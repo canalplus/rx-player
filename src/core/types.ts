@@ -5,7 +5,7 @@ import type {
 } from "./adaptive";
 import type {
   IManifestFetcherSettings,
-  ISegmentFetcherCreatorBackoffOptions,
+  ISegmentQueueCreatorBackoffOptions,
 } from "./fetchers";
 import type {
   IBufferedChunk,
@@ -33,16 +33,14 @@ export type {
   IAdaptiveRepresentationSelectorArguments,
   IABRThrottlers,
   IResolutionInfo,
-
   // Fetchers Metadata
   IManifestFetcherSettings,
-  ISegmentFetcherCreatorBackoffOptions,
+  ISegmentQueueCreatorBackoffOptions,
 
   // Media Sinks Metadata
   IBufferType,
   IBufferedChunk,
   ITextDisplayerInterface,
-
   // Stream Metadata
   IAdaptationChoice,
   IInbandEvent,

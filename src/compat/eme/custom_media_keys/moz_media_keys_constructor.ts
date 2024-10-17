@@ -16,7 +16,7 @@
 
 import globalScope from "../../../utils/global_scope";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { IMediaElement } from "../../browser_compatibility_types";
 import type { ICustomMediaKeys } from "./types";
 
 interface IMozMediaKeysConstructor {
@@ -32,9 +32,8 @@ if (
   MozMediaKeys !== undefined &&
   MozMediaKeys.prototype !== undefined &&
   typeof MozMediaKeys.isTypeSupported === "function" &&
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   typeof MozMediaKeys.prototype.createSession === "function"
-  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 ) {
   MozMediaKeysConstructor = MozMediaKeys;
 }
@@ -44,7 +43,7 @@ export default function getMozMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
   setMediaKeys: (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
@@ -64,11 +63,10 @@ export default function getMozMediaKeysCallbacks(): {
     return new MozMediaKeysConstructor(keyType);
   };
   const setMediaKeys = (
-    mediaElement: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     return wrapInPromise(() => {
-      const elt: ICompatHTMLMediaElement = mediaElement;
       if (
         elt.mozSetMediaKeys === undefined ||
         typeof elt.mozSetMediaKeys !== "function"

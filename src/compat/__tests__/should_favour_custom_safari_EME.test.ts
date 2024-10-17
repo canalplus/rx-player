@@ -1,11 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import globalScope from "../../utils/global_scope";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IShouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
 
 describe("compat - shouldFavourSafariMediaKeys", () => {
   const gs = globalScope as unknown as typeof globalThis & {
@@ -30,10 +25,10 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
         isSafariMobile: false,
       };
     });
-    const shouldFavourCustomSafariEME = (await vi.importActual(
-      "../should_favour_custom_safari_EME",
-    )) as any;
-    expect(shouldFavourCustomSafariEME.default()).toBe(false);
+    const shouldFavourCustomSafariEME = (
+      await vi.importActual("../should_favour_custom_safari_EME")
+    ).default as typeof IShouldFavourCustomSafariEME;
+    expect(shouldFavourCustomSafariEME()).toBe(false);
   });
 
   it("should return false if we are on Safari Desktop but WekitMediaKeys is not available", async () => {
@@ -44,10 +39,10 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
         isSafariMobile: false,
       };
     });
-    const shouldFavourCustomSafariEME = (await vi.importActual(
-      "../should_favour_custom_safari_EME",
-    )) as any;
-    expect(shouldFavourCustomSafariEME.default()).toBe(false);
+    const shouldFavourCustomSafariEME = (
+      await vi.importActual("../should_favour_custom_safari_EME")
+    ).default as typeof IShouldFavourCustomSafariEME;
+    expect(shouldFavourCustomSafariEME()).toBe(false);
   });
 
   it("should return false if we are on Safari Mobile but WekitMediaKeys is not available", async () => {
@@ -58,10 +53,10 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
         isSafariMobile: true,
       };
     });
-    const shouldFavourCustomSafariEME = (await vi.importActual(
-      "../should_favour_custom_safari_EME",
-    )) as any;
-    expect(shouldFavourCustomSafariEME.default()).toBe(false);
+    const shouldFavourCustomSafariEME = (
+      await vi.importActual("../should_favour_custom_safari_EME")
+    ).default as typeof IShouldFavourCustomSafariEME;
+    expect(shouldFavourCustomSafariEME()).toBe(false);
   });
 
   it("should return true if we are on Safari Desktop and a WebKitMediaKeys implementation is available", async () => {
@@ -81,10 +76,10 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
         isSafariMobile: false,
       };
     });
-    const shouldFavourCustomSafariEME = (await vi.importActual(
-      "../should_favour_custom_safari_EME",
-    )) as any;
-    expect(shouldFavourCustomSafariEME.default()).toBe(true);
+    const shouldFavourCustomSafariEME = (
+      await vi.importActual("../should_favour_custom_safari_EME")
+    ).default as typeof IShouldFavourCustomSafariEME;
+    expect(shouldFavourCustomSafariEME()).toBe(true);
   });
 
   it("should return true if we are on Safari Mobile and a WebKitMediaKeys implementation is available", async () => {
@@ -104,9 +99,9 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
         isSafariMobile: true,
       };
     });
-    const shouldFavourCustomSafariEME = (await vi.importActual(
-      "../should_favour_custom_safari_EME",
-    )) as any;
-    expect(shouldFavourCustomSafariEME.default()).toBe(true);
+    const shouldFavourCustomSafariEME = (
+      await vi.importActual("../should_favour_custom_safari_EME")
+    ).default as typeof IShouldFavourCustomSafariEME;
+    expect(shouldFavourCustomSafariEME()).toBe(true);
   });
 });

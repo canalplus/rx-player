@@ -1,9 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import flatMap from "../flat_map";
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 interface IProtoWithFlatMap {
   flatMap?:
     | (<U, This = undefined>(
@@ -20,9 +17,8 @@ interface IProtoWithFlatMap {
 
 const proto = Array.prototype as unknown as IProtoWithFlatMap;
 
-/* eslint-disable @typescript-eslint/unbound-method */
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const initialFlatMap = proto.flatMap;
-/* eslint-enable @typescript-eslint/unbound-method */
 
 describe("utils - starts-with", () => {
   beforeEach(() => {
@@ -44,7 +40,7 @@ describe("utils - starts-with", () => {
     it("should call the original flatMap function if available", () => {
       proto.flatMap = initialFlatMap;
       // TODO find what bother typescript here instead of adding "as any"
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockFlatMap = vi.spyOn(proto as any, "flatMap");
       const func1 = (x: number): number[] => [x, x + 1, x - 1];
       const func2 = (x: number): string => String(x) + "a";

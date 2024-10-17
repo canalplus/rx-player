@@ -32,9 +32,8 @@ export default function probeContentType(
         "MediaCapabilitiesProber >>> API_CALL: " + "MediaSource API not available",
       );
     }
-    /* eslint-disable @typescript-eslint/unbound-method */
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     if (typeof MediaSource_.isTypeSupported !== "function") {
-      /* eslint-enable @typescript-eslint/unbound-method */
       throw new Error(
         "MediaCapabilitiesProber >>> API_CALL: " + "isTypeSupported not available",
       );

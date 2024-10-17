@@ -12,7 +12,7 @@
 import { existsSync, readFileSync } from "fs";
 import readline from "readline";
 import { join } from "path";
-import { spawn } from "child_process";
+import { execSync } from "child_process";
 readline.emitKeypressEvents(process.stdin);
 
 run();
@@ -59,6 +59,9 @@ async function run() {
     console.log("\n");
     executeNpmScript(wantedScript);
 
+    // Ensure script is terminated here
+    process.exit(0);
+
     function recusivelyDiplayGroupCommands(groupEntries, indentation = "") {
       groupEntries.forEach(([name, val]) => {
         if (typeof val === "string") {
@@ -68,7 +71,12 @@ async function run() {
               `npm run ${name}`,
             )}]:`,
           );
-          console.log(`${indentation}   ${val}\n`);
+          const nbLength = String(currCommandNb).length;
+          let numberSpace = "";
+          for (let i = 0; i < nbLength; i++) {
+            numberSpace += " ";
+          }
+          console.log(`${indentation}${numberSpace}  ${val}\n`);
           currCommandNb++;
         } else if (typeof val === "object") {
           console.log(`${indentation}\x1b[33m${name}\x1b[37m\n`);
@@ -125,20 +133,14 @@ async function getChoice(maxNb) {
 function executeNpmScript(script) {
   const emphasizedCmdStr = emphasize(`npm run ${script}`);
   console.log(`Executing: ${emphasizedCmdStr}`);
-  const cmd = spawn("npm", ["run", script], {
-    stdio: "inherit",
-    stderr: "inherit",
-  });
-  process.on("SIGINT", function () {
-    cmd.kill("SIGINT");
-  });
-  process.on("SIGTERM", function () {
-    cmd.kill("SIGTERM");
-  });
-  cmd.on("error", (d) => {
-    process.stderr.write(`Error while executing command: ${d}`);
-  });
-  cmd.on("exit", (c) => process.exit(c));
+  try {
+    execSync(`npm run ${script}`, {
+      shell: true,
+      stdio: ["inherit", "inherit", "inherit"],
+    });
+  } catch (err) {
+    process.exit(err.status);
+  }
 }
 
 /**

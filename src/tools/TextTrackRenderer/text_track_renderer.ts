@@ -60,6 +60,7 @@ export default class TextTrackRenderer {
     videoElement,
     textTrackElement,
   }: {
+    // eslint-disable-next-line @typescript-eslint/no-restricted-types
     videoElement: HTMLMediaElement;
     textTrackElement: HTMLElement;
   }) {

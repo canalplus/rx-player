@@ -19,6 +19,7 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
 import type { IPictureInPictureEvent } from "../../compat/event_listeners";
 import {
@@ -31,6 +32,7 @@ import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
+import config from "../../config";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptationChoice,
@@ -38,6 +40,7 @@ import type {
   IABRThrottlers,
   IBufferType,
 } from "../../core/types";
+import type { IDefaultConfig } from "../../default_config";
 import type { IErrorCode, IErrorType } from "../../errors";
 import { ErrorCodes, ErrorTypes, formatError, MediaError } from "../../errors";
 import WorkerInitializationError from "../../errors/worker_initialization_error";
@@ -167,13 +170,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * This is used to check that a video element is not shared between multiple instances.
    * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
    */
-  private static _priv_currentlyUsedVideoElements = new WeakSet<HTMLMediaElement>();
+  private static _priv_currentlyUsedVideoElements = new WeakSet<IMediaElement>();
 
   /**
    * Media element attached to the RxPlayer.
    * Set to `null` when the RxPlayer is disposed.
    */
-  public videoElement: HTMLMediaElement | null; // null on dispose
+  public videoElement: IMediaElement | null; // null on dispose
 
   /** Logger the RxPlayer uses.  */
   public readonly log: Logger;
@@ -322,7 +325,21 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return log.getLevel();
   }
   static set LogLevel(logLevel: string) {
-    log.setLevel(logLevel);
+    log.setLevel(logLevel, log.getFormat());
+  }
+
+  /**
+   * Current log format.
+   * Should be either (by verbosity ascending):
+   *   - "standard": Regular log messages.
+   *   - "full": More verbose format, including a timestamp and a namespace.
+   * Any other value will be translated to "standard".
+   */
+  static get LogFormat(): string {
+    return log.getFormat();
+  }
+  static set LogFormat(format: string) {
+    log.setLevel(log.getLevel(), format);
   }
 
   /**
@@ -338,7 +355,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @param videoElement the video element to register.
    * @throws Error - Throws if the element is already used by another player instance.
    */
-  private static _priv_registerVideoElement(videoElement: HTMLMediaElement) {
+  private static _priv_registerVideoElement(videoElement: IMediaElement) {
     if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
       const errorMessage =
         "The video element is already attached to another RxPlayer instance." +
@@ -360,7 +377,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Deregister the video element of the set of elements currently in use.
    * @param videoElement the video element to deregister.
    */
-  static _priv_deregisterVideoElement(videoElement: HTMLMediaElement) {
+  static _priv_deregisterVideoElement(videoElement: IMediaElement) {
     if (Player._priv_currentlyUsedVideoElements.has(videoElement)) {
       Player._priv_currentlyUsedVideoElements.delete(videoElement);
     }
@@ -394,7 +411,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */ "4.1.0";
+    this.version = /* PLAYER_VERSION */ "4.2.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -458,6 +475,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         muted: videoElement.muted,
       });
     };
+
     videoElement.addEventListener("volumechange", onVolumeChange);
     destroyCanceller.signal.register(() => {
       videoElement.removeEventListener("volumechange", onVolumeChange);
@@ -531,6 +549,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         value: {
           dashWasmUrl: workerSettings.dashWasmUrl,
           logLevel: log.getLevel(),
+          logFormat: log.getFormat(),
           sendBackLogs: isDebugModeEnabled(),
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
@@ -540,7 +559,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       });
       log.addEventListener(
         "onLogLevelChange",
-        (logLevel) => {
+        (logInfo) => {
           if (this._priv_worker === null) {
             return;
           }
@@ -548,13 +567,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_worker.postMessage({
             type: MainThreadMessageType.LogLevelUpdate,
             value: {
-              logLevel,
+              logLevel: logInfo.level,
+              logFormat: logInfo.format,
               sendBackLogs: isDebugModeEnabled(),
             },
           });
         },
         this._destroyCanceller.signal,
       );
+
+      const sendConfigUpdates = (updates: Partial<IDefaultConfig>) => {
+        if (this._priv_worker === null) {
+          return;
+        }
+        log.debug("---> Sending To Worker:", MainThreadMessageType.ConfigUpdate);
+        this._priv_worker.postMessage({
+          type: MainThreadMessageType.ConfigUpdate,
+          value: updates,
+        });
+      };
+      if (config.updated) {
+        sendConfigUpdates(config.getCurrent());
+      }
+      config.addEventListener("update", sendConfigUpdates, this._destroyCanceller.signal);
     });
   }
 
@@ -730,6 +765,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_initializeContentPlayback(options: IParsedLoadVideoOptions): void {
     const {
       autoPlay,
+      cmcd,
       defaultAudioTrackSwitchingMode,
       enableFastSwitching,
       initialManifest,
@@ -741,6 +777,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       startAt,
       transport,
       checkMediaSegmentIntegrity,
+      checkManifestIntegrity,
       manifestLoader,
       referenceDateTime,
       segmentLoader,
@@ -884,6 +921,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const transportPipelines = transportFn({
           lowLatencyMode,
           checkMediaSegmentIntegrity,
+          checkManifestIntegrity,
           manifestLoader,
           referenceDateTime,
           representationFilter,
@@ -896,6 +934,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           adaptiveOptions,
           autoPlay,
           bufferOptions,
+          cmcd,
           keySystems,
           lowLatencyMode,
           transport: transportPipelines,
@@ -924,6 +963,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const transportOptions = {
           lowLatencyMode,
           checkMediaSegmentIntegrity,
+          checkManifestIntegrity,
           referenceDateTime,
           serverSyncInfos,
           manifestLoader: undefined,
@@ -936,6 +976,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           adaptiveOptions,
           autoPlay,
           bufferOptions,
+          cmcd,
           keySystems,
           lowLatencyMode,
           transportOptions,
@@ -1042,6 +1083,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     initializer.addEventListener("manifestUpdate", (updates) =>
       this._priv_onManifestUpdate(contentInfos, updates),
     );
+
+    initializer.addEventListener("codecSupportUpdate", () =>
+      this._priv_onCodecSupportUpdate(contentInfos),
+    );
     initializer.addEventListener("decipherabilityUpdate", (updates) =>
       this._priv_onDecipherabilityUpdate(contentInfos, updates),
     );
@@ -1103,11 +1148,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             .getValue()
             .position.getPolled();
           break;
-        default:
+        default: {
           const o = playbackObserver.getReference().getValue();
           this._priv_reloadingMetadata.reloadInPause = o.paused;
           this._priv_reloadingMetadata.reloadPosition = o.position.getWanted();
           break;
+        }
       }
     };
 
@@ -1249,8 +1295,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns {HTMLMediaElement|null} - The HTMLMediaElement used (`null` when
    * disposed)
    */
+  // eslint-disable-next-line @typescript-eslint/no-restricted-types
   getVideoElement(): HTMLMediaElement | null {
-    return this.videoElement;
+    // eslint-disable-next-line @typescript-eslint/no-restricted-types
+    return this.videoElement as HTMLMediaElement;
   }
 
   /**
@@ -1425,8 +1473,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     if (manifest !== null) {
       const currentTime = this.videoElement.currentTime;
-      const ast =
-        manifest.availabilityStartTime !== undefined ? manifest.availabilityStartTime : 0;
+      const ast = manifest.availabilityStartTime ?? 0;
       return currentTime + ast;
     }
     return 0;
@@ -1587,9 +1634,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const playPromise = this.videoElement.play();
-    /* eslint-disable @typescript-eslint/unbound-method */
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     if (isNullOrUndefined(playPromise) || typeof playPromise.catch !== "function") {
-      /* eslint-enable @typescript-eslint/unbound-method */
       return Promise.resolve();
     }
     return playPromise.catch((error: Error) => {
@@ -1860,10 +1906,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Returns every available audio tracks for a given Period - or the current
    * one if no `periodId` is given.
-   * @param {string|undefined} [periodId]
+   * @param {string|Object|undefined} [arg]
    * @returns {Array.<Object>}
    */
-  getAvailableAudioTracks(periodId?: string | undefined): IAvailableAudioTrack[] {
+  getAvailableAudioTracks(
+    arg?:
+      | string
+      | undefined
+      | {
+          periodId: string;
+          filterPlayableRepresentations: boolean;
+        },
+  ): IAvailableAudioTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
@@ -1871,10 +1925,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (isDirectFile) {
       return mediaElementTracksStore?.getAvailableAudioTracks() ?? [];
     }
+
+    let periodId: string | undefined;
+    let filterPlayableRepresentations: boolean;
+    if (typeof arg === "string") {
+      periodId = arg;
+    } else {
+      periodId = arg?.periodId;
+      filterPlayableRepresentations = arg?.filterPlayableRepresentations ?? true;
+    }
     return this._priv_callTracksStoreGetterSetter(
       periodId,
       [],
-      (tcm, periodRef) => tcm.getAvailableAudioTracks(periodRef) ?? [],
+      (tcm, periodRef) =>
+        tcm.getAvailableAudioTracks(periodRef, filterPlayableRepresentations) ?? [],
     );
   }
 
@@ -1901,10 +1965,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Returns every available video tracks for the current Period.
-   * @param {string|undefined} [periodId]
+   * @param {string|Object|undefined} [arg]
    * @returns {Array.<Object>}
    */
-  getAvailableVideoTracks(periodId?: string | undefined): IAvailableVideoTrack[] {
+  getAvailableVideoTracks(
+    arg?:
+      | string
+      | undefined
+      | {
+          periodId: string;
+          filterPlayableRepresentations: boolean;
+        },
+  ): IAvailableVideoTrack[] {
     if (this._priv_contentInfos === null) {
       return [];
     }
@@ -1912,19 +1984,37 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (isDirectFile) {
       return mediaElementTracksStore?.getAvailableVideoTracks() ?? [];
     }
+
+    let periodId: string | undefined;
+    let filterPlayableRepresentations: boolean;
+    if (typeof arg === "string") {
+      periodId = arg;
+    } else {
+      periodId = arg?.periodId;
+      filterPlayableRepresentations = arg?.filterPlayableRepresentations ?? true;
+    }
     return this._priv_callTracksStoreGetterSetter(
       periodId,
       [],
-      (tcm, periodRef) => tcm.getAvailableVideoTracks(periodRef) ?? [],
+      (tcm, periodRef) =>
+        tcm.getAvailableVideoTracks(periodRef, filterPlayableRepresentations) ?? [],
     );
   }
 
   /**
    * Returns currently chosen audio language for the current Period.
-   * @param {string|undefined} [periodId]
+   * @param {string|Object|undefined} [arg]
    * @returns {Object|null|undefined}
    */
-  getAudioTrack(periodId?: string | undefined): IAudioTrack | null | undefined {
+  getAudioTrack(
+    arg?:
+      | string
+      | undefined
+      | {
+          periodId: string;
+          filterPlayableRepresentations: boolean;
+        },
+  ): IAudioTrack | null | undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
@@ -1935,8 +2025,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       return mediaElementTracksStore.getChosenAudioTrack();
     }
+
+    let periodId: string | undefined;
+    let filterPlayableRepresentations: boolean;
+    if (typeof arg === "string") {
+      periodId = arg;
+    } else {
+      periodId = arg?.periodId;
+      filterPlayableRepresentations = arg?.filterPlayableRepresentations ?? true;
+    }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.getChosenAudioTrack(periodRef),
+      tcm.getChosenAudioTrack(periodRef, filterPlayableRepresentations),
     );
   }
 
@@ -1963,10 +2062,18 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
   /**
    * Returns currently chosen video track for the current Period.
-   * @param {string|undefined} [periodId]
+   * @param {string|Object|undefined} [arg]
    * @returns {Object|null|undefined}
    */
-  getVideoTrack(periodId?: string | undefined): IVideoTrack | null | undefined {
+  getVideoTrack(
+    arg?:
+      | string
+      | undefined
+      | {
+          periodId: string;
+          filterPlayableRepresentations: boolean;
+        },
+  ): IVideoTrack | null | undefined {
     if (this._priv_contentInfos === null) {
       return undefined;
     }
@@ -1977,8 +2084,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       return mediaElementTracksStore.getChosenVideoTrack();
     }
+
+    let periodId: string | undefined;
+    let filterPlayableRepresentations: boolean;
+    if (typeof arg === "string") {
+      periodId = arg;
+    } else {
+      periodId = arg?.periodId;
+      filterPlayableRepresentations = arg?.filterPlayableRepresentations ?? true;
+    }
     return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
-      tcm.getChosenVideoTrack(periodRef),
+      tcm.getChosenVideoTrack(periodRef, filterPlayableRepresentations),
     );
   }
 
@@ -1998,7 +2114,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const audioId = typeof arg === "string" ? arg : arg.trackId;
         mediaElementTracksStore?.setAudioTrackById(audioId);
         return;
-      } catch (e) {
+      } catch (_e) {
         throw new Error("player: unknown audio track");
       }
     }
@@ -2044,7 +2160,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const textId = typeof arg === "string" ? arg : arg.trackId;
         mediaElementTracksStore?.setTextTrackById(textId);
         return;
-      } catch (e) {
+      } catch (_e) {
         throw new Error("player: unknown text track");
       }
     }
@@ -2096,7 +2212,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const videoId = typeof arg === "string" ? arg : arg.trackId;
         mediaElementTracksStore?.setVideoTrackById(videoId);
         return;
-      } catch (e) {
+      } catch (_e) {
         throw new Error("player: unknown video track");
       }
     }
@@ -2532,6 +2648,20 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 
+  /**
+   * Triggered each times the support for a codec has changed in the manifest.
+   * When triggered, the track store may need to consider selecting a new track.
+   *
+   * @param {Object} contentInfos
+   */
+  private _priv_onCodecSupportUpdate(contentInfos: IPublicApiContentInfos) {
+    const tStore = contentInfos?.tracksStore;
+    if (isNullOrUndefined(tStore)) {
+      return;
+    }
+    tStore.onManifestCodecSupportUpdate();
+  }
+
   private _priv_onDecipherabilityUpdate(
     contentInfos: IPublicApiContentInfos,
     elts: IDecipherabilityStatusChangedElement[],
@@ -2539,7 +2669,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (contentInfos === null || contentInfos.manifest === null) {
       return;
     }
-
     if (!isNullOrUndefined(contentInfos?.tracksStore)) {
       contentInfos.tracksStore.onDecipherabilityUpdates();
     }
@@ -2570,10 +2699,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           }
           switch (elt.adaptation.type) {
             case "audio":
-              isCurrent = tStore.getChosenAudioTrack(periodRef)?.id === elt.adaptation.id;
+              isCurrent =
+                tStore.getChosenAudioTrack(periodRef, false)?.id === elt.adaptation.id;
               break;
             case "video":
-              isCurrent = tStore.getChosenVideoTrack(periodRef)?.id === elt.adaptation.id;
+              isCurrent =
+                tStore.getChosenVideoTrack(periodRef, false)?.id === elt.adaptation.id;
               break;
             case "text":
               isCurrent = tStore.getChosenTextTrack(periodRef)?.id === elt.adaptation.id;
@@ -2648,11 +2779,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (!isNullOrUndefined(tracksStore)) {
       const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
       if (periodRef) {
-        const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+        const audioTrack = tracksStore.getChosenAudioTrack(periodRef, true);
         this._priv_triggerEventIfNotStopped("audioTrackChange", audioTrack, cancelSignal);
         const textTrack = tracksStore.getChosenTextTrack(periodRef);
         this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
-        const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+        const videoTrack = tracksStore.getChosenVideoTrack(periodRef, true);
         this._priv_triggerEventIfNotStopped("videoTrackChange", videoTrack, cancelSignal);
       }
     } else {
@@ -2811,26 +2942,29 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         return;
       }
       switch (type) {
-        case "audio":
-          const audioTrack = tracksStore.getChosenAudioTrack(periodRef);
+        case "audio": {
+          const audioTrack = tracksStore.getChosenAudioTrack(periodRef, true);
           this._priv_triggerEventIfNotStopped(
             "audioTrackChange",
             audioTrack,
             cancelSignal,
           );
           break;
-        case "text":
+        }
+        case "text": {
           const textTrack = tracksStore.getChosenTextTrack(periodRef);
           this._priv_triggerEventIfNotStopped("textTrackChange", textTrack, cancelSignal);
           break;
-        case "video":
-          const videoTrack = tracksStore.getChosenVideoTrack(periodRef);
+        }
+        case "video": {
+          const videoTrack = tracksStore.getChosenVideoTrack(periodRef, true);
           this._priv_triggerEventIfNotStopped(
             "videoTrackChange",
             videoTrack,
             cancelSignal,
           );
           break;
+        }
       }
     }
   }
@@ -2914,9 +3048,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     this.trigger(
       // !!! undocumented API :O !!!
-      /* eslint-disable-next-line */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       "__priv_bitrateEstimateChange" as any,
-      /* eslint-disable-next-line */
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { type, bitrate } as any,
     );
   }
@@ -3135,23 +3269,25 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return;
     }
     switch (trackType) {
-      case "video":
-        const videoTracks = tracksStore.getAvailableVideoTracks(periodRef);
+      case "video": {
+        const videoTracks = tracksStore.getAvailableVideoTracks(periodRef, true);
         this._priv_triggerEventIfNotStopped(
           "availableVideoTracksChange",
           videoTracks ?? [],
           cancelSignal,
         );
         break;
-      case "audio":
-        const audioTracks = tracksStore.getAvailableAudioTracks(periodRef);
+      }
+      case "audio": {
+        const audioTracks = tracksStore.getAvailableAudioTracks(periodRef, true);
         this._priv_triggerEventIfNotStopped(
           "availableAudioTracksChange",
           audioTracks ?? [],
           cancelSignal,
         );
         break;
-      case "text":
+      }
+      case "text": {
         const textTracks = tracksStore.getAvailableTextTracks(periodRef);
         this._priv_triggerEventIfNotStopped(
           "availableTextTracksChange",
@@ -3159,6 +3295,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           cancelSignal,
         );
         break;
+      }
       default:
         assertUnreachable(trackType);
     }
@@ -3193,7 +3330,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 }
-Player.version = /* PLAYER_VERSION */ "4.1.0";
+Player.version = /* PLAYER_VERSION */ "4.2.0";
 
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
@@ -3202,8 +3339,8 @@ interface IPublicAPIEvent {
   audioTrackChange: IAudioTrack | null;
   textTrackChange: ITextTrack | null;
   videoTrackChange: IVideoTrack | null;
-  audioRepresentationChange: IVideoRepresentation | null;
-  videoRepresentationChange: IAudioRepresentation | null;
+  audioRepresentationChange: IAudioRepresentation | null;
+  videoRepresentationChange: IVideoRepresentation | null;
   volumeChange: {
     volume: number;
     muted: boolean;

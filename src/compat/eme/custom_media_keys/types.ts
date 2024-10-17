@@ -15,6 +15,7 @@
  */
 
 import type { IEventEmitter } from "../../../utils/event_emitter";
+import type { IMediaElement } from "../../browser_compatibility_types";
 
 export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEvents> {
   // Attributes
@@ -38,7 +39,7 @@ export interface ICustomMediaKeySession extends IEventEmitter<IMediaKeySessionEv
 }
 
 export interface ICustomMediaKeys {
-  _setVideo: (vid: HTMLMediaElement) => Promise<unknown>;
+  _setVideo: (vid: IMediaElement) => Promise<unknown>;
   createSession(sessionType?: MediaKeySessionType): ICustomMediaKeySession;
   setServerCertificate(setServerCertificate: BufferSource): Promise<void>;
 }
@@ -58,4 +59,8 @@ export interface IMediaKeySessionEvents {
   // "ready"
   // "keyerror"
   /* "error" */
+}
+
+export interface ICustomMediaEncryptedEvent extends MediaEncryptedEvent {
+  forceSessionRecreation?: boolean | undefined;
 }

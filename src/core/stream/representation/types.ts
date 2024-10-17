@@ -18,7 +18,7 @@ import type {
 } from "../../../public_types";
 import type { IRange } from "../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
-import type { IPrioritizedSegmentFetcher } from "../../fetchers";
+import type { SegmentQueue } from "../../fetchers";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
 
 /** Callbacks called by the `RepresentationStream` on various events. */
@@ -257,7 +257,7 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
   /** The `SegmentSink` on which segments will be pushed. */
   segmentSink: SegmentSink;
   /** Interface used to load new segments. */
-  segmentFetcher: IPrioritizedSegmentFetcher<TSegmentDataType>;
+  segmentQueue: SegmentQueue<TSegmentDataType>;
   /**
    * Reference emitting when the RepresentationStream should "terminate".
    *
@@ -333,7 +333,6 @@ export interface IRepresentationsChoice {
    * How the Streams should react if another, not currently authorized,
    * Representation was previously playing.
    */
-  /* eslint-disable @typescript-eslint/no-duplicate-type-constituents */
+  // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
   switchingMode: IVideoRepresentationsSwitchingMode | IAudioRepresentationsSwitchingMode;
-  /* eslint-enable @typescript-eslint/no-duplicate-type-constituents */
 }

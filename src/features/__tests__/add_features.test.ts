@@ -1,10 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IAddFeatures from "../add_features";
+import type { IFeature } from "../types";
 
 describe("Features - addFeatures", () => {
   beforeEach(() => {
@@ -16,7 +12,8 @@ describe("Features - addFeatures", () => {
     vi.doMock("../features_object", () => ({
       default: feat,
     }));
-    const addFeatures = ((await vi.importActual("../add_features")) as any).default;
+    const addFeatures = (await vi.importActual("../add_features"))
+      .default as typeof IAddFeatures;
 
     expect(() => addFeatures([])).not.toThrow();
   });
@@ -26,15 +23,18 @@ describe("Features - addFeatures", () => {
     vi.doMock("../features_object", () => ({
       default: feat,
     }));
-    const addFeatures = ((await vi.importActual("../add_features")) as any).default;
+    const addFeatures = (await vi.importActual("../add_features"))
+      .default as typeof IAddFeatures;
 
-    expect(() => addFeatures([5])).toThrow(new Error("Unrecognized feature"));
+    expect(() => addFeatures([5 as unknown as IFeature])).toThrow(
+      new Error("Unrecognized feature"),
+    );
     expect(() =>
       addFeatures([
         () => {
           /* noop */
         },
-        {},
+        {} as IFeature,
       ]),
     ).toThrow(new Error("Unrecognized feature"));
   });
@@ -44,7 +44,8 @@ describe("Features - addFeatures", () => {
     vi.doMock("../features_object", () => ({
       default: feat,
     }));
-    const addFeatures = ((await vi.importActual("../add_features")) as any).default;
+    const addFeatures = (await vi.importActual("../add_features"))
+      .default as typeof IAddFeatures;
 
     const fakeFeat1 = vi.fn();
     const fakeFeat2 = vi.fn();

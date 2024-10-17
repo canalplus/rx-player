@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../compat/browser_compatibility_types";
 import type { SegmentSink } from "../core/segment_sinks";
 import type ContentDecryptor from "../main_thread/decrypt";
 import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
@@ -23,7 +24,6 @@ import type HTMLTextDisplayer from "../main_thread/text_displayer/html";
 import type NativeTextDisplayer from "../main_thread/text_displayer/native/native_text_displayer";
 import type MediaElementTracksStore from "../main_thread/tracks_store/media_element_tracks_store";
 import type { IRxPlayer } from "../main_thread/types";
-import type { ICodecSupportProber } from "../mse";
 import type {
   IDashParserResponse,
   IMPDParserArguments,
@@ -46,7 +46,7 @@ import type { CancellationSignal } from "../utils/task_canceller";
  * @returns {Object} - `SegmentSink` implementation.
  */
 export type IHTMLTextTracksBuffer = new (
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   textTrackElement: HTMLElement,
 ) => SegmentSink;
 
@@ -59,7 +59,7 @@ export type IHTMLTextTracksBuffer = new (
  * tracks will be displayed will also be linked to this `HTMLMediaElement`.
  * @returns {Object} - `SegmentSink` implementation.
  */
-export type INativeTextTracksBuffer = new (mediaElement: HTMLMediaElement) => SegmentSink;
+export type INativeTextTracksBuffer = new (mediaElement: IMediaElement) => SegmentSink;
 
 export type IDashNativeParser = (
   dom: Document,
@@ -93,14 +93,6 @@ export type IDebugElementFn = (
  * an application.
  */
 export interface IFeaturesObject {
-  /**
-   * Interface checking for codec support in an MSE (Media Source Extensions)
-   * context.
-   *
-   * Works both for environments with and without the necessary MSE API such
-   * as WebWorkers.
-   */
-  codecSupportProber: ICodecSupportProber | null;
   /**
    * Feature allowing to load so-called "directfile" contents, which are
    * contents natively decodable by the browser.

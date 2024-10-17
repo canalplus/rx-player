@@ -15,7 +15,6 @@
  */
 
 import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
-import mainCodecSupportProber from "../../mse/main_codec_support_prober";
 import smooth from "../../transports/smooth";
 import type { IFeaturesObject } from "../types";
 
@@ -28,7 +27,6 @@ function addSmoothFeature(features: IFeaturesObject): void {
     features.transports.smooth = smooth;
   }
   features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
-  features.codecSupportProber = mainCodecSupportProber;
 }
 
 export { addSmoothFeature as SMOOTH };

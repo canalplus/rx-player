@@ -31,8 +31,8 @@ export default function getFirstPositionFromAdaptation(
 ): number | undefined | null {
   const { representations } = adaptation;
   let max: null | number = null;
-  for (let i = 0; i < representations.length; i++) {
-    const firstPosition = representations[i].index.getFirstAvailablePosition();
+  for (const representation of representations) {
+    const firstPosition = representation.index.getFirstAvailablePosition();
     if (firstPosition === undefined) {
       // we cannot tell
       return undefined;

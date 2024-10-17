@@ -1,18 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IAreSameStreamEvents from "../stream_events_emitter/are_same_stream_events";
 
 describe("init - areSameStreamEvents", () => {
   it("should consider two events to be the same with defined ends", async () => {
     const evt1 = { start: 0, end: 10, id: "1" };
     const evt2 = { start: 0, end: 10, id: "1" };
     const areSameStreamEvents = (
-      (await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")) as any
-    ).default;
+      await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")
+    ).default as typeof IAreSameStreamEvents;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(true);
   });
@@ -20,8 +15,8 @@ describe("init - areSameStreamEvents", () => {
     const evt1 = { start: 0, end: undefined, id: "1" };
     const evt2 = { start: 0, end: undefined, id: "1" };
     const areSameStreamEvents = (
-      (await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")) as any
-    ).default;
+      await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")
+    ).default as typeof IAreSameStreamEvents;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(true);
   });
@@ -29,8 +24,8 @@ describe("init - areSameStreamEvents", () => {
     const evt1 = { start: 0, end: undefined, id: "1" };
     const evt2 = { start: 0, end: undefined, id: "2" };
     const areSameStreamEvents = (
-      (await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")) as any
-    ).default;
+      await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")
+    ).default as typeof IAreSameStreamEvents;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(false);
   });
@@ -38,8 +33,8 @@ describe("init - areSameStreamEvents", () => {
     const evt1 = { start: 0, end: undefined, id: "1" };
     const evt2 = { start: 10, end: undefined, id: "1" };
     const areSameStreamEvents = (
-      (await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")) as any
-    ).default;
+      await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")
+    ).default as typeof IAreSameStreamEvents;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(false);
   });
@@ -47,8 +42,8 @@ describe("init - areSameStreamEvents", () => {
     const evt1 = { start: 0, end: 10, id: "1" };
     const evt2 = { start: 0, end: 30, id: "1" };
     const areSameStreamEvents = (
-      (await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")) as any
-    ).default;
+      await vi.importActual("../stream_events_emitter/are_same_stream_events.ts")
+    ).default as typeof IAreSameStreamEvents;
     const result = areSameStreamEvents(evt1, evt2);
     expect(result).toBe(false);
   });

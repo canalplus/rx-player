@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type ICanPatchISOBMFFSegment from "../can_patch_isobmff";
 
 describe("compat - canPatchISOBMFFSegment", () => {
   beforeEach(() => {
@@ -17,8 +12,9 @@ describe("compat - canPatchISOBMFFSegment", () => {
         isIEOrEdge: false,
       };
     });
-    const canPatchISOBMFFSegment = (await vi.importActual("../can_patch_isobmff")) as any;
-    expect(canPatchISOBMFFSegment.default()).toBe(true);
+    const canPatchISOBMFFSegment = (await vi.importActual("../can_patch_isobmff"))
+      .default as typeof ICanPatchISOBMFFSegment;
+    expect(canPatchISOBMFFSegment()).toBe(true);
   });
 
   it("should return false if we are on IE11 or Edge", async () => {
@@ -27,7 +23,8 @@ describe("compat - canPatchISOBMFFSegment", () => {
         isIEOrEdge: true,
       };
     });
-    const canPatchISOBMFFSegment = (await vi.importActual("../can_patch_isobmff")) as any;
-    expect(canPatchISOBMFFSegment.default()).toBe(false);
+    const canPatchISOBMFFSegment = (await vi.importActual("../can_patch_isobmff"))
+      .default as typeof ICanPatchISOBMFFSegment;
+    expect(canPatchISOBMFFSegment()).toBe(false);
   });
 });

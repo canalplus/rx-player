@@ -49,7 +49,7 @@ export default function request(
   options: IRequestOptions<"document">,
 ): Promise<IRequestResponse<Document, "document">>;
 export default function request(
-  options: IRequestOptions<"json">, // eslint-disable-next-line @typescript-eslint/ban-types
+  options: IRequestOptions<"json">, // eslint-disable-next-line @typescript-eslint/no-restricted-types
 ): Promise<IRequestResponse<object, "json">>;
 export default function request(
   options: IRequestOptions<"blob">,
@@ -254,7 +254,7 @@ export default function request<T>(
 function toJSONForIE(data: string): unknown {
   try {
     return JSON.parse(data);
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }
@@ -264,7 +264,7 @@ export interface IRequestOptions<ResponseType> {
   /** URL you want to request. */
   url: string;
   /** Dictionary of headers you want to set. `null` or `undefined` for no header. */
-  headers?: { [header: string]: string } | null | undefined;
+  headers?: Record<string, string> | null | undefined;
   /** Wanted format for the response */
   responseType?: ResponseType | undefined;
   /**

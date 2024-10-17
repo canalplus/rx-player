@@ -18,24 +18,35 @@ import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types"
 import request from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IManifestLoaderOptions, IRequestedData } from "../types";
+import addQueryString from "../utils/add_query_string";
 import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
 
 /**
  * Manifest loader triggered if there was no custom-defined one in the API.
- * @param {string} url
+ * @param {string} initialUrl
  * @param {Object} loaderOptions
  * @param {Object} cancelSignal
  */
 function regularManifestLoader(
-  url: string | undefined,
+  initialUrl: string | undefined,
   loaderOptions: IManifestLoaderOptions,
   cancelSignal: CancellationSignal,
 ): Promise<IRequestedData<ILoadedManifestFormat>> {
-  if (url === undefined) {
+  if (initialUrl === undefined) {
     throw new Error("Cannot perform HTTP(s) request. URL not known");
   }
+
+  const url =
+    loaderOptions.cmcdPayload?.type === "query"
+      ? addQueryString(initialUrl, loaderOptions.cmcdPayload.value)
+      : initialUrl;
+
   return request({
     url,
+    headers:
+      loaderOptions.cmcdPayload?.type === "headers"
+        ? loaderOptions.cmcdPayload.value
+        : undefined,
     responseType: "text",
     timeout: loaderOptions.timeout,
     connectionTimeout: loaderOptions.connectionTimeout,

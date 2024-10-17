@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import isCodecSupported from "../../compat/is_codec_supported";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import config from "../../config";
@@ -22,8 +24,8 @@ import type {
   IRepresentationEstimator,
 } from "../../core/adaptive";
 import AdaptiveRepresentationSelector from "../../core/adaptive";
-import type { IManifestFetcherSettings } from "../../core/fetchers";
-import { ManifestFetcher, SegmentFetcherCreator } from "../../core/fetchers";
+import CmcdDataBuilder from "../../core/cmcd";
+import { ManifestFetcher, SegmentQueueCreator } from "../../core/fetchers";
 import createContentTimeBoundariesObserver from "../../core/main/common/create_content_time_boundaries_observer";
 import DecipherabilityFreezeDetector from "../../core/main/common/DecipherabilityFreezeDetector";
 import SegmentSinksStore from "../../core/segment_sinks";
@@ -34,27 +36,34 @@ import type {
 } from "../../core/stream";
 import StreamOrchestrator from "../../core/stream";
 import type { ITextDisplayerInterface } from "../../core/types";
+import type { EncryptedMediaError } from "../../errors";
 import { MediaError } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import type { IManifest, IPeriodMetadata } from "../../manifest";
+import type { IManifest, IPeriodMetadata, ICodecSupportInfo } from "../../manifest";
 import type MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
-import type { IKeySystemOption, IPlayerError } from "../../public_types";
+import type {
+  ICmcdOptions,
+  IInitialManifest,
+  IKeySystemOption,
+  IPlayerError,
+} from "../../public_types";
 import type { ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import objectAssign from "../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
 import type { ISyncOrAsyncValue } from "../../utils/sync_or_async";
 import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
-import type { IContentProtection, IProcessedProtectionData } from "../decrypt";
-import { getKeySystemConfiguration } from "../decrypt";
+import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
+import type { IProcessedProtectionData } from "../decrypt";
+import type ContentDecryptor from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
@@ -83,7 +92,7 @@ import listenToMediaError from "./utils/throw_on_media_error";
  */
 export default class MediaSourceContentInitializer extends ContentInitializer {
   /** Constructor settings associated to this `MediaSourceContentInitializer`. */
-  private _settings: IInitializeArguments;
+  private _initSettings: IInitializeArguments;
   /**
    * `TaskCanceller` allowing to abort everything that the
    * `MediaSourceContentInitializer` is doing.
@@ -99,6 +108,36 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _manifest: ISyncOrAsyncValue<IManifest> | null;
 
+  private _cmcdDataBuilder: CmcdDataBuilder | null;
+
+  /**
+   * Describes the decryption capabilities on the current content, discriminated
+   * by a `status` property:
+   *
+   *   - If set to `"uninitialized"`, decryption capabilities have not been
+   *     set up yet.
+   *
+   *   - If set to `"disabled"`, decryption capabilities are explicitely
+   *     disabled. If encrypted content needs to be decrypted, the accompanying
+   *     error `value` describes the reason why decryption is not enabled.
+   *
+   *   - If set to `"enabled"`, decryption capabilities are available, and
+   *     `value` points to the corresponding `ContentDecryptor`.
+   */
+  private _decryptionCapabilities:
+    | {
+        status: "uninitialized";
+        value: null;
+      }
+    | {
+        status: "disabled";
+        value: EncryptedMediaError;
+      }
+    | {
+        status: "enabled";
+        value: ContentDecryptor;
+      };
+
   /**
    * Create a new `MediaSourceContentInitializer`, associated to the given
    * settings.
@@ -106,15 +145,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   constructor(settings: IInitializeArguments) {
     super();
-    this._settings = settings;
+    this._initSettings = settings;
     this._initCanceller = new TaskCanceller();
     this._manifest = null;
+    this._decryptionCapabilities = { status: "uninitialized", value: null };
     const urls = settings.url === undefined ? undefined : [settings.url];
-    this._manifestFetcher = new ManifestFetcher(
-      urls,
-      settings.transport,
-      settings.manifestRequestSettings,
-    );
+    this._cmcdDataBuilder =
+      settings.cmcd === undefined ? null : new CmcdDataBuilder(settings.cmcd);
+    this._manifestFetcher = new ManifestFetcher(urls, settings.transport, {
+      ...settings.manifestRequestSettings,
+      lowLatencyMode: settings.lowLatencyMode,
+      cmcdDataBuilder: this._cmcdDataBuilder,
+    });
   }
 
   /**
@@ -150,7 +192,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {Object} playbackObserver
    */
   public start(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     this.prepare(); // Load Manifest if not already done
@@ -162,20 +204,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    /** Send content protection initialization data to the decryption logic. */
-    const protectionRef = new SharedReference<IContentProtection | null>(
-      null,
-      this._initCanceller.signal,
-    );
-
-    this._initializeMediaSourceAndDecryption(mediaElement, protectionRef)
+    this._initializeMediaSourceAndDecryption(mediaElement)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
           mediaElement,
           initResult.mediaSource,
           playbackObserver,
           initResult.drmSystemId,
-          protectionRef,
           initResult.unlinkMediaSource,
         ),
       )
@@ -199,6 +234,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._initCanceller.cancel();
   }
 
+  /**
+   * Callback called when an error interrupting playback arised.
+   * @param {*} err
+   */
   private _onFatalError(err: unknown) {
     if (this._initCanceller.isUsed()) {
       return;
@@ -207,23 +246,25 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this.trigger("error", err);
   }
 
-  private _initializeMediaSourceAndDecryption(
-    mediaElement: HTMLMediaElement,
-    protectionRef: IReadOnlySharedReference<IContentProtection | null>,
-  ): Promise<{
+  /**
+   * Initialize decryption mechanisms if needed and begin creating and relying
+   * on the initial `MediaSourceInterface` for this content.
+   * @param {HTMLMediaElement|null} mediaElement
+   * @returns {Promise.<Object>}
+   */
+  private _initializeMediaSourceAndDecryption(mediaElement: IMediaElement): Promise<{
     mediaSource: MainMediaSourceInterface;
     drmSystemId: string | undefined;
     unlinkMediaSource: TaskCanceller;
   }> {
     const initCanceller = this._initCanceller;
     return createCancellablePromise(initCanceller.signal, (resolve) => {
-      const { keySystems } = this._settings;
+      const { keySystems } = this._initSettings;
 
       /** Initialize decryption capabilities. */
-      const drmInitRef = initializeContentDecryption(
+      const { statusRef: drmInitRef, contentDecryptor } = initializeContentDecryption(
         mediaElement,
         keySystems,
-        protectionRef,
         {
           onWarning: (err: IPlayerError) => this.trigger("warning", err),
           onError: (err: Error) => this._onFatalError(err),
@@ -254,9 +295,37 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               );
             })().catch(noop);
           },
+
+          onCodecSupportUpdate: () => {
+            const syncManifest = this._manifest?.syncValue;
+            if (isNullOrUndefined(syncManifest)) {
+              // The Manifest is not yet fetched, but we will be able to check
+              // the codecs once it is the case
+              this._manifest?.getValueAsAsync().then((loadedManifest) => {
+                if (this._initCanceller.isUsed()) {
+                  return;
+                }
+                this._refreshManifestCodecSupport(loadedManifest);
+              }, noop);
+            } else {
+              this._refreshManifestCodecSupport(syncManifest);
+            }
+          },
         },
         initCanceller.signal,
       );
+
+      if (contentDecryptor.enabled) {
+        this._decryptionCapabilities = {
+          status: "enabled",
+          value: contentDecryptor.value,
+        };
+      } else {
+        this._decryptionCapabilities = {
+          status: "disabled",
+          value: contentDecryptor.value,
+        };
+      }
 
       drmInitRef.onUpdate(
         (drmStatus, stopListeningToDrmUpdates) => {
@@ -308,11 +377,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   private async _onInitialMediaSourceReady(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     initialMediaSource: MainMediaSourceInterface,
     playbackObserver: IMediaElementPlaybackObserver,
     drmSystemId: string | undefined,
-    protectionRef: SharedReference<IContentProtection | null>,
     initialMediaSourceCanceller: TaskCanceller,
   ): Promise<void> {
     const {
@@ -325,7 +393,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       startAt,
       textTrackOptions,
       transport,
-    } = this._settings;
+    } = this._initSettings;
     const initCanceller = this._initCanceller;
     assert(this._manifest !== null);
     let manifest: IManifest;
@@ -339,6 +407,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       "manifestUpdate",
       (updates) => {
         this.trigger("manifestUpdate", updates);
+        this._refreshManifestCodecSupport(manifest);
       },
       initCanceller.signal,
     );
@@ -347,6 +416,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       "decipherabilityUpdate",
       (elts) => {
         this.trigger("decipherabilityUpdate", elts);
+      },
+      initCanceller.signal,
+    );
+
+    manifest.addEventListener(
+      "supportUpdate",
+      () => {
+        this.trigger("codecSupportUpdate", null);
       },
       initCanceller.signal,
     );
@@ -362,12 +439,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       bufferOptions,
     );
 
-    const segmentFetcherCreator = new SegmentFetcherCreator(
+    const segmentQueueCreator = new SegmentQueueCreator(
       transport,
+      this._cmcdDataBuilder,
       segmentRequestOptions,
       initCanceller.signal,
     );
 
+    this._refreshManifestCodecSupport(manifest);
     this.trigger("manifestReady", manifest);
     if (initCanceller.isUsed()) {
       return;
@@ -409,9 +488,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         autoPlay: shouldPlay,
         manifest,
         representationEstimator,
-        segmentFetcherCreator,
+        segmentQueueCreator,
         speed,
-        protectionRef,
         bufferOptions: subBufferOptions,
       };
       bufferOnMediaSource(opts, onReloadMediaSource, currentCanceller.signal);
@@ -458,7 +536,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private _startBufferingOnMediaSource(
     args: IBufferingMediaSettings,
-    onReloadOrder: (reloadOrder: { position: number; autoPlay: boolean }) => void,
+    onReloadOrder: IReloadMediaSourceCallback,
     cancelSignal: CancellationSignal,
   ): void {
     const {
@@ -469,9 +547,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       mediaElement,
       mediaSource,
       playbackObserver,
-      protectionRef,
       representationEstimator,
-      segmentFetcherCreator,
+      segmentQueueCreator,
       speed,
     } = args;
 
@@ -486,18 +563,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     }
 
     let textDisplayerInterface: ITextDisplayerInterface | null = null;
-    let textDisplayer: ITextDisplayer | null = null;
-    if (
-      this._settings.textTrackOptions.textTrackMode === "html" &&
-      features.htmlTextDisplayer !== null
-    ) {
-      textDisplayer = new features.htmlTextDisplayer(
-        mediaElement,
-        this._settings.textTrackOptions.textTrackElement,
-      );
-    } else if (features.nativeTextDisplayer !== null) {
-      textDisplayer = new features.nativeTextDisplayer(mediaElement);
-    }
+    const textDisplayer = createTextDisplayer(
+      mediaElement,
+      this._initSettings.textTrackOptions,
+    );
     if (textDisplayer !== null) {
       const sender = new MainThreadTextDisplayerInterface(textDisplayer);
       textDisplayerInterface = sender;
@@ -587,6 +656,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       },
       cancelSignal,
     );
+
+    this._cmcdDataBuilder?.startMonitoringPlayback(coreObserver);
+    cancelSignal.register(() => {
+      this._cmcdDataBuilder?.stopMonitoringPlayback();
+    });
 
     const rebufferingController = this._createRebufferingController(
       playbackObserver,
@@ -689,14 +763,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         this._onFatalError(err);
       });
 
-    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     StreamOrchestrator(
       { manifest, initialPeriod },
       coreObserver,
       representationEstimator,
       segmentSinksStore,
-      segmentFetcherCreator,
+      segmentQueueCreator,
       bufferOptions,
       handleStreamOrchestratorCallbacks(),
       cancelSignal,
@@ -838,7 +912,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           self.trigger("periodStreamCleared", value);
         },
 
-        bitrateEstimateChange: (value) => self.trigger("bitrateEstimateChange", value),
+        bitrateEstimateChange: (value) => {
+          self._cmcdDataBuilder?.updateThroughput(value.type, value.bitrate);
+          self.trigger("bitrateEstimateChange", value);
+        },
 
         needsMediaSourceReload: (payload) => {
           reloadMediaSource(
@@ -854,7 +931,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             const lastObservation = coreObserver.getReference().getValue();
             const position = lastObservation.position.isAwaitingFuturePosition()
               ? lastObservation.position.getWanted()
-              : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
+              : (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
             const isPaused =
               lastObservation.paused.pending ??
               coreObserver.getIsPaused() ??
@@ -864,7 +941,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             const lastObservation = coreObserver.getReference().getValue();
             const position = lastObservation.position.isAwaitingFuturePosition()
               ? lastObservation.position.getWanted()
-              : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
+              : (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
             // simple seek close to the current position
             // to flush the buffers
             if (position + 0.001 < lastObservation.duration) {
@@ -876,8 +953,18 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         },
 
         encryptionDataEncountered: (value) => {
+          if (self._decryptionCapabilities.status === "disabled") {
+            self._onFatalError(self._decryptionCapabilities.value);
+            return;
+          } else if (self._decryptionCapabilities.status === "uninitialized") {
+            // Should never happen
+            log.error(
+              "Init: received encryption data without known decryption capabilities",
+            );
+            return;
+          }
           for (const protectionData of value) {
-            protectionRef.setValue(protectionData);
+            self._decryptionCapabilities.value.onInitializationData(protectionData);
             if (cancelSignal.isCancelled()) {
               return; // Previous call has stopped streams due to a side-effect
             }
@@ -905,7 +992,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       const lastObservation = coreObserver.getReference().getValue();
       const currentPosition = lastObservation.position.isAwaitingFuturePosition()
         ? lastObservation.position.getWanted()
-        : coreObserver.getCurrentTime() ?? lastObservation.position.getPolled();
+        : (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
       const isPaused =
         lastObservation.paused.pending ??
         coreObserver.getIsPaused() ??
@@ -964,6 +1051,93 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     rebufferingController.start();
     return rebufferingController;
   }
+
+  /**
+   * Evaluates a list of codecs to determine their support status.
+   *
+   * @param {Array} codecsToCheck - The list of codecs to check.
+   * @returns {Array} - The list of evaluated codecs with their support status updated.
+   */
+  private getCodecsSupportInfo(
+    codecsToCheck: Array<{ mimeType: string; codec: string }>,
+  ): ICodecSupportInfo[] {
+    const codecsSupportInfo: ICodecSupportInfo[] = codecsToCheck.map((codecToCheck) => {
+      const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
+      const isSupported = isCodecSupported(inputCodec);
+      if (!isSupported) {
+        return {
+          mimeType: codecToCheck.mimeType,
+          codec: codecToCheck.codec,
+          supported: false,
+          supportedIfEncrypted: false,
+        };
+      }
+      /**
+       * `true` if the codec is supported when encrypted, `false` if it is not
+       * supported, or `undefined` if we cannot obtain that information.
+       */
+      let supportedIfEncrypted: boolean | undefined;
+      if (this._decryptionCapabilities.status === "uninitialized") {
+        supportedIfEncrypted = undefined;
+      } else if (this._decryptionCapabilities.status === "disabled") {
+        // It's ambiguous here, but let's say that no ContentDecryptor means that
+        // the codec is supported by it.
+        supportedIfEncrypted = true;
+      } else {
+        const contentDecryptor = this._decryptionCapabilities.value;
+        if (contentDecryptor.getState() !== ContentDecryptorState.Initializing) {
+          // No information is available regarding the support status.
+          // Defaulting to assume the codec is supported.
+          supportedIfEncrypted =
+            contentDecryptor.isCodecSupported(
+              codecToCheck.mimeType,
+              codecToCheck.codec,
+            ) ?? true;
+        }
+      }
+      return {
+        mimeType: codecToCheck.mimeType,
+        codec: codecToCheck.codec,
+        supported: isSupported,
+        supportedIfEncrypted,
+      };
+    });
+    return codecsSupportInfo;
+  }
+
+  /**
+   * Update the support status of all Representations in the Manifest.
+   *
+   * To call anytime either the Manifest is linked to new codecs or new means
+   * to test for codec support are available.
+   * @param {Object} manifest
+   */
+  private _refreshManifestCodecSupport(manifest: IManifest): void {
+    const codecsToTest = manifest.getCodecsWithUnknownSupport();
+    const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
+    if (codecsSupportInfo.length > 0) {
+      try {
+        manifest.updateCodecSupport(codecsSupportInfo);
+      } catch (err) {
+        this._onFatalError(err);
+      }
+    }
+  }
+}
+
+function createTextDisplayer(
+  mediaElement: IMediaElement,
+  textTrackOptions: ITextDisplayerOptions,
+): ITextDisplayer | null {
+  if (textTrackOptions.textTrackMode === "html" && features.htmlTextDisplayer !== null) {
+    return new features.htmlTextDisplayer(
+      mediaElement,
+      textTrackOptions.textTrackElement,
+    );
+  } else if (features.nativeTextDisplayer !== null) {
+    return new features.nativeTextDisplayer(mediaElement);
+  }
+  return null;
 }
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
@@ -990,12 +1164,39 @@ export interface IInitializeArguments {
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch: "continue" | "reload";
   };
+  /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
   /** Every encryption configuration set. */
   keySystems: IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
   lowLatencyMode: boolean;
   /** Settings linked to Manifest requests. */
-  manifestRequestSettings: IManifestFetcherSettings;
+  manifestRequestSettings: {
+    /** Maximum number of time a request on error will be retried. */
+    maxRetry: number | undefined;
+    /**
+     * Timeout after which request are aborted and, depending on other options,
+     * retried.
+     * To set to `-1` for no timeout.
+     * `undefined` will lead to a default, large, timeout being used.
+     */
+    requestTimeout: number | undefined;
+    /**
+     * Connection timeout, in milliseconds, after which the request is canceled
+     * if the responses headers has not being received.
+     * Do not set or set to "undefined" to disable it.
+     */
+    connectionTimeout: number | undefined;
+    /** Limit the frequency of Manifest updates. */
+    minimumManifestUpdateInterval: number;
+    /**
+     * Potential first Manifest to rely on, allowing to skip the initial Manifest
+     * request.
+     */
+    initialManifest: IInitialManifest | undefined;
+  };
   /** Logic linked Manifest and segment loading and parsing. */
   transport: ITransportPipelines;
   /** Configuration for the segment requesting logic. */
@@ -1033,20 +1234,15 @@ interface IBufferingMediaSettings {
   /* Manifest of the content we want to play. */
   manifest: IManifest;
   /** Media Element on which the content will be played. */
-  mediaElement: HTMLMediaElement;
+  mediaElement: IMediaElement;
   /** Emit playback conditions regularly. */
   playbackObserver: IMediaElementPlaybackObserver;
   /** Estimate the right Representation. */
   representationEstimator: IRepresentationEstimator;
   /** Module to facilitate segment fetching. */
-  segmentFetcherCreator: SegmentFetcherCreator;
+  segmentQueueCreator: SegmentQueueCreator;
   /** Last wanted playback rate. */
   speed: IReadOnlySharedReference<number>;
-  /**
-   * Reference through which decryption initialization information can be
-   * communicated.
-   */
-  protectionRef: SharedReference<IContentProtection | null>;
   /** `MediaSource` element on which the media will be buffered. */
   mediaSource: MainMediaSourceInterface;
   /** The initial position to seek to in media time, in seconds. */
@@ -1088,17 +1284,17 @@ function updateKeyIdsDecipherabilityOnManifest(
     if (contentKIDs !== undefined) {
       for (const elt of contentKIDs) {
         for (const blacklistedKeyId of blacklistedKeyIds) {
-          if (areArraysOfNumbersEqual(blacklistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(blacklistedKeyId, elt)) {
             return false;
           }
         }
         for (const whitelistedKeyId of whitelistedKeyIds) {
-          if (areArraysOfNumbersEqual(whitelistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(whitelistedKeyId, elt)) {
             return true;
           }
         }
         for (const delistedKeyId of delistedKeyIds) {
-          if (areArraysOfNumbersEqual(delistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(delistedKeyId, elt)) {
             return undefined;
           }
         }
@@ -1145,3 +1341,19 @@ function blackListProtectionDataOnManifest(
     return rep.decipherable;
   });
 }
+
+/**
+ * Function to call when you want to "reload" the MediaSource: basically
+ * restarting playback on a new MediaSource for the same content (it may
+ * be for varied reasons, such as ensuring data buffers are empty, or
+ * restarting after some kind of fatal error).
+ * @param {Object} reloadOrder
+ * @param {number} reloadOrder.position - Position in seconds at which we
+ * should restart from when playback restarts.
+ * @param {boolean} reloadOrder.autoPlay - If `true` we will directly play
+ * once enough data is re-loaded.
+ */
+type IReloadMediaSourceCallback = (reloadOrder: {
+  position: number;
+  autoPlay: boolean;
+}) => void;

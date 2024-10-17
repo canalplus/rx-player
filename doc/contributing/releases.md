@@ -106,75 +106,13 @@ The RxPlayer has several types of releases:
 
   When published on `npm`, they have the `canal` tag.
 
-## Workflow for an official release
+## To publish an official release
 
-Before each official releases, a list of steps are performed by its maintainers:
+Before publishing an official RxPlayer releases, a list of steps should be performed by
+its maintainers.
 
-1. Checkout the branch that will be the base of the next release: generally it is either
-   `stable` (for patch releases) or `dev` (for minor versions).
+First, checkout the branch that will be the base of the next release: generally it is
+either `stable` (for patch releases) or `dev` (for minor and major versions).
 
-2. Rebase that branch on the `stable` branch if it is a different branch (e.g.:
-   `git rebase stable --rebase-merges`).
-
-3. From there, create a branch named `release/vXX.XX.XX`, where XX.XX.XX is the semver of
-   the wanted new version.
-
-4. Update `CHANGELOG.md` file to add this new version's changelog and commit it.
-
-5. Call the npm script `update-version` for that release
-   (`npm run update-version XX.XX.XX`, where XX.XX.XX is the wanted new version SEMVER).
-
-6. Check that the modifications it did make sense and create a signed commit (`-S` option
-   when commiting with git) updating the staged built files in step `8`.
-
-7. Open a Pull Request on Github, named after the branch, putting the release's changelog
-   in the Pull Request's comment, and optional additional comments.
-
-8. Check that sonarcloud validated that branch. Resolve every bug and code smells it
-   finds.
-
-9. Ensure that the CI doesn't detect any issue and fix them if that's the case.
-
-10. Run sanity checks on myCanal's repository, by using this new version instead as a
-    dependency.
-
-11. If and only if no problem was seen perform a signed merge without fast-forward of the
-    release branch into master
-
-12. Launch script to update the gh-pages demo (`./scripts/update_gh-pages_demo`)
-
-13. Launch script to update the gh-pages doc (`./scripts/update_gh-pages_doc`)
-
-14. Check that both of those worked, perform manual updates and update the concerned
-    scripts in other cases.
-
-15. Check that the new demo and the new doc work as expected
-
-16. If all seems good, push to origin/stable your local stable branch.
-
-17. run `npm publish` to publish the new version on npm's registry.
-
-18. Test that importing this new version doesn't cause bundling issues (you may do so
-    through a ad-hoc package, or just myCanal for example).
-
-19. Create the new release through github's interface - don't forget to include the built
-    files on it.
-
-If any of the testing steps failed (after step `3`), run the following steps:
-
-1. Fix the problem (!)
-
-2. Create a commit for the fix with a meaningful message.
-
-3. If (and only if) it make sense, update the changelog and create a commit for it.
-
-4. Call the npm script `update-version` for that release
-   (`npm run update-version XX.XX.XX`, where XX.XX.XX is the wanted new version SEMVER).
-
-5. Check that the modifications of that last step made sense and create a signed commit
-   (`-S` option when commiting with git) updating the staged built files.
-
-6. Depending on the nature of the fix, either create a new branch and add a Pull Request
-   to merge it in the release branch or push it to the release branch directly.
-
-7. Go back to step `8` (sonarcloud + CI) of the previous workflow
+Then, the following steps are mostly automatized by the `releases:official` script, which
+may be run by calling `npm run releases:official`.

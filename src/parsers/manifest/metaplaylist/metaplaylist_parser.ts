@@ -22,7 +22,7 @@ import type { ITrackType } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
+import { getFilenameIndexInUrl } from "../../../utils/url-utils";
 import type {
   IParsedAdaptation,
   IParsedAdaptations,
@@ -91,7 +91,7 @@ export default function parseMetaPlaylist(
     try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       parsedData = JSON.parse(data);
-    } catch (error) {
+    } catch (_error) {
       throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");
     }
   } else {
@@ -118,8 +118,7 @@ export default function parseMetaPlaylist(
     throw new Error("MPL Parser: No content found.");
   }
   const ressources: Array<{ url: string; transportType: string }> = [];
-  for (let i = 0; i < contents.length; i++) {
-    const content = contents[i];
+  for (const content of contents) {
     if (
       isNullOrUndefined(content.url) ||
       isNullOrUndefined(content.startTime) ||

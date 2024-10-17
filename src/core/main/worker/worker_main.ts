@@ -3,8 +3,6 @@ import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
 import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
-import MainCodecSupportProber from "../../../mse/main_codec_support_prober";
-import WorkerCodecSupportProber from "../../../mse/worker_codec_support_prober";
 import type {
   IContentInitializationData,
   IDiscontinuityUpdateWorkerMessagePayload,
@@ -21,7 +19,7 @@ import type { IPlayerError, ITrackType } from "../../../public_types";
 import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
 import assert, { assertUnreachable } from "../../../utils/assert";
-import type { ILoggerLevel } from "../../../utils/logger";
+import type { ILogFormat, ILoggerLevel } from "../../../utils/logger";
 import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
@@ -82,6 +80,9 @@ export default function initializeWorkerMain() {
    */
   let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
 
+  onmessageerror = (_msg: MessageEvent) => {
+    log.error("MTCI: Error when receiving message from main thread.");
+  };
   onmessage = function (e: MessageEvent<IMainThreadMessage>) {
     log.debug("Worker: received message", e.data.type);
 
@@ -91,7 +92,11 @@ export default function initializeWorkerMain() {
         assert(!isInitialized);
         isInitialized = true;
         scaleTimestamp(msg.value);
-        updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
+        updateLoggerLevel(
+          msg.value.logLevel,
+          msg.value.logFormat,
+          msg.value.sendBackLogs,
+        );
         if (msg.value.dashWasmUrl !== undefined && dashWasmParser.isCompatible()) {
           dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
             const error = err instanceof Error ? err.toString() : "Unknown Error";
@@ -107,15 +112,15 @@ export default function initializeWorkerMain() {
           });
         }
 
-        features.codecSupportProber = msg.value.hasMseInWorker
-          ? MainCodecSupportProber
-          : WorkerCodecSupportProber;
-
         sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
         break;
 
       case MainThreadMessageType.LogLevelUpdate:
-        updateLoggerLevel(msg.value.logLevel, msg.value.sendBackLogs);
+        updateLoggerLevel(
+          msg.value.logLevel,
+          msg.value.logFormat,
+          msg.value.sendBackLogs,
+        );
         break;
 
       case MainThreadMessageType.PrepareContent:
@@ -283,13 +288,9 @@ export default function initializeWorkerMain() {
         if (preparedContent === null || preparedContent.manifest === null) {
           return;
         }
-        if (typeof features.codecSupportProber?.updateCache === "function") {
-          for (const { mimeType, codec, result } of msg.value) {
-            features.codecSupportProber.updateCache(mimeType, codec, result);
-          }
-        }
+        const newEvaluatedCodecs = msg.value;
         try {
-          const warning = preparedContent.manifest.refreshCodecSupport(msg.value);
+          const warning = preparedContent.manifest.updateCodecSupport(newEvaluatedCodecs);
           if (warning !== null) {
             sendMessage({
               type: WorkerMessageType.Warning,
@@ -403,6 +404,11 @@ export default function initializeWorkerMain() {
         break;
       }
 
+      case MainThreadMessageType.ConfigUpdate: {
+        config.update(msg.value);
+        break;
+      }
+
       default:
         assertUnreachable(msg);
     }
@@ -508,11 +514,12 @@ function loadOrReloadPreparedContent(
   }
   const {
     contentId,
+    cmcdDataBuilder,
     manifest,
     mediaSource,
     representationEstimator,
     segmentSinksStore,
-    segmentFetcherCreator,
+    segmentQueueCreator,
   } = preparedContent;
   const { drmSystemId, enableFastSwitching, initialTime, onCodecSwitch } = val;
   playbackObservationRef.onUpdate((observation) => {
@@ -554,6 +561,10 @@ function loadOrReloadPreparedContent(
     sendMessage,
     currentLoadCanceller.signal,
   );
+  cmcdDataBuilder?.startMonitoringPlayback(playbackObserver);
+  currentLoadCanceller.signal.register(() => {
+    cmcdDataBuilder?.stopMonitoringPlayback();
+  });
 
   const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
     manifest,
@@ -583,7 +594,7 @@ function loadOrReloadPreparedContent(
     playbackObserver,
     representationEstimator,
     segmentSinksStore,
-    segmentFetcherCreator,
+    segmentQueueCreator,
     {
       wantedBufferAhead,
       maxVideoBufferSize,
@@ -741,6 +752,7 @@ function loadOrReloadPreparedContent(
           }
         }
 
+        contentTimeBoundariesObserver.onPeriodCleared(value.type, value.period);
         preparedContent.trackChoiceSetter.removeTrackSetter(value.period.id, value.type);
         sendMessage({
           type: WorkerMessageType.PeriodStreamCleared,
@@ -750,6 +762,13 @@ function loadOrReloadPreparedContent(
       },
 
       bitrateEstimateChange(payload) {
+        if (preparedContent !== null) {
+          preparedContent.cmcdDataBuilder?.updateThroughput(
+            payload.type,
+            payload.bitrate,
+          );
+        }
+
         // TODO for low-latency contents it is __VERY__ frequent.
         // Considering this is only for an unimportant undocumented API, we may
         // throttle such messages. (e.g. max one per 2 seconds for each type?).
@@ -873,6 +892,10 @@ function loadOrReloadPreparedContent(
         );
       },
       (err: unknown) => {
+        if (TaskCanceller.isCancellationError(err)) {
+          log.info("WP: A reloading operation was cancelled");
+          return;
+        }
         sendMessage({
           type: WorkerMessageType.Error,
           contentId,
@@ -883,11 +906,17 @@ function loadOrReloadPreparedContent(
   }
 }
 
-function updateLoggerLevel(logLevel: ILoggerLevel, sendBackLogs: boolean): void {
+function updateLoggerLevel(
+  logLevel: ILoggerLevel,
+  logFormat: ILogFormat,
+  sendBackLogs: boolean,
+): void {
   if (!sendBackLogs) {
-    log.setLevel(logLevel);
+    log.setLevel(logLevel, logFormat);
   } else {
-    log.setLevel(logLevel, (levelStr, logs) => {
+    // Here we force the log format to "standard" as the full formatting will be
+    // performed on main thread.
+    log.setLevel(logLevel, "standard", (levelStr, logs) => {
       const sentLogs = logs.map((e) => {
         if (e instanceof Error) {
           return formatErrorForSender(e);

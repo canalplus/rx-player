@@ -28,8 +28,7 @@ export default function parseTtmlToNative(
 ): Array<TextTrackCue | ICompatVTTCue> {
   const parsedCues = parseTtml(str, timeOffset);
   const cues: Array<TextTrackCue | ICompatVTTCue> = [];
-  for (let i = 0; i < parsedCues.length; i++) {
-    const parsedCue = parsedCues[i];
+  for (const parsedCue of parsedCues) {
     const cue = parseCue(parsedCue);
     if (cue !== null) {
       cues.push(cue);

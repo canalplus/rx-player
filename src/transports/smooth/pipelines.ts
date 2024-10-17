@@ -41,6 +41,7 @@ import type {
   ITransportOptions,
   ITransportPipelines,
 } from "../types";
+import addQueryString from "../utils/add_query_string";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
 import generateManifestLoader from "../utils/generate_manifest_loader";
 import extractTimingsInfos from "./extract_timings_infos";
@@ -56,7 +57,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
   const manifestLoaderOptions = {
     customManifestLoader: transportOptions.manifestLoader,
   };
-  const manifestLoader = generateManifestLoader(manifestLoaderOptions, "text");
+  const manifestLoader = generateManifestLoader(manifestLoaderOptions, "text", null);
 
   const manifestPipeline = {
     loadManifest: manifestLoader,
@@ -219,7 +220,14 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
       const isMP4 = isMP4EmbeddedTrack(context.mimeType);
       if (!isMP4) {
         return request({
-          url,
+          url:
+            loaderOptions.cmcdPayload?.type === "query"
+              ? addQueryString(url, loaderOptions.cmcdPayload.value)
+              : url,
+          headers:
+            loaderOptions.cmcdPayload?.type === "headers"
+              ? loaderOptions.cmcdPayload.value
+              : undefined,
           responseType: "text",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -231,7 +239,14 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
         }));
       } else {
         return request({
-          url,
+          url:
+            loaderOptions.cmcdPayload?.type === "query"
+              ? addQueryString(url, loaderOptions.cmcdPayload.value)
+              : url,
+          headers:
+            loaderOptions.cmcdPayload?.type === "headers"
+              ? loaderOptions.cmcdPayload.value
+              : undefined,
           responseType: "arraybuffer",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -335,6 +350,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
         if (
           mimeType === "application/ttml+xml+mp4" ||
           lcCodec === "stpp" ||
+          lcCodec === "stpp.ttml" ||
           lcCodec === "stpp.ttml.im1t"
         ) {
           _sdType = "ttml";
@@ -408,6 +424,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
   };
 
   return {
+    transportName: "smooth",
     manifest: manifestPipeline,
     audio: audioVideoPipeline,
     video: audioVideoPipeline,

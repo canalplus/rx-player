@@ -8,7 +8,6 @@ export type {
   // Decrypt Metadata
   IContentProtection,
   IProcessedProtectionData,
-
   // Text Displayer Metadata
   ITextDisplayer,
   ITextDisplayerData,

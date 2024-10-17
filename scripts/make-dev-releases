@@ -34,12 +34,21 @@
 
 set -e
 
+# Log a line to sterr and exit with error code 1
+err() {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
 if [ $# -eq 0 ]; then
   read -r -p "Please enter the wanted version number (example: 4.12.1): " version
+  echo ""
   if [ -z "${version}" ]; then
-    echo "Please enter a valid version number"
-    exit 1
+    # TODO SEMVER REGEX?
+    err "Please enter a valid version number next time."
   fi
+else
+  version=$1
 fi
 
 if [ $# -lt 2 ]; then
@@ -47,12 +56,96 @@ if [ $# -lt 2 ]; then
   if [ -z "${incr}" ]; then
     incr="00"
   fi
+else
+  incr=$2
 fi
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 date=$(date "+%Y%m%d")
-dev_branch="release/v${version}-dev.${date}${incr}"
-canal_branch="release/v${version}-canal.${date}${incr}"
+dev_version="${version}-dev.${date}${incr}"
+canal_version="${version}-canal.${date}${incr}"
+dev_branch="release/v${dev_version}"
+canal_branch="release/v${canal_version}"
+
+if [ -n "$(git status --porcelain)" ]; then
+  err "There is unstaged changes in your worktree. Please commit your changes or stash them before creating the release."
+fi
+
+echo "This script will create the dev versions: $dev_version and $canal_version"
+
+echo "checking that the branches do not already exist locally or remotely..."
+if ! [ -z $(git branch --list "$dev_branch") ]; then
+  err "Branch name \"$dev_branch\" already exists locally. Please delete it first."
+fi
+if ! [ -z $(git branch --list "$canal_branch") ]; then
+  err "Branch name \"$canal_branch\" already exists locally. Please delete it first."
+fi
+if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$dev_branch") ]; then
+  err "Branch name \"$dev_branch\" already exists remotely. Please delete it first."
+fi
+if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$canal_branch") ]; then
+  err "Branch name \"$canal_branch\" already exists remotely. Please delete it first."
+fi
+
+echo "checking that the versions are not already published on npm..."
+if npm view rx-player@$dev_version >/dev/null 2>&1; then
+  err "Version already published to npm: $version-dev.${date}${incr}"
+fi
+
+if npm view rx-player@$canal_version >/dev/null 2>&1; then
+  err "Version already published to npm: $version-canal.${date}${incr}"
+fi
+
+# Make dev Changelog
+npm run releases:changelog -- $dev_version -d
+
+$EDITOR CHANGELOG.md
+
+if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
+  echo "-- Current CHANGELOG.md Status: --"
+  echo ""
+  git status CHANGELOG.md
+
+  while :; do
+    echo ""
+    echo "We will push this CHANGELOG.md update to ${current_branch}."
+    read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
+    echo ""
+
+    if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
+      echo ""
+      echo ""
+      echo "+- help -------------------------------------------------+"
+      echo "| y: commit and continue                                 |"
+      echo "| d: see diff                                            |"
+      echo "| s: see status                                          |"
+      echo "| a: abort script from here                              |"
+      echo "| c: skip CHANGELOG.md update and go to the next step    |"
+      echo "| h: see this help                                       |"
+      echo "+--------------------------------------------------------+"
+    elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
+      git add CHANGELOG.md
+      git commit -m "Update CHANGELOG.md for v$dev_version"
+      git push git@github.com:canalplus/rx-player.git $current_branch
+      break
+    elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
+      git diff CHANGELOG.md || true # ignore when return 1
+    elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
+      git status CHANGELOG.md
+    elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
+      echo "exiting"
+      exit 0
+    elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
+      git checkout CHANGELOG.md
+    else
+      echo "invalid input"
+    fi
+  done
+fi
+
+if [ -n "$(git status --porcelain)" ]; then
+  err "Unexpected diff in \"${current_branch}\""
+fi
 
 git checkout -b ${dev_branch}
 ./scripts/update-version $version-dev.${date}${incr}
@@ -62,9 +155,9 @@ while true; do
   read -n1 -p "Do you wish to push and publish the dev build? [y/n] " yn
   echo ""
   case $yn in
-    [Yy]* ) break;;
-    [Nn]* ) exit;;
-    * ) echo "Please answer y or n.";;
+  [Yy]*) break ;;
+  [Nn]*) exit ;;
+  *) echo "Please answer y or n." ;;
   esac
 done
 git push origin ${dev_branch}
@@ -82,9 +175,9 @@ while true; do
   read -n1 -p "Do you wish to push and publish the canal build? [y/n] " yn
   echo ""
   case $yn in
-    [Yy]* ) break;;
-    [Nn]* ) exit;;
-    * ) echo "Please answer y or n.";;
+  [Yy]*) break ;;
+  [Nn]*) exit ;;
+  *) echo "Please answer y or n." ;;
   esac
 done
 npm publish --tag canal-v4

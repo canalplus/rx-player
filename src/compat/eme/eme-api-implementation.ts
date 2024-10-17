@@ -3,8 +3,9 @@ import assert from "../../utils/assert";
 import globalScope from "../../utils/global_scope";
 import isNode from "../../utils/is_node";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import objectAssign from "../../utils/object_assign";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import type { ICompatHTMLMediaElement } from "../browser_compatibility_types";
+import type { IMediaElement } from "../browser_compatibility_types";
 import { isIE11 } from "../browser_detection";
 import type { IEventTargetLike } from "../event_listeners";
 import { createCompatibleEventListener } from "../event_listeners";
@@ -19,7 +20,10 @@ import getMozMediaKeysCallbacks, {
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./custom_media_keys/old_webkit_media_keys";
-import type { ICustomMediaKeys } from "./custom_media_keys/types";
+import type {
+  ICustomMediaEncryptedEvent,
+  ICustomMediaKeys,
+} from "./custom_media_keys/types";
 import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
 import { WebKitMediaKeysConstructor } from "./custom_media_keys/webkit_media_keys_constructor";
 
@@ -63,7 +67,7 @@ export interface IEmeApiImplementation {
    */
   onEncrypted: (
     target: IEventTargetLike,
-    listener: (evt: unknown) => void,
+    listener: (evt: ICustomMediaEncryptedEvent) => void,
     cancelSignal: CancellationSignal,
   ) => void;
 
@@ -77,7 +81,7 @@ export interface IEmeApiImplementation {
    * scenario.
    */
   setMediaKeys: (
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 
@@ -143,8 +147,8 @@ function getEmeApiImplementation(
     let createCustomMediaKeys: (keyType: string) => ICustomMediaKeys;
 
     if (preferredApiType === "webkit" && WebKitMediaKeysConstructor !== undefined) {
-      onEncrypted = createCompatibleEventListener(["needkey"]);
       const callbacks = getWebKitMediaKeysCallbacks();
+      onEncrypted = createOnEncryptedForWebkit();
       isTypeSupported = callbacks.isTypeSupported;
       createCustomMediaKeys = callbacks.createCustomMediaKeys;
       setMediaKeys = callbacks.setMediaKeys;
@@ -160,7 +164,7 @@ function getEmeApiImplementation(
         implementation = "older-webkit";
         // This is for WebKit with prefixed EME api
       } else if (WebKitMediaKeysConstructor !== undefined) {
-        onEncrypted = createCompatibleEventListener(["needkey"]);
+        onEncrypted = createOnEncryptedForWebkit();
         const callbacks = getWebKitMediaKeysCallbacks();
         isTypeSupported = callbacks.isTypeSupported;
         createCustomMediaKeys = callbacks.createCustomMediaKeys;
@@ -274,26 +278,50 @@ function getEmeApiImplementation(
     implementation,
   };
 }
+/**
+ * Create an event listener for the "webkitneedkey" event
+ * @returns
+ */
+function createOnEncryptedForWebkit(): IEmeApiImplementation["onEncrypted"] {
+  const compatibleEventListener = createCompatibleEventListener(
+    ["needkey"],
+    undefined /* prefixes */,
+  );
+  const onEncrypted = (
+    target: IEventTargetLike,
+    listener: (event: ICustomMediaEncryptedEvent) => void,
+    cancelSignal: CancellationSignal,
+  ) => {
+    compatibleEventListener(
+      target,
+      (event?: Event) => {
+        const patchedEvent = objectAssign(event as MediaEncryptedEvent, {
+          forceSessionRecreation: true,
+        });
+        listener(patchedEvent);
+      },
+      cancelSignal,
+    );
+  };
+  return onEncrypted;
+}
 
 /**
  * Set the given MediaKeys on the given HTMLMediaElement.
  * Emits null when done then complete.
- * @param {HTMLMediaElement} mediaElement
+ * @param {HTMLMediaElement} elt
  * @param {Object} mediaKeys
  * @returns {Promise}
  */
 function defaultSetMediaKeys(
-  mediaElement: HTMLMediaElement,
+  elt: IMediaElement,
   mediaKeys: MediaKeys | ICustomMediaKeys | null,
 ): Promise<unknown> {
   try {
     let ret: unknown;
-    const elt: ICompatHTMLMediaElement = mediaElement;
-    /* eslint-disable @typescript-eslint/unbound-method */
     if (typeof elt.setMediaKeys === "function") {
       ret = elt.setMediaKeys(mediaKeys as MediaKeys);
     }
-    /* eslint-enable @typescript-eslint/unbound-method */
 
     // If we get in the following code, it means that no compat case has been
     // found and no standard setMediaKeys API exists. This case is particulary

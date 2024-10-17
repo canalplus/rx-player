@@ -63,13 +63,14 @@ export default function parseEventStream(
       const currentElement = element.childNodes[i] as Element;
 
       switch (currentElement.nodeName) {
-        case "Event":
+        case "Event": {
           const [event, eventWarnings] = parseEvent(currentElement);
           eventStreamIR.children.events.push(event);
           if (eventWarnings.length > 0) {
             warnings = warnings.concat(eventWarnings);
           }
           break;
+        }
       }
     }
   }

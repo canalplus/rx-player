@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable no-restricted-properties */
-
 // Ugly transitory type to make duck typing work
 type ArrayWithFind<T> = T[] & {
   find(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: unknown): T;
@@ -29,7 +23,7 @@ type ArrayWithFind<T> = T[] & {
  * Array.prototype.find ponyfill.
  * @param {Array} arr
  * @param {Function} predicate
- * @param {*} context
+ * @param {*} thisArg
  * @returns {boolean}
  */
 export default function arrayFind<T>(
@@ -37,7 +31,9 @@ export default function arrayFind<T>(
   predicate: (arg: T, index: number, fullArray: T[]) => boolean,
   thisArg?: unknown,
 ): T | undefined {
+  // eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
   if (typeof (Array.prototype as ArrayWithFind<T>).find === "function") {
+    // eslint-disable-next-line no-restricted-properties
     return (arr as ArrayWithFind<T>).find(predicate, thisArg);
   }
 

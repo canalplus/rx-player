@@ -1,6 +1,3 @@
-# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
 name: RxPlayer Tests
 
 on:
@@ -29,7 +26,7 @@ jobs:
         with:
           toolchain: stable
 
-      - run: npm install
+      - run: npm ci
       - run: rustup target add wasm32-unknown-unknown
       - run: npm run fmt:prettier:check
       - run: npm run fmt:rust:check
@@ -49,7 +46,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      - run: npm install
+      - run: npm ci
       - run: npm run check
 
   unit_tests:
@@ -67,7 +64,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      - run: npm install
+      - run: npm ci
       - run: npm run test:unit
 
   integration_linux:
@@ -89,10 +86,8 @@ jobs:
       - run:
           sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
           ubuntu-restricted-extras
-      - run: npm install
+      - run: npm ci
       - run: npm run build
-      # Firefox seems to have issue with integration tests on GitHub actions only
-      # TODO to check
       - run: npm run test:integration
 
   memory_linux:
@@ -114,7 +109,5 @@ jobs:
       - run:
           sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
           ubuntu-restricted-extras
-      - run: npm install
-      # Firefox seems to have issue with integration tests on GitHub actions only
-      # TODO to check
+      - run: npm ci
       - run: npm run test:memory

@@ -21,8 +21,9 @@ import type {
 import TaskCanceller from "../../../utils/task_canceller";
 import type { IRepresentationEstimator } from "../../adaptive";
 import createAdaptiveRepresentationSelector from "../../adaptive";
+import CmcdDataBuilder from "../../cmcd";
 import type { IManifestRefreshSettings } from "../../fetchers";
-import { ManifestFetcher, SegmentFetcherCreator } from "../../fetchers";
+import { ManifestFetcher, SegmentQueueCreator } from "../../fetchers";
 import SegmentSinksStore from "../../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../../stream";
 import DecipherabilityFreezeDetector from "../common/DecipherabilityFreezeDetector";
@@ -99,10 +100,16 @@ export default class ContentPreparer {
         ...transportOptions,
         representationFilter,
       });
+
+      const cmcdDataBuilder =
+        context.cmcd === undefined ? null : new CmcdDataBuilder(context.cmcd);
       const manifestFetcher = new ManifestFetcher(
         url === undefined ? undefined : [url],
         dashPipelines,
-        context.manifestRetryOptions,
+        {
+          cmcdDataBuilder,
+          ...context.manifestRetryOptions,
+        },
       );
       const representationEstimator = createAdaptiveRepresentationSelector({
         initialBitrates: {
@@ -122,8 +129,9 @@ export default class ContentPreparer {
         },
       );
 
-      const segmentFetcherCreator = new SegmentFetcherCreator(
+      const segmentQueueCreator = new SegmentQueueCreator(
         dashPipelines,
+        cmcdDataBuilder,
         context.segmentRetryOptions,
         contentCanceller.signal,
       );
@@ -144,6 +152,7 @@ export default class ContentPreparer {
         segmentSinksStore,
       );
       this._currentContent = {
+        cmcdDataBuilder,
         contentId,
         decipherabilityFreezeDetector,
         mediaSource,
@@ -151,7 +160,7 @@ export default class ContentPreparer {
         manifestFetcher,
         representationEstimator,
         segmentSinksStore,
-        segmentFetcherCreator,
+        segmentQueueCreator,
         workerTextSender,
         trackChoiceSetter,
       };
@@ -314,6 +323,12 @@ export interface IPreparedContentData {
    */
   contentId: string;
   /**
+   * Perform data collection and retrieval for the "Common Media Client Data"
+   * scheme, which is a specification allowing to communicate about playback
+   * conditions with a CDN.
+   */
+  cmcdDataBuilder: CmcdDataBuilder | null;
+  /**
    * Interface to the MediaSource implementation, allowing to buffer audio
    * and video media segments.
    */
@@ -344,10 +359,10 @@ export interface IPreparedContentData {
   /** Allows to send timed text media data so it can be rendered. */
   workerTextSender: WorkerTextDisplayerInterface | null;
   /**
-   * Allows to create `SegmentFetcher` which simplifies complex media segment
+   * Allows to create `SegmentQueue` which simplifies complex media segment
    * fetching.
    */
-  segmentFetcherCreator: SegmentFetcherCreator;
+  segmentQueueCreator: SegmentQueueCreator;
   /**
    * Allows to store and update the wanted tracks and Representation inside that
    * track.

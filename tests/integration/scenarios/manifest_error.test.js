@@ -1,12 +1,9 @@
 import sleep from "../../utils/sleep.js";
-import sinon from "sinon";
 
 import RxPlayer from "../../../dist/es2017";
 
 import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-
-const MANIFEST_URL_INFOS = manifestInfos.url;
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on
@@ -31,220 +28,338 @@ const sleepWithoutFakeTimer = (function () {
  */
 describe("manifest error management", function () {
   let player;
-  let fakeServer;
 
   beforeEach(() => {
     player = new RxPlayer();
-    fakeServer = sinon.fakeServer.create();
   });
 
   afterEach(() => {
     player.dispose();
-    fakeServer.restore();
   });
 
   it("should retry to download the manifest 5 times", async () => {
     vi.useFakeTimers();
-    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (res) => res.respond(500));
-
+    const awaitingRequestCallbacks = [];
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
+      manifestLoader: async ({ url }, callbacks) => {
+        if (url !== manifestInfos.url) {
+          callbacks.fallback();
+          return;
+        }
+        awaitingRequestCallbacks.push(() => {
+          const err = new Error("Retry please");
+          err.canRetry = true;
+          callbacks.reject(err);
+        });
+      },
     });
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()();
+    await sleepWithoutFakeTimer(0);
+
+    vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()();
     await sleepWithoutFakeTimer(0);
     vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()();
     await sleepWithoutFakeTimer(0);
     vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()();
     await sleepWithoutFakeTimer(0);
     vi.advanceTimersByTime(5000);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
     await sleepWithoutFakeTimer(0);
-    vi.advanceTimersByTime(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()();
     await sleepWithoutFakeTimer(0);
 
     vi.useRealTimers();
 
     await sleep(5);
+    expect(awaitingRequestCallbacks).toHaveLength(0);
     const error = player.getError();
     expect(error).not.to.equal(null);
-    expect(error.type).to.equal(RxPlayer.ErrorTypes.NETWORK_ERROR);
+    expect(error.type).to.equal(RxPlayer.ErrorTypes.OTHER_ERROR);
     expect(error.code).to.equal(RxPlayer.ErrorCodes.PIPELINE_LOAD_ERROR);
   });
 
   it("should parse the manifest if it works the second time", async () => {
     vi.useFakeTimers();
 
-    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
-      return xhr.respond(500);
-    });
+    const awaitingRequestCallbacks = [];
 
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
+      manifestLoader: async ({ url }, callbacks) => {
+        if (url !== manifestInfos.url) {
+          callbacks.fallback();
+          return;
+        }
+        awaitingRequestCallbacks.push((shouldManifestRequestWork) => {
+          if (shouldManifestRequestWork) {
+            callbacks.fallback();
+            return;
+          }
+
+          const err = new Error("Retry please");
+          err.canRetry = true;
+          callbacks.reject(err);
+        });
+      },
     });
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
     await sleepWithoutFakeTimer(0);
-    fakeServer.restore();
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
     vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(true);
+    await sleepWithoutFakeTimer(0);
 
     expect(player.getError()).to.equal(null);
-    await sleepWithoutFakeTimer(50);
 
+    vi.advanceTimersByTime(100000);
     vi.useRealTimers();
 
-    await sleep(50);
+    await sleepWithoutFakeTimer(0);
     expect(player.getError()).to.equal(null);
   });
 
   it("should parse the manifest if it works the third time", async () => {
     vi.useFakeTimers();
-    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
-      return xhr.respond(500);
-    });
+
+    const awaitingRequestCallbacks = [];
 
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
+      manifestLoader: async ({ url }, callbacks) => {
+        if (url !== manifestInfos.url) {
+          callbacks.fallback();
+          return;
+        }
+        awaitingRequestCallbacks.push((shouldManifestRequestWork) => {
+          if (shouldManifestRequestWork) {
+            callbacks.fallback();
+            return;
+          }
+
+          const err = new Error("Retry please");
+          err.canRetry = true;
+          callbacks.reject(err);
+        });
+      },
     });
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
     await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
     vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
+    vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(true);
+    await sleepWithoutFakeTimer(0);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
-    await sleepWithoutFakeTimer(0);
-    fakeServer.restore();
-    vi.advanceTimersByTime(5000);
-
-    expect(player.getError()).to.equal(null);
-    await sleepWithoutFakeTimer(50);
-
+    vi.advanceTimersByTime(100000);
     vi.useRealTimers();
 
-    await sleep(1000);
+    await sleepWithoutFakeTimer(0);
     expect(player.getError()).to.equal(null);
-  }, 10000);
+  });
 
   it("should parse the manifest if it works the fourth time", async () => {
     vi.useFakeTimers();
-    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
-      return xhr.respond(500);
-    });
+
+    const awaitingRequestCallbacks = [];
 
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
+      manifestLoader: async ({ url }, callbacks) => {
+        if (url !== manifestInfos.url) {
+          callbacks.fallback();
+          return;
+        }
+        awaitingRequestCallbacks.push((shouldManifestRequestWork) => {
+          if (shouldManifestRequestWork) {
+            callbacks.fallback();
+            return;
+          }
+
+          const err = new Error("Retry please");
+          err.canRetry = true;
+          callbacks.reject(err);
+        });
+      },
     });
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
     await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
     vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
+    vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
+    vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(true);
+    await sleepWithoutFakeTimer(0);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
-    await sleepWithoutFakeTimer(0);
-    vi.advanceTimersByTime(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
-    await sleepWithoutFakeTimer(0);
-    fakeServer.restore();
-    vi.advanceTimersByTime(5000);
-
-    expect(player.getError()).to.equal(null);
-    await sleepWithoutFakeTimer(50);
-
+    vi.advanceTimersByTime(100000);
     vi.useRealTimers();
 
-    await sleep(5);
+    await sleepWithoutFakeTimer(0);
     expect(player.getError()).to.equal(null);
   });
 
   it("should parse the manifest if it works the fifth time", async () => {
     vi.useFakeTimers();
-    fakeServer.respondWith("GET", MANIFEST_URL_INFOS.url, (xhr) => {
-      return xhr.respond(500);
-    });
+
+    const awaitingRequestCallbacks = [];
 
     player.loadVideo({
       url: manifestInfos.url,
       transport: manifestInfos.transport,
+      manifestLoader: async ({ url }, callbacks) => {
+        if (url !== manifestInfos.url) {
+          callbacks.fallback();
+          return;
+        }
+        awaitingRequestCallbacks.push((shouldManifestRequestWork) => {
+          if (shouldManifestRequestWork) {
+            callbacks.fallback();
+            return;
+          }
+
+          const err = new Error("Retry please");
+          err.canRetry = true;
+          callbacks.reject(err);
+        });
+      },
     });
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
     await sleepWithoutFakeTimer(0);
-    vi.advanceTimersByTime(5000);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
-    await sleepWithoutFakeTimer(0);
     vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
+    vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
+    vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(false);
+    await sleepWithoutFakeTimer(0);
+
+    vi.advanceTimersByTime(5000);
+    await sleepWithoutFakeTimer(0);
+    expect(player.getError()).to.equal(null);
+
+    await sleepWithoutFakeTimer(0);
+    expect(awaitingRequestCallbacks).toHaveLength(1);
+    awaitingRequestCallbacks.pop()(true);
+    await sleepWithoutFakeTimer(0);
 
     expect(player.getError()).to.equal(null);
 
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
-    await sleepWithoutFakeTimer(0);
-    vi.advanceTimersByTime(5000);
-
-    expect(player.getError()).to.equal(null);
-
-    await sleepWithoutFakeTimer(50);
-    fakeServer.respond();
-    await sleepWithoutFakeTimer(0);
-    fakeServer.restore();
-    vi.advanceTimersByTime(5000);
-
-    expect(player.getError()).to.equal(null);
-    await sleepWithoutFakeTimer(50);
-
+    vi.advanceTimersByTime(10000);
     vi.useRealTimers();
 
-    await sleep(5);
+    await sleepWithoutFakeTimer(0);
     expect(player.getError()).to.equal(null);
   });
 });

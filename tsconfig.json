@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
     "noImplicitAny": true,
+    "noUncheckedSideEffectImports": true,
     "strict": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
@@ -16,8 +17,8 @@
     "noUnusedLocals": true,
     "moduleResolution": "node",
     "module": "es6",
-    "typeRoots": ["./src/globals.prod.d.ts", "./node_modules/@types"],
+    "typeRoots": ["./src/globals.prod.d.ts", "./node_modules/@types"]
   },
   "include": ["./src/**/*.ts"],
-  "exclude": ["./src/**/*.test.ts", "./src/**/__tests__/**", "./src/globals.dev.d.ts"],
+  "exclude": ["./src/**/*.test.ts", "./src/**/__tests__/**", "./src/globals.dev.d.ts"]
 }

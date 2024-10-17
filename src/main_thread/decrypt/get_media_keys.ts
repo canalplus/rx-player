@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import canReuseMediaKeys from "../../compat/can_reuse_media_keys";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import { EncryptedMediaError } from "../../errors";
@@ -22,6 +23,7 @@ import type { IKeySystemOption } from "../../public_types";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import getMediaKeySystemAccess from "./find_key_system";
+import type { ICodecSupportList } from "./find_key_system";
 import type { IMediaKeySessionStores } from "./types";
 import LoadedSessionsStore from "./utils/loaded_sessions_store";
 import MediaKeysInfosStore from "./utils/media_keys_infos_store";
@@ -49,12 +51,19 @@ function createPersistentSessionsStorage(
 export interface IMediaKeysInfos {
   /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
   mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  /**
+   * The MediaKeySystemConfiguration that has been provided to the
+   * `requestMediaKeySystemAccess` API.
+   */
+  askedConfiguration: MediaKeySystemConfiguration;
   /** The MediaKeys instance. */
   mediaKeys: MediaKeys | ICustomMediaKeys;
   /** Stores allowing to create and retrieve MediaKeySessions. */
   stores: IMediaKeySessionStores;
   /** IKeySystemOption compatible to the created MediaKeys instance. */
   options: IKeySystemOption;
+  /** The codecs support */
+  codecSupport: ICodecSupportList;
 }
 
 /**
@@ -71,7 +80,7 @@ export interface IMediaKeysInfos {
  * @returns {Promise.<Object>}
  */
 export default async function getMediaKeysInfos(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   keySystemsConfigs: IKeySystemOption[],
   cancelSignal: CancellationSignal,
 ): Promise<IMediaKeysInfos> {
@@ -84,15 +93,17 @@ export default async function getMediaKeysInfos(
     throw cancelSignal.cancellationError;
   }
 
-  const { options, mediaKeySystemAccess } = evt.value;
+  const { options, mediaKeySystemAccess, askedConfiguration, codecSupport } = evt.value;
   const currentState = MediaKeysInfosStore.getState(mediaElement);
   const persistentSessionsStore = createPersistentSessionsStorage(options);
 
   if (
+    evt.value.options.reuseMediaKeys !== false &&
     canReuseMediaKeys() &&
     currentState !== null &&
     evt.type === "reuse-media-key-system-access"
   ) {
+    log.debug("DRM: Reusing already created MediaKeys");
     const { mediaKeys, loadedSessionsStore } = currentState;
 
     // We might just rely on the currently attached MediaKeys instance.
@@ -106,8 +117,10 @@ export default async function getMediaKeysInfos(
       return {
         mediaKeys,
         mediaKeySystemAccess,
+        askedConfiguration,
         stores: { loadedSessionsStore, persistentSessionsStore },
         options,
+        codecSupport,
       };
     }
   }
@@ -118,8 +131,10 @@ export default async function getMediaKeysInfos(
   return {
     mediaKeys,
     mediaKeySystemAccess,
+    askedConfiguration,
     stores: { loadedSessionsStore, persistentSessionsStore },
     options,
+    codecSupport,
   };
 }
 

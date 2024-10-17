@@ -31,7 +31,7 @@ Those modules are:
 
   Ease up text/audio/video track switching to provide a simple-to-use API.
 
-  It as another sister block the `MediaElementTracksStore`
+  It has another sister block the `MediaElementTracksStore`
   (./tracks_store/media_element_tracks_store.ts), has the same role but for "directfile"
   contents - which are contents directly played by the browser (by setting the media file
   as the `src` of a media element).

@@ -19,6 +19,7 @@
  * It always should be imported through the `features` object.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import clearElementSrc from "../../compat/clear_element_src";
 import type { MediaError } from "../../errors";
 import log from "../../log";
@@ -28,7 +29,6 @@ import assert from "../../utils/assert";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
 import { ContentInitializer } from "./types";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
@@ -85,7 +85,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * information.
    */
   public start(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     const cancelSignal = this._initCanceller.signal;
@@ -93,17 +93,9 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
     clearElementSrc(mediaElement);
 
-    /**
-     * Create dummy encryption data emitter, as those are not sent from the
-     * RxPlayer for directfile contents.
-     */
-    const decryptionRef = new SharedReference(null);
-    decryptionRef.finish();
-
-    const drmInitRef = initializeContentDecryption(
+    const { statusRef: drmInitRef } = initializeContentDecryption(
       mediaElement,
       keySystems,
-      decryptionRef,
       {
         onError: (err) => this._onFatalError(err),
         onWarning: (err: IPlayerError) => this.trigger("warning", err),
@@ -210,7 +202,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * @param {Object} playbackObserver
    */
   private _seekAndPlay(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     const cancelSignal = this._initCanceller.signal;
@@ -260,9 +252,9 @@ export default class DirectFileContentInitializer extends ContentInitializer {
  * @returns {number}
  */
 function getDirectFileInitialTime(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   startAt?: IInitialTimeOptions,
-): number {
+): number | undefined {
   if (isNullOrUndefined(startAt)) {
     return 0;
   }
@@ -276,28 +268,38 @@ function getDirectFileInitialTime(
   }
 
   const duration = mediaElement.duration;
-
   if (typeof startAt.fromLastPosition === "number") {
-    if (isNullOrUndefined(duration) || !isFinite(duration)) {
-      log.warn(
-        "startAt.fromLastPosition set but no known duration, " + "beginning at 0.",
-      );
-      return 0;
+    if (!isNullOrUndefined(duration) && isFinite(duration)) {
+      return Math.max(0, duration + startAt.fromLastPosition);
     }
-    return Math.max(0, duration + startAt.fromLastPosition);
+
+    if (mediaElement.seekable.length > 0) {
+      const lastSegmentEnd = mediaElement.seekable.end(mediaElement.seekable.length - 1);
+      if (isFinite(lastSegmentEnd)) {
+        return Math.max(0, lastSegmentEnd + startAt.fromLastPosition);
+      }
+    }
+    log.warn(
+      "Init: startAt.fromLastPosition set but no known duration, " +
+        "it may be too soon to seek",
+    );
+    return undefined;
   } else if (typeof startAt.fromLivePosition === "number") {
     const livePosition =
       mediaElement.seekable.length > 0 ? mediaElement.seekable.end(0) : duration;
     if (isNullOrUndefined(livePosition)) {
       log.warn(
-        "startAt.fromLivePosition set but no known live position, " + "beginning at 0.",
+        "Init: startAt.fromLivePosition set but no known live position, " +
+          "beginning at 0.",
       );
       return 0;
     }
     return Math.max(0, livePosition + startAt.fromLivePosition);
   } else if (!isNullOrUndefined(startAt.percentage)) {
     if (isNullOrUndefined(duration) || !isFinite(duration)) {
-      log.warn("startAt.percentage set but no known duration, " + "beginning at 0.");
+      log.warn(
+        "Init: startAt.percentage set but no known duration, " + "beginning at 0.",
+      );
       return 0;
     }
     const { percentage } = startAt;

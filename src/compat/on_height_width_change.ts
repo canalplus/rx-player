@@ -26,9 +26,8 @@ export interface IResolution {
 }
 
 interface IResizeObserverConstructor {
-  /* eslint-disable @typescript-eslint/prefer-function-type */
+  // eslint-disable-next-line @typescript-eslint/prefer-function-type
   new (callback: IResizeObserverCallback): IResizeObserver;
-  /* eslint-enable @typescript-eslint/prefer-function-type */
 }
 
 interface IResizeObserver {

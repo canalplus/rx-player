@@ -1,12 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
+import type ICleanOldStoredPersistentInfo from "../clean_old_stored_persistent_info";
+import type PersistentSessionsStore from "../persistent_sessions_store";
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-function createPersistentSessionsStore() {
+function createPersistentSessionsStore(): PersistentSessionsStore {
   return {
     getLength(): number {
       return 3;
@@ -14,7 +10,7 @@ function createPersistentSessionsStore() {
     deleteOldSessions(): void {
       return;
     },
-  };
+  } as unknown as PersistentSessionsStore;
 }
 
 const emptyPersistentSessionsStore = {
@@ -27,7 +23,7 @@ const emptyPersistentSessionsStore = {
   deleteOldSessions(): void {
     return;
   },
-};
+} as unknown as PersistentSessionsStore;
 
 /**
  * Call `cleanOldStoredPersistentInfo` with the given persistentSessionsStore
@@ -35,16 +31,18 @@ const emptyPersistentSessionsStore = {
  * @param {Object} persistentSessionsStore
  * @param {number} limit
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function checkNothingHappen(persistentSessionsStore: any, limit: number) {
+async function checkNothingHappen(
+  persistentSessionsStore: PersistentSessionsStore,
+  limit: number,
+) {
   const mockDeleteLast = vi.spyOn(persistentSessionsStore, "deleteOldSessions");
   const mockLogInfo = vi.fn();
   vi.doMock("../../../../log", () => ({
     default: { info: mockLogInfo },
   }));
   const cleanOldStoredPersistentInfo = (
-    (await vi.importActual("../clean_old_stored_persistent_info")) as any
-  ).default;
+    await vi.importActual("../clean_old_stored_persistent_info")
+  ).default as typeof ICleanOldStoredPersistentInfo;
   cleanOldStoredPersistentInfo(persistentSessionsStore, limit);
   expect(mockDeleteLast).not.toHaveBeenCalled();
   expect(mockLogInfo).not.toHaveBeenCalled();
@@ -59,8 +57,7 @@ async function checkNothingHappen(persistentSessionsStore: any, limit: number) {
  * @param {number} numberToRemove
  */
 async function checkRemoved(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  persistentSessionsStore: any,
+  persistentSessionsStore: PersistentSessionsStore,
   limit: number,
   numberToRemove: number,
 ) {
@@ -70,8 +67,8 @@ async function checkRemoved(
     default: { info: mockLogInfo },
   }));
   const cleanOldStoredPersistentInfo = (
-    (await vi.importActual("../clean_old_stored_persistent_info")) as any
-  ).default;
+    await vi.importActual("../clean_old_stored_persistent_info")
+  ).default as typeof ICleanOldStoredPersistentInfo;
   cleanOldStoredPersistentInfo(persistentSessionsStore, limit);
   expect(mockDeleteLast).toHaveBeenCalledTimes(1);
   expect(mockDeleteLast).toHaveBeenCalledWith(numberToRemove);

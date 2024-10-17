@@ -214,13 +214,13 @@ function parseContentProtection(
     contentProtectionIr.attributes.keyId !== undefined &&
     contentProtectionIr.attributes.keyId.length > 0
   ) {
-    const kidObj = { keyId: contentProtectionIr.attributes.keyId, systemId };
+    const kid = contentProtectionIr.attributes.keyId;
     if (representation.contentProtections === undefined) {
-      representation.contentProtections = { keyIds: [kidObj], initData: [] };
+      representation.contentProtections = { keyIds: [kid], initData: [] };
     } else if (representation.contentProtections.keyIds === undefined) {
-      representation.contentProtections.keyIds = [kidObj];
+      representation.contentProtections.keyIds = [kid];
     } else {
-      representation.contentProtections.keyIds.push(kidObj);
+      representation.contentProtections.keyIds.push(kid);
     }
   }
 

@@ -1,20 +1,14 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { ITNode } from "../../../../../../utils/xml-parser";
 import { parseXml } from "../../../../../../utils/xml-parser";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IContentProtection from "../ContentProtection";
 
 function testStringAttribute(attributeName: string, variableName?: string): void {
   const _variableName = variableName ?? attributeName;
 
   it(`should correctly parse a ContentProtection element with a correct ${attributeName} attribute`, async () => {
-    const parseContentProtection = (
-      (await vi.importActual("../ContentProtection")) as any
-    ).default;
+    const parseContentProtection = (await vi.importActual("../ContentProtection"))
+      .default as typeof IContentProtection;
     const element1 = parseXml(
       `<ContentProtection ${attributeName}="foobar" />`,
     )[0] as ITNode;
@@ -37,9 +31,8 @@ describe("DASH Node Parsers - ContentProtection", () => {
   });
 
   it("should correctly parse a ContentProtection element without attributes", async () => {
-    const parseContentProtection = (
-      (await vi.importActual("../ContentProtection")) as any
-    ).default;
+    const parseContentProtection = (await vi.importActual("../ContentProtection"))
+      .default as typeof IContentProtection;
     const element = parseXml("<ContentProtection />")[0] as ITNode;
     expect(parseContentProtection(element)).toEqual([
       { attributes: {}, children: { cencPssh: [] } },
@@ -58,9 +51,8 @@ describe("DASH Node Parsers - ContentProtection", () => {
     vi.doMock("../../../../../../utils/string_parsing", () => ({
       hexToBytes: mockHexToBytes,
     }));
-    const parseContentProtection = (
-      (await vi.importActual("../ContentProtection")) as any
-    ).default;
+    const parseContentProtection = (await vi.importActual("../ContentProtection"))
+      .default as typeof IContentProtection;
     const element1 = parseXml(
       '<ContentProtection cenc:default_KID="dead-beef" />',
     )[0] as ITNode;
@@ -81,9 +73,8 @@ describe("DASH Node Parsers - ContentProtection", () => {
     vi.doMock("../../../../../../utils/string_parsing", () => ({
       hexToBytes: mockHexToBytes,
     }));
-    const parseContentProtection = (
-      (await vi.importActual("../ContentProtection")) as any
-    ).default;
+    const parseContentProtection = (await vi.importActual("../ContentProtection"))
+      .default as typeof IContentProtection;
     const element = parseXml(
       `<ContentProtection
     schemeIdUri="foo"
@@ -101,9 +92,8 @@ describe("DASH Node Parsers - ContentProtection", () => {
   });
 
   it("should correctly parse a ContentProtection with cenc:pssh children", async () => {
-    const parseContentProtection = (
-      (await vi.importActual("../ContentProtection")) as any
-    ).default;
+    const parseContentProtection = (await vi.importActual("../ContentProtection"))
+      .default as typeof IContentProtection;
     const element = parseXml(
       `<ContentProtection>
     <cenc:pssh>AABBCC</cenc:pssh>
@@ -131,9 +121,8 @@ describe("DASH Node Parsers - ContentProtection", () => {
     vi.doMock("../../../../../../utils/string_parsing", () => ({
       hexToBytes: mockHexToBytes,
     }));
-    const parseContentProtection = (
-      (await vi.importActual("../ContentProtection")) as any
-    ).default;
+    const parseContentProtection = (await vi.importActual("../ContentProtection"))
+      .default as typeof IContentProtection;
     const element = parseXml(
       `<ContentProtection
     schemeIdUri="foo"
@@ -156,9 +145,8 @@ describe("DASH Node Parsers - ContentProtection", () => {
   });
 
   it("should return a warning if one of the cenc:pssh is invalid base64", async () => {
-    const parseContentProtection = (
-      (await vi.importActual("../ContentProtection")) as any
-    ).default;
+    const parseContentProtection = (await vi.importActual("../ContentProtection"))
+      .default as typeof IContentProtection;
     const element = parseXml(
       `<ContentProtection>
     <cenc:pssh>AA!BCC</cenc:pssh>

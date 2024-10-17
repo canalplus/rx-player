@@ -17,6 +17,7 @@
 import features from "../../features";
 import type { ITransportOptions, ITransportPipelines } from "../types";
 import generateManifestLoader from "../utils/generate_manifest_loader";
+import { addManifestIntegrityChecks } from "./integrity_checks";
 import generateManifestParser from "./manifest_parser";
 import generateSegmentLoader from "./segment_loader";
 import generateAudioVideoSegmentParser from "./segment_parser";
@@ -33,6 +34,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
   const manifestLoader = generateManifestLoader(
     { customManifestLoader: options.manifestLoader },
     mightUseDashWasmFeature() ? "text" : "arraybuffer",
+    options.checkManifestIntegrity === true ? addManifestIntegrityChecks : null,
   );
 
   const manifestParser = generateManifestParser(options);
@@ -42,6 +44,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
   const textTrackParser = generateTextTrackParser(options);
 
   return {
+    transportName: "dash",
     manifest: { loadManifest: manifestLoader, parseManifest: manifestParser },
     audio: {
       loadSegment: segmentLoader,

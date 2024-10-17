@@ -26,9 +26,11 @@ import SharedReference from "../utils/reference";
 import type { CancellationSignal } from "../utils/task_canceller";
 import type {
   ICompatDocument,
-  ICompatHTMLMediaElement,
   ICompatPictureInPictureWindow,
+  IEventTarget,
+  IMediaElement,
 } from "./browser_compatibility_types";
+import type { ICustomMediaEncryptedEvent } from "./eme/custom_media_keys/types";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -81,8 +83,14 @@ function eventPrefixed(eventNames: string[], prefixes?: string[]): string[] {
 }
 
 export interface IEventEmitterLike {
-  addEventListener: (eventName: string, handler: () => void) => void;
-  removeEventListener: (eventName: string, handler: () => void) => void;
+  addEventListener: (
+    eventName: string,
+    handler: EventListenerOrEventListenerObject,
+  ) => void;
+  removeEventListener: (
+    eventName: string,
+    handler: EventListenerOrEventListenerObject,
+  ) => void;
 }
 
 export type IEventTargetLike = HTMLElement | IEventEmitterLike | IEventEmitter<unknown>;
@@ -98,12 +106,31 @@ export type IEventTargetLike = HTMLElement | IEventEmitterLike | IEventEmitter<u
  * @returns {Function} - Returns function allowing to easily add a callback to
  * be triggered when that event is emitted on a given event target.
  */
+
+function createCompatibleEventListener(
+  eventNames: Array<"needkey" | "encrypted">,
+  prefixes?: string[],
+): (
+  element: IEventTargetLike,
+  listener: (event: ICustomMediaEncryptedEvent) => void,
+  cancelSignal: CancellationSignal,
+) => void;
+
 function createCompatibleEventListener(
   eventNames: string[],
   prefixes?: string[],
 ): (
   element: IEventTargetLike,
-  listener: (event?: unknown) => void,
+  listener: (event?: Event) => void,
+  cancelSignal: CancellationSignal,
+) => void;
+
+function createCompatibleEventListener(
+  eventNames: string[] | Array<"needkey" | "encrypted">,
+  prefixes?: string[],
+): (
+  element: IEventTargetLike,
+  listener: (event?: Event | MediaEncryptedEvent) => void,
   cancelSignal: CancellationSignal,
 ) => void {
   let mem: string | undefined;
@@ -111,13 +138,12 @@ function createCompatibleEventListener(
 
   return (
     element: IEventTargetLike,
-    listener: (event?: unknown) => void,
+    listener: (event?: Event) => void,
     cancelSignal: CancellationSignal,
   ) => {
     if (cancelSignal.isCancelled()) {
       return;
     }
-
     // if the element is a HTMLElement we can detect
     // the supported event, and memoize it in `mem`
     if (typeof HTMLElement !== "undefined" && element instanceof HTMLElement) {
@@ -150,20 +176,16 @@ function createCompatibleEventListener(
         (element as IEventEmitterLike).addEventListener(eventName, listener);
       } else {
         hasSetOnFn = true;
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (element as any)["on" + eventName] = listener;
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       }
       cancelSignal.register(() => {
         if (typeof element.removeEventListener === "function") {
           (element as IEventEmitterLike).removeEventListener(eventName, listener);
         }
         if (hasSetOnFn) {
-          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
           delete (element as any)["on" + eventName];
-          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
         }
       });
     });
@@ -228,15 +250,14 @@ export interface IPictureInPictureEvent {
 
 /**
  * Emit when video enters and leaves Picture-In-Picture mode.
- * @param {HTMLMediaElement} elt
+ * @param {HTMLMediaElement} mediaElement
  * @param {Object} stopListening
  * @returns {Object}
  */
 function getPictureOnPictureStateRef(
-  elt: HTMLMediaElement,
+  mediaElement: IMediaElement,
   stopListening: CancellationSignal,
 ): IReadOnlySharedReference<IPictureInPictureEvent> {
-  const mediaElement = elt as ICompatHTMLMediaElement;
   if (
     mediaElement.webkitSupportsPresentationMode === true &&
     typeof mediaElement.webkitSetPresentationMode === "function"
@@ -263,7 +284,7 @@ function getPictureOnPictureStateRef(
   }
 
   const isPIPEnabled =
-    (document as ICompatDocument).pictureInPictureElement === mediaElement;
+    document.pictureInPictureElement === (mediaElement as unknown as HTMLElement);
   const ref = new SharedReference<IPictureInPictureEvent>(
     { isEnabled: isPIPEnabled, pipWindow: null },
     stopListening,
@@ -392,7 +413,7 @@ function getScreenResolutionRef(
  * @returns {Object}
  */
 function getElementResolutionRef(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   pipStatusRef: IReadOnlySharedReference<IPictureInPictureEvent>,
   stopListening: CancellationSignal,
 ): IReadOnlySharedReference<{
@@ -596,7 +617,7 @@ const onEnded = createCompatibleEventListener(["ended"]);
  * emits
  */
 function addEventListener(
-  elt: IEventEmitterLike,
+  elt: IEventEmitterLike | IEventTarget<Record<string, Event>>,
   evt: string,
   listener: (x?: unknown) => void,
   stopListening: CancellationSignal,

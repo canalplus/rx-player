@@ -12,7 +12,7 @@ export function scaleTimestamp({ date, timestamp }: { date: number; timestamp: n
 
   const diffCurrentEnv =
     typeof performance !== "undefined"
-      ? /* eslint-disable-next-line no-restricted-properties */
+      ? // eslint-disable-next-line no-restricted-properties
         Date.now() - performance.now()
       : 0;
   mainThreadTimestampDiff.setValueIfChanged(diffCurrentEnv - delta);
@@ -36,7 +36,7 @@ export function scaleTimestamp({ date, timestamp }: { date: number; timestamp: n
  */
 const getMonotonicTimeStamp =
   typeof performance !== "undefined"
-    ? /* eslint-disable-next-line no-restricted-properties */
+    ? // eslint-disable-next-line no-restricted-properties
       () => performance.now() + mainThreadTimestampDiff.getValue()
     : () => Date.now() + mainThreadTimestampDiff.getValue();
 

@@ -1,15 +1,10 @@
 import type { MockInstance } from "vitest";
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import type { IIndexSegment } from "../index_helpers";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IUpdateSegmentTimeline from "../update_segment_timeline";
 
 describe("Manifest Parsers utils - updateSegmentTimeline", () => {
-  let mockLogWarn: MockInstance<unknown[], void> | undefined;
+  let mockLogWarn: MockInstance | undefined;
   let updateSegmentTimeline:
     | ((a: IIndexSegment[], b: IIndexSegment[]) => boolean)
     | undefined;
@@ -22,8 +17,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
         warn: mockLogWarn,
       },
     }));
-    updateSegmentTimeline = ((await vi.importActual("../update_segment_timeline")) as any)
-      .default;
+    updateSegmentTimeline = (await vi.importActual("../update_segment_timeline"))
+      .default as typeof IUpdateSegmentTimeline;
   });
 
   afterEach(() => {

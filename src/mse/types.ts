@@ -163,6 +163,7 @@ export type IMediaSourceHandle =
        * Do not forget to revoke such URL (e.g. through `URL.revokeObjectURL`) when
        * you're done.
        */
+      // eslint-disable-next-line @typescript-eslint/no-restricted-types
       value: MediaSource;
     };
 
@@ -281,34 +282,4 @@ export interface IMediaSourceInterfaceEvents {
    * changed to `"close"`.
    */
   mediaSourceClose: null;
-}
-
-/**
- * Object allowing to probe for codec support, regarless of the environment
- * (e.g. in a WebWorker or in the main thread - which may have different API).
- */
-export interface ICodecSupportProber {
-  /**
-   * Probe for codec support of the given mime-type + codec combination,
-   * returning a boolean which is `true` when that combination is supported on
-   * the current browser, `false` when it is not or `undefined` if it cannot
-   * be known currently.
-   *
-   * @param {string} mimeType
-   * @param {string} codec
-   * @returns {boolean|undefined}
-   */
-  isSupported(mimeType: string, codec: string): boolean | undefined;
-  /**
-   * Some implementations may rely on a caching mechanism to improve the
-   * pertinence / speed of `isSupported`.
-   *
-   * Calling this method allows to add the entry refered by these arguments to
-   * the cache.
-   *
-   * @param {string} mimeType
-   * @param {string} codec
-   * @param {boolean} isSupported
-   */
-  updateCache?: (mimeType: string, codec: string, isSupported: boolean) => void;
 }

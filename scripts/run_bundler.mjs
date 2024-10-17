@@ -42,6 +42,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const shouldWatch = args.includes("-w") || args.includes("--watch");
   const shouldMinify = args.includes("-m") || args.includes("--minify");
   const production = args.includes("-p") || args.includes("--production-mode");
+  const globalScope = args.includes("-g") || args.includes("--globals");
   const silent = args.includes("-s") || args.includes("--silent");
 
   let outfile;
@@ -62,16 +63,19 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   }
 
   try {
-    await runBundler(normalizedPath, {
+    runBundler(normalizedPath, {
       watch: shouldWatch,
       minify: shouldMinify,
       production,
+      globalScope,
       silent,
       outfile,
+    }).catch((err) => {
+      console.error(`ERROR: ${err}\n`);
+      process.exit(1);
     });
   } catch (err) {
     console.error(`ERROR: ${err}\n`);
-    displayHelp();
     process.exit(1);
   }
 }
@@ -179,9 +183,7 @@ export default async function runBundler(inputFile, options) {
  * script.
  */
 function displayHelp() {
-  /* eslint-disable no-console */
   console.log(
-    /* eslint-disable indent */
     `Usage: node run_bundler.mjs input-file [options]
 Available options:
   -h, --help                  Display this help message
@@ -189,11 +191,10 @@ Available options:
   -o <path>, --output <path>  Specify an output file for the ES2017 bundle. To ignore to skip ES2017
                               bundle generation.
   -p, --production-mode       Build all files in production mode (less runtime checks, mostly).
+  -g, --globals               Add the RxPlayer to the global scope.
   -g, --global-scope          If set, enable "global scope mode" (the \`__GLOBAL_SCOPE__\` global
                               symbol) on the bundle.
   -s, --silent                Don't log to stdout/stderr when bundling
   -w, --watch                 Re-build each time either the files it depends on changed`,
-    /* eslint-enable indent */
   );
-  /* eslint-enable no-console */
 }

@@ -19,6 +19,7 @@
  * throw if something is wrong, and return a normalized option object.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import config from "../../config";
 import log from "../../log";
 import type {
@@ -33,6 +34,7 @@ import type {
   ISegmentLoader,
   IServerSyncInfos,
   IRxPlayerMode,
+  ICmcdOptions,
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -56,7 +58,7 @@ export interface IParsedConstructorOptions {
   videoResolutionLimit: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden: boolean;
 
-  videoElement: HTMLMediaElement;
+  videoElement: IMediaElement;
   baseBandwidth: number;
 }
 
@@ -78,12 +80,14 @@ interface IParsedLoadVideoOptionsBase {
   defaultAudioTrackSwitchingMode: IAudioTrackSwitchingMode | undefined;
   onCodecSwitch: "continue" | "reload";
   checkMediaSegmentIntegrity?: boolean | undefined;
+  checkManifestIntegrity?: boolean | undefined;
   manifestLoader?: IManifestLoader | undefined;
   referenceDateTime?: number | undefined;
   representationFilter?: IRepresentationFilter | string | undefined;
   segmentLoader?: ISegmentLoader | undefined;
   serverSyncInfos?: IServerSyncInfos | undefined;
   mode: IRxPlayerMode;
+  cmcd: ICmcdOptions | undefined;
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
 }
@@ -130,7 +134,7 @@ function parseConstructorOptions(
   let wantedBufferAhead: number;
   let maxVideoBufferSize: number;
 
-  let videoElement: HTMLMediaElement;
+  let videoElement: IMediaElement;
   let baseBandwidth: number;
 
   const {
@@ -191,7 +195,10 @@ function parseConstructorOptions(
 
   if (isNullOrUndefined(options.videoElement)) {
     videoElement = document.createElement("video");
-  } else if (options.videoElement instanceof HTMLMediaElement) {
+  } else if (
+    options.videoElement.nodeName.toLowerCase() === "video" ||
+    options.videoElement.nodeName.toLowerCase() === "audio"
+  ) {
     videoElement = options.videoElement;
   } else {
     throw new Error("Invalid videoElement parameter. Should be a HTMLMediaElement.");
@@ -426,16 +433,13 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
 
   // All those eslint disable are needed because the option is voluntarily
   // hidden from the base type to limit discovery of this hidden API.
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     __priv_patchLastSegmentInSidx: (options as any).__priv_patchLastSegmentInSidx,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     __priv_manifestUpdateUrl: (options as any).__priv_manifestUpdateUrl,
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     checkMediaSegmentIntegrity: options.checkMediaSegmentIntegrity,
+    checkManifestIntegrity: options.checkManifestIntegrity,
     autoPlay,
     defaultAudioTrackSwitchingMode,
     enableFastSwitching,
@@ -456,6 +460,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     transport,
     mode,
     url,
+    cmcd: options.cmcd,
   };
 }
 

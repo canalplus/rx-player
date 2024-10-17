@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
 
 /**
  * =================
@@ -22,9 +21,9 @@ import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import { rimraf } from "rimraf";
 import generateEmbeds from "./generate_embeds.mjs";
 import runBundler from "./run_bundler.mjs";
+import removeDir from "./utils/remove_dir.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,18 +45,23 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     process.exit(0);
   }
   const devMode = argv.includes("-d") || argv.includes("--dev-mode");
+  const noCheck = argv.includes("-n") || argv.includes("--no-check");
   generateBuild({
     devMode,
+    noCheck,
   });
 }
 
 /**
  * @param {Object|undefined} options
+ * @param {boolean|undefined} [options.devMode]
+ * @param {boolean|undefined} [options.noCheck]
  * @returns {Promise}
  */
-async function generateBuild(options = {}) {
+export default async function generateBuild(options = {}) {
   try {
     const devMode = options.devMode === true;
+    const noCheck = options.noCheck === true;
     console.log(" 🧹 Removing previous build artefacts...");
     await removePreviousBuildArtefacts();
 
@@ -70,7 +74,7 @@ async function generateBuild(options = {}) {
     if (!fs.existsSync(dashWasmDir)) {
       console.log(" 🏭 Generating WebAssembly file...");
       await spawnProm(
-        "npm run " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
+        "npm run --silent " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
         [],
         (code) => new Error(`WebAssembly compilation process exited with code ${code}`),
       );
@@ -95,7 +99,7 @@ async function generateBuild(options = {}) {
     await generateEmbeds();
 
     console.log(" ⚙️ Compiling project with TypeScript...");
-    await compile(devMode);
+    await compile({ devMode, noCheck });
   } catch (err) {
     console.error("Fatal error:", err instanceof Error ? err.message : err);
     process.exit(1);
@@ -112,17 +116,19 @@ async function removePreviousBuildArtefacts() {
   await Promise.all(
     BUILD_ARTEFACTS_TO_REMOVE.map((name) => {
       const relativePath = path.join(ROOT_DIR, name);
-      return removeFile(relativePath);
+      return removeDir(relativePath);
     }),
   );
 }
 
 /**
  * Compile the project by spawning a separate procress running TypeScript.
- * @param {boolean} devMode
+ * @param {Object} opts
+ * @param {boolean} opts.devMode
+ * @param {boolean} opts.noCheck
  * @returns {Promise}
  */
-async function compile(devMode) {
+async function compile(opts) {
   // Sadly TypeScript compiler API seems to be sub-par.
   // I did not find for example how to exclude some files (our unit tests)
   // easily by running typescript directly from NodeJS.
@@ -130,7 +136,10 @@ async function compile(devMode) {
   await Promise.all([
     spawnProm(
       "npx tsc -p",
-      [path.join(ROOT_DIR, devMode ? "tsconfig.dev.json" : "tsconfig.json")],
+      [
+        path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json"),
+        opts.noCheck ? "--noCheck" : "",
+      ],
       (code) => new Error(`CommonJS compilation process exited with code ${code}`),
     ),
     spawnProm(
@@ -138,20 +147,13 @@ async function compile(devMode) {
       [
         path.join(
           ROOT_DIR,
-          devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
+          opts.devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
         ),
+        opts.noCheck ? "--noCheck" : "",
       ],
       (code) => new Error(`es2018 compilation process exited with code ${code}`),
     ),
   ]);
-}
-
-/**
- * @param {string} fileName
- * @returns {Promise}
- */
-function removeFile(fileName) {
-  return rimraf(fileName);
 }
 
 /**
@@ -175,14 +177,11 @@ function spawnProm(command, args, errorOnCode) {
  * script.
  */
 function displayHelp() {
-  /* eslint-disable no-console */
   console.log(
-    /* eslint-disable indent */
     `Usage: node build_worker.mjs [options]
 Options:
   -h, --help             Display this help
-  -p, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)`,
-    /* eslint-enable indent */
+  -p, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)
+  -n, --no-check         Skip type checking for inputed files.`,
   );
-  /* eslint-enable no-console */
 }

@@ -1,10 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IInitialization from "../Initialization";
+import type { MPDError as IMPDError } from "../utils";
 
 describe("DASH Node Parsers - Initialization", () => {
   beforeEach(() => {
@@ -16,8 +12,8 @@ describe("DASH Node Parsers - Initialization", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
-      .default;
+    const parseInitialization = (await vi.importActual("../Initialization"))
+      .default as typeof IInitialization;
     const element1 = new DOMParser().parseFromString("<Foo />", "text/xml")
       .childNodes[0] as Element;
     expect(parseInitialization(element1)).toEqual([{}, []]);
@@ -35,8 +31,8 @@ describe("DASH Node Parsers - Initialization", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
-      .default;
+    const parseInitialization = (await vi.importActual("../Initialization"))
+      .default as typeof IInitialization;
     const element1 = new DOMParser().parseFromString('<Foo range="0-1" />', "text/xml")
       .childNodes[0] as Element;
     expect(parseInitialization(element1)).toEqual([{ range: [0, 1] }, []]);
@@ -56,9 +52,9 @@ describe("DASH Node Parsers - Initialization", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn").mockImplementation(vi.fn());
 
-    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
-      .default;
-    const MPDError = ((await vi.importActual("../utils")) as any).MPDError;
+    const parseInitialization = (await vi.importActual("../Initialization"))
+      .default as typeof IInitialization;
+    const MPDError = (await vi.importActual("../utils")).MPDError as typeof IMPDError;
     const element1 = new DOMParser().parseFromString('<Foo range="a" />', "text/xml")
       .childNodes[0] as Element;
     const error1 = new MPDError('`range` property has an unrecognized format "a"');
@@ -83,8 +79,8 @@ describe("DASH Node Parsers - Initialization", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
-      .default;
+    const parseInitialization = (await vi.importActual("../Initialization"))
+      .default as typeof IInitialization;
     const element1 = new DOMParser().parseFromString('<Foo sourceURL="a" />', "text/xml")
       .childNodes[0] as Element;
     expect(parseInitialization(element1)).toEqual([{ media: "a" }, []]);
@@ -102,8 +98,8 @@ describe("DASH Node Parsers - Initialization", () => {
     vi.doMock("../../../../../../log", () => log);
     const mockLog = vi.spyOn(log.default, "warn");
 
-    const parseInitialization = ((await vi.importActual("../Initialization")) as any)
-      .default;
+    const parseInitialization = (await vi.importActual("../Initialization"))
+      .default as typeof IInitialization;
     const element1 = new DOMParser().parseFromString(
       '<Foo sourceURL="a" range="4-10" />',
       "text/xml",

@@ -22,8 +22,7 @@ import type { IFeature } from "./types";
  * @param {Array.<Object>} featureFuncList
  */
 export default function addFeatures(featureFuncList: IFeature[]): void {
-  for (let i = 0; i < featureFuncList.length; i++) {
-    const addFeature = featureFuncList[i];
+  for (const addFeature of featureFuncList) {
     if (typeof addFeature === "function") {
       addFeature(features);
     } else if (

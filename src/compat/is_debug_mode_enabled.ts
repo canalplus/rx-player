@@ -1,4 +1,4 @@
-/* eslint-disable-next-line @typescript-eslint/naming-convention */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 declare const __RX_PLAYER_DEBUG_MODE__: boolean | undefined;
 
 /**

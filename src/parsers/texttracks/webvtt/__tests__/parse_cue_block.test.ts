@@ -1,10 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type IParseCueBlock from "../parse_cue_block";
 
 const cueBlock1 = [
   "112",
@@ -45,7 +40,8 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   it("should correctly parse regular cue blocks", async () => {
-    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
+    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
+      .default as typeof IParseCueBlock;
     expect(parseCueBlock(cueBlock1, 0)).toEqual({
       start: 31.08,
       end: 452.2,
@@ -92,7 +88,8 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   it("should add timeOffset in seconds", async () => {
-    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
+    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
+      .default as typeof IParseCueBlock;
     expect(parseCueBlock(cueBlock1, 10.1)).toEqual({
       start: 41.18,
       end: 462.3,
@@ -150,7 +147,8 @@ describe("parsers - srt - parseCueBlocks", () => {
   });
 
   it("should return null for invalid cue blocks", async () => {
-    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
+    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
+      .default as typeof IParseCueBlock;
     expect(parseCueBlock(notCueBlock1, 0)).toEqual(null);
     expect(parseCueBlock(notCueBlock1, 5)).toEqual(null);
     expect(parseCueBlock(notCueBlock2, 0)).toEqual(null);
@@ -168,7 +166,8 @@ describe("parsers - srt - parseCueBlocks", () => {
     vi.doMock("../parse_timestamp", () => ({
       default: parseTimestamp,
     }));
-    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
+    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
+      .default as typeof IParseCueBlock;
 
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
     expect(parseTimestamp).toHaveBeenCalledTimes(2);
@@ -179,7 +178,8 @@ describe("parsers - srt - parseCueBlocks", () => {
     vi.doMock("../parse_timestamp", () => ({
       default: parseTimestamp,
     }));
-    const parseCueBlock = ((await vi.importActual("../parse_cue_block")) as any).default;
+    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
+      .default as typeof IParseCueBlock;
 
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
     expect(parseTimestamp).toHaveBeenCalledTimes(2);

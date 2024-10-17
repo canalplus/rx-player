@@ -84,7 +84,7 @@ export function getMaximumSafePosition(manifest: IManifestMetadata): number {
 }
 
 /**
- * Returns Adaptations that contain Representations in supported codecs.
+ * Returns Adaptations that contain supported Representation(s).
  * @param {string|undefined} type - If set filter on a specific Adaptation's
  * type. Will return for all types if `undefined`.
  * @returns {Array.<Adaptation>}
@@ -103,7 +103,10 @@ export function getSupportedAdaptations(
 ): IAdaptationMetadata[] | IAdaptation[] {
   if (type === undefined) {
     return getAdaptations(period).filter((ada) => {
-      return ada.isSupported === true;
+      return (
+        ada.supportStatus.hasSupportedCodec !== false &&
+        ada.supportStatus.isDecipherable !== false
+      );
     });
   }
   const adaptationsForType = period.adaptations[type];
@@ -111,7 +114,10 @@ export function getSupportedAdaptations(
     return [];
   }
   return adaptationsForType.filter((ada) => {
-    return ada.isSupported === true;
+    return (
+      ada.supportStatus.hasSupportedCodec !== false &&
+      ada.supportStatus.isDecipherable !== false
+    );
   });
 }
 
@@ -132,8 +138,7 @@ export function getPeriodForTime(
   time: number,
 ): IPeriod | IPeriodMetadata | undefined {
   let nextPeriod = null;
-  for (let i = manifest.periods.length - 1; i >= 0; i--) {
-    const period = manifest.periods[i];
+  for (const period of manifest.periods) {
     if (periodContainsTime(period, time, nextPeriod)) {
       return period;
     }
@@ -352,6 +357,7 @@ function toVideoRepresentation(
     hdrInfo,
     isSupported,
     decipherable,
+    contentProtections,
   } = representation;
   return {
     id,
@@ -363,6 +369,12 @@ function toVideoRepresentation(
     hdrInfo,
     isCodecSupported: isSupported,
     decipherable,
+    contentProtections:
+      contentProtections !== undefined
+        ? {
+            keyIds: contentProtections.keyIds,
+          }
+        : undefined,
   };
 }
 
@@ -401,9 +413,10 @@ export interface IDecipherabilityStatusChangedElement {
  *     decipherability updated to `undefined`.
  *
  * @param {Object} manifest
- * @param {Array.<Uint8Array>} whitelistedKeyIds
- * @param {Array.<Uint8Array>} blacklistedKeyIds
- * @param {Array.<Uint8Array>} delistedKeyIds
+ * @param {Object} updates
+ * @param {Array.<Uint8Array>} updates.whitelistedKeyIds
+ * @param {Array.<Uint8Array>} updates.blacklistedKeyIds
+ * @param {Array.<Uint8Array>} updates.delistedKeyIds
  */
 export function updateDecipherabilityFromKeyIds(
   manifest: IManifestMetadata,
@@ -422,17 +435,17 @@ export function updateDecipherabilityFromKeyIds(
     if (contentKIDs !== undefined) {
       for (const elt of contentKIDs) {
         for (const blacklistedKeyId of blacklistedKeyIds) {
-          if (areArraysOfNumbersEqual(blacklistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(blacklistedKeyId, elt)) {
             return false;
           }
         }
         for (const whitelistedKeyId of whitelistedKeyIds) {
-          if (areArraysOfNumbersEqual(whitelistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(whitelistedKeyId, elt)) {
             return true;
           }
         }
         for (const delistedKeyId of delistedKeyIds) {
-          if (areArraysOfNumbersEqual(delistedKeyId, elt.keyId)) {
+          if (areArraysOfNumbersEqual(delistedKeyId, elt)) {
             return undefined;
           }
         }
@@ -503,12 +516,27 @@ function updateRepresentationsDeciperability(
       [],
     );
     for (const adaptation of adaptations) {
+      let hasOnlyUndecipherableRepresentations = true;
       for (const representation of adaptation.representations) {
         const result = isDecipherable(representation);
+        if (result !== false) {
+          hasOnlyUndecipherableRepresentations = false;
+        }
         if (result !== representation.decipherable) {
+          if (result === true) {
+            adaptation.supportStatus.isDecipherable = true;
+          } else if (
+            result === undefined &&
+            adaptation.supportStatus.isDecipherable === false
+          ) {
+            adaptation.supportStatus.isDecipherable = undefined;
+          }
           updates.push({ manifest, period, adaptation, representation });
           representation.decipherable = result;
         }
+      }
+      if (hasOnlyUndecipherableRepresentations) {
+        adaptation.supportStatus.isDecipherable = false;
       }
     }
   }
@@ -602,7 +630,7 @@ export function replicateUpdatesOnManifestMetadata(
                     for (const prop of Object.keys(newRepresentation) as Array<
                       keyof IRepresentationMetadata
                     >) {
-                      if (prop !== "decipherable" && prop !== "isSupported") {
+                      if (prop !== "decipherable") {
                         // eslint-disable-next-line
                         (baseRepresentation as any)[prop] = newRepresentation[prop];
                       }

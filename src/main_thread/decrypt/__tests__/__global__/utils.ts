@@ -1,26 +1,17 @@
 import type { MockInstance } from "vitest";
 import { vi } from "vitest";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/naming-convention */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable no-restricted-properties */
-
+import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
 import type { IEmeApiImplementation, IEncryptedEventData } from "../../../../compat/eme";
+import type { IKeySystemOption } from "../../../../public_types";
 import { base64ToBytes, bytesToBase64 } from "../../../../utils/base64";
 import EventEmitter from "../../../../utils/event_emitter";
 import flatMap from "../../../../utils/flat_map";
 import { strToUtf8, utf8ToStr } from "../../../../utils/string_parsing";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
+import type IContentDecryptor from "../../content_decryptor";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
-export const defaultKSConfig = [
+export const defaultKSConfig: MediaKeySystemConfiguration[] = [
   {
     audioCapabilities: [
       { contentType: 'audio/mp4;codecs="mp4a.40.2"' },
@@ -33,16 +24,9 @@ export const defaultKSConfig = [
     videoCapabilities: [
       { contentType: 'video/mp4;codecs="avc1.4d401e"' },
       { contentType: 'video/mp4;codecs="avc1.42e01e"' },
+      { contentType: 'video/mp4;codecs="hvc1.1.6.L93.B0"' },
       { contentType: 'video/webm;codecs="vp8"' },
     ],
-  },
-  {
-    audioCapabilities: undefined,
-    distinctiveIdentifier: "optional" as const,
-    initDataTypes: ["cenc"] as const,
-    persistentState: "optional" as const,
-    sessionTypes: ["temporary"] as const,
-    videoCapabilities: undefined,
   },
 ];
 
@@ -50,7 +34,7 @@ export const defaultKSConfig = [
  * Default "com.microsoft.playready.recommendation" MediaKeySystemAccess
  * configuration used by the RxPlayer.
  */
-export const defaultPRRecommendationKSConfig = [
+export const defaultPRRecommendationKSConfig: MediaKeySystemConfiguration[] = [
   {
     audioCapabilities: [
       { robustness: "3000", contentType: 'audio/mp4;codecs="mp4a.40.2"' },
@@ -65,24 +49,18 @@ export const defaultPRRecommendationKSConfig = [
     videoCapabilities: [
       { robustness: "3000", contentType: 'video/mp4;codecs="avc1.4d401e"' },
       { robustness: "3000", contentType: 'video/mp4;codecs="avc1.42e01e"' },
+      { robustness: "3000", contentType: 'video/mp4;codecs="hvc1.1.6.L93.B0"' },
       { robustness: "3000", contentType: 'video/webm;codecs="vp8"' },
       { robustness: "2000", contentType: 'video/mp4;codecs="avc1.4d401e"' },
       { robustness: "2000", contentType: 'video/mp4;codecs="avc1.42e01e"' },
+      { robustness: "2000", contentType: 'video/mp4;codecs="hvc1.1.6.L93.B0"' },
       { robustness: "2000", contentType: 'video/webm;codecs="vp8"' },
     ],
-  },
-  {
-    audioCapabilities: undefined,
-    distinctiveIdentifier: "optional" as const,
-    initDataTypes: ["cenc"] as const,
-    persistentState: "optional" as const,
-    sessionTypes: ["temporary"] as const,
-    videoCapabilities: undefined,
   },
 ];
 
 /** Default Widevine MediaKeySystemAccess configuration used by the RxPlayer. */
-export const defaultWidevineConfig = (() => {
+export const defaultWidevineConfig: MediaKeySystemConfiguration[] = (() => {
   const ROBUSTNESSES = [
     "HW_SECURE_ALL",
     "HW_SECURE_DECODE",
@@ -94,6 +72,7 @@ export const defaultWidevineConfig = (() => {
     return [
       { contentType: 'video/mp4;codecs="avc1.4d401e"', robustness },
       { contentType: 'video/mp4;codecs="avc1.42e01e"', robustness },
+      { contentType: 'video/mp4;codecs="hvc1.1.6.L93.B0"', robustness },
       { contentType: 'video/webm;codecs="vp8"', robustness },
     ];
   });
@@ -103,10 +82,7 @@ export const defaultWidevineConfig = (() => {
       { contentType: "audio/webm;codecs=opus", robustness },
     ];
   });
-  return [
-    { ...defaultKSConfig[0], audioCapabilities, videoCapabilities },
-    defaultKSConfig[1],
-  ];
+  return [{ ...defaultKSConfig[0], audioCapabilities, videoCapabilities }];
 })();
 
 /**
@@ -196,6 +172,7 @@ export class MediaKeySessionImpl extends EventEmitter<Record<string, unknown>> {
   public generateRequest(initDataType: string, initData: BufferSource): Promise<void> {
     const msg = formatFakeChallengeFromInitData(initData, initDataType);
     setTimeout(() => {
+      // eslint-disable-next-line no-restricted-properties
       const event: MediaKeyMessageEvent = Object.assign(new CustomEvent("message"), {
         message: msg.buffer,
         messageType: "license-request" as const,
@@ -274,12 +251,12 @@ export function requestMediaKeySystemAccessImpl(
 }
 
 class MockedDecryptorEventEmitter extends EventEmitter<{
-  encrypted: { elt: HTMLMediaElement; value: unknown };
+  encrypted: { elt: IMediaElement; value: unknown };
   keymessage: { session: MediaKeySessionImpl; value: unknown };
   keyerror: { session: MediaKeySessionImpl; value: unknown };
   keystatuseschange: { session: MediaKeySessionImpl; value: unknown };
 }> {
-  public triggerEncrypted(elt: HTMLMediaElement, value: unknown) {
+  public triggerEncrypted(elt: IMediaElement, value: unknown) {
     this.trigger("encrypted", { elt, value });
   }
   public triggerKeyError(session: MediaKeySessionImpl, value: unknown) {
@@ -312,7 +289,7 @@ export function mockCompat(
     vi
       .fn()
       .mockImplementation(
-        (elt: HTMLMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
+        (elt: IMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
           elt.addEventListener("encrypted", fn);
           signal.register(() => {
             elt.removeEventListener("encrypted", fn);
@@ -399,7 +376,11 @@ export function mockCompat(
   const mockGenerateKeyRequest = vi
     .fn()
     .mockImplementation(
-      (mks: MediaKeySessionImpl, initializationDataType, initializationData) => {
+      (
+        mks: MediaKeySessionImpl,
+        initializationDataType: string,
+        initializationData: BufferSource,
+      ) => {
         return mks.generateRequest(initializationDataType, initializationData);
       },
     );
@@ -444,7 +425,7 @@ export function mockCompat(
   return {
     mockEvents,
     eventTriggers: {
-      triggerEncrypted(elt: HTMLMediaElement, value: unknown) {
+      triggerEncrypted(elt: IMediaElement, value: unknown) {
         ee.triggerEncrypted(elt, value);
       },
       triggerKeyMessage(session: MediaKeySessionImpl, value: unknown) {
@@ -474,13 +455,14 @@ export function mockCompat(
  * @returns {Promise}
  */
 export function testContentDecryptorError(
-  ContentDecryptor: any,
-  mediaElement: HTMLMediaElement,
-  keySystemsConfigs: unknown[],
-): Promise<unknown> {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  ContentDecryptor: typeof IContentDecryptor,
+  mediaElement: IMediaElement,
+  keySystemsConfigs: IKeySystemOption[],
+): Promise<Error> {
   return new Promise((res, rej) => {
     const contentDecryptor = new ContentDecryptor(mediaElement, keySystemsConfigs);
-    contentDecryptor.addEventListener("error", (error: any) => {
+    contentDecryptor.addEventListener("error", (error) => {
       res(error);
     });
     setTimeout(() => {

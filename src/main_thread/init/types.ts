@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types";
 import type {
@@ -79,7 +80,7 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * intervals.
    */
   public abstract start(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void;
 
@@ -113,6 +114,10 @@ export interface IContentInitializerEvents {
   manifestReady: IManifestMetadata;
   /** Event sent after the Manifest has been updated. */
   manifestUpdate: IPeriodsUpdateResult;
+  /**
+   * The codecs support for some tracks may have changed.
+   */
+  codecSupportUpdate: null;
   /**
    * Event sent after the decipherability status of at least one Representation
    * in the Manifest has been updated.

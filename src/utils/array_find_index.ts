@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable no-restricted-properties */
-
 // Ugly transitory type to make duck typing work
 type ArrayWithFindIndex<T> = T[] & {
   findIndex(
@@ -32,7 +26,7 @@ type ArrayWithFindIndex<T> = T[] & {
  * Array.prototype.find ponyfill.
  * @param {Array} arr
  * @param {Function} predicate
- * @param {*} context
+ * @param {*} thisArg
  * @returns {boolean}
  */
 export default function arrayFindIndex<T>(
@@ -40,7 +34,9 @@ export default function arrayFindIndex<T>(
   predicate: (arg: T, index: number, fullArray: T[]) => boolean,
   thisArg?: unknown,
 ): number {
+  // eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
   if (typeof (Array.prototype as ArrayWithFindIndex<T>).findIndex === "function") {
+    // eslint-disable-next-line no-restricted-properties
     return (arr as ArrayWithFindIndex<T>).findIndex(predicate, thisArg);
   }
 

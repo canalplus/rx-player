@@ -1,3 +1,4 @@
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import { onEnded, onSeeked, onSeeking } from "../../../compat/event_listeners";
 import onHeightWidthChange from "../../../compat/on_height_width_change";
 import config from "../../../config";
@@ -55,7 +56,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * The video element the cues refer to.
    * Used to know when the user is seeking, for example.
    */
-  private readonly _videoElement: HTMLMediaElement;
+  private readonly _videoElement: IMediaElement;
 
   /** Allows to cancel the interval at which subtitles are updated. */
   private _subtitlesIntervalCanceller: TaskCanceller;
@@ -100,7 +101,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * @param {HTMLMediaElement} videoElement
    * @param {HTMLElement} textTrackElement
    */
-  constructor(videoElement: HTMLMediaElement, textTrackElement: HTMLElement) {
+  constructor(videoElement: IMediaElement, textTrackElement: HTMLElement) {
     log.debug("HTD: Creating HTMLTextDisplayer");
     this._buffered = new ManualTimeRanges();
 
@@ -422,15 +423,11 @@ export interface ITextTracksBufferSegmentData {
  * a hack to tell TypeScript to perform that check.
  */
 if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  /* eslint-disable @typescript-eslint/ban-ts-comment */
-  // @ts-ignore
+  // @ts-expect-error: uncalled function just for type-checking
   function _checkType(input: ITextTrackSegmentData): void {
     function checkEqual(_arg: ITextTracksBufferSegmentData): void {
       /* nothing */
     }
     checkEqual(input);
   }
-  /* eslint-enable @typescript-eslint/no-unused-vars */
-  /* eslint-enable @typescript-eslint/ban-ts-comment */
 }

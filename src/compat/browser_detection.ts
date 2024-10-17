@@ -67,6 +67,9 @@ let isWebOs2022 = false;
 /** `true` for Panasonic devices. */
 let isPanasonic = false;
 
+/** `true` we're relying on Philips's NetTv browser. */
+let isPhilipsNetTv = false;
+
 /** `true` for the PlayStation 4 game console. */
 let isPlayStation4 = false;
 
@@ -75,6 +78,9 @@ let isPlayStation5 = false;
 
 /** `true` for the Xbox game consoles. */
 let isXbox = false;
+
+/** `true` for specific A1 STB: KSTB 40xx from Kaon Media. */
+let isA1KStb40xx = false;
 
 (function findCurrentBrowser(): void {
   if (isNode) {
@@ -155,27 +161,39 @@ let isXbox = false;
     ) {
       isWebOs2021 = true;
     }
+  } else if (
+    navigator.userAgent.indexOf("NETTV") !== -1 &&
+    navigator.userAgent.indexOf("Philips") !== -1
+  ) {
+    isPhilipsNetTv = true;
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
     isPanasonic = true;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
     isXbox = true;
+  } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx")) {
+    isA1KStb40xx = true;
   }
 })();
 
 export {
+  // browsers
   isEdgeChromium,
+  isFirefox,
   isIE11,
   isIEOrEdge,
-  isFirefox,
-  isPanasonic,
-  isPlayStation4,
-  isPlayStation5,
-  isXbox,
   isSafariDesktop,
   isSafariMobile,
+
+  // specific devices
+  isA1KStb40xx,
+  isPanasonic,
+  isPhilipsNetTv,
+  isPlayStation4,
+  isPlayStation5,
   isSamsungBrowser,
   isTizen,
   isWebOs,
   isWebOs2021,
   isWebOs2022,
+  isXbox,
 };

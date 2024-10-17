@@ -177,6 +177,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
             const manOpts = {
               timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
               connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
+              cmcdPayload: undefined,
             };
             return transport.manifest.loadManifest(resource.url, manOpts, cancelSignal);
           }
@@ -392,6 +393,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
   };
 
   return {
+    transportName: "metaplaylist",
     manifest: manifestPipeline,
     audio: audioPipeline,
     video: videoPipeline,

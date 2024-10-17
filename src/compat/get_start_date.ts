@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "./browser_compatibility_types";
+
 /**
  * Calculating a live-offseted media position necessitate to obtain first an
  * offset, and then adding that offset to the wanted position.
@@ -28,8 +30,8 @@
  * @param {HTMLMediaElement} mediaElement
  * @returns {number|undefined}
  */
-export default function getStartDate(mediaElement: HTMLMediaElement): number | undefined {
-  const _mediaElement: HTMLMediaElement & {
+export default function getStartDate(mediaElement: IMediaElement): number | undefined {
+  const _mediaElement: IMediaElement & {
     getStartDate?: () => number | Date | null | undefined;
   } = mediaElement;
   if (typeof _mediaElement.getStartDate === "function") {

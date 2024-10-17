@@ -18,8 +18,10 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import type { IMediaSourceInterface } from "../../mse";
 import { SourceBufferType } from "../../mse";
+import assert from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import noop from "../../utils/noop";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IBufferType, SegmentSink } from "./implementations";
 import { AudioVideoSegmentSink } from "./implementations";
@@ -101,7 +103,11 @@ export default class SegmentSinksStore {
    * disabled. This means that the corresponding type (e.g. audio, video etc.)
    * won't be needed when playing the current content.
    */
-  private _initializedSegmentSinks: Partial<Record<IBufferType, SegmentSink | null>>;
+  private _initializedSegmentSinks: {
+    audio?: AudioVideoSegmentSink | undefined | null;
+    video?: AudioVideoSegmentSink | undefined | null;
+    text?: TextSegmentSink | null;
+  };
 
   /**
    * Callbacks called after a SourceBuffer is either created or disabled.
@@ -211,8 +217,8 @@ export default class SegmentSinksStore {
       return Promise.resolve();
     }
     return createCancellablePromise(cancelWaitSignal, (res) => {
-      /* eslint-disable-next-line prefer-const */
-      let onAddedOrDisabled: () => void;
+      // eslint-disable-next-line prefer-const
+      let onAddedOrDisabled: () => void = noop;
 
       const removeCallback = () => {
         const indexOf = this._onNativeBufferAddedOrDisabled.indexOf(onAddedOrDisabled);
@@ -251,7 +257,8 @@ export default class SegmentSinksStore {
     }
     this._initializedSegmentSinks[bufferType] = null;
     if (SegmentSinksStore.isNative(bufferType)) {
-      this._onNativeBufferAddedOrDisabled.forEach((cb) => cb());
+      this._onNativeBufferAddedOrDisabled.slice().forEach((cb) => cb());
+      assert(this._onNativeBufferAddedOrDisabled.length === 0);
     }
   }
 
@@ -295,7 +302,8 @@ export default class SegmentSinksStore {
         this._mediaSource,
       );
       this._initializedSegmentSinks[bufferType] = nativeSegmentSink;
-      this._onNativeBufferAddedOrDisabled.forEach((cb) => cb());
+      this._onNativeBufferAddedOrDisabled.slice().forEach((cb) => cb());
+      assert(this._onNativeBufferAddedOrDisabled.length === 0);
       return nativeSegmentSink;
     }
 
@@ -304,7 +312,7 @@ export default class SegmentSinksStore {
       return memorizedSegmentSink;
     }
 
-    let segmentSink: SegmentSink;
+    let segmentSink: TextSegmentSink;
     if (bufferType === "text") {
       log.info("SB: Creating a new text SegmentSink");
       if (this._textInterface === null) {

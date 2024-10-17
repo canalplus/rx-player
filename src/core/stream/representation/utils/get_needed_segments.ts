@@ -215,8 +215,7 @@ export default function getNeededSegments({
     }
 
     // check if the segment is already downloaded
-    for (let i = 0; i < reusableSegments.length; i++) {
-      const completeSeg = reusableSegments[i];
+    for (const completeSeg of reusableSegments) {
       const areFromSamePeriod = completeSeg.infos.period.id === content.period.id;
       // Check if content are from same period, as there can't be overlapping
       // periods, we should consider a segment as already downloaded if

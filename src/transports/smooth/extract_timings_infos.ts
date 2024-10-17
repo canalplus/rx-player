@@ -89,10 +89,10 @@ export default function extractTimingsInfos(
   }
 
   if (tfrfSegments !== undefined) {
-    for (let i = 0; i < tfrfSegments.length; i++) {
+    for (const tfrfSeg of tfrfSegments) {
       nextSegments.push({
-        time: tfrfSegments[i].time,
-        duration: tfrfSegments[i].duration,
+        time: tfrfSeg.time,
+        duration: tfrfSeg.duration,
         timescale: initTimescale,
       });
     }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import canSeekDirectlyAfterLoadedMetadata from "../../../compat/can_seek_directly_after_loaded_metadata";
 import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import { MediaError } from "../../../errors";
@@ -68,9 +69,9 @@ export default function performInitialSeekAndPlay(
     isDirectfile,
     onWarning,
   }: {
-    mediaElement: HTMLMediaElement;
+    mediaElement: IMediaElement;
     playbackObserver: IMediaElementPlaybackObserver;
-    startTime: number | (() => number);
+    startTime: number | (() => number | undefined);
     mustAutoPlay: boolean;
     isDirectfile: boolean;
     onWarning: (err: IPlayerError) => void;
@@ -106,18 +107,33 @@ export default function performInitialSeekAndPlay(
       if (!isDirectfile || typeof startTime === "number") {
         const initiallySeekedTime =
           typeof startTime === "number" ? startTime : startTime();
-        if (initiallySeekedTime !== 0) {
+        if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
           performInitialSeek(initiallySeekedTime);
         }
         waitForSeekable();
       } else {
         playbackObserver.listen(
           (obs, stopListening) => {
+            const initiallySeekedTime =
+              typeof startTime === "number" ? startTime : startTime();
+            if (
+              initiallySeekedTime === undefined &&
+              obs.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+            ) {
+              /**
+               * The starting position may not be known yet.
+               * Postpone the seek to a moment where the starting position should be known,
+               * assumely it's when readyState is greater or equal to HAVE_CURRENT_DATA (2).
+               * If the initiallySeekedTime is still `undefined` when the readyState is >= 2,
+               * let assume that the initiallySeekedTime will never be known and continue
+               * the logic without seeking.
+               */
+              return;
+            }
             if (obs.readyState >= 1) {
               stopListening();
-              const initiallySeekedTime =
-                typeof startTime === "number" ? startTime : startTime();
-              if (initiallySeekedTime !== 0) {
+
+              if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
                 if (canSeekDirectlyAfterLoadedMetadata) {
                   performInitialSeek(initiallySeekedTime);
                 } else {

@@ -9,13 +9,21 @@
 import type { IDefaultConfig } from "./default_config";
 import DEFAULT_CONFIG from "./default_config";
 import deepMerge from "./utils/deep_merge";
+import EventEmitter from "./utils/event_emitter";
 
-class ConfigHandler {
-  _config = DEFAULT_CONFIG;
+interface IConfigHandlerEvents {
+  update: Partial<IDefaultConfig>;
+}
+
+class ConfigHandler extends EventEmitter<IConfigHandlerEvents> {
+  public updated = false;
+  private _config = DEFAULT_CONFIG;
 
   update(config: Partial<IDefaultConfig>) {
     const newConfig = deepMerge(this._config, config);
     this._config = newConfig;
+    this.updated = true;
+    this.trigger("update", config);
   }
 
   getCurrent(): IDefaultConfig {

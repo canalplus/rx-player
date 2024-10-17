@@ -807,22 +807,60 @@ If not set or set to `"auto"`, you can see which mode is effective by calling th
 If the `useWorker` property is set to `false`, you're running in `"main"` mode, if set to
 `true`, you're running in `"multithread"` mode.
 
-### checkMediaSegmentIntegrity
+### cmcd
 
-_type_: `Function|undefined`
+_type_: `Object|undefined`
+
+_defaults_: `"undefined"`
 
 <div class="warning">
 This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
 transport option</a>)
 </div>
 
-If set to true, the RxPlayer will retry a media segment request if that segment seems
+When set to an object, it enables "Common Media Client Data" (CMCD) so the RxPlayer is
+able to report playback conditions to the CDN.
+
+If set to `undefined` or not defined, CMCD will be disabled.
+
+When set to an Object, it can have the following properties:
+
+- `contentId` (`string|undefined`): Content ID delivered by CMCD metadata for that
+  content. If not specified, a default one will be generated.
+
+  It is heavily recommended that you provide your own content identifier here.
+
+- `sessionId` (`string|undefined`): Session ID delivered by CMCD metadata. If not
+  specified, a default one will be generated.
+
+- `communicationType` (`string|undefined`): Way in which the CMCD metadata is
+  communicated.
+
+  Can be set to `"query"` for communicating it through query strings or `"headers"` for
+  communicating it through headers (which may lead to supplementary complexities linked to
+  CORS policies such as preflight request, blocking etc.).
+
+  If not set, the RxPlayer will automatically select the most appropriate way instead.
+
+### checkMediaSegmentIntegrity
+
+_type_: `boolean|undefined`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+If set to `true`, the RxPlayer will retry a media segment request if that segment seems
 corrupted.
 
-If not set or set to false, the RxPlayer might interrupt playback in the same situation.
+If not set or set to `false`, the RxPlayer might interrupt playback in the same situation.
 
 You can set this option if you suspect the CDN providing your contents to sometimes send
 you incomplete/corrupted segments.
+
+Note however that not all cases of media segment corruptions are spotted, it can still
+happen with this option set to `true`.
 
 Example:
 
@@ -830,6 +868,34 @@ Example:
 rxPlayer.loadVideo({
   // ...
   checkMediaSegmentIntegrity: true,
+});
+```
+
+### checkManifestIntegrity
+
+_type_: `boolean|undefined`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+If set to `true`, the RxPlayer will retry a Manifest request if it appears corrupted.
+
+If not set or set to `false`, the RxPlayer might interrupt playback in the same situation.
+
+You can set this option if you suspect the CDN providing your contents to sometimes send
+you incomplete/corrupted Manifests.
+
+Note however that not all cases of Manifest corruptions are spotted, and that it only has
+an effect on DASH contents for now.
+
+Example:
+
+```js
+rxPlayer.loadVideo({
+  // ...
+  checkManifestIntegrity: true,
 });
 ```
 

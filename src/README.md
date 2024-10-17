@@ -29,7 +29,7 @@ it:
                |                                             |
                +---------------------------------------------+
                          |
-                         | call RxPlayer API
+                         | call the RxPlayer API
                          |
 -------------------------|- RxPlayer Main Thread ---------------------------
                          |
@@ -52,29 +52,32 @@ it:
  |(./main_thread/init)|            creates          |  Text Displayer  |
  |                    | --------------------------->|(./main_thread/te |
  +--------------------+                             |xt_displayer)     |
-        |  ^                                        +------------------+
-        |  | Message exchanges                                          ^
-        |  |                                                            |
---------|--|------ RxPlayer Core (May run in a WebWorker) --------------|---
-        v  |                                                            |
+   |  ^                                             +------------------+
+   |  | Message exchanges                                          ^
+   |  |                                                            |
+---|--|----------- RxPlayer Core (May run in a WebWorker) ---------|---
+   |  |                                                            |
+   |  |  (*Only if running in a WebWorker)                         +----+
+   |  |  Exchange messages with the main                                |
+   V  |  thread and process them.                                       |
   +---------------------------+         +----------------------------+  |
   |                           | creates |                            |  |
   |        Worker Main*       |-------->|       Manifest Fetcher     |  |
   |   (./core/main/worker)    |         | (./core/fetchers/manifest) |  |
   |                           |         |                            |  |
   +---------------------------+         +----------------------------+  |
-  (*Only if running in a   |            Load and     |                  |
-  WebWorker)               |            refresh the  | Ask to load      |
-  Exchange messages with   |            Manifest     | and parse the    |
-  the main thread and      |                         | Manifest         |
-  process them.            |                         v                  |
-                           |        +--------------------+              |   ` Internet
-                           |        |                    |   request    |   `    ,,,,,
-                           |        |      transport     |--------------+---`-->( CDN )
-                   creates |        | (./core/transport) |              |   `    `````
-                           |        |                    |<---+         |   `
-                           |        +--------------------+     \        |
-                           |        Abstract the streaming      \       |
+     | Creates             |            Load and     |                  |
+     V                     |            refresh the  | Ask to load      |
+   +-------------------+   |            Manifest     | and parse the    |
+   |                   |   | creates                 | Manifest         |
+   | CMCD data builder |   |                         v                  |
+   |  (./core/cmcd)    |   |        +--------------------+              |   ` Internet
+   |                   |   |        |                    |   request    |   `    ,,,,,
+   +-------------------+   |        |      transport     |--------------+---`-->( CDN )
+   Perform data collection |        |    (./transport)   |              |   `    `````
+   for the "Common Media   |        |                    |<---+         |   `
+   Client Data" (CMCD)     |        +--------------------+     \        |
+   scheme.                 |        Abstract the streaming      \       |
                            |        protocol (e.g. DASH)         \      |
                            |                                      \     |
 Stream (./core/stream)     |                                       \    |
@@ -116,7 +119,7 @@ Stream (./core/stream)     |                                       \    |
 |                  (audio) v    (video) v     (text) v   uses                | |
 |                  +--------+   +--------+    +--------+ --->+-------------+ | |
 | (Representation- |        |   |        |    |        |   | |   Segment   | | |
-| Stream).         |Repre...|-+ |Repre...|-+  |Repre...|-+ | |   fetcher   |-+ |
+| Stream).         |Repre...|-+ |Repre...|-+  |Repre...|-+ | |    Queue    |-+ |
 | Download and push| Stream | | | Stream | |  | Stream | | | |(./core/fetc |   |
 | segments based on|        | | |        | |  |        | | | |hers/segment)|   |
 | the current      +--------+ | +--------+ |  +--------+ | | +-------------+   |
@@ -171,9 +174,9 @@ For the subdirectories and files in this directory not represented in that schem
 - `manifest` (_./manifest_): Defines a `Manifest` structure and its properties, a central
   structure of the player describing a content.
 
-- `multithread` (_./multithread_): Global code specific to the multithreaded "flavor" of
-  the RxPlayer, that is a specific RxPlayer class which may run its main logic in a
-  WebWorker to improve performance.
+- `PlaybackObserver` (./playback_observer): Defines `PlaybackObserver` instances, used by
+  many modules to obtain playback-related properties (such as the playing position, the
+  current playback speed etc.).
 
 - `parsers` (_./parsers_): Various parsers for several formats
 
@@ -248,10 +251,10 @@ The previous schema mostly illustrated the most complex code path of the three (
    `DirectfileContentInitializer` is called by the API to start-up such contents and a
    specialized `MediaElementTracksStore` is handling tracks specifically for directfile
    contents (as they are handled differently than for other code paths, here trough API
-   exposed by the browser)have .
+   exposed by the browser).
 
 2. A second code path, we may call the "monothreaded code path" apply for non-directfile
-   contents (so, contents which rely on MSE API instead) loaded in monothreaded mode,
+   contents (so, contents which rely on the MSE API instead) loaded in monothreaded mode,
    which is the default.
 
    It is much closer to the schema of the previous chapter:

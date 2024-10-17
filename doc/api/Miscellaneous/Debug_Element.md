@@ -93,6 +93,7 @@ exactly what's going on at a particular point in time.
       buffering media) also running in a WebWorker (which should be more efficient but is
       supported by less platforms).
     - If set to `0`, the playback is in the regular "main" (single thread) mode.
+  - **v**: Current version of the RxPlayer.
   - **ks**: _Key System_. If set, the current key system used to decrypt contents.
   - **mbb**: _Max Buffer Behind_. If set, the configured `maxBufferBehind` (amount of
     buffer to keep in memory behind the current position, in seconds).

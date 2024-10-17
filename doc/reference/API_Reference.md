@@ -172,6 +172,9 @@ events and so on.
 - [`checkMediaSegmentIntegrity`](../api/Loading_a_Content.md#checkmediasegmentintegrity):
   Enable supplementary checks to retry a request if a segment appears corrupted.
 
+- [`checkManifestIntegrity`](../api/Loading_a_Content.md#checkmanifestintegrity): Enable
+  supplementary checks to retry a request if a Manifest appears corrupted.
+
 - [`serverSyncInfos`](../api/Loading_a_Content.md#serversyncinfos): Provide time
   synchronization mechanism between the client and server.
 
@@ -391,6 +394,9 @@ events and so on.
 
 - [`LogLevel`](../api/Static_Properties.md#loglevel): Update the verbosity of the RxPlayer
   logger.
+
+- [`LogFormat`](../api/Static_Properties.md#logformat): Update the format of logs produced
+  by the logger.
 
 - [`ErrorTypes`](../api/Static_Properties.md#errortypes): All Error types that can be
   encountered.

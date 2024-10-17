@@ -1338,8 +1338,7 @@ function prettyPrintInventory(inventory: IBufferedChunk[]): string {
   }
 
   let str = "";
-  for (let i = 0; i < inventory.length; i++) {
-    const chunk = inventory[i];
+  for (const chunk of inventory) {
     if (chunk.bufferedStart !== undefined && chunk.bufferedEnd !== undefined) {
       const periodId = chunk.infos.period.id;
       const representationId = chunk.infos.representation.id;
@@ -1349,11 +1348,14 @@ function prettyPrintInventory(inventory: IBufferedChunk[]): string {
       if (encounteredPeriod === undefined) {
         currentLetter = generateNewLetter(chunk.infos);
         encounteredReps[periodId] = { [representationId]: currentLetter };
-      } else if (encounteredPeriod[representationId] === undefined) {
-        currentLetter = generateNewLetter(chunk.infos);
-        encounteredPeriod[representationId] = currentLetter;
       } else {
-        currentLetter = encounteredPeriod[representationId] as string;
+        const previousLetter = encounteredPeriod[representationId];
+        if (previousLetter === undefined) {
+          currentLetter = generateNewLetter(chunk.infos);
+          encounteredPeriod[representationId] = currentLetter;
+        } else {
+          currentLetter = previousLetter;
+        }
       }
 
       if (lastChunk === null) {

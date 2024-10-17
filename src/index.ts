@@ -56,9 +56,9 @@ Player.addFeatures([
   HTML_SRT_PARSER,
 ]);
 if (isDebugModeEnabled()) {
-  logger.setLevel("DEBUG");
+  logger.setLevel("DEBUG", "standard");
 } else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL);
+  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL, "standard");
 }
 export default Player;
 

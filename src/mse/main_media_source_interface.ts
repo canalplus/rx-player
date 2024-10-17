@@ -1,3 +1,4 @@
+import type { IMediaSource, ISourceBuffer } from "../compat/browser_compatibility_types";
 import { MediaSource_ } from "../compat/browser_compatibility_types";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
@@ -44,7 +45,7 @@ export default class MainMediaSourceInterface
   /** @see IMediaSourceInterface */
   public readyState: ReadyState;
   /** The MSE `MediaSource` instance linked to that `IMediaSourceInterface`. */
-  private _mediaSource: MediaSource;
+  private _mediaSource: IMediaSource;
   /**
    * Abstraction allowing to set and update the MediaSource's duration.
    */
@@ -83,12 +84,13 @@ export default class MainMediaSourceInterface
 
     log.info("Init: Creating MediaSource");
     const mediaSource = new MediaSource_();
-    this.readyState = mediaSource.readyState;
     const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
     this.handle = isNullOrUndefined(handle)
-      ? { type: "media-source", value: mediaSource }
+      ? // eslint-disable-next-line @typescript-eslint/no-restricted-types
+        { type: "media-source", value: mediaSource as unknown as MediaSource }
       : { type: "handle", value: handle };
     this._mediaSource = mediaSource;
+    this.readyState = mediaSource.readyState;
     this._durationUpdater = new MediaSourceDurationUpdater(mediaSource);
     this._endOfStreamCanceller = null;
     onSourceOpen(
@@ -181,7 +183,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    */
   private _canceller: TaskCanceller;
   /** The MSE `SourceBuffer` instance linked to that `ISourceBufferInterface`. */
-  private _sourceBuffer: SourceBuffer;
+  private _sourceBuffer: ISourceBuffer;
   /**
    * Queue of operations, from the most to the least urgent, currently waiting
    * their turn to be performed on the `SourceBuffer`.
@@ -202,7 +204,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    * @param {string} codec
    * @param {SourceBuffer} sourceBuffer
    */
-  constructor(sbType: SourceBufferType, codec: string, sourceBuffer: SourceBuffer) {
+  constructor(sbType: SourceBufferType, codec: string, sourceBuffer: ISourceBuffer) {
     this.type = sbType;
     this.codec = codec;
     this._canceller = new TaskCanceller();
@@ -255,11 +257,12 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       }
       this._performNextOperation();
     };
-    sourceBuffer.addEventListener("error", onError);
+
     sourceBuffer.addEventListener("updateend", onUpdateEnd);
+    sourceBuffer.addEventListener("error", onError);
     this._canceller.signal.register(() => {
-      sourceBuffer.removeEventListener("error", onError);
       sourceBuffer.removeEventListener("updateend", onUpdateEnd);
+      sourceBuffer.removeEventListener("error", onError);
     });
   }
 
@@ -461,6 +464,20 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
           op.reject(error);
         });
         this._currentOperations = [];
+
+        // A synchronous error probably will not lead to updateend event, so we need to
+        // go to next queue element manually
+        //
+        // FIXME: This here is needed to ensure that we're not left with a
+        // dangling queue of operations.
+        // However it can potentially be counter-productive if e.g. the `appendBuffer`
+        // error was due to a full buffer and if there are pushing operations awaiting in
+        // the queue.
+        //
+        // A better solution might just be to reject all push operations right away here?
+        // Only for a `QuotaExceededError` (to check MSE)?
+        // However this is too disruptive for what is now a hotfix
+        this._performNextOperation();
       }
     } else {
       // TODO merge contiguous removes?
@@ -479,7 +496,13 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
                 false,
               );
         nextElem.reject(error);
+        this._currentOperations.forEach((op) => {
+          op.reject(error);
+        });
         this._currentOperations = [];
+        // A synchronous error probably will not lead to updateend event, so we need to
+        // go to next queue element manually
+        this._performNextOperation();
       }
     }
   }
@@ -543,7 +566,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 }
 
-function resetMediaSource(mediaSource: MediaSource): void {
+function resetMediaSource(mediaSource: IMediaSource): void {
   if (mediaSource.readyState !== "closed") {
     const { readyState, sourceBuffers } = mediaSource;
     for (let i = sourceBuffers.length - 1; i >= 0; i--) {

@@ -29,6 +29,26 @@ export interface IWorkerSettings {
   dashWasmUrl?: string | ArrayBuffer | undefined;
 }
 
+/** Object that defines Common Media Client Data (CMCD) options. */
+export interface ICmcdOptions {
+  /**
+   * Content ID delivered by CMCD metadata for that content.
+   * If not specified, a default one will be generated.
+   */
+  contentId?: string;
+  /**
+   * Session ID delivered by CMCD metadata.
+   * If not specified, a default one will be generated.
+   */
+  sessionId?: string;
+  /**
+   * Allow to force the way in which the CMCD payload should be communicated.
+   *
+   * If not set, the most appropriate type will be relied on.
+   */
+  communicationType?: "headers" | "query";
+}
+
 /** Every options that can be given to the RxPlayer's constructor. */
 export interface IConstructorOptions {
   maxBufferAhead?: number;
@@ -38,6 +58,7 @@ export interface IConstructorOptions {
   videoResolutionLimit?: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden?: boolean;
 
+  // eslint-disable-next-line @typescript-eslint/no-restricted-types
   videoElement?: HTMLMediaElement;
   baseBandwidth?: number;
 }
@@ -124,6 +145,12 @@ export interface ILoadVideoOptions {
    */
   checkMediaSegmentIntegrity?: boolean;
 
+  /**
+   * Whether we should check that an obtained Manifest is truncated and retry
+   * the request if that's the case.
+   */
+  checkManifestIntegrity?: boolean | undefined;
+
   /** Manifest object that may be used initially. */
   initialManifest?: IInitialManifest;
 
@@ -150,6 +177,11 @@ export interface ILoadVideoOptions {
    * in "multithread" mode) for that content.
    */
   mode?: IRxPlayerMode | undefined;
+
+  /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
 }
 
 /** Value of the `serverSyncInfos` transport option. */
@@ -361,8 +393,7 @@ export type ISegmentLoader = (
       totalSize?: number | undefined;
     }) => void;
   },
-) => // returns either the aborting callback or nothing
-(() => void) | void;
+) => (() => void) | void; // returns either the aborting callback or nothing
 
 /** Context given to a segment loader. */
 export interface ISegmentLoaderContext {
@@ -404,10 +435,58 @@ export interface ISegmentLoaderContext {
   byteRanges?: Array<[number, number]> | undefined;
   /** Type of the corresponding track. */
   trackType: ITrackType;
+  /**
+   * Optional "Common Media Client Data" (CMCD) payload that may be added to
+   * the request.
+   */
+  cmcdPayload?: ICmcdPayload | undefined;
 }
 
 /** Every possible value for the Adaptation's `type` property. */
 export type ITrackType = "video" | "audio" | "text";
+
+/**
+ * Payload to add to a request to provide CMCD metadata through HTTP request
+ * headers.
+ *
+ * This is an object where keys are header names and values are header contents.
+ */
+export type ICmcdHeadersData = Record<string, string>;
+
+/**
+ * Payload to add to a request to provide CMCD metadata through an URL's query
+ * string.
+ *
+ * This is an array of all fields and corresponding values that should be
+ * added to the query string, the order should be kept.
+ *
+ * `null` indicates that the field has no value and should be added as is.
+ */
+export type ICmcdQueryData = Array<[string, string | null]>;
+
+/**
+ * Type when CMCD metadata should be added through headers to the HTTP request
+ * for the corresponding resource.
+ */
+export interface ICmcdHeadersPayload {
+  type: "headers";
+  value: ICmcdHeadersData;
+}
+
+/**
+ * Type when CMCD metadata should be added through the query string to the HTTP
+ * request for the corresponding resource.
+ */
+export interface ICmcdQueryPayload {
+  type: "query";
+  value: ICmcdQueryData;
+}
+
+/**
+ * Type to indicate that CMCD metadata should be added to the request for the
+ * corresponding resource.
+ */
+export type ICmcdPayload = ICmcdHeadersPayload | ICmcdQueryPayload;
 
 export type ILoadedManifestFormat = IInitialManifest;
 
@@ -429,12 +508,17 @@ export type IManifestLoader = (
     reject: (err?: Error) => void;
     fallback: () => void;
   },
-) => // returns either the aborting callback or nothing
-(() => void) | void;
+) => (() => void) | void; // returns either the aborting callback or nothing
 
 export interface IManifestLoaderInfo {
+  /** URL at which the wanted Manifest can be accessed. */
   url: string | undefined;
   timeout: number | undefined;
+  /**
+   * Optional "Common Media Client Data" (CMCD) payload that may be added to
+   * the request.
+   */
+  cmcdPayload: ICmcdPayload | undefined;
 }
 
 /** Options related to a single key system. */
@@ -452,7 +536,9 @@ export interface IKeySystemOption {
     messageType: string,
   ) => Promise<BufferSource | null> | BufferSource | null;
   /** Supplementary optional configuration for the getLicense call. */
-  getLicenseConfig?: { retry?: number; timeout?: number };
+  getLicenseConfig?:
+    | { retry?: number | undefined; timeout?: number | undefined }
+    | undefined;
   /**
    * Optional `serverCertificate` we will try to set to speed-up the
    * license-fetching process.
@@ -473,11 +559,62 @@ export interface IKeySystemOption {
    */
   distinctiveIdentifier?: MediaKeysRequirement | undefined;
   /**
-   * If true, all open MediaKeySession (used to decrypt the content) will be
-   * closed when the current playback stops.
+   * If true, all open `MediaKeySession` (JavaScript Objects linked to the keys
+   * used to decrypt the content) will be closed when the current playback
+   * stops.
+   *
+   * By default, we keep `MediaKeySession` from previous contents (up to
+   * `maxSessionCacheSize` `MediaKeySession`) to speed-up playback and avoid
+   * round-trips to the license server if the user ever decide to go back to
+   * those contents or to other contents relying to the same keys.
+   *
+   * However we found that some devices poorly handle that optimization.
+   *
+   * Note that if setting that property to `true` fixes your issue, it may be
+   * that it's just the `maxSessionCacheSize` which is for now too high.
+   *
+   * However if your problem doesn't disappear after setting
+   * `closeSessionsOnStop` to `true`, you may try `reuseMediaKeys` next.
    */
   closeSessionsOnStop?: boolean;
-
+  /**
+   * If set to `true` or if not set, we might rely on the previous `MediaKeys`
+   * if a compatible one is already set on the media element, allowing to
+   * potentially speed-up content playback.
+   *
+   * If set to `false`, we will create a new `MediaKeys` instance (a
+   * JavaScript object needed to decrypt contents) if needed for that content.
+   *
+   * We noticed that reusing a previous MediaKeys had led to errors on a few
+   * devices. For example some smart TVs had shown errors after playing several
+   * encrypted contents, errors which disappeared if we renewed the
+   * `MediaKeys` for each content.
+   *
+   * We should already be able to detect most of those cases in the RxPlayer
+   * logic. However, it is still possible that we don't know yet of a device
+   * which also has problem with that optimization.
+   *
+   * If you have issues appearing only after playing multiple encrypted
+   * contents:
+   *
+   *   - First, try setting the `closeSessionsOnStop` option which is less
+   *     destructive.
+   *
+   *     If it fixes your issue, it may be that it's just the number of
+   *     `MediaKeySession` cached by the RxPlayer that is here too high.
+   *
+   *     In that case you can instead update the `maxSessionCacheSize` option
+   *     to still profit from a `MediaKeySession` cache (which avoid making
+   *     license requests for already-played contents).
+   *
+   *     If that second option doesn't seem to have an effect, you can just set
+   *     `closeSessionsOnStop`.
+   *
+   *   - If none of the precedent work-arounds work however, you can try setting
+   *     `reuseMediaKeys` to `false`. If it fixes your problem, please open an
+   *     RxPlayer issue so we can add your device to our list.
+   */
+  reuseMediaKeys?: boolean | undefined;
   singleLicensePer?: "content" | "periods" | "init-data";
   /**
    * Maximum number of `MediaKeySession` that should be created on the same
@@ -717,12 +854,50 @@ export interface IRepresentationContext {
  * RxPlayer.
  */
 export interface IAudioRepresentation {
+  /**
+   * Identifier for that Representation.
+   * Might e.g. be used with the `lockVideoRepresentation` API.
+   */
   id: string | number;
+  /** Optional maximum bitrate, in bits per seconds, for this Representation. */
   bitrate?: number | undefined;
+  /** Codec(s) relied on by the media segments of that Representation. */
   codec?: string | undefined;
+  /**
+   * If `true`, this Representation is linked to "spatial audio" technology, such as
+   * Dolby Atmos.
+   * If `false`, it is not linked to such technology.
+   *
+   * If `undefined`, we don't if it is linked to a spatial audio technology or not.
+   */
   isSpatialAudio?: boolean | undefined;
+  /**
+   * If `true`, the codec is known to be supported on the current device.
+   * If `false`, it is known to be unsupported.
+   *
+   * If `undefined`, we don't know yet if it is supported or not.
+   */
   isCodecSupported?: boolean | undefined;
+  /**
+   * If `true`, this Representation is known to be decipherable.
+   * If `false`, it is known to be encrypted and not decipherable.
+   *
+   * If `undefined`, we don't know yet if it is decipherable or not (or if it is
+   * encrypted or not in some cases).
+   */
   decipherable?: boolean | undefined;
+  /**
+   * Encryption information linked to this content.
+   * If set to an Object, the Representation is known to be encrypted.
+   * If unset or set to `undefined` the Representation is either unencrypted or
+   * we don't know if it is.
+   */
+  contentProtections?:
+    | {
+        /** Known key ids linked to that Representation. */
+        keyIds?: Uint8Array[] | undefined;
+      }
+    | undefined;
 }
 
 /** Audio track returned by the RxPlayer. */
@@ -761,15 +936,50 @@ export interface ITextTrack {
  * RxPlayer.
  */
 export interface IVideoRepresentation {
+  /**
+   * Identifier for that Representation.
+   * Might e.g. be used with the `lockVideoRepresentation` API.
+   */
   id: string;
+  /** Optional maximum bitrate, in bits per seconds, for this Representation. */
   bitrate?: number | undefined;
+  /** Defines the width of the Representation in pixels. */
   width?: number | undefined;
+  /** Defines the height of the Representation in pixels. */
   height?: number | undefined;
+  /** Codec(s) relied on by the media segments of that Representation. */
   codec?: string | undefined;
+  /** The frame rate for this Representation, in frame per seconds. */
   frameRate?: number | undefined;
+  /** If the track is HDR, gives the HDR characteristics of the content */
   hdrInfo?: IHDRInformation | undefined;
+  /**
+   * If `true`, the codec is known to be supported on the current device.
+   * If `false`, it is known to be unsupported.
+   *
+   * If `undefined`, we don't know yet if it is supported or not.
+   */
   isCodecSupported?: boolean | undefined;
+  /**
+   * If `true`, this Representation is known to be decipherable.
+   * If `false`, it is known to be encrypted and not decipherable.
+   *
+   * If `undefined`, we don't know yet if it is decipherable or not (or if it is
+   * encrypted or not in some cases).
+   */
   decipherable?: boolean | undefined;
+  /**
+   * Encryption information linked to this content.
+   * If set to an Object, the Representation is known to be encrypted.
+   * If unset or set to `undefined` the Representation is either unencrypted or
+   * we don't know if it is.
+   */
+  contentProtections?:
+    | {
+        /** Known key ids linked to that Representation. */
+        keyIds?: Uint8Array[] | undefined;
+      }
+    | undefined;
 }
 
 /** Video track returned by the RxPlayer. */
@@ -954,9 +1164,8 @@ export interface ITrackUpdateEventPayload {
 export interface IRepresentationListUpdateContext {
   period: IPeriod;
   trackType: ITrackType;
-  /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   reason: "decipherability-update" | string;
-  /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
 }
 
 export interface ILockedVideoRepresentationsSettings {

@@ -91,6 +91,7 @@ export default defineConfig({
     globals: false,
     reporters: "dot",
     include: ["tests/**/*.[jt]s?(x)"],
+    exclude: ["tests/performance/**/*.[jt]s?(x)"],
     globalSetup: "tests/contents/server.mjs",
     browser: getBrowserConfig(process.env.BROWSER_CONFIG),
   },

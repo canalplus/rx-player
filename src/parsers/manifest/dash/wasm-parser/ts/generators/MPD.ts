@@ -122,18 +122,21 @@ export function generateMPDAttrParser(
       case AttributeName.Type:
         mpdAttrs.type = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
-      case AttributeName.AvailabilityStartTime:
+      case AttributeName.AvailabilityStartTime: {
         const startTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
         mpdAttrs.availabilityStartTime = new Date(startTime).getTime() / 1000;
         break;
-      case AttributeName.AvailabilityEndTime:
+      }
+      case AttributeName.AvailabilityEndTime: {
         const endTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
         mpdAttrs.availabilityEndTime = new Date(endTime).getTime() / 1000;
         break;
-      case AttributeName.PublishTime:
+      }
+      case AttributeName.PublishTime: {
         const publishTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
         mpdAttrs.publishTime = new Date(publishTime).getTime() / 1000;
         break;
+      }
       case AttributeName.MediaPresentationDuration:
         dataView = new DataView(linearMemory.buffer);
         mpdAttrs.duration = dataView.getFloat64(ptr, true);
@@ -162,11 +165,12 @@ export function generateMPDAttrParser(
         dataView = new DataView(linearMemory.buffer);
         mpdAttrs.maxSubsegmentDuration = dataView.getFloat64(ptr, true);
         break;
-      case AttributeName.Location:
+      case AttributeName.Location: {
         const location = parseString(textDecoder, linearMemory.buffer, ptr, len);
         mpdChildren.locations.push(location);
         break;
-      case AttributeName.Namespace:
+      }
+      case AttributeName.Namespace: {
         const xmlNs = { key: "", value: "" };
         dataView = new DataView(linearMemory.buffer);
         let offset = ptr;
@@ -186,6 +190,7 @@ export function generateMPDAttrParser(
           mpdAttrs.namespaces.push(xmlNs);
         }
         break;
+      }
     }
   };
 }

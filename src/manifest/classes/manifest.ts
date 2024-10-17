@@ -16,6 +16,7 @@
 
 import { MediaError } from "../../errors";
 import log from "../../log";
+import { getCodecsWithUnknownSupport } from "../../main_thread/init/utils/update_manifest_codec_support";
 import type { IParsedManifest } from "../../parsers/manifest";
 import type { ITrackType, IRepresentationFilter, IPlayerError } from "../../public_types";
 import arrayFind from "../../utils/array_find";
@@ -38,9 +39,10 @@ import {
   toTaggedTrack,
 } from "../utils";
 import type Adaptation from "./adaptation";
+import CodecSupportCache from "./codec_support_cache";
+import type { ICodecSupportInfo } from "./codec_support_cache";
 import type { IManifestAdaptations } from "./period";
 import Period from "./period";
-import type { ICodecSupportList } from "./representation";
 import type Representation from "./representation";
 import { MANIFEST_UPDATE_TYPE } from "./types";
 import type { IPeriodsUpdateResult } from "./update_periods";
@@ -74,6 +76,8 @@ export interface IManifestEvents {
   manifestUpdate: IPeriodsUpdateResult;
   /** Some Representation's decipherability status has been updated */
   decipherabilityUpdate: IDecipherabilityUpdateElement[];
+  /** Some Representation's support status has been updated */
+  supportUpdate: null;
 }
 
 /**
@@ -300,6 +304,12 @@ export default class Manifest
   };
 
   /**
+   * Caches the information if a codec is supported or not in the context of the
+   * current content.
+   */
+  private _cachedCodecSupport: CodecSupportCache;
+
+  /**
    * Construct a Manifest instance from a parsed Manifest object (as returned by
    * Manifest parsers) and options.
    *
@@ -322,6 +332,7 @@ export default class Manifest
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
+    this._cachedCodecSupport = new CodecSupportCache([]);
 
     const unsupportedAdaptations: Adaptation[] = [];
     this.periods = parsedManifest.periods
@@ -329,6 +340,7 @@ export default class Manifest
         const period = new Period(
           parsedPeriod,
           unsupportedAdaptations,
+          this._cachedCodecSupport,
           representationFilter,
         );
         return period;
@@ -348,9 +360,7 @@ export default class Manifest
      * @deprecated It is here to ensure compatibility with the way the
      * v3.x.x manages adaptations at the Manifest level
      */
-    /* eslint-disable import/no-deprecated */
     this.adaptations = this.periods[0] === undefined ? {} : this.periods[0].adaptations;
-    /* eslint-enable import/no-deprecated */
 
     this.timeBounds = parsedManifest.timeBounds;
     this.isDynamic = parsedManifest.isDynamic;
@@ -370,21 +380,28 @@ export default class Manifest
    * Some environments (e.g. in a WebWorker) may not have the capability to know
    * if a mimetype+codec combination is supported on the current platform.
    *
-   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
-   * once it has been requested on a compatible environment (e.g. in the main
-   * thread) allows to work-around this issue.
+   * Calling `updateCodecSupport` manually once the codecs supported are known
+   * by the current environnement allows to work-around this issue.
    *
-   * @param {Array.<Object>} supportList
+   * @param {Array<Object>} [updatedCodecSupportInfo]
    * @returns {Error|null} - Refreshing codec support might reveal that some
    * `Adaptation` don't have any of their `Representation`s supported.
    * In that case, an error object will be created and returned, so you can
    * e.g. later emit it as a warning through the RxPlayer API.
    */
-  public refreshCodecSupport(supportList: ICodecSupportList): MediaError | null {
+  public updateCodecSupport(
+    updatedCodecSupportInfo: ICodecSupportInfo[] = [],
+  ): MediaError | null {
+    if (updatedCodecSupportInfo.length === 0) {
+      return null;
+    }
+
+    this._cachedCodecSupport.addCodecs(updatedCodecSupportInfo);
     const unsupportedAdaptations: Adaptation[] = [];
     for (const period of this.periods) {
-      period.refreshCodecSupport(supportList, unsupportedAdaptations);
+      period.refreshCodecSupport(unsupportedAdaptations, this._cachedCodecSupport);
     }
+    this.trigger("supportUpdate", null);
     if (unsupportedAdaptations.length > 0) {
       return new MediaError(
         "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
@@ -499,6 +516,10 @@ export default class Manifest
     return getMaximumSafePosition(this);
   }
 
+  public updateCodecSupportList(cachedCodecSupport: CodecSupportCache) {
+    this._cachedCodecSupport = cachedCodecSupport;
+  }
+
   /**
    * Look in the Manifest for Representations linked to the given key ID,
    * and mark them as being impossible to decrypt.
@@ -572,9 +593,7 @@ export default class Manifest
       "manifest.getAdaptation(id) is deprecated." +
         " Please use manifest.period[].getAdaptation(id) instead",
     );
-    /* eslint-disable import/no-deprecated */
     return arrayFind(this.getAdaptations(), ({ id }) => wantedId === id);
-    /* eslint-enable import/no-deprecated */
   }
 
   /**
@@ -610,6 +629,20 @@ export default class Manifest
       availabilityStartTime: this.availabilityStartTime,
       timeBounds: this.timeBounds,
     };
+  }
+
+  /**
+   * Returns a list of all codecs that the support is not known yet.
+   * If a representation with (`isSupported`) is undefined, we consider the
+   * codec support as unknown.
+   *
+   * This function iterates through all periods, adaptations, and representations,
+   * and collects unknown codecs.
+   *
+   * @returns {Array} The list of codecs with unknown support status.
+   */
+  public getCodecsWithUnknownSupport(): Array<{ mimeType: string; codec: string }> {
+    return getCodecsWithUnknownSupport(this);
   }
 
   /**
@@ -651,10 +684,10 @@ export default class Manifest
       }
     }
 
+    this.updateCodecSupport();
+
     // Re-set this.adaptations for retro-compatibility in v3.x.x
-    /* eslint-disable import/no-deprecated */
     this.adaptations = this.periods[0] === undefined ? {} : this.periods[0].adaptations;
-    /* eslint-enable import/no-deprecated */
 
     // Let's trigger events at the end, as those can trigger side-effects.
     // We do not want the current Manifest object to be incomplete when those
@@ -686,18 +719,33 @@ function updateDeciperability(
   const updates: IDecipherabilityUpdateElement[] = [];
   for (const period of manifest.periods) {
     for (const adaptation of period.getAdaptations()) {
+      let hasOnlyUndecipherableRepresentations = true;
       for (const representation of adaptation.representations) {
         const content = { manifest, period, adaptation, representation };
         const result = isDecipherable(content);
+        if (result !== false) {
+          hasOnlyUndecipherableRepresentations = false;
+        }
         if (result !== representation.decipherable) {
           updates.push(content);
           representation.decipherable = result;
+          if (result === true) {
+            adaptation.supportStatus.isDecipherable = true;
+          } else if (
+            result === undefined &&
+            adaptation.supportStatus.isDecipherable === false
+          ) {
+            adaptation.supportStatus.isDecipherable = undefined;
+          }
           log.debug(
             `Decipherability changed for "${representation.id}"`,
             `(${representation.bitrate})`,
             String(representation.decipherable),
           );
         }
+      }
+      if (hasOnlyUndecipherableRepresentations) {
+        adaptation.supportStatus.isDecipherable = false;
       }
     }
   }

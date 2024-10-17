@@ -132,7 +132,7 @@ class SharedReference<T> {
   public setValue(newVal: T): void {
     if (this._isFinished) {
       if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-        /* eslint-disable-next-line no-console */
+        // eslint-disable-next-line no-console
         console.error("Finished shared references cannot be updated");
       }
       return;

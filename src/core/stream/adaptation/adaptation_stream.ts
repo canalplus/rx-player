@@ -58,7 +58,7 @@ export default function AdaptationStream(
     options,
     representationEstimator,
     segmentSink,
-    segmentFetcherCreator,
+    segmentQueueCreator,
     wantedBufferAhead,
     maxVideoBufferSize,
   }: IAdaptationStreamArguments,
@@ -117,7 +117,7 @@ export default function AdaptationStream(
   );
 
   /** Allows a `RepresentationStream` to easily fetch media segments. */
-  const segmentFetcher = segmentFetcherCreator.createSegmentFetcher(
+  const segmentQueue = segmentQueueCreator.createSegmentQueue(
     adaptation.type,
     /* eslint-disable @typescript-eslint/unbound-method */
     {
@@ -376,15 +376,21 @@ export default function AdaptationStream(
     representationStreamCallbacks: IRepresentationStreamCallbacks,
     fnCancelSignal: CancellationSignal,
   ): void {
+    /** Set to `true` if we've encountered an error with this `RepresentationStream` */
+    let hasEncounteredError = false;
+
     const bufferGoalCanceller = new TaskCanceller();
     bufferGoalCanceller.linkToSignal(fnCancelSignal);
+
+    /** Actually built buffer size, in seconds. */
     const bufferGoal = createMappedReference(
       wantedBufferAhead,
       (prev) => {
-        return prev * getBufferGoalRatio(representation);
+        return getBufferGoal(representation, prev);
       },
       bufferGoalCanceller.signal,
     );
+
     const maxBufferSize =
       adaptation.type === "video" ? maxVideoBufferSize : new SharedReference(Infinity);
     log.info(
@@ -394,7 +400,18 @@ export default function AdaptationStream(
       representation.bitrate,
     );
     const updatedCallbacks = objectAssign({}, representationStreamCallbacks, {
-      error(err: unknown) {
+      error(err: Error) {
+        if (hasEncounteredError) {
+          // A RepresentationStream might trigger multiple Errors (for example
+          // multiple segments it tried to push at once led to errors).
+          // In that case, we'll only consider the first Error.
+          //
+          // That could mean that we're hiding legitimate issues but handling
+          // multiple of those errors at once is too hard a task for now.
+          log.warn("Stream: Ignoring RepresentationStream error", err);
+          return;
+        }
+        hasEncounteredError = true;
         const formattedError = formatError(err, {
           defaultCode: "NONE",
           defaultReason: "Unknown `RepresentationStream` error",
@@ -402,14 +419,20 @@ export default function AdaptationStream(
         if (formattedError.code !== "BUFFER_FULL_ERROR") {
           representationStreamCallbacks.error(err);
         } else {
+          log.warn(
+            "Stream: received BUFFER_FULL_ERROR",
+            adaptation.type,
+            representation.bitrate,
+          );
           const wba = wantedBufferAhead.getValue();
           const lastBufferGoalRatio = bufferGoalRatioMap.get(representation.id) ?? 1;
           // 70%, 49%, 34.3%, 24%, 16.81%, 11.76%, 8.24% and 5.76%
           const newBufferGoalRatio = lastBufferGoalRatio * 0.7;
-          if (newBufferGoalRatio <= 0.05 || wba * newBufferGoalRatio <= 2) {
-            throw formattedError;
-          }
           bufferGoalRatioMap.set(representation.id, newBufferGoalRatio);
+          if (newBufferGoalRatio <= 0.05 || getBufferGoal(representation, wba) <= 2) {
+            representationStreamCallbacks.error(formattedError);
+            return;
+          }
 
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
@@ -435,7 +458,7 @@ export default function AdaptationStream(
         playbackObserver,
         content: { representation, adaptation, period, manifest },
         segmentSink,
-        segmentFetcher,
+        segmentQueue,
         terminate: terminateCurrentStream,
         options: {
           bufferGoal,
@@ -481,15 +504,25 @@ export default function AdaptationStream(
   }
 
   /**
-   * @param {Object} representation
+   * Returns how much media data should be pre-buffered for this
+   * `Representation`, according to the `wantedBufferAhead` setting and previous
+   * issues encountered with that `Representation`.
+   * @param {Object} representation - The `Representation` you want to buffer.
+   * @param {number} wba - The value of `wantedBufferAhead` set by the user.
    * @returns {number}
    */
-  function getBufferGoalRatio(representation: IRepresentation): number {
+  function getBufferGoal(representation: IRepresentation, wba: number): number {
     const oldBufferGoalRatio = bufferGoalRatioMap.get(representation.id);
     const bufferGoalRatio = oldBufferGoalRatio !== undefined ? oldBufferGoalRatio : 1;
     if (oldBufferGoalRatio === undefined) {
       bufferGoalRatioMap.set(representation.id, bufferGoalRatio);
     }
-    return bufferGoalRatio;
+    if (bufferGoalRatio < 1 && wba === Infinity) {
+      // When `wba` is equal to `Infinity`, dividing it will still make it equal
+      // to `Infinity`. To make the `bufferGoalRatio` still have an effect, we
+      // just starts from a `wba` set to the high value of 5 minutes.
+      return 5 * 60 * 1000 * bufferGoalRatio;
+    }
+    return wba * bufferGoalRatio;
   }
 }

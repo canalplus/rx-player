@@ -32,7 +32,7 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
 import WeakMapMemory from "../../../utils/weak_map_memory";
 import type { IRepresentationEstimator } from "../../adaptive";
-import type { SegmentFetcherCreator } from "../../fetchers";
+import type { SegmentQueueCreator } from "../../fetchers";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
 import type SegmentSinksStore from "../../segment_sinks";
 import { BufferGarbageCollector } from "../../segment_sinks";
@@ -68,7 +68,7 @@ import getTimeRangesForContent from "./get_time_ranges_for_content";
  * Representation to play.
  * @param {Object} segmentSinksStore - Will be used to lazily create
  * SegmentSink instances associated with the current content.
- * @param {Object} segmentFetcherCreator - Allow to download segments.
+ * @param {Object} segmentQueueCreator - Allow to download segments.
  * @param {Object} options
  * @param {Object} callbacks - The `StreamOrchestrator` relies on a system of
  * callbacks that it will call on various events.
@@ -94,7 +94,7 @@ export default function StreamOrchestrator(
   playbackObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
   representationEstimator: IRepresentationEstimator,
   segmentSinksStore: SegmentSinksStore,
-  segmentFetcherCreator: SegmentFetcherCreator,
+  segmentQueueCreator: SegmentQueueCreator,
   options: IStreamOrchestratorOptions,
   callbacks: IStreamOrchestratorCallbacks,
   orchestratorCancelSignal: CancellationSignal,
@@ -499,7 +499,7 @@ export default function StreamOrchestrator(
       content: { manifest, period: basePeriod },
       garbageCollectors,
       maxVideoBufferSize,
-      segmentFetcherCreator,
+      segmentQueueCreator,
       segmentSinksStore,
       options,
       playbackObserver,

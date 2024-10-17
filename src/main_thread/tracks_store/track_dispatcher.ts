@@ -91,36 +91,18 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     this._canceller = new TaskCanceller();
     this._adaptationRef = adaptationRef;
     this._updateToken = false;
+    this._lastEmitted = undefined;
     this.refresh = noop;
   }
 
   /**
-   * @param {Object|null} initialTrackInfo
+   * Returns `true` if the initial track choice has been sent by this
+   * `TrackDispatcher`.
+   * Returns `false` if that's not the case yet.
+   * @returns {boolean}
    */
-  public start(initialTrackInfo: ITrackSetting | null): void {
-    this._updateToken = true;
-    if (initialTrackInfo === null) {
-      this._lastEmitted = null;
-      this._updateToken = false;
-      this._adaptationRef.setValue(null);
-      return;
-    }
-    const reference = this._constructLockedRepresentationsReference(initialTrackInfo);
-    if (!this._updateToken) {
-      return;
-    }
-    this._lastEmitted = {
-      adaptation: initialTrackInfo.adaptation,
-      switchingMode: initialTrackInfo.switchingMode,
-      lockedRepresentations: null,
-    };
-    this._updateToken = false;
-    this._adaptationRef.setValue({
-      adaptationId: initialTrackInfo.adaptation.id,
-      switchingMode: initialTrackInfo.switchingMode,
-      representations: reference,
-      relativeResumingPosition: undefined,
-    });
+  public hasSetTrack(): boolean {
+    return this._adaptationRef.getValue() !== undefined;
   }
 
   /**
@@ -179,7 +161,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       switchingMode: "lazy",
     });
 
-    /* eslint-disable-next-line @typescript-eslint/no-this-alias */
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this.refresh = updateReferenceIfNeeded;
     this._canceller.signal.register(removeListeners);
@@ -228,7 +210,6 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
         }
       }
       if (playableRepresentations.length <= 0) {
-        trackInfo.adaptation.isSupported = false;
         self.trigger("noPlayableRepresentation", null);
         return;
       }

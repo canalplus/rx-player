@@ -186,6 +186,32 @@ The array emitted contains object describing each available audio track:
   - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation has
     spatial audio.
 
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
+
+    Note that because elements of the `representations` array only contains playable
+    Representation, this value here cannot be set to `false` when in this array.
+
+    `undefined` (or not set) if support of that Representation is unknown or if does not
+    make sense here.
+
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
+    (in the eventuality it had DRM-related protection).
+
+    Note that because elements of the `representations` array only contains playable
+    Representation, this value here cannot be set to `false` when in this array.
+
+  - `contentProtections` (`Object|undefined`): Encryption information linked to this
+    Representation.
+
+    If set to an Object, the Representation is known to be encrypted. If unset or set to
+    `undefined` the Representation is either unencrypted or we don't know if it is.
+
+    When set to an object, it may contain the following properties:
+
+    - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+      Representation.
+
 This event only concerns the currently-playing [Period](../Getting_Started/Glossary.md).
 
 ### availableVideoTracksChange
@@ -229,6 +255,35 @@ The array emitted contains object describing each available video track:
   - `codec` (`string|undefined`): The codec given in standard MIME type format.
 
   - `frameRate` (`number|undefined`): The video framerate.
+
+  - `hdrInfo` (`Object|undefined`) Information about the hdr characteristics of the track.
+    (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
+
+    Note that because elements of the `representations` array only contains playable
+    Representation, this value here cannot be set to `false` when in this array.
+
+    `undefined` (or not set) if support of that Representation is unknown or if does not
+    make sense here.
+
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
+    (in the eventuality it had DRM-related protection).
+
+    Note that because elements of the `representations` array only contains playable
+    Representation, this value here cannot be set to `false` when in this array.
+
+  - `contentProtections` (`Object|undefined`): Encryption information linked to this
+    Representation.
+
+    If set to an Object, the Representation is known to be encrypted. If unset or set to
+    `undefined` the Representation is either unencrypted or we don't know if it is.
+
+    When set to an object, it may contain the following properties:
+
+    - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+      Representation.
 
 - `signInterpreted` (`Boolean`): Whether the track contains sign interpretation.
 
@@ -305,14 +360,44 @@ The payload is an object describing the new track, with the following properties
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track,
   with attributes:
+
   - `id` (`string`): The id used to identify this Representation. No other Representation
     from this track will have the same `id`.
+
   - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits per
     seconds.
+
   - `codec` (`string|undefined`): The audio codec the Representation is in, as announced
     in the corresponding Manifest.
+
   - `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation has
     spatial audio.
+
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
+
+    Note that because elements of the `representations` array only contains playable
+    Representation, this value here cannot be set to `false` when in this array.
+
+    `undefined` (or not set) if support of that Representation is unknown or if does not
+    make sense here.
+
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
+    (in the eventuality it had DRM-related protection).
+
+    Note that because elements of the `representations` array only contains playable
+    Representation, this value here cannot be set to `false` when in this array.
+
+  - `contentProtections` (`Object|undefined`): Encryption information linked to this
+    Representation.
+
+    If set to an Object, the Representation is known to be encrypted. If unset or set to
+    `undefined` the Representation is either unencrypted or we don't know if it is.
+
+    When set to an object, it may contain the following properties:
+
+    - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+      Representation.
 
 This event only concerns the currently-playing Period. This event only concerns the
 currently-playing [Period](../Getting_Started/Glossary.md).
@@ -390,6 +475,35 @@ The payload is an object describing the new track, with the following properties
 
   - `frameRate` (`number|undefined`): The video framerate.
 
+  - `hdrInfo` (`Object|undefined`) Information about the hdr characteristics of the track.
+    (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+
+  - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
+    Representation is supported by the current platform.
+
+    Note that because elements of the `representations` array only contains playable
+    Representation, this value here cannot be set to `false` when in this array.
+
+    `undefined` (or not set) if support of that Representation is unknown or if does not
+    make sense here.
+
+  - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
+    (in the eventuality it had DRM-related protection).
+
+    Note that because elements of the `representations` array only contains playable
+    Representation, this value here cannot be set to `false` when in this array.
+
+  - `contentProtections` (`Object|undefined`): Encryption information linked to this
+    Representation.
+
+    If set to an Object, the Representation is known to be encrypted. If unset or set to
+    `undefined` the Representation is either unencrypted or we don't know if it is.
+
+    When set to an object, it may contain the following properties:
+
+    - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+      Representation.
+
 - `isTrickModeTrack` (`Boolean|undefined`): If set to `true`, this track is a trick mode
   track. This type of tracks proposes video content that is often encoded with a very low
   framerate with the purpose to be played more efficiently at a much higher speed.
@@ -450,6 +564,35 @@ properties:
 
 - `frameRate` (`number|undefined`): The video framerate.
 
+- `hdrInfo` (`Object|undefined`) Information about the hdr characteristics of the track.
+  (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+
+- `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that Representation
+  is supported by the current platform.
+
+  Note that because elements of the `representations` array only contains playable
+  Representation, this value here cannot be set to `false` when in this array.
+
+  `undefined` (or not set) if support of that Representation is unknown or if does not
+  make sense here.
+
+- `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered (in
+  the eventuality it had DRM-related protection).
+
+  Note that because elements of the `representations` array only contains playable
+  Representation, this value here cannot be set to `false` when in this array.
+
+- `contentProtections` (`Object|undefined`): Encryption information linked to this
+  Representation.
+
+  If set to an Object, the Representation is known to be encrypted. If unset or set to
+  `undefined` the Representation is either unencrypted or we don't know if it is.
+
+  When set to an object, it may contain the following properties:
+
+  - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+    Representation.
+
 A `null` payload means that no video track is available now.
 
 This event only concerns the currently-playing [Period](../Getting_Started/Glossary.md).
@@ -472,6 +615,35 @@ The payload is an object describing the new Representation, with the following p
 - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits per seconds.
 
 - `codec` (`string|undefined`): The codec of the representation
+
+- `isSpatialAudio` (`Boolean|undefined`): If set to `true`, this Representation has
+  spatial audio.
+
+- `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that Representation
+  is supported by the current platform.
+
+  Note that because elements of the `representations` array only contains playable
+  Representation, this value here cannot be set to `false` when in this array.
+
+  `undefined` (or not set) if support of that Representation is unknown or if does not
+  make sense here.
+
+- `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered (in
+  the eventuality it had DRM-related protection).
+
+  Note that because elements of the `representations` array only contains playable
+  Representation, this value here cannot be set to `false` when in this array.
+
+- `contentProtections` (`Object|undefined`): Encryption information linked to this
+  Representation.
+
+  If set to an Object, the Representation is known to be encrypted. If unset or set to
+  `undefined` the Representation is either unencrypted or we don't know if it is.
+
+  When set to an object, it may contain the following properties:
+
+  - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
+    Representation.
 
 This event only concerns the currently-playing [Period](../Getting_Started/Glossary.md).
 
@@ -801,7 +973,7 @@ refer to the [`streamEvent`](#streamevent) event for a definition of what a "str
 is).
 
 This means that the current position the player plays at, immediately changed from a time
-before the start time of a "stream event" to after its end time (or just after its end
+before the start time of a "stream event" to after its end time (or just after its start
 time for "stream event" without an end time).
 
 This is most likely due to the user seeking in the content. A "regular" content playback

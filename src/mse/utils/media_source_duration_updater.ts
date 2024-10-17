@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import type {
+  IMediaSource,
+  ISourceBufferList,
+} from "../../compat/browser_compatibility_types";
 import { onSourceOpen, onSourceEnded, onSourceClose } from "../../compat/event_listeners";
 import hasIssuesWithHighMediaSourceDuration from "../../compat/has_issues_with_high_media_source_duration";
 import log from "../../log";
@@ -34,7 +38,7 @@ export default class MediaSourceDurationUpdater {
   /**
    * `MediaSource` on which we're going to update the `duration` attribute.
    */
-  private _mediaSource: MediaSource;
+  private _mediaSource: IMediaSource;
 
   /**
    * Abort the current duration-setting logic.
@@ -47,7 +51,7 @@ export default class MediaSourceDurationUpdater {
    * @param {MediaSource} mediaSource - The MediaSource on which the content is
    * played.
    */
-  constructor(mediaSource: MediaSource) {
+  constructor(mediaSource: IMediaSource) {
     this._mediaSource = mediaSource;
     this._currentMediaSourceDurationUpdateCanceller = null;
   }
@@ -150,7 +154,7 @@ export default class MediaSourceDurationUpdater {
  * @returns {string}
  */
 function setMediaSourceDuration(
-  mediaSource: MediaSource,
+  mediaSource: IMediaSource,
   duration: number,
   isRealEndKnown: boolean,
 ): MediaSourceDurationUpdateStatus {
@@ -245,7 +249,7 @@ const enum MediaSourceDurationUpdateStatus {
  * @returns {Object}
  */
 function createSourceBuffersUpdatingReference(
-  sourceBuffers: SourceBufferList,
+  sourceBuffers: ISourceBufferList,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
   if (sourceBuffers.length === 0) {
@@ -289,7 +293,7 @@ function createSourceBuffersUpdatingReference(
  * @returns {Object}
  */
 function createMediaSourceOpenReference(
-  mediaSource: MediaSource,
+  mediaSource: IMediaSource,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
   const isMediaSourceOpen = new SharedReference(
@@ -335,7 +339,7 @@ function createMediaSourceOpenReference(
  * @param {Object} cancelSignal
  */
 function recursivelyForceDurationUpdate(
-  mediaSource: MediaSource,
+  mediaSource: IMediaSource,
   duration: number,
   isRealEndKnown: boolean,
   cancelSignal: CancellationSignal,

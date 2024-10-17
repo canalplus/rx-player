@@ -20,6 +20,7 @@ import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
 import { utf8ToStr } from "../../../utils/string_parsing";
 import wrapInPromise from "../../../utils/wrapInPromise";
+import type { IMediaElement } from "../../browser_compatibility_types";
 import type {
   ICustomMediaKeys,
   ICustomMediaKeySession,
@@ -109,15 +110,12 @@ class OldWebkitMediaKeySession
         if (this._key.indexOf("clearkey") >= 0) {
           const licenseTypedArray =
             license instanceof ArrayBuffer ? new Uint8Array(license) : license;
-          /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-          /* eslint-disable @typescript-eslint/no-unsafe-argument */
-          /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const json = JSON.parse(utf8ToStr(licenseTypedArray));
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
           const key = base64ToBytes(json.keys[0].k);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
           const kid = base64ToBytes(json.keys[0].kid);
-          /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-          /* eslint-enable @typescript-eslint/no-unsafe-argument */
-          /* eslint-enable @typescript-eslint/no-unsafe-assignment */
           resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
         } else {
           resolve(this._vid.webkitAddKey(this._key, license, null, /* sessionId */ ""));
@@ -165,9 +163,7 @@ class OldWebKitCustomMediaKeys implements ICustomMediaKeys {
     this._keySystem = keySystem;
   }
 
-  _setVideo(
-    videoElement: IOldWebkitHTMLMediaElement | HTMLMediaElement,
-  ): Promise<unknown> {
+  _setVideo(videoElement: IOldWebkitHTMLMediaElement | IMediaElement): Promise<unknown> {
     return wrapInPromise(() => {
       if (!isOldWebkitMediaElement(videoElement)) {
         throw new Error("Video not attached to the MediaKeys");
@@ -192,7 +188,7 @@ export default function getOldWebKitMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => OldWebKitCustomMediaKeys;
   setMediaKeys: (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
@@ -220,7 +216,7 @@ export default function getOldWebKitMediaKeysCallbacks(): {
   const createCustomMediaKeys = (keyType: string) =>
     new OldWebKitCustomMediaKeys(keyType);
   const setMediaKeys = (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     if (mediaKeys === null) {

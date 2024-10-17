@@ -21,7 +21,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IAdaptationMetadata, IPeriodMetadata } from "../types";
 import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils";
 import Adaptation from "./adaptation";
-import type { ICodecSupportList } from "./representation";
+import type CodecSupportCache from "./codec_support_cache";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;
@@ -68,6 +68,8 @@ export default class Period implements IPeriodMetadata {
   constructor(
     args: IParsedPeriod,
     unsupportedAdaptations: Adaptation[],
+    cachedCodecSupport: CodecSupportCache,
+
     representationFilter?: IRepresentationFilter | undefined,
   ) {
     this.id = args.id;
@@ -80,12 +82,12 @@ export default class Period implements IPeriodMetadata {
       }
       const filteredAdaptations = adaptationsForType
         .map((adaptation): Adaptation => {
-          const newAdaptation = new Adaptation(adaptation, {
+          const newAdaptation = new Adaptation(adaptation, cachedCodecSupport, {
             representationFilter,
           });
           if (
             newAdaptation.representations.length > 0 &&
-            newAdaptation.isSupported === false
+            newAdaptation.supportStatus.hasSupportedCodec === false
           ) {
             unsupportedAdaptations.push(newAdaptation);
           }
@@ -95,7 +97,9 @@ export default class Period implements IPeriodMetadata {
           (adaptation): adaptation is Adaptation => adaptation.representations.length > 0,
         );
       if (
-        filteredAdaptations.every((adaptation) => adaptation.isSupported === false) &&
+        filteredAdaptations.every(
+          (adaptation) => adaptation.supportStatus.hasSupportedCodec === false,
+        ) &&
         adaptationsForType.length > 0 &&
         (type === "video" || type === "audio")
       ) {
@@ -135,19 +139,18 @@ export default class Period implements IPeriodMetadata {
    * Some environments (e.g. in a WebWorker) may not have the capability to know
    * if a mimetype+codec combination is supported on the current platform.
    *
-   * Calling `refreshCodecSupport` manually with a clear list of codecs supported
-   * once it has been requested on a compatible environment (e.g. in the main
-   * thread) allows to work-around this issue.
+   * Calling `refreshCodecSupport` manually once the codecs supported are known
+   * by the current environnement allows to work-around this issue.
    *
-   * @param {Array.<Object>} supportList
    * @param {Array.<Object>} unsupportedAdaptations - Array on which
    * `Adaptation`s objects which are now known to have no supported
    * `Representation` will be pushed.
    * This array might be useful for minor error reporting.
+   * @param {Array.<Object>} cachedCodecSupport
    */
   refreshCodecSupport(
-    supportList: ICodecSupportList,
     unsupportedAdaptations: Adaptation[],
+    cachedCodecSupport: CodecSupportCache,
   ) {
     (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
       const adaptationsForType = this.adaptations[ttype];
@@ -156,17 +159,30 @@ export default class Period implements IPeriodMetadata {
       }
       let hasSupportedAdaptations: boolean | undefined = false;
       for (const adaptation of adaptationsForType) {
-        const wasSupported = adaptation.isSupported;
-        adaptation.refreshCodecSupport(supportList);
-        if (wasSupported !== false && adaptation.isSupported === false) {
+        if (!adaptation.supportStatus.hasCodecWithUndefinedSupport) {
+          // Go to next adaptation as an optimisation measure.
+          // NOTE this only is true if we never change a codec from supported
+          // to unsuported and its opposite.
+
+          if (adaptation.supportStatus.hasSupportedCodec === true) {
+            hasSupportedAdaptations = true;
+          }
+          continue;
+        }
+        const wasSupported = adaptation.supportStatus.hasSupportedCodec;
+        adaptation.refreshCodecSupport(cachedCodecSupport);
+        if (
+          wasSupported !== false &&
+          adaptation.supportStatus.hasSupportedCodec === false
+        ) {
           unsupportedAdaptations.push(adaptation);
         }
 
         if (hasSupportedAdaptations === false) {
-          hasSupportedAdaptations = adaptation.isSupported;
+          hasSupportedAdaptations = adaptation.supportStatus.hasSupportedCodec;
         } else if (
           hasSupportedAdaptations === undefined &&
-          adaptation.isSupported === true
+          adaptation.supportStatus.hasSupportedCodec === true
         ) {
           hasSupportedAdaptations = true;
         }

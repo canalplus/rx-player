@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type {
   ICustomMediaKeys,
   ICustomMediaKeySystemAccess,
@@ -34,7 +35,7 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @param {Object} mediaElement
  * @returns {Promise}
  */
-export function disableMediaKeys(mediaElement: HTMLMediaElement): Promise<unknown> {
+export function disableMediaKeys(mediaElement: IMediaElement): Promise<unknown> {
   const previousState = MediaKeysInfosStore.getState(mediaElement);
   MediaKeysInfosStore.setState(mediaElement, null);
   return setMediaKeys(previousState?.emeImplementation ?? eme, mediaElement, null);
@@ -50,10 +51,11 @@ export function disableMediaKeys(mediaElement: HTMLMediaElement): Promise<unknow
  * @returns {Promise}
  */
 export default async function attachMediaKeys(
-  mediaElement: HTMLMediaElement,
+  mediaElement: IMediaElement,
   {
     emeImplementation,
     keySystemOptions,
+    askedConfiguration,
     loadedSessionsStore,
     mediaKeySystemAccess,
     mediaKeys,
@@ -80,6 +82,7 @@ export default async function attachMediaKeys(
     mediaKeySystemAccess,
     mediaKeys,
     loadedSessionsStore,
+    askedConfiguration,
   });
   if (mediaElement.mediaKeys === mediaKeys) {
     return;
@@ -108,6 +111,11 @@ export interface IMediaKeysState {
   mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
   /** The MediaKeys instance to attach to the media element. */
   mediaKeys: MediaKeys | ICustomMediaKeys;
+  /**
+   * The MediaKeySystemConfiguration that has been provided to the
+   * `requestMediaKeySystemAccess` API.
+   */
+  askedConfiguration: MediaKeySystemConfiguration;
   /**
    * The chosen EME implementation abstraction linked to `mediaKeys`.
    * Different EME implementation might for example be used while debugging or

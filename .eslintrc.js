@@ -32,7 +32,7 @@ module.exports = {
       },
     ],
     "@typescript-eslint/await-thenable": "error",
-    "@typescript-eslint/ban-types": [
+    "@typescript-eslint/no-restricted-types": [
       "error",
       {
         types: {
@@ -55,6 +55,22 @@ module.exports = {
           Symbol: {
             message: "Avoid using the `Symbol` type. Did you mean `symbol`?",
           },
+          HTMLMediaElement: {
+            message:
+              "Avoid relying on `HTMLMediaElement` directly unless it is API-facing. Prefer our more restricted `IMediaElement` type",
+          },
+          MediaSource: {
+            message:
+              "Avoid relying on `MediaSource` directly unless it is API-facing. Prefer our more restricted `IMediaSource` type",
+          },
+          SourceBuffer: {
+            message:
+              "Avoid relying on `SourceBuffer` directly unless it is API-facing. Prefer our more restricted `ISourceBuffer` type",
+          },
+          SourceBufferList: {
+            message:
+              "Avoid relying on `SourceBufferList` directly unless it is API-facing. Prefer our more restricted `ISourceBufferList` type",
+          },
         },
       },
     ],
@@ -65,6 +81,8 @@ module.exports = {
         objectLiteralTypeAssertions: "allow",
       },
     ],
+    "@typescript-eslint/prefer-promise-reject-errors": "off",
+    "@typescript-eslint/only-throw-error": "off",
     "@typescript-eslint/consistent-type-definitions": "error",
     "@typescript-eslint/dot-notation": "error",
     "@typescript-eslint/explicit-member-accessibility": [
@@ -127,6 +145,15 @@ module.exports = {
         leadingUnderscore: "allow",
       },
     ],
+    "@typescript-eslint/no-duplicate-type-constituents": [
+      "error",
+      {
+        ignoreIntersections: false,
+        // We sadly have to disable this one because there's many cases where
+        // this is done on purpose
+        ignoreUnions: true,
+      },
+    ],
     "@typescript-eslint/no-empty-function": "error",
     "@typescript-eslint/no-empty-interface": "error",
     "@typescript-eslint/no-explicit-any": "error",
@@ -155,18 +182,14 @@ module.exports = {
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
+        args: "all",
         argsIgnorePattern: "^_",
+        caughtErrors: "none",
+        destructuredArrayIgnorePattern: "^_",
         varsIgnorePattern: "^_",
       },
     ],
     "@typescript-eslint/no-shadow": ["error"],
-    "@typescript-eslint/quotes": [
-      "error",
-      "double",
-      {
-        avoidEscape: true,
-      },
-    ],
     "@typescript-eslint/restrict-plus-operands": "error",
     "@typescript-eslint/strict-boolean-expressions": "error",
     "@typescript-eslint/triple-slash-reference": [

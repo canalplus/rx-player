@@ -23,11 +23,10 @@ import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
-import { getFilenameIndexInUrl } from "../../../utils/resolve_url";
 import { hexToBytes } from "../../../utils/string_parsing";
+import { getFilenameIndexInUrl } from "../../../utils/url-utils";
 import { createBox } from "../../containers/isobmff";
 import type {
-  IContentProtectionKID,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
@@ -313,7 +312,7 @@ function createSmoothStreamingParser(
       root,
       (res, _name, node) => {
         switch (_name) {
-          case "QualityLevel":
+          case "QualityLevel": {
             const qualityLevel = parseQualityLevel(node, adaptationType);
             if (qualityLevel === null) {
               return res;
@@ -327,6 +326,7 @@ function createSmoothStreamingParser(
               res.qualityLevels.push(qualityLevel);
             }
             break;
+          }
           case "c":
             res.cNodes.push(node);
             break;
@@ -371,15 +371,12 @@ function createSmoothStreamingParser(
         (!isNullOrUndefined(codecs) ? codecs + "-" : "") +
         String(qualityLevel.bitrate);
 
-      const keyIDs: IContentProtectionKID[] = [];
+      const keyIDs: Uint8Array[] = [];
       let firstProtection: IContentProtectionSmooth | undefined;
       if (protections.length > 0) {
         firstProtection = protections[0];
         protections.forEach((protection) => {
-          const keyId = protection.keyId;
-          protection.keySystems.forEach((keySystem) => {
-            keyIDs.push({ keyId, systemId: keySystem.systemId });
-          });
+          keyIDs.push(protection.keyId);
         });
       }
 

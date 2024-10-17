@@ -1,11 +1,9 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import type {
+  base64ToBytes as IBase64ToBytes,
+  bytesToBase64 as IBytesToBase64,
+} from "../base64";
 import globalScope from "../global_scope";
-
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** Every chars defined in base64. */
 const CHARS = [
@@ -88,13 +86,15 @@ describe("base64ToBytes", () => {
   });
 
   it("should return an empty Uint8Array for an empty string", async () => {
-    const base64ToBytes = ((await vi.importActual("../base64")) as any).base64ToBytes;
+    const base64ToBytes = (await vi.importActual("../base64"))
+      .base64ToBytes as typeof IBase64ToBytes;
     expect(base64ToBytes("")).toEqual(new Uint8Array([]));
     expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should convert a base64 to an Uint8Array", async () => {
-    const base64ToBytes = ((await vi.importActual("../base64")) as any).base64ToBytes;
+    const base64ToBytes = (await vi.importActual("../base64"))
+      .base64ToBytes as typeof IBase64ToBytes;
     expect(base64ToBytes("woDCge+/vg==")).toEqual(
       new Uint8Array([194, 128, 194, 129, 239, 191, 190]),
     );
@@ -112,7 +112,8 @@ describe("base64ToBytes", () => {
     );
     expect(logWarn).not.toHaveBeenCalled();
 
-    const bytesToBase64 = ((await vi.importActual("../base64")) as any).bytesToBase64;
+    const bytesToBase64 = (await vi.importActual("../base64"))
+      .bytesToBase64 as typeof IBytesToBase64;
 
     for (let i = 0; i < CHARS.length; i++) {
       const char1 = CHARS[i];
@@ -131,7 +132,8 @@ describe("base64ToBytes", () => {
   });
 
   it("should convert a non-padded base64 to an Uint8Array", async () => {
-    const base64ToBytes = ((await vi.importActual("../base64")) as any).base64ToBytes;
+    const base64ToBytes = (await vi.importActual("../base64"))
+      .base64ToBytes as typeof IBase64ToBytes;
     expect(base64ToBytes("woDCge+/vg")).toEqual(
       new Uint8Array([194, 128, 194, 129, 239, 191, 190]),
     );
@@ -151,7 +153,8 @@ describe("base64ToBytes", () => {
   });
 
   it("should fail on invalid data", async () => {
-    const base64ToBytes = ((await vi.importActual("../base64")) as any).base64ToBytes;
+    const base64ToBytes = (await vi.importActual("../base64"))
+      .base64ToBytes as typeof IBase64ToBytes;
     expect(() => base64ToBytes("woD=Cge+/vg=")).toThrowError(
       "Unable to parse base64 string.",
     );
@@ -175,13 +178,15 @@ describe("bytesToBase64", () => {
   });
 
   it("should return an empty string for an empty Uint8Array", async () => {
-    const bytesToBase64 = ((await vi.importActual("../base64")) as any).bytesToBase64;
+    const bytesToBase64 = (await vi.importActual("../base64"))
+      .bytesToBase64 as typeof IBytesToBase64;
     expect(bytesToBase64(new Uint8Array([]))).toEqual("");
     expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should convert a base64 to an Uint8Array", async () => {
-    const bytesToBase64 = ((await vi.importActual("../base64")) as any).bytesToBase64;
+    const bytesToBase64 = (await vi.importActual("../base64"))
+      .bytesToBase64 as typeof IBytesToBase64;
     expect(bytesToBase64(new Uint8Array([194, 128, 194, 129, 239, 191, 190]))).toEqual(
       "woDCge+/vg==",
     );

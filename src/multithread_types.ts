@@ -8,12 +8,13 @@ import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_buffers_s
 import type {
   IResolutionInfo,
   IManifestFetcherSettings,
-  ISegmentFetcherCreatorBackoffOptions,
+  ISegmentQueueCreatorBackoffOptions,
   IInbandEvent,
   IPausedPlaybackObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
 } from "./core/types";
+import type { IDefaultConfig } from "./default_config";
 import type {
   ISerializedMediaError,
   ISerializedNetworkError,
@@ -28,9 +29,9 @@ import type {
   SourceBufferType,
 } from "./mse";
 import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
-import type { ITrackType } from "./public_types";
+import type { ICmcdOptions, ITrackType } from "./public_types";
 import type { ITransportOptions } from "./transports";
-import type { ILoggerLevel } from "./utils/logger";
+import type { ILogFormat, ILoggerLevel } from "./utils/logger";
 import type { IRange } from "./utils/ranges";
 
 /**
@@ -65,6 +66,12 @@ export interface IInitMessage {
     hasMseInWorker: boolean;
     /** Initial logging level that should be set. */
     logLevel: ILoggerLevel;
+    /** Intitial logger's log format that should be set. */
+    logFormat: ILogFormat;
+    /**
+     * If `true`, logs should be sent back to the main thread, through a
+     * `ILogMessageWorkerMessage` message.
+     */
     sendBackLogs: boolean;
     /**
      * Value of `Date.now()` at the time the `timestamp` property was generated.
@@ -98,6 +105,10 @@ export interface IContentInitializationData {
    */
   contentId: string;
   /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
+  /**
    * URL at which the content's Manifest is accessible.
    * `undefined` if unknown.
    */
@@ -128,9 +139,9 @@ export interface IContentInitializationData {
   /**
    * Options relative to the fetching and refreshing of the Manifest.
    */
-  manifestRetryOptions: IManifestFetcherSettings;
+  manifestRetryOptions: Omit<IManifestFetcherSettings, "cmcdDataBuilder">;
   /** Options relative to the fetching of media segments. */
-  segmentRetryOptions: ISegmentFetcherCreatorBackoffOptions;
+  segmentRetryOptions: ISegmentQueueCreatorBackoffOptions;
 }
 
 export interface ILogLevelUpdateMessage {
@@ -138,8 +149,20 @@ export interface ILogLevelUpdateMessage {
   value: {
     /** The new logger level that should be set. */
     logLevel: ILoggerLevel;
+    /** Intitial logger's log format that should be set. */
+    logFormat: ILogFormat;
+    /**
+     * If `true`, logs should be sent back to the main thread, through a
+     * `ILogMessageWorkerMessage` message.
+     */
     sendBackLogs: boolean;
   };
+}
+
+/** Message sent by the main thread to update the Worker's global config. */
+export interface IConfigUpdateMessage {
+  type: MainThreadMessageType.ConfigUpdate;
+  value: Partial<IDefaultConfig>;
 }
 
 /**
@@ -222,17 +245,14 @@ export interface IStartPreparedContentMessageValue {
  */
 export interface ICodecSupportUpdateMessage {
   type: MainThreadMessageType.CodecSupportUpdate;
-  value: Array<{
-    /** The corresponding codec (e.g. "ec-3"). */
-    codec: string;
-    /** The mime-type associated (e.g. "audio/mp4"). */
-    mimeType: string;
-    /**
-     * If `true`, this `mimeType` and `codec` combination is supported.
-     * If `false`, it is not supported.
-     */
-    result: boolean;
-  }>;
+  value: ICodecSupportInfo[];
+}
+
+export interface ICodecSupportInfo {
+  mimeType: string;
+  codec: string;
+  supported?: boolean | undefined;
+  supportedIfEncrypted?: boolean | undefined;
 }
 
 /**
@@ -529,6 +549,7 @@ export const enum MainThreadMessageType {
   RemoveTextDataError = "remove-text-error",
   CodecSupportUpdate = "codec-support-update",
   ContentUrlsUpdate = "urls-update",
+  ConfigUpdate = "config-update",
   DecipherabilityStatusUpdate = "decipherability-update",
   LogLevelUpdate = "log-level-update",
   MediaSourceReadyStateChange = "media-source-ready-state-change",
@@ -547,6 +568,7 @@ export const enum MainThreadMessageType {
 export type IMainThreadMessage =
   | IInitMessage
   | ILogLevelUpdateMessage
+  | IConfigUpdateMessage
   | IPrepareContentMessage
   | IStopContentMessage
   | IStartPreparedContentMessage

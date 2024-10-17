@@ -3,7 +3,7 @@
 # Update gh-pages demo
 # ====================
 #
-# This script allows to automatically update the full demo on the gh-pages
+# This script allows to automatically update the demo on the gh-pages
 # branch.
 #
 # To use it:
@@ -23,9 +23,8 @@ current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 current_version=$(cat VERSION)
 
 if ! [ "$current_branch" == "stable" ]; then
-  echo $current_branch
-  echo "ERROR: The current branch should be \"stable\""
-  exit 1;
+  echo "ERROR: Updating the gh-pages demo is only possible from the \"stable\" branch"
+  exit 1
 fi
 
 # Generate demo
@@ -33,7 +32,7 @@ npm run demo:min
 
 if [ -n "$(git status --porcelain doc)" ]; then
   echo "ERROR: Please commit your modifications to \"stable\""
-  exit 1;
+  exit 1
 fi
 
 tmpFontsDir=$(mktemp -d)
@@ -47,15 +46,15 @@ tmpWorkerFile=$(mktemp)
 tmpMpdWasmFile=$(mktemp)
 tmpDemoList=$(mktemp)
 
-cp -r demo/full/fonts $tmpFontsDir -v
-cp -r demo/full/assets $tmpAssetsDir -v
-cp -r demo/full/styles $tmpStylesDir -v
-cp demo/full/bundle.js $tmpDemoFile -v
-cp demo/full/index.html $tmpIndexFile -v
-cp demo/full/plus.ico $tmpFaviconFile -v
-cp demo/full/worker.js $tmpWorkerFile -v
-cp demo/full/mpd-parser.wasm $tmpMpdWasmFile -v
-cp scripts/generate_demo_list.mjs $tmpDemoList -v
+cp -rv demo/fonts $tmpFontsDir
+cp -rv demo/assets $tmpAssetsDir
+cp -rv demo/styles $tmpStylesDir
+cp -v demo/bundle.js $tmpDemoFile
+cp -v demo/index.html $tmpIndexFile
+cp -v demo/plus.ico $tmpFaviconFile
+cp -v demo/worker.js $tmpWorkerFile
+cp -v dist/mpd-parser.wasm $tmpMpdWasmFile
+cp -v scripts/generate_demo_list.mjs $tmpDemoList
 
 # update gh-pages
 git checkout gh-pages
@@ -97,7 +96,7 @@ if [ -n "$(git status --porcelain bundle.js worker.js mpd-parser.wasm plus.ico s
   echo ""
   git status bundle.js worker.js mpd-parser.wasm plus.ico styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html
 
-  while : ; do
+  while :; do
     echo ""
     echo "We will push the demo to gh-pages."
     REPLY=""
@@ -130,8 +129,8 @@ if [ -n "$(git status --porcelain bundle.js worker.js mpd-parser.wasm plus.ico s
       exit 0
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
       git checkout bundle.js worker.js mpd-parser.wasm styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
-    elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then
-      git stash -u push bundle.js worker.js mpd-parser.wasm styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
+    elif [[ $REPLY =~ ^[Tt]$ ]]; then
+      git stash save -u bundle.js worker.js mpd-parser.wasm styles fonts assets index.html plus.ico "versions/$current_version/demo" demo_page_by_version.html
       break
     fi
   done

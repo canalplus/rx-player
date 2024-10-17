@@ -248,7 +248,7 @@ export interface ISessionEventListenerCallbacks {
    */
   onKeyUpdate: (val: IKeyUpdateValue) => void;
   onWarning: (val: IPlayerError) => void;
-  /* eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   onError: (val: unknown | BlacklistedSessionError) => void;
 }
 

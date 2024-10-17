@@ -1,5 +1,8 @@
 import addTextTrack from "../../../compat/add_text_track";
-import type { ICompatTextTrack } from "../../../compat/browser_compatibility_types";
+import type {
+  ICompatTextTrack,
+  IMediaElement,
+} from "../../../compat/browser_compatibility_types";
 import removeCue from "../../../compat/remove_cue";
 import log from "../../../log";
 import type { ITextTrackSegmentData } from "../../../transports";
@@ -16,7 +19,7 @@ import parseTextTrackToCues from "./native_parsers";
  * @class NativeTextDisplayer
  */
 export default class NativeTextDisplayer implements ITextDisplayer {
-  private readonly _videoElement: HTMLMediaElement;
+  private readonly _videoElement: IMediaElement;
   private readonly _track: ICompatTextTrack;
   private readonly _trackElement: HTMLTrackElement | undefined;
 
@@ -25,7 +28,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
   /**
    * @param {HTMLMediaElement} videoElement
    */
-  constructor(videoElement: HTMLMediaElement) {
+  constructor(videoElement: IMediaElement) {
     log.debug("NTD: Creating NativeTextDisplayer");
     const { track, trackElement } = addTextTrack(videoElement);
     this._buffered = new ManualTimeRanges();
@@ -155,24 +158,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
   public reset(): void {
     log.debug("NTD: Aborting NativeTextDisplayer");
     this._removeData(0, Infinity);
-    const { _trackElement, _videoElement } = this;
-
-    if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
-      try {
-        _videoElement.removeChild(_trackElement);
-      } catch (e) {
-        log.warn("NTD: Can't remove track element from the video");
-      }
-    }
-
-    // Ugly trick to work-around browser bugs by refreshing its mode
-    const oldMode = this._track.mode;
-    this._track.mode = "disabled";
-    this._track.mode = oldMode;
-
-    if (this._trackElement !== undefined) {
-      this._trackElement.innerHTML = "";
-    }
+    this._clearTrackElement();
   }
 
   public stop(): void {
@@ -183,7 +169,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
     if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
       try {
         _videoElement.removeChild(_trackElement);
-      } catch (e) {
+      } catch (_e) {
         log.warn("NTD: Can't remove track element from the video");
       }
     }
@@ -209,6 +195,27 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       }
     }
     this._buffered.remove(start, end);
+  }
+
+  private _clearTrackElement(): void {
+    const { _trackElement, _videoElement } = this;
+
+    if (_trackElement !== undefined && _videoElement.hasChildNodes()) {
+      try {
+        _videoElement.removeChild(_trackElement);
+      } catch (_e) {
+        log.warn("NTD: Can't remove track element from the video");
+      }
+    }
+
+    // Ugly trick to work-around browser bugs by refreshing its mode
+    const oldMode = this._track.mode;
+    this._track.mode = "disabled";
+    this._track.mode = oldMode;
+
+    if (this._trackElement !== undefined) {
+      this._trackElement.innerHTML = "";
+    }
   }
 }
 
@@ -240,15 +247,11 @@ export interface INativeTextTracksBufferSegmentData {
  * a hack to tell TypeScript to perform that check.
  */
 if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  /* eslint-disable @typescript-eslint/ban-ts-comment */
-  // @ts-ignore
+  // @ts-expect-error: uncalled function just for type checking
   function _checkType(input: ITextTrackSegmentData): void {
     function checkEqual(_arg: INativeTextTracksBufferSegmentData): void {
       /* nothing */
     }
     checkEqual(input);
   }
-  /* eslint-enable @typescript-eslint/no-unused-vars */
-  /* eslint-enable @typescript-eslint/ban-ts-comment */
 }

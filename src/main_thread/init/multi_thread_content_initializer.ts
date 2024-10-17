@@ -1,11 +1,10 @@
-import isCodecSupported from "../../compat/is_codec_supported";
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
-  IManifestFetcherSettings,
   IResolutionInfo,
 } from "../../core/types";
 import {
@@ -17,7 +16,7 @@ import {
 } from "../../errors";
 import features from "../../features";
 import log from "../../log";
-import type { ICodecSupportList, IManifestMetadata } from "../../manifest";
+import type { IManifestMetadata } from "../../manifest";
 import {
   replicateUpdatesOnManifestMetadata,
   updateDecipherabilityFromKeyIds,
@@ -35,7 +34,12 @@ import type {
   IMediaElementPlaybackObserver,
 } from "../../playback_observer";
 import type { IWorkerPlaybackObservation } from "../../playback_observer/worker_playback_observer";
-import type { IKeySystemOption, IPlayerError, ITrackType } from "../../public_types";
+import type {
+  ICmcdOptions,
+  IInitialManifest,
+  IKeySystemOption,
+  IPlayerError,
+} from "../../public_types";
 import type { ITransportOptions } from "../../transports";
 import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
@@ -48,6 +52,7 @@ import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
 import type { IContentProtection } from "../decrypt";
+import type IContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
@@ -62,6 +67,7 @@ import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import RebufferingController from "./utils/rebuffering_controller";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter";
 import listenToMediaError from "./utils/throw_on_media_error";
+import { updateManifestCodecSupport } from "./utils/update_manifest_codec_support";
 
 const generateContentId = idGenerator();
 
@@ -71,6 +77,20 @@ const generateContentId = idGenerator();
 export default class MultiThreadContentInitializer extends ContentInitializer {
   /** Constructor settings associated to this `MultiThreadContentInitializer`. */
   private _settings: IInitializeArguments;
+
+  /**
+   * The WebWorker may be sending messages as soon as we're preparing the
+   * content but the `MultiThreadContentInitializer` is only able to handle all of
+   * them only once `start`ed.
+   *
+   * As such `_queuedWorkerMessages` is set to an Array  when `prepare` has been
+   * called but not `start` yet, and contains all worker messages that have to
+   * be processed when `start` is called.
+   *
+   * It is set to `null` when there's no need to rely on that queue (either not
+   * yet `prepare`d or already `start`ed).
+   */
+  private _queuedWorkerMessages: MessageEvent[] | null;
 
   /**
    * Information relative to the current loaded content.
@@ -93,13 +113,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _currentMediaSourceCanceller: TaskCanceller;
 
   /**
-   * Stores the resolvers and the current messageId that is sent to the web worker to receive segment sink metrics.
+   * Stores the resolvers and the current messageId that is sent to the web worker to
+   * receive segment sink metrics.
    * The purpose of collecting metrics is for monitoring and debugging.
    */
   private _segmentMetrics: {
     lastMessageId: number;
-    resolvers: Record<number, (value: ISegmentSinkMetrics | undefined) => void>;
+    resolvers: Map<number, (value: ISegmentSinkMetrics | undefined) => void>;
   };
+
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
    * settings.
@@ -114,8 +136,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentContentInfo = null;
     this._segmentMetrics = {
       lastMessageId: 0,
-      resolvers: {},
+      resolvers: new Map(),
     };
+    this._queuedWorkerMessages = null;
   }
 
   /**
@@ -133,6 +156,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const initialAudioBitrate = adaptiveOptions.initialBitrates.audio;
     this._currentContentInfo = {
       contentId,
+      contentDecryptor: null,
       manifest: null,
       mainThreadMediaSource: null,
       rebufferingController: null,
@@ -145,12 +169,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       type: MainThreadMessageType.PrepareContent,
       value: {
         contentId,
+        cmcd: this._settings.cmcd,
         url: this._settings.url,
         hasText: this._hasTextBufferFeature(),
         transportOptions,
         initialVideoBitrate,
         initialAudioBitrate,
-        manifestRetryOptions: this._settings.manifestRequestSettings,
+        manifestRetryOptions: {
+          ...this._settings.manifestRequestSettings,
+          lowLatencyMode: this._settings.lowLatencyMode,
+        },
         segmentRetryOptions: this._settings.segmentRequestOptions,
       },
     });
@@ -164,6 +192,66 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     if (this._initCanceller.isUsed()) {
       return;
     }
+    this._queuedWorkerMessages = [];
+    log.debug("MTCI: addEventListener prepare buffering worker messages");
+    const onmessage = (evt: MessageEvent): void => {
+      const msgData = evt.data as unknown as IWorkerMessage;
+      const type = msgData.type;
+      switch (type) {
+        case WorkerMessageType.LogMessage: {
+          const formatted = msgData.value.logs.map((l) => {
+            switch (typeof l) {
+              case "string":
+              case "number":
+              case "boolean":
+              case "undefined":
+                return l;
+              case "object":
+                if (l === null) {
+                  return null;
+                }
+                return formatWorkerError(l);
+              default:
+                assertUnreachable(l);
+            }
+          });
+          switch (msgData.value.logLevel) {
+            case "NONE":
+              break;
+            case "ERROR":
+              log.error(...formatted);
+              break;
+            case "WARNING":
+              log.warn(...formatted);
+              break;
+            case "INFO":
+              log.info(...formatted);
+              break;
+            case "DEBUG":
+              log.debug(...formatted);
+              break;
+            default:
+              assertUnreachable(msgData.value.logLevel);
+          }
+          break;
+        }
+        default:
+          if (this._queuedWorkerMessages !== null) {
+            this._queuedWorkerMessages.push(evt);
+          }
+          break;
+      }
+    };
+    this._settings.worker.addEventListener("message", onmessage);
+    const onmessageerror = (_msg: MessageEvent) => {
+      log.error("MTCI: Error when receiving message from worker.");
+    };
+    this._settings.worker.addEventListener("messageerror", onmessageerror);
+    this._initCanceller.signal.register(() => {
+      log.debug("MTCI: removeEventListener prepare for worker message");
+      this._settings.worker.removeEventListener("message", onmessage);
+      this._settings.worker.removeEventListener("messageerror", onmessageerror);
+    });
 
     // Also bind all `SharedReference` objects:
 
@@ -220,7 +308,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * @param {Object} playbackObserver
    */
   public start(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
     this.prepare(); // Load Manifest if not already done
@@ -255,20 +343,28 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    /** Send content protection initialization data. */
+    /**
+     * Send content protection initialization data.
+     * TODO remove and use ContentDecryptor directly when possible.
+     */
     const lastContentProtection = new SharedReference<IContentProtection | null>(null);
 
     const mediaSourceStatus = new SharedReference<MediaSourceInitializationStatus>(
       MediaSourceInitializationStatus.Nothing,
     );
 
-    const drmInitializationStatus = this._initializeContentDecryption(
-      mediaElement,
-      lastContentProtection,
-      mediaSourceStatus,
-      () => reloadMediaSource(0, undefined, undefined),
-      this._initCanceller.signal,
-    );
+    const { statusRef: drmInitializationStatus, contentDecryptor } =
+      this._initializeContentDecryption(
+        mediaElement,
+        lastContentProtection,
+        mediaSourceStatus,
+        () => reloadMediaSource(0, undefined, undefined),
+        this._initCanceller.signal,
+      );
+    const contentInfo = this._currentContentInfo;
+    if (contentInfo !== null) {
+      contentInfo.contentDecryptor = contentDecryptor;
+    }
 
     const playbackStartParams = {
       mediaElement,
@@ -310,18 +406,18 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       minimumPosition: number | undefined,
       maximumPosition: number | undefined,
     ): void => {
-      const contentInfo = this._currentContentInfo;
-      if (contentInfo === null) {
+      const reloadingContentInfo = this._currentContentInfo;
+      if (reloadingContentInfo === null) {
         log.warn("MTCI: Asked to reload when no content is loaded.");
         return;
       }
       const lastObservation = playbackObserver.getReference().getValue();
       const currentPosition = lastObservation.position.getWanted();
       const isPaused =
-        contentInfo.initialPlayPerformed?.getValue() === true ||
-        contentInfo.autoPlay === undefined
+        reloadingContentInfo.initialPlayPerformed?.getValue() === true ||
+        reloadingContentInfo.autoPlay === undefined
           ? lastObservation.paused
-          : !contentInfo.autoPlay;
+          : !reloadingContentInfo.autoPlay;
       let position = currentPosition + deltaPosition;
       if (minimumPosition !== undefined) {
         position = Math.max(minimumPosition, position);
@@ -715,23 +811,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             return;
           }
           const manifest = msgData.value.manifest;
-          try {
-            const codecUpdate = updateManifestCodecSupport(manifest);
-            if (codecUpdate.length > 0) {
-              sendMessage(this._settings.worker, {
-                type: MainThreadMessageType.CodecSupportUpdate,
-                value: codecUpdate,
-              });
-            }
-          } catch (err) {
-            this._onFatalError(err);
-          }
           this._currentContentInfo.manifest = manifest;
+          this._updateCodecSupport(manifest);
           this._startPlaybackIfReady(playbackStartParams);
           break;
         }
 
-        case WorkerMessageType.ManifestUpdate:
+        case WorkerMessageType.ManifestUpdate: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -748,20 +834,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           );
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
-          // TODO only on added `Representation`?
-          try {
-            const codecUpdate = updateManifestCodecSupport(manifest);
-            if (codecUpdate.length > 0) {
-              sendMessage(this._settings.worker, {
-                type: MainThreadMessageType.CodecSupportUpdate,
-                value: codecUpdate,
-              });
-            }
-          } catch (err) {
-            this._onFatalError(err);
-          }
+          this._updateCodecSupport(manifest);
           this.trigger("manifestUpdate", msgData.value.updates);
           break;
+        }
 
         case WorkerMessageType.UpdatePlaybackRate:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
@@ -894,7 +970,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.DiscontinuityUpdate:
+        case WorkerMessageType.DiscontinuityUpdate: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -916,6 +992,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             position: msgData.value.position,
           });
           break;
+        }
 
         case WorkerMessageType.PushTextData: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
@@ -1041,40 +1118,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.LogMessage: {
-          const formatted = msgData.value.logs.map((l) => {
-            switch (typeof l) {
-              case "string":
-              case "number":
-              case "boolean":
-              case "undefined":
-                return l;
-              case "object":
-                if (l === null) {
-                  return null;
-                }
-                return formatWorkerError(l);
-              default:
-                assertUnreachable(l);
-            }
-          });
-          switch (msgData.value.logLevel) {
-            case "NONE":
-              break;
-            case "ERROR":
-              log.error(...formatted);
-              break;
-            case "WARNING":
-              log.warn(...formatted);
-              break;
-            case "INFO":
-              log.info(...formatted);
-              break;
-            case "DEBUG":
-              log.debug(...formatted);
-              break;
-            default:
-              assertUnreachable(msgData.value.logLevel);
+        case WorkerMessageType.SegmentSinkStoreUpdate: {
+          if (this._currentContentInfo?.contentId !== msgData.contentId) {
+            return;
+          }
+          const resolveFn = this._segmentMetrics.resolvers.get(msgData.value.messageId);
+          if (resolveFn !== undefined) {
+            resolveFn(msgData.value.segmentSinkMetrics);
+          } else {
+            log.error("MTCI: Failed to send segment sink store update");
           }
           break;
         }
@@ -1084,26 +1136,26 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           // Should already be handled by the API
           break;
 
-        case WorkerMessageType.SegmentSinkStoreUpdate: {
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
-          }
-          const resolveFn = this._segmentMetrics.resolvers[msgData.value.messageId];
-          if (resolveFn !== undefined) {
-            resolveFn(msgData.value.segmentSinkMetrics);
-            delete this._segmentMetrics.resolvers[msgData.value.messageId];
-          } else {
-            log.error("MTCI: Failed to send segment sink store update");
-          }
+        case WorkerMessageType.LogMessage:
+          // Already handled by prepare's handler
           break;
-        }
         default:
           assertUnreachable(msgData);
       }
     };
 
+    log.debug("MTCI: addEventListener for worker message");
+    if (this._queuedWorkerMessages !== null) {
+      const bufferedMessages = this._queuedWorkerMessages.slice();
+      log.debug("MTCI: Processing buffered messages", bufferedMessages.length);
+      for (const message of bufferedMessages) {
+        onmessage(message);
+      }
+      this._queuedWorkerMessages = null;
+    }
     this._settings.worker.addEventListener("message", onmessage);
     this._initCanceller.signal.register(() => {
+      log.debug("MTCI: removeEventListener for worker message");
       this._settings.worker.removeEventListener("message", onmessage);
     });
   }
@@ -1125,12 +1177,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   private _initializeContentDecryption(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     lastContentProtection: IReadOnlySharedReference<null | IContentProtection>,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
     cancelSignal: CancellationSignal,
-  ): IReadOnlySharedReference<IDrmInitializationStatus> {
+  ): {
+    statusRef: IReadOnlySharedReference<IDrmInitializationStatus>;
+    contentDecryptor: IContentDecryptor | null;
+  } {
     const { keySystems } = this._settings;
 
     // TODO private?
@@ -1149,11 +1204,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         { clearSignal: cancelSignal },
       );
       const ref = new SharedReference({
-        initializationState: { type: "initialized" as const, value: null },
+        initializationState: {
+          type: "initialized" as const,
+          value: null,
+        },
+        contentDecryptor: null,
         drmSystemId: undefined,
       });
       ref.finish(); // We know that no new value will be triggered
-      return ref;
+      return { statusRef: ref, contentDecryptor: null };
     };
 
     if (keySystems.length === 0) {
@@ -1162,6 +1221,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return createEmeDisabledReference("EME feature not activated.");
     }
 
+    const ContentDecryptor = features.decrypt;
+    if (!ContentDecryptor.hasEmeApis()) {
+      return createEmeDisabledReference("EME API not available on the current page.");
+    }
+    log.debug("MTCI: Creating ContentDecryptor");
+    const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
     const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
       {
         initializationState: { type: "uninitialized", value: null },
@@ -1169,12 +1234,21 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       cancelSignal,
     );
-    const ContentDecryptor = features.decrypt;
-    if (!ContentDecryptor.hasEmeApis()) {
-      return createEmeDisabledReference("EME API not available on the current page.");
-    }
-    log.debug("MTCI: Creating ContentDecryptor");
-    const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
+
+    const updateCodecSupportOnStateChange = (state: ContentDecryptorState) => {
+      if (state > ContentDecryptorState.Initializing) {
+        const manifest = this._currentContentInfo?.manifest;
+        if (isNullOrUndefined(manifest)) {
+          return;
+        }
+        this._updateCodecSupport(manifest);
+        contentDecryptor.removeEventListener(
+          "stateChange",
+          updateCodecSupportOnStateChange,
+        );
+      }
+    };
+    contentDecryptor.addEventListener("stateChange", updateCodecSupportOnStateChange);
 
     contentDecryptor.addEventListener("keyIdsCompatibilityUpdate", (updates) => {
       if (
@@ -1278,7 +1352,32 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       contentDecryptor.dispose();
     });
 
-    return drmStatusRef;
+    return { statusRef: drmStatusRef, contentDecryptor };
+  }
+  /**
+   * Retrieves all unknown codecs from the current manifest, checks these unknown codecs
+   * to determine if they are supported, updates the manifest with the support
+   * status of these codecs, and forwards the list of supported codecs to the web worker.
+   * @param manifest
+   */
+  private _updateCodecSupport(manifest: IManifestMetadata) {
+    try {
+      const updatedCodecs = updateManifestCodecSupport(
+        manifest,
+        this._currentContentInfo?.contentDecryptor ?? null,
+      );
+      if (updatedCodecs.length > 0) {
+        sendMessage(this._settings.worker, {
+          type: MainThreadMessageType.CodecSupportUpdate,
+          value: updatedCodecs,
+        });
+        // TODO what if one day the worker updates codec support by itself?
+        // We wouldn't know...
+        this.trigger("codecSupportUpdate", null);
+      }
+    } catch (err) {
+      this._onFatalError(err);
+    }
   }
 
   private _hasTextBufferFeature(): boolean {
@@ -1290,7 +1389,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   private _reload(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     textDisplayer: ITextDisplayer | null,
     playbackObserver: IMediaElementPlaybackObserver,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
@@ -1368,7 +1467,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     parameters: {
       initialTime: number;
       autoPlay: boolean;
-      mediaElement: HTMLMediaElement;
+      mediaElement: IMediaElement;
       textDisplayer: ITextDisplayer | null;
       playbackObserver: IMediaElementPlaybackObserver;
     },
@@ -1490,11 +1589,19 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         value: { messageId },
       });
       return new Promise((resolve, reject) => {
-        this._segmentMetrics.resolvers[messageId] = resolve;
         const rejectFn = (err: CancellationError) => {
-          delete this._segmentMetrics.resolvers[messageId];
+          cancelSignal.deregister(rejectFn);
+          this._segmentMetrics.resolvers.delete(messageId);
           return reject(err);
         };
+        this._segmentMetrics.resolvers.set(
+          messageId,
+          (value: ISegmentSinkMetrics | undefined) => {
+            cancelSignal.deregister(rejectFn);
+            this._segmentMetrics.resolvers.delete(messageId);
+            resolve(value);
+          },
+        );
         cancelSignal.register(rejectFn);
       });
     };
@@ -1544,7 +1651,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * playback start.
    */
   private _startPlaybackIfReady(parameters: {
-    mediaElement: HTMLMediaElement;
+    mediaElement: IMediaElement;
     textDisplayer: ITextDisplayer | null;
     playbackObserver: IMediaElementPlaybackObserver;
     drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
@@ -1628,7 +1735,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _onCreateMediaSourceMessage(
     msg: ICreateMediaSourceWorkerMessage,
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     worker: Worker,
   ): void {
@@ -1687,7 +1794,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             clearSignal: this._currentMediaSourceCanceller.signal,
           },
         );
-      } catch (err) {
+      } catch (_err) {
         const error = new OtherError(
           "NONE",
           "Unknown error when creating the MediaSource",
@@ -1748,6 +1855,12 @@ export interface IMultiThreadContentInitializerContentInfos {
    * Set to `null` when those considerations are not taken yet.
    */
   initialPlayPerformed: IReadOnlySharedReference<boolean> | null;
+  /**
+   * Set to the initialized `ContentDecryptor` instance linked to that content.
+   *
+   * Set to `null` when those considerations are not taken.
+   */
+  contentDecryptor: IContentDecryptor | null;
 }
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
@@ -1775,6 +1888,10 @@ export interface IInitializeArguments {
     /** Behavior when a new video and/or audio codec is encountered. */
     onCodecSwitch: "continue" | "reload";
   };
+  /**
+   * When set to an object, enable "Common Media Client Data", or "CMCD".
+   */
+  cmcd?: ICmcdOptions | undefined;
   /** Every encryption configuration set. */
   keySystems: IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
@@ -1793,7 +1910,30 @@ export interface IInitializeArguments {
     representationFilter: string | undefined;
   };
   /** Settings linked to Manifest requests. */
-  manifestRequestSettings: IManifestFetcherSettings;
+  manifestRequestSettings: {
+    /** Maximum number of time a request on error will be retried. */
+    maxRetry: number | undefined;
+    /**
+     * Timeout after which request are aborted and, depending on other options,
+     * retried.
+     * To set to `-1` for no timeout.
+     * `undefined` will lead to a default, large, timeout being used.
+     */
+    requestTimeout: number | undefined;
+    /**
+     * Connection timeout, in milliseconds, after which the request is canceled
+     * if the responses headers has not being received.
+     * Do not set or set to "undefined" to disable it.
+     */
+    connectionTimeout: number | undefined;
+    /** Limit the frequency of Manifest updates. */
+    minimumManifestUpdateInterval: number;
+    /**
+     * Potential first Manifest to rely on, allowing to skip the initial Manifest
+     * request.
+     */
+    initialManifest: IInitialManifest | undefined;
+  };
   /** Configuration for the segment requesting logic. */
   segmentRequestOptions: {
     lowLatencyMode: boolean;
@@ -1843,18 +1983,11 @@ function bindNumberReferencesToWorker(
       (newVal) => {
         // NOTE: The TypeScript checks have already been made by this function's
         // overload, but the body here is not aware of that.
-        /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        /* eslint-disable @typescript-eslint/no-unsafe-call */
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
         sendMessage(worker, {
           type: MainThreadMessageType.ReferenceUpdate,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           value: { name: ref[1] as any, newVal: newVal as any },
         });
-        /* eslint-enable @typescript-eslint/no-unsafe-assignment */
-        /* eslint-enable @typescript-eslint/no-explicit-any */
-        /* eslint-enable @typescript-eslint/no-unsafe-call */
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       },
       { clearSignal: cancellationSignal, emitCurrentValue: true },
     );
@@ -1873,7 +2006,7 @@ function formatWorkerError(sentError: ISentError): IPlayerError {
         ),
       );
     case "MediaError":
-      /* eslint-disable-next-line */
+      // eslint-disable-next-line
       return new MediaError(sentError.code as any, sentError.reason, {
         tracks: sentError.tracks,
       });
@@ -1933,117 +2066,13 @@ type IDecryptionInitializationState =
    */
   | { type: "uninitialized"; value: null }
   /**
-   * The `MediaSource` or media url has to be linked to the `HTMLMediaElement`
-   * before continuing.
-   * Once it has been linked with success (e.g. the `MediaSource` has "opened"),
-   * the `isMediaLinked` `SharedReference` should be set to `true`.
-   *
-   * In the `MediaSource` case, you should wait until the `"initialized"`
-   * state before pushing segment.
-   *
-   * Note that the `"awaiting-media-link"` is an optional state. It can be
-   * skipped to directly `"initialized"` instead.
-   */
-  | {
-      type: "awaiting-media-link";
-      value: { isMediaLinked: SharedReference<boolean> };
-    }
-  /**
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.
    */
-  | { type: "initialized"; value: null };
-
-/**
- * Ensure that all `Representation` and `Adaptation` have a known status
- * for their codec support and probe it for cases where that's not the
- * case.
- *
- * Because probing for codec support is always synchronous in the main thread,
- * calling this function ensures that support is now known.
- *
- * @param {Object} manifest
- */
-function updateManifestCodecSupport(manifest: IManifestMetadata): ICodecSupportList {
-  const codecSupportList: ICodecSupportList = [];
-  const codecSupportMap: Map<string, Map<string, boolean>> = new Map();
-  manifest.periods.forEach((p) => {
-    [
-      ...(p.adaptations.audio ?? []),
-      ...(p.adaptations.video ?? []),
-      ...(p.adaptations.text ?? []),
-    ].forEach((a) => {
-      let hasSupportedCodecs = false;
-      a.representations.forEach((r) => {
-        if (r.isSupported !== undefined) {
-          if (!hasSupportedCodecs && r.isSupported) {
-            hasSupportedCodecs = true;
-          }
-          return;
-        }
-        let isSupported = false;
-        const mimeType = r.mimeType ?? "";
-        let codecs = r.codecs ?? [];
-        if (codecs.length === 0) {
-          codecs = [""];
-        }
-        for (const codec of codecs) {
-          isSupported = checkCodecSupport(mimeType, codec);
-          if (isSupported) {
-            r.codecs = [codec];
-            break;
-          }
-        }
-        r.isSupported = isSupported;
-        if (r.isSupported) {
-          hasSupportedCodecs = true;
-        }
-        if (!hasSupportedCodecs) {
-          if (a.isSupported !== false) {
-            a.isSupported = false;
-          }
-        } else {
-          a.isSupported = true;
-        }
-      });
-    });
-    ["audio" as const, "video" as const].forEach((ttype: ITrackType) => {
-      const forType = p.adaptations[ttype];
-      if (forType !== undefined && forType.every((a) => a.isSupported === false)) {
-        throw new MediaError(
-          "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-          "No supported " + ttype + " adaptations",
-          { tracks: undefined },
-        );
-      }
-    });
-  });
-  return codecSupportList;
-  function checkCodecSupport(mimeType: string, codec: string): boolean {
-    const knownSupport = codecSupportMap.get(mimeType)?.get(codec);
-    let isSupported: boolean;
-    if (knownSupport !== undefined) {
-      isSupported = knownSupport;
-    } else {
-      const mimeTypeStr = `${mimeType};codecs="${codec}"`;
-      isSupported = isCodecSupported(mimeTypeStr);
-      codecSupportList.push({
-        mimeType,
-        codec,
-        result: isSupported,
-      });
-      const prevCodecMap = codecSupportMap.get(mimeType);
-      if (prevCodecMap !== undefined) {
-        prevCodecMap.set(codec, isSupported);
-      } else {
-        const codecMap = new Map<string, boolean>();
-        codecMap.set(codec, isSupported);
-        codecSupportMap.set(mimeType, codecMap);
-      }
-    }
-    return isSupported;
-  }
-}
+  | {
+      type: "initialized";
+      value: null;
+    };
 
 function formatSourceBufferError(error: unknown): SourceBufferError {
   if (error instanceof SourceBufferError) {

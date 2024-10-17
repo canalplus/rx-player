@@ -18,7 +18,7 @@ import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
 import startsWith from "../../../utils/starts_with";
 import wrapInPromise from "../../../utils/wrapInPromise";
-import type { ICompatHTMLMediaElement } from "../../browser_compatibility_types";
+import type { IMediaElement } from "../../browser_compatibility_types";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import type {
   ICustomMediaKeys,
@@ -30,7 +30,7 @@ import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor";
 import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
 
 export interface ICustomWebKitMediaKeys {
-  _setVideo: (videoElement: HTMLMediaElement) => void;
+  _setVideo: (videoElement: IMediaElement) => Promise<unknown>;
   createSession(mimeType: string, initData: Uint8Array): ICustomMediaKeySession;
   setServerCertificate(setServerCertificate: BufferSource): Promise<void>;
 }
@@ -47,15 +47,11 @@ function isFairplayKeyType(keyType: string): boolean {
 /**
  * Set media keys on video element using native HTMLMediaElement
  * setMediaKeys from WebKit.
- * @param {HTMLMediaElement} videoElement
+ * @param {HTMLMediaElement} elt
  * @param {Object|null} mediaKeys
  * @returns {Promise}
  */
-function setWebKitMediaKeys(
-  videoElement: HTMLMediaElement,
-  mediaKeys: unknown,
-): Promise<unknown> {
-  const elt: ICompatHTMLMediaElement = videoElement;
+function setWebKitMediaKeys(elt: IMediaElement, mediaKeys: unknown): Promise<unknown> {
   return wrapInPromise(() => {
     if (elt.webkitSetMediaKeys === undefined) {
       throw new Error("No webKitMediaKeys API.");
@@ -80,7 +76,7 @@ class WebkitMediaKeySession
   public expiration: number;
   public keyStatuses: ICustomMediaKeyStatusMap;
 
-  private readonly _videoElement: HTMLMediaElement;
+  private readonly _videoElement: IMediaElement;
   private readonly _keyType: string;
   private _nativeSession: undefined | MediaKeySession;
   private _serverCertificate: Uint8Array | undefined;
@@ -94,7 +90,7 @@ class WebkitMediaKeySession
    * @param {Uint8Array | undefined} serverCertificate
    */
   constructor(
-    mediaElement: HTMLMediaElement,
+    mediaElement: IMediaElement,
     keyType: string,
     serverCertificate?: Uint8Array,
   ) {
@@ -114,7 +110,6 @@ class WebkitMediaKeySession
 
   public update(license: BufferSource): Promise<void> {
     return new Promise((resolve, reject) => {
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       if (
         this._nativeSession === undefined ||
         this._nativeSession.update === undefined ||
@@ -131,20 +126,17 @@ class WebkitMediaKeySession
         } else {
           uInt8Arraylicense = new Uint8Array(license.buffer);
         }
-        /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         resolve(this._nativeSession.update(uInt8Arraylicense));
-        /* eslint-enable @typescript-eslint/no-unsafe-member-access */
       } catch (err) {
         reject(err);
       }
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
     });
   }
 
   public generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
     return new Promise((resolve) => {
-      const elt = this._videoElement as ICompatHTMLMediaElement;
+      const elt = this._videoElement;
       if (elt.webkitKeys?.createSession === undefined) {
         throw new Error("No WebKitMediaKeys API.");
       }
@@ -180,9 +172,8 @@ class WebkitMediaKeySession
         reject("No session to close.");
         return;
       }
-      /* eslint-disable @typescript-eslint/no-floating-promises */
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this._nativeSession.close();
-      /* eslint-enable @typescript-eslint/no-floating-promises */
       resolve();
     });
   }
@@ -196,11 +187,7 @@ class WebkitMediaKeySession
   }
 
   get sessionId(): string {
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
     return this._nativeSession?.sessionId ?? "";
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-return */
   }
 
   private _listenEvent(session: MediaKeySession): void {
@@ -210,9 +197,6 @@ class WebkitMediaKeySession
       this.trigger(evt.type, evt);
     };
 
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
     ["keymessage", "message", "keyadded", "ready", "keyerror", "error"].forEach((evt) => {
       session.addEventListener(evt, onEvent);
       session.addEventListener(`webkit${evt}`, onEvent);
@@ -226,14 +210,11 @@ class WebkitMediaKeySession
         },
       );
     };
-    /* eslint-disable @typescript-eslint/no-unsafe-return */
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
   }
 }
 
 class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
-  private _videoElement?: HTMLMediaElement;
+  private _videoElement?: IMediaElement;
   private _mediaKeys?: IWebKitMediaKeys;
   private _serverCertificate?: Uint8Array;
   private _keyType: string;
@@ -246,7 +227,7 @@ class WebKitCustomMediaKeys implements ICustomWebKitMediaKeys {
     this._mediaKeys = new WebKitMediaKeysConstructor(keyType);
   }
 
-  _setVideo(videoElement: HTMLMediaElement): Promise<unknown> {
+  _setVideo(videoElement: IMediaElement): Promise<unknown> {
     this._videoElement = videoElement;
     if (this._videoElement === undefined) {
       throw new Error("Video not attached to the MediaKeys");
@@ -275,7 +256,7 @@ export default function getWebKitMediaKeysCallbacks(): {
   isTypeSupported: (keyType: string) => boolean;
   createCustomMediaKeys: (keyType: string) => WebKitCustomMediaKeys;
   setMediaKeys: (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ) => Promise<unknown>;
 } {
@@ -285,7 +266,7 @@ export default function getWebKitMediaKeysCallbacks(): {
   const isTypeSupported = WebKitMediaKeysConstructor.isTypeSupported;
   const createCustomMediaKeys = (keyType: string) => new WebKitCustomMediaKeys(keyType);
   const setMediaKeys = (
-    elt: HTMLMediaElement,
+    elt: IMediaElement,
     mediaKeys: MediaKeys | ICustomMediaKeys | null,
   ): Promise<unknown> => {
     if (mediaKeys === null) {

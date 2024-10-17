@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
@@ -31,6 +32,7 @@ import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
 import createOrLoadSession from "./create_or_load_session";
+import type { ICodecSupportList } from "./find_key_system";
 import type { IMediaKeysInfos } from "./get_media_keys";
 import initMediaKeys from "./init_media_keys";
 import type { IKeyUpdateValue } from "./session_events_listener";
@@ -49,6 +51,7 @@ import { DecommissionedSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
 import getDrmSystemId from "./utils/get_drm_system_id";
 import InitDataValuesContainer from "./utils/init_data_values_container";
+import isCompatibleCodecSupported from "./utils/is_compatible_codec_supported";
 import {
   areAllKeyIdsContainedIn,
   areSomeKeyIdsContainedIn,
@@ -124,6 +127,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _initDataQueue: IProtectionData[];
 
   /**
+   * Store the list of supported codecs with the current key system configuration.
+   */
+  private _supportedCodecWhenEncrypted: ICodecSupportList;
+
+  /**
    * `true` if the EME API are available on the current platform according to
    * the default EME implementation used.
    * `false` otherwise.
@@ -147,7 +155,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * configurations. It will choose the appropriate one depending on user
    * settings and browser support.
    */
-  constructor(mediaElement: HTMLMediaElement, ksOptions: IKeySystemOption[]) {
+  constructor(mediaElement: IMediaElement, ksOptions: IKeySystemOption[]) {
     super();
 
     log.debug("DRM: Starting ContentDecryptor logic.");
@@ -162,13 +170,14 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       isInitDataQueueLocked: true,
       data: null,
     };
+    this._supportedCodecWhenEncrypted = [];
     this.error = null;
 
     eme.onEncrypted(
       mediaElement,
       (evt) => {
         log.debug("DRM: Encrypted event received from media element.");
-        const initData = getInitData(evt as MediaEncryptedEvent);
+        const initData = getInitData(evt);
         if (initData !== null) {
           this.onInitializationData(initData);
         }
@@ -179,7 +188,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     initMediaKeys(mediaElement, ksOptions, canceller.signal)
       .then((mediaKeysInfo) => {
         const { options, mediaKeySystemAccess } = mediaKeysInfo;
-
+        this._supportedCodecWhenEncrypted = mediaKeysInfo.codecSupport;
         /**
          * String identifying the key system, allowing the rest of the code to
          * only advertise the required initialization data for license requests.
@@ -199,6 +208,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
         this.systemId = systemId;
         if (this._stateData.state === ContentDecryptorState.Initializing) {
+          log.debug("DRM: Waiting for attachment.");
           this._stateData = {
             state: ContentDecryptorState.WaitingForAttachment,
             isInitDataQueueLocked: true,
@@ -246,10 +256,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     }
 
     const { mediaElement, mediaKeysInfo } = this._stateData.data;
-    const { options, mediaKeys, mediaKeySystemAccess, stores } = mediaKeysInfo;
+    const { options, mediaKeys, mediaKeySystemAccess, stores, askedConfiguration } =
+      mediaKeysInfo;
     const shouldDisableLock = options.disableMediaKeysAttachmentLock === true;
 
     if (shouldDisableLock) {
+      log.debug("DRM: disabling MediaKeys attachment lock. Ready for content");
       this._stateData = {
         state: ContentDecryptorState.ReadyForContent,
         isInitDataQueueLocked: true,
@@ -270,6 +282,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       loadedSessionsStore: stores.loadedSessionsStore,
       mediaKeySystemAccess,
       mediaKeys,
+      askedConfiguration,
       keySystemOptions: options,
     };
 
@@ -328,6 +341,33 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     };
     this._canceller.cancel();
     this.trigger("stateChange", this._stateData.state);
+  }
+
+  /**
+   * Returns `true` if the given mimeType and codec couple should be supported
+   * by the current key system.
+   * Returns `false` if it isn't.
+   *
+   * Returns `undefined` if we cannot determine if it is supported.
+   *
+   * @param {string} mimeType
+   * @param {string} codec
+   * @returns {boolean}
+   */
+  public isCodecSupported(mimeType: string, codec: string): boolean | undefined {
+    if (this._stateData.state === ContentDecryptorState.Initializing) {
+      log.error(
+        "DRM: Asking for codec support while the ContentDecryptor is still initializing",
+      );
+      return undefined;
+    }
+    if (
+      this._stateData.state === ContentDecryptorState.Error ||
+      this._stateData.state === ContentDecryptorState.Disposed
+    ) {
+      log.error("DRM: Asking for codec support while the ContentDecryptor is disposed");
+    }
+    return isCompatibleCodecSupported(mimeType, codec, this._supportedCodecWhenEncrypted);
   }
 
   /**
@@ -692,6 +732,21 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       return false;
     }
 
+    /**
+     * On Safari using Directfile, the old EME implementation triggers
+     * the "webkitneedkey" event instead of "encrypted". There's an issue in Safari
+     * where "webkitneedkey" fires too early before all tracks are added from an HLS playlist.
+     * Safari incorrectly assumes some keys are missing for these tracks,
+     * leading to repeated "webkitneedkey" events. Because RxPlayer recognizes
+     * it already has a session for these keys and ignores the events,
+     * the content remains frozen. To resolve this, the session is re-created.
+     */
+    const forceSessionRecreation = initializationData.forceSessionRecreation;
+    if (forceSessionRecreation === true) {
+      this.removeSessionForInitData(initializationData, mediaKeysData);
+      return false;
+    }
+
     // Check if the compatible session is blacklisted
     const blacklistedSessionError = compatibleSessionInfo.blacklistedSessionError;
     if (!isNullOrUndefined(blacklistedSessionError)) {
@@ -794,6 +849,48 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       this._currentSessions.splice(indexOf, 1);
     }
     return false;
+  }
+
+  /**
+   * Remove the session corresponding to the initData provided, and close it.
+   * It does nothing if no session was found for this initData.
+   * @param {Object} initData : The initialization data corresponding to the session
+   * that need to be removed
+   * @param {Object} mediaKeysData : The media keys data
+   */
+  private removeSessionForInitData(
+    initData: IProcessedProtectionData,
+    mediaKeysData: IAttachedMediaKeysData,
+  ) {
+    const { stores } = mediaKeysData;
+    /** Remove the session and close it from the loadedSessionStore */
+    const entry = stores.loadedSessionsStore.reuse(initData);
+    if (entry !== null) {
+      stores.loadedSessionsStore
+        .closeSession(entry.mediaKeySession)
+        .catch(() =>
+          log.error("DRM: Cannot close the session from the loaded session store"),
+        );
+    }
+
+    /**
+     * If set, a currently-used key session is already compatible to this
+     * initialization data.
+     */
+    const compatibleSessionInfo = arrayFind(this._currentSessions, (x) =>
+      x.record.isCompatibleWith(initData),
+    );
+    if (compatibleSessionInfo === undefined) {
+      return;
+    }
+    /** Remove the session from the currentSessions */
+    const indexOf = this._currentSessions.indexOf(compatibleSessionInfo);
+    if (indexOf !== -1) {
+      log.debug(
+        "DRM: A session from a processed init is removed due to forceSessionRecreation policy.",
+      );
+      this._currentSessions.splice(indexOf, 1);
+    }
   }
 
   /**
@@ -1109,8 +1206,8 @@ function addKeyIdsFromPeriod(set: Set<Uint8Array>, period: IPeriodMetadata) {
         representation.contentProtections !== undefined &&
         representation.contentProtections.keyIds !== undefined
       ) {
-        for (const kidInf of representation.contentProtections.keyIds) {
-          set.add(kidInf.keyId);
+        for (const kid of representation.contentProtections.keyIds) {
+          set.add(kid);
         }
       }
     }
@@ -1174,7 +1271,7 @@ type IWaitingForAttachmentStateData = IContentDecryptorStateBase<
   true, // isInitDataQueueLocked
   MediaKeyAttachmentStatus.NotAttached, // isMediaKeysAttached
   // data
-  { mediaKeysInfo: IMediaKeysInfos; mediaElement: HTMLMediaElement }
+  { mediaKeysInfo: IMediaKeysInfos; mediaElement: IMediaElement }
 >;
 
 /**
@@ -1185,7 +1282,7 @@ type IReadyForContentStateDataUnattached = IContentDecryptorStateBase<
   ContentDecryptorState.ReadyForContent,
   true, // isInitDataQueueLocked
   MediaKeyAttachmentStatus.NotAttached | MediaKeyAttachmentStatus.Pending, // isMediaKeysAttached
-  { mediaKeysInfo: IMediaKeysInfos; mediaElement: HTMLMediaElement } // data
+  { mediaKeysInfo: IMediaKeysInfos; mediaElement: IMediaElement } // data
 >;
 
 /**
