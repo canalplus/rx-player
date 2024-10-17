@@ -50,7 +50,6 @@
 - Fix the SyncOrAsync util syncValue transfer [#1568]
 - Fix off by one issue in when relying on `keySystems[].maxSessionCacheSize` [#1565]
 
-
 ### Other improvements
 
 - DASH: provide a more precize calculation for the timeshift buffer depth [#1483]
