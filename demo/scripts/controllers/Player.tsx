@@ -3,7 +3,7 @@ import type {
   IAudioRepresentationsSwitchingMode,
   ILoadVideoOptions,
   IVideoRepresentationsSwitchingMode,
-} from "../../../src/public_types";
+} from "rx-player/types";
 import PlayerModule from "../modules/player";
 import type { IPlayerModule } from "../modules/player";
 import ControlBar from "./ControlBar";

@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { ITextTrack, IAvailableTextTrack } from "../../../../src/public_types";
+import type { ITextTrack, IAvailableTextTrack } from "rx-player/types";
 import translateLanguageCode from "../../lib/translateLanguageCode";
 import Knob from "../../components/Knob";
 import useModuleState from "../../lib/useModuleState";

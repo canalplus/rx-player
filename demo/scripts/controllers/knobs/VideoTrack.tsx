@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { IVideoTrack, IAvailableVideoTrack } from "../../../../src/public_types";
+import type { IVideoTrack, IAvailableVideoTrack } from "rx-player/types";
 import Knob from "../../components/Knob";
 import useModuleState from "../../lib/useModuleState";
 import type { IPlayerModule } from "../../modules/player/index";

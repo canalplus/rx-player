@@ -1,5 +1,5 @@
 import * as React from "react";
-import { IVideoRepresentationsSwitchingMode } from "../../../../src/public_types";
+import { IVideoRepresentationsSwitchingMode } from "rx-player/types";
 import Checkbox from "../../components/CheckBox";
 import Select from "../Select";
 

@@ -17,7 +17,7 @@ import DEFAULT_CONTENTS from "../contents";
 import type { IDefaultContent, IDrmInfo } from "../contents";
 import GeneratedLinkURL from "../components/GenerateLinkURL";
 import GenerateLinkButton from "../components/GenerateLinkButton";
-import type { IKeySystemOption, ILoadVideoOptions } from "../../../src/public_types";
+import type { IKeySystemOption, ILoadVideoOptions } from "rx-player/types";
 
 /* eslint-disable */
 const win = window as any;

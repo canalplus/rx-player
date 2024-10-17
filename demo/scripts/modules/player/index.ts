@@ -18,13 +18,13 @@ import {
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
   SMOOTH,
-} from "../../../../src/features/list";
-import { METAPLAYLIST, MULTI_THREAD } from "../../../../src/experimental/features";
-import RxPlayer from "../../../../src/minimal";
+} from "rx-player/features";
+import { METAPLAYLIST, MULTI_THREAD } from "rx-player/experimental/features";
+import RxPlayer from "rx-player/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {
   DASH_LOADER,
-} from "../../../../src/experimental/tools/VideoThumbnailLoader";
+} from "rx-player/experimental/tools/VideoThumbnailLoader";
 import CatchUpModeController from "./catchUp";
 import { declareModule } from "../../lib/declareModule";
 import type {
@@ -40,7 +40,7 @@ import type {
   ITextTrack,
   IVideoRepresentation,
   IVideoTrack,
-} from "../../../../src/public_types";
+} from "rx-player/types";
 
 RxPlayer.addFeatures([
   DASH,

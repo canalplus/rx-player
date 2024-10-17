@@ -1,4 +1,4 @@
-import RxPlayer from "../../../src/minimal";
+import RxPlayer from "rx-player/minimal";
 import * as React from "react";
 import GitHubButton from "../components/GitHubButton";
 import Player from "./Player";
