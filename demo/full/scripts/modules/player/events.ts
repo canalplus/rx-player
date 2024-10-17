@@ -1,6 +1,6 @@
 import type { IBifThumbnail, IPlayerModuleState } from ".";
-import type RxPlayer from "../../../../../src";
-import type { IPlayerError } from "../../../../../src/public_types";
+import type RxPlayer from "rx-player";
+import type { IPlayerError } from "rx-player/types";
 import type { IStateUpdater } from "../../lib/declareModule";
 
 const POSITION_UPDATES_INTERVAL = 100;

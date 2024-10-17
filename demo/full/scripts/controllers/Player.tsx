@@ -12,7 +12,7 @@ import type {
   ILoadVideoSettings,
   IConstructorSettings,
 } from "../lib/defaultOptionsValues";
-import type { ILoadVideoOptions } from "../../../../src/public_types";
+import type { ILoadVideoOptions } from "rx-player/types";
 
 const { useCallback, useEffect, useRef, useState } = React;
 

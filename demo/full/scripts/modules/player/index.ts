@@ -18,17 +18,13 @@ import {
   HTML_VTT_PARSER,
   IMAGE_BUFFER,
   SMOOTH,
-} from "../../../../../src/features/list";
-import {
-  DASH_WASM,
-  METAPLAYLIST,
-  DEBUG_ELEMENT,
-} from "../../../../../src/experimental/features";
-import RxPlayer from "../../../../../src/minimal";
+} from "rx-player/features";
+import { DASH_WASM, METAPLAYLIST, DEBUG_ELEMENT } from "rx-player/experimental/features";
+import RxPlayer from "rx-player/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {
   DASH_LOADER,
-} from "../../../../../src/experimental/tools/VideoThumbnailLoader";
+} from "rx-player/experimental/tools/VideoThumbnailLoader";
 import CatchUpModeController from "./catchUp";
 import { declareModule } from "../../lib/declareModule";
 import type {
@@ -42,7 +38,7 @@ import type {
   IRepresentation,
   ITextTrack,
   IVideoTrack,
-} from "../../../../../src/public_types";
+} from "rx-player/types";
 
 RxPlayer.addFeatures([
   BIF_PARSER,
