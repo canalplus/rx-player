@@ -53,7 +53,7 @@ cp -v demo/bundle.js $tmpDemoFile
 cp -v demo/index.html $tmpIndexFile
 cp -v demo/plus.ico $tmpFaviconFile
 cp -v demo/worker.js $tmpWorkerFile
-cp -v demo/mpd-parser.wasm $tmpMpdWasmFile
+cp -v dist/mpd-parser.wasm $tmpMpdWasmFile
 cp -v scripts/generate_demo_list.mjs $tmpDemoList
 
 # update gh-pages
