@@ -1,19 +1,18 @@
-node_modules
+/tmp
 /localhost.crt
 /localhost.key
+/node_modules
 *.log
 *.keys
 
-demo/bundle.js
+/demo
 
-coverage/
+/dist
 
-dist/*
-!dist/rx-player.js
-!dist/rx-player.min.js
-test-output.xml
-/src/parsers/manifest/dash/wasm-parser/target
+/src
 
-demo/bundle.js
+# IDE files
+/.idea
+/.vscode
 
-.vscode
+.DS_Store
