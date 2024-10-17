@@ -16,7 +16,7 @@
 
 import Adaptation from "./adaptation";
 import type { ICodecSupportInfo } from "./codec_support_cache";
-import type { IDecipherabilityUpdateElement, IManifestParsingOptions } from "./manifest";
+import type { IUpdatedRepresentationInfo, IManifestParsingOptions } from "./manifest";
 import Manifest from "./manifest";
 import Period from "./period";
 import Representation from "./representation";
@@ -36,7 +36,7 @@ export type { IPeriodsUpdateResult } from "./update_periods";
 export type {
   IBufferedChunkInfos,
   ICodecSupportInfo,
-  IDecipherabilityUpdateElement,
+  IUpdatedRepresentationInfo,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,

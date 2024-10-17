@@ -783,6 +783,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       segmentLoader,
       serverSyncInfos,
       mode,
+      experimentalOptions,
       __priv_manifestUpdateUrl,
       __priv_patchLastSegmentInSidx,
       url,
@@ -935,6 +936,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           autoPlay,
           bufferOptions,
           cmcd,
+          enableRepresentationDeprecation:
+            experimentalOptions.enableRepresentationDeprecation,
           keySystems,
           lowLatencyMode,
           transport: transportPipelines,
@@ -977,6 +980,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           autoPlay,
           bufferOptions,
           cmcd,
+          enableRepresentationDeprecation:
+            experimentalOptions.enableRepresentationDeprecation,
           keySystems,
           lowLatencyMode,
           transportOptions,

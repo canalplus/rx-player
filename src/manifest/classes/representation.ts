@@ -112,6 +112,15 @@ class Representation implements IRepresentationMetadata {
    * @see ITrackType
    */
   public trackType: ITrackType;
+  /**
+   * When set to `true`, the `Representation` should not be played, unless
+   * there's no other choice.
+   *
+   * Note that this property should __NEVER__ be updated directly on an
+   * instanciated `Representation`, you are supposed to rely on
+   * `Manifest` methods for this.
+   */
+  public deprecated: boolean;
 
   /**
    * @param {Object} args
@@ -124,6 +133,7 @@ class Representation implements IRepresentationMetadata {
   ) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
+    this.deprecated = false;
     this.bitrate = args.bitrate;
     this.codecs = [];
     this.trackType = trackType;

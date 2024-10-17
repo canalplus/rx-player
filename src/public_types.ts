@@ -182,6 +182,23 @@ export interface ILoadVideoOptions {
    * When set to an object, enable "Common Media Client Data", or "CMCD".
    */
   cmcd?: ICmcdOptions | undefined;
+
+  /**
+   * Options which may be removed or updated at any RxPlayer release.
+   *
+   * Most of those are options which we temporarily test before making
+   * them part of the RxPlayer API.
+   */
+  experimentalOptions?:
+    | {
+        /**
+         * If `true`, the RxPlayer can enable its "Representation deprecation"
+         * mechanism, where it avoid loading Representation that it suspect
+         * have issues being decoded on the current device.
+         */
+        enableRepresentationDeprecation: boolean | undefined;
+      }
+    | undefined;
 }
 
 /** Value of the `serverSyncInfos` transport option. */

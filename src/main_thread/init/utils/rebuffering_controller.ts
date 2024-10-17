@@ -95,39 +95,16 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
       playbackRateUpdater.dispose();
     });
 
-    let prevFreezingState: { attemptTimestamp: number } | null = null;
-
     this._playbackObserver.listen(
       (observation) => {
         const discontinuitiesStore = this._discontinuitiesStore;
         const { buffered, position, readyState, rebuffering, freezing } = observation;
 
-        const {
-          BUFFER_DISCONTINUITY_THRESHOLD,
-          FREEZING_STALLED_DELAY,
-          UNFREEZING_SEEK_DELAY,
-          UNFREEZING_DELTA_POSITION,
-        } = config.getCurrent();
+        const { BUFFER_DISCONTINUITY_THRESHOLD, FREEZING_STALLED_DELAY } =
+          config.getCurrent();
 
         if (freezing !== null) {
           const now = getMonotonicTimeStamp();
-
-          const referenceTimestamp =
-            prevFreezingState === null
-              ? freezing.timestamp
-              : prevFreezingState.attemptTimestamp;
-
-          if (
-            !position.isAwaitingFuturePosition() &&
-            now - referenceTimestamp > UNFREEZING_SEEK_DELAY
-          ) {
-            log.warn("Init: trying to seek to un-freeze player");
-            this._playbackObserver.setCurrentTime(
-              this._playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION,
-            );
-            prevFreezingState = { attemptTimestamp: now };
-          }
-
           if (now - freezing.timestamp > FREEZING_STALLED_DELAY) {
             if (rebuffering === null) {
               playbackRateUpdater.stopRebuffering();
@@ -137,8 +114,6 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
             this.trigger("stalled", "freezing");
             return;
           }
-        } else {
-          prevFreezingState = null;
         }
 
         if (rebuffering === null) {

@@ -140,6 +140,8 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
    * `undefined` if we cannot determine the buffer gap.
    */
   bufferGap: number | undefined;
+  /** If `true` the content is loaded until its maximum position. */
+  fullyLoaded: boolean;
   /**
    * The buffered range we are currently playing.
    * `null` if no range is currently available.
