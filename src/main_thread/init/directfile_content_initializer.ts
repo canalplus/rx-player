@@ -137,7 +137,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
     drmInitRef.onUpdate(
       (evt, stopListeningToDrmUpdates) => {
-        if (evt.initializationState.type === "uninitialized") {
+        if (evt.type === "uninitialized") {
           return; // nothing done yet
         }
         stopListeningToDrmUpdates();
@@ -150,11 +150,11 @@ export default class DirectFileContentInitializer extends ContentInitializer {
           clearElementSrc(mediaElement);
         });
 
-        if (evt.initializationState.type === "awaiting-media-link") {
-          evt.initializationState.value.isMediaLinked.setValue(true);
+        if (evt.type === "awaiting-media-link") {
+          evt.value.isMediaLinked.setValue(true);
           drmInitRef.onUpdate(
             (newDrmStatus, stopListeningToDrmUpdatesAgain) => {
-              if (newDrmStatus.initializationState.type === "initialized") {
+              if (newDrmStatus.type === "initialized") {
                 stopListeningToDrmUpdatesAgain();
                 this._seekAndPlay(mediaElement, playbackObserver);
               }
@@ -162,7 +162,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
             { emitCurrentValue: true, clearSignal: cancelSignal },
           );
         } else {
-          assert(evt.initializationState.type === "initialized");
+          assert(evt.type === "initialized");
           this._seekAndPlay(mediaElement, playbackObserver);
         }
       },
