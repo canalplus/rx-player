@@ -634,6 +634,12 @@ export interface IKeySystemOption {
   disableMediaKeysAttachmentLock?: boolean;
 
   /**
+   * If `true`, the current device is known to not be able to begin playback of
+   * encrypted content if there's already clear content playing.
+   */
+  failOnEncryptedAfterClear?: boolean | undefined;
+
+  /**
    * Behavior the RxPlayer should have when one of the key has the
    * `MediaKeyStatus` `"internal-error"`.
    *
