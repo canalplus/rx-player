@@ -137,7 +137,7 @@ describe("compat - browser compatibility types", () => {
     gs.ManagedMediaSource = { a: 5 };
 
     const { MediaSource_ } = await vi.importActual("../browser_compatibility_types");
-    expect(MediaSource_).toEqual({ a: 4 });
+    expect(MediaSource_).toEqual({ a: 5 });
 
     gs.MediaSource = origMediaSource;
     gs.MozMediaSource = origMozMediaSource;
