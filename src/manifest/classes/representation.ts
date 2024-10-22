@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import type { IRepresentationMetadata } from "../../manifest";
+import { isRepresentationPlayable, type IRepresentationMetadata } from "../../manifest";
 import type {
   ICdnMetadata,
   IContentProtections,
@@ -427,6 +427,23 @@ class Representation implements IRepresentationMetadata {
     // init data type in this.contentProtections.initData.
     this.contentProtections.initData.push({ type: initDataType, values: data });
     return true;
+  }
+
+  /**
+   * Returns `true` if the `Representation` has a high chance of being playable on
+   * the current device (its codec seems supported and we don't consider it to be
+   * un-decipherable).
+   *
+   * Returns `false` if the `Representation` has a high chance of being unplayable
+   * on the current device (its codec seems unsupported and/or we consider it to
+   * be un-decipherable).
+   *
+   * Returns `undefined` if we don't know as the codec has not been checked yet.
+   *
+   * @returns {boolean|undefined}
+   */
+  public isPlayable(): boolean | undefined {
+    return isRepresentationPlayable(this);
   }
 
   /**

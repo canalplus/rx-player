@@ -189,8 +189,7 @@ export default function getAdaptationSwitchStrategy(
 function hasCompatibleCodec(adaptation: IAdaptation, segmentSinkCodec: string): boolean {
   return adaptation.representations.some(
     (rep) =>
-      rep.isSupported === true &&
-      rep.decipherable !== false &&
+      rep.isPlayable() === true &&
       areCodecsCompatible(rep.getMimeTypeString(), segmentSinkCodec),
   );
 }

@@ -472,9 +472,9 @@ function createOrReuseSegmentSink(
  * @returns {string}
  */
 function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
-  const representations = adaptation.representations.filter((r) => {
-    return r.isSupported === true && r.decipherable !== false;
-  });
+  const representations = adaptation.representations.filter(
+    (r) => r.isPlayable() !== false,
+  );
   if (representations.length === 0) {
     const noRepErr = new MediaError(
       "NO_PLAYABLE_REPRESENTATION",
