@@ -81,6 +81,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
         parserResult,
         {
           representationFilter: transportOptions.representationFilter,
+          enableResolutionChecks: transportOptions.enableResolutionChecks,
         },
         warnings,
       );

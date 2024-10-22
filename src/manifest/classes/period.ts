@@ -59,19 +59,30 @@ export default class Period implements IPeriodMetadata {
   /**
    * @constructor
    * @param {Object} args
-   * @param {Array.<Object>} unsupportedAdaptations - Array on which
+   * @param {Object} options
+   * @param {Array.<Object>} options.unsupportedAdaptations - Array on which
    * `Adaptation`s objects which have no supported `Representation` will be
    * pushed.
    * This array might be useful for minor error reporting.
-   * @param {function|undefined} [representationFilter]
+   * @param {function|undefined} [options.representationFilter]
+   * @param {boolean|undefined} [options.enableResolutionChecks]
+   * @param {Object|undefined} [options.codecSupportCache]
    */
   constructor(
     args: IParsedPeriod,
-    unsupportedAdaptations: Adaptation[],
-    cachedCodecSupport: CodecSupportCache,
-
-    representationFilter?: IRepresentationFilter | undefined,
+    options: {
+      codecSupportCache: CodecSupportCache;
+      enableResolutionChecks?: boolean | undefined;
+      representationFilter?: IRepresentationFilter | undefined;
+      unsupportedAdaptations: Adaptation[];
+    },
   ) {
+    const {
+      enableResolutionChecks,
+      codecSupportCache,
+      unsupportedAdaptations,
+      representationFilter,
+    } = options;
     this.id = args.id;
     this.adaptations = (
       Object.keys(args.adaptations) as ITrackType[]
@@ -82,7 +93,9 @@ export default class Period implements IPeriodMetadata {
       }
       const filteredAdaptations = adaptationsForType
         .map((adaptation): Adaptation => {
-          const newAdaptation = new Adaptation(adaptation, cachedCodecSupport, {
+          const newAdaptation = new Adaptation(adaptation, {
+            codecSupportCache,
+            enableResolutionChecks,
             representationFilter,
           });
           if (
@@ -146,11 +159,11 @@ export default class Period implements IPeriodMetadata {
    * `Adaptation`s objects which are now known to have no supported
    * `Representation` will be pushed.
    * This array might be useful for minor error reporting.
-   * @param {Array.<Object>} cachedCodecSupport
+   * @param {Array.<Object>} codecSupportCache
    */
   refreshCodecSupport(
     unsupportedAdaptations: Adaptation[],
-    cachedCodecSupport: CodecSupportCache,
+    codecSupportCache: CodecSupportCache,
   ) {
     (Object.keys(this.adaptations) as ITrackType[]).forEach((ttype) => {
       const adaptationsForType = this.adaptations[ttype];
@@ -170,7 +183,7 @@ export default class Period implements IPeriodMetadata {
           continue;
         }
         const wasSupported = adaptation.supportStatus.hasSupportedCodec;
-        adaptation.refreshCodecSupport(cachedCodecSupport);
+        adaptation.refreshCodecSupport(codecSupportCache);
         if (
           wasSupported !== false &&
           adaptation.supportStatus.hasSupportedCodec === false

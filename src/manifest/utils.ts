@@ -237,9 +237,7 @@ export function toAudioTrack(
     audioDescription: adaptation.isAudioDescription === true,
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        )
+      ? adaptation.representations.filter((r) => isRepresentationPlayable(r))
       : adaptation.representations
     ).map(toAudioRepresentation),
     label: adaptation.label,
@@ -283,7 +281,7 @@ export function toVideoTrack(
           const representations = (
             filterPlayable
               ? trickModeAdaptation.representations.filter(
-                  (r) => r.isSupported === true && r.decipherable !== false,
+                  (r) => isRepresentationPlayable(r) === true,
                 )
               : trickModeAdaptation.representations
           ).map(toVideoRepresentation);
@@ -302,9 +300,7 @@ export function toVideoTrack(
   const videoTrack: IVideoTrack = {
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        )
+      ? adaptation.representations.filter((r) => isRepresentationPlayable(r) === true)
       : adaptation.representations
     ).map(toVideoRepresentation),
     label: adaptation.label,
@@ -328,14 +324,14 @@ export function toVideoTrack(
 function toAudioRepresentation(
   representation: IRepresentationMetadata,
 ): IAudioRepresentation {
-  const { id, bitrate, codecs, isSpatialAudio, isSupported, decipherable } =
+  const { id, bitrate, codecs, isSpatialAudio, isCodecSupported, decipherable } =
     representation;
   return {
     id,
     bitrate,
     codec: codecs?.[0],
     isSpatialAudio,
-    isCodecSupported: isSupported,
+    isCodecSupported,
     decipherable,
   };
 }
@@ -355,7 +351,8 @@ function toVideoRepresentation(
     height,
     codecs,
     hdrInfo,
-    isSupported,
+    isCodecSupported,
+    isResolutionSupported,
     decipherable,
     contentProtections,
   } = representation;
@@ -367,7 +364,8 @@ function toVideoRepresentation(
     height,
     codec: codecs?.[0],
     hdrInfo,
-    isCodecSupported: isSupported,
+    isCodecSupported,
+    isResolutionSupported,
     decipherable,
     contentProtections:
       contentProtections !== undefined
@@ -387,6 +385,19 @@ export function toTaggedTrack(adaptation: IAdaptation): ITaggedTrack {
     case "text":
       return { type: "text", track: toTextTrack(adaptation) };
   }
+}
+
+export function isRepresentationPlayable(
+  representation: IRepresentationMetadata,
+): boolean | undefined {
+  if (representation.isCodecSupported === undefined) {
+    return undefined;
+  }
+  return (
+    representation.isCodecSupported &&
+    representation.isResolutionSupported !== false &&
+    representation.decipherable !== false
+  );
 }
 
 /**
