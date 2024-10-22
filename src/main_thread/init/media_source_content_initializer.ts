@@ -486,11 +486,24 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     args: IBufferingMediaSettings,
     currentCanceller: TaskCanceller,
   ): void {
+    this._startLoadingContentOnMediaSource(
+      args,
+      this._createReloadMediaSourceCallback(args, currentCanceller),
+      currentCanceller.signal,
+    );
+  }
+
+  /**
+   * Create `IReloadMediaSourceCallback` allowing to handle reload orders.
+   * @param {Object} args
+   * @param {Object} currentCanceller
+   */
+  private _createReloadMediaSourceCallback(
+    args: IBufferingMediaSettings,
+    currentCanceller: TaskCanceller,
+  ): IReloadMediaSourceCallback {
     const initCanceller = this._initCanceller;
-    const onReloadMediaSource: IReloadMediaSourceCallback = (reloadOrder: {
-      position: number;
-      autoPlay: boolean;
-    }): void => {
+    return (reloadOrder: { position: number; autoPlay: boolean }): void => {
       currentCanceller.cancel();
       if (initCanceller.isUsed()) {
         return;
@@ -521,11 +534,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           this._onFatalError(err);
         });
     };
-    this._startLoadingContentOnMediaSource(
-      args,
-      onReloadMediaSource,
-      currentCanceller.signal,
-    );
   }
 
   /**
