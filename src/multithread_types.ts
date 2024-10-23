@@ -417,6 +417,17 @@ export interface ISerializedPlaybackObservation {
    * `undefined` if we cannot determine the buffer gap.
    */
   bufferGap: number | undefined;
+  /**
+   * Indicates whether the user agent believes it has enough buffered data to ensure
+   * uninterrupted playback for a meaningful period or needs more data.
+   * It also reflects whether the user agent can retrieve and buffer data in an
+   * energy-efficient manner while maintaining the desired memory usage.
+   * The value can be `undefined` if the user agent does not provide this indicator.
+   * `true` indicates that the buffer is low, and more data should be buffered.
+   * `false` indicates that there is enough buffered data, and no additional data needs
+   *  to be buffered at this time.
+   */
+  canStream: boolean | undefined;
 }
 
 /**

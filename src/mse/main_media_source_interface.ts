@@ -44,6 +44,18 @@ export default class MainMediaSourceInterface
   public sourceBuffers: MainSourceBufferInterface[];
   /** @see IMediaSourceInterface */
   public readyState: ReadyState;
+  /**
+   * The `ManagedMediaSource.streaming` attribute
+   * Indicates whether the user agent believes it has enough buffered data to ensure
+   * uninterrupted playback for a meaningful period or needs more data.
+   * It also reflects whether the user agent can retrieve and buffer data in an
+   * energy-efficient manner while maintaining the desired memory usage.
+   * The value can be `undefined` if the user agent does not provide this indicator.
+   * `true` indicates that the buffer is low, and more data should be buffered.
+   * `false` indicates that there is enough buffered data, and no additional data needs
+   *  to be buffered at this time.
+   */
+  public streaming?: boolean;
   /** The MSE `MediaSource` instance linked to that `IMediaSourceInterface`. */
   private _mediaSource: IMediaSource;
   /**
@@ -117,6 +129,17 @@ export default class MainMediaSourceInterface
       },
       this._canceller.signal,
     );
+    if (this._mediaSource.streaming !== undefined) {
+      this.streaming = this._mediaSource.streaming;
+    }
+    this._mediaSource.addEventListener("startstreaming", () => {
+      this.streaming = true;
+      this.trigger("streamingChanged", null);
+    });
+    this._mediaSource.addEventListener("endstreaming", () => {
+      this.streaming = false;
+      this.trigger("streamingChanged", null);
+    });
   }
 
   /** @see IMediaSourceInterface */

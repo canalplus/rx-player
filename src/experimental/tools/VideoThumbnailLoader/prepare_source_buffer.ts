@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../compat/browser_compatibility_types";
+import {
+  isManagedMediaSource,
+  MediaSource_,
+} from "../../../compat/browser_compatibility_types";
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import log from "../../../log";
 import { resetMediaElement } from "../../../main_thread/init/utils/create_media_source";
@@ -52,6 +55,14 @@ export default function prepareSourceBuffer(
 
     log.info("Init: Creating MediaSource");
     const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
+    if (isManagedMediaSource) {
+      /**
+       * Using ManagedMediaSource needs to disableRemotePlayback or to provide
+       * an Airplay source alternative, such as HLS.
+       * https://github.com/w3c/media-source/issues/320
+       */
+      videoElement.disableRemotePlayback = true;
+    }
     if (mediaSource.handle.type === "handle") {
       videoElement.srcObject = mediaSource.handle.value;
       cleanUpSignal.register(() => {
