@@ -117,13 +117,10 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
               ? freezing.timestamp
               : prevFreezingState.attemptTimestamp;
 
-          if (
-            !position.isAwaitingFuturePosition() &&
-            now - referenceTimestamp > UNFREEZING_SEEK_DELAY
-          ) {
+          if (now - referenceTimestamp > UNFREEZING_SEEK_DELAY) {
             log.warn("Init: trying to seek to un-freeze player");
             this._playbackObserver.setCurrentTime(
-              this._playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION,
+              observation.position.getWanted() + UNFREEZING_DELTA_POSITION,
             );
             prevFreezingState = { attemptTimestamp: now };
           }
@@ -477,7 +474,7 @@ function generateDiscontinuityError(stalledPosition: number, seekTo: number): Me
     "DISCONTINUITY_ENCOUNTERED",
     "A discontinuity has been encountered at position " +
       String(stalledPosition) +
-      ", seeked at position " +
+      ", seeking at position " +
       String(seekTo),
   );
 }
