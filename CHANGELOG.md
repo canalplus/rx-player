@@ -1,5 +1,16 @@
 # Changelog
 
+## Current dev build: v4.2.1-dev.2024102300
+
+### Bug fixes
+
+- MULTI_THREAD: Fix `onmessageerror` being undefined on older devices [#1587]
+
+### Other improvements
+
+- DEBUG_ELEMENT: Add buffer size estimate to debug buffer content graph [#1558]
+- DEBUG_ELEMENT: Add `hdr` information to video Representation [#1583]
+
 ## v4.2.0 (2024-10-17)
 
 ### Features
