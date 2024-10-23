@@ -28,6 +28,7 @@ export default function createSegmentSinkGraph(
   const bufferGraphWrapper = createElement("div");
   const bufferTitle = createMetricTitle(title);
   const canvasElt = createGraphCanvas();
+  const bufferSizeElt = document.createElement("span");
   const currentRangeRepInfoElt = createElement("div");
   const loadingRangeRepInfoElt = createElement("div");
   const bufferGraph = new SegmentSinkGraph(canvasElt);
@@ -48,8 +49,11 @@ export default function createSegmentSinkGraph(
 
   bufferGraphWrapper.appendChild(bufferTitle);
   bufferGraphWrapper.appendChild(canvasElt);
+  bufferGraphWrapper.appendChild(bufferSizeElt);
   bufferGraphWrapper.appendChild(currentRangeRepInfoElt);
   bufferGraphWrapper.appendChild(loadingRangeRepInfoElt);
+  bufferSizeElt.style.marginLeft = "5px";
+  bufferSizeElt.style.fontSize = "0.9em";
   bufferGraphWrapper.style.padding = "5px 0px";
   update();
   return bufferGraphWrapper;
@@ -75,13 +79,29 @@ export default function createSegmentSinkGraph(
 
   function updateBufferMetrics() {
     const showAllInfo = isExtendedMode(parentElt);
-    const inventory = bufferMetrics?.segmentSinks[bufferType].segmentInventory;
+    const metricsForType = bufferMetrics?.segmentSinks[bufferType];
+    const inventory = metricsForType?.segmentInventory;
     if (bufferMetrics === null || inventory === undefined) {
       bufferGraphWrapper.style.display = "none";
+      bufferSizeElt.innerHTML = "";
       currentRangeRepInfoElt.innerHTML = "";
       loadingRangeRepInfoElt.innerHTML = "";
     } else {
       bufferGraphWrapper.style.display = "block";
+      if (metricsForType?.sizeEstimate !== undefined) {
+        const sizeEstimate = metricsForType.sizeEstimate;
+        let sizeStr: string;
+        if (sizeEstimate > 2e6) {
+          sizeStr = (sizeEstimate / 1e6).toFixed(2) + "MB";
+        } else if (sizeEstimate > 2e3) {
+          sizeStr = (sizeEstimate / 1e3).toFixed(2) + "kB";
+        } else {
+          sizeStr = sizeEstimate + "B";
+        }
+        bufferSizeElt.innerHTML = sizeStr;
+      } else {
+        bufferSizeElt.innerHTML = "";
+      }
       const currentTime = instance.getPosition();
       const width = Math.min(parentElt.clientWidth - 150, 600);
       bufferGraph.update({
