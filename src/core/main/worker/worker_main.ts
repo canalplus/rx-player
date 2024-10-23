@@ -19,6 +19,7 @@ import type { IPlayerError, ITrackType } from "../../../public_types";
 import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
 import assert, { assertUnreachable } from "../../../utils/assert";
+import globalScope from "../../../utils/global_scope";
 import type { ILogFormat, ILoggerLevel } from "../../../utils/logger";
 import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
@@ -80,7 +81,7 @@ export default function initializeWorkerMain() {
    */
   let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
 
-  onmessageerror = (_msg: MessageEvent) => {
+  globalScope.onmessageerror = (_msg: MessageEvent) => {
     log.error("MTCI: Error when receiving message from main thread.");
   };
   onmessage = function (e: MessageEvent<IMainThreadMessage>) {
