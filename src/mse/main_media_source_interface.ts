@@ -134,9 +134,11 @@ export default class MainMediaSourceInterface
     }
     this._mediaSource.addEventListener("startstreaming", () => {
       this.streaming = true;
+      this.trigger("streamingChanged", null);
     });
     this._mediaSource.addEventListener("endstreaming", () => {
       this.streaming = false;
+      this.trigger("streamingChanged", null);
     });
   }
 

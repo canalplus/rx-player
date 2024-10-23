@@ -260,9 +260,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
 
     const recursivelyRequestSegments = (): void => {
       if (contentInfo.canStream.getValue() === false) {
-        log.info(
-          "DEBUG ManagedMediaSource: segment fetching postponed because it cannot stream now",
-        );
+        log.info("SQ: Segment fetching postponed because it cannot stream now.");
         return;
       }
       const { segmentQueue } = downloadQueue.getValue();

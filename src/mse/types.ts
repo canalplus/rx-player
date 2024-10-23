@@ -304,4 +304,10 @@ export interface IMediaSourceInterfaceEvents {
    * changed to `"close"`.
    */
   mediaSourceClose: null;
+
+  /**
+   * Indicate that the `IMediaSourceInterface`'s `streaming` property just
+   * changed.
+   */
+  streamingChanged: null;
 }

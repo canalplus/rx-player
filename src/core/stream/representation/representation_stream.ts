@@ -214,10 +214,7 @@ export default function RepresentationStream<TSegmentDataType>(
 
   playbackObserver.listen((observation) => {
     if (canStream.getValue() !== observation.canStream) {
-      log.info(
-        "DEBUG ManagedMediaSource: observation.canStream update",
-        observation.canStream,
-      );
+      log.info("Stream: observation.canStream updated to", observation.canStream);
       canStream.setValue(observation.canStream);
     }
   });

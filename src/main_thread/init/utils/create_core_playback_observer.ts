@@ -139,6 +139,10 @@ export default function createCorePlaybackObserver(
       clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
+
+    mediaSource?.addEventListener("streamingChanged", () => {
+      emitCorePlaybackObservation();
+    });
     return newRef;
 
     function constructCorePlaybackObservation() {
