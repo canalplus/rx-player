@@ -455,7 +455,7 @@ const PlayerModule = declareModule(
       player
         .attachWorker({
           workerUrl: "./worker.js",
-          dashWasmUrl: "./mpd-parser.wasm",
+          dashWasmUrl: __INCLUDE_WASM_PARSER__ ? "./mpd-parser.wasm" : undefined,
         })
         .catch((err) => {
           // eslint-disable-next-line no-console
