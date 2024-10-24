@@ -150,6 +150,7 @@ export default function initializeWorkerMain() {
         currentLoadedContentTaskCanceller.signal.register(() => {
           currentContentObservationRef.finish();
         });
+        log.debug("WP: Loading new pepared content.");
         loadOrReloadPreparedContent(
           msg.value,
           contentPreparer,
@@ -487,6 +488,7 @@ function loadOrReloadPreparedContent(
   playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
   parentCancelSignal: CancellationSignal,
 ) {
+  log.debug("WP: Loading prepared content");
   const currentLoadCanceller = new TaskCanceller();
   currentLoadCanceller.linkToSignal(parentCancelSignal);
 
@@ -516,6 +518,7 @@ function loadOrReloadPreparedContent(
   const {
     contentId,
     cmcdDataBuilder,
+    enableRepresentationDeprecation,
     manifest,
     mediaSource,
     representationEstimator,
@@ -523,23 +526,61 @@ function loadOrReloadPreparedContent(
     segmentQueueCreator,
   } = preparedContent;
   const { drmSystemId, enableFastSwitching, initialTime, onCodecSwitch } = val;
-  playbackObservationRef.onUpdate((observation) => {
-    if (preparedContent.decipherabilityFreezeDetector.needToReload(observation)) {
-      handleMediaSourceReload({
-        timeOffset: 0,
-        minimumPosition: 0,
-        maximumPosition: Infinity,
+  playbackObservationRef.onUpdate(
+    (observation) => {
+      // Synchronize SegmentSinks with what has been buffered.
+      ["video" as const, "audio" as const, "text" as const].forEach((tType) => {
+        const segmentSinkStatus = segmentSinksStore.getStatus(tType);
+        if (segmentSinkStatus.type === "initialized") {
+          segmentSinkStatus.value.synchronizeInventory(observation.buffered[tType] ?? []);
+        }
       });
-    }
 
-    // Synchronize SegmentSinks with what has been buffered.
-    ["video" as const, "audio" as const, "text" as const].forEach((tType) => {
-      const segmentSinkStatus = segmentSinksStore.getStatus(tType);
-      if (segmentSinkStatus.type === "initialized") {
-        segmentSinkStatus.value.synchronizeInventory(observation.buffered[tType] ?? []);
+      const freezeResolution =
+        preparedContent.freezeResolver.onNewObservation(observation);
+      if (freezeResolution !== null) {
+        switch (freezeResolution.type) {
+          case "reload": {
+            log.info("WP: Planning reload due to freeze");
+            handleMediaSourceReload({
+              timeOffset: 0,
+              minimumPosition: 0,
+              maximumPosition: Infinity,
+            });
+            break;
+          }
+          case "flush": {
+            log.info("WP: Flushing buffer due to freeze");
+            sendMessage({
+              type: WorkerMessageType.NeedsBufferFlush,
+              contentId,
+              value: {
+                relativeResumingPosition: freezeResolution.value.relativeSeek,
+                relativePosHasBeenDefaulted: false,
+              },
+            });
+            break;
+          }
+          case "deprecate-representations": {
+            log.info("WP: Planning Representation deprecation due to freeze");
+            const content = freezeResolution.value;
+            if (enableRepresentationDeprecation) {
+              manifest.deprecateRepresentations(content);
+            }
+            handleMediaSourceReload({
+              timeOffset: 0,
+              minimumPosition: 0,
+              maximumPosition: Infinity,
+            });
+            break;
+          }
+          default:
+            assertUnreachable(freezeResolution);
+        }
       }
-    });
-  });
+    },
+    { clearSignal: currentLoadCanceller.signal },
+  );
 
   const initialPeriod =
     manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
@@ -878,8 +919,15 @@ function loadOrReloadPreparedContent(
     if (currentLoadCanceller !== null) {
       currentLoadCanceller.cancel();
     }
+    log.debug(
+      "WP: Reloading MediaSource",
+      payload.timeOffset,
+      payload.minimumPosition,
+      payload.maximumPosition,
+    );
     contentPreparer.reloadMediaSource(payload).then(
       () => {
+        log.info("WP: MediaSource Reloaded, loading...");
         loadOrReloadPreparedContent(
           {
             initialTime: newInitialTime,

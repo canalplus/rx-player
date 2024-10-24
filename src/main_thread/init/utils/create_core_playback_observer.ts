@@ -82,6 +82,8 @@ export interface ICorePlaybackObservation {
   rebuffering: IRebufferingStatus | null;
   freezing: IFreezingStatus | null;
   bufferGap: number | undefined;
+  /** If `true` the content is loaded until its maximum position. */
+  fullyLoaded: boolean;
 }
 
 /**
@@ -149,6 +151,7 @@ export default function createCorePlaybackObserver(
         },
         readyState: observation.readyState,
         speed: lastSpeed,
+        fullyLoaded: observation.fullyLoaded,
       };
     }
 
