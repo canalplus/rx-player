@@ -222,7 +222,10 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
         ignoredStallTimeStamp = null;
         playbackRateUpdater.startRebuffering();
 
-        if (this._manifest === null) {
+        if (
+          this._manifest === null ||
+          (isSeekingApproximate && performance.now() - rebuffering.timestamp <= 1000)
+        ) {
           this.trigger("stalled", stalledReason);
           return;
         }
@@ -275,6 +278,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
         // case of small discontinuity in the content.
         const nextBufferRangeGap = getNextRangeGap(buffered, freezePosition);
         if (
+          (!isSeekingApproximate || performance.now() - rebuffering.timestamp > 1000) &&
           this._speed.getValue() > 0 &&
           nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD
         ) {
