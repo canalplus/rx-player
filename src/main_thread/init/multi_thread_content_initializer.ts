@@ -684,7 +684,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          const currentTime = mediaElement.currentTime;
+          const lastObservation = playbackObserver.getReference().getValue();
+          const currentTime = lastObservation.position.isAwaitingFuturePosition()
+            ? lastObservation.position.getWanted()
+            : mediaElement.currentTime;
           const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
           const canBeApproximateSeek = Boolean(
             msgData.value?.relativePosHasBeenDefaulted,

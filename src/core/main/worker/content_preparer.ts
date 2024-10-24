@@ -289,6 +289,7 @@ export default class ContentPreparer {
       );
     this._currentContent.mediaSource = mediaSource;
     this._currentContent.segmentSinksStore = segmentSinksStore;
+    this._currentContent.freezeResolver = new FreezeResolver(segmentSinksStore);
     this._currentContent.workerTextSender = workerTextSender;
     return new Promise((res, rej) => {
       mediaSource.addEventListener(
