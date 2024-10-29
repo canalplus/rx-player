@@ -1018,12 +1018,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       referenceDateTime,
       segmentLoader,
       serverSyncInfos,
-      experimentalOptions,
       __priv_manifestUpdateUrl,
       __priv_patchLastSegmentInSidx,
       url,
       onAudioTracksNotPlayable,
       onVideoTracksNotPlayable,
+      experimentalOptions,
     } = options;
 
     // Perform multiple checks on the given options
@@ -1231,6 +1231,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
+          playbackRateBasedRebufferingAvoidanceSettings:
+            experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings,
           playbackSupport: {
             mseInWorker: false,
             videoTrack: isVideoHandled,
@@ -1316,6 +1318,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
+          playbackRateBasedRebufferingAvoidanceSettings:
+            experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings,
           MediaSourceClass,
           playbackSupport: {
             mseInWorker: hasMseInWorker,
@@ -1346,6 +1350,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         speed: this._priv_speed,
         startAt,
         url,
+        playbackRateBasedRebufferingAvoidanceSettings:
+          experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings,
       });
     }
 
