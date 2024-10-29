@@ -182,6 +182,20 @@ export interface ILoadVideoOptions {
    * When set to an object, enable "Common Media Client Data", or "CMCD".
    */
   cmcd?: ICmcdOptions | undefined;
+
+  /**
+   * Optional options that are still considered experimental.
+   */
+  experimentalOptions?: {
+    /**
+     * Update playback rate (speed) when the buffer is close to empty, to avoid
+     * rebuffering.
+     */
+    playbackRateBasedRebufferingAvoidanceSettings?:
+      | IPlaybackRateBasedRebufferingAvoidanceSettings
+      | null
+      | undefined;
+  };
 }
 
 /** Value of the `serverSyncInfos` transport option. */
@@ -1283,4 +1297,27 @@ export interface ITextTrackSetting {
 export interface IModeInformation {
   isDirectFile: boolean;
   useWorker: boolean;
+}
+
+/**
+ * Configuration on a rebuffering avoidance mechanism where the playback rate
+ * (i.e. the speed at which the content plays) is lowered when there's not a lot
+ * of data in the buffer.
+ */
+export interface IPlaybackRateBasedRebufferingAvoidanceSettings {
+  /**
+   * Once the player is below this amount of seconds in the buffer before
+   * rebuffering, it will start updating the "regular" `playbackRate`
+   * ("regular" here meaning: the `playbackRate` is currently set to the
+   * default value `1`) to the `minPlaybackRate` value below.
+   */
+  onBufferGapSize: number;
+
+  /**
+   * The playbackRate that should be set if there's less than
+   * `onBufferGapSize` seconds in the buffer and if the player is currently
+   * doing a regular `playbackRate` ("regular" here meaning: the
+   * `playbackRate` is currently set to the default value `1`)
+   */
+  minPlaybackRate: number;
 }

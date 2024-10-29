@@ -24,7 +24,11 @@ import clearElementSrc from "../../compat/clear_element_src";
 import type { MediaError } from "../../errors";
 import log from "../../log";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
-import type { IKeySystemOption, IPlayerError } from "../../public_types";
+import type {
+  IKeySystemOption,
+  IPlaybackRateBasedRebufferingAvoidanceSettings,
+  IPlayerError,
+} from "../../public_types";
 import assert from "../../utils/assert";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
@@ -120,6 +124,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       playbackObserver,
       null,
       speed,
+      this._settings.playbackRateBasedRebufferingAvoidanceSettings,
     );
     rebufferingController.addEventListener("stalled", (evt) =>
       this.trigger("stalled", evt),
@@ -330,4 +335,10 @@ export interface IDirectFileOptions {
   startAt?: IInitialTimeOptions | undefined;
   /** URL that should be played. */
   url: string;
+  /**
+   * Configuration on a rebuffering avoidance mechanism where the playback rate
+   * (i.e. the speed at which the content plays) is lowered when there's not a lot
+   * of data in the buffer.
+   */
+  playbackRateBasedRebufferingAvoidanceSettings: IPlaybackRateBasedRebufferingAvoidanceSettings | null;
 }

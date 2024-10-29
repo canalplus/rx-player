@@ -417,6 +417,8 @@ export interface ISerializedPlaybackObservation {
    * `undefined` if we cannot determine the buffer gap.
    */
   bufferGap: number | undefined;
+  /** If `true` the content is loaded until its maximum position. */
+  fullyLoaded: boolean;
 }
 
 /**

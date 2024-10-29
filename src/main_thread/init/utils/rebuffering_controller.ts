@@ -20,13 +20,16 @@ import type { IBufferType } from "../../../core/types";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
 import type { IManifestMetadata, IPeriodMetadata } from "../../../manifest";
-import { getPeriodAfter } from "../../../manifest";
+import { getLivePosition, getPeriodAfter } from "../../../manifest";
 import { SeekingState } from "../../../playback_observer";
 import type {
   IMediaElementPlaybackObserver,
   IPlaybackObservation,
 } from "../../../playback_observer";
-import type { IPlayerError } from "../../../public_types";
+import type {
+  IPlaybackRateBasedRebufferingAvoidanceSettings,
+  IPlayerError,
+} from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import { getNextBufferedTimeRangeGap } from "../../../utils/ranges";
@@ -60,7 +63,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
    * order (first ordered by Period's start, then by bufferType in any order.
    */
   private _discontinuitiesStore: IDiscontinuityStoredInfo[];
-
+  private _playbackRateBasedRebufferingAvoidanceSettings: IPlaybackRateBasedRebufferingAvoidanceSettings | null;
   private _canceller: TaskCanceller;
 
   /**
@@ -72,6 +75,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     playbackObserver: IMediaElementPlaybackObserver,
     manifest: IManifestMetadata | null,
     speed: IReadOnlySharedReference<number>,
+    playbackRateBasedRebufferingAvoidanceSettings: IPlaybackRateBasedRebufferingAvoidanceSettings | null,
   ) {
     super();
     this._playbackObserver = playbackObserver;
@@ -79,6 +83,8 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     this._speed = speed;
     this._discontinuitiesStore = [];
     this._isStarted = false;
+    this._playbackRateBasedRebufferingAvoidanceSettings =
+      playbackRateBasedRebufferingAvoidanceSettings;
     this._canceller = new TaskCanceller();
   }
 
@@ -109,6 +115,21 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           UNFREEZING_SEEK_DELAY,
           UNFREEZING_DELTA_POSITION,
         } = config.getCurrent();
+
+        if (
+          playbackRateUpdater.hasLowerRegularPlaybackRate() &&
+          observation.bufferGap !== undefined &&
+          observation.bufferGap >
+            (this._playbackRateBasedRebufferingAvoidanceSettings?.onBufferGapSize ?? 0)
+        ) {
+          log.info(
+            "Init: stopping lower playback rate due to low buffer gap",
+            observation.bufferGap,
+            this._playbackRateBasedRebufferingAvoidanceSettings?.onBufferGapSize,
+            this._playbackRateBasedRebufferingAvoidanceSettings?.minPlaybackRate,
+          );
+          playbackRateUpdater.stopLowerRegularPlaybackRate();
+        }
 
         if (freezing !== null) {
           const now = getMonotonicTimeStamp();
@@ -155,6 +176,33 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
             }
             this.trigger("stalled", reason);
             return;
+          }
+
+          if (
+            this._playbackRateBasedRebufferingAvoidanceSettings !== null &&
+            observation.bufferGap !== undefined &&
+            observation.bufferGap <
+              this._playbackRateBasedRebufferingAvoidanceSettings.onBufferGapSize
+          ) {
+            const bufferEnd = observation.position.getPolled() + observation.bufferGap;
+            const livePos =
+              this._manifest !== null && this._manifest.isLive
+                ? getLivePosition(this._manifest)
+                : undefined;
+            if (
+              (!observation.fullyLoaded || bufferEnd + 5 < observation.duration) &&
+              (livePos === undefined || bufferEnd + 5 < livePos)
+            ) {
+              log.info(
+                "Init: starting lower playback rate due to low buffer gap",
+                observation.bufferGap,
+                this._playbackRateBasedRebufferingAvoidanceSettings?.onBufferGapSize,
+                this._playbackRateBasedRebufferingAvoidanceSettings?.minPlaybackRate,
+              );
+              playbackRateUpdater.startLowerRegularPlaybackRate(
+                this._playbackRateBasedRebufferingAvoidanceSettings.minPlaybackRate,
+              );
+            }
           }
           this.trigger("unstalled", null);
           return;
@@ -502,6 +550,7 @@ class PlaybackRateUpdater {
   private _speedUpdateCanceller: TaskCanceller;
   private _isRebuffering: boolean;
   private _isDisposed: boolean;
+  private _playbackRateRatio: number;
 
   /**
    * Create a new `PlaybackRateUpdater`.
@@ -517,7 +566,30 @@ class PlaybackRateUpdater {
     this._playbackObserver = playbackObserver;
     this._isDisposed = false;
     this._speed = speed;
+    this._playbackRateRatio = 1;
     this._updateSpeed();
+  }
+
+  public startLowerRegularPlaybackRate(ratio: number): void {
+    this._playbackRateRatio = ratio;
+    if (!this._isRebuffering) {
+      this._speedUpdateCanceller.cancel();
+      this._speedUpdateCanceller = new TaskCanceller();
+      this._updateSpeed();
+    }
+  }
+
+  public stopLowerRegularPlaybackRate() {
+    this._playbackRateRatio = 1;
+    if (!this._isRebuffering) {
+      this._speedUpdateCanceller.cancel();
+      this._speedUpdateCanceller = new TaskCanceller();
+      this._updateSpeed();
+    }
+  }
+
+  public hasLowerRegularPlaybackRate(): boolean {
+    return this._playbackRateRatio !== 1;
   }
 
   /**
@@ -566,7 +638,9 @@ class PlaybackRateUpdater {
     this._speed.onUpdate(
       (lastSpeed) => {
         log.info("Init: Resume playback speed", lastSpeed);
-        this._playbackObserver.setPlaybackRate(lastSpeed);
+        const wantedSpeed =
+          lastSpeed === 1 ? lastSpeed * this._playbackRateRatio : lastSpeed;
+        this._playbackObserver.setPlaybackRate(wantedSpeed);
       },
       {
         clearSignal: this._speedUpdateCanceller.signal,

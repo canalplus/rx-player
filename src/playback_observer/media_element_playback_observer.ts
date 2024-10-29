@@ -467,6 +467,13 @@ export default class PlaybackObserver {
             Infinity;
     }
 
+    const fullyLoaded = hasLoadedUntilTheEnd(
+      basePosition,
+      currentRange,
+      mediaTimings.ended,
+      mediaTimings.duration,
+      this._lowLatencyMode,
+    );
     const rebufferingStatus = getRebufferingStatus({
       previousObservation,
       currentObservation: mediaTimings,
@@ -475,7 +482,7 @@ export default class PlaybackObserver {
       lowLatencyMode: this._lowLatencyMode,
       withMediaSource: this._withMediaSource,
       bufferGap,
-      currentRange,
+      fullyLoaded,
     });
 
     const freezingStatus = getFreezingStatus(
@@ -502,6 +509,7 @@ export default class PlaybackObserver {
       freezing: freezingStatus,
       bufferGap,
       currentRange,
+      fullyLoaded,
     });
     if (log.hasLevel("DEBUG")) {
       log.debug(
@@ -646,7 +654,7 @@ function getRebufferingStatus({
   withMediaSource,
   lowLatencyMode,
   bufferGap,
-  currentRange,
+  fullyLoaded,
 }: {
   /** Previous Playback Observation produced. */
   previousObservation: IPlaybackObservation;
@@ -676,36 +684,17 @@ function getRebufferingStatus({
    * `undefined` if we cannot determine this due to a browser issue.
    */
   bufferGap: number | undefined;
-  /**
-   * Range of buffered data where the current position is (`basePosition`).
-   *
-   * `null` if we've no buffered data at the current position.
-   * `undefined` if we cannot determine this due to a browser issue.
-   */
-  currentRange: { start: number; end: number } | null | undefined;
+  /** If `true` the content is loaded until its maximum position. */
+  fullyLoaded: boolean;
 }): IRebufferingStatus | null {
   const { REBUFFERING_GAP } = config.getCurrent();
-  const {
-    position: currentTime,
-    duration,
-    paused,
-    readyState,
-    ended,
-  } = currentObservation;
+  const { position: currentTime, paused, readyState, ended } = currentObservation;
 
   const {
     rebuffering: prevRebuffering,
     event: prevEvt,
     position: prevTime,
   } = previousObservation;
-
-  const fullyLoaded = hasLoadedUntilTheEnd(
-    basePosition,
-    currentRange,
-    ended,
-    duration,
-    lowLatencyMode,
-  );
 
   const canSwitchToRebuffering =
     readyState >= 1 &&
@@ -943,5 +932,6 @@ function getInitialObservation(mediaElement: IMediaElement): IPlaybackObservatio
     freezing: null,
     bufferGap: 0,
     currentRange: null,
+    fullyLoaded: false,
   });
 }

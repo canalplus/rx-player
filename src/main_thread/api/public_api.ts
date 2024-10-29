@@ -786,6 +786,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       __priv_manifestUpdateUrl,
       __priv_patchLastSegmentInSidx,
       url,
+      experimentalOptions,
     } = options;
 
     // Perform multiple checks on the given options
@@ -944,6 +945,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
+          playbackRateBasedRebufferingAvoidanceSettings:
+            experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings,
         });
       } else {
         if (features.multithread === null) {
@@ -987,6 +990,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           textTrackOptions,
           worker: this._priv_worker,
           url,
+          playbackRateBasedRebufferingAvoidanceSettings:
+            experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings,
         });
       }
     } else {
@@ -1011,6 +1016,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         speed: this._priv_speed,
         startAt,
         url,
+        playbackRateBasedRebufferingAvoidanceSettings:
+          experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings,
       });
     }
 

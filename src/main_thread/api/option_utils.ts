@@ -35,6 +35,7 @@ import type {
   IServerSyncInfos,
   IRxPlayerMode,
   ICmcdOptions,
+  IPlaybackRateBasedRebufferingAvoidanceSettings,
 } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -65,6 +66,7 @@ export interface IParsedConstructorOptions {
 /**
  * Base type which the types for the parsed options of the RxPlayer's
  * `loadVideo` method exend.
+ * @see ILoadVideoOptions
  */
 interface IParsedLoadVideoOptionsBase {
   url: string | undefined;
@@ -88,6 +90,9 @@ interface IParsedLoadVideoOptionsBase {
   serverSyncInfos?: IServerSyncInfos | undefined;
   mode: IRxPlayerMode;
   cmcd: ICmcdOptions | undefined;
+  experimentalOptions: {
+    playbackRateBasedRebufferingAvoidanceSettings: IPlaybackRateBasedRebufferingAvoidanceSettings | null;
+  };
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
 }
@@ -461,6 +466,11 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     mode,
     url,
     cmcd: options.cmcd,
+    experimentalOptions: {
+      playbackRateBasedRebufferingAvoidanceSettings:
+        options.experimentalOptions?.playbackRateBasedRebufferingAvoidanceSettings ??
+        null,
+    },
   };
 }
 
