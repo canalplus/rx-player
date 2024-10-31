@@ -33,7 +33,6 @@ import type {
   IReadOnlyPlaybackObserver,
   IMediaElementPlaybackObserver,
 } from "../../playback_observer";
-import type { IWorkerPlaybackObservation } from "../../playback_observer/worker_playback_observer";
 import type {
   ICmcdOptions,
   IInitialManifest,
@@ -58,6 +57,7 @@ import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
+import type { ICorePlaybackObservation } from "./utils/create_core_playback_observer";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import { resetMediaElement } from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
@@ -1472,7 +1472,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       playbackObserver: IMediaElementPlaybackObserver;
     },
     cancelSignal: CancellationSignal,
-  ): IReadOnlyPlaybackObserver<IWorkerPlaybackObservation> | null {
+  ): IReadOnlyPlaybackObserver<ICorePlaybackObservation> | null {
     if (cancelSignal.isCancelled()) {
       return null;
     }

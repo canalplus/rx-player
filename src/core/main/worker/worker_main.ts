@@ -2,6 +2,7 @@ import config from "../../../config";
 import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
+import type { ICorePlaybackObservation } from "../../../main_thread/init/utils/create_core_playback_observer";
 import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
 import type {
   IContentInitializationData,
@@ -13,7 +14,6 @@ import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_t
 import DashFastJsParser from "../../../parsers/manifest/dash/fast-js-parser";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import { ObservationPosition } from "../../../playback_observer";
-import type { IWorkerPlaybackObservation } from "../../../playback_observer/worker_playback_observer";
 import WorkerPlaybackObserver from "../../../playback_observer/worker_playback_observer";
 import type { IPlayerError, ITrackType } from "../../../public_types";
 import createDashPipelines from "../../../transports/dash";
@@ -79,7 +79,7 @@ export default function initializeWorkerMain() {
   /**
    * When set, emit playback observation made on the main thread.
    */
-  let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
+  let playbackObservationRef: SharedReference<ICorePlaybackObservation> | null = null;
 
   globalScope.onmessageerror = (_msg: MessageEvent) => {
     log.error("MTCI: Error when receiving message from main thread.");
@@ -140,7 +140,7 @@ export default function initializeWorkerMain() {
 
         const currentCanceller = new TaskCanceller();
         const currentContentObservationRef =
-          new SharedReference<IWorkerPlaybackObservation>(
+          new SharedReference<ICorePlaybackObservation>(
             objectAssign(msg.value.initialObservation, {
               position: new ObservationPosition(...msg.value.initialObservation.position),
             }),
@@ -484,7 +484,7 @@ interface IBufferingInitializationInformation {
 function loadOrReloadPreparedContent(
   val: IBufferingInitializationInformation,
   contentPreparer: ContentPreparer,
-  playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+  playbackObservationRef: IReadOnlySharedReference<ICorePlaybackObservation>,
   parentCancelSignal: CancellationSignal,
 ) {
   const currentLoadCanceller = new TaskCanceller();
