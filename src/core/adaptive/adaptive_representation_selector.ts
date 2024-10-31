@@ -23,10 +23,7 @@ import type {
   IRepresentation,
   ISegment,
 } from "../../manifest";
-import type {
-  ObservationPosition,
-  IReadOnlyPlaybackObserver,
-} from "../../playback_observer";
+import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import type { IRange } from "../../utils/ranges";
@@ -36,6 +33,7 @@ import SharedReference from "../../utils/reference";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 import type { IBufferType } from "../segment_sinks";
+import type { IAdaptationStreamPlaybackObservation } from "../stream/adaptation";
 import BufferBasedChooser from "./buffer_based_chooser";
 import GuessBasedChooser from "./guess_based_chooser";
 import NetworkAnalyzer from "./network_analyzer";
@@ -96,7 +94,7 @@ export default function createAdaptiveRepresentationSelector(
     context: { manifest: IManifest; period: IPeriod; adaptation: IAdaptation },
     currentRepresentation: IReadOnlySharedReference<IRepresentation | null>,
     representations: IReadOnlySharedReference<IRepresentation[]>,
-    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>,
+    playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>,
     stopAllEstimates: CancellationSignal,
   ): IRepresentationEstimatorResponse {
     const { type } = context.adaptation;
@@ -636,29 +634,6 @@ export interface IABREstimate {
   knownStableBitrate?: number | undefined;
 }
 
-/** Media properties `getEstimateReference` will need to keep track of. */
-export interface IRepresentationEstimatorPlaybackObservation {
-  /**
-   * For the concerned media buffer, difference in seconds between the next
-   * position where no segment data is available and the current position.
-   */
-  bufferGap: number;
-  /**
-   * Information on the current media position in seconds at the time of a
-   * Playback Observation.
-   */
-  position: ObservationPosition;
-  /**
-   * Last "playback rate" set by the user. This is the ideal "playback rate" at
-   * which the media should play.
-   */
-  speed: number;
-  /** `duration` property of the HTMLMediaElement on which the content plays. */
-  duration: number;
-  /** Theoretical maximum position on the content that can currently be played. */
-  maximumPosition: number;
-}
-
 /** Content of the `IABRMetricsEvent` event's payload. */
 export interface IMetricsCallbackPayload {
   /** Time the request took to perform the request, in milliseconds. */
@@ -747,7 +722,7 @@ export interface IRepresentationEstimatorArguments {
   /** Class allowing to estimate the current network bandwidth. */
   bandwidthEstimator: BandwidthEstimator;
   /** Emit regular playback information. */
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>;
+  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
   /**
    * The Representation currently loaded.
    * `null` if no Representation is currently loaded.
@@ -797,7 +772,7 @@ export type IRepresentationEstimator = (
   /** Reference emitting the list of available Representations to choose from. */
   representations: IReadOnlySharedReference<IRepresentation[]>,
   /** Regularly emits playback conditions */
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>,
   /**
    * After this `CancellationSignal` emits, resources will be disposed and
    * estimates will stop to be emitted.
