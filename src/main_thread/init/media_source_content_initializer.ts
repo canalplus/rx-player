@@ -72,6 +72,7 @@ import createMediaSource from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
+import handleTooMuchMediaKeySessions from "./utils/handle_too_much_media_key_sessions";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import initializeContentDecryption from "./utils/initialize_content_decryption";
 import MainThreadTextDisplayerInterface from "./utils/main_thread_text_displayer_interface";
@@ -279,14 +280,19 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             waitingKeyIds: Uint8Array[];
             activeKeyIds: Uint8Array[];
           }) => {
-            if (!contentDecryptor.enabled) {
+            if (
+              !contentDecryptor.enabled ||
+              this._manifest === null ||
+              this._manifest?.syncValue === null
+            ) {
               log.error(
-                "Init: Received tooMuchSessions error before getting a ContentDecryptor",
+                "Init: Received tooMuchSessions error before getting a Manifest or ContentDecryptor",
               );
               return;
             }
-            this._onTooMuchMediaKeySessions(
+            handleTooMuchMediaKeySessions(
               contentDecryptor.value,
+              this._manifest.syncValue,
               playbackObserver,
               val,
             );
@@ -1147,77 +1153,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         manifest.updateCodecSupport(codecsSupportInfo);
       } catch (err) {
         this._onFatalError(err);
-      }
-    }
-  }
-
-  /**
-   * Logic performed when the `ContentDecryptor` tells us that there are too
-   * many DRM sessions created for the current content.
-   *
-   * We here try to determine which keys aren't needed anymore on the current
-   * content, and indicate to the `ContentDecryptor` that it can "free" them.
-   *
-   * @param {Object} contentDecryptor - The `ContentDecryptor` instance which
-   * has encountered the issue.
-   * @param {Object} playbackObserver - The playbackObserver linked to the same
-   * media element than the one handled by the `ContentDecryptor`.
-   * @param {Object} payload - The payload from the `tooMuchSessions` event from
-   * the `ContentDecryptor`.
-   */
-  private _onTooMuchMediaKeySessions(
-    contentDecryptor: ContentDecryptor,
-    playbackObserver: IMediaElementPlaybackObserver,
-    payload: {
-      waitingKeyIds: Uint8Array[];
-      activeKeyIds: Uint8Array[];
-    },
-  ): void {
-    const manifest = this._manifest?.syncValue;
-    if (isNullOrUndefined(manifest)) {
-      log.error("Init: Received tooMuchSessions error before fetching the Manifest");
-      return;
-    }
-
-    // We will here free all keys that aren't needed for the content buffered
-    // forward.
-
-    const basePosition = Math.min(
-      playbackObserver.getCurrentTime(),
-      playbackObserver.getReference().getValue().position.getWanted(),
-    );
-
-    const keyIdsToCheck = payload.activeKeyIds.slice();
-    for (const period of manifest.periods) {
-      if (period.end !== undefined && period.end < basePosition) {
-        continue;
-      }
-      for (const adaptation of period.getAdaptations()) {
-        for (const representation of adaptation.representations) {
-          const repKeyIds = representation.contentProtections?.keyIds;
-          if (repKeyIds === undefined) {
-            break;
-          }
-          for (let i = keyIdsToCheck.length - 1; i >= 0; i--) {
-            const kidToCheck = keyIdsToCheck[i];
-            for (const repKid of repKeyIds) {
-              if (areArraysOfNumbersEqual(kidToCheck, repKid)) {
-                keyIdsToCheck.splice(i, 1);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (keyIdsToCheck.length === 0) {
-      // FIXME:
-      log.error("Init: Too much MediaKeySession but found none to free");
-    } else {
-      const hasFreedSession = contentDecryptor.freeKeyIds(keyIdsToCheck);
-      if (!hasFreedSession) {
-        // FIXME:
-        log.error("Init: Too much MediaKeySession even after freeing some keys");
       }
     }
   }

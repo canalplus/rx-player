@@ -63,6 +63,7 @@ import { resetMediaElement } from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
+import handleTooMuchMediaKeySessions from "./utils/handle_too_much_media_key_sessions";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import RebufferingController from "./utils/rebuffering_controller";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter";
@@ -356,6 +357,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const { statusRef: drmInitializationStatus, contentDecryptor } =
       this._initializeContentDecryption(
         mediaElement,
+        playbackObserver,
         lastContentProtection,
         mediaSourceStatus,
         () => reloadMediaSource(0, undefined, undefined),
@@ -1178,6 +1180,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
   private _initializeContentDecryption(
     mediaElement: IMediaElement,
+    playbackObserver: IMediaElementPlaybackObserver,
     lastContentProtection: IReadOnlySharedReference<null | IContentProtection>,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
@@ -1328,6 +1331,20 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         });
         contentDecryptor.removeEventListener("stateChange");
       }
+    });
+
+    contentDecryptor.addEventListener("tooMuchSessions", (payload) => {
+      const manifest = this._currentContentInfo?.manifest;
+      if (isNullOrUndefined(manifest)) {
+        log.error("Init: Received tooMuchSessions error before getting a Manifest");
+        return;
+      }
+      handleTooMuchMediaKeySessions(
+        contentDecryptor,
+        manifest,
+        playbackObserver,
+        payload,
+      );
     });
 
     contentDecryptor.addEventListener("error", (error) => {

@@ -17,9 +17,10 @@ import type KeySessionRecord from "./key_session_record";
  * "Marking as full" this way does not change your ability do add new session,
  * but the `isFull` method will return `true` until at least a single session is
  * removed from this `ActiveSessionsInfo`.
- * This "full" flag allows to simplify overflowing MediaKeySession management, by
- * storing in a single place whether this event has been encountered and whether
- * it had chance to be resolved since.
+ * This "full" flag allows to simplify the management of having too many
+ * simultaneous `MediaKeySession` on the current device, by storing in a single
+ * place whether this event has been encountered and whether it had chance to
+ * be resolved since.
  *
  * @class ActiveSessionsInfo
  */
@@ -32,7 +33,7 @@ export default class ActiveSessionsStore {
    * is called **and** led to a `MediaKeySession` has been removed.
    *
    * This boolean has no impact on the creation of new `MediaKeySession`, it is
-   * only here as a flag to indicate that an overflow of `MediaKeySession`
+   * only here as a flag to indicate that a surplus of `MediaKeySession`
    * linked to this `ActiveSessionsStore` has been detected and only resets to
    * `false` when it has chances to be resolved (when a `MediaKeySession` has
    * since been removed).
@@ -49,8 +50,8 @@ export default class ActiveSessionsStore {
    * now on return `true` until at least one `MediaKeySession` has been removed
    * from this `ActiveSessionsStore` (through the `removeSession` method).
    *
-   * This flag allows to store the information of whether an "overflow" of
-   * active `MediaKeySession` has been detected.
+   * This flag allows to store the information of whether too much
+   * `MediaKeySession` seems to be created right now.
    */
   public markAsFull(): void {
     this._isFull = true;
@@ -95,14 +96,9 @@ export default class ActiveSessionsStore {
 
   /**
    * If `true`, we know that there's too much `MediaKeySession` currently
-   * created and we thus cannot create any more.
+   * created.
    *
-   * Supplementary "overflowing" initialization data may in this state awaiting
-   * in one of the `ContentDecryptor`'s queue.
-   *
-   * If `false` we've either have less `MediaKeySession` active than the
-   * current limit currently or we don't know whether we reached the limit
-   * yet.
+   * @see `markAsFull` method.
    * @returns {boolean}
    */
   public isFull(): boolean {

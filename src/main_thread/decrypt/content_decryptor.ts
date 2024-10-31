@@ -140,7 +140,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
      * and adding the corresponding initialization data to this queue.
      *
      * The `ContentDecryptor` will then handle this queue in priority if/when
-     * the overflow has ended.
+     * this "overflow" has ended.
      */
     overflowQueue: IProcessedProtectionData[];
   };
@@ -437,7 +437,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * be created due to the current limit of simultaneous `MediaKeySession` being
    * reached.
    * You may know whether that's the case by listening for the `tooMuchSessions`
-   * event or by calling the `isOverflowing` method.
+   * event or by calling the `hasTooMuchSessions` method.
    *
    * The boolean returned by this method indicates if the key id freeing led to
    * `MediaKeySession` that are relied on for the current content have in
@@ -491,8 +491,21 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     return !this._activeSessionsStore.isFull();
   }
 
-  public isOverflowing(): boolean {
-    return this._initDataQueues.overflowQueue.length > 0;
+  /**
+   * Returns `true` if the `ContentDecryptor` is known to currently depend on
+   * too much `MediaKeySession` for the current configuration, and is thus
+   * unable to create more, limiting the possibility to handle further keys.
+   *
+   * To allow the `ContentDecryptor` to remove some of those `MediaKeySession`,
+   * you're advised to call the `freeKeyIds` method for keys you don't want to
+   * be handling anymore.
+   *
+   * @returns {boolean}
+   */
+  public hasTooMuchSessions(): boolean {
+    return (
+      this._initDataQueues.overflowQueue.length > 0 && this._activeSessionsStore.isFull()
+    );
   }
 
   /**
