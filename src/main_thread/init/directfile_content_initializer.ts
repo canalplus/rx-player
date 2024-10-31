@@ -108,6 +108,9 @@ export default class DirectFileContentInitializer extends ContentInitializer {
         onWarning: (err: IPlayerError) => this.trigger("warning", err),
         onBlackListProtectionData: noop,
         onKeyIdsCompatibilityUpdate: noop,
+        onTooMuchSessions: () => {
+          log.error("Init", "There's currently too much MediaKeySession created");
+        },
       },
       cancelSignal,
     );
