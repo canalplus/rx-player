@@ -1,4 +1,5 @@
 import log from "../../log";
+import type { ICorePlaybackObservation } from "../../main_thread/init/utils/create_core_playback_observer";
 import type {
   IAdaptation,
   IManifest,
@@ -6,15 +7,10 @@ import type {
   IRepresentation,
   ISegment,
 } from "../../manifest";
-import type {
-  IReadOnlyPlaybackObserver,
-  IRebufferingStatus,
-  ObservationPosition,
-} from "../../playback_observer";
+import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
 import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types";
 import createUuid from "../../utils/create_uuid";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { IRange } from "../../utils/ranges";
 import TaskCanceller from "../../utils/task_canceller";
 import { getRelativeUrl } from "../../utils/url-utils";
 
@@ -60,34 +56,6 @@ export interface ICmcdSegmentInfo {
 }
 
 /**
- * Media playback observation's properties the `CmcdDataBuilder` wants to have
- * access to.
- */
-export interface ICmcdDataBuilderPlaybackObservation {
-  /**
-   * Ranges of buffered data per type of media.
-   * `null` if no buffer exists for that type of media.
-   */
-  buffered: Record<ITrackType, IRange[] | null>;
-  /**
-   * Information on the current media position in seconds at the time of the
-   * Observation.
-   */
-  position: ObservationPosition;
-  /** Target playback rate at which we want to play the content. */
-  speed: number;
-  /**
-   * Describes when the player is "rebuffering" and what event started that
-   * status.
-   * "Rebuffering" is a status where the player has not enough buffer ahead to
-   * play reliably.
-   * The RxPlayer should pause playback when a playback observation indicates the
-   * rebuffering status.
-   */
-  rebuffering: IRebufferingStatus | null;
-}
-
-/**
  * Class allowing to easily obtain "Common Media Client Data" (CMCD) properties
  * that may be relied on while performing HTTP(S) requests on a CDN.
  *
@@ -98,7 +66,7 @@ export default class CmcdDataBuilder {
   private _contentId: string;
   private _typePreference: TypePreference;
   private _lastThroughput: Partial<Record<ITrackType, number | undefined>>;
-  private _playbackObserver: IReadOnlyPlaybackObserver<ICmcdDataBuilderPlaybackObservation> | null;
+  private _playbackObserver: IReadOnlyPlaybackObserver<ICorePlaybackObservation> | null;
   private _bufferStarvationToggle: boolean;
   private _canceller: TaskCanceller | null;
 
@@ -131,7 +99,7 @@ export default class CmcdDataBuilder {
    * @param {Object} playbackObserver
    */
   public startMonitoringPlayback(
-    playbackObserver: IReadOnlyPlaybackObserver<ICmcdDataBuilderPlaybackObservation>,
+    playbackObserver: IReadOnlyPlaybackObserver<ICorePlaybackObservation>,
   ): void {
     this._canceller?.cancel();
     this._canceller = new TaskCanceller();
