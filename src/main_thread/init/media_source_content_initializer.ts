@@ -62,8 +62,8 @@ import SyncOrAsync from "../../utils/sync_or_async";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
-import type { IProcessedProtectionData } from "../decrypt";
 import type ContentDecryptor from "../decrypt";
+import type { IProcessedProtectionData } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
@@ -204,7 +204,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    this._setupInitialMediaSourceAndDecryption(mediaElement)
+    this._setupInitialMediaSourceAndDecryption(mediaElement, playbackObserver)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
           mediaElement,
@@ -256,7 +256,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {HTMLMediaElement|null} mediaElement
    * @returns {Promise.<Object>}
    */
-  private _setupInitialMediaSourceAndDecryption(mediaElement: IMediaElement): Promise<{
+  private _setupInitialMediaSourceAndDecryption(
+    mediaElement: IMediaElement,
+    playbackObserver: IMediaElementPlaybackObserver,
+  ): Promise<{
     mediaSource: MainMediaSourceInterface;
     drmSystemId: string | undefined;
     unlinkMediaSource: TaskCanceller;
@@ -272,6 +275,22 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         {
           onWarning: (err: IPlayerError) => this.trigger("warning", err),
           onError: (err: Error) => this._onFatalError(err),
+          onTooMuchSessions: (val: {
+            waitingKeyIds: Uint8Array[];
+            activeKeyIds: Uint8Array[];
+          }) => {
+            if (!contentDecryptor.enabled) {
+              log.error(
+                "Init: Received tooMuchSessions error before getting a ContentDecryptor",
+              );
+              return;
+            }
+            this._onTooMuchMediaKeySessions(
+              contentDecryptor.value,
+              playbackObserver,
+              val,
+            );
+          },
           onBlackListProtectionData: (val) => {
             // Ugly IIFE workaround to allow async event listener
             (async () => {
@@ -1128,6 +1147,77 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         manifest.updateCodecSupport(codecsSupportInfo);
       } catch (err) {
         this._onFatalError(err);
+      }
+    }
+  }
+
+  /**
+   * Logic performed when the `ContentDecryptor` tells us that there are too
+   * many DRM sessions created for the current content.
+   *
+   * We here try to determine which keys aren't needed anymore on the current
+   * content, and indicate to the `ContentDecryptor` that it can "free" them.
+   *
+   * @param {Object} contentDecryptor - The `ContentDecryptor` instance which
+   * has encountered the issue.
+   * @param {Object} playbackObserver - The playbackObserver linked to the same
+   * media element than the one handled by the `ContentDecryptor`.
+   * @param {Object} payload - The payload from the `tooMuchSessions` event from
+   * the `ContentDecryptor`.
+   */
+  private _onTooMuchMediaKeySessions(
+    contentDecryptor: ContentDecryptor,
+    playbackObserver: IMediaElementPlaybackObserver,
+    payload: {
+      waitingKeyIds: Uint8Array[];
+      activeKeyIds: Uint8Array[];
+    },
+  ): void {
+    const manifest = this._manifest?.syncValue;
+    if (isNullOrUndefined(manifest)) {
+      log.error("Init: Received tooMuchSessions error before fetching the Manifest");
+      return;
+    }
+
+    // We will here free all keys that aren't needed for the content buffered
+    // forward.
+
+    const basePosition = Math.min(
+      playbackObserver.getCurrentTime(),
+      playbackObserver.getReference().getValue().position.getWanted(),
+    );
+
+    const keyIdsToCheck = payload.activeKeyIds.slice();
+    for (const period of manifest.periods) {
+      if (period.end !== undefined && period.end < basePosition) {
+        continue;
+      }
+      for (const adaptation of period.getAdaptations()) {
+        for (const representation of adaptation.representations) {
+          const repKeyIds = representation.contentProtections?.keyIds;
+          if (repKeyIds === undefined) {
+            break;
+          }
+          for (let i = keyIdsToCheck.length - 1; i >= 0; i--) {
+            const kidToCheck = keyIdsToCheck[i];
+            for (const repKid of repKeyIds) {
+              if (areArraysOfNumbersEqual(kidToCheck, repKid)) {
+                keyIdsToCheck.splice(i, 1);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (keyIdsToCheck.length === 0) {
+      // FIXME:
+      log.error("Init: Too much MediaKeySession but found none to free");
+    } else {
+      const hasFreedSession = contentDecryptor.freeKeyIds(keyIdsToCheck);
+      if (!hasFreedSession) {
+        // FIXME:
+        log.error("Init: Too much MediaKeySession even after freeing some keys");
       }
     }
   }

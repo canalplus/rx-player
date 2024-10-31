@@ -26,12 +26,13 @@ import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
+import flatMap from "../../utils/flat_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { objectValues } from "../../utils/object_values";
 import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
 import attachMediaKeys from "./attach_media_keys";
-import createOrLoadSession from "./create_or_load_session";
+import createOrLoadSession, { NoSessionSpaceError } from "./create_or_load_session";
 import type { ICodecSupportList } from "./find_key_system";
 import type { IMediaKeysInfos } from "./get_media_keys";
 import initMediaKeys from "./init_media_keys";
@@ -47,6 +48,8 @@ import type {
   IContentDecryptorEvent,
 } from "./types";
 import { MediaKeySessionLoadingType, ContentDecryptorState } from "./types";
+import type { IActiveSessionInfo } from "./utils/active_sessions_store";
+import ActiveSessionsStore from "./utils/active_sessions_store";
 import { DecommissionedSessionError } from "./utils/check_key_statuses";
 import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
 import getDrmSystemId from "./utils/get_drm_system_id";
@@ -103,12 +106,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _stateData: IContentDecryptorStateData;
 
   /**
-   * Contains information about all key sessions loaded for this current
-   * content.
-   * This object is most notably used to check which keys are already obtained,
-   * thus avoiding to perform new unnecessary license requests and CDM interactions.
+   * Regroups information on `MediaKeySession` currently actively used by this
+   * `ContentDecryptor`.
+   * @see ActiveSessionsStore
    */
-  private _currentSessions: IActiveSessionInfo[];
+  private _activeSessionsStore: ActiveSessionsStore;
 
   /**
    * Allows to dispose the resources taken by the current instance of the
@@ -117,14 +119,31 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
   private _canceller: TaskCanceller;
 
   /**
-   * This queue stores initialization data which hasn't been processed yet,
-   * probably because the "queue is locked" for now. (@see _stateData private
-   * property).
-   *
-   * For example, this queue stores initialization data communicated while
-   * initializing so it can be processed when the initialization is done.
+   * The `ContentDecryptor` may have to bufferize some initialization data
+   * proccessing. This is done through queues set up in this Object.
    */
-  private _initDataQueue: IProtectionData[];
+  private _initDataQueues: {
+    /**
+     * This queue stores initialization data which hasn't been processed yet,
+     * probably because the "queue is locked" for now. (@see _stateData private
+     * property).
+     *
+     * For example, this queue stores initialization data communicated while
+     * initializing so it can be processed when the initialization is done.
+     */
+    mainQueue: IProcessedProtectionData[];
+    /**
+     * The `ContentDecryptor` may have a limit of `MediaKeySession` it can rely
+     * on at the same time.
+     * If the processing of newly-received initialization data risks to go over
+     * that limit, the `ContentDecryptor` is sending its `tooMuchSessions` event
+     * and adding the corresponding initialization data to this queue.
+     *
+     * The `ContentDecryptor` will then handle this queue in priority if/when
+     * the overflow has ended.
+     */
+    overflowQueue: IProcessedProtectionData[];
+  };
 
   /**
    * Store the list of supported codecs with the current key system configuration.
@@ -161,9 +180,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     log.debug("DRM: Starting ContentDecryptor logic.");
 
     const canceller = new TaskCanceller();
-    this._currentSessions = [];
+    this._activeSessionsStore = new ActiveSessionsStore();
     this._canceller = canceller;
-    this._initDataQueue = [];
+    this._initDataQueues = {
+      mainQueue: [],
+      overflowQueue: [],
+    };
     this._stateData = {
       state: ContentDecryptorState.Initializing,
       isMediaKeysAttached: MediaKeyAttachmentStatus.NotAttached,
@@ -380,24 +402,97 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    * @param {Object} initializationData
    */
   public onInitializationData(initializationData: IProtectionData): void {
-    if (this._stateData.isInitDataQueueLocked !== false) {
-      if (this._isStopped()) {
-        throw new Error("ContentDecryptor either disposed or stopped.");
-      }
-      this._initDataQueue.push(initializationData);
-      return;
-    }
-
-    const { mediaKeysData } = this._stateData.data;
     const processedInitializationData = {
       ...initializationData,
       values: new InitDataValuesContainer(initializationData.values),
     };
+    if (this._stateData.isInitDataQueueLocked !== false) {
+      if (this._isStopped()) {
+        throw new Error("ContentDecryptor either disposed or stopped.");
+      }
+      this._initDataQueues.mainQueue.push(processedInitializationData);
+      return;
+    }
+
+    const { mediaKeysData } = this._stateData.data;
     this._processInitializationData(processedInitializationData, mediaKeysData).catch(
       (err) => {
         this._onFatalError(err);
       },
     );
+  }
+
+  /**
+   * Indicate that a key being handled by the `ContentDecryptor` can be "freed",
+   * meaning that we won't be using it anymore (not for the current content, nor
+   * for a future content).
+   *
+   * This call may lead to close the corresponding `MediaKeySession` if all its
+   * linked keys are not needed anymore.
+   * Note that this is not always wanted for keys of already-played content, as
+   * it prevent the `ContentDecryptor` from caching the key if the corresponding
+   * content is played again in the future.
+   *
+   * Calling this method is thus mainly useful if no new `MediaKeySession` can
+   * be created due to the current limit of simultaneous `MediaKeySession` being
+   * reached.
+   * You may know whether that's the case by listening for the `tooMuchSessions`
+   * event or by calling the `isOverflowing` method.
+   *
+   * The boolean returned by this method indicates if the key id freeing led to
+   * `MediaKeySession` that are relied on for the current content have in
+   * consequence been closed:
+   *
+   *   - If `false`, and if we're currently unable to create new
+   *     `MediaKeySession` due to the set limit being reached, we're still not
+   *     able to create new `MediaKeySession`.
+   *
+   *   - It `true`, and if we were unable to create new `MediaKeySession` due
+   *     to the limit being reached, the issue **may** now be resolved.
+   *
+   *     Note that this is not a certitude. You will receive a `tooMuchSessions`
+   *     event soon after if it ended up that there's still too many
+   *     simultaneous `MediaKeySession` created.
+   *
+   * @param {Array.<Uint8Array>} keyIds
+   * @returns {boolean}
+   */
+  public freeKeyIds(keyIds: Uint8Array[]): boolean {
+    if (this._stateData.isMediaKeysAttached !== MediaKeyAttachmentStatus.Attached) {
+      log.warn(
+        "DRM: Invalid state when freeing key ids",
+        this._stateData.isMediaKeysAttached,
+      );
+      return false;
+    }
+
+    const loadedSessionsStore =
+      this._stateData.data.mediaKeysData.stores.loadedSessionsStore;
+    const entries = loadedSessionsStore.getAll();
+    for (const entry of entries) {
+      const { keySessionRecord } = entry;
+      const keyIdsFromSession = keySessionRecord.getAssociatedKeyIds();
+      if (areAllKeyIdsContainedIn(keyIdsFromSession, keyIds)) {
+        loadedSessionsStore.closeSession(entry.mediaKeySession).catch((err) => {
+          const errorMsg = err instanceof Error ? err.message : "Unknown Error";
+          log.warn("DRM: Failed to close mediaKeySession in `freeKeyIds`", errorMsg);
+        });
+      }
+    }
+
+    const currentActiveSessions = this._activeSessionsStore.getSessions();
+    for (let i = currentActiveSessions.length - 1; i >= 0; i--) {
+      const session = currentActiveSessions[i];
+      if (!loadedSessionsStore.hasEntryForRecord(session.record)) {
+        this._activeSessionsStore.removeSession(session);
+      }
+    }
+
+    return !this._activeSessionsStore.isFull();
+  }
+
+  public isOverflowing(): boolean {
+    return this._initDataQueues.overflowQueue.length > 0;
   }
 
   /**
@@ -433,7 +528,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
     if (options.singleLicensePer === "content") {
       const firstCreatedSession = arrayFind(
-        this._currentSessions,
+        this._activeSessionsStore.getSessions(),
         (x) => x.source === MediaKeySessionLoadingType.Created,
       );
 
@@ -475,9 +570,9 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       initializationData.content !== undefined
     ) {
       const { period } = initializationData.content;
-      const createdSessions = this._currentSessions.filter(
-        (x) => x.source === MediaKeySessionLoadingType.Created,
-      );
+      const createdSessions = this._activeSessionsStore
+        .getSessions()
+        .filter((x) => x.source === MediaKeySessionLoadingType.Created);
       const periodKeys = new Set<Uint8Array>();
       addKeyIdsFromPeriod(periodKeys, period);
       for (const createdSess of createdSessions) {
@@ -545,13 +640,51 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         ? options.maxSessionCacheSize
         : EME_DEFAULT_MAX_SIMULTANEOUS_MEDIA_KEY_SESSIONS;
 
-    const sessionRes = await createOrLoadSession(
-      initializationData,
-      stores,
-      wantedSessionType,
-      maxSessionCacheSize,
-      this._canceller.signal,
-    );
+    const activeRecords = this._activeSessionsStore.getSessions().map((s) => s.record);
+    let sessionRes;
+    try {
+      sessionRes = await createOrLoadSession(
+        {
+          activeRecords,
+          initializationData,
+          sessionStores: stores,
+          sessionType: wantedSessionType,
+          maxSessionCacheSize,
+        },
+        this._canceller.signal,
+      );
+    } catch (err) {
+      if (!(err instanceof NoSessionSpaceError)) {
+        throw err;
+      }
+      if (this._isStopped()) {
+        return;
+      }
+
+      // We have no space for further sessions for that content, trigger a
+      // "tooMuchSessions" event.
+      this._activeSessionsStore.markAsFull();
+      if (this._initDataQueues.overflowQueue.indexOf(initializationData) === -1) {
+        this._initDataQueues.overflowQueue.push(initializationData);
+      }
+
+      // We unlock the init data queue first, to avoid weird states.
+      this._unlockInitDataQueue();
+      if (this._isStopped()) {
+        return;
+      }
+      if (this._activeSessionsStore.isFull()) {
+        this.trigger("tooMuchSessions", {
+          waitingKeyIds: flatMap(this._initDataQueues.overflowQueue, (k) => {
+            return k.keyIds ?? [];
+          }),
+          activeKeyIds: flatMap(activeRecords, (r: KeySessionRecord): Uint8Array[] => {
+            return r.getAssociatedKeyIds();
+          }),
+        });
+      }
+      return;
+    }
     if (this._isStopped()) {
       return;
     }
@@ -562,7 +695,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       keyStatuses: { whitelisted: [], blacklisted: [] },
       blacklistedSessionError: null,
     };
-    this._currentSessions.push(sessionInfo);
+    this._activeSessionsStore.addSession(sessionInfo);
 
     const { mediaKeySession, sessionType } = sessionRes.value;
 
@@ -631,10 +764,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           if (err instanceof DecommissionedSessionError) {
             log.warn("DRM: A session's closing condition has been triggered");
             this._lockInitDataQueue();
-            const indexOf = this._currentSessions.indexOf(sessionInfo);
-            if (indexOf >= 0) {
-              this._currentSessions.splice(indexOf);
-            }
+            this._activeSessionsStore.removeSession(sessionInfo);
             if (initializationData.content !== undefined) {
               this.trigger("keyIdsCompatibilityUpdate", {
                 whitelistedKeyIds: [],
@@ -698,10 +828,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         const entry = stores.loadedSessionsStore.getEntryForSession(mediaKeySession);
         if (entry === null || entry.closingStatus.type !== "none") {
           // MediaKeySession closing/closed: Just remove from handled list and abort.
-          const indexInCurrent = this._currentSessions.indexOf(sessionInfo);
-          if (indexInCurrent >= 0) {
-            this._currentSessions.splice(indexInCurrent, 1);
-          }
+          this._activeSessionsStore.removeSession(sessionInfo);
           return Promise.resolve();
         }
         throw new EncryptedMediaError(
@@ -724,8 +851,9 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
      * If set, a currently-used key session is already compatible to this
      * initialization data.
      */
-    const compatibleSessionInfo = arrayFind(this._currentSessions, (x) =>
-      x.record.isCompatibleWith(initializationData),
+    const compatibleSessionInfo = arrayFind(
+      this._activeSessionsStore.getSessions(),
+      (x) => x.record.isCompatibleWith(initializationData),
     );
 
     if (compatibleSessionInfo === undefined) {
@@ -837,16 +965,15 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
     // Session not found in `loadedSessionsStore`, it might have been closed
     // since.
-    // Remove from `this._currentSessions` and start again.
-    const indexOf = this._currentSessions.indexOf(compatibleSessionInfo);
-    if (indexOf === -1) {
+    // Remove from `this._activeSessionsStore` and start again.
+    const hasRemoved = this._activeSessionsStore.removeSession(compatibleSessionInfo);
+    if (!hasRemoved) {
       log.error("DRM: Unable to remove processed init data: not found.");
     } else {
       log.debug(
         "DRM: A session from a processed init data is not available " +
           "anymore. Re-processing it.",
       );
-      this._currentSessions.splice(indexOf, 1);
     }
     return false;
   }
@@ -877,19 +1004,19 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
      * If set, a currently-used key session is already compatible to this
      * initialization data.
      */
-    const compatibleSessionInfo = arrayFind(this._currentSessions, (x) =>
-      x.record.isCompatibleWith(initData),
+    const compatibleSessionInfo = arrayFind(
+      this._activeSessionsStore.getSessions(),
+      (x) => x.record.isCompatibleWith(initData),
     );
     if (compatibleSessionInfo === undefined) {
       return;
     }
     /** Remove the session from the currentSessions */
-    const indexOf = this._currentSessions.indexOf(compatibleSessionInfo);
-    if (indexOf !== -1) {
+    const hasRemoved = this._activeSessionsStore.removeSession(compatibleSessionInfo);
+    if (hasRemoved) {
       log.debug(
         "DRM: A session from a processed init is removed due to forceSessionRecreation policy.",
       );
-      this._currentSessions.splice(indexOf, 1);
     }
   }
 
@@ -910,7 +1037,8 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     const formattedErr =
       err instanceof Error ? err : new OtherError("NONE", "Unknown decryption error");
     this.error = formattedErr;
-    this._initDataQueue.length = 0;
+    this._initDataQueues.overflowQueue.length = 0;
+    this._initDataQueues.mainQueue.length = 0;
     this._stateData = {
       state: ContentDecryptorState.Error,
       isMediaKeysAttached: undefined,
@@ -944,11 +1072,18 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    */
   private _processCurrentInitDataQueue(): void {
     while (this._stateData.isInitDataQueueLocked === false) {
-      const initData = this._initDataQueue.shift();
+      const initData =
+        this._initDataQueues.overflowQueue.length > 0 &&
+        !this._activeSessionsStore.isFull()
+          ? this._initDataQueues.overflowQueue.shift()
+          : this._initDataQueues.mainQueue.shift();
       if (initData === undefined) {
         return;
       }
-      this.onInitializationData(initData);
+      const { mediaKeysData } = this._stateData.data;
+      this._processInitializationData(initData, mediaKeysData).catch((err) => {
+        this._onFatalError(err);
+      });
     }
   }
 
@@ -1320,38 +1455,6 @@ type IErrorStateData = IContentDecryptorStateBase<
   undefined, // isMediaKeysAttached
   null // data
 >;
-
-/** Information linked to a session created by the `ContentDecryptor`. */
-interface IActiveSessionInfo {
-  /**
-   * Record associated to the session.
-   * Most notably, it allows both to identify the session as well as to
-   * anounce and find out which key ids are already handled.
-   */
-  record: KeySessionRecord;
-
-  /** Current keys' statuses linked that session. */
-  keyStatuses: {
-    /** Key ids linked to keys that are "usable". */
-    whitelisted: Uint8Array[];
-    /**
-     * Key ids linked to keys that are not considered "usable".
-     * Content linked to those keys are not decipherable and may thus be
-     * fallbacked from.
-     */
-    blacklisted: Uint8Array[];
-  };
-
-  /** Source of the MediaKeySession linked to that record. */
-  source: MediaKeySessionLoadingType;
-
-  /**
-   * If different than `null`, all initialization data compatible with this
-   * processed initialization data has been blacklisted with this corresponding
-   * error.
-   */
-  blacklistedSessionError: BlacklistedSessionError | null;
-}
 
 /**
  * Sent when the created (or already created) MediaKeys is attached to the

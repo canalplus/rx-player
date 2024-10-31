@@ -64,7 +64,7 @@ async function checkNothingHappen(
   limit: number,
 ): Promise<void> {
   const mockCloseSession = vi.spyOn(loadedSessionsStore, "closeSession");
-  await cleanOldLoadedSessions(loadedSessionsStore, limit);
+  await cleanOldLoadedSessions(loadedSessionsStore, [], limit);
   expect(mockCloseSession).not.toHaveBeenCalled();
   mockCloseSession.mockRestore();
 }
@@ -85,7 +85,7 @@ async function checkEntriesCleaned(
   entries: Array<{ sessionId: string }>,
 ): Promise<void> {
   const mockCloseSession = vi.spyOn(loadedSessionsStore, "closeSession");
-  const prom = cleanOldLoadedSessions(loadedSessionsStore, limit).then(() => {
+  const prom = cleanOldLoadedSessions(loadedSessionsStore, [], limit).then(() => {
     expect(mockCloseSession).toHaveBeenCalledTimes(entries.length);
     mockCloseSession.mockRestore();
   });
