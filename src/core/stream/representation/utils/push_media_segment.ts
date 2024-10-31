@@ -28,10 +28,8 @@ import objectAssign from "../../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 import type { SegmentSink } from "../../../segment_sinks";
-import type {
-  IRepresentationStreamPlaybackObservation,
-  IStreamEventAddedSegmentPayload,
-} from "../types";
+import type { IAdaptationStreamPlaybackObservation } from "../../adaptation";
+import type { IStreamEventAddedSegmentPayload } from "../types";
 import appendSegmentToBuffer from "./append_segment_to_buffer";
 
 /**
@@ -50,7 +48,7 @@ export default async function pushMediaSegment<T>(
     segment,
     segmentSink,
   }: {
-    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+    playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
     content: {
       adaptation: IAdaptation;
       manifest: IManifest;

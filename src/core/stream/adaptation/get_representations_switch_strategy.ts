@@ -26,17 +26,15 @@ import {
   getLastSegmentBeforePeriod,
   SegmentSinkOperation,
 } from "../../segment_sinks";
-import type {
-  IRepresentationsChoice,
-  IRepresentationStreamPlaybackObservation,
-} from "../representation";
+import type { IRepresentationsChoice } from "../representation";
+import type { IAdaptationStreamPlaybackObservation } from "./types";
 
 export default function getRepresentationsSwitchingStrategy(
   period: IPeriod,
   adaptation: IAdaptation,
   settings: IRepresentationsChoice,
   segmentSink: SegmentSink,
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>,
 ): IRepresentationSwitchStrategy {
   if (settings.switchingMode === "lazy") {
     return { type: "continue", value: undefined };

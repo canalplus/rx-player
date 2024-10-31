@@ -7,10 +7,7 @@ import type {
   IRepresentation,
 } from "../../../manifest";
 import type { IEMSG } from "../../../parsers/containers/isobmff";
-import type {
-  ObservationPosition,
-  IReadOnlyPlaybackObserver,
-} from "../../../playback_observer";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type {
   IAudioRepresentationsSwitchingMode,
   IPlayerError,
@@ -20,6 +17,7 @@ import type { IRange } from "../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import type { SegmentQueue } from "../../fetchers";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
+import type { IAdaptationStreamPlaybackObservation } from "../adaptation";
 
 /** Callbacks called by the `RepresentationStream` on various events. */
 export interface IRepresentationStreamCallbacks {
@@ -178,22 +176,6 @@ export interface IBufferDiscontinuity {
   end: number | null;
 }
 
-/** Object that should be emitted by the given `IReadOnlyPlaybackObserver`. */
-export interface IRepresentationStreamPlaybackObservation {
-  /**
-   * Information on the current media position in seconds at the time of a
-   * Playback Observation.
-   */
-  position: ObservationPosition;
-  /**
-   * Information on whether the media element was paused at the time of the
-   * Observation.
-   */
-  paused: IPausedPlaybackObservation;
-  /** Last "playback rate" asked by the user. */
-  speed: number;
-}
-
 /** Pause-related information linked to an emitted Playback observation. */
 export interface IPausedPlaybackObservation {
   /**
@@ -269,7 +251,7 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
    */
   terminate: IReadOnlySharedReference<null | ITerminationOrder>;
   /** Periodically emits the current playback conditions. */
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
   /** Supplementary arguments which configure the RepresentationStream's behavior. */
   options: IRepresentationStreamOptions;
 }

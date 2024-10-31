@@ -27,11 +27,8 @@ import type {
   SegmentSink,
 } from "../../../segment_sinks";
 import SegmentSinksStore, { SegmentSinkOperation } from "../../../segment_sinks";
-import type {
-  IBufferDiscontinuity,
-  IRepresentationStreamPlaybackObservation,
-  IQueuedSegment,
-} from "../types";
+import type { IAdaptationStreamPlaybackObservation } from "../../adaptation";
+import type { IBufferDiscontinuity, IQueuedSegment } from "../types";
 import checkForDiscontinuity from "./check_for_discontinuity";
 import getNeededSegments from "./get_needed_segments";
 import getSegmentPriority from "./get_segment_priority";
@@ -92,7 +89,7 @@ export default function getBufferStatus(
     representation: IRepresentation;
   },
   initialWantedTime: number,
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>,
   fastSwitchThreshold: number | undefined,
   bufferGoal: number,
   maxBufferSize: number,

@@ -4,14 +4,15 @@ import type {
   IAudioTrackSwitchingMode,
   IVideoTrackSwitchingMode,
 } from "../../../public_types";
+import type { IRange } from "../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import type { IRepresentationEstimator } from "../../adaptive";
 import type { SegmentQueueCreator } from "../../fetchers";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
+import type { IPeriodStreamPlaybackObservation } from "../period";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
-  IRepresentationStreamPlaybackObservation,
 } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
@@ -112,16 +113,17 @@ export interface INeedsBufferFlushPayload {
 
 /** Regular playback information needed by the AdaptationStream. */
 export interface IAdaptationStreamPlaybackObservation
-  extends IRepresentationStreamPlaybackObservation {
+  extends Omit<IPeriodStreamPlaybackObservation, "buffered"> {
   /**
    * For the current SegmentSink, difference in seconds between the next position
    * where no segment data is available and the current position.
    */
   bufferGap: number;
-  /** `duration` property of the HTMLMediaElement on which the content plays. */
-  duration: number;
-  /** Theoretical maximum position on the content that can currently be played. */
-  maximumPosition: number;
+  /**
+   * Ranges of buffered data for the adaptation media type.
+   * `null` if no buffer exists for the media type.
+   */
+  buffered: IRange[] | null;
 }
 
 /** Arguments given when creating a new `AdaptationStream`. */
