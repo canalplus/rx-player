@@ -2,7 +2,6 @@ import config from "../../../config";
 import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
 import log from "../../../log";
-import type { ICorePlaybackObservation } from "../../../main_thread/init/utils/create_core_playback_observer";
 import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
 import type {
   IContentInitializationData,
@@ -14,6 +13,7 @@ import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_t
 import DashFastJsParser from "../../../parsers/manifest/dash/fast-js-parser";
 import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import { ObservationPosition } from "../../../playback_observer";
+import type { ICorePlaybackObservation } from "../../../playback_observer/types";
 import WorkerPlaybackObserver from "../../../playback_observer/worker_playback_observer";
 import type { IPlayerError, ITrackType } from "../../../public_types";
 import createDashPipelines from "../../../transports/dash";

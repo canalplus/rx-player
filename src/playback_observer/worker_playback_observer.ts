@@ -1,9 +1,8 @@
-import type { ICorePlaybackObservation } from "../main_thread/init/utils/create_core_playback_observer";
 import type { IUpdatePlaybackRateWorkerMessage } from "../multithread_types";
 import { WorkerMessageType } from "../multithread_types";
 import type { IReadOnlySharedReference } from "../utils/reference";
 import type { CancellationSignal } from "../utils/task_canceller";
-import type { IReadOnlyPlaybackObserver } from "./types";
+import type { ICorePlaybackObservation, IReadOnlyPlaybackObserver } from "./types";
 import generateReadOnlyObserver from "./utils/generate_read_only_observer";
 
 export default class WorkerPlaybackObserver
