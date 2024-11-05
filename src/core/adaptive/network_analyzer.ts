@@ -17,10 +17,10 @@
 import config from "../../config";
 import log from "../../log";
 import type { IRepresentation } from "../../manifest";
+import type { IAdaptationStreamPlaybackObservation } from "../../playback_observer";
 import arrayFind from "../../utils/array_find";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import type { IAdaptationStreamPlaybackObservation } from "../stream/adaptation";
 import type BandwidthEstimator from "./utils/bandwidth_estimator";
 import EWMA from "./utils/ewma";
 import type {

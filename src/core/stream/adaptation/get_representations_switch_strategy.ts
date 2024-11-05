@@ -16,7 +16,10 @@
 
 import config from "../../../config";
 import type { IAdaptation, IPeriod } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+  IAdaptationStreamPlaybackObservation,
+} from "../../../playback_observer";
 import arrayIncludes from "../../../utils/array_includes";
 import type { IRange } from "../../../utils/ranges";
 import { excludeFromRanges, insertInto } from "../../../utils/ranges";
@@ -27,7 +30,6 @@ import {
   SegmentSinkOperation,
 } from "../../segment_sinks";
 import type { IRepresentationsChoice } from "../representation";
-import type { IAdaptationStreamPlaybackObservation } from "./types";
 
 export default function getRepresentationsSwitchingStrategy(
   period: IPeriod,

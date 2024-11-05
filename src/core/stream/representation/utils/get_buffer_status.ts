@@ -20,14 +20,16 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+  IAdaptationStreamPlaybackObservation,
+} from "../../../../playback_observer";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type {
   ISignalCompleteSegmentOperation,
   SegmentSink,
 } from "../../../segment_sinks";
 import SegmentSinksStore, { SegmentSinkOperation } from "../../../segment_sinks";
-import type { IAdaptationStreamPlaybackObservation } from "../../adaptation";
 import type { IBufferDiscontinuity, IQueuedSegment } from "../types";
 import checkForDiscontinuity from "./check_for_discontinuity";
 import getNeededSegments from "./get_needed_segments";

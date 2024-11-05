@@ -21,12 +21,14 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+  IAdaptationStreamPlaybackObservation,
+} from "../../../../playback_observer";
 import objectAssign from "../../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 import type { IPushedChunkData, SegmentSink } from "../../../segment_sinks";
-import type { IAdaptationStreamPlaybackObservation } from "../../adaptation";
 import type { IStreamEventAddedSegmentPayload } from "../types";
 import appendSegmentToBuffer from "./append_segment_to_buffer";
 
