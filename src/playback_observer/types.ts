@@ -239,7 +239,45 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
   ): IReadOnlyPlaybackObserver<TDest>;
 }
 
-export interface ICorePlaybackObservation {
+export interface ICorePlaybackObservation extends IPeriodStreamPlaybackObservation {
+  rebuffering: IRebufferingStatus | null;
+  freezing: IFreezingStatus | null;
+  bufferGap: number | undefined;
+}
+
+/** Regular playback information needed by the AdaptationStream. */
+export interface IAdaptationStreamPlaybackObservation {
+  /**
+   * Information on whether the media element was paused at the time of the
+   * Observation.
+   */
+  paused: IPausedPlaybackObservation;
+  /**
+   * Information on the current media position in seconds at the time of the
+   * Observation.
+   */
+  position: ObservationPosition;
+  /** `duration` property of the HTMLMediaElement. */
+  duration: number;
+  /** `readyState` property of the HTMLMediaElement. */
+  readyState: number;
+  /** Target playback rate at which we want to play the content. */
+  speed: number;
+  /** Theoretical maximum position on the content that can currently be played. */
+  maximumPosition: number;
+  /**
+   * For the current SegmentSink, difference in seconds between the next position
+   * where no segment data is available and the current position.
+   */
+  bufferGap: number;
+  /**
+   * Ranges of buffered data for the adaptation media type.
+   * `null` if no buffer exists for the media type.
+   */
+  buffered: IRange[] | null;
+}
+
+export interface IPeriodStreamPlaybackObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
@@ -263,9 +301,6 @@ export interface ICorePlaybackObservation {
    * `null` if no buffer exists for that type of media.
    */
   buffered: Record<ITrackType, IRange[] | null>;
-  rebuffering: IRebufferingStatus | null;
-  freezing: IFreezingStatus | null;
-  bufferGap: number | undefined;
 }
 
 /** Pause-related information linked to an emitted Playback observation. */

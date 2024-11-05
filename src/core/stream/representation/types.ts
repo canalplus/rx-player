@@ -7,7 +7,10 @@ import type {
   IRepresentation,
 } from "../../../manifest";
 import type { IEMSG } from "../../../parsers/containers/isobmff";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+  IAdaptationStreamPlaybackObservation,
+} from "../../../playback_observer";
 import type {
   IAudioRepresentationsSwitchingMode,
   IPlayerError,
@@ -17,7 +20,6 @@ import type { IRange } from "../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import type { SegmentQueue } from "../../fetchers";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
-import type { IAdaptationStreamPlaybackObservation } from "../adaptation";
 
 /** Callbacks called by the `RepresentationStream` on various events. */
 export interface IRepresentationStreamCallbacks {

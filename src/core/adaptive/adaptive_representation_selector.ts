@@ -23,7 +23,10 @@ import type {
   IRepresentation,
   ISegment,
 } from "../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+  IAdaptationStreamPlaybackObservation,
+} from "../../playback_observer";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import type { IRange } from "../../utils/ranges";
@@ -33,7 +36,6 @@ import SharedReference from "../../utils/reference";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 import type { IBufferType } from "../segment_sinks";
-import type { IAdaptationStreamPlaybackObservation } from "../stream/adaptation";
 import BufferBasedChooser from "./buffer_based_chooser";
 import GuessBasedChooser from "./guess_based_chooser";
 import NetworkAnalyzer from "./network_analyzer";

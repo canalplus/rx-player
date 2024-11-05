@@ -6,8 +6,10 @@ import type {
   IRepresentation,
   ISegment,
 } from "../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
-import type { ICorePlaybackObservation } from "../../playback_observer/types";
+import type {
+  IReadOnlyPlaybackObserver,
+  ICorePlaybackObservation,
+} from "../../playback_observer";
 import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types";
 import createUuid from "../../utils/create_uuid";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";

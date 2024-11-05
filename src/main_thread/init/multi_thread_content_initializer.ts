@@ -32,8 +32,8 @@ import { MainThreadMessageType, WorkerMessageType } from "../../multithread_type
 import type {
   IReadOnlyPlaybackObserver,
   IMediaElementPlaybackObserver,
+  ICorePlaybackObservation,
 } from "../../playback_observer";
-import type { ICorePlaybackObservation } from "../../playback_observer/types";
 import type {
   ICmcdOptions,
   IInitialManifest,
@@ -58,7 +58,6 @@ import type { ITextDisplayer } from "../text_displayer";
 import sendMessage from "./send_message";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
-
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import { resetMediaElement } from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
