@@ -75,14 +75,14 @@ interface IKeySystemType {
 }
 
 /**
- * @param {Array.<Object>} keySystems
+ * @param {Object} keySystem
  * @param {Object} askedConfiguration
  * @param {MediaKeySystemAccess} currentKeySystemAccess
  * @param {Object} currentKeySystemOptions
  * @returns {null|Object}
  */
 function checkCachedMediaKeySystemAccess(
-  keySystems: IKeySystemOption[],
+  keySystem: IKeySystemOption,
   askedConfiguration: MediaKeySystemConfiguration,
   currentKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess,
   currentKeySystemOptions: IKeySystemOption,
@@ -96,37 +96,31 @@ function checkCachedMediaKeySystemAccess(
     return null;
   }
 
-  const firstCompatibleOption = keySystems.filter((ks) => {
-    // TODO Do it with MediaKeySystemAccess.prototype.keySystem instead
-    if (ks.type !== currentKeySystemOptions.type) {
-      return false;
-    }
-
-    if (
-      (ks.persistentLicense === true || ks.persistentStateRequired === true) &&
-      mksConfiguration.persistentState !== "required"
-    ) {
-      return false;
-    }
-
-    if (
-      ks.distinctiveIdentifierRequired === true &&
-      mksConfiguration.distinctiveIdentifier !== "required"
-    ) {
-      return false;
-    }
-
-    return true;
-  })[0];
-
-  if (firstCompatibleOption != null) {
-    return {
-      keySystemOptions: firstCompatibleOption,
-      keySystemAccess: currentKeySystemAccess,
-      askedConfiguration,
-    };
+  // TODO Do it with MediaKeySystemAccess.prototype.keySystem instead
+  if (keySystem.type !== currentKeySystemOptions.type) {
+    return null;
   }
-  return null;
+
+  if (
+    (keySystem.persistentLicense === true ||
+      keySystem.persistentStateRequired === true) &&
+    mksConfiguration.persistentState !== "required"
+  ) {
+    return null;
+  }
+
+  if (
+    keySystem.distinctiveIdentifierRequired === true &&
+    mksConfiguration.distinctiveIdentifier !== "required"
+  ) {
+    return null;
+  }
+
+  return {
+    keySystemOptions: keySystem,
+    keySystemAccess: currentKeySystemAccess,
+    askedConfiguration,
+  };
 }
 
 /**
@@ -302,31 +296,6 @@ export default function getMediaKeySystemAccess(
   cancelSignal: CancellationSignal,
 ): Promise<IFoundMediaKeySystemAccessEvent> {
   log.info("DRM: Searching for compatible MediaKeySystemAccess");
-  const currentState = MediaKeysInfosStore.getState(mediaElement);
-  if (currentState !== null) {
-    if (eme.implementation === currentState.emeImplementation.implementation) {
-      // Fast way to find a compatible keySystem if the currently loaded
-      // one as exactly the same compatibility options.
-      const cachedKeySystemAccess = checkCachedMediaKeySystemAccess(
-        keySystemsConfigs,
-        currentState.askedConfiguration,
-        currentState.mediaKeySystemAccess,
-        currentState.keySystemOptions,
-      );
-      if (cachedKeySystemAccess !== null) {
-        log.info("DRM: Found cached compatible keySystem");
-        return Promise.resolve({
-          type: "reuse-media-key-system-access" as const,
-          value: {
-            mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
-            askedConfiguration: cachedKeySystemAccess.askedConfiguration,
-            options: cachedKeySystemAccess.keySystemOptions,
-          },
-        });
-      }
-    }
-  }
-
   /**
    * Array of set keySystems for this content.
    * Each item of this array is an object containing the following keys:
@@ -386,7 +355,34 @@ export default function getMediaKeySystemAccess(
       throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
     }
 
-    const { keyName, keyType, keySystemOptions } = keySystemsType[index];
+    const chosenType = keySystemsType[index];
+
+    const currentState = MediaKeysInfosStore.getState(mediaElement);
+    if (currentState !== null) {
+      if (eme.implementation === currentState.emeImplementation.implementation) {
+        // Fast way to find a compatible keySystem if the currently loaded
+        // one as exactly the same compatibility options.
+        const cachedKeySystemAccess = checkCachedMediaKeySystemAccess(
+          chosenType.keySystemOptions,
+          currentState.askedConfiguration,
+          currentState.mediaKeySystemAccess,
+          currentState.keySystemOptions,
+        );
+        if (cachedKeySystemAccess !== null) {
+          log.info("DRM: Found cached compatible keySystem");
+          return Promise.resolve({
+            type: "reuse-media-key-system-access" as const,
+            value: {
+              mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
+              askedConfiguration: cachedKeySystemAccess.askedConfiguration,
+              options: cachedKeySystemAccess.keySystemOptions,
+            },
+          });
+        }
+      }
+    }
+
+    const { keyName, keyType, keySystemOptions } = chosenType;
 
     const keySystemConfigurations = buildKeySystemConfigurations(
       keyName,
