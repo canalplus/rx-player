@@ -2,6 +2,7 @@ import type {
   ICmcdOptions,
   IConstructorOptions,
   ILoadVideoOptions,
+  IPlaybackRateBasedRebufferingAvoidanceSettings,
 } from "../../../src/public_types.ts";
 
 const defaultOptionsValues = {
@@ -33,6 +34,13 @@ const defaultOptionsValues = {
     onCodecSwitch: "continue",
     onAudioTracksNotPlayable: "error",
     onVideoTracksNotPlayable: "error",
+    experimentalOptions: {
+      enableRepresentationAvoidance: true,
+      playbackRateBasedRebufferingAvoidanceSettings: {
+        onBufferGapSize: 0,
+        minPlaybackRate: 0.95,
+      } as IPlaybackRateBasedRebufferingAvoidanceSettings,
+    },
   },
 } satisfies {
   player: IConstructorOptions;

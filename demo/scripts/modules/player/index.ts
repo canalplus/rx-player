@@ -306,6 +306,12 @@ const PlayerModule = declareModule(
               textTrackElement,
               onAudioTracksNotPlayable: state.get("onAudioTracksNotPlayable"),
               onVideoTracksNotPlayable: state.get("onVideoTracksNotPlayable"),
+              experimentalOptions: {
+                playbackRateBasedRebufferingAvoidanceSettings: {
+                  onBufferGapSize: 1.5,
+                  minPlaybackRate: 0.95,
+                },
+              },
             },
             arg,
           ) as ILoadVideoOptions,
