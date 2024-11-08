@@ -330,6 +330,13 @@ function BufferOptions({
             ? "No triggering Playback-Rate-based rebuffering Avoidance"
             : `Starting rebuffering avoidance strategy once ${rebufferingAvoidanceBufferGapSize} second(s) is left in the buffer`}
         </span>
+        <span
+          style={{
+            marginTop: "5px",
+            borderBottom: "1px solid #999",
+            marginBottom: "5px",
+          }}
+        ></span>
         <PlayerOptionNumberInput
           ariaLabel="Playback Rate Based Rebuffering Avoidance Min Playback Rate option"
           label="playbackRateBasedRebufferingAvoidanceMinPlaybackRate"
