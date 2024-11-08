@@ -181,6 +181,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           if (
             this._playbackRateBasedRebufferingAvoidanceSettings !== null &&
             observation.bufferGap !== undefined &&
+            this._playbackRateBasedRebufferingAvoidanceSettings.onBufferGapSize > 0 &&
             observation.bufferGap <
               this._playbackRateBasedRebufferingAvoidanceSettings.onBufferGapSize
           ) {
