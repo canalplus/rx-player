@@ -2,6 +2,7 @@ import type {
   ICmcdOptions,
   IConstructorOptions,
   ILoadVideoOptions,
+  IPlaybackRateBasedRebufferingAvoidanceSettings,
 } from "../../../src/public_types";
 
 const defaultOptionsValues = {
@@ -31,6 +32,12 @@ const defaultOptionsValues = {
       },
     },
     onCodecSwitch: "continue",
+    experimentalOptions: {
+      playbackRateBasedRebufferingAvoidanceSettings: {
+        onBufferGapSize: 0,
+        minPlaybackRate: 0.95,
+      } as IPlaybackRateBasedRebufferingAvoidanceSettings,
+    },
   },
 } satisfies {
   player: IConstructorOptions;

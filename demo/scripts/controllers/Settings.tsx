@@ -69,6 +69,7 @@ function Settings({
     checkManifestIntegrity,
     requestConfig,
     onCodecSwitch,
+    experimentalOptions,
   } = loadVideoOptions;
   const cmcdCommunicationMethod = cmcd?.communicationType ?? "disabled";
   const { manifest: manifestRequestConfig, segment: segmentRequestConfig } =
@@ -313,6 +314,58 @@ function Settings({
     [playerOptions],
   );
 
+  const onRebufferingAvoidanceBufferGapSizeChange = useCallback(
+    (rebufferingAvoidanceBufferGapSize: number) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (
+          rebufferingAvoidanceBufferGapSize ===
+          prevOptions.experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings
+            .onBufferGapSize
+        ) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          ...prevOptions.experimentalOptions,
+          experimentalOptions: {
+            playbackRateBasedRebufferingAvoidanceSettings: {
+              onBufferGapSize: rebufferingAvoidanceBufferGapSize,
+              minPlaybackRate:
+                prevOptions.experimentalOptions
+                  .playbackRateBasedRebufferingAvoidanceSettings.minPlaybackRate,
+            },
+          },
+        });
+      });
+    },
+    [playerOptions],
+  );
+
+  const onRebufferingAvoidanceMinPlaybackRateChange = useCallback(
+    (rebufferingAvoidanceMinPlaybackRate: number) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (
+          rebufferingAvoidanceMinPlaybackRate ===
+          prevOptions.experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings
+            .minPlaybackRate
+        ) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, {
+          experimentalOptions: {
+            ...prevOptions.experimentalOptions,
+            playbackRateBasedRebufferingAvoidanceSettings: {
+              onBufferGapSize:
+                prevOptions.experimentalOptions
+                  .playbackRateBasedRebufferingAvoidanceSettings.onBufferGapSize,
+              minPlaybackRate: rebufferingAvoidanceMinPlaybackRate,
+            },
+          },
+        });
+      });
+    },
+    [playerOptions],
+  );
+
   const onMaxVideoBufferSizeChange = useCallback(
     (maxVideoBufferSize: number) => {
       updatePlayerOptions((prevOptions) => {
@@ -432,10 +485,24 @@ function Settings({
             maxVideoBufferSize={maxVideoBufferSize}
             maxBufferAhead={maxBufferAhead}
             maxBufferBehind={maxBufferBehind}
+            rebufferingAvoidanceBufferGapSize={
+              experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings
+                .onBufferGapSize
+            }
+            rebufferingAvoidanceMinPlaybackRate={
+              experimentalOptions.playbackRateBasedRebufferingAvoidanceSettings
+                .minPlaybackRate
+            }
             onWantedBufferAheadChange={onWantedBufferAheadChange}
             onMaxBufferAheadChange={onMaxBufferAheadChange}
             onMaxBufferBehindChange={onMaxBufferBehindChange}
             onMaxVideoBufferSizeChange={onMaxVideoBufferSizeChange}
+            onRebufferingAvoidanceBufferGapSizeChange={
+              onRebufferingAvoidanceBufferGapSizeChange
+            }
+            onRebufferingAvoidanceMinPlaybackRateChange={
+              onRebufferingAvoidanceMinPlaybackRateChange
+            }
           />
         </Option>
       </div>

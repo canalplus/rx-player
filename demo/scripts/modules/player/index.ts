@@ -289,6 +289,12 @@ const PlayerModule = declareModule(
             {
               mode: state.get("relyOnWorker") ? "auto" : "main",
               textTrackElement,
+              experimentalOptions: {
+                playbackRateBasedRebufferingAvoidanceSettings: {
+                  onBufferGapSize: 1.5,
+                  minPlaybackRate: 0.95,
+                },
+              },
             },
             arg,
           ) as ILoadVideoOptions,
