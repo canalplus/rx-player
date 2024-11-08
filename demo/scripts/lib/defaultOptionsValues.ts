@@ -34,7 +34,7 @@ const defaultOptionsValues = {
     onCodecSwitch: "continue",
     experimentalOptions: {
       playbackRateBasedRebufferingAvoidanceSettings: {
-        onBufferGapSize: 0,
+        onBufferGapSize: 1.5,
         minPlaybackRate: 0.95,
       } as IPlaybackRateBasedRebufferingAvoidanceSettings,
     },
