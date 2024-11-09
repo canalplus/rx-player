@@ -19,7 +19,10 @@ import { formatError, MediaError } from "../../../errors";
 import log from "../../../log";
 import type { IAdaptation, IPeriod } from "../../../manifest";
 import { toTaggedTrack } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+  IAdaptationStreamPlaybackObservation,
+} from "../../../playback_observer";
 import type { ITrackType } from "../../../public_types";
 import arrayFind from "../../../utils/array_find";
 import objectAssign from "../../../utils/object_assign";
@@ -31,11 +34,7 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
 import type { IBufferType, SegmentSink } from "../../segment_sinks";
 import SegmentSinksStore from "../../segment_sinks";
-import type {
-  IAdaptationChoice,
-  IAdaptationStreamCallbacks,
-  IAdaptationStreamPlaybackObservation,
-} from "../adaptation";
+import type { IAdaptationChoice, IAdaptationStreamCallbacks } from "../adaptation";
 import AdaptationStream from "../adaptation";
 import type { IRepresentationsChoice } from "../representation";
 import type {

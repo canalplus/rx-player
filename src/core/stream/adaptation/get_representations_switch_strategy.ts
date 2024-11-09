@@ -16,7 +16,10 @@
 
 import config from "../../../config";
 import type { IAdaptation, IPeriod } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+  IAdaptationStreamPlaybackObservation,
+} from "../../../playback_observer";
 import arrayIncludes from "../../../utils/array_includes";
 import type { IRange } from "../../../utils/ranges";
 import { excludeFromRanges, insertInto } from "../../../utils/ranges";
@@ -26,17 +29,14 @@ import {
   getLastSegmentBeforePeriod,
   SegmentSinkOperation,
 } from "../../segment_sinks";
-import type {
-  IRepresentationsChoice,
-  IRepresentationStreamPlaybackObservation,
-} from "../representation";
+import type { IRepresentationsChoice } from "../representation";
 
 export default function getRepresentationsSwitchingStrategy(
   period: IPeriod,
   adaptation: IAdaptation,
   settings: IRepresentationsChoice,
   segmentSink: SegmentSink,
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>,
 ): IRepresentationSwitchStrategy {
   if (settings.switchingMode === "lazy") {
     return { type: "continue", value: undefined };

@@ -1,5 +1,8 @@
 import type { IManifest, IAdaptation, IPeriod, IRepresentation } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
+import type {
+  IAdaptationStreamPlaybackObservation,
+  IReadOnlyPlaybackObserver,
+} from "../../../playback_observer";
 import type {
   IAudioTrackSwitchingMode,
   IVideoTrackSwitchingMode,
@@ -11,7 +14,6 @@ import type { IBufferType, SegmentSink } from "../../segment_sinks";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
-  IRepresentationStreamPlaybackObservation,
 } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
@@ -108,20 +110,6 @@ export interface INeedsBufferFlushPayload {
    *  for slight adjustments when needed if it was defaulted by the API."
    */
   relativePosHasBeenDefaulted: boolean;
-}
-
-/** Regular playback information needed by the AdaptationStream. */
-export interface IAdaptationStreamPlaybackObservation
-  extends IRepresentationStreamPlaybackObservation {
-  /**
-   * For the current SegmentSink, difference in seconds between the next position
-   * where no segment data is available and the current position.
-   */
-  bufferGap: number;
-  /** `duration` property of the HTMLMediaElement on which the content plays. */
-  duration: number;
-  /** Theoretical maximum position on the content that can currently be played. */
-  maximumPosition: number;
 }
 
 /** Arguments given when creating a new `AdaptationStream`. */

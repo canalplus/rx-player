@@ -21,7 +21,10 @@
 import { MediaError, SourceBufferError } from "../../../../errors";
 import log from "../../../../log";
 import { toTaggedTrack } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
+import type {
+  IReadOnlyPlaybackObserver,
+  IAdaptationStreamPlaybackObservation,
+} from "../../../../playback_observer";
 import type { IRange } from "../../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import sleep from "../../../../utils/sleep";
@@ -32,7 +35,6 @@ import type {
   IPushChunkInfos,
   SegmentSink,
 } from "../../../segment_sinks";
-import type { IRepresentationStreamPlaybackObservation } from "../types";
 
 /**
  * Append a segment to the given segmentSink.
@@ -46,7 +48,7 @@ import type { IRepresentationStreamPlaybackObservation } from "../types";
  * @returns {Promise}
  */
 export default async function appendSegmentToBuffer<T>(
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>,
   segmentSink: SegmentSink,
   dataInfos: IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
   bufferGoal: IReadOnlySharedReference<number>,

@@ -32,8 +32,8 @@ import { MainThreadMessageType, WorkerMessageType } from "../../multithread_type
 import type {
   IReadOnlyPlaybackObserver,
   IMediaElementPlaybackObserver,
+  ICorePlaybackObservation,
 } from "../../playback_observer";
-import type { IWorkerPlaybackObservation } from "../../playback_observer/worker_playback_observer";
 import type {
   ICmcdOptions,
   IInitialManifest,
@@ -1472,7 +1472,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       playbackObserver: IMediaElementPlaybackObserver;
     },
     cancelSignal: CancellationSignal,
-  ): IReadOnlyPlaybackObserver<IWorkerPlaybackObservation> | null {
+  ): IReadOnlyPlaybackObserver<ICorePlaybackObservation> | null {
     if (cancelSignal.isCancelled()) {
       return null;
     }
