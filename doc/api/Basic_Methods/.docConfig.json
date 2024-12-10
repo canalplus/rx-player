@@ -33,6 +33,10 @@
       "displayName": "getWallClockTime"
     },
     {
+      "path": "./getWallClockOffset.md",
+      "displayName": "getWallClockOffset"
+    },
+    {
       "path": "./seekTo.md",
       "displayName": "seekTo"
     },

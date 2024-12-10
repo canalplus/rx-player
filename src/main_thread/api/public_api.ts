@@ -1618,16 +1618,58 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_contentInfos === null) {
       return this.videoElement.currentTime;
     }
+    const wallClockOffset = this.getWallClockOffset();
+    const currentTime = this.videoElement.currentTime;
+    return currentTime + wallClockOffset;
+  }
+
+  /**
+   * Get value allowing to convert the media position, as returned by
+   * `getPosition` to a "wall-clock time", as returned by `getWallClockTime`, by
+   * additioning the first two:
+   * ```js
+   * player.getPosition() + player.getWallClockOffset() === player.getWallClockTime();
+   * ```
+   *
+   * As most of the RxPlayer API relies on the media position as returned by
+   * `getPosition`, you may want to use this method to simplify conversion if
+   * what you have right now is a wall-clock time. For example:
+   *
+   * ```js
+   * const wallClockTime = player.getWallClockTime();
+   *
+   * // This one is expressed as a media position
+   * const maximumPosition = player.getMaximumPosition();
+   *
+   * // convert wall-clock time to a media position
+   * const currentPosition = wallClockTime - player.getWallClockOffset();
+   *
+   * console.log(
+   *   "delay from maximum position, in seconds",
+   *   maximumPosition - currentPosition
+   * );
+   * ```
+   *
+   * Note that there's nothing guaranteeing that this offset won't evolve over
+   * time for a given content. You should call this method every time you need
+   * to perform the conversion.
+   * @returns {number}
+   */
+  getWallClockOffset(): number {
+    if (this.videoElement === null) {
+      return 0;
+    }
+    if (this._priv_contentInfos === null) {
+      return 0;
+    }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
     if (isDirectFile) {
       const startDate = getStartDate(this.videoElement);
-      return (startDate ?? 0) + this.videoElement.currentTime;
+      return startDate ?? 0;
     }
     if (manifest !== null) {
-      const currentTime = this.videoElement.currentTime;
-      const ast = manifest.availabilityStartTime ?? 0;
-      return currentTime + ast;
+      return manifest.availabilityStartTime ?? 0;
     }
     return 0;
   }
