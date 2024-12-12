@@ -1,4 +1,4 @@
-import { describe, beforeEach, afterEach, it, expect } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import { manifestInfos } from "../../contents/DASH_DRM_static_SegmentTemplate";
 import DummyMediaElement from "../../../dist/es2017/experimental/tools/DummyMediaElement";
 import RxPlayer from "../../../dist/es2017";
@@ -1341,5 +1341,195 @@ describe("DRM: requestMediaKeySystemAcces use cases", function () {
       await sleep(10);
       expect(checkNumber).toEqual(1);
     }
+  });
+
+  describe("MediaKeySystemAccess cache", () => {
+    const loadVideoAndWaitForLoaded = async (player, keySystemConfigs) => {
+      player.loadVideo({
+        url,
+        transport,
+        autoPlay: false,
+        textTrackMode: "html",
+        textTrackElement: document.createElement("div"),
+        keySystems: keySystemConfigs.map((keySystemConfig) => ({
+          getLicense: generateGetLicenseForFakeLicense({}),
+          ...keySystemConfig,
+        })),
+      });
+      await waitForPlayerState(player, "LOADED", ["LOADING"]);
+    };
+
+    it("should reuse a MediaKeySystemAccess if the exact same config was asked before", async () => {
+      for (const keySystem of [
+        "widevine",
+        "com.widevine.alpha",
+        "playready",
+        "com.microsoft.playready",
+        "com.microsoft.playready.recommendation",
+      ]) {
+        const someConfig = [
+          {
+            type: keySystem,
+            audioCapabilitiesConfig: {
+              type: "robustness",
+              value: ["foo", "bar"],
+            },
+            videoCapabilitiesConfig: {
+              type: "robustness",
+              value: ["Waka", "Flocka"],
+            },
+          },
+        ];
+        dummy = new DummyMediaElement({
+          drmOptions: {
+            requestMediaKeySystemAccessConfig: {
+              isKeySystemSupported: () => true,
+            },
+          },
+        });
+        const spy = vi.spyOn(dummy.FORCED_EME_API, "requestMediaKeySystemAccess");
+        player = new RxPlayer({ videoElement: dummy });
+
+        await loadVideoAndWaitForLoaded(player, someConfig);
+        expect(spy).toHaveBeenCalledOnce();
+        await loadVideoAndWaitForLoaded(player, someConfig);
+        expect(spy).toHaveBeenCalledOnce();
+        spy.mockRestore();
+        player.dispose();
+        await sleep(10);
+      }
+    });
+
+    it("should NOT reuse a MediaKeySystemAccess if the type is different", async () => {
+      dummy = new DummyMediaElement({
+        drmOptions: {
+          requestMediaKeySystemAccessConfig: {
+            isKeySystemSupported: () => true,
+          },
+        },
+      });
+      const spy = vi.spyOn(dummy.FORCED_EME_API, "requestMediaKeySystemAccess");
+      player = new RxPlayer({ videoElement: dummy });
+
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledOnce();
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(2);
+      spy.mockRestore();
+      player.dispose();
+      await sleep(10);
+    });
+
+    it("should NOT reuse a MediaKeySystemAccess if distinctiveIdentifier is different", async () => {
+      dummy = new DummyMediaElement({
+        drmOptions: {
+          requestMediaKeySystemAccessConfig: {
+            isKeySystemSupported: () => true,
+          },
+        },
+      });
+      const spy = vi.spyOn(dummy.FORCED_EME_API, "requestMediaKeySystemAccess");
+      player = new RxPlayer({ videoElement: dummy });
+
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+          distinctiveIdentifier: "not-allowed",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledOnce();
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+          distinctiveIdentifier: "required",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(2);
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+          distinctiveIdentifier: "optional",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+
+      // Now just check that it's reused when they are the same
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+          distinctiveIdentifier: "optional",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+      spy.mockRestore();
+      player.dispose();
+      await sleep(10);
+    });
+
+    it("should NOT reuse a MediaKeySystemAccess if persistentState is different", async () => {
+      dummy = new DummyMediaElement({
+        drmOptions: {
+          requestMediaKeySystemAccessConfig: {
+            isKeySystemSupported: () => true,
+          },
+        },
+      });
+      const spy = vi.spyOn(dummy.FORCED_EME_API, "requestMediaKeySystemAccess");
+      player = new RxPlayer({ videoElement: dummy });
+
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+          persistentState: "not-allowed",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledOnce();
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+          persistentState: "required",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(2);
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+          persistentState: "optional",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+
+      // Now just check that it's reused when they are the same
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+          persistentState: "optional",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "playready",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+      spy.mockRestore();
+      player.dispose();
+      await sleep(10);
+    });
   });
 });

@@ -111,6 +111,8 @@ export function createRequestMediaKeySystemAccess(
 
     // check some mandatory configuration state
 
+    // Clone so following setter don't update the source object
+    supportedConfiguration = { ...supportedConfiguration };
     supportedConfiguration.persistentState =
       isNullOrUndefined(supportedConfiguration.persistentState) ||
       supportedConfiguration.persistentState === "optional"
