@@ -9,6 +9,7 @@ import { base64ToBytes, bytesToBase64 } from "../../../utils/base64";
 import { be4toi, le2toi } from "../../../utils/byte_parsing";
 import createUuid from "../../../utils/create_uuid";
 import EventEmitter from "../../../utils/event_emitter";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
@@ -99,6 +100,7 @@ export function createRequestMediaKeySystemAccess(
         supportedConfigurations,
       );
     }
+
     if (supportedConfiguration === null) {
       const error = new Error(
         "`requestMediaKeySystemAccess` error: No configuration supported.",
@@ -106,6 +108,20 @@ export function createRequestMediaKeySystemAccess(
       error.name = "NotSupportedError";
       return Promise.reject(error);
     }
+
+    // check some mandatory configuration state
+
+    supportedConfiguration.persistentState =
+      isNullOrUndefined(supportedConfiguration.persistentState) ||
+      supportedConfiguration.persistentState === "optional"
+        ? "not-allowed"
+        : supportedConfiguration.persistentState;
+    supportedConfiguration.distinctiveIdentifier =
+      isNullOrUndefined(supportedConfiguration.distinctiveIdentifier) ||
+      supportedConfiguration.distinctiveIdentifier === "optional"
+        ? "not-allowed"
+        : supportedConfiguration.distinctiveIdentifier;
+
     return Promise.resolve(
       new DummyMediaKeySystemAccess(keySystem, supportedConfiguration),
     );
