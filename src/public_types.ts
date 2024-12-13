@@ -1414,6 +1414,59 @@ export interface IThumbnailTrackInfo {
    * `image/jpeg` or `image/png`.
    */
   mimeType: string | undefined;
+  /**
+   * Starting `position` the first thumbnail of this thumbnail track applies to,
+   * if known.
+   */
+  start: number | undefined;
+  /**
+   * Ending `position` the last thumbnail of this thumbnail track applies to,
+   * if known.
+   */
+  end: number | undefined;
+  /**
+   * Individual thumbnails may be technically part of "segments" containing
+   * multiple consecutive thumbnails each.
+   *
+   * `thumbnailsPerSegment` is the number of `thumbnails` each segments have.
+   *
+   * For example you could have stored on the server a segment which is a grid
+   * of 2 x 3 (2 horizontal rows and 3 vertical columns) thumbnails, which the
+   * RxPlayer will load at once then "cut" the right way when calling
+   * `renderThumbnail`. In that example, `thumbnailsPerSegment` would be set to
+   * `6` (2*3).
+   *
+   * Note that the last segment of a content may contain less thumbnails as
+   * anounced here depending on the duration of the content.
+   *
+   * You may want to rely on this information alongside `thumbnailDuration` to
+   * construct a list of available thumbnails and/or of available segments of
+   * thumbnails.
+   */
+  thumbnailsPerSegment: number | undefined;
+  /**
+   * When loaded, thumbnails are part of so-called "segments" which may contain
+   * either a single thumbnail or a grid of them (@see `thumbnailsPerSegment`).
+   *
+   * This `thumbnail` property indicates a duration in seconds each thumbnail
+   * apply to.
+   * You can multiply that value with `thumbnailsPerSegment` to get the amount
+   * of time each segment applies to.
+   *
+   * Set to `undefined` either the duration is unknown or if the duration
+   * depends from segment to segments.
+   *
+   * For example, with a `start` set to `10`, an `end` set to `26`, a
+   * `thumbnailsPerSegment` set to `2` and a `tileDuration` set to
+   * `3`, there should be 3 segments, each with 2 thumbnails of 3 seconds each:
+   * 1. A segment of 2 thumbnails for the seconds: 10-16
+   *    (The first thumbnail in that segment for 10-13, the second for 13-16)
+   * 2. A segment of 2 thumbnails for the seconds: 16-22
+   *    (The first thumbnail in that segment for 16-19, the second for 19-22)
+   * 3. A segment of 2 thumbnails for the seconds: 22-26 (the end)
+   *    (The first thumbnail in that segment for 22-25, the second for 25-26)
+   */
+  thumbnailDuration: number | undefined;
 }
 
 /**
