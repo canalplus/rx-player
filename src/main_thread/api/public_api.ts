@@ -961,6 +961,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         width: Math.floor(t.width / t.horizontalTiles),
         height: Math.floor(t.height / t.verticalTiles),
         mimeType: t.mimeType,
+        start: t.start,
+        end: t.end,
+        thumbnailDuration: t.tileDuration,
+        thumbnailsPerSegment: t.horizontalTiles * t.verticalTiles,
       };
     });
   }
