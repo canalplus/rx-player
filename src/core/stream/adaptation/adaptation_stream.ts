@@ -253,11 +253,11 @@ export default function AdaptationStream<T>(
 
     const repInfo = { type: adaptation.type, period, representation };
     currentRepresentation.setValue(representation);
-    if (adapStreamCanceller.isUsed()) {
+    if (fnCancelSignal.isCancelled()) {
       return; // previous callback has stopped everything by side-effect
     }
     callbacks.representationChange(repInfo);
-    if (adapStreamCanceller.isUsed()) {
+    if (fnCancelSignal.isCancelled()) {
       return; // previous callback has stopped everything by side-effect
     }
 
@@ -356,7 +356,7 @@ export default function AdaptationStream<T>(
 
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
-          cancellableSleep(4000, adapStreamCanceller.signal)
+          cancellableSleep(4000, fnCancelSignal)
             .then(() => {
               return createRepresentationStream(
                 representation,
