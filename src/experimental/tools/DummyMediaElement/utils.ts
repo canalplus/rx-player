@@ -32,17 +32,17 @@ export class EventScheduler {
   public schedule(
     obj: DummyMediaElement,
     evtName: keyof IMediaElementEventMap,
-    cancelSignal: CancellationSignal | null,
+    cancelSignal: CancellationSignal | null | undefined,
   ): Promise<void>;
   public schedule(
     obj: DummyMediaSource,
     evtName: keyof IMediaSourceEventMap,
-    cancelSignal: CancellationSignal | null,
+    cancelSignal: CancellationSignal | null | undefined,
   ): Promise<void>;
   public schedule(
     obj: DummySourceBuffer,
     evtName: keyof ISourceBufferEventMap,
-    cancelSignal: CancellationSignal | null,
+    cancelSignal: CancellationSignal | null | undefined,
   ): Promise<void>;
   public schedule(
     obj: DummyMediaElement | DummyMediaSource | DummySourceBuffer,
@@ -50,7 +50,7 @@ export class EventScheduler {
       | keyof IMediaElementEventMap
       | keyof IMediaSourceEventMap
       | keyof ISourceBufferEventMap,
-    cancelSignal: CancellationSignal | null,
+    cancelSignal: CancellationSignal | null | undefined,
   ): Promise<void> {
     return new Promise<void>((res, rej) => {
       /* eslint-disable */
@@ -59,7 +59,7 @@ export class EventScheduler {
         reject: rej,
         obj: obj as any,
         evtName: evtName as any,
-        cancelSignal,
+        cancelSignal: cancelSignal ?? null,
       });
       /* eslint-enable */
       if (this._scheduled.length === 1) {
@@ -149,6 +149,15 @@ export default class TimeRangesWithMetadata<T> implements TimeRanges {
     for (const element of this._rangesWithMetadata) {
       if (element.start <= time && element.end > time) {
         return element.info;
+      }
+    }
+    return null;
+  }
+
+  getRangeFor(time: number): { start: number; end: number } | null {
+    for (const element of this._rangesWithMetadata) {
+      if (element.start <= time && element.end > time) {
+        return { start: element.start, end: element.end };
       }
     }
     return null;
