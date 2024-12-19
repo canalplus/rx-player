@@ -94,13 +94,19 @@ export default function getInitialTime(
     const min = getMinimumSafePosition(manifest);
     const max = getMaximumSafePosition(manifest);
     if (!isNullOrUndefined(startAt.position)) {
-      log.debug("Init: using startAt.minimumPosition");
+      log.debug("Init: using startAt.position");
+      if (manifest.isDynamic) {
+        return startAt.position;
+      }
       return Math.max(Math.min(startAt.position, max), min);
     } else if (!isNullOrUndefined(startAt.wallClockTime)) {
       log.debug("Init: using startAt.wallClockTime");
       const ast =
         manifest.availabilityStartTime === undefined ? 0 : manifest.availabilityStartTime;
       const position = startAt.wallClockTime - ast;
+      if (manifest.isDynamic) {
+        return position;
+      }
       return Math.max(Math.min(position, max), min);
     } else if (!isNullOrUndefined(startAt.fromFirstPosition)) {
       log.debug("Init: using startAt.fromFirstPosition");

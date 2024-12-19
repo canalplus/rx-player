@@ -93,8 +93,20 @@ export default function performInitialSeekAndPlay(
       let hasAskedForInitialSeek = false;
 
       const performInitialSeek = (initialSeekTime: number) => {
-        playbackObserver.setCurrentTime(initialSeekTime);
+        const pendingSeek = playbackObserver.getPendingSeekInformation();
+
+        /*
+         * NOTE: The user might have asked for a seek before the media element
+         * was ready, in which case we want the seek to be at the user's wanted
+         * position instead.
+         * If multiple internal seeks were asked however, we want to keep the
+         * last one.
+         */
+        if (pendingSeek === null || pendingSeek.isInternal) {
+          playbackObserver.setCurrentTime(initialSeekTime);
+        }
         hasAskedForInitialSeek = true;
+        playbackObserver.unblockSeeking();
       };
 
       // `startTime` defined as a function might depend on metadata to make its
@@ -109,6 +121,8 @@ export default function performInitialSeekAndPlay(
           typeof startTime === "number" ? startTime : startTime();
         if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
           performInitialSeek(initiallySeekedTime);
+        } else {
+          playbackObserver.unblockSeeking();
         }
         waitForSeekable();
       } else {
@@ -141,6 +155,8 @@ export default function performInitialSeekAndPlay(
                     performInitialSeek(initiallySeekedTime);
                   }, 0);
                 }
+              } else {
+                playbackObserver.unblockSeeking();
               }
               waitForSeekable();
             }

@@ -1014,10 +1014,27 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       });
     }
 
+    /** Global "playback observer" which will emit playback conditions */
+    const playbackObserver = new MediaElementPlaybackObserver(videoElement, {
+      withMediaSource: !isDirectFile,
+      lowLatencyMode,
+    });
+
+    /*
+     * We want to block seeking operations until we know the media element is
+     * ready for it.
+     */
+    playbackObserver.blockSeeking();
+
+    currentContentCanceller.signal.register(() => {
+      playbackObserver.stop();
+    });
+
     /** Future `this._priv_contentInfos` related to this content. */
     const contentInfos: IPublicApiContentInfos = {
       contentId: generateContentId(),
       originalUrl: url,
+      playbackObserver,
       currentContentCanceller,
       defaultAudioTrackSwitchingMode,
       initializer,
@@ -1107,16 +1124,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     //   - we can avoid involontarily catching events linked to the previous
     //     content.
     this.stop();
-
-    /** Global "playback observer" which will emit playback conditions */
-    const playbackObserver = new MediaElementPlaybackObserver(videoElement, {
-      withMediaSource: !isDirectFile,
-      lowLatencyMode,
-    });
-
-    currentContentCanceller.signal.register(() => {
-      playbackObserver.stop();
-    });
 
     // Update the RxPlayer's state at the right events
     const playerStateRef = constructPlayerStateReference(
@@ -1677,10 +1684,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const { isDirectFile, manifest } = this._priv_contentInfos;
-    if (!isDirectFile && manifest === null) {
-      throw new Error("player: the content did not load yet");
-    }
-
     let positionWanted: number | undefined;
 
     if (typeof time === "number") {
@@ -1700,7 +1703,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       } else if (!isNullOrUndefined(timeObj.wallClockTime)) {
         if (manifest !== null) {
           positionWanted = timeObj.wallClockTime - (manifest.availabilityStartTime ?? 0);
-        } else if (isDirectFile && this.videoElement !== null) {
+        } else if (!isDirectFile) {
+          throw new Error(
+            "Cannot seek: wallClockTime asked but Manifest not yet loaded.",
+          );
+        } else if (this.videoElement !== null) {
           const startDate = getStartDate(this.videoElement);
           if (startDate !== undefined) {
             positionWanted = timeObj.wallClockTime - startDate;
@@ -1722,7 +1729,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("invalid time given");
     }
     log.info("API: API Seek to", positionWanted);
-    this.videoElement.currentTime = positionWanted;
+    this._priv_contentInfos.playbackObserver.setCurrentTime(positionWanted, false);
     return positionWanted;
   }
 
@@ -3376,6 +3383,8 @@ interface IPublicApiContentInfos {
   originalUrl: string | undefined;
   /** `ContentInitializer` used to load the content. */
   initializer: ContentInitializer;
+  /** interface emitting regularly playback observations. */
+  playbackObserver: MediaElementPlaybackObserver;
   /** TaskCanceller triggered when it's time to stop the current content. */
   currentContentCanceller: TaskCanceller;
   /** The default behavior to adopt when switching the audio track. */

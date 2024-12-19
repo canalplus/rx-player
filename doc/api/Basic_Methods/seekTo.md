@@ -8,8 +8,8 @@ The argument can be an object with a single `Number` property, either:
 
 - `relative`: seek relatively to the current position
 
-- `position`: seek to the given absolute position (equivalent to
-  `player.getVideoElement().currentTime = newPosition`)
+- `position`: seek to the given absolute position (equivalent to what you would give to
+  `player.getVideoElement().currentTime)
 
 - `wallClockTime`: seek to the given wallClock position, as returned by
   `getWallClockTime`.
@@ -17,8 +17,7 @@ The argument can be an object with a single `Number` property, either:
 The argument can also just be a `Number` property, which will have the same effect than
 the `position` property (absolute position).
 
-Seeking should only be done when a content is loaded (i.e. the player isn't in the
-`STOPPED`, `LOADING` or `RELOADING` state).
+Seeking cannot be done when the content is `STOPPED`.
 
 The seek operation will start as soon as possible, in almost every cases directly after
 this method is called.
