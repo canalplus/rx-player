@@ -29,6 +29,7 @@ import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import queueMicrotask from "../../../utils/queue_microtask";
 import SortedList from "../../../utils/sorted_list";
 import TaskCanceller from "../../../utils/task_canceller";
 
@@ -94,29 +95,35 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
     this._maximumPositionCalculator = maximumPositionCalculator;
 
     const cancelSignal = this._canceller.signal;
-    playbackObserver.listen(
-      ({ position }) => {
-        const wantedPosition = position.getWanted();
-        if (wantedPosition < manifest.getMinimumSafePosition()) {
-          const warning = new MediaError(
-            "MEDIA_TIME_BEFORE_MANIFEST",
-            "The current position is behind the " +
-              "earliest time announced in the Manifest.",
-          );
-          this.trigger("warning", warning);
-        } else if (
-          wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
-        ) {
-          const warning = new MediaError(
-            "MEDIA_TIME_AFTER_MANIFEST",
-            "The current position is after the latest " +
-              "time announced in the Manifest.",
-          );
-          this.trigger("warning", warning);
-        }
-      },
-      { includeLastObservation: true, clearSignal: cancelSignal },
-    );
+
+    // As the following code may send events synchronously, which would not be
+    // catchable as a caller could not have called `addEventListener` yet,
+    // we schedule it in a micro-task
+    queueMicrotask(() => {
+      playbackObserver.listen(
+        ({ position }) => {
+          const wantedPosition = position.getWanted();
+          if (wantedPosition < manifest.getMinimumSafePosition()) {
+            const warning = new MediaError(
+              "MEDIA_TIME_BEFORE_MANIFEST",
+              "The current position is behind the " +
+                "earliest time announced in the Manifest.",
+            );
+            this.trigger("warning", warning);
+          } else if (
+            wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
+          ) {
+            const warning = new MediaError(
+              "MEDIA_TIME_AFTER_MANIFEST",
+              "The current position is after the latest " +
+                "time announced in the Manifest.",
+            );
+            this.trigger("warning", warning);
+          }
+        },
+        { includeLastObservation: true, clearSignal: cancelSignal },
+      );
+    });
 
     manifest.addEventListener(
       "manifestUpdate",
