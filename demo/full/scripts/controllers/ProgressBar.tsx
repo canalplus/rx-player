@@ -5,6 +5,7 @@ import ToolTip from "../components/ToolTip";
 import VideoThumbnail from "../components/VideoThumbnail";
 import useModuleState from "../lib/useModuleState";
 import type { IPlayerModule } from "../modules/player/index";
+import isNullOrUndefined from "../../../../src/utils/is_null_or_undefined";
 
 function ProgressBar({
   player,
@@ -14,11 +15,11 @@ function ProgressBar({
   player: IPlayerModule;
   enableVideoThumbnails: boolean;
   onSeek: () => void;
-}): JSX.Element {
+}): JSX.Element | null {
   const bufferGap = useModuleState(player, "bufferGap");
   const currentTime = useModuleState(player, "currentTime");
   const images = useModuleState(player, "images");
-  const isContentLoaded = useModuleState(player, "isContentLoaded");
+  const isStopped = useModuleState(player, "isStopped");
   const isLive = useModuleState(player, "isLive");
   const minimumPosition = useModuleState(player, "minimumPosition");
   const livePosition = useModuleState(player, "livePosition");
@@ -137,18 +138,14 @@ function ProgressBar({
     [player, showTimeIndicator, showThumbnail],
   );
 
+  if (isStopped) {
+    return null;
+  }
+
   const toolTipOffset =
     wrapperElementRef.current !== null
       ? wrapperElementRef.current.getBoundingClientRect().left
       : 0;
-
-  if (!isContentLoaded) {
-    return (
-      <div className="progress-bar-parent" ref={wrapperElementRef}>
-        <div className="progress-bar-wrapper" />
-      </div>
-    );
-  }
 
   let thumbnailElement: JSX.Element | null = null;
   if (thumbnailIsVisible) {
@@ -162,6 +159,7 @@ function ProgressBar({
     }
   }
 
+  const progressBarMaximum = livePosition ?? maximumPosition;
   return (
     <div className="progress-bar-parent" ref={wrapperElementRef}>
       {timeIndicatorVisible ? (
@@ -173,14 +171,16 @@ function ProgressBar({
         />
       ) : null}
       {thumbnailElement}
-      {currentTime === undefined ? null : (
+      {currentTime === undefined ||
+      isNullOrUndefined(minimumPosition) ||
+      isNullOrUndefined(progressBarMaximum) ? null : (
         <ProgressbarComponent
           seek={seek}
           onMouseOut={hideToolTips}
           onMouseMove={onMouseMove}
           position={currentTime}
           minimumPosition={minimumPosition}
-          maximumPosition={livePosition ?? maximumPosition}
+          maximumPosition={progressBarMaximum}
           bufferGap={bufferGap}
         />
       )}

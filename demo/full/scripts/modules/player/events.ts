@@ -170,6 +170,9 @@ function linkPlayerEventsToState(
     };
 
     switch (playerState) {
+      case "LOADING":
+        startPositionUpdates();
+        break;
       case "ENDED":
         stateUpdates.autoPlayBlocked = false;
         stateUpdates.isPaused = true;
@@ -182,7 +185,6 @@ function linkPlayerEventsToState(
         stateUpdates.isPaused = false;
         break;
       case "LOADED":
-        startPositionUpdates();
         stateUpdates.isPaused = true;
         stateUpdates.isLive = player.isLive();
         break;
