@@ -1,6 +1,7 @@
 import type { MockInstance } from "vitest";
-import { describe, beforeEach, it, expect, vi } from "vitest";
-import eme from "../../../compat/eme";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import type { IEmeApiImplementation } from "../../../compat/eme";
+import getEmeApiImplementation from "../../../compat/eme";
 import type { IKeySystemOption } from "../../../public_types";
 import TaskCanceller from "../../../utils/task_canceller";
 import getMediaKeySystemAccess from "../find_key_system";
@@ -8,12 +9,27 @@ import LoadedSessionsStore from "../utils/loaded_sessions_store";
 import mediaKeysAttacher from "../utils/media_keys_attacher";
 
 describe("find_key_systems - ", () => {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const oldRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
+  let eme: IEmeApiImplementation;
   let requestMediaKeySystemAccessMock: MockInstance;
 
   beforeEach(() => {
+    // NOTE: We prefer resetting `navigator.requestMediaKeySystemAccess` as DOM
+    // implementations often forget to implement it.
+    navigator.requestMediaKeySystemAccess = vi.fn();
+    requestMediaKeySystemAccessMock = vi.spyOn(navigator, "requestMediaKeySystemAccess");
+    const implem = getEmeApiImplementation("auto");
+    if (implem === null) {
+      throw new Error("Could not initialize EME implementation");
+    }
+    eme = implem;
+  });
+
+  afterEach(() => {
+    navigator.requestMediaKeySystemAccess = oldRequestMediaKeySystemAccess;
     vi.resetModules();
     vi.restoreAllMocks();
-    requestMediaKeySystemAccessMock = vi.spyOn(eme, "requestMediaKeySystemAccess");
   });
 
   const baseEmeConfiguration: MediaKeySystemConfiguration = {
@@ -172,6 +188,7 @@ describe("find_key_systems - ", () => {
 
     const taskCanceller = new TaskCanceller();
     const event1 = await getMediaKeySystemAccess(
+      eme,
       mediaElement,
       keySystemOptionsA,
       taskCanceller.signal,
@@ -190,6 +207,7 @@ describe("find_key_systems - ", () => {
     });
 
     const event2 = await getMediaKeySystemAccess(
+      eme,
       mediaElement,
       keySystemOptionsA,
       taskCanceller.signal,
@@ -222,6 +240,7 @@ describe("find_key_systems - ", () => {
 
     const taskCanceller = new TaskCanceller();
     const event1 = await getMediaKeySystemAccess(
+      eme,
       mediaElement,
       keySystemOptionsA,
       taskCanceller.signal,
@@ -248,6 +267,7 @@ describe("find_key_systems - ", () => {
     ];
 
     const event2 = await getMediaKeySystemAccess(
+      eme,
       mediaElement,
       keySystemOptionsB,
       taskCanceller.signal,
@@ -283,6 +303,7 @@ describe("find_key_systems - ", () => {
 
     const taskCanceller = new TaskCanceller();
     const event1 = await getMediaKeySystemAccess(
+      eme,
       mediaElement,
       keySystemOptionsA,
       taskCanceller.signal,
@@ -313,6 +334,7 @@ describe("find_key_systems - ", () => {
     ];
 
     const event2 = await getMediaKeySystemAccess(
+      eme,
       mediaElement,
       keySystemOptionsB,
       taskCanceller.signal,
