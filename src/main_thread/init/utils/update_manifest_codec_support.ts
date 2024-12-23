@@ -1,9 +1,7 @@
 import isCodecSupported from "../../../compat/is_codec_supported";
-import { MediaError } from "../../../errors";
 import type { IManifestMetadata } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
 import type { ICodecSupportInfo } from "../../../multithread_types";
-import type { ITrackType } from "../../../public_types";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type ContentDecryptor from "../../decrypt";
 import { ContentDecryptorState } from "../../decrypt";
@@ -182,20 +180,6 @@ export function updateManifestCodecSupport(
         adaptation.supportStatus.hasSupportedCodec = undefined;
       } else {
         adaptation.supportStatus.hasSupportedCodec = hasSupportedCodec;
-      }
-    });
-
-    ["audio" as const, "video" as const].forEach((ttype: ITrackType) => {
-      const forType = p.adaptations[ttype];
-      if (
-        forType !== undefined &&
-        forType.every((a) => a.supportStatus.hasSupportedCodec === false)
-      ) {
-        throw new MediaError(
-          "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-          "No supported " + ttype + " adaptations",
-          { tracks: undefined },
-        );
       }
     });
   });

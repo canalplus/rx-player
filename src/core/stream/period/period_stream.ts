@@ -127,7 +127,7 @@ export default function PeriodStream(
 
         const streamCanceller = new TaskCanceller();
         streamCanceller.linkToSignal(parentCancelSignal);
-        currentStreamCanceller?.cancel(); // Cancel oreviously created stream if one
+        currentStreamCanceller?.cancel(); // Cancel previously created stream if one
         currentStreamCanceller = streamCanceller;
 
         if (choice === null) {
@@ -473,7 +473,11 @@ function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
   const representations = adaptation.representations.filter(
     (r) => r.isPlayable() !== false,
   );
-  if (representations.length === 0) {
+  if (representations.length > 0) {
+    return representations[0].getMimeTypeString();
+  } else if (adaptation.representations.length > 0) {
+    return adaptation.representations[0].getMimeTypeString();
+  } else {
     const noRepErr = new MediaError(
       "NO_PLAYABLE_REPRESENTATION",
       "No Representation in the chosen " + adaptation.type + " Adaptation can be played",
@@ -481,7 +485,6 @@ function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
     );
     throw noRepErr;
   }
-  return representations[0].getMimeTypeString();
 }
 
 /**

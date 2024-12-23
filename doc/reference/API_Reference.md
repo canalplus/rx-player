@@ -167,6 +167,12 @@ events and so on.
 - [`defaultAudioTrackSwitchingMode`](../api/Loading_a_Content.md#defaultaudiotrackswitchingmode):
   Default behavior when switching the audio track.
 
+- [`onAudioTracksNotPlayable`](../api/Loading_a_Content.md#onaudiotracksnotplayable):
+  Specifies the behavior when all audio tracks are not playable.
+
+- [`onVideoTracksNotPlayable`](../api/Loading_a_Content.md#onvideotracksnotplayable):
+  Specifies the behavior when all video tracks are not playable.
+
 - [`lowLatencyMode`](../api/Loading_a_Content.md#lowlatencymode): Allows to play
   low-latency contents efficiently.
 

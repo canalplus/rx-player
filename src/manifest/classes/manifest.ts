@@ -18,7 +18,7 @@ import { MediaError } from "../../errors";
 import log from "../../log";
 import { getCodecsWithUnknownSupport } from "../../main_thread/init/utils/update_manifest_codec_support";
 import type { IParsedManifest } from "../../parsers/manifest";
-import type { ITrackType, IRepresentationFilter, IPlayerError } from "../../public_types";
+import type { ITrackType, IRepresentationFilter } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import EventEmitter from "../../utils/event_emitter";
 import idGenerator from "../../utils/id_generator";
@@ -318,18 +318,10 @@ export default class Manifest
    * Construct a Manifest instance from a parsed Manifest object (as returned by
    * Manifest parsers) and options.
    *
-   * Some minor errors can arise during that construction. `warnings`
-   * will contain all such errors, in the order they have been encountered.
    * @param {Object} parsedManifest
    * @param {Object} options
-   * @param {Array.<Object>} warnings - After construction, will be optionally
-   * filled by errors expressing minor issues seen while parsing the Manifest.
    */
-  constructor(
-    parsedManifest: IParsedManifest,
-    options: IManifestParsingOptions,
-    warnings: IPlayerError[],
-  ) {
+  constructor(parsedManifest: IParsedManifest, options: IManifestParsingOptions) {
     super();
     const { representationFilter, manifestUpdateUrl } = options;
     this.manifestFormat = ManifestMetadataFormat.Class;
@@ -339,27 +331,16 @@ export default class Manifest
     this.clockOffset = parsedManifest.clockOffset;
     this._cachedCodecSupport = new CodecSupportCache([]);
 
-    const unsupportedAdaptations: Adaptation[] = [];
     this.periods = parsedManifest.periods
       .map((parsedPeriod) => {
         const period = new Period(
           parsedPeriod,
-          unsupportedAdaptations,
           this._cachedCodecSupport,
           representationFilter,
         );
         return period;
       })
       .sort((a, b) => a.start - b.start);
-
-    if (unsupportedAdaptations.length > 0) {
-      const error = new MediaError(
-        "MANIFEST_INCOMPATIBLE_CODECS_ERROR",
-        "An Adaptation contains only incompatible codecs.",
-        { tracks: unsupportedAdaptations.map(toTaggedTrack) },
-      );
-      warnings.push(error);
-    }
 
     /**
      * @deprecated It is here to ensure compatibility with the way the

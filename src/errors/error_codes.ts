@@ -62,7 +62,8 @@ export type IMediaErrorCode =
   | "MEDIA_TIME_AFTER_MANIFEST"
   | "MEDIA_TIME_NOT_FOUND"
   | "NO_PLAYABLE_REPRESENTATION"
-  | "DISCONTINUITY_ENCOUNTERED";
+  | "DISCONTINUITY_ENCOUNTERED"
+  | "NO_AUDIO_VIDEO_TRACKS";
 
 export type INetworkErrorCode = "PIPELINE_LOAD_ERROR";
 
@@ -141,6 +142,8 @@ const ErrorCodes: Record<IErrorCode, IErrorCode> = {
   DISCONTINUITY_ENCOUNTERED: "DISCONTINUITY_ENCOUNTERED",
 
   NONE: "NONE",
+
+  NO_AUDIO_VIDEO_TRACKS: "NO_AUDIO_VIDEO_TRACKS",
 };
 
 export { ErrorTypes, ErrorCodes };

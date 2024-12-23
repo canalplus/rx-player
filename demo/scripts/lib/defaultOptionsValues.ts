@@ -31,6 +31,8 @@ const defaultOptionsValues = {
       },
     },
     onCodecSwitch: "continue",
+    onAudioTracksNotPlayable: "error",
+    onVideoTracksNotPlayable: "error",
   },
 } satisfies {
   player: IConstructorOptions;

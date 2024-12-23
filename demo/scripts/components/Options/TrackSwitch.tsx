@@ -13,6 +13,10 @@ function TrackSwitchConfig({
   onDefaultAudioTrackSwitchingModeChange,
   onCodecSwitchChange,
   onEnableFastSwitchingChange,
+  onAudioTracksNotPlayable,
+  onAudioTracksNotPlayableChange,
+  onVideoTracksNotPlayable,
+  onVideoTracksNotPlayableChange,
 }: {
   defaultAudioTrackSwitchingMode: string;
   onDefaultAudioTrackSwitchingModeChange: (newVal: string) => void;
@@ -20,38 +24,56 @@ function TrackSwitchConfig({
   onCodecSwitch: string;
   onCodecSwitchChange: (val: string) => void;
   onEnableFastSwitchingChange: (val: boolean) => void;
+  onAudioTracksNotPlayable: string;
+  onAudioTracksNotPlayableChange: (val: string) => void;
+  onVideoTracksNotPlayable: string;
+  onVideoTracksNotPlayableChange: (val: string) => void;
 }): React.JSX.Element {
-  let defaultAudioTrackSwitchingModeDescMsg;
-  switch (defaultAudioTrackSwitchingMode) {
-    case "reload":
-      defaultAudioTrackSwitchingModeDescMsg =
-        "Reloading by default when the audio track is changed";
-      break;
-    case "direct":
-      defaultAudioTrackSwitchingModeDescMsg =
-        "Directly audible transition when the audio track is changed";
-      break;
-    case "seamless":
-      defaultAudioTrackSwitchingModeDescMsg =
-        "Smooth transition when the audio track is changed";
-      break;
-    default:
-      defaultAudioTrackSwitchingModeDescMsg = "Unknown value";
-      break;
-  }
+  const defaultAudioTrackSwitchingModeDescMsg = React.useMemo(() => {
+    switch (defaultAudioTrackSwitchingMode) {
+      case "reload":
+        return "Reloading by default when the audio track is changed";
+      case "direct":
+        return "Directly audible transition when the audio track is changed";
+      case "seamless":
+        return "Smooth transition when the audio track is changed";
+      default:
+        return "Unknown value";
+    }
+  }, [defaultAudioTrackSwitchingMode]);
 
-  let onCodecSwitchDescMsg;
-  switch (onCodecSwitch) {
-    case "reload":
-      onCodecSwitchDescMsg = "Reloading buffers when the codec changes";
-      break;
-    case "continue":
-      onCodecSwitchDescMsg = "Keeping the same buffers even when the codec changes";
-      break;
-    default:
-      onCodecSwitchDescMsg = "Unknown value";
-      break;
-  }
+  const onCodecSwitchDescMsg = React.useMemo(() => {
+    switch (onCodecSwitch) {
+      case "reload":
+        return "Reloading buffers when the codec changes";
+      case "continue":
+        return "Keeping the same buffers even when the codec changes";
+      default:
+        return "Unknown value";
+    }
+  }, [onCodecSwitch]);
+
+  const onAudioTracksNotPlayableDescMsg = React.useMemo(() => {
+    switch (onAudioTracksNotPlayable) {
+      case "error":
+        return "Throw an error if no audio track can be played";
+      case "continue":
+        return "Continue with video only if no audio track is playable";
+      default:
+        return "Unknown value";
+    }
+  }, [onAudioTracksNotPlayable]);
+
+  const onVideoTracksNotPlayableDescMsg = React.useMemo(() => {
+    switch (onVideoTracksNotPlayable) {
+      case "error":
+        return "Throw an error if no video track can be played";
+      case "continue":
+        return "Continue with audio only if no video track is playable";
+      default:
+        return "Unknown value";
+    }
+  }, [onVideoTracksNotPlayable]);
 
   const onCodecSwitchSelection = React.useCallback(
     ({ value }: { value: string }) => onCodecSwitchChange(value),
@@ -61,6 +83,16 @@ function TrackSwitchConfig({
   const onDefaultAudioTrackSwitchingModeSelection = React.useCallback(
     ({ value }: { value: string }) => onDefaultAudioTrackSwitchingModeChange(value),
     [onDefaultAudioTrackSwitchingModeChange],
+  );
+
+  const onAudioTracksNotPlayableSelection = React.useCallback(
+    ({ value }: { value: string }) => onAudioTracksNotPlayableChange(value),
+    [onAudioTracksNotPlayableChange],
+  );
+
+  const onVideoTracksNotPlayableSelection = React.useCallback(
+    ({ value }: { value: string }) => onVideoTracksNotPlayableChange(value),
+    [onVideoTracksNotPlayableChange],
   );
 
   return (
@@ -108,6 +140,35 @@ function TrackSwitchConfig({
           On Codec Switch
         </Select>
         <span className="option-desc">{onCodecSwitchDescMsg}</span>
+      </li>
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          ariaLabel="Selecting the onAudioTracksNotPlayable attribute"
+          disabled={false}
+          className="playerOptionInput"
+          name="onAudioTracksNotPlayable"
+          onChange={onAudioTracksNotPlayableSelection}
+          selected={{ value: onAudioTracksNotPlayable, index: undefined }}
+          options={["continue", "error"]}
+        >
+          On Audio Tracks Not Playable
+        </Select>
+        <span className="option-desc">{onAudioTracksNotPlayableDescMsg}</span>
+      </li>
+
+      <li className="featureWrapperWithSelectMode">
+        <Select
+          ariaLabel="Selecting the onVideoTracksNotPlayable attribute"
+          disabled={false}
+          className="playerOptionInput"
+          name="onVideoTracksNotPlayable"
+          onChange={onVideoTracksNotPlayableSelection}
+          selected={{ value: onVideoTracksNotPlayable, index: undefined }}
+          options={["continue", "error"]}
+        >
+          On Video Tracks Not Playable
+        </Select>
+        <span className="option-desc">{onVideoTracksNotPlayableDescMsg}</span>
       </li>
     </>
   );

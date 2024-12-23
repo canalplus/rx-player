@@ -98,6 +98,26 @@ const DEFAULT_CONFIG = {
   DEFAULT_CODEC_SWITCHING_BEHAVIOR: "continue" as "continue" | "reload",
 
   /**
+   * Specifies the behavior when all audio tracks are not playable.
+   *
+   * - If set to `"continue"`, the player will proceed to play the content without audio.
+   * - If set to `"error"`, an error will be thrown to indicate that the audio tracks could not be played.
+   *
+   * Note: If neither the audio nor the video tracks are playable, an error will be thrown regardless of this setting.
+   */
+  DEFAULT_AUDIO_TRACKS_NOT_PLAYABLE_BEHAVIOR: "error" as "continue" | "error",
+
+  /**
+   * Specifies the behavior when all video tracks are not playable.
+   *
+   * - If set to `"continue"`, the player will proceed to play the content without video.
+   * - If set to `"error"`, an error will be thrown to indicate that the video tracks could not be played.
+   *
+   * Note: If neither the audio nor the video tracks are playable, an error will be thrown regardless of this setting.
+   */
+  DEFAULT_VIDEO_TRACKS_NOT_PLAYABLE_BEHAVIOR: "error" as "continue" | "error",
+
+  /**
    * If set to true, video through loadVideo will auto play by default
    * @type {Boolean}
    */

@@ -706,6 +706,61 @@ Those are the possible values for that option:
   More information about the `"RELOADING"` state can be found in
   [the player states documentation](./Player_States.md).
 
+### onAudioTracksNotPlayable
+
+_type_: `string|undefined`
+
+_defaults_: `"error"`
+
+Specifies the behavior when all audio tracks are not playable - This can occur if the
+device does not support the required audio codecs, or if the content cannot be decrypted,
+for example, due to an insufficient security level.
+
+Those are the possible values for that option:
+
+- `"continue"`: The player will proceed to play the content without audio.
+
+- `"error"`: The player will throw an error to indicate that the audio tracks could not be
+  played.
+
+<div class="note">
+
+- An event [`noPlayableTrack`](../api/Loading_a_Content) will be emitted if no audio
+  tracks are playable.
+
+- If neither the audio nor video tracks are playable, a `"NO_AUDIO_VIDEO_TRACKS"` error
+  will be thrown regardless of this setting.
+
+</div>
+
+### onVideoTracksNotPlayable
+
+_type_: `string|undefined`
+
+_defaults_: `"error"`
+
+Specifies the behavior when all video tracks are not playable - This can occur if the
+device does not support the required video codecs, or if the content cannot be decrypted,
+for example, due to an insufficient security level.
+
+Those are the possible values for that option:
+
+- `"continue"`: The player will proceed to play the content without video. (i.e.,
+  audio-only playback).
+
+- `"error"`: The player will throw an error to indicate that the video tracks could not be
+  played.
+
+<div class="note">
+
+- An event [`noPlayableTrack`](../api/Loading_a_Content) will be emitted if no video
+  tracks are playable.
+
+- If neither the audio nor video tracks are playable, a `"NO_AUDIO_VIDEO_TRACKS"` error
+  will be thrown regardless of this setting.
+
+</div>
+
 ### lowLatencyMode
 
 _type_: `Boolean|undefined`
@@ -927,7 +982,7 @@ The `serverSyncInfos` object contains two keys:
   <div class="note">
   The `performance.now()` API is used here because it is the main API to
   obtain a monotically increasing clock on the client-side.
-  </div</div>
+  </div>
 
 Example:
 
