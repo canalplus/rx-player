@@ -20,10 +20,6 @@ export default async function parseDRMConfigurations(
         serverCertificateUrl,
       } = drmConfig;
 
-      if (!licenseServerUrl) {
-        return;
-      }
-
       const type = drm.toLowerCase();
       const keySystem: IKeySystemOption = {
         type,
@@ -43,6 +39,61 @@ export default async function parseDRMConfigurations(
     }),
   );
   return keySystems.filter((ks): ks is IKeySystemOption => ks !== undefined);
+}
+
+/**
+ * Update `keySystems` options given to the RxPlayer, especially the
+ * `getLicense` callback, so it is compatible to the `DummyMediaElement` feature
+ * of the RxPlayer: here, an EME fully-defined in JavaScript will be used instead
+ * of the browser's implementation, so we cannot rely on real CDM <-> license
+ * server exchanges.
+ *
+ * What we do here instead is just parsing that mock's challenge, and return a
+ * fake license with all keys supported.
+ * @param {Array.<Object>} baseOptions - The initial `keySystems` options to
+ * pass to the RxPlayer.
+ * @returns {Array.<Object>} baseOptions - The updated `keySystems` options with
+ * the updated `getLicense` callback.
+ */
+export function toDummyDrmConfiguration(
+  baseOptions: IKeySystemOption[],
+): IKeySystemOption[] {
+  return baseOptions.map((ks) => {
+    return {
+      ...ks,
+      getLicense(...args: Parameters<IKeySystemOption["getLicense"]>) {
+        try {
+          const challenge = args[0];
+          const challengeStr = utf8ToStr(challenge);
+          const challengeObj = JSON.parse(challengeStr) as {
+            certificate: string | null;
+            persistent: boolean;
+            keyIds: string[];
+          };
+          const keys: Record<
+            string,
+            {
+              policyLevel: number;
+            }
+          > = {};
+          challengeObj.keyIds.forEach((kid) => {
+            keys[kid] = {
+              policyLevel: 50,
+            };
+          });
+          const license = {
+            type: "license",
+            persistent: false,
+            keys,
+          };
+          const licenseU8 = strToUtf8(JSON.stringify(license));
+          return licenseU8.buffer;
+        } catch (e) {
+          return ks.getLicense(...args);
+        }
+      },
+    };
+  });
 }
 
 function getServerCertificate(url: string): Promise<ArrayBuffer> {
@@ -89,6 +140,9 @@ function generateGetLicense(
 ): (rawChallenge: BufferSource) => Promise<BufferSource | null> {
   const isPlayready = drmType.indexOf("playready") !== -1;
   return (rawChallenge: BufferSource): Promise<BufferSource | null> => {
+    if (licenseServerUrl === "") {
+      throw new Error("The content is encrypted but no license server URL was entered");
+    }
     const challenge = isPlayready ? formatPlayreadyChallenge(rawChallenge) : rawChallenge;
     const xhr = new XMLHttpRequest();
     xhr.open("POST", licenseServerUrl, true);
