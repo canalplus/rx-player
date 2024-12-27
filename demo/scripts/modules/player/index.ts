@@ -276,6 +276,14 @@ const PlayerModule = declareModule(
         player.setVolume(volume);
       },
 
+      /**
+       * Get media element linked to the RxPlayer Instance.
+       * @returns {HTMLMediaElement|null}
+       */
+      getMediaElement(): HTMLMediaElement | null {
+        return player.getVideoElement();
+      },
+
       updateWorkerMode(enabled: boolean) {
         if (enabled && !hasAttachedMultithread) {
           attachMultithread(player);
