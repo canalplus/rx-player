@@ -11,11 +11,7 @@ function getBrowserConfig(browser) {
         providerOptions: {
           capabilities: {
             "goog:chromeOptions": {
-              args: [
-                "--autoplay-policy=no-user-gesture-required",
-                "--enable-precise-memory-info",
-                "--js-flags=--expose-gc",
-              ],
+              args: ["--autoplay-policy=no-user-gesture-required"],
             },
           },
         },

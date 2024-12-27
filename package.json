@@ -194,8 +194,8 @@
     "test:integration:firefox:watch": "cross-env BROWSER_CONFIG=firefox vitest watch tests/integration/scenarios",
     "test:memory": "cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
     "test:memory:chrome:watch": "cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
-    "test:unit": "vitest --config vitest.config.unit.mjs",
-    "test:unit:watch": "cross-env WATCH=true vitest --config vitest.config.unit.mjs",
+    "test:unit": "cross-env BROWSER_CONFIG=chrome vitest --config vitest.config.unit.mjs",
+    "test:unit:watch": "cross-env BROWSER_CONFIG=chrome cross-env WATCH=true vitest --config vitest.config.unit.mjs",
     "update-version": "npm run version --git-tag-version=false",
     "version": "./scripts/update-version",
     "wasm-strip": "node scripts/wasm-strip.mjs dist/mpd-parser.wasm"

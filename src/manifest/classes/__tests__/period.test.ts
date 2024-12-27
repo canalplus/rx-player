@@ -1,8 +1,10 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IParsedAdaptation, IParsedPeriod } from "../../../parsers/manifest";
-import type Adaptation from "../adaptation";
+import Adaptation, { SUPPORTED_ADAPTATIONS_TYPE } from "../adaptation";
 import CodecSupportCache from "../codec_support_cache";
 import type IPeriod from "../period";
+
+vi.mock("../adaptation");
 
 describe("Manifest - Period", () => {
   beforeEach(() => {
@@ -18,6 +20,10 @@ describe("Manifest - Period", () => {
         isDecipherable: undefined,
       },
     }));
+    const a = vi.mocked("../adaptation");
+    a;
+
+    vi.spyOn(Adaptation, mockAdaptation);
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],

@@ -1,6 +1,9 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import logger from "../../../../../../log";
 import type ISegmentUrl from "../SegmentURL";
 import type { MPDError as IMPDError } from "../utils";
+
+vi.mock("../../../../../../log");
 
 describe("DASH Node Parsers - SegmentURL", () => {
   beforeEach(() => {
@@ -8,9 +11,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with no known attribute", async () => {
-    const log = { default: { warn: () => null } };
-    vi.doMock("../../../../../../log", () => log);
-    const mockLog = vi.spyOn(log.default, "warn");
+    const mockLog = vi.spyOn(logger, "warn");
 
     const parseSegmentURL = (await vi.importActual("../SegmentURL"))
       .default as typeof ISegmentUrl;
@@ -27,12 +28,11 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with a well-formed `mediaRange` attribute", async () => {
-    const log = { default: { warn: () => null } };
-    vi.doMock("../../../../../../log", () => log);
-    const mockLog = vi.spyOn(log.default, "warn");
+    const mockLog = vi.spyOn(logger, "warn");
 
     const parseSegmentURL = (await vi.importActual("../SegmentURL"))
       .default as typeof ISegmentUrl;
+
     const element1 = new DOMParser().parseFromString(
       '<Foo mediaRange="10-100" />',
       "text/xml",
@@ -50,9 +50,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with an incorrect `mediaRange` attribute", async () => {
-    const log = { default: { warn: () => null } };
-    vi.doMock("../../../../../../log", () => log);
-    const mockLog = vi.spyOn(log.default, "warn").mockImplementation(vi.fn());
+    const mockLog = vi.spyOn(logger, "warn").mockImplementation(vi.fn());
 
     const parseSegmentURL = (await vi.importActual("../SegmentURL"))
       .default as typeof ISegmentUrl;
@@ -81,7 +79,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
       default: { warn: () => null },
     };
     vi.doMock("../../../../../../log", () => log);
-    const mockLog = vi.spyOn(log.default, "warn");
+    const mockLog = vi.spyOn(logger, "warn");
 
     const parseSegmentURL = (await vi.importActual("../SegmentURL"))
       .default as typeof ISegmentUrl;
@@ -102,9 +100,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with an incorrect `indexRange` attribute", async () => {
-    const log = { default: { warn: () => null } };
-    vi.doMock("../../../../../../log", () => log);
-    const mockLog = vi.spyOn(log.default, "warn").mockImplementation(vi.fn());
+    const mockLog = vi.spyOn(logger, "warn").mockImplementation(vi.fn());
 
     const parseSegmentURL = (await vi.importActual("../SegmentURL"))
       .default as typeof ISegmentUrl;
@@ -129,9 +125,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with a media attribute", async () => {
-    const log = { default: { warn: () => null } };
-    vi.doMock("../../../../../../log", () => log);
-    const mockLog = vi.spyOn(log.default, "warn");
+    const mockLog = vi.spyOn(logger, "warn");
 
     const parseSegmentURL = (await vi.importActual("../SegmentURL"))
       .default as typeof ISegmentUrl;
@@ -148,9 +142,7 @@ describe("DASH Node Parsers - SegmentURL", () => {
   });
 
   it("should correctly parse an element with a index attribute", async () => {
-    const log = { default: { warn: () => null } };
-    vi.doMock("../../../../../../log", () => log);
-    const mockLog = vi.spyOn(log.default, "warn");
+    const mockLog = vi.spyOn(logger, "warn");
 
     const parseSegmentURL = (await vi.importActual("../SegmentURL"))
       .default as typeof ISegmentUrl;
