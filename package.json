@@ -1,12 +1,82 @@
 {
   "name": "rx-player",
-  "author": "Canal+",
   "version": "4.5.0",
   "description": "Canal+ HTML5 Video Player",
+  "keywords": [
+    "dash",
+    "eme",
+    "hss",
+    "html5",
+    "mediasource",
+    "mse",
+    "reactive",
+    "smooth",
+    "streaming",
+    "typescript",
+    "video"
+  ],
+  "homepage": "https://github.com/canalplus/rx-player",
+  "bugs": "https://github.com/canalplus/rx-player/issues",
+  "license": "Apache-2.0",
+  "author": "Canal+",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/canalplus/rx-player.git"
+  },
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/commonjs/index.js",
   "module": "./dist/es2017/index.js",
   "browser": "./dist/es2017/index.js",
+  "typesVersions": {
+    "*": {
+      "experimental": [
+        "./dist/es2017/experimental/index.d.ts"
+      ],
+      "experimental/features": [
+        "./dist/es2017/experimental/features/index.d.ts"
+      ],
+      "experimental/features/embeds": [
+        "./dist/es2017/__GENERATED_CODE/index.d.ts"
+      ],
+      "experimental/features/*": [
+        "./dist/es2017/experimental/features/*.d.ts"
+      ],
+      "experimental/tools": [
+        "./dist/es2017/experimental/tools/index.d.ts"
+      ],
+      "experimental/tools/*": [
+        "./dist/es2017/experimental/tools/*/index.d.ts"
+      ],
+      "experimental/worker": [
+        "./dist/es2017/importable_worker.d.ts"
+      ],
+      "experimental/worker/features": [
+        "./dist/es2017/experimental/features/worker/index.d.ts"
+      ],
+      "features": [
+        "./dist/es2017/features/list/index.d.ts"
+      ],
+      "features/*": [
+        "./dist/es2017/features/list/*.d.ts"
+      ],
+      "logger": [
+        "./dist/es2017/log.d.ts"
+      ],
+      "minimal": [
+        "./dist/es2017/minimal.d.ts"
+      ],
+      "tools": [
+        "./dist/es2017/tools/index.d.ts"
+      ],
+      "tools/*": [
+        "./dist/es2017/tools/*/index.d.ts"
+      ],
+      "types": [
+        "./dist/es2017/public_types.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "import": "./dist/es2017/index.js",
@@ -95,72 +165,6 @@
     },
     "./package.json": "./package.json"
   },
-  "typesVersions": {
-    "*": {
-      "experimental": [
-        "./dist/es2017/experimental/index.d.ts"
-      ],
-      "experimental/features": [
-        "./dist/es2017/experimental/features/index.d.ts"
-      ],
-      "experimental/features/embeds": [
-        "./dist/es2017/__GENERATED_CODE/index.d.ts"
-      ],
-      "experimental/features/*": [
-        "./dist/es2017/experimental/features/*.d.ts"
-      ],
-      "experimental/tools": [
-        "./dist/es2017/experimental/tools/index.d.ts"
-      ],
-      "experimental/tools/*": [
-        "./dist/es2017/experimental/tools/*/index.d.ts"
-      ],
-      "experimental/worker": [
-        "./dist/es2017/importable_worker.d.ts"
-      ],
-      "experimental/worker/features": [
-        "./dist/es2017/experimental/features/worker/index.d.ts"
-      ],
-      "features": [
-        "./dist/es2017/features/list/index.d.ts"
-      ],
-      "features/*": [
-        "./dist/es2017/features/list/*.d.ts"
-      ],
-      "logger": [
-        "./dist/es2017/log.d.ts"
-      ],
-      "minimal": [
-        "./dist/es2017/minimal.d.ts"
-      ],
-      "tools": [
-        "./dist/es2017/tools/index.d.ts"
-      ],
-      "tools/*": [
-        "./dist/es2017/tools/*/index.d.ts"
-      ],
-      "types": [
-        "./dist/es2017/public_types.d.ts"
-      ]
-    }
-  },
-  "keywords": [
-    "dash",
-    "eme",
-    "hss",
-    "html5",
-    "mediasource",
-    "mse",
-    "reactive",
-    "smooth",
-    "streaming",
-    "typescript",
-    "video"
-  ],
-  "homepage": "https://github.com/canalplus/rx-player",
-  "bugs": "https://github.com/canalplus/rx-player/issues",
-  "license": "Apache-2.0",
-  "sideEffects": false,
   "scripts": {
     "build": "node ./scripts/generate_build.mjs",
     "build:all": "bash ./scripts/make_all_builds.sh",
@@ -199,21 +203,16 @@
     "test:integration:edge:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest watch tests/integration/scenarios",
     "test:integration:firefox": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest run tests/integration/scenarios",
     "test:integration:firefox:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest watch tests/integration/scenarios",
-    "test:integration:notice": "echo \"~~~ ⚠️ NOTICE ⚠️\n~~~ Tests have two dependencies: a local RxPlayer build and ffmpeg.\n~~~ Make sure you:\n~~~ 1.  Have an ffmpeg executable in your path and,\n~~~ 2.  You built an up-to-date RxPlayer through the \\`build\\` npm script.\n\"",
-    "test:memory": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
-    "test:memory:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:performance": "node ./tests/performance/run.mjs",
-    "test:unit": "vitest --config vitest.config.unit.mjs",
+    "test:unit": "npm run test:unit:chrome && npm run test:unit:firefox",
+    "test:unit:chrome": "cross-env BROWSER_CONFIG=chrome vitest src/",
+    "test:unit:firefox": "cross-env BROWSER_CONFIG=firefox vitest src/",
     "types": "tsc --noEmit --project .",
     "types:all": "npm run types && npm run types:demo && npm run types:unit_tests && npm run types:scripts",
     "types:demo": "tsc --noEmit --project demo/",
     "types:scripts": "tsc --project ./scripts",
     "types:unit_tests": "tsc --noEmit --project ./tests/unit/tsconfig.json",
     "update-version": "bash ./scripts/update-version-number.sh"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/canalplus/rx-player.git"
   },
   "devDependencies": {
     "@canalplus/readme.doc": "0.6.1",
@@ -237,7 +236,6 @@
     "eslint-plugin-react": "7.37.5",
     "github-buttons": "2.33.0",
     "html-entities": "2.6.0",
-    "jsdom": "^30.0.1",
     "prettier": "^3.9.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",

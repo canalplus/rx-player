@@ -108,6 +108,9 @@ export default defineConfig({
       "tests/integration/**/*.test.[jt]s?(x)",
       // memory tests
       "tests/memory/**/*.[jt]s?(x)",
+      // unit tests
+      "./tests/unit/src/**/*.ts",
+      "./tests/unit/global/**/*.test.ts",
     ],
     globalSetup: "tests/globalSetup.mjs",
     browser: getBrowserConfig(process.env.BROWSER_CONFIG ?? "chrome"),
