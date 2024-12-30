@@ -1,5 +1,5 @@
 import type { ICompatAudioTrack } from "./browser_compatibility_types";
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Enable the audio track at the given index while disabling all others in the

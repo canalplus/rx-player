@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IEnvDetector from "../browser_detection";
+import type IEnvDetector from "../env_detector";
 import type IShouldRenewMediaKeySystemAccess from "../should_renew_media_key_system_access";
 
 describe("compat - shouldRenewMediaKeySystemAccess", () => {
@@ -8,8 +8,8 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
   });
 
   it("should return false if we are not on the concerned browsers with PlayReady", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -25,8 +25,8 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
   });
 
   it("should return false if we are on IE11+Widevine", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -42,8 +42,8 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
   });
 
   it("should return true if we are on IE11+PlayReady", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -59,8 +59,8 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
   });
 
   it("should return false if we are on Firefox+Widevine", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -76,8 +76,8 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
   });
 
   it("should return true if we are on Firefox+PlayReady", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -93,8 +93,8 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
   });
 
   it("should return false if we are on Edge+Widevine", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -110,8 +110,8 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
   });
 
   it("should return true if we are on Edge+PlayReady", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

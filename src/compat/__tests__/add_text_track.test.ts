@@ -1,7 +1,7 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import type IAddTextTrack from "../add_text_track";
-import type IEnvDetector from "../browser_detection";
+import type IEnvDetector from "../env_detector";
 
 describe("compat - addTextTrack", () => {
   beforeEach(() => {
@@ -20,8 +20,8 @@ describe("compat - addTextTrack", () => {
       addTextTrack: mockAddTextTrack,
     } as unknown as IMediaElement;
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -51,8 +51,8 @@ describe("compat - addTextTrack", () => {
       addTextTrack: mockAddTextTrack,
     } as unknown as IMediaElement;
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -87,8 +87,8 @@ describe("compat - addTextTrack", () => {
       addTextTrack: mockAddTextTrack,
     } as unknown as IMediaElement;
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -126,8 +126,8 @@ describe("compat - addTextTrack", () => {
       addTextTrack: mockAddTextTrack,
     } as unknown as IMediaElement;
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -149,8 +149,8 @@ describe("compat - addTextTrack", () => {
   });
 
   it("should create showing trackElement and set track on mediaElement", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

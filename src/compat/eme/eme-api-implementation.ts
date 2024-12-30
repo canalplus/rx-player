@@ -11,7 +11,7 @@ import type {
   IMediaKeySystemAccess,
   IMediaKeys,
 } from "../browser_compatibility_types";
-import EnvDetector from "../browser_detection";
+import EnvDetector from "../env_detector";
 import type { IEventTargetLike } from "../event_listeners";
 import { createCompatibleEventListener } from "../event_listeners";
 import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";

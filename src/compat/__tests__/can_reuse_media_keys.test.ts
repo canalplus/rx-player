@@ -1,6 +1,6 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-import type IEnvDetector from "../browser_detection";
 import type ICanReuseMediaKeys from "../can_reuse_media_keys";
+import type IEnvDetector from "../env_detector";
 
 describe("Compat - canReuseMediaKeys", () => {
   afterEach(() => {
@@ -8,8 +8,8 @@ describe("Compat - canReuseMediaKeys", () => {
   });
 
   it("should return true on most browsers", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -25,8 +25,8 @@ describe("Compat - canReuseMediaKeys", () => {
   });
 
   it("should return false on WebOs2022", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -42,8 +42,8 @@ describe("Compat - canReuseMediaKeys", () => {
   });
 
   it("should return false on WebOs2021", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -59,8 +59,8 @@ describe("Compat - canReuseMediaKeys", () => {
   });
 
   it("should return false on other WebOS", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -76,8 +76,8 @@ describe("Compat - canReuseMediaKeys", () => {
   });
 
   it("should return false on Panasonic", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -93,8 +93,8 @@ describe("Compat - canReuseMediaKeys", () => {
   });
 
   it("should return false on Philips' NETTV", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -110,8 +110,8 @@ describe("Compat - canReuseMediaKeys", () => {
   });
 
   it("should return false on A1 KSTB 40xxx", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

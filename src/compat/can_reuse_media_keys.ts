@@ -1,4 +1,4 @@
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Returns `true` if a `MediaKeys` instance (the  `Encrypted Media Extension`

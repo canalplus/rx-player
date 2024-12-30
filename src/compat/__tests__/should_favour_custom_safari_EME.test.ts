@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import globalScope from "../../utils/global_scope";
-import type IEnvDetector from "../browser_detection";
+import type IEnvDetector from "../env_detector";
 import type IShouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
 
 describe("compat - shouldFavourSafariMediaKeys", () => {
@@ -20,8 +20,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
   });
 
   it("should return false if we are not on Safari", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -38,8 +38,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
 
   it("should return false if we are on Safari Desktop but WekitMediaKeys is not available", async () => {
     gs.WebKitMediaKeys = undefined;
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -56,8 +56,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
 
   it("should return false if we are on Safari Mobile but WekitMediaKeys is not available", async () => {
     gs.WebKitMediaKeys = undefined;
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -83,8 +83,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
       webkitSetMediaKeys: () => Record<string, never>;
     };
     proto.webkitSetMediaKeys = () => ({});
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -110,8 +110,8 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
       webkitSetMediaKeys: () => Record<string, never>;
     };
     proto.webkitSetMediaKeys = () => ({});
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

@@ -1,4 +1,4 @@
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Return `true` if the current device is compatible with the Worker API.

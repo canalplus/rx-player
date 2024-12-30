@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IEnvDetector from "../browser_detection";
+import type IEnvDetector from "../env_detector";
 import type IIsSeekingApproximate from "../is_seeking_approximate";
 
 describe("isSeekingApproximate", () => {
@@ -8,8 +8,8 @@ describe("isSeekingApproximate", () => {
   });
 
   it("should be true if on Tizen", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -25,8 +25,8 @@ describe("isSeekingApproximate", () => {
   });
 
   it("should be false if not on tizen", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

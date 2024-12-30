@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import arrayFindIndex from "../../utils/array_find_index";
-import type IEnvDetector from "../browser_detection";
+import type IEnvDetector from "../env_detector";
 import type IRemoveCue from "../remove_cue";
 
 describe("compat - removeCue", () => {
@@ -34,8 +34,8 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     } as unknown as TextTrack;
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -89,8 +89,8 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     } as unknown as TextTrack;
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -144,8 +144,8 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     } as unknown as TextTrack;
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -175,8 +175,8 @@ describe("compat - removeCue", () => {
     });
     const mockLog = vi.fn((message: unknown) => message);
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -216,8 +216,8 @@ describe("compat - removeCue", () => {
       throw new Error();
     });
 
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

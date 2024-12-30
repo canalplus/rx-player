@@ -1,4 +1,4 @@
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * An `HTMLMediaElement`'s readyState allows the browser to communicate whether

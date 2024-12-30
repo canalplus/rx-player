@@ -1,4 +1,4 @@
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * On safari mobile (version 17.1.2) and desktop (version 18.4) seeking too early cause

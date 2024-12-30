@@ -15,7 +15,7 @@
  */
 
 import { guidToUuid } from "../../utils/string_parsing";
-import EnvDetector from "../browser_detection";
+import EnvDetector from "../env_detector";
 
 /**
  * Get KID from MediaKeySession keyStatus, and convert it in usual big-endian kid

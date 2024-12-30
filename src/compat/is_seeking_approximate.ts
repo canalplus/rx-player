@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * On some devices (right now only seen on Tizen), seeking through the

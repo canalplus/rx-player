@@ -1,6 +1,6 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-import type IEnvDetector from "../browser_detection";
 import type { getFirefoxVersion as IGetFirefoxVersion } from "../browser_version";
+import type IEnvDetector from "../env_detector";
 
 describe("Compat - Browser version", () => {
   const origUserAgent = navigator.userAgent;
@@ -30,8 +30,8 @@ describe("Compat - Browser version", () => {
   });
 
   it("Should return correct Firefox version (60)", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -48,8 +48,8 @@ describe("Compat - Browser version", () => {
   });
 
   it("Should return correct Firefox version (80)", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -66,8 +66,8 @@ describe("Compat - Browser version", () => {
   });
 
   it("Should return null when not on Firefox", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -83,8 +83,8 @@ describe("Compat - Browser version", () => {
   });
 
   it("Should return null when obscure Firefox user agent", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

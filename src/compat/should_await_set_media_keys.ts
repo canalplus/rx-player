@@ -1,4 +1,4 @@
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Some devices will give an error if you did not ensure that a `setMediaKeys`

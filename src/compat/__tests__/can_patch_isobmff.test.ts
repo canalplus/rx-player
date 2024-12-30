@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IEnvDetector from "../browser_detection";
 import type ICanPatchISOBMFFSegment from "../can_patch_isobmff";
+import type IEnvDetector from "../env_detector";
 
 describe("compat - canPatchISOBMFFSegment", () => {
   beforeEach(() => {
@@ -8,8 +8,8 @@ describe("compat - canPatchISOBMFFSegment", () => {
   });
 
   it("should return true if we are not on IE11 nor Edge", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -24,8 +24,8 @@ describe("compat - canPatchISOBMFFSegment", () => {
   });
 
   it("should return false if we are on old IE or Edge", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -40,8 +40,8 @@ describe("compat - canPatchISOBMFFSegment", () => {
   });
 
   it("should return false if we are on IE 11", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

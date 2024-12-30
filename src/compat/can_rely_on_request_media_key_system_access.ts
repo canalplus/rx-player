@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * This functions tells if the RxPlayer can trust the browser when it has

@@ -7,8 +7,8 @@ describe("compat - shouldValidateMetadata", () => {
   });
 
   it("should return false if we are not on the Samsung browser", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = await vi.importActual("../browser_detection");
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = await vi.importActual("../env_detector");
       return {
         default: {
           ...EnvDetector,
@@ -22,8 +22,8 @@ describe("compat - shouldValidateMetadata", () => {
   });
 
   it("should return true if we are on the Samsung browser", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = await vi.importActual("../browser_detection");
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = await vi.importActual("../env_detector");
       return {
         default: {
           ...EnvDetector,

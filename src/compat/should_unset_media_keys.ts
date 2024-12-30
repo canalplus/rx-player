@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Returns true if the mediakeys associated to a media element should be

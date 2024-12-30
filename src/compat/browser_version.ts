@@ -15,7 +15,7 @@
  */
 
 import log from "../log";
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Returns either :

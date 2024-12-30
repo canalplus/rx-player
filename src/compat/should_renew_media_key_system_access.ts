@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Returns true if the current target require the MediaKeySystemAccess to be

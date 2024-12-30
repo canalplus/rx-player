@@ -15,7 +15,7 @@
  */
 
 import type { ICompatTextTrack, IMediaElement } from "./browser_compatibility_types";
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Add text track to the given media element.

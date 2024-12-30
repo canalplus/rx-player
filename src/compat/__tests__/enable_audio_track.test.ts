@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IEnvDetector from "../../compat/browser_detection";
+import type IEnvDetector from "../../compat/env_detector";
 import type IEnableAudioTrack from "../enable_audio_track";
 
 describe("compat - enableAudioTrack", () => {
@@ -8,8 +8,8 @@ describe("compat - enableAudioTrack", () => {
   });
 
   it("should enable the wanted audioTrack", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -59,8 +59,8 @@ describe("compat - enableAudioTrack", () => {
   });
 
   it("should enable the wanted audioTrack on Tizen", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -110,8 +110,8 @@ describe("compat - enableAudioTrack", () => {
   });
 
   it("should return false if the audio track index does not exist", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -161,8 +161,8 @@ describe("compat - enableAudioTrack", () => {
   });
 
   it("should return false if the audio track index does not exist on Tizen", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {
@@ -264,8 +264,8 @@ describe("compat - enableAudioTrack", () => {
   });
 
   it("should first disable all audioTracks except the one wanted by default on Tizen", async () => {
-    vi.doMock("../browser_detection", async () => {
-      const EnvDetector = (await vi.importActual("../browser_detection"))
+    vi.doMock("../env_detector", async () => {
+      const EnvDetector = (await vi.importActual("../env_detector"))
         .default as typeof IEnvDetector;
       return {
         default: {

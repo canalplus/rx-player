@@ -1,4 +1,4 @@
-import EnvDetector from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * We noticed that the PlayStation 5 may have the HTMLMediaElement on which the
