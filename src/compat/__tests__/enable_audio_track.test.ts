@@ -1,24 +1,21 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IEnvDetector from "../../compat/env_detector";
-import type IEnableAudioTrack from "../enable_audio_track";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import enableAudioTrack from "../enable_audio_track";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
 
 describe("compat - enableAudioTrack", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    resetEnvironment();
+  });
 
-  it("should enable the wanted audioTrack", async () => {
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.Other,
-          device: EnvDetector.DEVICES.PlayStation5,
-        },
-      };
-    });
+  it("should enable the wanted audioTrack", () => {
+    mockEnvironment(
+      EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
+      EnvDetector.DEVICES.Other,
+    );
+    mockEnvironment(EnvDetector.BROWSERS.Other, EnvDetector.DEVICES.PlayStation5);
     const fakeAudioTracks = [
       {
         id: "id1",
@@ -42,8 +39,6 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
-      .default as typeof IEnableAudioTrack;
     expect(enableAudioTrack(fakeAudioTracks, 2)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
@@ -58,18 +53,12 @@ describe("compat - enableAudioTrack", () => {
     expect(fakeAudioTracks[2].enabled).toBe(false);
   });
 
-  it("should enable the wanted audioTrack on Tizen", async () => {
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.Other,
-          device: EnvDetector.DEVICES.Tizen,
-        },
-      };
-    });
+  it("should enable the wanted audioTrack on Tizen", () => {
+    mockEnvironment(
+      EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
+      EnvDetector.DEVICES.Other,
+    );
+    mockEnvironment(EnvDetector.BROWSERS.Other, EnvDetector.DEVICES.Tizen);
     const fakeAudioTracks = [
       {
         id: "id1",
@@ -93,8 +82,6 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
-      .default as typeof IEnableAudioTrack;
     expect(enableAudioTrack(fakeAudioTracks, 2)).toEqual(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
@@ -109,18 +96,12 @@ describe("compat - enableAudioTrack", () => {
     expect(fakeAudioTracks[2].enabled).toBe(false);
   });
 
-  it("should return false if the audio track index does not exist", async () => {
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.Other,
-          device: EnvDetector.DEVICES.WebOsOther,
-        },
-      };
-    });
+  it("should return false if the audio track index does not exist", () => {
+    mockEnvironment(
+      EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
+      EnvDetector.DEVICES.Other,
+    );
+    mockEnvironment(EnvDetector.BROWSERS.Other, EnvDetector.DEVICES.WebOsOther);
     const fakeAudioTracks = [
       {
         id: "id1",
@@ -144,8 +125,6 @@ describe("compat - enableAudioTrack", () => {
         enabled: false,
       },
     ];
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
-      .default as typeof IEnableAudioTrack;
     expect(enableAudioTrack(fakeAudioTracks, -1)).toEqual(false);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(false);
@@ -160,18 +139,12 @@ describe("compat - enableAudioTrack", () => {
     expect(fakeAudioTracks[2].enabled).toBe(false);
   });
 
-  it("should return false if the audio track index does not exist on Tizen", async () => {
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.Other,
-          device: EnvDetector.DEVICES.Panasonic,
-        },
-      };
-    });
+  it("should return false if the audio track index does not exist on Tizen", () => {
+    mockEnvironment(
+      EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
+      EnvDetector.DEVICES.Other,
+    );
+    mockEnvironment(EnvDetector.BROWSERS.Other, EnvDetector.DEVICES.Panasonic);
     let track1IsEnabled = true;
     let track2IsEnabled = false;
     let track3IsEnabled = false;
@@ -246,8 +219,6 @@ describe("compat - enableAudioTrack", () => {
         track3IsEnabled = enabled;
       },
     });
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
-      .default as typeof IEnableAudioTrack;
     expect(enableAudioTrack(fakeAudioTracks, 1)).toBe(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(true);
@@ -263,18 +234,12 @@ describe("compat - enableAudioTrack", () => {
     expect(track3WasEnabled).toBe(0);
   });
 
-  it("should first disable all audioTracks except the one wanted by default on Tizen", async () => {
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.Other,
-          device: EnvDetector.DEVICES.Tizen,
-        },
-      };
-    });
+  it("should first disable all audioTracks except the one wanted by default on Tizen", () => {
+    mockEnvironment(
+      EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
+      EnvDetector.DEVICES.Other,
+    );
+    mockEnvironment(EnvDetector.BROWSERS.Other, EnvDetector.DEVICES.Tizen);
     let track1IsEnabled = true;
     let track2IsEnabled = false;
     let track3IsEnabled = false;
@@ -349,8 +314,6 @@ describe("compat - enableAudioTrack", () => {
         track3IsEnabled = enabled;
       },
     });
-    const enableAudioTrack = (await vi.importActual("../enable_audio_track"))
-      .default as typeof IEnableAudioTrack;
     expect(enableAudioTrack(fakeAudioTracks, 1)).toBe(true);
     expect(fakeAudioTracks[0].enabled).toBe(false);
     expect(fakeAudioTracks[1].enabled).toBe(true);

@@ -113,7 +113,36 @@ const EnvDetector = {
   isSamsungBrowser: false,
 };
 
-(function findCurrentBrowser(): void {
+resetEnvironment();
+
+/**
+ * Force `EnvDetector` to report the indicated environment, so other player
+ * modules believe they are on another device.
+ *
+ * This method should only be relied on by tests.
+ * @param {number} browser
+ * @param {number} device
+ * @returns {function} - Function allowing to reset the `EnvDetector`'s actual
+ * properties.
+ */
+export function mockEnvironment(
+  browser: (typeof BROWSERS)[keyof typeof BROWSERS],
+  device: (typeof DEVICES)[keyof typeof DEVICES],
+  isSamsungBrowser: boolean = false,
+): () => void {
+  EnvDetector.browser = browser;
+  EnvDetector.device = device;
+  EnvDetector.isSamsungBrowser = isSamsungBrowser;
+  return resetEnvironment;
+}
+
+/**
+ * Reset `EnvDetector` to its regular state.
+ * You want to call this if you mocked an environment with the
+ * `mockEnvironment` function and want to reset the `EnvDetector` to its actual
+ * value.
+ */
+function resetEnvironment(): void {
   if (isNode) {
     return;
   }
@@ -203,5 +232,7 @@ const EnvDetector = {
   } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx") !== -1) {
     EnvDetector.device = DEVICES.A1KStb40xx;
   }
-})();
+}
+
+export { resetEnvironment };
 export default EnvDetector as IEnvDetector;

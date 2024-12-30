@@ -1,14 +1,17 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import type IAddTextTrack from "../add_text_track";
-import type IEnvDetector from "../env_detector";
+import addTextTrack from "../add_text_track";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
 
 describe("compat - addTextTrack", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    resetEnvironment();
+  });
 
-  it("should re-use text track on old IE / EDGE", async () => {
+  it("should re-use text track on old IE / EDGE", () => {
     const fakeTextTrack = {
       id: "textTrack1",
       HIDDEN: "hidden",
@@ -20,18 +23,10 @@ describe("compat - addTextTrack", () => {
       addTextTrack: mockAddTextTrack,
     } as unknown as IMediaElement;
 
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
-        },
-      };
-    });
-    const addTextTrack = (await vi.importActual("../add_text_track"))
-      .default as typeof IAddTextTrack;
+    mockEnvironment(
+      EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
+      EnvDetector.DEVICES.Other,
+    );
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -39,7 +34,7 @@ describe("compat - addTextTrack", () => {
     expect(mockAddTextTrack).not.toHaveBeenCalled();
   });
 
-  it("should re-use text track on IE11", async () => {
+  it("should re-use text track on IE11", () => {
     const fakeTextTrack = {
       id: "textTrack1",
       HIDDEN: "hidden",
@@ -51,18 +46,7 @@ describe("compat - addTextTrack", () => {
       addTextTrack: mockAddTextTrack,
     } as unknown as IMediaElement;
 
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.Ie11,
-        },
-      };
-    });
-    const addTextTrack = (await vi.importActual("../add_text_track"))
-      .default as typeof IAddTextTrack;
+    mockEnvironment(EnvDetector.BROWSERS.Ie11, EnvDetector.DEVICES.Other);
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -70,7 +54,7 @@ describe("compat - addTextTrack", () => {
     expect(mockAddTextTrack).not.toHaveBeenCalled();
   });
 
-  it("should add text track if no track on media element on old IE / EDGE", async () => {
+  it("should add text track if no track on media element on old IE / EDGE", () => {
     const fakeTextTrack = {
       id: "textTrack1",
       HIDDEN: "hidden",
@@ -87,19 +71,11 @@ describe("compat - addTextTrack", () => {
       addTextTrack: mockAddTextTrack,
     } as unknown as IMediaElement;
 
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
-        },
-      };
-    });
+    mockEnvironment(
+      EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
+      EnvDetector.DEVICES.Other,
+    );
 
-    const addTextTrack = (await vi.importActual("../add_text_track"))
-      .default as typeof IAddTextTrack;
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -109,7 +85,7 @@ describe("compat - addTextTrack", () => {
     expect(mockAddTextTrack).toHaveBeenCalledTimes(1);
   });
 
-  it("should add text track if no track on media element on IE11", async () => {
+  it("should add text track if no track on media element on IE11", () => {
     const fakeTextTrack = {
       id: "textTrack1",
       HIDDEN: "hidden",
@@ -126,19 +102,8 @@ describe("compat - addTextTrack", () => {
       addTextTrack: mockAddTextTrack,
     } as unknown as IMediaElement;
 
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.Ie11,
-        },
-      };
-    });
+    mockEnvironment(EnvDetector.BROWSERS.Ie11, EnvDetector.DEVICES.Other);
 
-    const addTextTrack = (await vi.importActual("../add_text_track"))
-      .default as typeof IAddTextTrack;
     const { track, trackElement } = addTextTrack(fakeMediaElement);
     expect(trackElement).toBe(undefined);
     expect(track).toBe(fakeTextTrack);
@@ -148,19 +113,8 @@ describe("compat - addTextTrack", () => {
     expect(mockAddTextTrack).toHaveBeenCalledTimes(1);
   });
 
-  it("should create showing trackElement and set track on mediaElement", async () => {
-    vi.doMock("../env_detector", async () => {
-      const EnvDetector = (await vi.importActual("../env_detector"))
-        .default as typeof IEnvDetector;
-      return {
-        default: {
-          ...EnvDetector,
-          browser: EnvDetector.BROWSERS.Firefox,
-        },
-      };
-    });
-    const addTextTrack = (await vi.importActual("../add_text_track"))
-      .default as typeof IAddTextTrack;
+  it("should create showing trackElement and set track on mediaElement", () => {
+    mockEnvironment(EnvDetector.BROWSERS.Firefox, EnvDetector.DEVICES.Other);
 
     const fakeTextTrack = {
       id: "textTrack1",
