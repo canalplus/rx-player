@@ -1,4 +1,4 @@
-import { isA1KStb40xx, isPanasonic, isPhilipsNetTv, isWebOs } from "./browser_detection";
+import EnvDetector, { DeviceName } from "./browser_detection";
 
 /**
  * Returns `true` if a `MediaKeys` instance (the  `Encrypted Media Extension`
@@ -19,5 +19,11 @@ import { isA1KStb40xx, isPanasonic, isPhilipsNetTv, isWebOs } from "./browser_de
  * @returns {boolean}
  */
 export default function canReuseMediaKeys(): boolean {
-  return !isWebOs && !isPhilipsNetTv && !isPanasonic && !isA1KStb40xx;
+  return (
+    EnvDetector.deviceName !== DeviceName.WebOs2021 &&
+    EnvDetector.deviceName !== DeviceName.WebOs2022 &&
+    EnvDetector.deviceName !== DeviceName.WebOsOther &&
+    EnvDetector.deviceName !== DeviceName.Panasonic &&
+    EnvDetector.deviceName !== DeviceName.A1KStb40xx
+  );
 }

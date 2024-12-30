@@ -1,5 +1,5 @@
 import type { ICompatAudioTrack } from "./browser_compatibility_types";
-import { isTizen } from "./browser_detection";
+import EnvDetector, { DeviceName } from "./browser_detection";
 
 /**
  * Enable the audio track at the given index while disabling all others in the
@@ -19,7 +19,7 @@ export default function enableAudioTrack(
   for (let i = 0; i < audioTracks.length; i++) {
     // However, Tizen just plays no audio if it is disabled then enabled
     // synchronously (2022-10-12)
-    if (!isTizen || i !== indexToEnable) {
+    if (EnvDetector.deviceName !== DeviceName.Tizen || i !== indexToEnable) {
       audioTracks[i].enabled = false;
     }
   }

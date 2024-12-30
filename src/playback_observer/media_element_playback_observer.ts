@@ -398,7 +398,7 @@ export default class PlaybackObserver {
         isInternalSeeking = true;
         tmpEvt = "internal-seeking";
         const startedInternalSeekTime = this._internalSeeksIncoming.shift();
-        this._expectedSeekingPosition = isSeekingApproximate
+        this._expectedSeekingPosition = isSeekingApproximate()
           ? Math.max(position, startedInternalSeekTime ?? 0)
           : position;
       } else {
@@ -413,7 +413,7 @@ export default class PlaybackObserver {
         this._expectedSeekingPosition ?? 0,
       );
     } else if (
-      isSeekingApproximate &&
+      isSeekingApproximate() &&
       this._expectedSeekingPosition !== null &&
       position < this._expectedSeekingPosition
     ) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isSafariDesktop, isSafariMobile } from "./browser_detection";
+import EnvDetector, { BrowserName } from "./browser_detection";
 
 /**
  * On some browsers, the ready state might never go above `1` when autoplay is
@@ -25,7 +25,11 @@ import { isSafariDesktop, isSafariMobile } from "./browser_detection";
  * @returns {Boolean}
  */
 export default function shouldWaitForDataBeforeLoaded(isDirectfile: boolean): boolean {
-  if (isDirectfile && (isSafariMobile || isSafariDesktop)) {
+  if (
+    isDirectfile &&
+    (EnvDetector.browserName === BrowserName.SafariMobile ||
+      EnvDetector.browserName === BrowserName.SafariDesktop)
+  ) {
     return false;
   } else {
     return true;

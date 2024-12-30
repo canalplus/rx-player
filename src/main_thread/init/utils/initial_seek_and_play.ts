@@ -134,7 +134,7 @@ export default function performInitialSeekAndPlay(
               stopListening();
 
               if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
-                if (shouldWaitCanPlayEventForSeeking) {
+                if (shouldWaitCanPlayEventForSeeking()) {
                   const seekOnCanPlay = () => {
                     performInitialSeek(initiallySeekedTime);
                     mediaElement.removeEventListener("canplay", seekOnCanPlay);

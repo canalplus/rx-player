@@ -15,7 +15,7 @@
  */
 
 import log from "../log";
-import { isFirefox } from "./browser_detection";
+import EnvDetector, { BrowserName } from "./browser_detection";
 
 /**
  * Returns either :
@@ -25,7 +25,7 @@ import { isFirefox } from "./browser_detection";
  * @returns {number|null}
  */
 function getFirefoxVersion(): number | null {
-  if (!isFirefox) {
+  if (EnvDetector.browserName !== BrowserName.Firefox) {
     log.warn("Compat: Can't access Firefox version on no firefox browser.");
     return null;
   }

@@ -1,4 +1,4 @@
-import { isWebOs } from "./browser_detection";
+import EnvDetector, { DeviceName } from "./browser_detection";
 
 /**
  * Some devices will give an error if you did not ensure that a `setMediaKeys`
@@ -16,5 +16,9 @@ import { isWebOs } from "./browser_detection";
  * @returns {boolean}
  */
 export default function shouldAwaitSetMediaKeys(): boolean {
-  return isWebOs;
+  return (
+    EnvDetector.deviceName === DeviceName.WebOs2021 ||
+    EnvDetector.deviceName === DeviceName.WebOs2022 ||
+    EnvDetector.deviceName === DeviceName.WebOsOther
+  );
 }

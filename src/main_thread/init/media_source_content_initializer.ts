@@ -686,7 +686,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     );
     const freezeResolver = new FreezeResolver(segmentSinksStore);
 
-    if (mayMediaElementFailOnUndecipherableData) {
+    if (mayMediaElementFailOnUndecipherableData()) {
       // On some devices, just reload immediately when data become undecipherable
       manifest.addEventListener(
         "decipherabilityUpdate",

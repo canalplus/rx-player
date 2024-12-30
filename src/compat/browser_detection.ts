@@ -31,56 +31,77 @@ interface ISafariWindowObject extends GlobalScope {
   safari?: { pushNotification?: { toString(): string } };
 }
 
-/** Edge Chromium, regardless of the device */
-let isEdgeChromium = false;
+/** Categorize a particular browser, without considering the current device. */
+export const enum BrowserName {
+  /**
+   * Edge since it has been ported to chromium's engine.
+   * chromium's engines.
+   */
+  EdgeChromium,
+  /** Firefox Gecko-based browser, any engine. */
+  Firefox,
+  /** Internet Explorer 11 specifically. */
+  Ie11,
+  /**
+   * Either Internet Explorer pre-11 or Microsoft Edge before Edge was ported on
+   * chromium's engines.
+   */
+  OtherIeOrEdgePreEdgeChromium,
+  /** Safari on Desktop devices (not mobile, tablets etc.). */
+  SafariDesktop,
+  /** Safari on mobile devices (not desktop). */
+  SafariMobile,
+  /** Another browser that does not match with the others defined here. */
+  Other,
+}
 
-/** IE11, regardless of the device */
-let isIE11 = false;
+/**
+ * Categorize a particular device, without considering the actual browser
+ * running our code.
+ */
+export const enum DeviceName {
+  /** Specific A1 STB: KSTB 40xx from Kaon Media. */
+  A1KStb40xx,
+  /** Panasonic smart TVs */
+  Panasonic,
+  /** Philips's NetTv browser. */
+  PhilipsNetTv,
+  /** The PlayStation 4 game console. */
+  PlayStation4,
+  /** The PlayStation 5 game console. */
+  PlayStation5,
+  /** Devices where Tizen is the OS (e.g. Samsung TVs). */
+  Tizen,
+  /** WebOS (mostly LG smart TVs) 2021 version. */
+  WebOs2021,
+  /** WebOS (mostly LG smart TVs) 2022 version. */
+  WebOs2022,
+  /** Other WebOS (mostly LG smart TVs) versions. */
+  WebOsOther,
+  /** The Xbox(es) game console(s). */
+  Xbox,
+  /** Another device that does not match with the others defined here. */
+  Other,
+}
 
-/** IE11 or Edge __Legacy__ (not Edge Chromium), regardless of the device */
-let isIEOrEdge = false;
+/** Interface giving information on the current environment where the RxPlayer runs. */
+export interface IEnvDetector {
+  readonly browserName: BrowserName;
+  readonly deviceName: DeviceName;
+  /**
+   * If `true`, we're on Samsung's own browser application
+   * TODO: see how to merge it with either of the previous ones */
+  readonly isSamsungBrowser: boolean;
+}
 
-/** Firefox, regardless of the device */
-let isFirefox = false;
-
-/** `true` on Safari on a PC platform (i.e. not iPhone / iPad etc.) */
-let isSafariDesktop = false;
-
-/** `true` on Safari on an iPhone, iPad & iPod platform */
-let isSafariMobile = false;
-
-/** Samsung's own browser application */
-let isSamsungBrowser = false;
-
-/** `true` on devices where Tizen is the OS (e.g. Samsung TVs). */
-let isTizen = false;
-
-/** `true` on devices where WebOS is the OS (e.g. LG TVs). */
-let isWebOs = false;
-
-/** `true` specifically for WebOS 2021 version. */
-let isWebOs2021 = false;
-
-/** `true` specifically for WebOS 2022 version. */
-let isWebOs2022 = false;
-
-/** `true` for Panasonic devices. */
-let isPanasonic = false;
-
-/** `true` we're relying on Philips's NetTv browser. */
-let isPhilipsNetTv = false;
-
-/** `true` for the PlayStation 4 game console. */
-let isPlayStation4 = false;
-
-/** `true` for the PlayStation 5 game console. */
-let isPlayStation5 = false;
-
-/** `true` for the Xbox game consoles. */
-let isXbox = false;
-
-/** `true` for specific A1 STB: KSTB 40xx from Kaon Media. */
-let isA1KStb40xx = false;
+/** Object giving information on the current environment where the RxPlayer runs. */
+const EnvDetector = {
+  browserName: BrowserName.Other,
+  deviceName: DeviceName.Other,
+  isSamsungBrowser: false,
+  // BROWSER_NAMES: BrowserName,
+  // DEVICE_NAMES: DeviceName,
+};
 
 (function findCurrentBrowser(): void {
   if (isNode) {
@@ -93,22 +114,21 @@ let isA1KStb40xx = false;
     typeof (globalScope as IIE11WindowObject).MSInputMethodContext !== "undefined" &&
     typeof (document as IIE11Document).documentMode !== "undefined"
   ) {
-    isIE11 = true;
-    isIEOrEdge = true;
+    EnvDetector.browserName = BrowserName.Ie11;
   } else if (
     navigator.appName === "Microsoft Internet Explorer" ||
     (navigator.appName === "Netscape" && /(Trident|Edge)\//.test(navigator.userAgent))
   ) {
-    isIEOrEdge = true;
+    EnvDetector.browserName = BrowserName.OtherIeOrEdgePreEdgeChromium;
   } else if (navigator.userAgent.toLowerCase().indexOf("edg/") !== -1) {
-    isEdgeChromium = true;
+    EnvDetector.browserName = BrowserName.EdgeChromium;
   } else if (navigator.userAgent.toLowerCase().indexOf("firefox") !== -1) {
-    isFirefox = true;
+    EnvDetector.browserName = BrowserName.Firefox;
   } else if (
     typeof navigator.platform === "string" &&
     /iPad|iPhone|iPod/.test(navigator.platform)
   ) {
-    isSafariMobile = true;
+    EnvDetector.browserName = BrowserName.SafariMobile;
   } else if (
     // the following statement check if the window.safari contains the method
     // "pushNotification", this condition is not met when using web app from the dock
@@ -127,73 +147,51 @@ let isA1KStb40xx = false;
       !/Chrome\/(\d+)/.test(navigator.userAgent) &&
       !/Chromium\/(\d+)/.test(navigator.userAgent))
   ) {
-    isSafariDesktop = true;
+    EnvDetector.browserName = BrowserName.SafariDesktop;
   }
 
   // 2 - Find out specific device/platform information
 
   // Samsung browser e.g. on Android
   if (/SamsungBrowser/.test(navigator.userAgent)) {
-    isSamsungBrowser = true;
+    EnvDetector.isSamsungBrowser = true;
   }
 
   if (navigator.userAgent.indexOf("PlayStation 4") !== -1) {
-    isPlayStation4 = true;
+    EnvDetector.deviceName = DeviceName.PlayStation4;
   } else if (navigator.userAgent.indexOf("PlayStation 5") !== -1) {
-    isPlayStation5 = true;
+    EnvDetector.deviceName = DeviceName.PlayStation5;
   } else if (/Tizen/.test(navigator.userAgent)) {
-    isTizen = true;
+    EnvDetector.deviceName = DeviceName.Tizen;
 
     // Inspired form: http://webostv.developer.lge.com/discover/specifications/web-engine/
     // Note: even that page doesn't correspond to what we've actually seen in the
     // wild
   } else if (/[Ww]eb[O0]S/.test(navigator.userAgent)) {
-    isWebOs = true;
-
     if (
       /[Ww]eb[O0]S.TV-2022/.test(navigator.userAgent) ||
       /[Cc]hr[o0]me\/87/.test(navigator.userAgent)
     ) {
-      isWebOs2022 = true;
+      EnvDetector.deviceName = DeviceName.WebOs2022;
     } else if (
       /[Ww]eb[O0]S.TV-2021/.test(navigator.userAgent) ||
       /[Cc]hr[o0]me\/79/.test(navigator.userAgent)
     ) {
-      isWebOs2021 = true;
+      EnvDetector.deviceName = DeviceName.WebOs2021;
+    } else {
+      EnvDetector.deviceName = DeviceName.WebOsOther;
     }
   } else if (
     navigator.userAgent.indexOf("NETTV") !== -1 &&
     navigator.userAgent.indexOf("Philips") !== -1
   ) {
-    isPhilipsNetTv = true;
+    EnvDetector.deviceName = DeviceName.PhilipsNetTv;
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
-    isPanasonic = true;
+    EnvDetector.deviceName = DeviceName.Panasonic;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
-    isXbox = true;
+    EnvDetector.deviceName = DeviceName.Xbox;
   } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx") !== -1) {
-    isA1KStb40xx = true;
+    EnvDetector.deviceName = DeviceName.A1KStb40xx;
   }
 })();
-
-export {
-  // browsers
-  isEdgeChromium,
-  isFirefox,
-  isIE11,
-  isIEOrEdge,
-  isSafariDesktop,
-  isSafariMobile,
-
-  // specific devices
-  isA1KStb40xx,
-  isPanasonic,
-  isPhilipsNetTv,
-  isPlayStation4,
-  isPlayStation5,
-  isSamsungBrowser,
-  isTizen,
-  isWebOs,
-  isWebOs2021,
-  isWebOs2022,
-  isXbox,
-};
+export default EnvDetector as IEnvDetector;

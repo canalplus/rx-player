@@ -1,4 +1,4 @@
-import { isPlayStation5 } from "./browser_detection";
+import EnvDetector, { DeviceName } from "./browser_detection";
 
 /**
  * We noticed that the PlayStation 5 may have the HTMLMediaElement on which the
@@ -13,6 +13,8 @@ import { isPlayStation5 } from "./browser_detection";
  *
  * Consequently, we have to specifically consider platforms with that
  * fail-on-undecipherable-data issue, to perform a work-around in that case.
+ * @returns {boolean}
  */
-const mayMediaElementFailOnUndecipherableData = isPlayStation5;
-export default mayMediaElementFailOnUndecipherableData;
+export default function mayMediaElementFailOnUndecipherableData(): boolean {
+  return EnvDetector.deviceName === DeviceName.PlayStation5;
+}

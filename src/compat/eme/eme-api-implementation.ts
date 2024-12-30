@@ -11,7 +11,7 @@ import type {
   IMediaKeySystemAccess,
   IMediaKeys,
 } from "../browser_compatibility_types";
-import { isIE11 } from "../browser_detection";
+import EnvDetector, { BrowserName } from "../browser_detection";
 import type { IEventTargetLike } from "../event_listeners";
 import { createCompatibleEventListener } from "../event_listeners";
 import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
@@ -171,7 +171,10 @@ function getEmeApiImplementation(
         createCustomMediaKeys = callbacks.createCustomMediaKeys;
         setMediaKeys = callbacks.setMediaKeys;
         implementation = "webkit";
-      } else if (isIE11 && MSMediaKeysConstructor !== undefined) {
+      } else if (
+        EnvDetector.browserName === BrowserName.Ie11 &&
+        MSMediaKeysConstructor !== undefined
+      ) {
         onEncrypted = createCompatibleEventListener(["encrypted", "needkey"]);
         const callbacks = getIE11MediaKeysCallbacks();
         isTypeSupported = callbacks.isTypeSupported;

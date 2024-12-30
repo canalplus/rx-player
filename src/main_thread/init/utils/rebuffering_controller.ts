@@ -155,7 +155,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
 
         if (
           this._manifest === null ||
-          (isSeekingApproximate &&
+          (isSeekingApproximate() &&
             // Don't handle discontinuities on devices with broken seeks before
             // enough time have passed because seeking brings more risks to
             // lead to a lengthy rebuffering-exiting process
@@ -226,7 +226,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           positionBlockedAt,
         );
         if (
-          (!isSeekingApproximate ||
+          (!isSeekingApproximate() ||
             getMonotonicTimeStamp() - rebuffering.timestamp > 1000) &&
           this._speed.getValue() > 0 &&
           nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD

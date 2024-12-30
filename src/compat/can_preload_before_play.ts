@@ -1,4 +1,4 @@
-import { isSafariDesktop, isSafariMobile } from "./browser_detection";
+import EnvDetector, { BrowserName } from "./browser_detection";
 
 /**
  * On Safari (both mobile and desktop), when using direct file playback,
@@ -10,7 +10,11 @@ import { isSafariDesktop, isSafariMobile } from "./browser_detection";
  * @returns {boolean} - True if the media can be preloaded; false otherwise.
  */
 export default function canPreloadBeforePlay(isDirectfile: boolean): boolean {
-  if (isDirectfile && (isSafariMobile || isSafariDesktop)) {
+  if (
+    isDirectfile &&
+    (EnvDetector.browserName === BrowserName.SafariMobile ||
+      EnvDetector.browserName === BrowserName.SafariDesktop)
+  ) {
     return false;
   } else {
     return true;
