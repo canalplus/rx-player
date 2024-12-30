@@ -25,7 +25,7 @@ import type {
 } from "../../browser_compatibility_types";
 import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
 import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor";
-import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
+import getWebKitMediaKeysConstructor from "./webkit_media_keys_constructor";
 
 /**
  * Check if keyType is for fairplay DRM
@@ -213,6 +213,7 @@ class WebKitCustomMediaKeys implements IMediaKeys {
   private _keyType: string;
 
   constructor(keyType: string) {
+    const WebKitMediaKeysConstructor = getWebKitMediaKeysConstructor();
     if (WebKitMediaKeysConstructor === undefined) {
       throw new Error("No WebKitMediaKeys API.");
     }
@@ -250,6 +251,7 @@ export default function getWebKitMediaKeysCallbacks(): {
   createCustomMediaKeys: (keyType: string) => WebKitCustomMediaKeys;
   setMediaKeys: (elt: IMediaElement, mediaKeys: IMediaKeys | null) => Promise<unknown>;
 } {
+  const WebKitMediaKeysConstructor = getWebKitMediaKeysConstructor();
   if (WebKitMediaKeysConstructor === undefined) {
     throw new Error("No WebKitMediaKeys API.");
   }

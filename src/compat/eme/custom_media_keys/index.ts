@@ -6,7 +6,7 @@ import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./old_webkit_media_keys";
 import getWebKitMediaKeysCallbacks from "./webkit_media_keys";
-import { WebKitMediaKeysConstructor } from "./webkit_media_keys_constructor";
+import getWebKitMediaKeysConstructor from "./webkit_media_keys_constructor";
 
 export {
   getIE11MediaKeysCallbacks,
@@ -16,5 +16,5 @@ export {
   getOldKitWebKitMediaKeyCallbacks,
   isOldWebkitMediaElement,
   getWebKitMediaKeysCallbacks,
-  WebKitMediaKeysConstructor,
+  getWebKitMediaKeysConstructor,
 };

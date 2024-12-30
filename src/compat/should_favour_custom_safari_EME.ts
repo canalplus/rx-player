@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { WebKitMediaKeysConstructor } from "./eme/custom_media_keys/webkit_media_keys_constructor";
+import { getWebKitMediaKeysConstructor } from "./eme/custom_media_keys";
 import EnvDetector from "./env_detector";
 
 /**
@@ -28,6 +28,6 @@ export default function shouldFavourCustomSafariEME(): boolean {
   return (
     (EnvDetector.browser === EnvDetector.BROWSERS.SafariDesktop ||
       EnvDetector.browser === EnvDetector.BROWSERS.SafariMobile) &&
-    WebKitMediaKeysConstructor !== undefined
+    getWebKitMediaKeysConstructor() !== undefined
   );
 }

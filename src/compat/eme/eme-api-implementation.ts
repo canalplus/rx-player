@@ -26,7 +26,7 @@ import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./custom_media_keys/old_webkit_media_keys";
 import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
-import { WebKitMediaKeysConstructor } from "./custom_media_keys/webkit_media_keys_constructor";
+import getWebKitMediaKeysConstructor from "./custom_media_keys/webkit_media_keys_constructor";
 
 /**
  * Automatically detect and set which EME implementation should be used in the
@@ -147,7 +147,7 @@ function getEmeApiImplementation(
     let isTypeSupported: (keyType: string) => boolean;
     let createCustomMediaKeys: (keyType: string) => IMediaKeys;
 
-    if (preferredApiType === "webkit" && WebKitMediaKeysConstructor !== undefined) {
+    if (preferredApiType === "webkit" && getWebKitMediaKeysConstructor() !== undefined) {
       const callbacks = getWebKitMediaKeysCallbacks();
       onEncrypted = createOnEncryptedForWebkit();
       isTypeSupported = callbacks.isTypeSupported;
@@ -164,7 +164,7 @@ function getEmeApiImplementation(
         setMediaKeys = callbacks.setMediaKeys;
         implementation = "older-webkit";
         // This is for WebKit with prefixed EME api
-      } else if (WebKitMediaKeysConstructor !== undefined) {
+      } else if (getWebKitMediaKeysConstructor() !== undefined) {
         onEncrypted = createOnEncryptedForWebkit();
         const callbacks = getWebKitMediaKeysCallbacks();
         isTypeSupported = callbacks.isTypeSupported;
