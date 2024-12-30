@@ -15,7 +15,7 @@
  */
 
 import type { ICompatTextTrack, IMediaElement } from "./browser_compatibility_types";
-import EnvDetector, { BrowserName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * Add text track to the given media element.
@@ -38,8 +38,8 @@ export default function addTextTrack(mediaElement: IMediaElement): {
   const kind = "subtitles";
 
   if (
-    EnvDetector.browserName === BrowserName.Ie11 ||
-    EnvDetector.browserName === BrowserName.OtherIeOrEdgePreEdgeChromium
+    EnvDetector.browser === EnvDetector.BROWSERS.Ie11 ||
+    EnvDetector.browser === EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium
   ) {
     const tracksLength = mediaElement.textTracks.length;
     track = (

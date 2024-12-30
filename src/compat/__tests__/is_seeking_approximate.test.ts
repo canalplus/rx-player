@@ -1,4 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type IEnvDetector from "../browser_detection";
+import type IIsSeekingApproximate from "../is_seeking_approximate";
 
 describe("isSeekingApproximate", () => {
   beforeEach(() => {
@@ -6,22 +8,36 @@ describe("isSeekingApproximate", () => {
   });
 
   it("should be true if on Tizen", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isTizen: true };
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Other,
+          device: EnvDetector.DEVICES.Tizen,
+        },
+      };
     });
-    const shouldAppendBufferAfterPadding = (
-      await vi.importActual("../is_seeking_approximate")
-    ).default;
-    expect(shouldAppendBufferAfterPadding).toBe(true);
+    const isSeekingApproximate = (await vi.importActual("../is_seeking_approximate"))
+      .default as typeof IIsSeekingApproximate;
+    expect(isSeekingApproximate()).toBe(true);
   });
 
   it("should be false if not on tizen", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isTizen: false };
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Other,
+          device: EnvDetector.DEVICES.WebOsOther,
+        },
+      };
     });
-    const shouldAppendBufferAfterPadding = (
-      await vi.importActual("../is_seeking_approximate")
-    ).default;
-    expect(shouldAppendBufferAfterPadding).toBe(false);
+    const isSeekingApproximate = (await vi.importActual("../is_seeking_approximate"))
+      .default as typeof IIsSeekingApproximate;
+    expect(isSeekingApproximate()).toBe(false);
   });
 });

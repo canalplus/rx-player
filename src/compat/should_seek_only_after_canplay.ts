@@ -1,4 +1,4 @@
-import EnvDetector, { BrowserName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * On safari mobile (version 17.1.2) and desktop (version 18.4) seeking too early cause
@@ -9,7 +9,7 @@ import EnvDetector, { BrowserName } from "./browser_detection";
  */
 export default function shouldWaitCanPlayEventForSeeking(): boolean {
   return (
-    EnvDetector.browserName === BrowserName.SafariMobile ||
-    EnvDetector.browserName === BrowserName.SafariDesktop
+    EnvDetector.browser === EnvDetector.BROWSERS.SafariMobile ||
+    EnvDetector.browser === EnvDetector.BROWSERS.SafariDesktop
   );
 }

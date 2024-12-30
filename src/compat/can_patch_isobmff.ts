@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector, { BrowserName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe
@@ -27,7 +27,7 @@ import EnvDetector, { BrowserName } from "./browser_detection";
  */
 export default function canPatchISOBMFFSegment(): boolean {
   return (
-    EnvDetector.browserName !== BrowserName.Ie11 &&
-    EnvDetector.browserName !== BrowserName.OtherIeOrEdgePreEdgeChromium
+    EnvDetector.browser !== EnvDetector.BROWSERS.Ie11 &&
+    EnvDetector.browser !== EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium
   );
 }

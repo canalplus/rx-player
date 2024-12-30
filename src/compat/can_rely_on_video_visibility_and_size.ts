@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector, { BrowserName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 import { getFirefoxVersion } from "./browser_version";
 
 /**
@@ -39,7 +39,7 @@ import { getFirefoxVersion } from "./browser_version";
  * @returns {boolean}
  */
 export default function canRelyOnVideoVisibilityAndSize(): boolean {
-  if (EnvDetector.browserName !== BrowserName.Firefox) {
+  if (EnvDetector.browser !== EnvDetector.BROWSERS.Firefox) {
     return true;
   }
   const firefoxVersion = getFirefoxVersion();

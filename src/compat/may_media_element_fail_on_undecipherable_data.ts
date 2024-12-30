@@ -1,4 +1,4 @@
-import EnvDetector, { DeviceName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * We noticed that the PlayStation 5 may have the HTMLMediaElement on which the
@@ -16,5 +16,5 @@ import EnvDetector, { DeviceName } from "./browser_detection";
  * @returns {boolean}
  */
 export default function mayMediaElementFailOnUndecipherableData(): boolean {
-  return EnvDetector.deviceName === DeviceName.PlayStation5;
+  return EnvDetector.device === EnvDetector.DEVICES.PlayStation5;
 }

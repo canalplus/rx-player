@@ -1,4 +1,5 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
+import type IEnvDetector from "../browser_detection";
 import type { getFirefoxVersion as IGetFirefoxVersion } from "../browser_version";
 
 describe("Compat - Browser version", () => {
@@ -29,8 +30,15 @@ describe("Compat - Browser version", () => {
   });
 
   it("Should return correct Firefox version (60)", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isFirefox: true };
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Firefox,
+        },
+      };
     });
     const getFirefoxVersion = (await vi.importActual("../browser_version"))
       .getFirefoxVersion as typeof IGetFirefoxVersion;
@@ -40,8 +48,15 @@ describe("Compat - Browser version", () => {
   });
 
   it("Should return correct Firefox version (80)", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isFirefox: true };
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Firefox,
+        },
+      };
     });
     const getFirefoxVersion = (await vi.importActual("../browser_version"))
       .getFirefoxVersion as typeof IGetFirefoxVersion;
@@ -51,8 +66,15 @@ describe("Compat - Browser version", () => {
   });
 
   it("Should return null when not on Firefox", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isFirefox: false };
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Ie11,
+        },
+      };
     });
     const getFirefoxVersion = (await vi.importActual("../browser_version"))
       .getFirefoxVersion as typeof IGetFirefoxVersion;
@@ -61,8 +83,15 @@ describe("Compat - Browser version", () => {
   });
 
   it("Should return null when obscure Firefox user agent", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isFirefox: true };
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Firefox,
+        },
+      };
     });
     const getFirefoxVersion = (await vi.importActual("../browser_version"))
       .getFirefoxVersion as typeof IGetFirefoxVersion;

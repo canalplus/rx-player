@@ -1,4 +1,4 @@
-import EnvDetector, { BrowserName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * On Safari (both mobile and desktop), when using direct file playback,
@@ -12,8 +12,8 @@ import EnvDetector, { BrowserName } from "./browser_detection";
 export default function canPreloadBeforePlay(isDirectfile: boolean): boolean {
   if (
     isDirectfile &&
-    (EnvDetector.browserName === BrowserName.SafariMobile ||
-      EnvDetector.browserName === BrowserName.SafariDesktop)
+    (EnvDetector.browser === EnvDetector.BROWSERS.SafariMobile ||
+      EnvDetector.browser === EnvDetector.BROWSERS.SafariDesktop)
   ) {
     return false;
   } else {

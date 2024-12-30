@@ -1,5 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import arrayFindIndex from "../../utils/array_find_index";
+import type IEnvDetector from "../browser_detection";
 import type IRemoveCue from "../remove_cue";
 
 describe("compat - removeCue", () => {
@@ -33,9 +34,16 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     } as unknown as TextTrack;
 
-    vi.doMock("../browser_detection", () => ({
-      isFirefox: false,
-    }));
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.SafariMobile,
+        },
+      };
+    });
 
     const removeCue = (await vi.importActual("../remove_cue"))
       .default as typeof IRemoveCue;
@@ -81,9 +89,16 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     } as unknown as TextTrack;
 
-    vi.doMock("../browser_detection", () => ({
-      isFirefox: true,
-    }));
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Firefox,
+        },
+      };
+    });
 
     const removeCue = (await vi.importActual("../remove_cue"))
       .default as typeof IRemoveCue;
@@ -129,9 +144,16 @@ describe("compat - removeCue", () => {
       removeCue: mockRemoveCue,
     } as unknown as TextTrack;
 
-    vi.doMock("../browser_detection", () => ({
-      isFirefox: true,
-    }));
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Firefox,
+        },
+      };
+    });
 
     const removeCue = (await vi.importActual("../remove_cue"))
       .default as typeof IRemoveCue;
@@ -153,9 +175,16 @@ describe("compat - removeCue", () => {
     });
     const mockLog = vi.fn((message: unknown) => message);
 
-    vi.doMock("../browser_detection", () => ({
-      isFirefox: true,
-    }));
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Firefox,
+        },
+      };
+    });
     vi.doMock("../../log", () => ({
       default: {
         warn: mockLog,
@@ -187,9 +216,16 @@ describe("compat - removeCue", () => {
       throw new Error();
     });
 
-    vi.doMock("../browser_detection", () => ({
-      isFirefox: false,
-    }));
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
+      return {
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.SafariMobile,
+        },
+      };
+    });
     vi.doMock("../../log", () => ({
       default: {
         warn: mockLog,

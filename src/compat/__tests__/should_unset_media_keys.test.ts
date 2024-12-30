@@ -1,4 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type IEnvDetector from "../browser_detection";
 import type IShouldUnsetMediaKeys from "../should_unset_media_keys";
 
 describe("compat - shouldUnsetMediaKeys", () => {
@@ -7,9 +8,14 @@ describe("compat - shouldUnsetMediaKeys", () => {
   });
 
   it("should return false if we are not on IE11", async () => {
-    vi.doMock("../browser_detection", () => {
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
       return {
-        isIE11: false,
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium,
+        },
       };
     });
     const shouldUnsetMediaKeys = (await vi.importActual("../should_unset_media_keys"))
@@ -18,9 +24,14 @@ describe("compat - shouldUnsetMediaKeys", () => {
   });
 
   it("should return true if we are on IE11", async () => {
-    vi.doMock("../browser_detection", () => {
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
       return {
-        isIE11: true,
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Ie11,
+        },
       };
     });
     const shouldUnsetMediaKeys = (await vi.importActual("../should_unset_media_keys"))

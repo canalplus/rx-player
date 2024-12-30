@@ -1,4 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type IEnvDetector from "../browser_detection";
 import type IShouldWaitForHaveEnoughData from "../should_wait_for_have_enough_data";
 
 describe("compat - shouldWaitForHaveEnoughData", () => {
@@ -7,9 +8,15 @@ describe("compat - shouldWaitForHaveEnoughData", () => {
   });
 
   it("should return false if we are not on the Playstation 5", async () => {
-    vi.doMock("../browser_detection", () => {
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
       return {
-        isPlayStation5: false,
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Other,
+          device: EnvDetector.DEVICES.WebOsOther,
+        },
       };
     });
     const shouldWaitForHaveEnoughData = (
@@ -19,9 +26,15 @@ describe("compat - shouldWaitForHaveEnoughData", () => {
   });
 
   it("should return true if we are on the Playstation 5", async () => {
-    vi.doMock("../browser_detection", () => {
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = (await vi.importActual("../browser_detection"))
+        .default as typeof IEnvDetector;
       return {
-        isPlayStation5: true,
+        default: {
+          ...EnvDetector,
+          browser: EnvDetector.BROWSERS.Other,
+          device: EnvDetector.DEVICES.PlayStation5,
+        },
       };
     });
     const shouldWaitForHaveEnoughData = (

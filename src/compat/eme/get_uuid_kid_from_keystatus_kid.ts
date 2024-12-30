@@ -15,7 +15,7 @@
  */
 
 import { guidToUuid } from "../../utils/string_parsing";
-import EnvDetector, { BrowserName } from "../browser_detection";
+import EnvDetector from "../browser_detection";
 
 /**
  * Get KID from MediaKeySession keyStatus, and convert it in usual big-endian kid
@@ -30,9 +30,9 @@ export default function getUUIDKIDFromKeyStatusKID(
 ): Uint8Array {
   if (
     keySystem.indexOf("playready") !== -1 &&
-    (EnvDetector.browserName === BrowserName.EdgeChromium ||
-      EnvDetector.browserName === BrowserName.Ie11 ||
-      EnvDetector.browserName === BrowserName.OtherIeOrEdgePreEdgeChromium)
+    (EnvDetector.browser === EnvDetector.BROWSERS.EdgeChromium ||
+      EnvDetector.browser === EnvDetector.BROWSERS.Ie11 ||
+      EnvDetector.browser === EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium)
   ) {
     return guidToUuid(baseKeyId);
   }

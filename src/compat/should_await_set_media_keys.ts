@@ -1,4 +1,4 @@
-import EnvDetector, { DeviceName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * Some devices will give an error if you did not ensure that a `setMediaKeys`
@@ -17,8 +17,8 @@ import EnvDetector, { DeviceName } from "./browser_detection";
  */
 export default function shouldAwaitSetMediaKeys(): boolean {
   return (
-    EnvDetector.deviceName === DeviceName.WebOs2021 ||
-    EnvDetector.deviceName === DeviceName.WebOs2022 ||
-    EnvDetector.deviceName === DeviceName.WebOsOther
+    EnvDetector.device === EnvDetector.DEVICES.WebOs2021 ||
+    EnvDetector.device === EnvDetector.DEVICES.WebOs2022 ||
+    EnvDetector.device === EnvDetector.DEVICES.WebOsOther
   );
 }

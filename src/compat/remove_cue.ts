@@ -16,7 +16,7 @@
 
 import log from "../log";
 import type { ICompatTextTrack, ICompatVTTCue } from "./browser_compatibility_types";
-import EnvDetector, { BrowserName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * Return true if given cue is active.
@@ -52,7 +52,7 @@ export default function removeCue(
   // On Firefox, cue doesn't dissapear when it is removed from track. Track
   // should be hidden, and shown again after removing cue, in order to
   // definitely clean the cue.
-  if (EnvDetector.browserName === BrowserName.Firefox && isActiveCue(track, cue)) {
+  if (EnvDetector.browser === EnvDetector.BROWSERS.Firefox && isActiveCue(track, cue)) {
     const trackMode = track.mode;
     track.mode = "hidden";
     try {

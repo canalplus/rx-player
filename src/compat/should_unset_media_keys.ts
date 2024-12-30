@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector, { BrowserName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * Returns true if the mediakeys associated to a media element should be
@@ -23,5 +23,5 @@ import EnvDetector, { BrowserName } from "./browser_detection";
  * @returns {Boolean}
  */
 export default function shouldUnsetMediaKeys(): boolean {
-  return EnvDetector.browserName === BrowserName.Ie11;
+  return EnvDetector.browser === EnvDetector.BROWSERS.Ie11;
 }

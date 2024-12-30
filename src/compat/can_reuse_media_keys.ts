@@ -1,4 +1,4 @@
-import EnvDetector, { DeviceName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * Returns `true` if a `MediaKeys` instance (the  `Encrypted Media Extension`
@@ -20,10 +20,11 @@ import EnvDetector, { DeviceName } from "./browser_detection";
  */
 export default function canReuseMediaKeys(): boolean {
   return (
-    EnvDetector.deviceName !== DeviceName.WebOs2021 &&
-    EnvDetector.deviceName !== DeviceName.WebOs2022 &&
-    EnvDetector.deviceName !== DeviceName.WebOsOther &&
-    EnvDetector.deviceName !== DeviceName.Panasonic &&
-    EnvDetector.deviceName !== DeviceName.A1KStb40xx
+    EnvDetector.device !== EnvDetector.DEVICES.WebOs2021 &&
+    EnvDetector.device !== EnvDetector.DEVICES.WebOs2022 &&
+    EnvDetector.device !== EnvDetector.DEVICES.WebOsOther &&
+    EnvDetector.device !== EnvDetector.DEVICES.PhilipsNetTv &&
+    EnvDetector.device !== EnvDetector.DEVICES.Panasonic &&
+    EnvDetector.device !== EnvDetector.DEVICES.A1KStb40xx
   );
 }

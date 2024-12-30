@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector, { DeviceName } from "./browser_detection";
+import EnvDetector from "./browser_detection";
 
 /**
  * On some devices (right now only seen on Tizen), seeking through the
@@ -29,5 +29,5 @@ import EnvDetector, { DeviceName } from "./browser_detection";
  * @returns {boolean}
  */
 export default function isSeekingApproximate(): boolean {
-  return EnvDetector.deviceName === DeviceName.Tizen;
+  return EnvDetector.device === EnvDetector.DEVICES.Tizen;
 }

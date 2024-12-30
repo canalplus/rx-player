@@ -7,9 +7,13 @@ describe("compat - shouldValidateMetadata", () => {
   });
 
   it("should return false if we are not on the Samsung browser", async () => {
-    vi.doMock("../browser_detection", () => {
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = await vi.importActual("../browser_detection");
       return {
-        isSamsungBrowser: false,
+        default: {
+          ...EnvDetector,
+          isSamsungBrowser: false,
+        },
       };
     });
     const shouldValidateMetadata = (await vi.importActual("../should_validate_metadata"))
@@ -18,9 +22,13 @@ describe("compat - shouldValidateMetadata", () => {
   });
 
   it("should return true if we are on the Samsung browser", async () => {
-    vi.doMock("../browser_detection", () => {
+    vi.doMock("../browser_detection", async () => {
+      const EnvDetector = await vi.importActual("../browser_detection");
       return {
-        isSamsungBrowser: true,
+        default: {
+          ...EnvDetector,
+          isSamsungBrowser: true,
+        },
       };
     });
     const shouldValidateMetadata = (await vi.importActual("../should_validate_metadata"))
