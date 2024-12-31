@@ -83,9 +83,9 @@ function getBrowserConfig(browser) {
       return {
         enabled: true,
         name: "safari",
+        headless: false,
         provider: "webdriverio",
         screenshotFailures: false,
-        providerOptions: {},
       };
 
     default:
