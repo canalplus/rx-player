@@ -88,7 +88,9 @@ jobs:
           ubuntu-restricted-extras
       - run: npm ci
       - run: npm run build
-      - run: npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+      - run:
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run
+          test:integration:edge
 
   integration_mac:
     runs-on: macos-latest
@@ -107,7 +109,9 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run build
-      - run: npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge && npm run test:integration:safari
+      - run:
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run
+          test:integration:edge && npm run test:integration:safari
 
   integration_windows:
     runs-on: windows-latest
@@ -127,7 +131,9 @@ jobs:
       - shell: "bash"
       - run: npm ci
       - run: npm run build
-      - run: npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge && npm run test:integration:safari
+      - run:
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run
+          test:integration:edge && npm run test:integration:safari
 
   memory_linux:
     runs-on: ubuntu-latest
