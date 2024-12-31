@@ -26,6 +26,7 @@ function getBrowserConfig(browser) {
         name: "chrome",
         provider: "webdriverio",
         headless: true,
+        screenshotFailures: false,
         providerOptions: {
           capabilities: {
             "goog:chromeOptions": {
@@ -45,6 +46,7 @@ function getBrowserConfig(browser) {
         name: "firefox",
         provider: "webdriverio",
         headless: true,
+        screenshotFailures: false,
         providerOptions: {
           capabilities: {
             "moz:firefoxOptions": {
@@ -59,6 +61,31 @@ function getBrowserConfig(browser) {
             },
           },
         },
+      };
+
+    case "edge":
+      return {
+        enabled: true,
+        name: "edge",
+        provider: "webdriverio",
+        headless: true,
+        screenshotFailures: false,
+        providerOptions: {
+          capabilities: {
+            "ms:edgeOptions": {
+              args: ["--autoplay-policy=no-user-gesture-required"],
+            },
+          },
+        },
+      };
+
+    case "safari":
+      return {
+        enabled: true,
+        name: "safari",
+        provider: "webdriverio",
+        screenshotFailures: false,
+        providerOptions: {},
       };
 
     default:
