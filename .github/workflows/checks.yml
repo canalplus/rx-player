@@ -124,7 +124,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-        shell: "bash"
+      - shell: "bash"
       - run: npm ci
       - run: npm run build
       - run: npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge && npm run test:integration:safari
