@@ -111,10 +111,7 @@ jobs:
 
   integration_windows:
     runs-on: windows-latest
-
-    defaults:
-      run:
-        shell: "bash"
+    shell: "bash"
 
     strategy:
       matrix:
