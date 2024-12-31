@@ -112,6 +112,10 @@ jobs:
   integration_windows:
     runs-on: windows-latest
 
+    defaults:
+      run:
+        shell: "bash"
+
     strategy:
       matrix:
         node-version: [20.x]
