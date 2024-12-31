@@ -107,7 +107,7 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run build
-      - run: npm run test:integration:safari
+      - run: npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge && npm run test:integration:safari
 
   memory_linux:
     runs-on: ubuntu-latest
