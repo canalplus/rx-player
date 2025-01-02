@@ -27,7 +27,7 @@ import removeDir from "./utils/remove_dir.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
-const ROOT_DIR = path.join(currentDirectory, "../");
+const ROOT_DIR = path.join(currentDirectory, "..");
 const BUILD_ARTEFACTS_TO_REMOVE = [
   "dist/commonjs",
   "dist/es2017",
@@ -65,12 +65,12 @@ export default async function generateBuild(options = {}) {
     console.log(" 🧹 Removing previous build artefacts...");
     await removePreviousBuildArtefacts();
 
-    const distDir = path.join(ROOT_DIR, "./dist");
+    const distDir = path.join(ROOT_DIR, "dist");
     if (!fs.existsSync(distDir)) {
       fs.mkdirSync(distDir);
     }
 
-    const dashWasmDir = path.join(distDir, "./mpd-parser.wasm");
+    const dashWasmDir = path.join(distDir, "mpd-parser.wasm");
     if (!fs.existsSync(dashWasmDir)) {
       console.log(" 🏭 Generating WebAssembly file...");
       await spawnProm(

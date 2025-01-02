@@ -48,13 +48,13 @@ import { dirname, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
-const originalWasmFilePath = join(currentDir, "../dist/mpd-parser.wasm");
-const originalWorkerFilePath = join(currentDir, "../dist/worker.js");
+const originalWasmFilePath = join(currentDir, "..", "dist/mpd-parser.wasm");
+const originalWorkerFilePath = join(currentDir, "..", "dist/worker.js");
 
-const codeGenDir = join(currentDir, "../src/__GENERATED_CODE");
-const indexPath = join(codeGenDir, "./index.ts");
-const mpdEmbedPath = join(codeGenDir, "./embedded_dash_wasm.ts");
-const workerEmbedPath = join(codeGenDir, "./embedded_worker.ts");
+const codeGenDir = join(currentDir, "..", "src/__GENERATED_CODE");
+const indexPath = join(codeGenDir, "index.ts");
+const mpdEmbedPath = join(codeGenDir, "embedded_dash_wasm.ts");
+const workerEmbedPath = join(codeGenDir, "embedded_worker.ts");
 
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
