@@ -14,5 +14,5 @@ jobs:
         shell: bash
         run: |
           npm ci
-          npm run build
+          node scripts/generate_build.mjs
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
