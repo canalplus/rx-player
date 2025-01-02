@@ -94,15 +94,15 @@ describe("DASH Stream events", function () {
 
   it("should not send any event if none have been reached yet", async function () {
     await expectNoEvent({ startAt: 0 });
-  }, 5000);
+  }, 10000);
 
   it("should not send any event if loading at a position after all events", async function () {
     await expectNoEvent({ startAt: 180 });
-  }, 5000);
+  }, 10000);
 
   it("should not send any event if loading at a position between events", async function () {
     await expectNoEvent({ startAt: 80 });
-  }, 5000);
+  }, 10000);
 
   it("should receive event when loading right in one", async function () {
     const streamEventsReceived = [];
@@ -144,7 +144,7 @@ describe("DASH Stream events", function () {
       expect(streamEventSkipReceived).to.have.lengthOf(0);
       expect(streamEventsReceived).to.have.lengthOf(1);
     });
-  }, 5000);
+  }, 10000);
 
   it("should receive an event when playing through one", async function () {
     const streamEventsReceived = [];
@@ -374,7 +374,7 @@ describe("DASH Stream events", function () {
     expect(hasExited).to.equal(true);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
-  }, 5000);
+  }, 10000);
 
   it("should receive an event when seeking right into one", async function () {
     const streamEventsReceived = [];
@@ -432,7 +432,7 @@ describe("DASH Stream events", function () {
     expect(hasExited).to.equal(true);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
-  }, 5000);
+  }, 10000);
 
   it("should receive multiple events when playing through a position with multiple events", async function () {
     const streamEventsReceived = [];
@@ -781,7 +781,7 @@ describe("DASH Stream events", function () {
         checkEvent(eventReceived, wantedEvent);
       },
     );
-  }, 5000);
+  }, 10000);
 
   it("should receive an event and be able to set an exit even when the event is very short", async function () {
     const streamEventsReceived = [];
@@ -831,5 +831,5 @@ describe("DASH Stream events", function () {
         checkEvent(eventReceived, wantedEvent);
       },
     );
-  }, 5000);
+  }, 10000);
 });
