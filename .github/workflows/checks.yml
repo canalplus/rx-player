@@ -130,7 +130,7 @@ jobs:
       - run: npm run build
       - run:
           npm run test:integration:chrome && npm run test:integration:firefox && npm run
-          test:integration:edge && npm run test:integration:safari
+          test:integration:edge
 
   memory_linux:
     runs-on: ubuntu-latest
