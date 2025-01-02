@@ -273,11 +273,11 @@ describe("DASH Stream events", function () {
     await sleep(100);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(0);
-    player.setPlaybackRate(2);
+    player.setPlaybackRate(1);
     player.play();
 
     await checkAfterSleepWithBackoff(
-      { minTimeMs: 500, stepMs: 100, maxTimeMs: 1500 },
+      { minTimeMs: 1000, stepMs: 100, maxTimeMs: 3000 },
       () => {
         expect(player.getPosition()).to.be.within(
           142,
@@ -294,7 +294,7 @@ describe("DASH Stream events", function () {
     checkEvent(eventReceived, wantedEvent);
 
     await checkAfterSleepWithBackoff(
-      { minTimeMs: 1200, stepMs: 100, maxTimeMs: 1500 },
+      { minTimeMs: 2400, stepMs: 100, maxTimeMs: 3000 },
       () => {
         expect(player.getPosition()).to.be.within(
           145,
