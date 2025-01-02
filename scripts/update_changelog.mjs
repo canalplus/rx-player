@@ -22,7 +22,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import { exec } from "child_process";
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_CHANGELOG_PATH = join(currentDir, "../CHANGELOG.md");
+const DEFAULT_CHANGELOG_PATH = join(currentDir, "..", "CHANGELOG.md");
 
 const NOTICE_OPENER_CLOSER = "---";
 const NOTICE_PREFIX = `⚠️  The following "proposed additional changelog lines" were automatically
