@@ -13,6 +13,6 @@ jobs:
       - name: Run Bash Script
         shell: bash
         run: |
-          npm run ci
+          npm ci
           npm run build
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
