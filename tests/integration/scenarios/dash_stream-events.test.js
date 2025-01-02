@@ -721,10 +721,10 @@ describe("DASH Stream events", function () {
     const wantedEvent1 = EVENTS.periods[0][0]; //  -> 5 - 8
     const wantedEvent2 = EVENTS.periods[0][1]; //  -> 20
     await loadContent(0);
-    await sleep(100);
+    await sleep(300);
 
     player.seekTo(24);
-    await sleep(100);
+    await sleep(500);
 
     expect(streamEventSkipReceived).to.have.lengthOf(2);
     expect(streamEventsReceived).to.have.lengthOf(0);

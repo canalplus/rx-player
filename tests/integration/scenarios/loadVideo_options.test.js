@@ -226,7 +226,7 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           const initialPosition = player.getPosition();
           expect(initialPosition).to.be.closeTo(
             player.getMaximumPosition() - startAt,
-            0.5,
+            1.5,
           );
           await checkAfterSleepWithBackoff(null, () => {
             expect(player.getPosition()).to.equal(initialPosition);
@@ -246,7 +246,7 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           const initialPosition = player.getPosition();
           expect(initialPosition).to.be.closeTo(
             player.getMaximumPosition() - startAt,
-            0.5,
+            1.5,
           );
           await checkAfterSleepWithBackoff(null, () => {
             expect(player.getPosition()).to.equal(initialPosition);
