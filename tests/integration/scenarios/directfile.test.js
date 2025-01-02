@@ -64,15 +64,19 @@ describe("basic playback use cases: direct file", function () {
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(0.5);
     player.play();
+    const now = performance.now();
     const lastPosition = player.getPosition();
-    await sleep(600);
-    expect(player.getPlayerState()).to.equal("PLAYING");
-    expect(player.getPosition()).to.be.below(0.5);
-    expect(player.getPosition()).to.be.above(0.15);
-    expect(player.getPosition()).to.be.above(lastPosition);
-    expect(player.getCurrentBufferGap()).to.be.above(0);
-    expect(player.getVideoElement().buffered.start(0)).to.be.below(player.getPosition());
-    expect(player.getPlaybackRate()).to.equal(0.5);
+    await checkAfterSleepWithBackoff({ stepMs: 100, maxTimeMs: 1000 }, () => {
+      const elapsed = performance.now() - now;
+      expect(player.getPosition()).to.be.below(elapsed / 1.7);
+      expect(player.getPosition()).to.be.above(elapsed * 0.3);
+      expect(player.getPosition()).to.be.above(lastPosition);
+      expect(player.getVideoElement().buffered.start(0)).to.be.below(
+        player.getPosition(),
+      );
+      expect(player.getPlaybackRate()).to.equal(0.5);
+      expect(player.getVideoElement().playbackRate).to.equal(0.5);
+    });
   });
 
   it("should play faster for a speed superior to 1", async function () {

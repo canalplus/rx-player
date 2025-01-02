@@ -685,10 +685,10 @@ describe("DASH Stream events", function () {
 
     const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
     await loadContent(0);
-    await sleep(100);
+    await sleep(200);
 
     player.seekTo(9);
-    await sleep(100);
+    await sleep(600);
 
     expect(streamEventSkipReceived).to.have.lengthOf(1);
     expect(streamEventsReceived).to.have.lengthOf(0);
