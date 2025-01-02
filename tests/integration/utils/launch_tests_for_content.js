@@ -968,11 +968,11 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         expect(initialPosition).to.be.closeTo(minimumPosition + duration1, 2);
 
         const before2 = performance.now();
-        player.setPlaybackRate(3);
-        await sleep(2000);
+        player.setPlaybackRate(2);
+        await sleep(4000);
         const duration2 = (performance.now() - before2) / 1000;
         const secondPosition = player.getPosition();
-        expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 3, 2);
+        expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 2, 2);
       }, 15000);
     });
 
