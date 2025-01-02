@@ -92,6 +92,22 @@ jobs:
           npm run test:integration:chrome && npm run test:integration:firefox && npm run
           test:integration:edge
 
+  integration_windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/checkout@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - shell: bash
+        run: |
+          npm ci
+          npm run build
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+
   integration_mac_safari:
     runs-on: macos-latest
 
