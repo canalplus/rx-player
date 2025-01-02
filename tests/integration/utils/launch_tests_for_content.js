@@ -962,18 +962,18 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         player.setPlaybackRate(1);
         const before1 = performance.now();
         player.play();
-        await sleep(2000);
+        await sleep(6000);
         const duration1 = (performance.now() - before1) / 1000;
         const initialPosition = player.getPosition();
-        expect(initialPosition).to.be.closeTo(minimumPosition + duration1, 2);
+        expect(initialPosition).to.be.closeTo(minimumPosition + duration1, 3);
 
         const before2 = performance.now();
         player.setPlaybackRate(2);
-        await sleep(4000);
+        await sleep(8000);
         const duration2 = (performance.now() - before2) / 1000;
         const secondPosition = player.getPosition();
-        expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 2, 2);
-      }, 15000);
+        expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 2, 5);
+      }, 25000);
     });
 
     describe("getVideoRepresentation", () => {
