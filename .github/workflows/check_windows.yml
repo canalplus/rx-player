@@ -3,7 +3,6 @@ name: RxPlayer Windows
 on: [push]
 
 jobs:
-
   build:
     runs-on: windows-latest
 
