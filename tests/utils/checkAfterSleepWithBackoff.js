@@ -57,8 +57,11 @@ export async function checkAfterSleepWithBackoff(configuration, checks) {
         checks,
       );
     } else {
-      const step = stepMs ?? sleepTime;
-      sleepTime += step;
+      if (stepMs !== undefined) {
+        sleepTime = stepMs;
+      } else {
+        sleepTime += sleepTime;
+      }
       if (sleepTime > remainingMax) {
         sleepTime = remainingMax;
       }
