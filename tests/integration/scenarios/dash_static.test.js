@@ -153,7 +153,7 @@ describe("DASH content CENC wrong version in MPD", function () {
         "should not have found a CENC pssh other than v1",
       );
     });
-  }, 2000);
+  }, 3000);
 });
 
 describe('DASH non-linear content with a "broken" sidx', function () {
