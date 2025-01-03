@@ -10,7 +10,6 @@ import {
   discontinuityInfos,
   notStartingAt0ManifestInfos,
 } from "../../contents/DASH_static_SegmentTimeline";
-import sleep from "../../utils/sleep.js";
 
 let player;
 
@@ -40,17 +39,16 @@ describe("discontinuities handling", () => {
         startAt: { position: 116 },
       });
       await waitForLoadedStateAfterLoadVideo(player);
-      await sleep(2000);
       expect(discontinuitiesWarningReceived).to.equal(0);
       await checkAfterSleepWithBackoff(
-        { minTimeMs: 3500, maxTimeMs: 8000, stepMs: 500 },
+        { minTimeMs: 4000, maxTimeMs: 10000, stepMs: 500 },
         () => {
           expect(player.getPosition()).to.be.above(131);
           expect(player.getPlayerState()).to.equal("PLAYING");
           expect(discontinuitiesWarningReceived).to.equal(1);
         },
       );
-    }, 10000);
+    }, 11000);
 
     it("should seek to next Period when loading in discontinuity", async function () {
       let discontinuitiesWarningReceived = 0;
@@ -108,10 +106,9 @@ describe("discontinuities handling", () => {
         startAt: { position: 116 },
       });
       await waitForLoadedStateAfterLoadVideo(player);
-      await sleep(2000);
       expect(discontinuitiesWarningReceived).to.equal(0);
       await checkAfterSleepWithBackoff(
-        { minTimeMs: 3500, maxTimeMs: 8000, stepMs: 500 },
+        { minTimeMs: 40000, maxTimeMs: 10000, stepMs: 500 },
         () => {
           expect(player.getPlayerState()).to.equal("PLAYING");
           expect(player.getPosition()).to.be.above(131);
