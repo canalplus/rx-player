@@ -40,15 +40,12 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff(
-        { minTimeMs: 4000, maxTimeMs: 10000, stepMs: 500 },
-        () => {
-          expect(player.getPosition()).to.be.above(131);
-          expect(player.getPlayerState()).to.equal("PLAYING");
-          expect(discontinuitiesWarningReceived).to.equal(1);
-        },
-      );
-    }, 11000);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 10000, stepMs: 100 }, () => {
+        expect(player.getPosition()).to.be.above(131);
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(discontinuitiesWarningReceived).to.equal(1);
+      });
+    }, 12000);
 
     it("should seek to next Period when loading in discontinuity", async function () {
       let discontinuitiesWarningReceived = 0;
@@ -107,15 +104,12 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff(
-        { minTimeMs: 40000, maxTimeMs: 10000, stepMs: 500 },
-        () => {
-          expect(player.getPlayerState()).to.equal("PLAYING");
-          expect(player.getPosition()).to.be.above(131);
-          expect(discontinuitiesWarningReceived).to.equal(1);
-        },
-      );
-    }, 11000);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 10000, stepMs: 100 }, () => {
+        expect(player.getPlayerState()).to.equal("PLAYING");
+        expect(player.getPosition()).to.be.above(131);
+        expect(discontinuitiesWarningReceived).to.equal(1);
+      });
+    }, 12000);
 
     it("should seek to next Period when loading in discontinuity", async function () {
       let discontinuitiesWarningReceived = 0;
