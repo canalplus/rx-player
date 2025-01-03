@@ -36,7 +36,7 @@ describe("discontinuities handling", () => {
         url,
         transport,
         autoPlay: true,
-        startAt: { position: 116 },
+        startAt: { position: 118 },
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
@@ -100,7 +100,7 @@ describe("discontinuities handling", () => {
         url,
         transport,
         autoPlay: true,
-        startAt: { position: 116 },
+        startAt: { position: 118 },
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
