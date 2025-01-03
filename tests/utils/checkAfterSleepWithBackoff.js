@@ -3,8 +3,11 @@ import sleep from "./sleep";
 /**
  * Performs a check after a given delay (starting at either `minTimeMs`
  * milliseconds or just after a `setTimeout` of `0` if not set).
- * If that check fails, re-wait two times the previous delay (or less if/when
- * we reached `maxTimeMs`).
+ * If that check fails, re-run it recursively after waiting until either:
+ *   - `stepMs` milliseconds if one has been indicated
+ *   - two times the previous delay
+ *   - `maxTimeMs` milliseconds if any of the preceding methods would have lead
+ *     to a longer delay.
  *
  * Once `maxTimeMs` milliseconds have passed (or 4 seconds if not set) since
  * this function was called and if the check still fails, throw the

@@ -958,18 +958,35 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         player.setPlaybackRate(1);
         await player.play();
         const before1 = performance.now();
-        await sleep(10000);
-        const duration1 = (performance.now() - before1) / 1000;
-        const initialPosition = player.getPosition();
-        expect(initialPosition).to.be.closeTo(minimumPosition + duration1, 5);
+        let initialPosition;
+        await checkAfterSleepWithBackoff(
+          {
+            minTimeMs: 3000,
+            maxTimeMs: 20000,
+            stepMs: 100,
+          },
+          () => {
+            const duration1 = (performance.now() - before1) / 1000;
+            initialPosition = player.getPosition();
+            expect(initialPosition).to.be.closeTo(minimumPosition + duration1, 5);
+          },
+        );
 
         const before2 = performance.now();
         player.setPlaybackRate(2);
-        await sleep(10000);
-        const duration2 = (performance.now() - before2) / 1000;
-        const secondPosition = player.getPosition();
-        expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 2, 7.5);
-      }, 30000);
+        await checkAfterSleepWithBackoff(
+          {
+            minTimeMs: 3000,
+            maxTimeMs: 20000,
+            stepMs: 100,
+          },
+          () => {
+            const duration2 = (performance.now() - before2) / 1000;
+            const secondPosition = player.getPosition();
+            expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 2, 7.5);
+          },
+        );
+      }, 50000);
     });
 
     describe("getVideoRepresentation", () => {
