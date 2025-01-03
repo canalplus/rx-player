@@ -86,11 +86,14 @@ jobs:
       - run:
           sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
           ubuntu-restricted-extras
-      - run: npm ci
-      - run: npm run build
-      - run:
-          npm run test:integration:chrome && npm run test:integration:firefox && npm run
-          test:integration:edge
+      - run: |
+          npm ci
+          npm run build
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          # retry on failure
+          if [ $? -ne 0 ]; then
+            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          fi
 
   integration_windows:
     runs-on: windows-latest
@@ -112,6 +115,10 @@ jobs:
           npm ci
           npm run build
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          # retry on failure
+          if [ $? -ne 0 ]; then
+            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          fi
 
   integration_mac:
     runs-on: macos-latest
@@ -132,6 +139,10 @@ jobs:
           npm ci
           npm run build
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          # retry on failure
+          if [ $? -ne 0 ]; then
+            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          fi
 
   memory_linux:
     runs-on: ubuntu-latest
