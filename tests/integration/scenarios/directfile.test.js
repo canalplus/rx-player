@@ -59,7 +59,7 @@ describe("basic playback use cases: direct file", function () {
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(0.5);
-    player.play();
+    await player.play();
     const now = performance.now();
     const lastPosition = player.getPosition();
     await checkAfterSleepWithBackoff({ stepMs: 100, maxTimeMs: 1000 }, () => {
@@ -82,7 +82,7 @@ describe("basic playback use cases: direct file", function () {
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(3);
-    player.play();
+    await player.play();
     await sleep(1200);
     expect(player.getPlayerState()).to.equal("PLAYING");
     expect(player.getPosition()).to.be.below(4);

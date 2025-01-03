@@ -86,7 +86,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       player.setPlaybackRate(0.5);
-      player.play();
+      await player.play();
       const now = performance.now();
       const lastPosition = player.getPosition();
       await checkAfterSleepWithBackoff({ stepMs: 100, maxTimeMs: 1000 }, () => {
@@ -109,7 +109,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       player.setPlaybackRate(3);
-      player.play();
+      await player.play();
       await checkAfterSleepWithBackoff(
         { minTimeMs: 700, stepMs: 100, maxTimeMs: 1400 },
         () => {

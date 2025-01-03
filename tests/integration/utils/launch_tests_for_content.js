@@ -957,7 +957,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.02);
         player.setPlaybackRate(1);
         const before1 = performance.now();
-        player.play();
+        await player.play();
         await sleep(10000);
         const duration1 = (performance.now() - before1) / 1000;
         const initialPosition = player.getPosition();
