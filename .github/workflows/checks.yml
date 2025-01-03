@@ -92,7 +92,8 @@ jobs:
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           # retry on failure
           if [ $? -ne 0 ]; then
-            echo "First tests attempt failed. Retrying..."
+            echo "First tests attempt failed. Retrying after 20 seconds..."
+            sleep 20
             npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           fi
 
@@ -118,7 +119,14 @@ jobs:
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           # retry on failure
           if [ $? -ne 0 ]; then
-            echo "First tests attempt failed. Retrying..."
+            echo "First tests attempt failed. Retrying after 20 seconds..."
+            sleep 20
+            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          fi
+          # Other OSes than linux are particularly bad on github actions, run it three times
+          if [ $? -ne 0 ]; then
+            echo "Second tests attempt failed. Retrying after 60 seconds..."
+            sleep 60
             npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           fi
 
@@ -143,7 +151,14 @@ jobs:
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           # retry on failure
           if [ $? -ne 0 ]; then
-            echo "First tests attempt failed. Retrying..."
+            echo "First tests attempt failed. Retrying after 20 seconds..."
+            sleep 20
+            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          fi
+          # Other OSes than linux are particularly bad on github actions, run it three times
+          if [ $? -ne 0 ]; then
+            echo "Second tests attempt failed. Retrying after 60 seconds..."
+            sleep 60
             npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           fi
 
