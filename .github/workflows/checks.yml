@@ -92,6 +92,7 @@ jobs:
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           # retry on failure
           if [ $? -ne 0 ]; then
+            echo "First tests attempt failed. Retrying..."
             npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           fi
 
@@ -117,6 +118,7 @@ jobs:
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           # retry on failure
           if [ $? -ne 0 ]; then
+            echo "First tests attempt failed. Retrying..."
             npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           fi
 
@@ -141,6 +143,7 @@ jobs:
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           # retry on failure
           if [ $? -ne 0 ]; then
+            echo "First tests attempt failed. Retrying..."
             npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
           fi
 

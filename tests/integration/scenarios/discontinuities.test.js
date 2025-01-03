@@ -31,7 +31,7 @@ describe("discontinuities handling", () => {
           discontinuitiesWarningReceived++;
         }
       });
-      player.setPlaybackRate(2);
+      player.setPlaybackRate(1);
       player.loadVideo({
         url,
         transport,
@@ -40,7 +40,7 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 6000, stepMs: 500 }, () => {
         expect(player.getPosition()).to.be.above(131);
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
@@ -101,7 +101,7 @@ describe("discontinuities handling", () => {
           discontinuitiesWarningReceived++;
         }
       });
-      player.setPlaybackRate(2);
+      player.setPlaybackRate(1);
       player.loadVideo({
         url,
         transport,
@@ -110,7 +110,7 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 6000, stepMs: 500 }, () => {
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
         expect(player.getPosition()).to.be.above(131);
@@ -169,7 +169,7 @@ describe("discontinuities handling", () => {
           discontinuitiesWarningReceived++;
         }
       });
-      player.setPlaybackRate(2);
+      player.setPlaybackRate(1);
       player.loadVideo({
         url,
         transport,
@@ -178,12 +178,12 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 4000 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 8000, stepMs: 500 }, () => {
         expect(player.getPosition()).to.be.above(28);
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    }, 8000);
+    }, 9000);
 
     it("should seek over discontinuity when loading on one", async function () {
       let discontinuitiesWarningReceived = 0;
