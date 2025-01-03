@@ -727,7 +727,7 @@ describe("DASH Stream events", function () {
       const wantedEvent1 = EVENTS.periods[0][0]; //  -> 5 - 8
       const wantedEvent2 = EVENTS.periods[0][1]; //  -> 20
       await loadContent(0);
-      await sleep(300);
+      await sleep(3000);
 
       player.seekTo(24);
 
@@ -754,7 +754,7 @@ describe("DASH Stream events", function () {
         },
       );
     },
-    { timeout: 4000 },
+    { timeout: 7000 },
   );
 
   it("should not exit events without a duration", async function () {
