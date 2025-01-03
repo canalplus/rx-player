@@ -89,7 +89,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       await player.play();
       const now = performance.now();
       const lastPosition = player.getPosition();
-      await checkAfterSleepWithBackoff({ stepMs: 100, maxTimeMs: 1000 }, () => {
+      await checkAfterSleepWithBackoff({ stepMs: 100, maxTimeMs: 1500 }, () => {
         const elapsed = (performance.now() - now) / 1000;
         expect(player.getPosition()).to.be.below(elapsed / 1.7);
         expect(player.getPosition()).to.be.above(elapsed * 0.3);

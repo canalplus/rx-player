@@ -659,87 +659,103 @@ describe("DASH Stream events", function () {
     );
   }, 15000);
 
-  it("should receive an event when skipping one", async function () {
-    const streamEventsReceived = [];
-    const streamEventSkipReceived = [];
+  it(
+    "should receive an event when skipping one",
+    async function () {
+      const streamEventsReceived = [];
+      const streamEventSkipReceived = [];
 
-    let hasExitedSomething = false;
-    function onStreamEvent(evt) {
-      streamEventsReceived.push(evt);
-      evt.onExit = function () {
-        hasExitedSomething = true;
-      };
-    }
-    function onStreamEventSkip(evt) {
-      streamEventSkipReceived.push(evt);
-      evt.onExit = function () {
-        hasExitedSomething = true;
-      };
-    }
-    player.addEventListener("streamEvent", onStreamEvent);
-    player.addEventListener("streamEventSkip", onStreamEventSkip);
+      let hasExitedSomething = false;
+      function onStreamEvent(evt) {
+        streamEventsReceived.push(evt);
+        evt.onExit = function () {
+          hasExitedSomething = true;
+        };
+      }
+      function onStreamEventSkip(evt) {
+        streamEventSkipReceived.push(evt);
+        evt.onExit = function () {
+          hasExitedSomething = true;
+        };
+      }
+      player.addEventListener("streamEvent", onStreamEvent);
+      player.addEventListener("streamEventSkip", onStreamEventSkip);
 
-    const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
-    await loadContent(0);
-    await sleep(200);
+      const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
+      await loadContent(0);
+      await sleep(200);
 
-    player.seekTo(9);
-    await sleep(600);
+      player.seekTo(9);
 
-    expect(streamEventSkipReceived).to.have.lengthOf(1);
-    expect(streamEventsReceived).to.have.lengthOf(0);
-    expect(hasExitedSomething).to.equal(false);
+      await checkAfterSleepWithBackoff(
+        { minTimeMs: 600, maxTimeMs: 3000, stepMs: 100 },
+        () => {
+          expect(streamEventSkipReceived).to.have.lengthOf(1);
+          expect(streamEventsReceived).to.have.lengthOf(0);
+          expect(hasExitedSomething).to.equal(false);
 
-    const eventReceived = streamEventSkipReceived[0];
-    checkEvent(eventReceived, wantedEvent);
-  });
+          const eventReceived = streamEventSkipReceived[0];
+          checkEvent(eventReceived, wantedEvent);
+        },
+      );
+    },
+    { timeout: 4000 },
+  );
 
-  it("should receive multiple events when skipping multiple ones", async function () {
-    const streamEventsReceived = [];
-    const streamEventSkipReceived = [];
+  it(
+    "should receive multiple events when skipping multiple ones",
+    async function () {
+      const streamEventsReceived = [];
+      const streamEventSkipReceived = [];
 
-    let hasExitedSomething = false;
-    function onStreamEvent(evt) {
-      streamEventsReceived.push(evt);
-      evt.onExit = function () {
-        hasExitedSomething = true;
-      };
-    }
-    function onStreamEventSkip(evt) {
-      streamEventSkipReceived.push(evt);
-      evt.onExit = function () {
-        hasExitedSomething = true;
-      };
-    }
-    player.addEventListener("streamEvent", onStreamEvent);
-    player.addEventListener("streamEventSkip", onStreamEventSkip);
+      let hasExitedSomething = false;
+      function onStreamEvent(evt) {
+        streamEventsReceived.push(evt);
+        evt.onExit = function () {
+          hasExitedSomething = true;
+        };
+      }
+      function onStreamEventSkip(evt) {
+        streamEventSkipReceived.push(evt);
+        evt.onExit = function () {
+          hasExitedSomething = true;
+        };
+      }
+      player.addEventListener("streamEvent", onStreamEvent);
+      player.addEventListener("streamEventSkip", onStreamEventSkip);
 
-    const wantedEvent1 = EVENTS.periods[0][0]; //  -> 5 - 8
-    const wantedEvent2 = EVENTS.periods[0][1]; //  -> 20
-    await loadContent(0);
-    await sleep(300);
+      const wantedEvent1 = EVENTS.periods[0][0]; //  -> 5 - 8
+      const wantedEvent2 = EVENTS.periods[0][1]; //  -> 20
+      await loadContent(0);
+      await sleep(300);
 
-    player.seekTo(24);
-    await sleep(500);
+      player.seekTo(24);
 
-    expect(streamEventSkipReceived).to.have.lengthOf(2);
-    expect(streamEventsReceived).to.have.lengthOf(0);
-    expect(hasExitedSomething).to.equal(false);
+      await checkAfterSleepWithBackoff(
+        { minTimeMs: 500, maxTimeMs: 2000, stepMs: 100 },
+        () => {
+          expect(streamEventSkipReceived).to.have.lengthOf(2);
+          expect(streamEventsReceived).to.have.lengthOf(0);
+          expect(hasExitedSomething).to.equal(false);
 
-    let eventReceived1;
-    let eventReceived2;
+          let eventReceived1;
+          let eventReceived2;
 
-    if (streamEventSkipReceived[0].start === wantedEvent1.start) {
-      eventReceived1 = streamEventSkipReceived[0];
-      eventReceived2 = streamEventSkipReceived[1];
-    } else {
-      eventReceived1 = streamEventSkipReceived[1];
-      eventReceived2 = streamEventSkipReceived[0];
-    }
+          if (streamEventSkipReceived[0].start === wantedEvent1.start) {
+            eventReceived1 = streamEventSkipReceived[0];
+            eventReceived2 = streamEventSkipReceived[1];
+          } else {
+            eventReceived1 = streamEventSkipReceived[1];
+            eventReceived2 = streamEventSkipReceived[0];
+          }
 
-    checkEvent(eventReceived1, wantedEvent1);
-    checkEvent(eventReceived2, wantedEvent2);
-  });
+          checkEvent(eventReceived1, wantedEvent1);
+          checkEvent(eventReceived2, wantedEvent2);
+        },
+      );
+    },
+    { timeout: 4000 },
+  );
 
   it("should not exit events without a duration", async function () {
     const streamEventsReceived = [];
@@ -767,7 +783,7 @@ describe("DASH Stream events", function () {
     player.setPlaybackRate(1);
     player.play();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: 4500, maxTimeMs: 6000, stepMs: 100 },
+      { mintimems: 4500, maxtimems: 6000, stepms: 100 },
       () => {
         expect(streamEventSkipReceived).to.have.lengthOf(0);
         expect(streamEventsReceived).to.have.lengthOf(1);

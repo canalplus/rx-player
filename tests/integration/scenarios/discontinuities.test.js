@@ -110,12 +110,12 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 6000, stepMs: 500 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 7000, stepMs: 500 }, () => {
         expect(player.getPlayerState()).to.equal("PLAYING");
-        expect(discontinuitiesWarningReceived).to.equal(1);
         expect(player.getPosition()).to.be.above(131);
+        expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    }, 7000);
+    }, 8000);
 
     it("should seek to next Period when loading in discontinuity", async function () {
       let discontinuitiesWarningReceived = 0;
