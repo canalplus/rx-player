@@ -24,13 +24,7 @@ describe("discontinuities handling", () => {
 
   describe("discontinuities between periods", () => {
     const { url, transport } = discontinuitiesBetweenPeriodsInfos;
-    it("should seek over discontinuities between periods", async function ({ skip }) {
-      // eslint-disable-next-line no-undef
-      if (__BROWSER_NAME__ === "firefox") {
-        // TODO: test is failing on firefox in the CI, an error is thrown when
-        // playing the content
-        skip();
-      }
+    it("should seek over discontinuities between periods", async function () {
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
@@ -94,7 +88,13 @@ describe("discontinuities handling", () => {
 
   describe("discontinuities between periods with different types", () => {
     const { url, transport } = differentTypesDiscontinuitiesInfos;
-    it("should seek over discontinuities between periods", async function () {
+    it("should seek over discontinuities between periods", async function ({ skip }) {
+      // eslint-disable-next-line no-undef
+      if (__BROWSER_NAME__ === "firefox") {
+        // TODO: test is failing on firefox in the CI, an error is thrown when
+        // playing the content
+        skip();
+      }
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
