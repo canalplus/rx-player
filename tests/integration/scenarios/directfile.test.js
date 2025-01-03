@@ -27,10 +27,6 @@ describe("basic playback use cases: direct file", function () {
 
   beforeEach(() => {
     player = new RxPlayer();
-    // eslint-disable-next-line no-undef
-    if (__BROWSER_NAME__ === "safari") {
-      player.mute(); // Safari won't let us autoplay easily sadly
-    }
   });
 
   afterEach(() => {

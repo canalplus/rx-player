@@ -195,8 +195,6 @@
     "test:integration:firefox": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest run tests/integration/scenarios",
     "test:integration:firefox:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest watch tests/integration/scenarios",
     "test:integration:notice": "echo \"~~~ ⚠️ NOTICE ⚠️\n~~~ Integration tests rely on the RxPlayer build.\n~~~ Make sure you called the \\`build\\` script succesfully first.\n\"",
-    "test:integration:safari": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=safari vitest run tests/integration/scenarios",
-    "test:integration:safari:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=safari vitest watch tests/integration/scenarios",
     "test:memory": "cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
     "test:memory:chrome:watch": "cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:unit": "vitest --config vitest.config.unit.mjs",
@@ -273,9 +271,7 @@
         "test:integration:firefox": "Launch integration tests in a Firefox browser.",
         "test:integration:firefox:watch": "Launch integration tests in Firefox each times the files update",
         "test:integration:Edge": "Launch integration tests in an Edge browser.",
-        "test:integration:Edge:watch": "Launch integration tests in Edge each times the files update",
-        "test:integration:Safari": "Launch integration tests in a Safari browser.",
-        "test:integration:Safari:watch": "Launch integration tests in Safari each times the files update"
+        "test:integration:Edge:watch": "Launch integration tests in Edge each times the files update"
       },
       "Unit tests (test particular functions)": {
         "test:unit": "Launch unit tests",

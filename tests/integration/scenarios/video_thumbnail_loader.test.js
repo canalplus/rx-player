@@ -18,10 +18,6 @@ describe("Video Thumbnail Loader", () => {
 
   beforeEach(() => {
     rxPlayer = new RxPlayer();
-    // eslint-disable-next-line no-undef
-    if (__BROWSER_NAME__ === "safari") {
-      rxPlayer.mute(); // Safari won't let us autoplay easily sadly
-    }
     videoThumbnailLoader = new VideoThumbnailLoader(videoElement, rxPlayer);
   });
   afterEach(() => {

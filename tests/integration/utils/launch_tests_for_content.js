@@ -78,10 +78,6 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
   describe("API tests", () => {
     beforeEach(() => {
       player = new RxPlayer();
-      // eslint-disable-next-line no-undef
-      if (__BROWSER_NAME__ === "safari") {
-        player.mute(); // Safari won't let us autoplay easily sadly
-      }
       if (multithread === true) {
         player.attachWorker({
           workerUrl: EMBEDDED_WORKER,

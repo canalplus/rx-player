@@ -49,10 +49,6 @@ describe("DASH multi-Period with different choices", function () {
 
   beforeEach(() => {
     player = new RxPlayer();
-    // eslint-disable-next-line no-undef
-    if (__BROWSER_NAME__ === "safari") {
-      player.mute(); // Safari won't let us autoplay easily sadly
-    }
     player.setWantedBufferAhead(5); // We don't really care
   });
 
@@ -242,10 +238,6 @@ describe("DASH multi-Period with same choices", function () {
 
   beforeEach(() => {
     player = new RxPlayer();
-    // eslint-disable-next-line no-undef
-    if (__BROWSER_NAME__ === "safari") {
-      player.mute(); // Safari won't let us autoplay easily sadly
-    }
     player.setWantedBufferAhead(5); // We don't really care
   });
 
