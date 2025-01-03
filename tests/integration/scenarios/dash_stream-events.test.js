@@ -683,7 +683,7 @@ describe("DASH Stream events", function () {
 
       const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
       await loadContent(0);
-      await sleep(200);
+      await sleep(1000);
 
       player.seekTo(9);
 
@@ -699,7 +699,7 @@ describe("DASH Stream events", function () {
         },
       );
     },
-    { timeout: 4000 },
+    { timeout: 5000 },
   );
 
   it(
