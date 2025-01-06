@@ -155,6 +155,7 @@ jobs:
               echo "First tests attempt failed. Retrying after 20 seconds..."
               sleep 20
               eval "npm run test:integration:$browser"
+
             fi
             # Other OSes than linux are particularly bad on github actions, run it three times
             if [ $? -ne 0 ]; then
