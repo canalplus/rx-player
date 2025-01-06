@@ -151,11 +151,10 @@ jobs:
           for browser in "chrome" "firefox" "edge"; do
             eval "npm run test:integration:$browser"
             # retry on failure
-            if [ $? -ne 0 ]; then:
+            if [ $? -ne 0 ]; then
               echo "First tests attempt failed. Retrying after 20 seconds..."
               sleep 20
               eval "npm run test:integration:$browser"
-
             fi
             # Other OSes than linux are particularly bad on github actions, run it three times
             if [ $? -ne 0 ]; then
