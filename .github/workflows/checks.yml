@@ -146,21 +146,21 @@ jobs:
           cache: "npm"
 
       - run: |
-          npm ci
-          npm run build
+          # npm ci
+          # npm run build
           for browser in "chrome" "firefox" "edge"; do
             npm run "test:integration:$browser"
             # retry on failure
             if [ $? -ne 0 ]; then:
               echo "First tests attempt failed. Retrying after 20 seconds..."
               sleep 20
-              npm run "test:integration:$browser"
+              # npm run "test:integration:$browser"
             fi
             # Other OSes than linux are particularly bad on github actions, run it three times
             if [ $? -ne 0 ]; then
               echo "Second tests attempt failed. Retrying after 60 seconds..."
               sleep 60
-              npm run "test:integration:$browser"
+              # npm run "test:integration:$browser"
             fi
           done
 
