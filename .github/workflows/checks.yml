@@ -89,7 +89,7 @@ jobs:
       - run: |
           npm ci
           npm run build
-          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
           # retry on failure
           if [ $? -ne 0 ]; then
             echo "First tests attempt failed. Retrying after 20 seconds..."
@@ -116,18 +116,18 @@ jobs:
         run: |
           npm ci
           npm run build
-          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
           # retry on failure
           if [ $? -ne 0 ]; then
             echo "First tests attempt failed. Retrying after 20 seconds..."
             sleep 20
-            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
-          fi
-          # Other OSes than linux are particularly bad on github actions, run it three times
-          if [ $? -ne 0 ]; then
-            echo "Second tests attempt failed. Retrying after 60 seconds..."
-            sleep 60
-            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
+            # Other OSes than linux are particularly bad on github actions, run it three times
+            if [ $? -ne 0 ]; then
+              echo "Second tests attempt failed. Retrying after 60 seconds..."
+              sleep 60
+              npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+            fi
           fi
 
   integration_mac:
@@ -148,48 +148,21 @@ jobs:
       - run: |
           npm ci
           npm run build
-          # TODO: I tried doing a for loop but I'm so bad in bash I couldn't make
-          # `$?` work with string interpolation. So let's unroll that loop
-          # instead.
-          npm run test:integration:chrome
-          # retry on failure
-          if [ $? -ne 0 ]; then
-            echo "First chrome tests attempt failed. Retrying after 20 seconds..."
-            sleep 20
-            npm run test:integration:chrome
-          fi
-          # Other OSes than linux are particularly bad on github actions, run it three times
-          if [ $? -ne 0 ]; then
-            echo "Second chrome tests attempt failed. Retrying after 60 seconds..."
-            sleep 60
-            npm run test:integration:chrome
-          fi
-          npm run test:integration:firefox
-          # retry on failure
-          if [ $? -ne 0 ]; then
-            echo "First firefox tests attempt failed. Retrying after 20 seconds..."
-            sleep 20
-            npm run test:integration:firefox
-          fi
-          # Other OSes than linux are particularly bad on github actions, run it three times
-          if [ $? -ne 0 ]; then
-            echo "Second firefox tests attempt failed. Retrying after 60 seconds..."
-            sleep 60
-            npm run test:integration:firefox
-          fi
-          npm run test:integration:edge
-          # retry on failure
-          if [ $? -ne 0 ]; then
-            echo "First edge tests attempt failed. Retrying after 20 seconds..."
-            sleep 20
-            npm run test:integration:edge
-          fi
-          # Other OSes than linux are particularly bad on github actions, run it three times
-          if [ $? -ne 0 ]; then
-            echo "Second edge tests attempt failed. Retrying after 60 seconds..."
-            sleep 60
-            npm run test:integration:edge
-          fi
+          for browser in "chrome" "firefox" "edge"; do
+            npm run test:integration:$browser ||
+            # retry on failure
+            if [ $? -ne 0 ]; then
+              echo "First tests attempt failed. Retrying after 20 seconds..."
+              sleep 20
+              npm run test:integration:$browser ||
+              # Other OSes than linux are particularly bad on github actions, run it three times
+              if [ $? -ne 0 ]; then
+                echo "Second tests attempt failed. Retrying after 60 seconds..."
+                sleep 60
+                npm run test:integration:$browser
+              fi
+            fi
+          done
 
   memory_linux:
     runs-on: ubuntu-latest
