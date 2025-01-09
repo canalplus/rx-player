@@ -21,18 +21,10 @@
  * import only features that is needed.
  */
 
-import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer";
-import logger from "./log";
 import Player from "./main_thread/api";
 
 patchWebkitSourceBuffer();
-
-if (isDebugModeEnabled()) {
-  logger.setLevel("DEBUG", "full");
-} else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL, "standard");
-}
 
 /**
  * Minimal Player which starts with no feature.
