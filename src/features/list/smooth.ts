@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
+import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 import smooth from "../../transports/smooth";
 import type { IFeaturesObject } from "../types";
 
@@ -26,7 +26,7 @@ function addSmoothFeature(features: IFeaturesObject): void {
   if (features.transports.smooth === undefined) {
     features.transports.smooth = smooth;
   }
-  features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
+  features.mainThreadMediaSourceInit = MultiThreadContentInitializer;
 }
 
 export { addSmoothFeature as SMOOTH };
