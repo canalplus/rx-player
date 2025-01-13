@@ -8,10 +8,10 @@ import WorkerMediaSourceInterface from "../../../mse/worker_media_source_interfa
 import type {
   IAttachMediaSourceWorkerMessagePayload,
   IContentInitializationData,
+  IWorkerMessage,
 } from "../../../multithread_types";
 import { WorkerMessageType } from "../../../multithread_types";
 import type { IPlayerError } from "../../../public_types";
-import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import objectAssign from "../../../utils/object_assign";
 import type {
@@ -28,8 +28,8 @@ import SegmentSinksStore from "../../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../../stream";
 import DecipherabilityFreezeDetector from "../common/DecipherabilityFreezeDetector";
 import { limitVideoResolution, throttleVideoBitrate } from "./globals";
-import sendMessage, { formatErrorForSender } from "./send_message";
 import TrackChoiceSetter from "./track_choice_setter";
+import { formatErrorForSender } from "./utils";
 import WorkerTextDisplayerInterface from "./worker_text_displayer_interface";
 
 const generateMediaSourceId = idGenerator();
@@ -74,6 +74,7 @@ export default class ContentPreparer {
   }
 
   public initializeNewContent(
+    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
   ): Promise<IManifestMetadata> {
     return new Promise((res, rej) => {
@@ -84,19 +85,20 @@ export default class ContentPreparer {
 
       currentMediaSourceCanceller.linkToSignal(contentCanceller.signal);
 
-      const { contentId, url, hasText, transportOptions } = context;
+      const { contentId, url, hasText, transport, transportOptions } = context;
       let manifest: IManifest | null = null;
 
-      // TODO better way
-      assert(
-        features.transports.dash !== undefined,
-        "Multithread RxPlayer should have access to the DASH feature",
-      );
+      const transportFn = features.transports[transport];
+      if (typeof transportFn !== "function") {
+        // Stop previous content and reset its state
+        // XXX TODO:  send fatal error
+        throw new Error(`transport "${transport}" not supported`);
+      }
       const representationFilter =
         typeof transportOptions.representationFilter === "string"
           ? createRepresentationFilterFromFnString(transportOptions.representationFilter)
-          : undefined;
-      const dashPipelines = features.transports.dash({
+          : transportOptions.representationFilter;
+      const transportPipelines = transportFn({
         ...transportOptions,
         representationFilter,
       });
@@ -105,7 +107,7 @@ export default class ContentPreparer {
         context.cmcd === undefined ? null : new CmcdDataBuilder(context.cmcd);
       const manifestFetcher = new ManifestFetcher(
         url === undefined ? undefined : [url],
-        dashPipelines,
+        transportPipelines,
         {
           cmcdDataBuilder,
           ...context.manifestRetryOptions,
@@ -130,7 +132,7 @@ export default class ContentPreparer {
       );
 
       const segmentQueueCreator = new SegmentQueueCreator(
-        dashPipelines,
+        transportPipelines,
         cmcdDataBuilder,
         context.segmentRetryOptions,
         contentCanceller.signal,
@@ -140,6 +142,7 @@ export default class ContentPreparer {
 
       const [mediaSource, segmentSinksStore, workerTextSender] =
         createMediaSourceAndBuffersStore(
+          sendMessage,
           contentId,
           {
             hasMseInWorker: this._hasMseInWorker,
@@ -255,7 +258,10 @@ export default class ContentPreparer {
     this._currentContent?.manifestFetcher.scheduleManualRefresh(settings);
   }
 
-  public reloadMediaSource(reloadInfo: INeedsMediaSourceReloadPayload): Promise<void> {
+  public reloadMediaSource(
+    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+    reloadInfo: INeedsMediaSourceReloadPayload,
+  ): Promise<void> {
     this._currentMediaSourceCanceller.cancel();
     if (this._currentContent === null) {
       return Promise.reject(new Error("CP: No content anymore"));
@@ -274,6 +280,7 @@ export default class ContentPreparer {
 
     const [mediaSource, segmentSinksStore, workerTextSender] =
       createMediaSourceAndBuffersStore(
+        sendMessage,
         this._currentContent.contentId,
         {
           hasMseInWorker: this._hasMseInWorker,
@@ -380,6 +387,7 @@ export interface IPreparedContentData {
  * @returns {Array.<Object>}
  */
 function createMediaSourceAndBuffersStore(
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   contentId: string,
   capabilities: {
     hasMseInWorker: boolean;

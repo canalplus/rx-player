@@ -15,12 +15,12 @@
  */
 
 import type { IFeaturesObject } from "../../features/types";
-import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
+import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 import metaplaylist from "../../transports/metaplaylist";
 
 function addMetaPlaylistFeature(features: IFeaturesObject): void {
   features.transports.metaplaylist = metaplaylist;
-  features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
+  features.mainThreadMediaSourceInit = MultiThreadContentInitializer;
 }
 
 export { addMetaPlaylistFeature as METAPLAYLIST };

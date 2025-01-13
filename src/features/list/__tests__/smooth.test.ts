@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer";
+import MultiThreadContentInitializer from "../../../main_thread/init/multi_thread_content_initializer";
 import SmoothFeature from "../../../transports/smooth";
 import type { IFeaturesObject } from "../../types";
 import addSmoothFeature from "../smooth";
@@ -10,9 +10,9 @@ describe("Features list - Smooth", () => {
     addSmoothFeature(featureObject);
     expect(featureObject).toEqual({
       transports: { smooth: SmoothFeature },
-      mainThreadMediaSourceInit: MediaSourceContentInitializer,
+      mainThreadMediaSourceInit: MultiThreadContentInitializer,
     });
     expect(featureObject.transports.smooth).toBe(SmoothFeature);
-    expect(featureObject.mainThreadMediaSourceInit).toBe(MediaSourceContentInitializer);
+    expect(featureObject.mainThreadMediaSourceInit).toBe(MultiThreadContentInitializer);
   });
 });

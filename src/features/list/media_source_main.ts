@@ -1,4 +1,4 @@
-import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
+import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 import type { IFeaturesObject } from "../types";
 
 /**
@@ -6,7 +6,7 @@ import type { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addMediaSourceMainFeature(features: IFeaturesObject): void {
-  features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
+  features.mainThreadMediaSourceInit = MultiThreadContentInitializer;
 }
 
 export { addMediaSourceMainFeature as MEDIA_SOURCE_MAIN };

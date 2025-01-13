@@ -18,7 +18,6 @@ import type { IMediaElement } from "../compat/browser_compatibility_types";
 import type { SegmentSink } from "../core/segment_sinks";
 import type ContentDecryptor from "../main_thread/decrypt";
 import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
-import type MediaSourceContentInitializer from "../main_thread/init/media_source_content_initializer";
 import type MultiThreadContentInitializer from "../main_thread/init/multi_thread_content_initializer";
 import type HTMLTextDisplayer from "../main_thread/text_displayer/html";
 import type NativeTextDisplayer from "../main_thread/text_displayer/native/native_text_displayer";
@@ -117,7 +116,7 @@ export interface IFeaturesObject {
    * Feature allowing to load contents through MediaSource API through the
    * main thread.
    */
-  mainThreadMediaSourceInit: typeof MediaSourceContentInitializer | null;
+  mainThreadMediaSourceInit: typeof MultiThreadContentInitializer | null;
   /**
    * Features allowing to load contents through MediaSource API through
    * a WebWorker.
