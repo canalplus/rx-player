@@ -1,6 +1,6 @@
 import features from "../../../features";
 import log from "../../../log";
-import type { IManifest, IManifestMetadata } from "../../../manifest";
+import type { IManifest } from "../../../manifest";
 import { createRepresentationFilterFromFnString } from "../../../manifest";
 import type { IMediaSourceInterface } from "../../../mse";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
@@ -13,7 +13,6 @@ import type {
 import { WorkerMessageType } from "../../../multithread_types";
 import type { IPlayerError } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
-import objectAssign from "../../../utils/object_assign";
 import type {
   CancellationError,
   CancellationSignal,
@@ -76,7 +75,7 @@ export default class ContentPreparer {
   public initializeNewContent(
     sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
-  ): Promise<IManifestMetadata> {
+  ): Promise<IManifest> {
     return new Promise((res, rej) => {
       this.disposeCurrentContent();
       const contentCanceller = this._contentCanceller;
@@ -222,7 +221,6 @@ export default class ContentPreparer {
           return;
         }
 
-        const sentManifest = manifest.getMetadataSnapshot();
         manifest.addEventListener(
           "manifestUpdate",
           (updates) => {
@@ -230,22 +228,16 @@ export default class ContentPreparer {
               // TODO log warn?
               return;
             }
-
-            // Remove `periods` key to reduce cost of an unnecessary manifest
-            // clone.
-            const snapshot = objectAssign(manifest.getMetadataSnapshot(), {
-              periods: [],
-            });
             sendMessage({
               type: WorkerMessageType.ManifestUpdate,
               contentId,
-              value: { manifest: snapshot, updates },
+              value: { manifest, updates },
             });
           },
           contentCanceller.signal,
         );
         unbindRejectOnCancellation();
-        res(sentManifest);
+        res(manifest);
       }
     });
   }
