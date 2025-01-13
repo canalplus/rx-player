@@ -278,6 +278,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
         manifestLoader,
         segmentLoader,
       });
+      await sleep(0);
 
       expect(manifestLoaderCalledTimes).to.equal(1);
       await sleep(500);
@@ -307,6 +308,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
         manifestLoader,
         segmentLoader,
       });
+      await sleep(0);
 
       expect(manifestLoaderCalledTimes).to.equal(1);
       await sleep(100);

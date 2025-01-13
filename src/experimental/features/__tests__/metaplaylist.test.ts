@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { IFeaturesObject } from "../../../features/types";
-import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer";
+import MultiThreadContentInitializer from "../../../main_thread/init/multi_thread_content_initializer";
 import metaplaylist from "../../../transports/metaplaylist";
 import addLocalManifestFeature from "../metaplaylist";
 
@@ -10,9 +10,9 @@ describe("Features list - METAPLAYLIST", () => {
     addLocalManifestFeature(featureObject);
     expect(featureObject).toEqual({
       transports: { metaplaylist },
-      mainThreadMediaSourceInit: MediaSourceContentInitializer,
+      mainThreadMediaSourceInit: MultiThreadContentInitializer,
     });
     expect(featureObject.transports.metaplaylist).toBe(metaplaylist);
-    expect(featureObject.mainThreadMediaSourceInit).toBe(MediaSourceContentInitializer);
+    expect(featureObject.mainThreadMediaSourceInit).toBe(MultiThreadContentInitializer);
   });
 });

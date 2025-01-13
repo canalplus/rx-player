@@ -183,6 +183,7 @@ describe("DASH live content (SegmentTimeline)", function () {
       });
       expect(player.getAvailableVideoTracks()).to.eql([]);
 
+      await sleep(0);
       expect(player.getAvailableVideoTracks()).to.eql([]);
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff(null, () => {
@@ -248,6 +249,7 @@ describe("DASH live content (SegmentTimeline)", function () {
         manifestLoader,
         segmentLoader,
       });
+      await sleep(0);
 
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff({ maxTimeMs: 2000 }, () => {
@@ -273,6 +275,7 @@ describe("DASH live content (SegmentTimeline)", function () {
         manifestLoader,
         segmentLoader,
       });
+      await sleep(0);
 
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff(null, () => {
@@ -341,6 +344,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
         segmentLoader,
       });
       expect(player.getAvailableAudioTracks()).to.eql([]);
+      await sleep(0);
 
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff(null, () => {
@@ -402,6 +406,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
       });
       expect(player.getAvailableTextTracks()).to.eql([]);
 
+      await sleep(0);
       expect(player.getAvailableTextTracks()).to.eql([]);
       expect(manifestLoaderCalledTimes).to.equal(1);
 
@@ -460,6 +465,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
       });
       expect(player.getAvailableVideoTracks()).to.eql([]);
 
+      await sleep(0);
       expect(player.getAvailableVideoTracks()).to.eql([]);
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff(null, () => {
@@ -528,6 +534,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
         segmentLoader,
       });
 
+      await sleep(0);
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff(null, () => {
         expect(player.getMinimumPosition()).to.equal(6);
@@ -555,6 +562,7 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
         segmentLoader,
       });
 
+      await sleep(0);
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff(null, () => {
         expect(player.getMaximumPosition()).to.be.closeTo(1527508062, 1);
