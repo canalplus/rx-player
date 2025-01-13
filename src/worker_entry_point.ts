@@ -14,7 +14,9 @@ import {
 } from "./core/main/worker/globals";
 import log from "./experimental/tools/mediaCapabilitiesProber/log";
 import features from "./features";
+import Manifest from "./manifest/classes";
 import type { IWorkerMessage } from "./multithread_types";
+import { WorkerMessageType } from "./multithread_types";
 import DashJsParser from "./parsers/manifest/dash/js-parser";
 import DashWasmParser from "./parsers/manifest/dash/wasm-parser";
 import createDashPipelines from "./transports/dash";
@@ -45,7 +47,15 @@ initializeWorkerMain(
   },
 );
 
+/**
+ * Perform a `postMessage` to main thread with the given message.
+ * Arguments follow the `postMessage` API.
+ * @param {Object} msg
+ * @param {Array.<Object>} [transferables]
+ */
 function sendMessage(msg: IWorkerMessage, transferables?: Transferable[]): void {
+  updateMessageFormat(msg);
+
   log.debug("<--- Sending to Main:", msg.type);
   if (transferables === undefined) {
     postMessage(msg);
@@ -55,5 +65,30 @@ function sendMessage(msg: IWorkerMessage, transferables?: Transferable[]): void 
       msg,
       transferables,
     );
+  }
+}
+
+/**
+ * Ensure that we're sending data that can be serialized, as this is a
+ * requirement for the `postMessage` browser API.
+ *
+ * If necessary, mutations are done in place.
+ * @param {Object} msg
+ */
+function updateMessageFormat(msg: IWorkerMessage): void {
+  if (
+    msg.type === WorkerMessageType.ManifestReady ||
+    msg.type === WorkerMessageType.ManifestUpdate
+  ) {
+    if (msg.value.manifest instanceof Manifest) {
+      msg.value.manifest = msg.value.manifest.getMetadataSnapshot();
+      if (msg.type === WorkerMessageType.ManifestUpdate) {
+        // Remove `periods` key to reduce cost of an unnecessary manifest
+        // clone.
+        msg.value.manifest.periods = [];
+      }
+    } else {
+      log.warn("Worker: the Manifest instance should be communicated to `sendMessage`.");
+    }
   }
 }
