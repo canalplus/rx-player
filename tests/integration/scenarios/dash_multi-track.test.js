@@ -312,6 +312,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       manifestLoader,
       segmentLoader,
     });
+    await sleep(0);
 
     expect(manifestLoaderCalledTimes).to.equal(1);
     expect(requestedSegments).to.be.empty;

@@ -8,6 +8,7 @@ import type {
   IAdaptationChoice,
   IResolutionInfo,
 } from "../../core/types";
+import type CoreInterface from "../../core_interface";
 import {
   EncryptedMediaError,
   MediaError,
@@ -41,6 +42,7 @@ import type {
   IInitialManifest,
   IKeySystemOption,
   IPlayerError,
+  IRepresentationFilter,
 } from "../../public_types";
 import type { IThumbnailResponse, ITransportOptions } from "../../transports";
 import arrayFind from "../../utils/array_find";
@@ -58,7 +60,6 @@ import type { IContentProtection } from "../decrypt";
 import type IContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
-import sendMessage from "./send_message";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
@@ -85,18 +86,18 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _settings: IInitializeArguments;
 
   /**
-   * The WebWorker may be sending messages as soon as we're preparing the
-   * content but the `MultiThreadContentInitializer` is only able to handle all of
-   * them only once `start`ed.
+   * The Core may be sending messages as soon as we're preparing the content but
+   * the `MultiThreadContentInitializer` is only able to handle all of them only
+   * once `start`ed.
    *
-   * As such `_queuedWorkerMessages` is set to an Array  when `prepare` has been
-   * called but not `start` yet, and contains all worker messages that have to
+   * As such `_queuedCoreMessages` is set to an Array  when `prepare` has been
+   * called but not `start` yet, and contains all core messages that have to
    * be processed when `start` is called.
    *
    * It is set to `null` when there's no need to rely on that queue (either not
    * yet `prepare`d or already `start`ed).
    */
-  private _queuedWorkerMessages: MessageEvent[] | null;
+  private _queuedCoreMessages: IWorkerMessage[] | null;
 
   /**
    * Information relative to the current loaded content.
@@ -121,7 +122,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _awaitingRequests: {
     nextRequestId: number;
     /**
-     * Stores the resolvers and the current messageId that is sent to the web worker to
+     * Stores the resolvers and the current messageId that is sent to the core to
      * receive segment sink metrics.
      * The purpose of collecting metrics is for monitoring and debugging.
      */
@@ -132,7 +133,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       }
     >;
     /**
-     * Stores the resolvers and the current messageId that is sent to the web worker to
+     * Stores the resolvers and the current messageId that is sent to the core to
      * receive image thumbnails.
      */
     pendingThumbnailFetching: Map<
@@ -161,7 +162,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       pendingSinkMetrics: new Map(),
       pendingThumbnailFetching: new Map(),
     };
-    this._queuedWorkerMessages = null;
+    this._queuedCoreMessages = null;
   }
 
   /**
@@ -172,7 +173,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return;
     }
     const contentId = generateContentId();
-    const { adaptiveOptions, transportOptions, useMseInWorker, worker } = this._settings;
+    const {
+      adaptiveOptions,
+      transport,
+      transportOptions,
+      useMseInWorker,
+      coreInterface,
+    } = this._settings;
     const { wantedBufferAhead, maxVideoBufferSize, maxBufferAhead, maxBufferBehind } =
       this._settings.bufferOptions;
     const initialVideoBitrate = adaptiveOptions.initialBitrates.video;
@@ -189,7 +196,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       initialPlayPerformed: null,
       useMseInWorker,
     };
-    sendMessage(worker, {
+    coreInterface.sendMessage({
       type: MainThreadMessageType.PrepareContent,
       value: {
         contentId,
@@ -197,6 +204,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         enableRepresentationAvoidance: this._settings.enableRepresentationAvoidance,
         url: this._settings.url,
         hasText: this._hasTextBufferFeature(),
+        transport,
         transportOptions,
         initialVideoBitrate,
         initialAudioBitrate,
@@ -209,7 +217,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
     });
     this._initCanceller.signal.register(() => {
-      sendMessage(worker, {
+      coreInterface.sendMessage({
         type: MainThreadMessageType.StopContent,
         contentId,
         value: null,
@@ -218,10 +226,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     if (this._initCanceller.isUsed()) {
       return;
     }
-    this._queuedWorkerMessages = [];
-    log.debug("Init", "addEventListener prepare buffering worker messages");
-    const onmessage = (evt: MessageEvent): void => {
-      const msgData = evt.data as unknown as IWorkerMessage;
+    this._queuedCoreMessages = [];
+    log.debug("Init", "addEventListener prepare buffering core messages");
+    const onmessage = (msgData: IWorkerMessage): void => {
       const type = msgData.type;
       switch (type) {
         case WorkerMessageType.LogMessage: {
@@ -262,29 +269,29 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
         default:
-          if (this._queuedWorkerMessages !== null) {
-            this._queuedWorkerMessages.push(evt);
+          if (this._queuedCoreMessages !== null) {
+            this._queuedCoreMessages.push(msgData);
           }
           break;
       }
     };
-    this._settings.worker.addEventListener("message", onmessage);
-    const onmessageerror = (_msg: MessageEvent) => {
-      log.error("Init", "Error when receiving message from worker.");
+    this._settings.coreInterface.addMessageListener(onmessage);
+    const onmessageerror = () => {
+      log.error("Init", "Error when receiving message from core.");
     };
-    this._settings.worker.addEventListener("messageerror", onmessageerror);
+    this._settings.coreInterface.addErrorListener(onmessageerror);
     this._initCanceller.signal.register(() => {
-      log.debug("Init", "removeEventListener prepare for worker message");
-      this._settings.worker.removeEventListener("message", onmessage);
-      this._settings.worker.removeEventListener("messageerror", onmessageerror);
+      log.debug("Init", "removeEventListener prepare for core message");
+      this._settings.coreInterface.removeMessageListener(onmessage);
+      this._settings.coreInterface.removeErrorListener(onmessageerror);
     });
 
     // Also bind all `SharedReference` objects:
 
     const throttleVideoBitrate =
       adaptiveOptions.throttlers.throttleBitrate.video ?? new SharedReference(Infinity);
-    bindNumberReferencesToWorker(
-      worker,
+    bindNumberReferencesToCore(
+      coreInterface,
       this._initCanceller.signal,
       [wantedBufferAhead, "wantedBufferAhead"],
       [maxVideoBufferSize, "maxVideoBufferSize"],
@@ -302,7 +309,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       });
     limitVideoResolution.onUpdate(
       (newVal) => {
-        sendMessage(worker, {
+        coreInterface.sendMessage({
           type: MainThreadMessageType.ReferenceUpdate,
           value: { name: "limitVideoResolution", newVal },
         });
@@ -322,7 +329,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     if (this._currentContentInfo === null) {
       return;
     }
-    sendMessage(this._settings.worker, {
+    this._settings.coreInterface.sendMessage({
       type: MainThreadMessageType.ContentUrlsUpdate,
       contentId: this._currentContentInfo.contentId,
       value: { urls, refreshNow },
@@ -450,7 +457,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         reloadingContentInfo.mediaSourceInfo.type === "main"
           ? reloadingContentInfo.mediaSourceInfo.mediaSource.id
           : reloadingContentInfo.mediaSourceInfo.mediaSourceId;
-      sendMessage(this._settings.worker, {
+      this._settings.coreInterface.sendMessage({
         type: MainThreadMessageType.MediaSourceReload,
         mediaSourceId,
         value: null,
@@ -505,8 +512,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       );
     };
 
-    const onmessage = (msg: MessageEvent) => {
-      const msgData = msg.data as unknown as IWorkerMessage;
+    const onmessage = (msgData: IWorkerMessage) => {
       switch (msgData.type) {
         case WorkerMessageType.AttachMediaSource: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
@@ -555,14 +561,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          this.trigger("warning", formatWorkerError(msgData.value));
+          this.trigger("warning", formatCoreError(msgData.value));
           break;
 
         case WorkerMessageType.Error:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          this._onFatalError(formatWorkerError(msgData.value));
+          this._onFatalError(formatCoreError(msgData.value));
           break;
 
         case WorkerMessageType.CreateMediaSource:
@@ -570,7 +576,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             msgData,
             mediaElement,
             mediaSourceStatus,
-            this._settings.worker,
+            this._settings.coreInterface,
           );
           break;
 
@@ -611,7 +617,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             sourceBuffer
               .appendBuffer(msgData.value.data, msgData.value.params)
               .then((buffered) => {
-                sendMessage(this._settings.worker, {
+                this._settings.coreInterface.sendMessage({
                   type: MainThreadMessageType.SourceBufferSuccess,
                   mediaSourceId: mediaSource.id,
                   sourceBufferType: sourceBuffer.type,
@@ -620,7 +626,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                 });
               })
               .catch((error) => {
-                sendMessage(this._settings.worker, {
+                this._settings.coreInterface.sendMessage({
                   type: MainThreadMessageType.SourceBufferError,
                   mediaSourceId: mediaSource.id,
                   sourceBufferType: sourceBuffer.type,
@@ -654,7 +660,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             sourceBuffer
               .remove(msgData.value.start, msgData.value.end)
               .then((buffered) => {
-                sendMessage(this._settings.worker, {
+                this._settings.coreInterface.sendMessage({
                   type: MainThreadMessageType.SourceBufferSuccess,
                   mediaSourceId: mediaSource.id,
                   sourceBufferType: sourceBuffer.type,
@@ -663,7 +669,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                 });
               })
               .catch((error) => {
-                sendMessage(this._settings.worker, {
+                this._settings.coreInterface.sendMessage({
                   type: MainThreadMessageType.SourceBufferError,
                   mediaSourceId: mediaSource.id,
                   sourceBufferType: sourceBuffer.type,
@@ -1012,7 +1018,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                       stopListening();
                       return;
                     }
-                    sendMessage(this._settings.worker, {
+                    this._settings.coreInterface.sendMessage({
                       type: MainThreadMessageType.RepresentationUpdate,
                       contentId: this._currentContentInfo.contentId,
                       value: {
@@ -1026,7 +1032,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                   { clearSignal: this._initCanceller.signal },
                 );
               }
-              sendMessage(this._settings.worker, {
+              this._settings.coreInterface.sendMessage({
                 type: MainThreadMessageType.TrackUpdate,
                 contentId: this._currentContentInfo.contentId,
                 value: {
@@ -1102,14 +1108,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           } else {
             try {
               const ranges = textDisplayer.pushTextData(msgData.value);
-              sendMessage(this._settings.worker, {
+              this._settings.coreInterface.sendMessage({
                 type: MainThreadMessageType.PushTextDataSuccess,
                 contentId: msgData.contentId,
                 value: { ranges },
               });
             } catch (err) {
               const message = err instanceof Error ? err.message : "Unknown error";
-              sendMessage(this._settings.worker, {
+              this._settings.coreInterface.sendMessage({
                 type: MainThreadMessageType.PushTextDataError,
                 contentId: msgData.contentId,
                 value: { message },
@@ -1134,14 +1140,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                 msgData.value.start,
                 msgData.value.end,
               );
-              sendMessage(this._settings.worker, {
+              this._settings.coreInterface.sendMessage({
                 type: MainThreadMessageType.RemoveTextDataSuccess,
                 contentId: msgData.contentId,
                 value: { ranges },
               });
             } catch (err) {
               const message = err instanceof Error ? err.message : "Unknown error";
-              sendMessage(this._settings.worker, {
+              this._settings.coreInterface.sendMessage({
                 type: MainThreadMessageType.RemoveTextDataError,
                 contentId: msgData.contentId,
                 value: { message },
@@ -1261,7 +1267,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           );
           if (tObj !== undefined) {
             if (msgData.value.status === "error") {
-              tObj.reject(formatWorkerError(msgData.value.error));
+              tObj.reject(formatCoreError(msgData.value.error));
             } else {
               tObj.resolve(msgData.value.data);
             }
@@ -1275,21 +1281,21 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       }
     };
 
-    log.debug("Init", "addEventListener for worker message");
-    if (this._queuedWorkerMessages !== null) {
-      const bufferedMessages = this._queuedWorkerMessages.slice();
+    log.debug("Init", "addEventListener for core message");
+    if (this._queuedCoreMessages !== null) {
+      const bufferedMessages = this._queuedCoreMessages.slice();
       log.debug("Init", "Processing buffered messages", {
         ammount: bufferedMessages.length,
       });
       for (const message of bufferedMessages) {
         onmessage(message);
       }
-      this._queuedWorkerMessages = null;
+      this._queuedCoreMessages = null;
     }
-    this._settings.worker.addEventListener("message", onmessage);
+    this._settings.coreInterface.addMessageListener(onmessage);
     this._initCanceller.signal.register(() => {
-      log.debug("Init", "removeEventListener for worker message");
-      this._settings.worker.removeEventListener("message", onmessage);
+      log.debug("Init", "removeEventListener for core message");
+      this._settings.coreInterface.removeMessageListener(onmessage);
     });
   }
 
@@ -1407,7 +1413,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       ) {
         reloadMediaSource();
       } else {
-        sendMessage(this._settings.worker, {
+        this._settings.coreInterface.sendMessage({
           type: MainThreadMessageType.DecipherabilityStatusUpdate,
           contentId: this._currentContentInfo.contentId,
           value: manUpdates.map((s) => ({
@@ -1435,7 +1441,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       ) {
         reloadMediaSource();
       } else {
-        sendMessage(this._settings.worker, {
+        this._settings.coreInterface.sendMessage({
           type: MainThreadMessageType.DecipherabilityStatusUpdate,
           contentId: this._currentContentInfo.contentId,
           value: manUpdates.map((s) => ({
@@ -1497,7 +1503,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   /**
    * Retrieves all unknown codecs from the current manifest, checks these unknown codecs
    * to determine if they are supported, updates the manifest with the support
-   * status of these codecs, and forwards the list of supported codecs to the web worker.
+   * status of these codecs, and forwards the list of supported codecs to core.
    * @param manifest
    */
   private _updateCodecSupport(manifest: IManifestMetadata, mediaElement: IMediaElement) {
@@ -1509,11 +1515,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         this._currentContentInfo?.useMseInWorker ?? false,
       );
       if (updatedCodecs.length > 0) {
-        sendMessage(this._settings.worker, {
+        this._settings.coreInterface.sendMessage({
           type: MainThreadMessageType.CodecSupportUpdate,
           value: updatedCodecs,
         });
-        // TODO what if one day the worker updates codec support by itself?
+        // TODO what if one day the core updates codec support by itself?
         // We wouldn't know...
         this.trigger("codecSupportUpdate", null);
       }
@@ -1569,7 +1575,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           const contentId = this._currentContentInfo.contentId;
           corePlaybackObserver.listen(
             (obs) => {
-              sendMessage(this._settings.worker, {
+              this._settings.coreInterface.sendMessage({
                 type: MainThreadMessageType.PlaybackObservation,
                 contentId,
                 value: objectAssign(obs, {
@@ -1596,7 +1602,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * time a content is loaded AND re-loaded on a `HTMLMediaElement`, when the
    * manifest is known.
    *
-   * Note that this does not include reacting to incoming worker messages nor
+   * Note that this does not include reacting to incoming core messages nor
    * sending them, those actions have to be handled separately.
    *
    * @param {Object} parameters
@@ -1721,7 +1727,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const _getSegmentSinkMetrics = async (): Promise<ISegmentSinkMetrics | undefined> => {
       this._awaitingRequests.nextRequestId++;
       const requestId = this._awaitingRequests.nextRequestId;
-      sendMessage(this._settings.worker, {
+      this._settings.coreInterface.sendMessage({
         type: MainThreadMessageType.PullSegmentSinkStoreInfos,
         value: { requestId },
       });
@@ -1751,7 +1757,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       }
       this._awaitingRequests.nextRequestId++;
       const requestId = this._awaitingRequests.nextRequestId;
-      sendMessage(this._settings.worker, {
+      this._settings.coreInterface.sendMessage({
         type: MainThreadMessageType.ThumbnailDataRequest,
         contentId: this._currentContentInfo.contentId,
         value: { requestId, periodId, thumbnailTrackId, time },
@@ -1872,7 +1878,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const sentInitialObservation = objectAssign(initialObservation, {
       position: initialObservation.position.serialize(),
     });
-    sendMessage(this._settings.worker, {
+    this._settings.coreInterface.sendMessage({
       type: MainThreadMessageType.StartPreparedContent,
       contentId,
       value: {
@@ -1886,7 +1892,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
     corePlaybackObserver.listen(
       (obs) => {
-        sendMessage(this._settings.worker, {
+        this._settings.coreInterface.sendMessage({
           type: MainThreadMessageType.PlaybackObservation,
           contentId,
           value: objectAssign(obs, { position: obs.position.serialize() }),
@@ -1902,18 +1908,17 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   /**
-   * Handles Worker messages asking to create a MediaSource.
-   * @param {Object} msg - The worker's message received.
+   * Handles core messages asking to create a MediaSource.
+   * @param {Object} msg - The core's message received.
    * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
    * content plays.
-   * @param {Worker} worker - The WebWorker concerned, messages may be sent back
-   * to it.
+   * @param {Object} coreInterface - The interface to the core.
    */
   private _onCreateMediaSourceMessage(
     msg: ICreateMediaSourceWorkerMessage,
     mediaElement: IMediaElement,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
-    worker: Worker,
+    coreInterface: CoreInterface,
   ): void {
     if (this._currentContentInfo?.contentId !== msg.contentId) {
       log.info("Init", "Ignoring MediaSource attachment due to wrong `contentId`");
@@ -1937,21 +1942,21 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                 mediaSource,
               };
               mediaSource.addEventListener("mediaSourceOpen", () => {
-                sendMessage(worker, {
+                coreInterface.sendMessage({
                   type: MainThreadMessageType.MediaSourceReadyStateChange,
                   mediaSourceId,
                   value: "open",
                 });
               });
               mediaSource.addEventListener("mediaSourceEnded", () => {
-                sendMessage(worker, {
+                coreInterface.sendMessage({
                   type: MainThreadMessageType.MediaSourceReadyStateChange,
                   mediaSourceId,
                   value: "ended",
                 });
               });
               mediaSource.addEventListener("mediaSourceClose", () => {
-                sendMessage(worker, {
+                coreInterface.sendMessage({
                   type: MainThreadMessageType.MediaSourceReadyStateChange,
                   mediaSourceId,
                   value: "closed",
@@ -1994,7 +1999,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 export interface IMultiThreadContentInitializerContentInfos {
   /**
    * "contentId", which is the identifier for the currently loaded content.
-   * Allows to ensure that the WebWorker is referencing the current content, not
+   * Allows to ensure that the Core is referencing the current content, not
    * a previously stopped one.
    */
   contentId: string;
@@ -2067,8 +2072,16 @@ export interface IMultiThreadContentInitializerContentInfos {
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
 export interface IInitializeArguments {
-  /** WebWorker inside which the core code runs. */
-  worker: Worker;
+  /**
+   * The `MultiThreadContentInitializer` will interact with the RxPlayer's core
+   * logic (the one loading media data) by exchanging messages through an
+   * interface called the `CoreInterface`.
+   *
+   * This `CoreInterface` allows to abstract its actual current implementation.
+   * E.g., the core logic could be running in a WebWorker or in main thread, in
+   * which cases message exchanging mechanisms would be different.
+   */
+  coreInterface: CoreInterface;
   /**
    * If `true`, MSE API should be used in the core part of the RxPlayer (in the
    * WebWorker).
@@ -2115,18 +2128,13 @@ export interface IInitializeArguments {
   keySystems: IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
   lowLatencyMode: boolean;
+  /**
+   * The type of "transport" wanted, e.g. "dash" or "smooth".
+   */
+  transport: string;
   /** Options relative to the streaming protocol. */
-  transportOptions: Omit<
-    ITransportOptions,
-    "manifestLoader" | "segmentLoader" | "representationFilter"
-  > & {
-    // Unsupported features have to be disabled explicitely
-    // TODO support them
-    manifestLoader: undefined;
-    segmentLoader: undefined;
-
-    // Option which has to be set as a Funtion string to work.
-    representationFilter: string | undefined;
+  transportOptions: Omit<ITransportOptions, "representationFilter"> & {
+    representationFilter?: IRepresentationFilter | string | undefined;
   };
   /** Settings linked to Manifest requests. */
   manifestRequestSettings: {
@@ -2181,8 +2189,8 @@ export interface IInitializeArguments {
   url: string | undefined;
 }
 
-function bindNumberReferencesToWorker(
-  worker: Worker,
+function bindNumberReferencesToCore(
+  coreInterface: CoreInterface,
   cancellationSignal: CancellationSignal,
   ...refs: Array<
     [
@@ -2202,7 +2210,7 @@ function bindNumberReferencesToWorker(
       (newVal) => {
         // NOTE: The TypeScript checks have already been made by this function's
         // overload, but the body here is not aware of that.
-        sendMessage(worker, {
+        coreInterface.sendMessage({
           type: MainThreadMessageType.ReferenceUpdate,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
           value: { name: ref[1] as any, newVal: newVal as any },
@@ -2213,7 +2221,7 @@ function bindNumberReferencesToWorker(
   }
 }
 
-function formatWorkerError(sentError: ISentError): IPlayerError {
+function formatCoreError(sentError: ISentError): IPlayerError {
   switch (sentError.name) {
     case "NetworkError":
       return new NetworkError(
@@ -2230,7 +2238,7 @@ function formatWorkerError(sentError: ISentError): IPlayerError {
         tracks: sentError.tracks,
       });
     case "EncryptedMediaError":
-      // We assume that everything have already been checked Worker-side here
+      // We assume that everything have already been checked core-side here
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return new EncryptedMediaError(sentError.code, sentError.reason, {
         keyStatuses: sentError.keyStatuses,
@@ -2324,7 +2332,7 @@ function formatSentLogObject(arg: ISentLogValue): IAcceptedLogValue {
     return arg;
   }
   if (arg?.isSerializedError === true) {
-    return formatWorkerError(arg as ISentError);
+    return formatCoreError(arg as ISentError);
   }
   return arg as Exclude<ISentLogValue, ISentError>;
 }

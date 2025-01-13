@@ -10,10 +10,10 @@ import WorkerMediaSourceInterface from "../../../mse/worker_media_source_interfa
 import type {
   IAttachMediaSourceWorkerMessagePayload,
   IContentInitializationData,
+  IWorkerMessage,
 } from "../../../multithread_types";
 import { WorkerMessageType } from "../../../multithread_types";
 import type { IPlayerError } from "../../../public_types";
-import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";
@@ -33,8 +33,8 @@ import type { IThumbnailFetcher } from "../../fetchers/thumbnails/thumbnail_fetc
 import SegmentSinksStore from "../../segment_sinks";
 import FreezeResolver from "../common/FreezeResolver";
 import { limitVideoResolution, throttleVideoBitrate } from "./globals";
-import sendMessage, { formatErrorForSender } from "./send_message";
 import TrackChoiceSetter from "./track_choice_setter";
+import { formatErrorForSender } from "./utils";
 import WorkerTextDisplayerInterface from "./worker_text_displayer_interface";
 
 /** Function allowing to associate a unique identifier to all created `MediaSource` */
@@ -111,6 +111,7 @@ export default class ContentPreparer {
    * @returns {Promise.<Object>}
    */
   public initializeNewContent(
+    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
   ): Promise<IManifestMetadata> {
     return new Promise((res, rej) => {
@@ -128,19 +129,21 @@ export default class ContentPreparer {
         transportOptions,
         useMseInWorker,
         enableRepresentationAvoidance,
+        transport,
       } = context;
       let manifest: IManifest | null = null;
 
-      // TODO better way
-      assert(
-        features.transports.dash !== undefined,
-        "Multithread RxPlayer should have access to the DASH feature",
-      );
+      const transportFn = features.transports[transport];
+      if (typeof transportFn !== "function") {
+        // Stop previous content and reset its state
+        // XXX TODO:  send fatal error
+        throw new Error(`transport "${transport}" not supported`);
+      }
       const representationFilter =
         typeof transportOptions.representationFilter === "string"
           ? createRepresentationFilterFromFnString(transportOptions.representationFilter)
-          : undefined;
-      const dashPipelines = features.transports.dash({
+          : transportOptions.representationFilter;
+      const transportPipelines = transportFn({
         ...transportOptions,
         representationFilter,
       });
@@ -149,7 +152,7 @@ export default class ContentPreparer {
         context.cmcd === undefined ? null : new CmcdDataBuilder(context.cmcd);
       const manifestFetcher = new ManifestFetcher(
         url === undefined ? undefined : [url],
-        dashPipelines,
+        transportPipelines,
         {
           cmcdDataBuilder,
           ...context.manifestRetryOptions,
@@ -175,13 +178,13 @@ export default class ContentPreparer {
 
       const cdnPrioritizer = new CdnPrioritizer(contentCanceller.signal);
       const segmentQueueCreator = new SegmentQueueCreator(
-        dashPipelines,
+        transportPipelines,
         cdnPrioritizer,
         cmcdDataBuilder,
         context.segmentRetryOptions,
       );
       const fetchThumbnailData = createThumbnailFetcher(
-        dashPipelines.thumbnails,
+        transportPipelines.thumbnails,
         cdnPrioritizer,
       );
 
@@ -189,6 +192,7 @@ export default class ContentPreparer {
 
       const [mediaSource, segmentSinksStore, workerTextSender] =
         createMediaSourceInterfaceAndSegmentSinksStore(
+          sendMessage,
           contentId,
           {
             useMseInWorker,
@@ -329,7 +333,9 @@ export default class ContentPreparer {
    * The returned Promise resolves when it restarts being ready.
    * @returns {Promise}
    */
-  public reloadMediaSource(): Promise<void> {
+  public reloadMediaSource(
+    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  ): Promise<void> {
     this._currentMediaSourceCanceller.cancel();
     if (this._currentContent === null) {
       return Promise.reject(new Error("CP: No content anymore"));
@@ -339,6 +345,7 @@ export default class ContentPreparer {
 
     const [mediaSourceInterface, segmentSinksStore, workerTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
+        sendMessage,
         this._currentContent.contentId,
         {
           useMseInWorker: this._currentContent.useMseInWorker,
@@ -455,6 +462,7 @@ export interface IPreparedContentData {
 }
 
 /**
+ * @param {Function} sendMessage
  * @param {string} contentId
  * @param {Object} capabilities
  * @param {boolean} capabilities.useMseInWorker
@@ -464,6 +472,7 @@ export interface IPreparedContentData {
  * @returns {Array.<Object>}
  */
 function createMediaSourceInterfaceAndSegmentSinksStore(
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   contentId: string,
   capabilities: {
     useMseInWorker: boolean;
