@@ -33,13 +33,16 @@ import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import config from "../../config";
+import initializeWorkerMain from "../../core/main/worker";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type {
   IAdaptationChoice,
   IInbandEvent,
   IABRThrottlers,
   IBufferType,
+  IResolutionInfo,
 } from "../../core/types";
+import { MonoThreadCoreInterface, WorkerCoreInterface } from "../../core_interface";
 import type { IDefaultConfig } from "../../default_config";
 import type { IErrorCode, IErrorType } from "../../errors";
 import { ErrorCodes, ErrorTypes, formatError, MediaError } from "../../errors";
@@ -61,7 +64,6 @@ import {
   getMaximumSafePosition,
   getMinimumSafePosition,
   ManifestMetadataFormat,
-  createRepresentationFilterFromFnString,
   getPeriodForTime,
 } from "../../manifest";
 import type { IWorkerMessage } from "../../multithread_types";
@@ -919,6 +921,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         limitResolution: {},
       };
 
+      let throttleVideoBitrate: IReadOnlySharedReference<number> = new SharedReference(
+        Infinity,
+      );
+
       if (this._priv_throttleVideoBitrateWhenHidden) {
         if (!relyOnVideoVisibilityAndSize) {
           log.warn(
@@ -926,15 +932,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               "browser can't be trusted for visibility.",
           );
         } else {
-          throttlers.throttleBitrate = {
-            video: createMappedReference(
-              getVideoVisibilityRef(
-                this._priv_pictureInPictureRef,
-                currentContentCanceller.signal,
-              ),
-              (isActive) => (isActive ? Infinity : 0),
+          throttleVideoBitrate = createMappedReference(
+            getVideoVisibilityRef(
+              this._priv_pictureInPictureRef,
               currentContentCanceller.signal,
             ),
+            (isActive) => (isActive ? Infinity : 0),
+            currentContentCanceller.signal,
+          );
+          throttlers.throttleBitrate = {
+            video: throttleVideoBitrate,
           };
         }
       }
@@ -987,6 +994,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         connectionTimeout: requestConfig.segment?.connectionTimeout,
       };
 
+      const transportOptions = {
+        lowLatencyMode,
+        checkMediaSegmentIntegrity,
+        checkManifestIntegrity,
+        referenceDateTime,
+        serverSyncInfos,
+        manifestLoader,
+        segmentLoader,
+        representationFilter: options.representationFilter,
+        __priv_manifestUpdateUrl,
+        __priv_patchLastSegmentInSidx,
+      };
+
       const canRunInMultiThread =
         features.multithread !== null &&
         this._priv_worker !== null &&
@@ -1003,33 +1023,40 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               "`MEDIA_SOURCE_MAIN` feature",
           );
         }
-        const transportFn = features.transports[transport];
-        if (typeof transportFn !== "function") {
-          // Stop previous content and reset its state
-          this.stop();
-          this._priv_currentError = null;
-          throw new Error(`transport "${transport}" not supported`);
-        }
-
-        const representationFilter =
-          typeof options.representationFilter === "string"
-            ? createRepresentationFilterFromFnString(options.representationFilter)
-            : options.representationFilter;
-
         log.info("API: Initializing MediaSource mode in the main thread");
-        const transportPipelines = transportFn({
-          lowLatencyMode,
-          checkMediaSegmentIntegrity,
-          checkManifestIntegrity,
-          manifestLoader,
-          referenceDateTime,
-          representationFilter,
-          segmentLoader,
-          serverSyncInfos,
-          __priv_manifestUpdateUrl,
-          __priv_patchLastSegmentInSidx,
+        const coreInterface = new MonoThreadCoreInterface();
+        const coreInterfaceCallbacks = coreInterface.getCallbacks();
+        initializeWorkerMain(
+          coreInterfaceCallbacks.setCoreMessageReceiver,
+          coreInterfaceCallbacks.sendCoreMessage,
+          {
+            // XXX TODO:
+            limitVideoResolution: new SharedReference<IResolutionInfo>({
+              height: undefined,
+              width: undefined,
+              pixelRatio: 1,
+            }),
+            maxBufferAhead: bufferOptions.maxBufferAhead,
+            maxBufferBehind: bufferOptions.maxBufferBehind,
+            maxVideoBufferSize: bufferOptions.maxVideoBufferSize,
+            throttleVideoBitrate: new SharedReference(Infinity),
+            wantedBufferAhead: bufferOptions.wantedBufferAhead,
+          },
+        );
+        coreInterface.sendMessage({
+          type: MainThreadMessageType.Init,
+          value: {
+            dashWasmUrl: undefined,
+            hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
+            logLevel: log.getLevel(),
+            logFormat: log.getFormat(),
+            sendBackLogs: false,
+            date: Date.now(),
+            timestamp: getMonotonicTimeStamp(),
+          },
         });
         initializer = new features.mainThreadMediaSourceInit({
+          coreInterface,
           adaptiveOptions,
           autoPlay,
           bufferOptions,
@@ -1038,13 +1065,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             experimentalOptions.enableRepresentationAvoidance,
           keySystems,
           lowLatencyMode,
-          transport: transportPipelines,
+          transport,
+          transportOptions,
           manifestRequestSettings,
           segmentRequestOptions,
           speed: this._priv_speed,
           startAt,
           textTrackOptions,
           url,
+          useMseInWorker: false,
         });
       } else {
         if (features.multithread === null) {
@@ -1061,19 +1090,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         assert(typeof options.representationFilter !== "function");
         useWorker = true;
         log.info("API: Initializing MediaSource mode in a WebWorker");
-        const transportOptions = {
-          lowLatencyMode,
-          checkMediaSegmentIntegrity,
-          checkManifestIntegrity,
-          referenceDateTime,
-          serverSyncInfos,
-          manifestLoader: undefined,
-          segmentLoader: undefined,
-          representationFilter: options.representationFilter,
-          __priv_manifestUpdateUrl,
-          __priv_patchLastSegmentInSidx,
-        };
         initializer = new features.multithread.init({
+          coreInterface: new WorkerCoreInterface(this._priv_worker),
           adaptiveOptions,
           autoPlay,
           bufferOptions,
@@ -1082,13 +1100,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             experimentalOptions.enableRepresentationAvoidance,
           keySystems,
           lowLatencyMode,
+          transport,
           transportOptions,
           manifestRequestSettings,
           segmentRequestOptions,
           speed: this._priv_speed,
           startAt,
           textTrackOptions,
-          worker: this._priv_worker,
           url,
           useMseInWorker: hasMseInWorker,
         });

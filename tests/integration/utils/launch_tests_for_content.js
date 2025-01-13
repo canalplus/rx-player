@@ -113,6 +113,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           manifestLoader,
           segmentLoader,
         });
+        await sleep(0);
 
         // should only have the manifest for now
         expect(manifestLoaderCalledTimes).to.equal(1);

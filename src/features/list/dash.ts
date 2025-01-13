@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
+import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 import dashJsParser from "../../parsers/manifest/dash/js-parser";
 import dash from "../../transports/dash";
 import type { IFeaturesObject } from "../types";
@@ -28,7 +28,7 @@ function addDASHFeature(features: IFeaturesObject): void {
     features.transports.dash = dash;
   }
   features.dashParsers.js = dashJsParser;
-  features.mainThreadMediaSourceInit = MediaSourceContentInitializer;
+  features.mainThreadMediaSourceInit = MultiThreadContentInitializer;
 }
 
 export { addDASHFeature as DASH };

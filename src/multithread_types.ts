@@ -29,7 +29,7 @@ import type {
   SourceBufferType,
 } from "./mse";
 import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
-import type { ICmcdOptions, ITrackType } from "./public_types";
+import type { ICmcdOptions, IRepresentationFilter, ITrackType } from "./public_types";
 import type { IThumbnailResponse, ITransportOptions } from "./transports";
 import type { ILogFormat, ILoggerLevel } from "./utils/logger";
 import type { IRange } from "./utils/ranges";
@@ -114,21 +114,12 @@ export interface IContentInitializationData {
   /** If `true`, text buffer (e.g. for subtitles) is enabled. */
   hasText: boolean;
   /**
-   * Options relative to the streaming protocol.
-   *
-   * Options not yet supported in a WebWorker environment are omitted.
+   * The type of "transport" wanted, e.g. "dash" or "smooth".
    */
-  transportOptions: Omit<
-    ITransportOptions,
-    "manifestLoader" | "segmentLoader" | "representationFilter"
-  > & {
-    // Unsupported features have to be disabled explicitely
-    // TODO support them
-    manifestLoader: undefined;
-    segmentLoader: undefined;
-
-    // Option which has to be set as a Funtion string to work.
-    representationFilter: string | undefined;
+  transport: string;
+  /** Options relative to the streaming protocol. */
+  transportOptions: Omit<ITransportOptions, "representationFilter"> & {
+    representationFilter?: IRepresentationFilter | string | undefined;
   };
   /** Initial video bitrate on which the adaptive logic will base itself. */
   initialVideoBitrate?: number | undefined;
