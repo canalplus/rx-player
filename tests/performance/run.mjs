@@ -455,7 +455,11 @@ function createResultServer() {
           const parsedBody = JSON.parse(body);
           if (parsedBody.type === "log") {
             // eslint-disable-next-line no-console
-            console.log("LOG:", parsedBody.data);
+            console.warn("LOG:", parsedBody.data);
+          } else if (parsedBody.type === "error") {
+            // eslint-disable-next-line no-console
+            console.error("ERROR: A fatal error happened:", parsedBody.data);
+            process.exit(1);
           } else if (parsedBody.type === "done") {
             if (currentBrowser !== undefined) {
               currentBrowser.kill();
