@@ -573,9 +573,8 @@ function compareSamples() {
     const result2 = getResultsForSample(sample2);
 
     // eslint-disable-next-line no-console
-    console.log("For current Player:\n" + "===================");
-    // eslint-disable-next-line no-console
     console.log(
+      "\n==== For current Player ====\n",
       `test name: ${testName}\n` +
         `mean: ${result1.mean}\n` +
         `variance: ${result1.variance}\n` +
@@ -585,9 +584,8 @@ function compareSamples() {
     );
 
     // eslint-disable-next-line no-console
-    console.log("\nFor previous Player:\n" + "===================");
-    // eslint-disable-next-line no-console
     console.log(
+      "\n==== For previous Player ====\n",
       `test name: ${testName}\n` +
         `mean: ${result2.mean}\n` +
         `variance: ${result2.variance}\n` +
@@ -703,12 +701,14 @@ function getSamplePerScenarios(samplesObj) {
  */
 function displayTemporaryResults() {
   const testedScenarios = getSamplePerScenarios(currentTestSample);
+  // eslint-disable-next-line no-console
+  console.log(`\n\n==== Temporary results (${nextTaskIndex}/${tasks.length}) ====\n`);
   for (const testName of Object.keys(testedScenarios)) {
     const scenarioSample = testedScenarios[testName];
     const results = getResultsForSample(scenarioSample);
     // eslint-disable-next-line no-console
     console.log(
-      `test name: ${testName}\n` +
+      `\ntest name: ${testName}\n` +
         `mean: ${results.mean}\n` +
         `first sample: ${scenarioSample[0]}\n` +
         `last sample: ${scenarioSample[scenarioSample.length - 1]}\n` +
