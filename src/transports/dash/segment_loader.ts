@@ -89,37 +89,16 @@ export async function regularSegmentLoader(
     headers = cmcdHeaders;
   }
 
-  const containerType = inferSegmentContainer(context.type, context.mimeType);
-  if (lowLatencyMode && (containerType === "mp4" || containerType === undefined)) {
-    if (fetchIsSupported()) {
-      return loadChunkedSegmentData(
-        url,
-        {
-          headers,
-          timeout: options.timeout,
-          connectionTimeout: options.connectionTimeout,
-        },
-        callbacks,
-        cancelSignal,
-      );
-    } else {
-      warnOnce(
-        "DASH: Your browser does not have the fetch API. You will have " +
-          "a higher chance of rebuffering when playing close to the live edge",
-      );
-    }
-  }
-
-  const data = await request({
+  return loadChunkedSegmentData(
     url,
-    responseType: "arraybuffer",
-    headers,
-    timeout: options.timeout,
-    connectionTimeout: options.connectionTimeout,
+    {
+      headers,
+      timeout: options.timeout,
+      connectionTimeout: options.connectionTimeout,
+    },
+    callbacks,
     cancelSignal,
-    onProgress: callbacks.onProgress,
-  });
-  return { resultType: "segment-loaded", resultData: data };
+  );
 }
 
 /**
