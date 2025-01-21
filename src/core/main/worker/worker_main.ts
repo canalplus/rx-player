@@ -52,15 +52,30 @@ export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => vo
  * receive messages coming from the "main thread" part of the RxPlayer logic.
  * @param {Function} sendMessage - Function allowing to send messages to the
  * "main thread" part of the RxPlayer logic.
- * @param {Object} refs - Collection of so-called "references": values
- * configuring playback that may be updated at any time and that the WorkerMain
- * should react on.
  */
 export default function initializeWorkerMain(
   setMessageReceiver: (cb: IMessageReceiverCallback) => void,
   sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
-  refs: ICoreReferences,
 ): void {
+  const {
+    DEFAULT_WANTED_BUFFER_AHEAD,
+    DEFAULT_MAX_VIDEO_BUFFER_SIZE,
+    DEFAULT_MAX_BUFFER_AHEAD,
+    DEFAULT_MAX_BUFFER_BEHIND,
+  } = config.getCurrent();
+  const refs: ICoreReferences = {
+    wantedBufferAhead: new SharedReference(DEFAULT_WANTED_BUFFER_AHEAD),
+    maxVideoBufferSize: new SharedReference(DEFAULT_MAX_VIDEO_BUFFER_SIZE),
+    maxBufferAhead: new SharedReference(DEFAULT_MAX_BUFFER_AHEAD),
+    maxBufferBehind: new SharedReference(DEFAULT_MAX_BUFFER_BEHIND),
+    limitVideoResolution: new SharedReference<IResolutionInfo>({
+      height: undefined,
+      width: undefined,
+      pixelRatio: 1,
+    }),
+    throttleVideoBitrate: new SharedReference(Infinity),
+  };
+
   /**
    * `true` once the worker has been initialized.
    * Allow to enforce the fact that it is only initialized once.
@@ -128,7 +143,7 @@ export default function initializeWorkerMain(
         break;
 
       case MainThreadMessageType.PrepareContent:
-        prepareNewContent(sendMessage, contentPreparer, msg.value);
+        prepareNewContent(sendMessage, contentPreparer, msg.value, refs);
         break;
 
       case MainThreadMessageType.StartPreparedContent: {
@@ -451,28 +466,37 @@ export default function initializeWorkerMain(
  * @param {ContentPreparer} contentPreparer
  * @param {Object} contentInitData - Configuration wanted for the content to
  * load.
+ * @param {Object} refs - Collection of so-called "references": values
+ * configuring playback that may be updated at any time and that the
+ * WorkerMain should react on.
  */
 function prepareNewContent(
   sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   contentPreparer: ContentPreparer,
   contentInitData: IContentInitializationData,
+  refs: ICoreReferences,
 ): void {
-  contentPreparer.initializeNewContent(sendMessage, contentInitData).then(
-    (manifest) => {
-      sendMessage({
-        type: WorkerMessageType.ManifestReady,
-        contentId: contentInitData.contentId,
-        value: { manifest },
-      });
-    },
-    (err: unknown) => {
-      sendMessage({
-        type: WorkerMessageType.Error,
-        contentId: contentInitData.contentId,
-        value: formatErrorForSender(err),
-      });
-    },
-  );
+  contentPreparer
+    .initializeNewContent(sendMessage, contentInitData, {
+      limitResolution: { video: refs.limitVideoResolution },
+      throttleBitrate: { video: refs.throttleVideoBitrate },
+    })
+    .then(
+      (manifest) => {
+        sendMessage({
+          type: WorkerMessageType.ManifestReady,
+          contentId: contentInitData.contentId,
+          value: { manifest },
+        });
+      },
+      (err: unknown) => {
+        sendMessage({
+          type: WorkerMessageType.Error,
+          contentId: contentInitData.contentId,
+          value: formatErrorForSender(err),
+        });
+      },
+    );
 }
 
 function updateCoreReference(msg: IReferenceUpdateMessage, refs: ICoreReferences): void {
@@ -1192,11 +1216,19 @@ function sendThumbnailData(
   );
 }
 
+/**
+ * Collection of so-called "references": values configuring playback that may
+ * be updated at any time and that the WorkerMain should react on.
+ */
 export interface ICoreReferences {
   limitVideoResolution: SharedReference<IResolutionInfo>;
+  /** Max buffer size after the current position, in seconds (we GC further up). */
   maxBufferAhead: SharedReference<number>;
+  /** Max buffer size before the current position, in seconds (we GC further down). */
   maxBufferBehind: SharedReference<number>;
+  /** Buffer maximum size in kiloBytes at which we stop downloading */
   maxVideoBufferSize: SharedReference<number>;
   throttleVideoBitrate: SharedReference<number>;
+  /** Buffer "goal" at which we stop downloading new segments. */
   wantedBufferAhead: SharedReference<number>;
 }

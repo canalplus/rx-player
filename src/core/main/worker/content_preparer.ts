@@ -23,6 +23,7 @@ import type {
 import TaskCanceller from "../../../utils/task_canceller";
 import type { IRepresentationEstimator } from "../../adaptive";
 import createAdaptiveRepresentationSelector from "../../adaptive";
+import type { IRepresentationEstimatorThrottlers } from "../../adaptive/adaptive_representation_selector";
 import CmcdDataBuilder from "../../cmcd";
 import type { IManifestRefreshSettings } from "../../fetchers";
 import { ManifestFetcher, SegmentQueueCreator } from "../../fetchers";
@@ -31,7 +32,6 @@ import createThumbnailFetcher from "../../fetchers/thumbnails/thumbnail_fetcher"
 import type { IThumbnailFetcher } from "../../fetchers/thumbnails/thumbnail_fetcher";
 import SegmentSinksStore from "../../segment_sinks";
 import FreezeResolver from "../common/FreezeResolver";
-import { limitVideoResolution, throttleVideoBitrate } from "./globals";
 import TrackChoiceSetter from "./track_choice_setter";
 import { formatErrorForSender } from "./utils";
 import WorkerTextDisplayerInterface from "./worker_text_displayer_interface";
@@ -112,6 +112,8 @@ export default class ContentPreparer {
   public initializeNewContent(
     sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
+    /** Allows to filter which Representations can be choosen. */
+    throttlers: IRepresentationEstimatorThrottlers,
   ): Promise<IManifest> {
     return new Promise((res, rej) => {
       this.disposeCurrentContent();
@@ -134,9 +136,13 @@ export default class ContentPreparer {
 
       const transportFn = features.transports[transport];
       if (typeof transportFn !== "function") {
-        // Stop previous content and reset its state
-        // XXX TODO:  send fatal error
-        throw new Error(`transport "${transport}" not supported`);
+        rej(
+          new Error(
+            `transport "${transport}" not supported. ` +
+              "Did you add the corresponding feature?",
+          ),
+        );
+        return;
       }
       const representationFilter =
         typeof transportOptions.representationFilter === "string"
@@ -163,10 +169,7 @@ export default class ContentPreparer {
           video: context.initialVideoBitrate ?? 0,
         },
         lowLatencyMode: transportOptions.lowLatencyMode,
-        throttlers: {
-          limitResolution: { video: limitVideoResolution },
-          throttleBitrate: { video: throttleVideoBitrate },
-        },
+        throttlers,
       });
 
       const unbindRejectOnCancellation = currentMediaSourceCanceller.signal.register(
