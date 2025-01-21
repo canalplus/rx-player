@@ -301,7 +301,7 @@ function formatResultInHumanReadableWay(results) {
   const meanResult = results.map(
     (r) =>
       `${r.previousMean.toFixed(2)}ms -> ${r.currentMean.toFixed(2)}ms ` +
-      `(${r.differenceMs.toFixed(3)}ms, ${(r.differencePc * 100).toFixed(3)}%, z: ${r.zScore.toFixed(5)})`,
+      `(${r.meanDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
   );
   const medianResult = results.map(
     (r) => `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms`,
@@ -810,7 +810,6 @@ function compareSamples() {
 
     const medianDiffMs = resultPrevious.median - resultCurrent.median;
     const meanDiffMs = resultPrevious.mean - resultCurrent.mean;
-    const differencePc = meanDiffMs / resultCurrent.mean;
     const uValue = getUValueFromSamples(sampleCurrent, samplePrevious);
     const zScore = Math.abs(
       calculateZScore(uValue, sampleCurrent.length, samplePrevious.length),
@@ -841,7 +840,6 @@ function compareSamples() {
     console.log(`      moe: ${resultPrevious.moe}`);
     console.log("");
     console.log("    Results");
-    console.log(`      mean difference % (negative is slower): ${differencePc * 100}%`);
     console.log(`      mean difference time (negative is slower): ${meanDiffMs} ms`);
     if (isSignificant) {
       console.log(`      The difference is significant (z: ${zScore})`);
@@ -852,8 +850,7 @@ function compareSamples() {
           currentMean: resultCurrent.mean,
           previousMedian: resultPrevious.median,
           currentMedian: resultCurrent.median,
-          differenceMs: meanDiffMs,
-          differencePc,
+          meanDifferenceMs: meanDiffMs,
           zScore,
         });
       } else if (meanDiffMs > 2 && medianDiffMs > 2) {
@@ -863,8 +860,7 @@ function compareSamples() {
           currentMean: resultCurrent.mean,
           previousMedian: resultPrevious.median,
           currentMedian: resultCurrent.median,
-          differenceMs: meanDiffMs,
-          differencePc,
+          meanDifferenceMs: meanDiffMs,
           zScore,
         });
       } else {
@@ -874,8 +870,7 @@ function compareSamples() {
           currentMean: resultCurrent.mean,
           previousMedian: resultPrevious.median,
           currentMedian: resultCurrent.median,
-          differenceMs: meanDiffMs,
-          differencePc,
+          meanDifferenceMs: meanDiffMs,
           zScore,
         });
       }
@@ -887,8 +882,7 @@ function compareSamples() {
         currentMean: resultCurrent.mean,
         previousMedian: resultPrevious.median,
         currentMedian: resultCurrent.median,
-        differenceMs: meanDiffMs,
-        differencePc,
+        meanDifferenceMs: meanDiffMs,
         zScore,
       });
     }
