@@ -40,7 +40,6 @@ import type {
   IInbandEvent,
   IABRThrottlers,
   IBufferType,
-  IResolutionInfo,
 } from "../../core/types";
 import { MonoThreadCoreInterface, WorkerCoreInterface } from "../../core_interface";
 import type { IDefaultConfig } from "../../default_config";
@@ -921,10 +920,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         limitResolution: {},
       };
 
-      let throttleVideoBitrate: IReadOnlySharedReference<number> = new SharedReference(
-        Infinity,
-      );
-
       if (this._priv_throttleVideoBitrateWhenHidden) {
         if (!relyOnVideoVisibilityAndSize) {
           log.warn(
@@ -932,16 +927,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               "browser can't be trusted for visibility.",
           );
         } else {
-          throttleVideoBitrate = createMappedReference(
-            getVideoVisibilityRef(
-              this._priv_pictureInPictureRef,
+          throttlers.throttleBitrate = {
+            video: createMappedReference(
+              getVideoVisibilityRef(
+                this._priv_pictureInPictureRef,
+                currentContentCanceller.signal,
+              ),
+              (isActive) => (isActive ? Infinity : 0),
               currentContentCanceller.signal,
             ),
-            (isActive) => (isActive ? Infinity : 0),
-            currentContentCanceller.signal,
-          );
-          throttlers.throttleBitrate = {
-            video: throttleVideoBitrate,
           };
         }
       }
@@ -1029,19 +1023,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         initializeWorkerMain(
           coreInterfaceCallbacks.setCoreMessageReceiver,
           coreInterfaceCallbacks.sendCoreMessage,
-          {
-            // XXX TODO:
-            limitVideoResolution: new SharedReference<IResolutionInfo>({
-              height: undefined,
-              width: undefined,
-              pixelRatio: 1,
-            }),
-            maxBufferAhead: bufferOptions.maxBufferAhead,
-            maxBufferBehind: bufferOptions.maxBufferBehind,
-            maxVideoBufferSize: bufferOptions.maxVideoBufferSize,
-            throttleVideoBitrate: new SharedReference(Infinity),
-            wantedBufferAhead: bufferOptions.wantedBufferAhead,
-          },
         );
         coreInterface.sendMessage({
           type: MainThreadMessageType.Init,
