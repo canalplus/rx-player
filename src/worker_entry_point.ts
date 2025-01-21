@@ -4,14 +4,6 @@
  */
 
 import initializeWorkerMain from "./core/main/worker";
-import {
-  limitVideoResolution,
-  maxBufferAhead,
-  maxBufferBehind,
-  maxVideoBufferSize,
-  throttleVideoBitrate,
-  wantedBufferAhead,
-} from "./core/main/worker/globals";
 import log from "./experimental/tools/mediaCapabilitiesProber/log";
 import features from "./features";
 import Manifest from "./manifest/classes";
@@ -31,20 +23,9 @@ features.transports.dash = createDashPipelines;
 globalScope.onmessageerror = (_msg: MessageEvent) => {
   log.error("Worker: Error when receiving message from main thread.");
 };
-initializeWorkerMain(
-  (handler) => {
-    onmessage = handler;
-  },
-  sendMessage,
-  {
-    limitVideoResolution,
-    maxBufferAhead,
-    maxBufferBehind,
-    maxVideoBufferSize,
-    throttleVideoBitrate,
-    wantedBufferAhead,
-  },
-);
+initializeWorkerMain((handler) => {
+  onmessage = handler;
+}, sendMessage);
 
 /**
  * Perform a `postMessage` to main thread with the given message.
