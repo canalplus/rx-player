@@ -39,15 +39,15 @@ import type {
   IInbandEvent,
   IABRThrottlers,
   IBufferType,
+  ICoreMessage,
 } from "../../core/types";
+import { CoreMessageType } from "../../core/types";
 import type { IDefaultConfig } from "../../default_config";
 import type { IErrorCode, IErrorType } from "../../errors";
 import { ErrorCodes, ErrorTypes, formatError, MediaError } from "../../errors";
 import WorkerInitializationError from "../../errors/worker_initialization_error";
 import type { IFeature } from "../../features";
 import features, { addFeatures } from "../../features";
-import type { ICoreMessage } from "../../internal_types";
-import { MainThreadMessageType, CoreMessageType } from "../../internal_types";
 import log from "../../log";
 import type {
   IDecipherabilityStatusChangedElement,
@@ -130,6 +130,7 @@ import type { ContentInitializer } from "../init";
 import renderThumbnail from "../render_thumbnail";
 import type { IMediaElementTracksStore, ITSPeriodObject } from "../tracks_store";
 import TracksStore from "../tracks_store";
+import { MainThreadMessageType } from "../types";
 import type { IParsedLoadVideoOptions, IParsedStartAtOption } from "./option_utils";
 import {
   checkReloadOptions,

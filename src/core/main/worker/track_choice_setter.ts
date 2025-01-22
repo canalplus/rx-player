@@ -1,5 +1,5 @@
-import type { ITrackUpdateChoiceObject } from "../../../internal_types";
 import log from "../../../log";
+import type { ITrackUpdateChoiceObject } from "../../../main_thread/types";
 import type { ITrackType } from "../../../public_types";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectAssign from "../../../utils/object_assign";

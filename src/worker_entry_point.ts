@@ -4,9 +4,10 @@
  */
 
 import initializeWorkerMain from "./core/main/worker";
+import type { ICoreMessage } from "./core/types";
+import { CoreMessageType } from "./core/types";
 import log from "./experimental/tools/mediaCapabilitiesProber/log";
 import features from "./features";
-import { CoreMessageType, type ICoreMessage } from "./internal_types";
 import Manifest from "./manifest/classes";
 import DashJsParser from "./parsers/manifest/dash/js-parser";
 import DashWasmParser from "./parsers/manifest/dash/wasm-parser";

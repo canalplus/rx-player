@@ -1,5 +1,5 @@
-import type { IUpdatePlaybackRateCoreMessage } from "../internal_types";
-import { CoreMessageType } from "../internal_types";
+import type { IUpdatePlaybackRateCoreMessage } from "../core/types";
+import { CoreMessageType } from "../core/types";
 import type { ITrackType } from "../public_types";
 import type { IRange } from "../utils/ranges";
 import type { IReadOnlySharedReference } from "../utils/reference";
@@ -12,7 +12,7 @@ import type {
 import generateReadOnlyObserver from "./utils/generate_read_only_observer";
 import type ObservationPosition from "./utils/observation_position";
 
-export interface IWorkerPlaybackObservation {
+export interface ICorePlaybackObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
@@ -73,16 +73,16 @@ export interface IPausedPlaybackObservation {
   pending: boolean | undefined;
 }
 
-export default class WorkerPlaybackObserver
-  implements IReadOnlyPlaybackObserver<IWorkerPlaybackObservation>
+export default class CorePlaybackObserver
+  implements IReadOnlyPlaybackObserver<ICorePlaybackObservation>
 {
-  private _src: IReadOnlySharedReference<IWorkerPlaybackObservation>;
+  private _src: IReadOnlySharedReference<ICorePlaybackObservation>;
   private _cancelSignal: CancellationSignal;
   private _messageSender: (msg: IUpdatePlaybackRateCoreMessage) => void;
   private _contentId: string;
 
   constructor(
-    src: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+    src: IReadOnlySharedReference<ICorePlaybackObservation>,
     contentId: string,
     sendMessage: (msg: IUpdatePlaybackRateCoreMessage) => void,
     cancellationSignal: CancellationSignal,
@@ -105,7 +105,7 @@ export default class WorkerPlaybackObserver
     return undefined;
   }
 
-  public getReference(): IReadOnlySharedReference<IWorkerPlaybackObservation> {
+  public getReference(): IReadOnlySharedReference<ICorePlaybackObservation> {
     return this._src;
   }
 
@@ -122,7 +122,7 @@ export default class WorkerPlaybackObserver
   }
 
   public listen(
-    cb: (observation: IWorkerPlaybackObservation, stopListening: () => void) => void,
+    cb: (observation: ICorePlaybackObservation, stopListening: () => void) => void,
     params: {
       includeLastObservation?: boolean | undefined;
       clearSignal: CancellationSignal;
@@ -140,7 +140,7 @@ export default class WorkerPlaybackObserver
 
   public deriveReadOnlyObserver<TDest>(
     transform: (
-      observationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+      observationRef: IReadOnlySharedReference<ICorePlaybackObservation>,
       cancellationSignal: CancellationSignal,
     ) => IReadOnlySharedReference<TDest>,
   ): IReadOnlyPlaybackObserver<TDest> {

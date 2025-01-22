@@ -1,5 +1,3 @@
-import { SourceBufferError } from "../errors";
-import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
 import type {
   IAbortBufferCoreMessage,
   IAddSourceBufferCoreMessage,
@@ -11,8 +9,10 @@ import type {
   IRemoveBufferCoreMessage,
   IStopEndOfStreamCoreMessage,
   IUpdateMediaSourceDurationCoreMessage,
-} from "../internal_types";
-import { CoreMessageType } from "../internal_types";
+} from "../core/types";
+import { CoreMessageType } from "../core/types";
+import { SourceBufferError } from "../errors";
+import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
 import log from "../log";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";

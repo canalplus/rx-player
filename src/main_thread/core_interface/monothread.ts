@@ -1,7 +1,7 @@
-import type { IMessageReceiverCallback } from "../../core/types";
-import type { IMainThreadMessage, ICoreMessage } from "../../internal_types";
+import type { ICoreMessage, IMessageReceiverCallback } from "../../core/types";
 import log from "../../log";
 import noop from "../../utils/noop";
+import type { IMainThreadMessage } from "../types";
 import CoreInterface from "./base";
 
 export class MonoThreadCoreInterface extends CoreInterface {

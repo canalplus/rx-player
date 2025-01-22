@@ -1,10 +1,10 @@
 import isCodecSupported from "../../../compat/is_codec_supported";
-import type { ICodecSupportInfo } from "../../../internal_types";
 import type { IManifestMetadata } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type ContentDecryptor from "../../decrypt";
 import { ContentDecryptorState } from "../../decrypt";
+import type { ICodecSupportInfo } from "../../types";
 
 /**
  * Returns a list of all codecs that the support is not known yet on the given

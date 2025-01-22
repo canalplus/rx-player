@@ -7,7 +7,11 @@ import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
   IResolutionInfo,
+  ICreateMediaSourceCoreMessage,
+  ISentError,
+  ICoreMessage,
 } from "../../core/types";
+import { CoreMessageType } from "../../core/types";
 import {
   EncryptedMediaError,
   MediaError,
@@ -16,12 +20,6 @@ import {
   SourceBufferError,
 } from "../../errors";
 import features from "../../features";
-import type {
-  ICreateMediaSourceCoreMessage,
-  ISentError,
-  ICoreMessage,
-} from "../../internal_types";
-import { MainThreadMessageType, CoreMessageType } from "../../internal_types";
 import log from "../../log";
 import type { IManifestMetadata } from "../../manifest";
 import {
@@ -34,7 +32,6 @@ import type {
   IReadOnlyPlaybackObserver,
   IMediaElementPlaybackObserver,
 } from "../../playback_observer";
-import type { IWorkerPlaybackObservation } from "../../playback_observer/worker_playback_observer";
 import type {
   ICmcdOptions,
   IInitialManifest,
@@ -58,8 +55,10 @@ import type { IContentProtection } from "../decrypt";
 import type IContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
+import { MainThreadMessageType } from "../types";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
+import type { ICorePlaybackObservation } from "./utils/create_core_playback_observer";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import {
   resetMediaElement,
@@ -1535,7 +1534,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       playbackObserver: IMediaElementPlaybackObserver;
     },
     cancelSignal: CancellationSignal,
-  ): IReadOnlyPlaybackObserver<IWorkerPlaybackObservation> | null {
+  ): IReadOnlyPlaybackObserver<ICorePlaybackObservation> | null {
     if (cancelSignal.isCancelled()) {
       return null;
     }

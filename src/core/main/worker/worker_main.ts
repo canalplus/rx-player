@@ -1,20 +1,18 @@
 import config from "../../../config";
 import { MediaError, OtherError } from "../../../errors";
 import features from "../../../features";
+import log from "../../../log";
 import type {
   IContentInitializationData,
-  IDiscontinuityUpdateCoreMessagePayload,
   IMainThreadMessage,
   IReferenceUpdateMessage,
   IThumbnailDataRequestMainMessage,
-  ICoreMessage,
-} from "../../../internal_types";
-import { MainThreadMessageType, CoreMessageType } from "../../../internal_types";
-import log from "../../../log";
+} from "../../../main_thread/types";
+import { MainThreadMessageType } from "../../../main_thread/types";
 import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
 import { ObservationPosition } from "../../../playback_observer";
-import type { IWorkerPlaybackObservation } from "../../../playback_observer/worker_playback_observer";
-import WorkerPlaybackObserver from "../../../playback_observer/worker_playback_observer";
+import type { ICorePlaybackObservation } from "../../../playback_observer/core_playback_observer";
+import CorePlaybackObserver from "../../../playback_observer/core_playback_observer";
 import type { IPlayerError, ITrackType } from "../../../public_types";
 import arrayFind from "../../../utils/array_find";
 import assert, { assertUnreachable } from "../../../utils/assert";
@@ -31,7 +29,12 @@ import type {
   IStreamStatusPayload,
 } from "../../stream";
 import StreamOrchestrator from "../../stream";
-import type { IResolutionInfo } from "../../types";
+import type {
+  ICoreMessage,
+  IDiscontinuityUpdateCoreMessagePayload,
+  IResolutionInfo,
+} from "../../types";
+import { CoreMessageType } from "../../types";
 import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
 import type { IFreezeResolution } from "../common/FreezeResolver";
 import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
@@ -99,7 +102,7 @@ export default function initializeWorkerMain(
   /**
    * When set, emit playback observation made on the main thread.
    */
-  let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
+  let playbackObservationRef: SharedReference<ICorePlaybackObservation> | null = null;
   setMessageReceiver((e) => {
     log.debug("Worker: received message", e.data.type);
 
@@ -160,7 +163,7 @@ export default function initializeWorkerMain(
 
         const currentCanceller = new TaskCanceller();
         const currentContentObservationRef =
-          new SharedReference<IWorkerPlaybackObservation>(
+          new SharedReference<ICorePlaybackObservation>(
             objectAssign(msg.value.initialObservation, {
               position: new ObservationPosition(...msg.value.initialObservation.position),
             }),
@@ -535,7 +538,7 @@ function loadOrReloadPreparedContent(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   val: IBufferingInitializationInformation,
   contentPreparer: ContentPreparer,
-  playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+  playbackObservationRef: IReadOnlySharedReference<ICorePlaybackObservation>,
   refs: ICoreReferences,
   parentCancelSignal: CancellationSignal,
 ) {
@@ -610,7 +613,7 @@ function loadOrReloadPreparedContent(
     return;
   }
 
-  const playbackObserver = new WorkerPlaybackObserver(
+  const playbackObserver = new CorePlaybackObserver(
     playbackObservationRef,
     contentId,
     sendMessage,

@@ -1,12 +1,7 @@
 import { MediaSource_ } from "../../../compat/browser_compatibility_types";
 import features from "../../../features";
-import type {
-  IAttachMediaSourceCoreMessagePayload,
-  IContentInitializationData,
-  ICoreMessage,
-} from "../../../internal_types";
-import { CoreMessageType } from "../../../internal_types";
 import log from "../../../log";
+import type { IContentInitializationData } from "../../../main_thread/types";
 import type { IManifest } from "../../../manifest";
 import { createRepresentationFilterFromFnString } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
@@ -32,6 +27,8 @@ import createThumbnailFetcher from "../../fetchers/thumbnails/thumbnail_fetcher"
 import type { IThumbnailFetcher } from "../../fetchers/thumbnails/thumbnail_fetcher";
 import SegmentSinksStore from "../../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../../stream";
+import type { IAttachMediaSourceCoreMessagePayload, ICoreMessage } from "../../types";
+import { CoreMessageType } from "../../types";
 import FreezeResolver from "../common/FreezeResolver";
 import TrackChoiceSetter from "./track_choice_setter";
 import { formatErrorForSender } from "./utils";

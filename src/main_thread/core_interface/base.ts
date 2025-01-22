@@ -1,4 +1,5 @@
-import type { IMainThreadMessage, ICoreMessage } from "../../internal_types";
+import type { ICoreMessage } from "../../core/types";
+import type { IMainThreadMessage } from "../types";
 
 export default abstract class CoreInterface {
   protected listeners: Array<(evt: ICoreMessage) => void> = [];
