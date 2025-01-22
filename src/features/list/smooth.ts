@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import initializeWorkerMain from "../../core/main/worker";
+import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
 import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 import smooth from "../../transports/smooth";
 import type { IFeaturesObject } from "../types";
@@ -26,7 +28,11 @@ function addSmoothFeature(features: IFeaturesObject): void {
   if (features.transports.smooth === undefined) {
     features.transports.smooth = smooth;
   }
-  features.mainThreadMediaSourceInit = MultiThreadContentInitializer;
+  features.monothread = {
+    init: MultiThreadContentInitializer,
+    coreInterface: MonoThreadCoreInterface,
+    workerMain: initializeWorkerMain,
+  };
 }
 
 export { addSmoothFeature as SMOOTH };
