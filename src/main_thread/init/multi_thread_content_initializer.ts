@@ -7,7 +7,6 @@ import type {
   IAdaptationChoice,
   IResolutionInfo,
 } from "../../core/types";
-import type CoreInterface from "../../core_interface";
 import {
   EncryptedMediaError,
   MediaError,
@@ -53,6 +52,7 @@ import SharedReference from "../../utils/reference";
 import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
+import type CoreInterface from "../core_interface/types";
 import type { IContentProtection } from "../decrypt";
 import type IContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";

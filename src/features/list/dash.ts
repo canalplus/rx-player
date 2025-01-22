@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import initializeWorkerMain from "../../core/main/worker";
+import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
 import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 import dashJsParser from "../../parsers/manifest/dash/native-parser";
 import dash from "../../transports/dash";
@@ -28,7 +30,11 @@ function addDASHFeature(features: IFeaturesObject): void {
     features.transports.dash = dash;
   }
   features.dashParsers.native = dashJsParser;
-  features.mainThreadMediaSourceInit = MultiThreadContentInitializer;
+  features.monothread = {
+    init: MultiThreadContentInitializer,
+    coreInterface: MonoThreadCoreInterface,
+    workerMain: initializeWorkerMain,
+  };
 }
 
 export { addDASHFeature as DASH };
