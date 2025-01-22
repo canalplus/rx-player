@@ -33,7 +33,6 @@ import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import config from "../../config";
-import initializeWorkerMain from "../../core/main/worker";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type {
   IAdaptationChoice,
@@ -41,7 +40,6 @@ import type {
   IABRThrottlers,
   IBufferType,
 } from "../../core/types";
-import { MonoThreadCoreInterface, WorkerCoreInterface } from "../../core_interface";
 import type { IDefaultConfig } from "../../default_config";
 import type { IErrorCode, IErrorType } from "../../errors";
 import { ErrorCodes, ErrorTypes, formatError, MediaError } from "../../errors";
@@ -912,16 +910,16 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         ) &&
         typeof options.representationFilter !== "function";
       if (mode === "main" || (mode === "auto" && !canRunInMultiThread)) {
-        if (features.mainThreadMediaSourceInit === null) {
+        if (features.monothread === null) {
           throw new Error(
             "Cannot load video, neither in a WebWorker nor with the " +
               "`MEDIA_SOURCE_MAIN` feature",
           );
         }
         log.info("API: Initializing MediaSource mode in the main thread");
-        const coreInterface = new MonoThreadCoreInterface();
+        const coreInterface = new features.monothread.coreInterface();
         const coreInterfaceCallbacks = coreInterface.getCallbacks();
-        initializeWorkerMain(
+        features.monothread.workerMain(
           coreInterfaceCallbacks.setCoreMessageReceiver,
           coreInterfaceCallbacks.sendCoreMessage,
         );
@@ -938,7 +936,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             timestamp: getMonotonicTimeStamp(),
           },
         });
-        initializer = new features.mainThreadMediaSourceInit({
+        initializer = new features.monothread.init({
           coreInterface,
           adaptiveOptions,
           autoPlay,
@@ -971,7 +969,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         useWorker = true;
         log.info("API: Initializing MediaSource mode in a WebWorker");
         initializer = new features.multithread.init({
-          coreInterface: new WorkerCoreInterface(this._priv_worker),
+          coreInterface: new features.multithread.coreInterface(this._priv_worker),
           adaptiveOptions,
           autoPlay,
           bufferOptions,

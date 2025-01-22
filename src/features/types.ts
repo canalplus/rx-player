@@ -15,7 +15,12 @@
  */
 
 import type { IMediaElement } from "../compat/browser_compatibility_types";
+import type IInitializeWorkerMain from "../core/main/worker";
 import type { SegmentSink } from "../core/segment_sinks";
+import type {
+  WorkerCoreInterface,
+  MonoThreadCoreInterface,
+} from "../main_thread/core_interface/types";
 import type ContentDecryptor from "../main_thread/decrypt";
 import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
 import type MultiThreadContentInitializer from "../main_thread/init/multi_thread_content_initializer";
@@ -116,14 +121,29 @@ export interface IFeaturesObject {
    * Feature allowing to load contents through MediaSource API through the
    * main thread.
    */
-  mainThreadMediaSourceInit: typeof MultiThreadContentInitializer | null;
+  monothread: {
+    /** Class to load a content through the MediaSource API. */
+    init: typeof MultiThreadContentInitializer;
+    /** The RxPlayer's core logic. */
+    workerMain: typeof IInitializeWorkerMain;
+    /**
+     * Class allowing to exchange messages with the RxPlayer's `core`, here
+     * running in `workerMain`
+     */
+    coreInterface: typeof MonoThreadCoreInterface;
+  } | null;
   /**
    * Features allowing to load contents through MediaSource API through
    * a WebWorker.
    */
   multithread: {
-    /** Class to load a content through MediaSource API via a WebWorker. */
+    /** Class to load a content through the MediaSource API. */
     init: typeof MultiThreadContentInitializer;
+    /**
+     * Class allowing to exchange messages with the RxPlayer's `core`, here
+     * running in another thread.
+     */
+    coreInterface: typeof WorkerCoreInterface;
   } | null;
   /**
    * Function for loading and parsing contents through various protocols, by

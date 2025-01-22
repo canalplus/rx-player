@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import initializeWorkerMain from "../../../core/main/worker";
+import { MonoThreadCoreInterface } from "../../../main_thread/core_interface/monothread";
 import MultiThreadContentInitializer from "../../../main_thread/init/multi_thread_content_initializer";
 import nativeDashParser from "../../../parsers/manifest/dash/native-parser";
 import DASHFeature from "../../../transports/dash";
@@ -10,15 +12,22 @@ describe("Features list - DASH", () => {
     const featureObject = {
       transports: {},
       dashParsers: { fastJs: null, native: null, wasm: null },
-      mainThreadMediaSourceInit: null,
+      monothread: null,
     } as unknown as IFeaturesObject;
     addDASHFeature(featureObject);
     expect(featureObject).toEqual({
       transports: { dash: DASHFeature },
       dashParsers: { native: nativeDashParser, fastJs: null, wasm: null },
-      mainThreadMediaSourceInit: MultiThreadContentInitializer,
+      monothread: {
+        init: MultiThreadContentInitializer,
+        coreInterface: MonoThreadCoreInterface,
+        workerMain: initializeWorkerMain,
+      },
     });
     expect(featureObject.transports.dash).toBe(DASHFeature);
-    expect(featureObject.mainThreadMediaSourceInit).toBe(MultiThreadContentInitializer);
+    expect(featureObject.monothread).not.toBe(null);
+    expect(featureObject.monothread?.init).toBe(MultiThreadContentInitializer);
+    expect(featureObject.monothread?.coreInterface).toBe(MonoThreadCoreInterface);
+    expect(featureObject.monothread?.workerMain).toBe(initializeWorkerMain);
   });
 });

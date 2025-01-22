@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
+import initializeWorkerMain from "../../core/main/worker";
 import type { IFeaturesObject } from "../../features/types";
+import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
 import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 import local from "../../transports/local";
 
 function addLocalManifestFeature(features: IFeaturesObject): void {
   features.transports.local = local;
-  features.mainThreadMediaSourceInit = MultiThreadContentInitializer;
+  features.monothread = {
+    init: MultiThreadContentInitializer,
+    coreInterface: MonoThreadCoreInterface,
+    workerMain: initializeWorkerMain,
+  };
 }
 
 export { addLocalManifestFeature as LOCAL_MANIFEST };
