@@ -34,13 +34,13 @@ it:
 -------------------------|- RxPlayer Main Thread ---------------------------
                          |
      Front-facing API    v
-     +---------------------------------------+    +--------------------+
-     |               Public API              |uses|     TracksStore    |
-     |          (./main_thread/api)          |--->|(./main_thread/track|
-     +---------------------------------------+    |s_store)            |
-                 |                                +--------------------+
-                 |                                 Facilitate track switching
- Initialize      | creates                         for the API
+     +---------------------------------------+      +----------------------+
+     |               Public API              | uses |      TracksStore     |
+     |          (./main_thread/api)          |----->|(./main_thread/tracks_|
+     +---------------------------------------+      |store)                |
+                 |                                  +----------------------+
+                 |                                  Facilitate track switching
+ Initialize      | creates                          for the API
  playback and    |
  create/connect  |        Negotiate content
  modules         v        decryption
@@ -52,41 +52,49 @@ it:
  |(./main_thread/init)|            creates          |  Text Displayer  |
  |                    | --------------------------->|(./main_thread/te |
  +--------------------+                             |xt_displayer)     |
-   |  ^                                             +------------------+
-   |  | Message exchanges                                          ^
-   |  |                                                            |
----|--|----------- RxPlayer Core (May run in a WebWorker) ---------|---
-   |  |                                                            |
-   |  |  (*Only if running in a WebWorker)                         +----+
-   |  |  Exchange messages with the main                                |
-   V  |  thread and process them.                                       |
-  +---------------------------+         +----------------------------+  |
-  |                           | creates |                            |  |
-  |        Worker Main*       |-------->|       Manifest Fetcher     |  |
-  |   (./core/main/worker)    |         | (./core/fetchers/manifest) |  |
-  |                           |         |                            |  |
-  +---------------------------+         +----------------------------+  |
-     | Creates             |            Load and     |                  |
-     V                     |            refresh the  | Ask to load      |
-   +-------------------+   |            Manifest     | and parse the    |
-   |                   |   | creates                 | Manifest         |
-   | CMCD data builder |   |                         v                  |
-   |  (./core/cmcd)    |   |        +--------------------+              |   ` Internet
-   |                   |   |        |                    |   request    |   `    ,,,,,
-   +-------------------+   |        |      transport     |--------------+---`-->( CDN )
-   Perform data collection |        |    (./transport)   |              |   `    `````
-   for the "Common Media   |        |                    |<---+         |   `
-   Client Data" (CMCD)     |        +--------------------+     \        |
-   scheme.                 |        Abstract the streaming      \       |
-                           |        protocol (e.g. DASH)         \      |
-                           |                                      \     |
-Stream (./core/stream)     |                                       \    |
-+--------------------------|-------------------------------+        \   |
-|                          v                               |         \  +
-| Create the right        +----------------------------+   |    Ask to\  \
-| PeriodStreams depending |      StreamOrchestrator    |   |    load   \  \
-| on the current position,|(./core/stream/orchestrator)|   |    and     \  \
-| and settings            +----------------------------+   |    parse    \  \
+           |  ^                                     +------------------+
+           V  |                                                       ^
+ +--------------------------------+                                   |
+ |          CoreInterface         | Link `main_thread`                |
+ | (./main_thread/core_interface) | to `core` logic                   |
+ +--------------------------------+                                   |
+   |  ^                                                               |
+   |  |                                                               |
+   |  |                                                               |
+   |  | Message exchanges                                             |
+   |  |                                                               |
+   |  |                                                               |
+---|--|----------- RxPlayer Core (May run in a WebWorker) ----------------
+   |  |                                                               |
+   |  |                                                               |
+   |  |                                                               |
+   |  |    Exchange messages with the main                            |
+   V  |    thread and process them.                                   |
+  +-----------------------+             +--------------------------+  |
+  |      Core Entry       |------------>|     Manifest Fetcher     |  |
+  |    (./core/entry/)    |   creates   |(./core/fetchers/manifest)|  |
+  +-----------------------+             +--------------------------+  |
+     | Creates           |              Load and     |                |
+     V                   |              refresh the  | Ask to load    |
+ +-------------------+   |              Manifest     | and parse the  |
+ |                   |   | creates                   | Manifest       |
+ | CMCD data builder |   |                           v                |
+ |  (./core/cmcd)    |   |        +--------------------+              |   ` Internet
+ |                   |   |        |                    |   request    |   `    ,,,,,
+ +-------------------+   |        |      transport     |--------------+---`-->( CDN )
+ Perform data collection |        |    (./transport)   |              |   `    `````
+ for the "Common Media   |        |                    |<-----+       |   `
+ Client Data" (CMCD)     |        +--------------------+       \      |
+ scheme.                 |        Abstract the streaming        \     |
+                         |        protocol (e.g. DASH)           \    |
+                         |                                        \   |
+Stream (./core/stream)   |                                         \  +
++------------------------|---------------------------------+        \  \
+|                        v                                 |         \  \
+| Create PeriodStreams  +----------------------------+     |    Ask to\  \
+| based on the position |      StreamOrchestrator    |     |    load   \  \
+| and settings          |(./core/stream/orchestrator)|     |    and     \  \
+|                       +----------------------------+     |    parse    \  \
 |                          |            |            |     |    segments  \  \
 |                          | creates    |            |     |               \  \
 |                          |            |            |     |                \  +
@@ -150,7 +158,7 @@ Stream (./core/stream)     |                                       \    |
                     +-----------------------+  +-------------------------+     |
   Actually pushes   |      MediaSource      |  |      TextDisplayer      |     |
   audio and video   |       Interface       |  |      Message sender     |-----+
-  data to the right |        (./mse)        |  |      (./core/main)      |
+  data to the right |        (./mse)        |  |      (./core/enry)      |
   low-level buffers +-----------------------+  +-------------------------+
                                                Small interface
                                                facilitating communication
