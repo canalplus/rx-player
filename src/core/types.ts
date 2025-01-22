@@ -7,6 +7,7 @@ import type {
   IManifestFetcherSettings,
   ISegmentQueueCreatorBackoffOptions,
 } from "./fetchers";
+import type { IMessageReceiverCallback } from "./main/worker";
 import type {
   IBufferedChunk,
   IBufferType,
@@ -48,4 +49,7 @@ export type {
   IStreamOrchestratorPlaybackObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
+
+  // CoreMain
+  IMessageReceiverCallback,
 };

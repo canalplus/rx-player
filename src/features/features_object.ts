@@ -27,7 +27,7 @@ const features: IFeaturesObject = {
   decrypt: null,
   htmlTextDisplayer: null,
   htmlTextTracksParsers: {},
-  mainThreadMediaSourceInit: null,
+  monothread: null,
   multithread: null,
   nativeTextDisplayer: null,
   nativeTextTracksParsers: {},

@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import initializeWorkerMain from "../../core/main/worker";
 import type { IFeaturesObject } from "../../features/types";
+import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
 import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
 import type { IDashWasmParserOptions } from "../../parsers/manifest/dash/wasm-parser";
 import DashWasmParser from "../../parsers/manifest/dash/wasm-parser";
@@ -27,7 +29,11 @@ const dashWasmFeature = {
       features.transports.dash = dash;
     }
     features.dashParsers.wasm = dashWasmParser;
-    features.mainThreadMediaSourceInit = MultiThreadContentInitializer;
+    features.monothread = {
+      init: MultiThreadContentInitializer,
+      coreInterface: MonoThreadCoreInterface,
+      workerMain: initializeWorkerMain,
+    };
   },
 
   initialize(opts: IDashWasmParserOptions): Promise<void> {
