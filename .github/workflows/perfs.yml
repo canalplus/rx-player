@@ -23,6 +23,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
       # needed for integration & memory tests codecs support
+      - run: echo "${{ contains(github.event.issue.labels.*.name, 'skip-performance-checks') }}"
+      - run: echo "${{ contains(github.event.issue.labels.*.name, 'totoleheros') }}"
+      - run: echo "${{ !contains(github.event.issue.labels.*.name, 'skip-performance-checks') }}"
+      - run: echo "${{ !contains(github.event.issue.labels.*.name, 'totoleheros') }}"
       - run: echo "${{ toJson(github.event.issue.labels) }}"
       - run: echo "toto"
       - run: echo "${{ toJson(github.event.issue.labels.*.name) }}"
