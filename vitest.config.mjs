@@ -70,7 +70,7 @@ export default defineConfig({
   test: {
     watch: false,
     globals: false,
-    reporters: process.env.GITHUB_ACTIONS ? ["dot", "github-actions"] : ["dot"],
+    reporters: ["dot", "github-actions"],
     include: [
       // integration tests
       "tests/integration/scenarios/**/*.[jt]s?(x)",
