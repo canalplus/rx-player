@@ -284,6 +284,9 @@ const PlayerModule = declareModule(
 
       load(arg: ILoadVideoOptions) {
         dettachVideoThumbnailLoader();
+        setInterval(() => {
+          console.log("!!!!", player.getLivePosition() - player.getPosition());
+        }, 1000);
         player.loadVideo(
           Object.assign(
             {
@@ -291,6 +294,7 @@ const PlayerModule = declareModule(
               textTrackElement,
             },
             arg,
+            // { startAt: { fromFirstPosition: 0 } },
           ) as ILoadVideoOptions,
         );
         const newState: Partial<IPlayerModuleState> = {
