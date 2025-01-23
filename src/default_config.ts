@@ -40,7 +40,7 @@ const DEFAULT_CONFIG = {
    * improve.
    * When disabled, segments of a lower-quality will not be replaced.
    */
-  DEFAULT_ENABLE_FAST_SWITCHING: true,
+  DEFAULT_ENABLE_FAST_SWITCHING: false,
 
   /**
    * In some cases after switching the current track or bitrate, the RxPlayer
