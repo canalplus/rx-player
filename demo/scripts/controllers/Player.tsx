@@ -47,7 +47,7 @@ function Player(): React.JSX.Element {
     defaultOptionsValues.loadVideo,
   );
   const [relyOnWorker, setRelyOnWorker] = useState(false);
-  const [useDummyMediaElement, setUseDummyMediaElement] = useState(false);
+  const [useDummyMediaElement, setUseDummyMediaElement] = useState(true);
   const [hasUpdatedPlayerOptions, setHasUpdatedPlayerOptions] = useState(false);
   const displaySpinnerTimeoutRef = useRef<number | null>(null);
 
