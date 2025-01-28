@@ -1009,9 +1009,7 @@ function canCreatePersistentSession(
  * @param {MediaKeySystemAccess} mediaKeySystemAccess
  * @returns {Boolean}
  */
-function canCreateTemporarySession(
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess,
-): boolean {
+function canCreateTemporarySession(mediaKeySystemAccess: IMediaKeySystemAccess): boolean {
   const { sessionTypes } = mediaKeySystemAccess.getConfiguration();
   return sessionTypes !== undefined && arrayIncludes(sessionTypes, "temporary");
 }
