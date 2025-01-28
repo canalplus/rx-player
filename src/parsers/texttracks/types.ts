@@ -25,14 +25,16 @@ export interface IHTMLCue {
 
 // Function to parse texttracks into native VTT cues
 export type INativeTextTracksParserFn = (
-  texttrack: string,
+  texttrack: string | BufferSource,
+  timescale: number,
   timeOffset: number,
   language?: string,
 ) => Array<ICompatVTTCue | TextTrackCue>;
 
 // Function to parse texttracks into HTML cues
 export type IHTMLTextTracksParserFn = (
-  texttrack: string,
+  texttrack: string | BufferSource,
+  timescale: number,
   timeOffset: number,
   language?: string,
 ) => IHTMLCue[];

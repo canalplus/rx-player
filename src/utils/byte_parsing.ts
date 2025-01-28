@@ -83,6 +83,25 @@ function be4toi(bytes: Uint8Array, offset: number): number {
 }
 
 /**
+ * Translate groups of 4 big-endian bytes representing a two's complement signed
+ * integer to directly that value.
+ * @param {Uint8Array} bytes
+ * @param {Number} offset - The offset (from the start of the given array)
+ * @returns {Number}
+ */
+function be4toiSigned(bytes: Uint8Array, offset: number): number {
+  // Didn't bother overthinking that one though it may be fun
+  return new Int32Array(
+    new Uint8Array([
+      bytes[offset + 0],
+      bytes[offset + 1],
+      bytes[offset + 2],
+      bytes[offset + 3],
+    ]).buffer,
+  )[0];
+}
+
+/**
  * Translate groups of 8 big-endian bytes to Integer.
  * @param {Uint8Array} bytes
  * @param {Number} offset - The offset (from the start of the given array)
@@ -260,6 +279,7 @@ export {
   be2toi,
   be3toi,
   be4toi,
+  be4toiSigned,
   be8toi,
   le2toi,
   le4toi,

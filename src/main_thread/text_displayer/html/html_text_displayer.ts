@@ -126,12 +126,25 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       return convertToRanges(this._buffered);
     }
 
-    const { start: startTime, end: endTime, data: dataString, type, language } = chunk;
+    const {
+      start: startTime,
+      end: endTime,
+      data: dataRaw,
+      type,
+      language,
+      timescale,
+    } = chunk;
 
     const appendWindowStart = appendWindow[0] ?? 0;
     const appendWindowEnd = appendWindow[1] ?? Infinity;
 
-    const cues = parseTextTrackToElements(type, dataString, timestampOffset, language);
+    const cues = parseTextTrackToElements(
+      type,
+      dataRaw,
+      timescale ?? 1,
+      timestampOffset,
+      language,
+    );
 
     if (appendWindowStart !== 0 && appendWindowEnd !== Infinity) {
       // Removing before window start
@@ -398,7 +411,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 /** Data of chunks that should be pushed to the `HTMLTextDisplayer`. */
 export interface ITextTracksBufferSegmentData {
   /** The text track data, in the format indicated in `type`. */
-  data: string;
+  data: string | BufferSource;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
   type: string;
   /**
@@ -424,7 +437,9 @@ export interface ITextTracksBufferSegmentData {
  */
 if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
   // @ts-expect-error: uncalled function just for type-checking
-  function _checkType(input: ITextTrackSegmentData): void {
+  function _checkType<T extends string | BufferSource>(
+    input: ITextTrackSegmentData<T>,
+  ): void {
     function checkEqual(_arg: ITextTracksBufferSegmentData): void {
       /* nothing */
     }

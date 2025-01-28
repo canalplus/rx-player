@@ -14,13 +14,53 @@
  * limitations under the License.
  */
 
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
+import { strToUtf8, utf8ToStr } from "../../../../utils/string_parsing";
 import getCueBlocks from "../get_cue_blocks";
 import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
+import parseMp4EmbeddedWebVtt from "../parse_mp4_embedded_wvtt";
+import parseStyleBlocks from "../parse_style_block";
+import seemsMp4EmbeddedFormat from "../seems_mp4_embedded_format";
 import { getFirstLineAfterHeader } from "../utils";
-import parseStyleBlocks from "./parse_style_block";
 import type { IVTTHTMLCue } from "./to_html";
 import toHTML from "./to_html";
+
+/**
+ * Parse WebVTT subtitles format.
+ * @throws Error - Throws if the given WebVTT format.
+ * @param {string | BufferSource} text - The whole webvtt subtitles to parse
+ * @param {Number} timescale
+ * @param {Number} timeOffset - Offset to add to start and end times, in seconds
+ * @return {Array.<Object>}
+ */
+export default function parseWebVttToDiv(
+  text: string | BufferSource,
+  timescale: number,
+  timeOffset: number,
+): IVTTHTMLCue[] {
+  if (seemsMp4EmbeddedFormat(text)) {
+    if (typeof text === "string") {
+      return parseMp4EmbeddedWebVtt(strToUtf8(text), timescale, timeOffset, toHTML);
+    } else {
+      return parseMp4EmbeddedWebVtt(
+        bufferSourceToUint8(text),
+        timescale,
+        timeOffset,
+        toHTML,
+      );
+    }
+  } else if (typeof text === "string") {
+    return parseWebVTTText(text, timescale, timeOffset);
+  } else {
+    return parseWebVTTText(
+      // Assume UTF-8
+      utf8ToStr(bufferSourceToUint8(text)),
+      timescale,
+      timeOffset,
+    );
+  }
+}
 
 /**
  * Parse WebVTT from text. Returns an array with:
@@ -32,13 +72,18 @@ import toHTML from "./to_html";
  * Specific style is parsed and applied to class element.
  *
  * @throws Error - Throws if the given WebVTT string is invalid.
- * @param {string} text - The whole webvtt subtitles to parse
+ * @param {string } textStr - The whole webvtt subtitles to parse
+ * @param {Number} _timescale
  * @param {Number} timeOffset - Offset to add to start and end times, in seconds
  * @return {Array.<Object>}
  */
-export default function parseWebVTT(text: string, timeOffset: number): IVTTHTMLCue[] {
+function parseWebVTTText(
+  textStr: string,
+  _timescale: number,
+  timeOffset: number,
+): IVTTHTMLCue[] {
   const newLineChar = /\r\n|\n|\r/g; // CRLF|LF|CR
-  const linified = text.split(newLineChar);
+  const linified = textStr.split(newLineChar);
 
   const cuesArray: IVTTHTMLCue[] = [];
   if (/^WEBVTT( |\t|\n|\r|$)/.exec(linified[0]) === null) {

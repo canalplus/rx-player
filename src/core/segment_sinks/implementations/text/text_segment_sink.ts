@@ -1,6 +1,7 @@
 import log from "../../../../log";
 import type { ITextDisplayer } from "../../../../main_thread/types";
 import type { ITextTrackSegmentData } from "../../../../transports";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../../utils/ranges";
 import type { ICompleteSegmentInfo, IPushChunkInfos, ISBOperation } from "../types";
@@ -142,9 +143,11 @@ export default class TextSegmentSink extends SegmentSink {
 }
 
 /** Data of chunks that should be pushed to the HTMLTextSegmentSink. */
-export interface ITextTracksBufferSegmentData {
+export interface ITextTracksBufferSegmentData<
+  T extends string | BufferSource = string | BufferSource,
+> {
   /** The text track data, in the format indicated in `type`. */
-  data: string;
+  data: T;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
   type: string;
   /**
@@ -153,6 +156,11 @@ export interface ITextTracksBufferSegmentData {
    * be parsed.
    */
   language?: string | undefined;
+  /**
+   * Optional timescale data context that is used to convert timing information
+   * into seconds.
+   */
+  timescale: number | null;
   /** start time from which the segment apply, in seconds. */
   start?: number | undefined;
   /** end time until which the segment apply, in seconds. */
@@ -176,14 +184,27 @@ function assertChunkIsTextTrackSegmentData(
   if (
     typeof chunk !== "object" ||
     chunk === null ||
-    typeof (chunk as ITextTracksBufferSegmentData).data !== "string" ||
+    isNullOrUndefined((chunk as ITextTracksBufferSegmentData).data)
+  ) {
+    throw new Error("Invalid format given to a TextSegmentSink");
+  }
+  if (
     typeof (chunk as ITextTracksBufferSegmentData).type !== "string" ||
     ((chunk as ITextTracksBufferSegmentData).language !== undefined &&
       typeof (chunk as ITextTracksBufferSegmentData).language !== "string") ||
+    ((chunk as ITextTracksBufferSegmentData).timescale !== null &&
+      typeof (chunk as ITextTracksBufferSegmentData).timescale !== "number") ||
     ((chunk as ITextTracksBufferSegmentData).start !== undefined &&
       typeof (chunk as ITextTracksBufferSegmentData).start !== "number") ||
     ((chunk as ITextTracksBufferSegmentData).end !== undefined &&
       typeof (chunk as ITextTracksBufferSegmentData).end !== "number")
+  ) {
+    throw new Error("Invalid format given to a TextSegmentSink");
+  }
+  if (
+    typeof (chunk as ITextTracksBufferSegmentData<string>).data !== "string" &&
+    typeof (chunk as ITextTracksBufferSegmentData<BufferSource>).data.byteLength !==
+      "number"
   ) {
     throw new Error("Invalid format given to a TextSegmentSink");
   }

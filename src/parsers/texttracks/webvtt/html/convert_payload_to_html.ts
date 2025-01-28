@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+import type { IStyleElements } from "../parse_style_block";
 import createStyledElement from "./create_styled_element";
-import type { IStyleElements } from "./parse_style_block";
 
 /**
  * @param {string} text

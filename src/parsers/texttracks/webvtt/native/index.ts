@@ -19,5 +19,5 @@
  * It always should be imported through the `features` object.
  */
 
-import parseVTTStringToVTTCues from "./parse_vtt_to_cues";
-export default parseVTTStringToVTTCues;
+import parseVttToNative from "./parse_vtt_to_cues";
+export default parseVttToNative;

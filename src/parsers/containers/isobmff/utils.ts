@@ -20,6 +20,7 @@ import {
   be2toi,
   be3toi,
   be4toi,
+  be4toiSigned,
   be8toi,
   concat,
   itobe4,
@@ -231,6 +232,103 @@ function getDefaultDurationFromTFHDInTRAF(traf: Uint8Array): number | undefined 
 
   const defaultDuration = be4toi(tfhd, cursor);
   return defaultDuration;
+}
+
+/** Describe the metadata of a sample found inside a trun sample. */
+interface ITrunSampleInfo {
+  /** `duration` of the sample, timescaled. */
+  duration: number;
+  /** "Composition" time offset for that sample, timescaled. */
+  compositionTimeOffset: number | undefined;
+  /** Size for that sample, in bytes. */
+  size: number | undefined;
+  /** Flags for that sample as per the ISOBMFF spec, in decimal form. */
+  flags: number | undefined;
+}
+
+/**
+ *  Parse all trun boxes found in the given ISOBMFF file into "trun sample"
+ *  objects.
+ *  @param {Uint8Array} buffer
+ *  @returns {Array.<Object>}
+ */
+function getTrunSamples(buffer: Uint8Array): ITrunSampleInfo[] {
+  const trafs = getTRAFs(buffer);
+  const samples: ITrunSampleInfo[] = [];
+  for (const traf of trafs) {
+    const trun = getBoxContent(traf, 0x7472756e /* trun */);
+    if (trun === null) {
+      continue;
+    }
+    let cursor = 0;
+    const version = trun[cursor];
+    cursor += 1;
+    if (version > 1) {
+      return [];
+    }
+
+    const flags = be3toi(trun, cursor);
+    cursor += 3;
+    const hasSampleDuration = (flags & 0x000100) > 0;
+
+    let defaultDuration: number | undefined = 0;
+    if (!hasSampleDuration) {
+      defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
+      if (defaultDuration === undefined) {
+        return [];
+      }
+    }
+
+    const hasDataOffset = (flags & 0x000001) > 0;
+    const hasFirstSampleFlags = (flags & 0x000004) > 0;
+    const hasSampleSize = (flags & 0x000200) > 0;
+    const hasSampleFlags = (flags & 0x000400) > 0;
+    const hasSampleCompositionOffset = (flags & 0x000800) > 0;
+
+    const sampleCounts = be4toi(trun, cursor);
+    cursor += 4;
+
+    if (hasDataOffset) {
+      cursor += 4;
+    }
+    if (hasFirstSampleFlags) {
+      cursor += 4;
+    }
+
+    let i = sampleCounts;
+    while (i-- > 0) {
+      let duration;
+      let size;
+      let sampleFlags;
+      let compositionTimeOffset;
+      if (hasSampleDuration) {
+        duration = be4toi(trun, cursor);
+        cursor += 4;
+      } else {
+        duration = defaultDuration;
+      }
+      if (hasSampleSize) {
+        size = be4toi(trun, cursor);
+        cursor += 4;
+      }
+      if (hasSampleFlags) {
+        sampleFlags = be4toi(trun, cursor);
+        cursor += 4;
+      }
+      if (hasSampleCompositionOffset) {
+        compositionTimeOffset =
+          version === 0 ? be4toi(trun, cursor) : be4toiSigned(trun, cursor);
+        cursor += 4;
+      }
+      samples.push({
+        duration,
+        compositionTimeOffset,
+        size,
+        flags: sampleFlags,
+      });
+    }
+  }
+  return samples;
 }
 
 /**
@@ -563,6 +661,7 @@ function getKeyIdFromInitSegment(segment: Uint8Array): Uint8Array | null {
   return keyId.every((b) => b === 0) ? null : keyId;
 }
 
+export type { ITrunSampleInfo };
 export {
   getKeyIdFromInitSegment,
   getMDHDTimescale,
@@ -573,4 +672,5 @@ export {
   patchPssh,
   updateBoxLength,
   parseEmsgBoxes,
+  getTrunSamples,
 };

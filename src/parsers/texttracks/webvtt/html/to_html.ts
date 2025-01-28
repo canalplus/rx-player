@@ -15,9 +15,9 @@
  */
 
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
+import type { IStyleElements } from "../parse_style_block";
 import convertPayloadToHTML from "./convert_payload_to_html";
 import createStyleAttribute from "./create_style_attribute";
-import type { IStyleElements } from "./parse_style_block";
 
 export interface IVTTHTMLCue {
   start: number;

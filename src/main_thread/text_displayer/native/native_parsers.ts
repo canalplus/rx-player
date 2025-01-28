@@ -5,7 +5,9 @@ import log from "../../../log";
 /**
  * Convert text track data into timed VTT Cues.
  * @param {string} type - Text track format wanted
- * @param {string} data - Text track data
+ * @param {string|BufferSource} data - Text track data
+ * @param {Number} timescale - Potential external timescale to convert timing
+ * information into seconds.
  * @param {Number} timestampOffset - offset to apply to every timed text
  * @param {string} [language] - language of the text tracks
  * @returns {Array.<VTTCue>}
@@ -13,7 +15,8 @@ import log from "../../../log";
  */
 export default function parseTextTrackToCues(
   type: string,
-  data: string,
+  data: string | BufferSource,
+  timescale: number,
   timestampOffset: number,
   language?: string,
 ): Array<ICompatVTTCue | TextTrackCue> {
@@ -25,7 +28,7 @@ export default function parseTextTrackToCues(
   }
 
   log.debug("NTSB: Parser found, parsing...");
-  const parsed = parser(data, timestampOffset, language);
+  const parsed = parser(data, timescale, timestampOffset, language);
   log.debug("NTSB: Parsed successfully!", parsed.length);
   return parsed;
 }

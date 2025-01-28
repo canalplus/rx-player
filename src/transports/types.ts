@@ -462,9 +462,11 @@ export interface IChunkTimeInfo {
 }
 
 /** Text track segment data, once parsed. */
-export interface ITextTrackSegmentData {
+export interface ITextTrackSegmentData<
+  T extends string | BufferSource = string | BufferSource,
+> {
   /** The text track data, in the format indicated in `type`. */
-  data: string;
+  data: T;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
   type: string;
   /**
@@ -473,6 +475,11 @@ export interface ITextTrackSegmentData {
    * be parsed.
    */
   language?: string | undefined;
+  /**
+   * Optional timescale data context that is used to convert timing information
+   * found inside the segment into seconds.
+   */
+  timescale: number | null;
   /** start time from which the segment apply, in seconds. */
   start?: number | undefined;
   /** end time until which the segment apply, in seconds. */
@@ -512,7 +519,10 @@ export interface ITransportAudioVideoSegmentPipeline {
 
 export interface ITransportTextSegmentPipeline {
   loadSegment: ISegmentLoader<ILoadedTextSegmentFormat>;
-  parseSegment: ISegmentParser<ILoadedTextSegmentFormat, ITextTrackSegmentData | null>;
+  parseSegment: ISegmentParser<
+    ILoadedTextSegmentFormat,
+    ITextTrackSegmentData<Uint8Array | string> | null
+  >;
 }
 
 export type ITransportSegmentPipeline =

@@ -11,6 +11,8 @@ export interface IHTMLCue {
  * Convert text track data into timed HTML Cues.
  * @param {string} type - Text track format wanted
  * @param {string} data - Text track data
+ * @param {Number} timescale - Potential external timescale to convert timing
+ * information into seconds.
  * @param {Number} timestampOffset - offset to apply to every timed text
  * @param {string} [language] - language of the text tracks
  * @returns {Array.<Object>}
@@ -18,7 +20,8 @@ export interface IHTMLCue {
  */
 export default function parseTextTrackToElements(
   type: string,
-  data: string,
+  data: string | BufferSource,
+  timescale: number,
   timestampOffset: number,
   language?: string,
 ): IHTMLCue[] {
@@ -29,7 +32,7 @@ export default function parseTextTrackToElements(
     throw new Error("no parser found for the given text track");
   }
   log.debug("HTSB: Parser found, parsing...");
-  const parsed = parser(data, timestampOffset, language);
+  const parsed = parser(data, timescale, timestampOffset, language);
   log.debug("HTTB: Parsed successfully!", parsed.length);
   return parsed;
 }

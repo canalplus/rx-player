@@ -16,16 +16,24 @@
 
 import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
 import makeVTTCue from "../../../../compat/make_vtt_cue";
+import type { IStyleElements } from "../parse_style_block";
 
 /**
  * @param {Object} cueObj
+ * @param {Object} _styling
  * @returns {TextTrackCue|ICompatVTTCue|null}
  */
-export default function toNativeCue(cueObj: {
-  start: number;
-  end: number;
-  payload: string[];
-}): ICompatVTTCue | TextTrackCue | null {
+export default function toNativeCue(
+  cueObj: {
+    start: number;
+    end: number;
+    settings: Partial<Record<string, string>>;
+    header?: string | undefined;
+    payload: string[];
+  },
+  _styling: { classes: IStyleElements; global?: string | undefined },
+): ICompatVTTCue | TextTrackCue | null {
+  // TODO: Some amount of styling?
   const { start, end, payload } = cueObj;
   const text = payload.join("\n");
   return makeVTTCue(start, end, text);
