@@ -1,6 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
-import type { IEmeApiImplementation } from "../../../../compat/eme";
 import type {
   IManifestMetadata,
   IPeriodMetadata,
@@ -10,6 +9,7 @@ import type {
 import { ManifestMetadataFormat } from "../../../../manifest";
 
 import type { IContentProtections } from "../../../../parsers/manifest";
+import assert from "../../../../utils/assert";
 import sleep from "../../../../utils/sleep";
 import ContentDecryptor from "../../../decrypt";
 import { updateManifestCodecSupport } from "../update_manifest_codec_support";
@@ -193,7 +193,8 @@ describe("init - utils - updateManifestCodecSupport", () => {
       },
     };
     const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
-    const emeImplem = getEmeApiImplementation("auto") as IEmeApiImplementation;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
     updateManifestCodecSupport(manifest, contentDecryptor, true);
     expect(representationAVC.isSupported).toBe(true);
@@ -274,7 +275,8 @@ describe("init - utils - updateManifestCodecSupport", () => {
     };
     const video = document.createElement("video");
     const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
-    const emeImplem = getEmeApiImplementation("auto") as IEmeApiImplementation;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
     await sleep(100);
     contentDecryptor.attach();
@@ -322,7 +324,8 @@ describe("init - utils - updateManifestCodecSupport", () => {
 
     const video = document.createElement("video");
     const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
-    const emeImplem = getEmeApiImplementation("auto") as IEmeApiImplementation;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, []);
     updateManifestCodecSupport(manifest, contentDecryptor, true);
     expect(representationAVC.isSupported).toBe(true);

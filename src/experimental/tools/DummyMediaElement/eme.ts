@@ -852,7 +852,7 @@ function getKeyIdsFromPssh(
 
     const kids = [];
     let i = kidCount;
-    while (i--) {
+    while (i-- > 0) {
       if (buf.length < offset + 16) {
         return null;
       }
