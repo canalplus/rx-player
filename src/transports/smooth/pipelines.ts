@@ -37,6 +37,7 @@ import type {
   ISegmentLoaderResultSegmentLoaded,
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
+  ISupportedTextTrackFormat,
   ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
@@ -308,7 +309,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
       let segmentStart: number | undefined;
       let segmentEnd: number | undefined;
       let _sdData: string;
-      let _sdType: string | undefined;
+      let _sdType: ISupportedTextTrackFormat | undefined;
 
       if (isMP4) {
         let chunkBytes: Uint8Array;

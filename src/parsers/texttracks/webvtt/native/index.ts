@@ -19,5 +19,7 @@
  * It always should be imported through the `features` object.
  */
 
-import parseVttToNative from "./parse_vtt_to_cues";
-export default parseVttToNative;
+import parseWebVTTPlainTextToVTTCues from "./parse_vtt_plain_text_to_cues";
+import parseMp4EmbeddedWebVttToVTTCues from "./parse_webvtt_mp4_to_cues";
+
+export { parseMp4EmbeddedWebVttToVTTCues, parseWebVTTPlainTextToVTTCues };

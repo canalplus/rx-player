@@ -15,7 +15,10 @@
  */
 
 import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
-import vttParser from "../../parsers/texttracks/webvtt/html";
+import {
+  parseWebVTTMp4,
+  parseWebVTTPlainText,
+} from "../../parsers/texttracks/webvtt//html";
 import type { IFeaturesObject } from "../types";
 
 /**
@@ -23,7 +26,8 @@ import type { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addHTMLVTTFeature(features: IFeaturesObject): void {
-  features.htmlTextTracksParsers.vtt = vttParser;
+  features.htmlTextTracksParsers.vtt = parseWebVTTPlainText;
+  features.htmlTextTracksParsers.mp4vtt = parseWebVTTMp4;
   features.htmlTextDisplayer = HTMLTextDisplayer;
 }
 

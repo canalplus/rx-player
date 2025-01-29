@@ -22,13 +22,11 @@
 import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
 import isVTTCue from "../../../../compat/is_vtt_cue";
 import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
-import { strToUtf8, utf8ToStr } from "../../../../utils/string_parsing";
+import { utf8ToStr } from "../../../../utils/string_parsing";
 import getCueBlocks from "../get_cue_blocks";
 import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
-import parseMp4EmbeddedWebVtt from "../parse_mp4_embedded_wvtt";
 import parseStyleBlocks from "../parse_style_block";
-import seemsMp4EmbeddedFormat from "../seems_mp4_embedded_format";
 import { getFirstLineAfterHeader } from "../utils";
 import setSettingsOnCue from "./set_settings_on_cue";
 import toNativeCue from "./to_native_cue";
@@ -38,52 +36,25 @@ import toNativeCue from "./to_native_cue";
 // Does not take into consideration STYLE and REGION blocks.
 
 /**
- * @param {string|BufferSource} input
- * @param {Number} timescale
- * @param {Number} timeOffset
- * @returns {Array.<ICompatVTTCue|TextTrackCue>}
- */
-export default function parseVttToNative(
-  input: string | BufferSource,
-  timescale: number,
-  timeOffset: number,
-): Array<TextTrackCue | ICompatVTTCue> {
-  if (seemsMp4EmbeddedFormat(input)) {
-    if (typeof input === "string") {
-      return parseMp4EmbeddedWebVtt(strToUtf8(input), timescale, timeOffset, toNativeCue);
-    } else {
-      return parseMp4EmbeddedWebVtt(
-        bufferSourceToUint8(input),
-        timescale,
-        timeOffset,
-        toNativeCue,
-      );
-    }
-  } else if (typeof input === "string") {
-    return parseVTTStringToVTTCues(input, timescale, timeOffset);
-  } else {
-    return parseVTTStringToVTTCues(
-      // Assume UTF-8
-      utf8ToStr(bufferSourceToUint8(input)),
-      timescale,
-      timeOffset,
-    );
-  }
-}
-
-/**
  * Parse whole WEBVTT file into an array of cues, to be inserted in a video's
  * TrackElement.
- * @param {string} vttStr
+ * @param {string|BufferSource} input
  * @param {Number} _timescale
  * @param {Number} timeOffset
  * @returns {Array.<ICompatVTTCue|TextTrackCue>}
  */
-function parseVTTStringToVTTCues(
-  vttStr: string,
+export default function parseWebVTTPlainTextToVTTCues(
+  input: string | BufferSource,
   _timescale: number,
   timeOffset: number,
 ): Array<TextTrackCue | ICompatVTTCue> {
+  let vttStr: string;
+  if (typeof input === "string") {
+    vttStr = input;
+  } else {
+    // Assume UTF-8
+    vttStr = utf8ToStr(bufferSourceToUint8(input));
+  }
   // WEBVTT authorize CRLF, LF or CR as line terminators
   const lines = vttStr.split(/\r\n|\n|\r/);
 

@@ -1,6 +1,9 @@
 import log from "../../../../log";
 import type { ITextDisplayer } from "../../../../main_thread/types";
-import type { ITextTrackSegmentData } from "../../../../transports";
+import type {
+  ISupportedTextTrackFormat,
+  ITextTrackSegmentData,
+} from "../../../../transports";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../../utils/ranges";
@@ -149,7 +152,7 @@ export interface ITextTracksBufferSegmentData<
   /** The text track data, in the format indicated in `type`. */
   data: T;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type: string;
+  type: ISupportedTextTrackFormat;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should

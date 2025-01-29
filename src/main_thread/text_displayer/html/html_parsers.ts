@@ -1,5 +1,6 @@
 import features from "../../../features";
 import log from "../../../log";
+import type { ISupportedTextTrackFormat } from "../../../transports";
 
 export interface IHTMLCue {
   start: number;
@@ -19,7 +20,7 @@ export interface IHTMLCue {
  * @throws Error - Throw if no parser is found for the given type
  */
 export default function parseTextTrackToElements(
-  type: string,
+  type: ISupportedTextTrackFormat,
   data: string | BufferSource,
   timescale: number,
   timestampOffset: number,

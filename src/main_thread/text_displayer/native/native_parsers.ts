@@ -1,6 +1,7 @@
 import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
 import features from "../../../features";
 import log from "../../../log";
+import type { ISupportedTextTrackFormat } from "../../../transports";
 
 /**
  * Convert text track data into timed VTT Cues.
@@ -14,7 +15,7 @@ import log from "../../../log";
  * @throws Error - Throw if no parser is found for the given type
  */
 export default function parseTextTrackToCues(
-  type: string,
+  type: ISupportedTextTrackFormat,
   data: string | BufferSource,
   timescale: number,
   timestampOffset: number,

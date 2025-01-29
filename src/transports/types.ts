@@ -461,14 +461,29 @@ export interface IChunkTimeInfo {
   time: number;
 }
 
+/**
+ * The format in which text track data may be communicated:
+ *   - `"ttml"`: Plain text TTML. The data should be in preference in a string
+ *     format or at worse as UTF-8.
+ *   - `"ttml"`: Plain text WebVTT. The data should be in preference in a string
+ *     format or at worse as UTF-8.
+ *   - `"srt"`: Plain text SRT. The data should be in preference in a string
+ *     format or at worse as UTF-8.
+ *   - `"sami"`: Plain text SAMI. The data should be in preference in a string
+ *     format or at worse as UTF-8.
+ *   - `"mp4vtt"`: The WebVTT format when embedded in an ISOBMFF file. The data
+ *     should represent the whole mp4 segment as a BufferSource.
+ */
+export type ISupportedTextTrackFormat = "ttml" | "vtt" | "mp4vtt" | "srt" | "sami";
+
 /** Text track segment data, once parsed. */
 export interface ITextTrackSegmentData<
   T extends string | BufferSource = string | BufferSource,
 > {
   /** The text track data, in the format indicated in `type`. */
   data: T;
-  /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type: string;
+  /** The format of `data`. */
+  type: ISupportedTextTrackFormat;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should
