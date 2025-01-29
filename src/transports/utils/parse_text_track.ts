@@ -19,12 +19,7 @@ import type { ISegment } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
 import startsWith from "../../utils/starts_with";
 import { utf8ToStr } from "../../utils/string_parsing";
-import type {
-  IChunkTimeInfo,
-  ISegmentContext,
-  ISupportedTextTrackFormat,
-  ITextTrackSegmentData,
-} from "../types";
+import type { IChunkTimeInfo, ISegmentContext, ITextTrackSegmentData } from "../types";
 
 /**
  * Returns the a string expliciting the format of a text track when that text
@@ -122,24 +117,27 @@ export function getISOBMFFEmbeddedTextTrackData(
     }
   }
 
-  let type: ISupportedTextTrackFormat = getISOBMFFTextTrackFormat(codecs);
-  let textData: string | BufferSource;
+  const type: "ttml" | "vtt" = getISOBMFFTextTrackFormat(codecs);
   const mdat = getMDAT(chunkBytes);
   const mdatStr = mdat !== null ? utf8ToStr(mdat) : "";
-  if (codecs === "wvtt") {
-    if (!startsWith(mdatStr, "WEBVTT") && !startsWith(mdatStr, "\xfe\xffWEBVTT")) {
-      // From how I understand it, we're here in a special WebVTT format  embedded
-      // in an MP4 where the whole chunk contains information, now just the MDAT
-      textData = chunkBytes;
-      type = "mp4vtt";
-    } else {
-      textData = mdatStr;
-    }
-  } else {
-    textData = mdatStr;
+  if (
+    codecs === "wvtt" &&
+    !startsWith(mdatStr, "WEBVTT") &&
+    !startsWith(mdatStr, "\xfe\xffWEBVTT")
+  ) {
+    // From how I understand it, we're here in a special WebVTT format  embedded
+    // in an MP4 where the whole chunk contains information, now just the MDAT
+    return {
+      data: chunkBytes,
+      type: "mp4vtt",
+      language,
+      start: startTime,
+      end: endTime,
+      timescale: initTimescale ?? null,
+    };
   }
   return {
-    data: textData,
+    data: mdatStr,
     type,
     language,
     start: startTime,

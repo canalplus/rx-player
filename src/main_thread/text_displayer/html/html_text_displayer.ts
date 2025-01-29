@@ -3,7 +3,10 @@ import { onEnded, onSeeked, onSeeking } from "../../../compat/event_listeners";
 import onHeightWidthChange from "../../../compat/on_height_width_change";
 import config from "../../../config";
 import log from "../../../log";
-import type { ITextTrackSegmentData } from "../../../transports";
+import type {
+  ISupportedTextTrackFormat,
+  ITextTrackSegmentData,
+} from "../../../transports";
 import type { IRange } from "../../../utils/ranges";
 import { convertToRanges } from "../../../utils/ranges";
 import type { CancellationSignal } from "../../../utils/task_canceller";
@@ -409,11 +412,13 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 }
 
 /** Data of chunks that should be pushed to the `HTMLTextDisplayer`. */
-export interface ITextTracksBufferSegmentData {
+export interface ITextTracksBufferSegmentData<
+  TDataFormatName extends ISupportedTextTrackFormat = ISupportedTextTrackFormat,
+> {
   /** The text track data, in the format indicated in `type`. */
-  data: string | BufferSource;
+  data: TDataFormatName extends "mp4vtt" ? BufferSource : string;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type: string;
+  type: TDataFormatName;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should
@@ -437,9 +442,7 @@ export interface ITextTracksBufferSegmentData {
  */
 if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
   // @ts-expect-error: uncalled function just for type-checking
-  function _checkType<T extends string | BufferSource>(
-    input: ITextTrackSegmentData<T>,
-  ): void {
+  function _checkType(input: ITextTrackSegmentData): void {
     function checkEqual(_arg: ITextTracksBufferSegmentData): void {
       /* nothing */
     }

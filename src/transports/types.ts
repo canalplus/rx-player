@@ -478,12 +478,12 @@ export type ISupportedTextTrackFormat = "ttml" | "vtt" | "mp4vtt" | "srt" | "sam
 
 /** Text track segment data, once parsed. */
 export interface ITextTrackSegmentData<
-  T extends string | BufferSource = string | BufferSource,
+  TDataFormatName extends ISupportedTextTrackFormat = ISupportedTextTrackFormat,
 > {
   /** The text track data, in the format indicated in `type`. */
-  data: T;
+  data: TDataFormatName extends "mp4vtt" ? BufferSource : string;
   /** The format of `data`. */
-  type: ISupportedTextTrackFormat;
+  type: TDataFormatName;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should
@@ -534,10 +534,7 @@ export interface ITransportAudioVideoSegmentPipeline {
 
 export interface ITransportTextSegmentPipeline {
   loadSegment: ISegmentLoader<ILoadedTextSegmentFormat>;
-  parseSegment: ISegmentParser<
-    ILoadedTextSegmentFormat,
-    ITextTrackSegmentData<Uint8Array | string> | null
-  >;
+  parseSegment: ISegmentParser<ILoadedTextSegmentFormat, ITextTrackSegmentData | null>;
 }
 
 export type ITransportSegmentPipeline =
