@@ -418,6 +418,25 @@ function parseCompleteIntermediateRepresentation(
       (parsedPeriods[parsedPeriods.length - 1]?.end !== undefined ||
         mpdIR.attributes.mediaPresentationDuration !== undefined));
 
+  let chainedManifests: null | string[] = null;
+  for (const prop of ["EssentialProperty", "SupplementalProperty"] as const) {
+    if (Array.isArray(mpdIR.children[prop])) {
+      const propChainedManifests = mpdIR.children[prop].reduce((acc: string[], s) => {
+        if (
+          s.attributes.schemeIdUri === "urn:mpeg:dash:chaining:2016" &&
+          s.attributes.value !== undefined
+        ) {
+          acc.push(s.attributes.value);
+        }
+        return acc;
+      }, []);
+      if (propChainedManifests.length > 0) {
+        chainedManifests = chainedManifests ?? [];
+        chainedManifests.push(...propChainedManifests);
+      }
+    }
+  }
+
   const parsedMPD: IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
@@ -437,6 +456,7 @@ function parseCompleteIntermediateRepresentation(
     uris: isNullOrUndefined(args.url)
       ? rootChildren.Location.map((l) => l.value)
       : [args.url, ...rootChildren.Location.map((l) => l.value)],
+    chainedManifests,
   };
 
   return { type: "done", value: { parsed: parsedMPD, warnings } };
