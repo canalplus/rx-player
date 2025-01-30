@@ -96,6 +96,7 @@ describe("Manifest - Manifest", () => {
       isDynamic: false,
       isLive: false,
       duration: 5,
+      chainedManifests: null,
       timeBounds: {
         minimumSafePosition: 0,
         timeshiftDepth: null,
@@ -138,6 +139,7 @@ describe("Manifest - Manifest", () => {
       isDynamic: false,
       isLive: false,
       duration: 5,
+      chainedManifests: null,
       timeBounds: {
         minimumSafePosition: 0,
         timeshiftDepth: null,
@@ -189,6 +191,7 @@ describe("Manifest - Manifest", () => {
       isLastPeriodKnown: true,
       isLive: false,
       duration: 5,
+      chainedManifests: null,
       timeBounds: {
         minimumSafePosition: 0,
         timeshiftDepth: null,
@@ -243,6 +246,7 @@ describe("Manifest - Manifest", () => {
       isLastPeriodKnown: true,
       isLive: false,
       duration: 5,
+      chainedManifests: null,
       timeBounds: {
         minimumSafePosition: 0,
         timeshiftDepth: null,
@@ -291,6 +295,7 @@ describe("Manifest - Manifest", () => {
     const oldManifestArgs = {
       availabilityStartTime: 5,
       duration: 12,
+      chainedManifests: null,
       id: "man",
       transportType: "dash",
       isLastPeriodKnown: true,
@@ -359,6 +364,7 @@ describe("Manifest - Manifest", () => {
     const oldManifestArgs1 = {
       availabilityStartTime: 5,
       duration: 12,
+      chainedManifests: null,
       id: "man",
       isDynamic: false,
       isLive: false,
@@ -386,6 +392,7 @@ describe("Manifest - Manifest", () => {
     const oldManifestArgs2 = {
       availabilityStartTime: 5,
       duration: 12,
+      chainedManifests: null,
       id: "man",
       isDynamic: false,
       isLive: false,
@@ -428,6 +435,7 @@ describe("Manifest - Manifest", () => {
     const oldManifestArgs = {
       availabilityStartTime: 5,
       duration: 12,
+      chainedManifests: null,
       id: "man",
       transportType: "dash",
       isLastPeriodKnown: true,

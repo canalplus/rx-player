@@ -69,6 +69,7 @@ function generateFakeManifestWithRepresentations(
     id: "manifest1",
     isDynamic: false,
     isLive: false,
+    chainedManifests: null,
     timeBounds: {
       minimumSafePosition: 0,
       timeshiftDepth: null,
