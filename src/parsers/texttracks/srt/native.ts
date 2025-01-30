@@ -33,13 +33,13 @@ import parseCueBlock from "./parse_cue";
  * Parse whole srt file into an array of cues, to be inserted in a video's
  * TrackElement.
  * @param {string|bufferSource} input
- * @param {Number} _timescale
+ * @param {Object} _context
  * @param {Number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
 export default function parseSRTStringToVTTCues(
   input: string | BufferSource,
-  _timescale: number,
+  _context: unknown,
   timeOffset: number,
 ): Array<ICompatVTTCue | TextTrackCue> {
   let srtStr: string;
@@ -70,7 +70,7 @@ export default function parseSRTStringToVTTCues(
 }
 
 /**
- * @param {Object} cue Object
+ * @param {Object} cueObj
  * @returns {TextTrackCue|VTTCue|null}
  */
 function toNativeCue(cueObj: {

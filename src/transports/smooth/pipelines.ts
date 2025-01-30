@@ -412,7 +412,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
           data: _sdData,
           start: segmentStart,
           end: segmentEnd,
-          timescale: initTimescale ?? null,
+          initTimescale: initTimescale ?? null,
           language,
         },
         chunkSize,

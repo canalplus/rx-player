@@ -8,21 +8,26 @@ import toNativeCue from "./to_native_cue";
  * Parse WebVTT subtitles format when embedded in an MP4 file.
  * @throws Error - Throws if the given WebVTT format.
  * @param {string | BufferSource} input - The whole webvtt subtitles to parse
- * @param {Number} timescale
+ * @param {Object} context
  * @param {Number} timeOffset - Offset to add to start and end times, in seconds
  * @return {Array.<Object>}
  */
 export default function parseMp4EmbeddedWebVttToVTTCues(
   input: string | BufferSource,
-  timescale: number,
+  { initTimescale }: { initTimescale: number | null },
   timeOffset: number,
 ): Array<TextTrackCue | ICompatVTTCue> {
   if (typeof input === "string") {
-    return parseMp4EmbeddedWebVtt(strToUtf8(input), timescale, timeOffset, toNativeCue);
+    return parseMp4EmbeddedWebVtt(
+      strToUtf8(input),
+      initTimescale ?? 1,
+      timeOffset,
+      toNativeCue,
+    );
   } else {
     return parseMp4EmbeddedWebVtt(
       bufferSourceToUint8(input),
-      timescale,
+      initTimescale ?? 1,
       timeOffset,
       toNativeCue,
     );

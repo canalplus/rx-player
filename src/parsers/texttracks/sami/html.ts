@@ -102,15 +102,17 @@ function decodeEntities(text: string): string {
  * may not work for every sami input.
  *
  * @param {string|BufferSource} input
- * @param {Number} _timescale
+ * @param {Object} context
  * @param {Number} timeOffset
- * @param {string} lang
  */
 function parseSami(
   input: string | BufferSource,
-  _timescale: number,
+  {
+    language: lang,
+  }: {
+    language: string | undefined;
+  },
   timeOffset: number,
-  lang?: string,
 ): IHTMLCue[] {
   let smi: string;
   if (typeof input !== "string") {

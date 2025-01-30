@@ -107,16 +107,18 @@ function decodeEntities(text: string): string {
  * may not work for every sami input.
  *
  * @param {string|BufferSource} input
- * @param {Number} _timescale
+ * @param {Object} context
  * @param {Number} timeOffset
- * @param {string} lang
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
 function parseSami(
   input: string | BufferSource,
-  _timescale: number,
+  {
+    language: lang,
+  }: {
+    language: string | undefined;
+  },
   timeOffset: number,
-  lang?: string,
 ): Array<TextTrackCue | ICompatVTTCue> {
   let smi: string;
   if (typeof input !== "string") {

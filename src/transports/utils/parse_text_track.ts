@@ -133,7 +133,7 @@ export function getISOBMFFEmbeddedTextTrackData(
       language,
       start: startTime,
       end: endTime,
-      timescale: initTimescale ?? null,
+      initTimescale: initTimescale ?? null,
     };
   }
   return {
@@ -142,7 +142,7 @@ export function getISOBMFFEmbeddedTextTrackData(
     language,
     start: startTime,
     end: endTime,
-    timescale: initTimescale ?? null,
+    initTimescale: initTimescale ?? null,
   };
 }
 
@@ -182,6 +182,6 @@ export function getPlainTextTrackData(
     language: context.language,
     start,
     end,
-    timescale: initTimescale ?? null,
+    initTimescale: initTimescale ?? null,
   };
 }

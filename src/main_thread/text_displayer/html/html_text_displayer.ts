@@ -135,7 +135,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       data: dataRaw,
       type,
       language,
-      timescale,
+      initTimescale,
     } = chunk;
 
     const appendWindowStart = appendWindow[0] ?? 0;
@@ -144,9 +144,8 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     const cues = parseTextTrackToElements(
       type,
       dataRaw,
-      timescale ?? 1,
+      { initTimescale, language },
       timestampOffset,
-      language,
     );
 
     if (appendWindowStart !== 0 && appendWindowEnd !== Infinity) {

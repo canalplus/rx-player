@@ -39,13 +39,13 @@ import toNativeCue from "./to_native_cue";
  * Parse whole WEBVTT file into an array of cues, to be inserted in a video's
  * TrackElement.
  * @param {string|BufferSource} input
- * @param {Number} _timescale
+ * @param {Object} _context
  * @param {Number} timeOffset
  * @returns {Array.<ICompatVTTCue|TextTrackCue>}
  */
 export default function parseWebVTTPlainTextToVTTCues(
   input: string | BufferSource,
-  _timescale: number,
+  _context: unknown,
   timeOffset: number,
 ): Array<TextTrackCue | ICompatVTTCue> {
   let vttStr: string;

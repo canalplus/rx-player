@@ -160,10 +160,14 @@ export interface ITextTracksBufferSegmentData<
    */
   language?: string | undefined;
   /**
-   * Optional timescale data context that is used to convert timing information
+   * If set, there has been a "timescale" that has been parsed from an
+   * initialization segment linked to that text track, which contained a
+   * timescale value, potentially allowing to convert time information
    * into seconds.
+   *
+   * This is needed by very few text track formats.
    */
-  timescale: number | null;
+  initTimescale: number | null;
   /** start time from which the segment apply, in seconds. */
   start?: number | undefined;
   /** end time until which the segment apply, in seconds. */
@@ -195,8 +199,8 @@ function assertChunkIsTextTrackSegmentData(
     typeof (chunk as ITextTracksBufferSegmentData).type !== "string" ||
     ((chunk as ITextTracksBufferSegmentData).language !== undefined &&
       typeof (chunk as ITextTracksBufferSegmentData).language !== "string") ||
-    ((chunk as ITextTracksBufferSegmentData).timescale !== null &&
-      typeof (chunk as ITextTracksBufferSegmentData).timescale !== "number") ||
+    ((chunk as ITextTracksBufferSegmentData).initTimescale !== null &&
+      typeof (chunk as ITextTracksBufferSegmentData).initTimescale !== "number") ||
     ((chunk as ITextTracksBufferSegmentData).start !== undefined &&
       typeof (chunk as ITextTracksBufferSegmentData).start !== "number") ||
     ((chunk as ITextTracksBufferSegmentData).end !== undefined &&

@@ -54,16 +54,15 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       data: dataString,
       type,
       language,
-      timescale,
+      initTimescale,
     } = chunk;
     const appendWindowStart = appendWindow[0] ?? 0;
     const appendWindowEnd = appendWindow[1] ?? Infinity;
     const cues = parseTextTrackToCues(
       type,
       dataString,
-      timescale ?? 1,
+      { initTimescale, language },
       timestampOffset,
-      language,
     );
 
     if (appendWindowStart !== 0 && appendWindowEnd !== Infinity) {

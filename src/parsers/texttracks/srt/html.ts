@@ -37,13 +37,13 @@ export interface ISRTHTMLCue {
 
 /**
  * @param {string|BufferSource} input
- * @param {Number} _timescale
+ * @param {Object} _context
  * @param {Number} timeOffset
  * @returns {Array.<Object>}
  */
 export default function parseSRTStringToHTML(
   input: string | BufferSource,
-  _timescale: number,
+  _context: unknown,
   timeOffset: number,
 ): ISRTHTMLCue[] {
   let srtStr: string;

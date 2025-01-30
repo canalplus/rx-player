@@ -35,13 +35,13 @@ import toHTML from "./to_html";
  *
  * @throws Error - Throws if the given WebVTT string is invalid.
  * @param {string|BufferSource} text - The whole webvtt subtitles to parse
- * @param {Number} _timescale
+ * @param {Object} _context
  * @param {Number} timeOffset - Offset to add to start and end times, in seconds
  * @return {Array.<Object>}
  */
 export default function parseWebVTTPlainText(
   text: string | BufferSource,
-  _timescale: number,
+  _context: unknown,
   timeOffset: number,
 ): IVTTHTMLCue[] {
   let textStr: string;

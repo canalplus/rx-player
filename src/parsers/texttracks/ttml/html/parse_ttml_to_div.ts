@@ -39,12 +39,12 @@ import parseCue from "./parse_cue";
  * Optimizations have been done, principally to avoid using too much XML APIs,
  * but we can still do better.
  * @param {string|BufferSource} input
- * @param {number} _timescale
+ * @param {Object} _context
  * @param {number} timeOffset
  */
 export default function parseTTMLToDiv(
   input: string | BufferSource,
-  _timescale: number,
+  _context: unknown,
   timeOffset: number,
 ): ITTMLHTMLCue[] {
   let str: string;

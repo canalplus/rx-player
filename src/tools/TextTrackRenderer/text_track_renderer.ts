@@ -29,7 +29,7 @@ export interface ISetTextTrackArguments {
    * Optional timescale data context that is used to convert timing information
    * into seconds.
    */
-  timescale: number | null;
+  initTimescale: number | null;
   /** Offset, in seconds, that will be added to each subtitle's start and end time. */
   timeOffset?: number;
   /**
@@ -87,7 +87,7 @@ export default class TextTrackRenderer {
       chunk: {
         start: 0,
         end: Number.MAX_VALUE,
-        timescale: args.timescale,
+        initTimescale: args.initTimescale,
         data: args.data,
         language: args.language,
         type: args.type,

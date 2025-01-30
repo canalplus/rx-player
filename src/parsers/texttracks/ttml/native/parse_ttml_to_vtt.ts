@@ -22,13 +22,13 @@ import parseCue from "./parse_cue";
 
 /**
  * @param {string|BufferSource} input
- * @param {number} _timescale
+ * @param {Object} _context
  * @param {number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
 export default function parseTtmlToNative(
   input: string | BufferSource,
-  _timescale: number,
+  _context: unknown,
   timeOffset: number,
 ): Array<TextTrackCue | ICompatVTTCue> {
   let str: string;

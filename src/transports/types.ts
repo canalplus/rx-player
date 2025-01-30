@@ -491,10 +491,14 @@ export interface ITextTrackSegmentData<
    */
   language?: string | undefined;
   /**
-   * Optional timescale data context that is used to convert timing information
-   * found inside the segment into seconds.
+   * If set, there has been a "timescale" that has been parsed from an
+   * initialization segment linked to that text track, which contained a
+   * timescale value, potentially allowing to convert time information
+   * into seconds.
+   *
+   * This is needed by very few text track formats.
    */
-  timescale: number | null;
+  initTimescale: number | null;
   /** start time from which the segment apply, in seconds. */
   start?: number | undefined;
   /** end time until which the segment apply, in seconds. */
