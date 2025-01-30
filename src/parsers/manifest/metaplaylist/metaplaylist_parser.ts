@@ -355,6 +355,7 @@ function createManifest(
       },
     },
     lifetime: mplData.pollInterval,
+    chainedManifests: null,
   };
 
   return manifest;

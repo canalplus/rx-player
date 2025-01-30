@@ -39,6 +39,8 @@ function parseMPDChildren(mpdChildren: NodeList): [IMPDChildren, Error[]] {
   const periods: IPeriodIntermediateRepresentation[] = [];
   const utcTimings: IScheme[] = [];
   const contentProtections: IContentProtectionIntermediateRepresentation[] = [];
+  const essentialProperties: IScheme[] = [];
+  const supplementalProperties: IScheme[] = [];
 
   let warnings: Error[] = [];
   for (let i = 0; i < mpdChildren.length; i++) {
@@ -83,11 +85,30 @@ function parseMPDChildren(mpdChildren: NodeList): [IMPDChildren, Error[]] {
           }
           break;
         }
+
+        case "SupplementalProperty":
+          supplementalProperties.push(parseScheme(currentNode));
+          break;
+
+        case "EssentialProperty":
+          essentialProperties.push(parseScheme(currentNode));
+          break;
       }
     }
   }
 
-  return [{ baseURLs, locations, periods, utcTimings, contentProtections }, warnings];
+  return [
+    {
+      baseURLs,
+      locations,
+      periods,
+      utcTimings,
+      contentProtections,
+      supplementalProperties,
+      essentialProperties,
+    },
+    warnings,
+  ];
 }
 
 /**

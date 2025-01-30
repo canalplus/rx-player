@@ -67,6 +67,11 @@ export interface IMPDChildren {
   utcTimings: IScheme[];
   /** Encryption-related metadata. */
   contentProtections?: IContentProtectionIntermediateRepresentation[] | undefined;
+
+  /** DASH `SupplementalProperties` elements at the MPD level. */
+  supplementalProperties?: IScheme[] | undefined;
+  /** DASH `EssentialProperties` elements at the MPD level. */
+  essentialProperties?: IScheme[] | undefined;
 }
 
 /* Intermediate representation for the root's attributes. */

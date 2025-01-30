@@ -304,6 +304,14 @@ export default class Manifest
   };
 
   /**
+   * Manifests can have a reference to another Manifest that should be played
+   * once the previous one is finished.
+   * If that's the case, `chainedManifests` is set to the wanted Manifests' URL,
+   * by order of preference.
+   */
+  public chainedManifests: string[] | null;
+
+  /**
    * Caches the information if a codec is supported or not in the context of the
    * current content.
    */
@@ -374,6 +382,7 @@ export default class Manifest
     this.suggestedPresentationDelay = parsedManifest.suggestedPresentationDelay;
     this.availabilityStartTime = parsedManifest.availabilityStartTime;
     this.publishTime = parsedManifest.publishTime;
+    this.chainedManifests = parsedManifest.chainedManifests;
   }
 
   /**
@@ -628,6 +637,7 @@ export default class Manifest
       uris: this.uris,
       availabilityStartTime: this.availabilityStartTime,
       timeBounds: this.timeBounds,
+      chainedManifests: this.chainedManifests,
     };
   }
 

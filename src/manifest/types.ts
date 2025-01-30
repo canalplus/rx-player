@@ -210,6 +210,13 @@ export interface IManifestMetadata {
       time: number;
     };
   };
+  /**
+   * Manifests can have a reference to another Manifest that should be played
+   * once the previous one is finished.
+   * If that's the case, `chainedManifests` is set to the wanted Manifests' URL,
+   * by order of preference.
+   */
+  chainedManifests: string[] | null;
 }
 
 /**

@@ -394,4 +394,11 @@ export interface IParsedManifest {
   suggestedPresentationDelay?: number | undefined;
   /** URIs where the manifest can be refreshed by order of importance. */
   uris?: string[] | undefined;
+  /**
+   * Manifests can have a reference to another Manifest that should be played
+   * once the previous one is finished.
+   * If that's the case, `chainedManifests` is set to the wanted Manifests' URL,
+   * by order of preference.
+   */
+  chainedManifests: string[] | null;
 }

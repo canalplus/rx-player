@@ -95,6 +95,31 @@ export function generateMPDChildrenParser(
         break;
       }
 
+      case TagName.EssentialProperty: {
+        const essentialProperty = {};
+        if (mpdChildren.essentialProperties === undefined) {
+          mpdChildren.essentialProperties = [];
+        }
+        mpdChildren.essentialProperties.push(essentialProperty);
+        const attributeParser = generateSchemeAttrParser(essentialProperty, linearMemory);
+        parsersStack.pushParsers(nodeId, noop, attributeParser);
+        break;
+      }
+
+      case TagName.SupplementalProperty: {
+        const supplementalProperty = {};
+        if (mpdChildren.supplementalProperties === undefined) {
+          mpdChildren.supplementalProperties = [];
+        }
+        mpdChildren.supplementalProperties.push(supplementalProperty);
+        const attributeParser = generateSchemeAttrParser(
+          supplementalProperty,
+          linearMemory,
+        );
+        parsersStack.pushParsers(nodeId, noop, attributeParser);
+        break;
+      }
+
       default:
         // Allows to make sure we're not mistakenly closing a re-opened
         // tag.
