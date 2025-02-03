@@ -32,7 +32,7 @@ import noop from "../../utils/noop.ts";
 import type { IReadOnlySharedReference } from "../../utils/reference.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import TaskCanceller from "../../utils/task_canceller.ts";
-import { ContentInitializer, ContentInitializerState } from "./types.ts";
+import { ContentInitializer } from "./types.ts";
 import type { IInitialTimeOptions } from "./utils/get_initial_time.ts";
 import getLoadedReference from "./utils/get_loaded_reference.ts";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play.ts";
@@ -51,7 +51,6 @@ import listenToMediaError from "./utils/throw_on_media_error.ts";
  * @class DirectFileContentInitializer
  */
 export default class DirectFileContentInitializer extends ContentInitializer {
-  public state: ContentInitializerState;
   /**
    * Initial options given to the `DirectFileContentInitializer`.
    */
@@ -68,13 +67,8 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    */
   constructor(settings: IDirectFileOptions) {
     super();
-    this.state = ContentInitializerState.Idle;
     this._settings = settings;
     this._initCanceller = new TaskCanceller("Directfile Init");
-  }
-
-  public getState(): ContentInitializerState {
-    return this.state;
   }
 
   /**
@@ -98,8 +92,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       );
     }
 
-    this.state = ContentInitializerState.Loading;
-    this.trigger("stateChange", this.state);
     if (this._initCanceller.isUsed()) {
       return;
     }
@@ -214,8 +206,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   public dispose(reason: string | undefined): void {
     this._initCanceller.cancel(reason ?? "Directfile Init dispose");
     this._initCanceller = new TaskCanceller("Directfile Init new");
-    this.state = ContentInitializerState.Idle;
-    this.trigger("stateChange", this.state);
   }
 
   /**

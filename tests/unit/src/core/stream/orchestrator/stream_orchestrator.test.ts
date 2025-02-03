@@ -74,7 +74,9 @@ vi.mock("../../../../../../src/utils/queue_microtask", () => ({
 
 const DummySegmentSinksStore = makeMockedClass<SegmentSinksStore>(
   {
+    attachOpenedMediaSource: notImplemented("attachOpenedMediaSource"),
     getBufferTypes: notImplemented("getBufferTypes"),
+    getMediaSourceInterface: notImplemented("getMediaSourceInterface"),
     getNativeBufferTypes: notImplemented("getNativeBufferTypes"),
     getStatus: notImplemented("getStatus"),
     waitForUsableBuffers: notImplemented("waitForUsableBuffers"),
