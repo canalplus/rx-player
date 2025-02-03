@@ -22,7 +22,7 @@ import type {
 import { maintainEndOfStream } from "./utils/end_of_stream";
 import MediaSourceDurationUpdater from "./utils/media_source_duration_updater";
 
-/*
+/**
  * `IMediaSourceInterface` object for when the MSE API are directly available.
  * @see IMediaSourceInterface
  * @class {MainMediaSourceInterface}
@@ -221,7 +221,6 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    * `null` if no known operation is pending.
    */
   private _currentOperations: Array<Omit<ISbiQueuedOperation, "params">>;
-  private _isTransferring: boolean;
 
   /**
    * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
@@ -237,7 +236,6 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
-    this._isTransferring = false;
 
     const onError = this._onError.bind(this);
     const onUpdateEnd = this._onUpdateEnd.bind(this);
@@ -276,9 +274,6 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
   /** @see ISourceBufferInterface */
   public getBuffered(): IRange[] | undefined {
-    if (this._isTransferring) {
-      return undefined;
-    }
     try {
       return convertToRanges(this._sourceBuffer.buffered);
     } catch (err) {
@@ -393,11 +388,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   private _performNextOperation(): void {
-    if (
-      this._currentOperations.length !== 0 ||
-      this._sourceBuffer.updating ||
-      this._isTransferring
-    ) {
+    if (this._currentOperations.length !== 0 || this._sourceBuffer.updating) {
       return;
     }
     const nextElem = this._operationQueue.shift();

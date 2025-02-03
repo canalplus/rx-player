@@ -141,7 +141,7 @@ export default class SegmentSinksStore {
     this._onNativeBufferAddedOrDisabled = [];
   }
 
-  public attachMediaSource(mediaSource: IMediaSourceInterface): Promise<unknown> {
+  public attachOpenedMediaSource(mediaSource: IMediaSourceInterface): Promise<unknown> {
     if (this._mediaSource !== null) {
       return Promise.reject(
         new Error("mediaSourceInterface already attached to SegmentSinksStore"),

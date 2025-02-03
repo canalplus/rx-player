@@ -1167,7 +1167,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       currentContentCanceller.signal,
     );
     currentContentCanceller.signal.register(() => {
-      initializer.stop();
+      initializer.dispose();
     });
 
     /**

@@ -223,7 +223,7 @@ export default function initializeWorkerMain(
 
       case MainThreadMessageType.SourceBufferSuccess: {
         const preparedContent = contentPreparer.getCurrentContent();
-        if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+        if (msg.mediaSourceId !== preparedContent?.mediaSource?.id) {
           return;
         }
         const { sourceBuffers } = preparedContent.mediaSource;
@@ -248,7 +248,7 @@ export default function initializeWorkerMain(
 
       case MainThreadMessageType.SourceBufferError: {
         const preparedContent = contentPreparer.getCurrentContent();
-        if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+        if (msg.mediaSourceId !== preparedContent?.mediaSource?.id) {
           return;
         }
         const { sourceBuffers } = preparedContent.mediaSource;
@@ -273,7 +273,7 @@ export default function initializeWorkerMain(
 
       case MainThreadMessageType.MediaSourceReadyStateChange: {
         const preparedContent = contentPreparer.getCurrentContent();
-        if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+        if (msg.mediaSourceId !== preparedContent?.mediaSource?.id) {
           return;
         }
         if (preparedContent.mediaSource.onMediaSourceReadyStateChanged === undefined) {
@@ -432,8 +432,18 @@ export default function initializeWorkerMain(
         break;
       }
 
-      case MainThreadMessageType.MediaElementAvailable: {
-        // XXX TODO:
+      case MainThreadMessageType.MediaElementReady: {
+        const preparedContent = contentPreparer.getCurrentContent();
+        if (msg.contentId !== preparedContent?.contentId) {
+          return;
+        }
+        contentPreparer.attachMediaSource(sendMessage).catch((err) => {
+          sendMessage({
+            type: WorkerMessageType.Error,
+            contentId: preparedContent.contentId,
+            value: formatErrorForSender(err),
+          });
+        });
         break;
       }
 

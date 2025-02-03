@@ -8,14 +8,14 @@ being actually played to lower the time it will take once the user want to play 
 content.
 
 It can be used as a mechanism to improve loading performance when we're very confident
-that the user will play a content - yet we don't want to play it on the media element yet,
-or it may also be used to accelerate the transition between contents that will be played
-on the same media element (advertisement cuts, switching between episodes of a TV serie
-etc.).
+that the user will play a content yet we don't want to play it on the media element yet.
+It may also be used to accelerate the transition between contents that will be played
+sequentially on the same media element (advertisement cuts, switching between episodes of
+a TV serie etc.).
 
-As a supplementary goal, it may be used explicitely by an application through an RxPlayer
-`API` or implicitely through an adaptive streaming technology mechanism that could profit
-from it (e.g. "interstitial" systems, MPD chaining etc.).
+As a supplementary goal, it may both be used explicitely by an application through an
+RxPlayer `API` or implicitely through an adaptive streaming technology mechanism that
+could profit from it (e.g. "interstitial" systems, MPD chaining etc.).
 
 ## Preloading high level behavior
 
@@ -26,10 +26,10 @@ the content, we will push all of that stored data on the actual browser's buffer
 to the `HTMLMediaElement` (which is itself linked to the current RxPlayer instance).
 
 _An alternative solution that was studied was to preload and load all contents on the same
-`HTMLMediaElement`. Though it could lead to better performance (i.e. a simple seek to
-switch content is generally much faster than initializing all MSE API and then feeding it
-data), we decided to abandon that solution for now because of fears of compatibility
-issues._
+`HTMLMediaElement`, only at an offseted time for each preload. Though it could lead to
+better performance (i.e. a simple seek to switch content is generally much faster than
+initializing all MSE API and then feeding it data), we decided to abandon that solution
+for now because of fears of compatibility issues._
 
 We also postpone some API calls, such as encryption-related ones, for when the content is
 actually played to increase device compatibility. This even though those
@@ -83,15 +83,15 @@ between a content that is pre-loading and a content that is actually loading is 
 ### Working around not having the `HTMLMediaElement` when pre-loading
 
 As the `HTMLMediaElement` is only playing the content when actually loading, not
-pre-loading, we decided the following modifications:
+pre-loading, I decided the following modifications:
 
 1. For a few modules, they now can function with **AND** without an `HTMLMediaElement`
-   yet. In the cases where an `HTMLMediaElement` hasn't been provided to it yet, they
-   behave in a not-yet-ready state as if an `HTMLMediaElement` will be provided to it in
-   the future.
+   yet. In the cases where an `HTMLMediaElement` hasn't been provided to it , they behave
+   in a not-yet-ready state as if an `HTMLMediaElement` will be provided to it in the
+   future coincidentally with actual playback.
 
-   For example, the two `ITextDisplayer` implementations will store but not display on
-   screen subtitles synchronized with the media element until... a media element has
+   For example, the two `ITextDisplayer` implementations will store subtitles but not
+   display them on screen synchronized with the media element until... a media element has
    actually been provided through its `attachMediaElement` method (which may be called
    when/if the application finally decide to actually load that preload).
 
@@ -99,11 +99,11 @@ pre-loading, we decided the following modifications:
    initial position until an actual `HTMLMediaElement` has been provided here also though
    an `attachMediaElement` method.
 
-2. For most other cases, we removed direct usage of the `HTMLMediaElement` to prefer using
-   the `MediaElementPlaybackObserver` instead, which is already intrinsically linked to
-   the `HTMLMediaElement`.
+2. For most other cases, I removed direct usage of the `HTMLMediaElement` to prefer
+   relying on the `MediaElementPlaybackObserver` instead, which is already intrinsically
+   linked to the `HTMLMediaElement`.
 
-   We then added to the `MediaElementPlaybackObserver` a method called
+   I then added to the `MediaElementPlaybackObserver` a method called
    `onMediaElementAttachment` which allows to register a callback that will be called once
    the `HTMLMediaElement` has been attached to it (or called immediately and synchronously
    if it is already the case). This is what those other modules can rely on to declare
@@ -113,7 +113,7 @@ pre-loading, we decided the following modifications:
 
 `SourceBuffer` are very important here because preloading is all about loading in advance
 media segments and because under the RxPlayer's "normal" (i.e. "loading", not
-"preloading") behavior, media segments are immediately pushed to their `SourceBuffer`
+"preloading") behavior, media segments were immediately pushed to their `SourceBuffer`
 after loading them (with the RxPlayer preferably not keeping an in-memory reference to
 that huge chunk of data).
 
@@ -157,27 +157,38 @@ _NOTE2: There are some "smart" tricks performed by a `DummySegmentSink` to free 
 from JS memory if they appear to completely overwrite previous segments that were
 previously pushed._
 
+_NOTE3: There's nothing in a `DummySegmentSink`'s definition that links it to the preload
+feature and we could imagine other usage for that type of in-JS storing of recent
+operations._
+
 ### Working around not having a ready `MediaSource`
 
 Under normal ("loading") conditions, we create a `MediaSource` object almost immediately
 after the `loadVideo` API is called, attach it to the `HTMLMediaElement` and then wait for
-that `MediaSource`'s `readyState` property to switch to `"open"`. All this so we can then
-create `SourceBuffer` and start playing.
+that `MediaSource`'s `readyState` property to switch to `"open"` and for the `MediaKeys`
+to be linked to the `HTMLMediaElement`. All this so we can then load segments on the
+`SourceBuffer` and start playing.
 
-We cannot link a `MediaSource` to the `HTMLMediaElement` when preloading though. To
-work-around this, the `Core` part of the RxPlayer is now also aware that an
-`HTMLMediaElement` may not be available right away, and thus has separate initialization
-logic for when none is available yet.
+We do not want to link a `MediaSource` nor a `MediaKeys` to the `HTMLMediaElement` when
+preloading though.
 
-When it knows that no `HTMLMediaElement` is available, the `core` won't create the
-`MediaSource` yet and just create a `SegmentSinksStore` without one. The
-`SegmentSinksStore` then understand that it should create `DummySegmentSink` for the time
-being until a `MediaSource` is attached to it through its `attachMediaSource` method -
-which will happen when actually loading as the `HTMLMediaElement` will then be anounced as
-available.
+To work-around this, the `Core` part of the RxPlayer now separates the concept of being
+"ready" to fetch+push segments and the concept of having the media element actually
+available for playback: the `Core` will start by creating a `SegmentSinksStore` without a
+`MediaSource` - leading it to create `DummySegmentSink` initially for all buffer types.
 
-Signalment of whether an `HTMLMediaElement` is available is done through the usual
-message-based API
+Note that for code simplification purposes, this for now happen for all contents - not
+just the preloaded ones. We thus **always** begin by creating `DummySegmentSink` and
+storing segments in memory before actually switching to the real deal when ready.
+
+Generally when actually "loading" (and not "preloading"), segment fetching should take
+longer than the `MediaSource` and `MediaKeys` attachment logic in which case there
+shouldn't really be an observable in-JS storing of segments, not that this would be a
+problem anyway. It might even end up improving performance on devices where either
+`MediaSource`, `MediaKeys` attachment or both took a long time.
+
+This is implemented through a supplementary message from `main_thread` to `core`:
+`MediaElementReady`.
 
 ## Memory concerns
 
@@ -197,36 +208,37 @@ not do anything in that sense yet to keep the initial implementation """"simple"
 
 As I know there is some long term need for this, both at Canal+ and from outsiders, and as
 it may seem similar to a downloading concept (as when preloading, contents are also loaded
-for later), I thought that I add to add this part to this documentation.
+for later), I thought that I had to add this chapter to this documentation.
 
 The answer is: I don't think so.
 
-For downloads, the solution found by other implementation we've seen have many key
+For downloads, the solution found by other implementations we've seen have many key
 differences:
 
 - they favor the highest compatible media quality without network bandwidth
   considerations, where content preloading starts from the idea that playback will soon
   start and thus act like our regular playback logic on that point
 
-- for downloaded contents, playback will most often start later, in a different browsing
-  session and thus in a different RxPlayer instance. In contrast with "preloading" where
-  preloading and actually playing are usually close in time to each other and are always
-  on the same RxPlayer instance.
+- for downloaded contents, playback will most often start much later, in a different
+  browsing session and thus in a different RxPlayer instance. In contrast with
+  "preloading" where preloading and actually playing are usually close in time to each
+  other and are always on the same RxPlayer instance.
 
   The current preloading solution proposed is basically about handling a "not-yet-playing"
   mode, where the media element can then be "hot-swapped" (well, "hot-inserted") to enable
   actual playback on the current RxPlayer instance.
 
   This also means that all modules handling playback-related issues are in-place (and
-  there's a LOT of them) because they might be imminently-needed, though this is just
-  added complexity in a context where the content will not be actually played in that same
+  there's a LOT of them) because they might be imminently-needed. This is just added
+  complexity in a context where the content will not be actually played in that same
   session.
 
 Because of those, I actually think that having a separate code path/architecture for
 content downloading than for content loading and preloading would be easier to follow and
 maintain (though we know some people do not believe us on this :p!). Most advanced
-features worked-around here (`SegmentSink` inventories, `HTMLMediaElement` usage etc.) are
-not needed at all for content downloading because they are linked to content playback.
+features worked-around here (`SegmentSink` inventories, `HTMLMediaElement` usage,
+`PlaybackObserver` etc.) are not needed at all for content downloading because they are
+linked to content playback.
 
 The main logic of content downloading seem actually easier to implement than what we're
 doing here, the complexities we had at the time of our first attempts (at implementing
@@ -239,4 +251,6 @@ interrupted by the user closing the page etc.).
 Adding those orthogonal complexities linked to content downloading on top of the
 preloading API would complexify the "regular" code for in my opinion no real gain.
 Re-using in a separate location loading-related modules (`segmentFetcher`,
-`manifestFetcher`) and the manifest parser seems much easier to implement.
+`manifestFetcher`), selecting Representations through an util and a well-defined API, and
+then loading and storing all of their segments sequentially (code which would be written
+in that downloading-specific directory) seems much easier to implement.

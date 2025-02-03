@@ -87,12 +87,10 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
 
   /**
    * Stop playing the content linked to this `ContentInitializer` on the
-   * `HTMLMediaElement` linked to it and free every resources taken while
+   * `HTMLMediaElement` linked to it and dispose of every resources taken while
    * trying to do so.
-   *
-   * The content could be then restarted through a `start` call.
    */
-  public abstract stop(): void;
+  public abstract dispose(): void;
 }
 
 /** Every events emitted by a `ContentInitializer`. */

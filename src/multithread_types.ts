@@ -231,7 +231,7 @@ export interface IStartPreparedContentMessageValue {
    * If `false`, the content should start to be loaded, but the
    * `HTMLMediaElement` is not yet available. As such, loaded data should be
    * stored temporarily in-JavaScript and no `MediaSource` should be created
-   * yet until an `IAvailableMediaElementMessage`  is sent for the same
+   * yet until an `IMediaElementReadyMessage`  is sent for the same
    * `contentId`.
    *
    * The most likely use-case for it being set to `false` is to enable
@@ -256,8 +256,8 @@ export interface IStartPreparedContentMessageValue {
  * then be linked to that `MediaSource` and if media segments have already been
  * loaded in-memory, they should now be migrated to those `SourceBuffer`.
  */
-export interface IAvailableMediaElementMessage {
-  type: MainThreadMessageType.MediaElementAvailable;
+export interface IMediaElementReadyMessage {
+  type: MainThreadMessageType.MediaElementReady;
   /**
    * Same `contentId` than for the corresponding `IPrepareContentMessage` message.
    *
@@ -600,7 +600,7 @@ export const enum MainThreadMessageType {
   SourceBufferError = "sb-error",
   SourceBufferSuccess = "sb-success",
   StartPreparedContent = "start",
-  MediaElementAvailable = "meavail",
+  MediaElementReady = "media-element-ready",
   StopContent = "stop",
   TrackUpdate = "track-update",
   PullSegmentSinkStoreInfos = "pull-segment-sink-store-infos",
@@ -613,7 +613,7 @@ export type IMainThreadMessage =
   | IPrepareContentMessage
   | IStopContentMessage
   | IStartPreparedContentMessage
-  | IAvailableMediaElementMessage
+  | IMediaElementReadyMessage
   | IReferenceUpdateMessage
   | ICodecSupportUpdateMessage
   | IPlaybackObservationMessage

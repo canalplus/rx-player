@@ -1202,7 +1202,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     });
   }
 
-  public stop(): void {
+  public dispose(): void {
     this._initCanceller.cancel();
     this._initCanceller = new TaskCanceller();
     if (this._currentContentInfo !== null) {

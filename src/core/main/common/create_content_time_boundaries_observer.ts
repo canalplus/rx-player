@@ -32,6 +32,7 @@ export interface IContentTimeBoundariesObserverCallbacks {
  */
 export default function createContentTimeBoundariesObserver(
   manifest: IManifest,
+  // XXX TODO:
   mediaSource: IMediaSourceInterface | null,
   streamObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
   segmentSinksStore: ISegmentSinksStore,
