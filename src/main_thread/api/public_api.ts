@@ -647,6 +647,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * /!\ The player cannot be "used" anymore after this method has been called.
    */
   dispose(): void {
+    this.clearPreloads();
+
     // free resources linked to the loaded content
     this.stop();
 
@@ -1353,7 +1355,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     return Array.from(this._priv_currentPreloads.keys()).map((id) => ({ id }));
   }
 
-  removePreload(preloadId: string): boolean {
+  stopPreloads(preloadId: string): boolean {
     const preloadObject = this._priv_currentPreloads.get(preloadId);
     if (preloadObject === undefined) {
       return false;
@@ -1363,7 +1365,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   clearPreloads(): void {
-    this.getCurrentPreloads().forEach((preload) => this.removePreload(preload.id));
+    this.getCurrentPreloads().forEach((preload) => this.stopPreloads(preload.id));
   }
 
   /**
@@ -2673,31 +2675,35 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     if (contentInfos.isPreload) {
       tracksStore.addEventListener("newAvailablePeriods", (p) => {
-        this.trigger("preloadNewAvailablePeriods", {
+        this.trigger("preload-newAvailablePeriods", {
           contentId: contentInfos.contentId,
           payload: p,
         });
       });
       tracksStore.addEventListener("brokenRepresentationsLock", (e) => {
-        this.trigger("preloadBrokenRepresentationsLock", {
+        this.trigger("preload-brokenRepresentationsLock", {
           contentId: contentInfos.contentId,
           payload: e,
         });
       });
       tracksStore.addEventListener("trackUpdate", (e) => {
-        this.trigger("preloadTrackUpdate", {
+        this.trigger("preload-trackUpdate", {
           contentId: contentInfos.contentId,
           payload: e,
         });
       });
       contentInfos.tracksStore.addEventListener("warning", (err) => {
-        this.trigger("preloadWarning", {
+        this.trigger("preload-warning", {
           contentId: contentInfos.contentId,
           payload: err,
         });
       });
       contentInfos.tracksStore.addEventListener("error", (_err) => {
-        // XXX TODO: on preloadError?
+        // XXX TODO: handle content stop
+        // this.trigger("preload-error", {
+        //   contentId: contentInfos.contentId,
+        //   payload: err,
+        // });
       });
     } else {
       tracksStore.addEventListener("newAvailablePeriods", (p) => {
@@ -2846,7 +2852,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     for (const [period, trackType] of periodsAndTrackTypes) {
       if (contentInfos.isPreload) {
         this._priv_triggerEventIfNotStopped(
-          "preloadRepresentationListUpdate",
+          "preload-representationListUpdate",
           {
             contentId: contentInfos.contentId,
             payload: {
@@ -3525,27 +3531,27 @@ interface IPublicAPIEvent {
   streamEventSkip: IStreamEvent;
   inbandEvents: IInbandEvent[];
 
-  preloadNewAvailablePeriods: {
+  "preload-newAvailablePeriods": {
     contentId: string;
     payload: IPeriod[];
   };
-  preloadBrokenRepresentationsLock: {
+  "preload-brokenRepresentationsLock": {
     contentId: string;
     payload: IBrokenRepresentationsLockContext;
   };
-  preloadTrackUpdate: {
+  "preload-trackUpdate": {
     contentId: string;
     payload: ITrackUpdateEventPayload;
   };
-  preloadRepresentationListUpdate: {
+  "preload-representationListUpdate": {
     contentId: string;
     payload: IRepresentationListUpdateContext;
   };
-  preloadError: {
+  "preload-error": {
     contentId: string;
     payload: IPlayerError | Error;
   };
-  preloadWarning: {
+  "preload-warning": {
     contentId: string;
     payload: IPlayerError | Error;
   };

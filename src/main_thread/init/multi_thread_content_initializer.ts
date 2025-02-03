@@ -352,13 +352,19 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       MediaSourceInitializationStatus.Nothing,
     );
 
-    const playbackStartParamsRef = new SharedReference<null | {
-      mediaElement: IMediaElement;
-      textDisplayer: ITextDisplayer | null;
-      playbackObserver: IMediaElementPlaybackObserver;
-      drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
-      mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
-    }>(null);
+    const drmInitializationStatus = new SharedReference<IDrmInitializationStatus>({
+      initializationState: {
+        type: "uninitialized",
+        value: null,
+      },
+      drmSystemId: undefined,
+    });
+    const playbackStartParams = {
+      textDisplayer: this._currentContentInfo?.textDisplayer ?? null,
+      playbackObserver,
+      drmInitializationStatus,
+      mediaSourceStatus,
+    };
 
     playbackObserver.onMediaElementAttachment((mediaElement: IMediaElement) => {
       listenToMediaError(
@@ -367,14 +373,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         this._initCanceller.signal,
       );
 
-      const { statusRef: drmInitializationStatus, contentDecryptor } =
-        this._initializeContentDecryption(
-          mediaElement,
-          lastContentProtection,
-          mediaSourceStatus,
-          () => reloadMediaSource(0, undefined, undefined),
-          this._initCanceller.signal,
-        );
+      const contentDecryptor = this._initializeContentDecryption(
+        mediaElement,
+        lastContentProtection,
+        drmInitializationStatus,
+        mediaSourceStatus,
+        () => reloadMediaSource(0, undefined, undefined),
+        this._initCanceller.signal,
+      );
       const contentInfo = this._currentContentInfo;
       if (contentInfo !== null) {
         contentInfo.contentDecryptor = contentDecryptor;
@@ -383,18 +389,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       const textDisplayer = contentInfo?.textDisplayer ?? null;
       textDisplayer?.attachMediaElement(mediaElement);
 
-      const startParams = {
-        mediaElement,
-        textDisplayer,
-        playbackObserver,
-        drmInitializationStatus,
-        mediaSourceStatus,
-      };
       mediaSourceStatus.onUpdate(
         (msInitStatus, stopListeningMSStatus) => {
           if (msInitStatus === MediaSourceInitializationStatus.Attached) {
             stopListeningMSStatus();
-            this._startPlaybackIfReady(startParams);
+            this._startPlaybackIfReady(playbackStartParams);
           }
         },
         { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
@@ -403,12 +402,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         (initializationStatus, stopListeningDrm) => {
           if (initializationStatus.initializationState.type === "initialized") {
             stopListeningDrm();
-            this._startPlaybackIfReady(startParams);
+            this._startPlaybackIfReady(playbackStartParams);
           }
         },
         { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
       );
-      playbackStartParamsRef.setValue(startParams);
     }, this._initCanceller.signal);
 
     /**
@@ -450,13 +448,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         position = Math.min(maximumPosition, position);
       }
 
-      this._reload(
-        mediaElement,
-        playbackObserver,
-        mediaSourceStatus,
-        position,
-        !isPaused,
-      );
+      this._reload(playbackObserver, mediaSourceStatus, position, !isPaused);
     };
 
     const onmessage = (msgData: IWorkerMessage) => {
@@ -849,10 +841,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           const manifest = msgData.value.manifest;
           this._currentContentInfo.manifest = manifest;
           this._updateCodecSupport(manifest);
-          const playbackStartParams = playbackStartParamsRef.getValue();
-          if (playbackStartParams !== null) {
-            this._startPlaybackIfReady(playbackStartParams);
-          }
+          this._startPlaybackIfReady(playbackStartParams);
           break;
         }
 
@@ -1233,13 +1222,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _initializeContentDecryption(
     mediaElement: IMediaElement,
     lastContentProtection: IReadOnlySharedReference<null | IContentProtection>,
+    drmInitializationStatus: SharedReference<IDrmInitializationStatus>,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
     cancelSignal: CancellationSignal,
-  ): {
-    statusRef: IReadOnlySharedReference<IDrmInitializationStatus>;
-    contentDecryptor: IContentDecryptor | null;
-  } {
+  ): IContentDecryptor | null {
     const { keySystems } = this._settings;
 
     // TODO private?
@@ -1257,16 +1244,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         },
         { clearSignal: cancelSignal },
       );
-      const ref = new SharedReference({
+      drmInitializationStatus.setValue({
         initializationState: {
           type: "initialized" as const,
           value: null,
         },
-        contentDecryptor: null,
         drmSystemId: undefined,
       });
-      ref.finish(); // We know that no new value will be triggered
-      return { statusRef: ref, contentDecryptor: null };
+      drmInitializationStatus.finish(); // We know that no new value will be triggered
+      return null;
     };
 
     if (keySystems.length === 0) {
@@ -1281,14 +1267,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
     log.debug("MTCI: Creating ContentDecryptor");
     const contentDecryptor = new ContentDecryptor(mediaElement, keySystems);
-    const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
-      {
-        initializationState: { type: "uninitialized", value: null },
-        drmSystemId: undefined,
-      },
-      cancelSignal,
-    );
-
     const updateCodecSupportOnStateChange = (state: ContentDecryptorState) => {
       if (state > ContentDecryptorState.Initializing) {
         const manifest = this._currentContentInfo?.manifest;
@@ -1376,7 +1354,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           { clearSignal: cancelSignal, emitCurrentValue: true },
         );
       } else if (state === ContentDecryptorState.ReadyForContent) {
-        drmStatusRef.setValue({
+        drmInitializationStatus.setValue({
           initializationState: { type: "initialized", value: null },
           drmSystemId: contentDecryptor.systemId,
         });
@@ -1406,7 +1384,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       contentDecryptor.dispose();
     });
 
-    return { statusRef: drmStatusRef, contentDecryptor };
+    return contentDecryptor;
   }
   /**
    * Retrieves all unknown codecs from the current manifest, checks these unknown codecs
@@ -1443,7 +1421,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   }
 
   private _reload(
-    mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     position: number,
@@ -1465,7 +1442,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           {
             initialTime: position,
             autoPlay,
-            mediaElement,
             playbackObserver,
           },
           this._currentMediaSourceCanceller.signal,
@@ -1519,7 +1495,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     parameters: {
       initialTime: number;
       autoPlay: boolean;
-      mediaElement: IMediaElement;
       playbackObserver: IMediaElementPlaybackObserver;
     },
     cancelSignal: CancellationSignal,
@@ -1696,23 +1671,34 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * @returns {boolean} - Returns `true` if all conditions where met for
    * playback start.
    */
-  private _startPlaybackIfReady(parameters: {
-    mediaElement: IMediaElement;
-    textDisplayer: ITextDisplayer | null;
-    playbackObserver: IMediaElementPlaybackObserver;
-    drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
-    mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
-  }): boolean {
+  private _startPlaybackIfReady(parameters: IStartPlaybackParams): boolean {
     if (this._currentContentInfo === null || this._currentContentInfo.manifest === null) {
       return false;
     }
-    const drmInitStatus = parameters.drmInitializationStatus.getValue();
-    if (drmInitStatus.initializationState.type !== "initialized") {
-      return false;
-    }
-    const msInitStatus = parameters.mediaSourceStatus.getValue();
-    if (msInitStatus !== MediaSourceInitializationStatus.Attached) {
-      return false;
+
+    /**
+     * `true` when an `HTMLMediaElement` is available for playback.
+     * In that case we check that other preconditions are filled: DRM
+     * initialization is done, the `MediaSource` is attached etc., before
+     * actually loading the content.
+     *
+     * `false` when the `HTMLMediaElement` is not yet available.
+     * In that case we will just load media segments in memory, where those
+     * pre-conditions are not needed.
+     */
+    const hasMediaElement = parameters.playbackObserver.getMediaElement() !== null;
+
+    let drmSystemId: string | undefined;
+    if (hasMediaElement) {
+      const drmInitStatus = parameters.drmInitializationStatus.getValue();
+      if (drmInitStatus.initializationState.type === "uninitialized") {
+        return false;
+      }
+      drmSystemId = drmInitStatus.drmSystemId;
+      const msInitStatus = parameters.mediaSourceStatus.getValue();
+      if (msInitStatus !== MediaSourceInitializationStatus.Attached) {
+        return false;
+      }
     }
 
     const { contentId, manifest } = this._currentContentInfo;
@@ -1728,7 +1714,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       {
         initialTime,
         autoPlay: this._settings.autoPlay,
-        mediaElement: parameters.mediaElement,
         playbackObserver: parameters.playbackObserver,
       },
       this._currentMediaSourceCanceller.signal,
@@ -1747,9 +1732,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       value: {
         initialTime,
         initialObservation: sentInitialObservation,
-        drmSystemId: drmInitStatus.drmSystemId,
+        drmSystemId,
         enableFastSwitching,
         onCodecSwitch,
+        hasMediaElement,
       },
     });
 
@@ -2118,6 +2104,7 @@ type IDecryptionInitializationState =
    * `HTMLMediaElement` (such as linking a content / `MediaSource` to it).
    */
   | { type: "uninitialized"; value: null }
+  | { type: "skipped"; value: null }
   /**
    * The `MediaSource` or media url can be linked AND segments can be pushed to
    * the `HTMLMediaElement` on which decryption capabilities were wanted.
@@ -2139,4 +2126,11 @@ function formatSourceBufferError(error: unknown): SourceBufferError {
   } else {
     return new SourceBufferError("Error", "Unknown SourceBufferError Error", false);
   }
+}
+
+interface IStartPlaybackParams {
+  textDisplayer: ITextDisplayer | null;
+  playbackObserver: IMediaElementPlaybackObserver;
+  drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
+  mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
 }

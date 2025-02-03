@@ -4,6 +4,18 @@ import type { IRange } from "../../../utils/ranges";
 import type { ICompleteSegmentInfo, IPushChunkInfos, ISBOperation } from "./types";
 import { SegmentSink, SegmentSinkOperation } from "./types";
 
+/**
+ * Dummy `SegmentSink` implementation that just stores in-memory all queued
+ * operations.
+ *
+ * Its intent is to only be used temporarily when actual lower-level buffers are
+ * not available yet (or not yet wanted - e.g. when pre-loading content). Once
+ * those buffers are available / wanted, you can get port this
+ * `DummySegmentSink`'s queue of operations to it by calling the `getStoredData`
+ * method.
+ *
+ * @class DummySegmentSink
+ */
 export default class DummySegmentSink extends SegmentSink {
   /** "Type" of the buffer concerned. */
   public readonly bufferType: "audio" | "video" | "text";
@@ -59,21 +71,20 @@ export default class DummySegmentSink extends SegmentSink {
   /** @see SegmentSink */
   public async pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[] | undefined> {
     this._buffer.push({ type: SegmentSinkOperation.Push, value: infos });
-    // TODO replace already buffered + range?
+    // XXX TODO: replace already buffered + range
     return Promise.resolve(undefined);
   }
 
   /** @see SegmentSink */
   public async removeBuffer(start: number, end: number): Promise<IRange[] | undefined> {
     this._buffer.push({ type: SegmentSinkOperation.Remove, value: { start, end } });
-    // TODO evict+range?
+    // XXX TODO: evict+range?
     return Promise.resolve(undefined);
   }
 
   /** @see SegmentSink */
   public async signalSegmentComplete(infos: ICompleteSegmentInfo): Promise<void> {
     this._buffer.push({ type: SegmentSinkOperation.SignalSegmentComplete, value: infos });
-    // TODO replace already buffered + range?
     return Promise.resolve(undefined);
   }
 

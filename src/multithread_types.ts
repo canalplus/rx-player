@@ -224,9 +224,48 @@ export interface IStartPreparedContentMessageValue {
   /** Behavior when a new video and/or audio codec is encountered. */
   onCodecSwitch: "continue" | "reload";
 
+  /**
+   * If `true` the `HTMLMediaElement` is already ready to play that content.
+   * As such a `MediaSource` can be created and linked to it right away.
+   *
+   * If `false`, the content should start to be loaded, but the
+   * `HTMLMediaElement` is not yet available. As such, loaded data should be
+   * stored temporarily in-JavaScript and no `MediaSource` should be created
+   * yet until an `IAvailableMediaElementMessage`  is sent for the same
+   * `contentId`.
+   *
+   * The most likely use-case for it being set to `false` is to enable
+   * content-preloading.
+   */
+  hasMediaElement: boolean;
+
   // TODO prepare chosen Adaptations here?
   // In which case the Period's `id` should probably be given instead of the
   // `initialTime`
+}
+
+/**
+ * Message sent by the main thread in the case where a content previously
+ * started through an `IStartPreparedContentMessage` message had not yet
+ * the `HTMLMediaElement` available for playback.
+ *
+ * This message indicates that the `HTMLMediaElement` is now available for
+ * playing this content.
+ * As such, a `MediaSource` should now be created and linked to the
+ * HTMLMediaElement, `SourceBuffer` objects for the right data types should
+ * then be linked to that `MediaSource` and if media segments have already been
+ * loaded in-memory, they should now be migrated to those `SourceBuffer`.
+ */
+export interface IAvailableMediaElementMessage {
+  type: MainThreadMessageType.MediaElementAvailable;
+  /**
+   * Same `contentId` than for the corresponding `IPrepareContentMessage` message.
+   *
+   * Allows to ensure no race condition lead to starting another content than
+   * the one meant by the main thread.
+   */
+  contentId: string;
+  value: null;
 }
 
 /**
@@ -561,6 +600,7 @@ export const enum MainThreadMessageType {
   SourceBufferError = "sb-error",
   SourceBufferSuccess = "sb-success",
   StartPreparedContent = "start",
+  MediaElementAvailable = "meavail",
   StopContent = "stop",
   TrackUpdate = "track-update",
   PullSegmentSinkStoreInfos = "pull-segment-sink-store-infos",
@@ -573,6 +613,7 @@ export type IMainThreadMessage =
   | IPrepareContentMessage
   | IStopContentMessage
   | IStartPreparedContentMessage
+  | IAvailableMediaElementMessage
   | IReferenceUpdateMessage
   | ICodecSupportUpdateMessage
   | IPlaybackObservationMessage

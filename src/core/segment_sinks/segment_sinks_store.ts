@@ -111,7 +111,7 @@ export default class SegmentSinksStore {
   private _initializedSegmentSinks: {
     audio?: AudioVideoSegmentSink | DummySegmentSink | undefined | null;
     video?: AudioVideoSegmentSink | DummySegmentSink | undefined | null;
-    text?: TextSegmentSink | DummySegmentSink | null;
+    text?: TextSegmentSink | null;
   };
 
   /**
@@ -155,9 +155,6 @@ export default class SegmentSinksStore {
     }
     if (this._initializedSegmentSinks.audio instanceof DummySegmentSink) {
       initializedSegmentSinks.push(["audio", this._initializedSegmentSinks.audio]);
-    }
-    if (this._initializedSegmentSinks.text instanceof DummySegmentSink) {
-      initializedSegmentSinks.push(["text", this._initializedSegmentSinks.text]);
     }
 
     this._initializedSegmentSinks = {};
@@ -375,20 +372,15 @@ export default class SegmentSinksStore {
       return memorizedSegmentSink;
     }
 
-    let textSegmentSink: TextSegmentSink | DummySegmentSink;
+    let textSegmentSink: TextSegmentSink;
     if (bufferType === "text") {
-      if (this._mediaSource === null) {
-        log.info("SB: Adding Dummy text SegmentSink", codec);
-        textSegmentSink = new DummySegmentSink(bufferType, codec);
-      } else {
-        log.info("SB: Creating a new text SegmentSink");
-        if (this._textInterface === null) {
-          throw new Error("HTML Text track feature not activated");
-        }
-        textSegmentSink = new TextSegmentSink(this._textInterface);
-        this._initializedSegmentSinks.text = textSegmentSink;
-        return textSegmentSink;
+      log.info("SB: Creating a new text SegmentSink");
+      if (this._textInterface === null) {
+        throw new Error("HTML Text track feature not activated");
       }
+      textSegmentSink = new TextSegmentSink(this._textInterface);
+      this._initializedSegmentSinks.text = textSegmentSink;
+      return textSegmentSink;
     }
 
     log.error("SB: Unknown buffer type:", bufferType);

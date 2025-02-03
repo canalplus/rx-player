@@ -432,6 +432,11 @@ export default function initializeWorkerMain(
         break;
       }
 
+      case MainThreadMessageType.MediaElementAvailable: {
+        // XXX TODO:
+        break;
+      }
+
       default:
         assertUnreachable(msg);
     }
