@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
 import config from "../../../../config";
 import type { IManifestMetadata } from "../../../../manifest";
 import { SeekingState } from "../../../../playback_observer";
@@ -44,7 +43,6 @@ interface IStreamEventsEmitterEvent {
  */
 export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitterEvent> {
   private _manifest: IManifestMetadata;
-  private _mediaElement: IMediaElement;
   private _playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>;
   private _scheduledEventsRef: SharedReference<
     Array<IStreamEventPayload | INonFiniteStreamEventPayload>
@@ -57,17 +55,14 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
 
   /**
    * @param {Object} manifest
-   * @param {HTMLMediaElement} mediaElement
    * @param {Object} playbackObserver
    */
   constructor(
     manifest: IManifestMetadata,
-    mediaElement: IMediaElement,
     playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
   ) {
     super();
     this._manifest = manifest;
-    this._mediaElement = mediaElement;
     this._playbackObserver = playbackObserver;
     this._canceller = null;
     this._scheduledEventsRef = new SharedReference<
@@ -87,7 +82,6 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
 
     const cancelSignal = this._canceller.signal;
     const playbackObserver = this._playbackObserver;
-    const mediaElement = this._mediaElement;
 
     let isPollingEvents = false;
     let cancelCurrentPolling = new TaskCanceller();
@@ -137,7 +131,9 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
 
         function constructObservation() {
           const lastObservation = playbackObserver.getReference().getValue();
-          const currentTime = mediaElement.currentTime;
+          const currentTime =
+            playbackObserver.getCurrentTime() ??
+            playbackObserver.getReference().getValue().position.getPolled();
           const isSeeking = lastObservation.seeking !== SeekingState.None;
           return { currentTime, isSeeking };
         }

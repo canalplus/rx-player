@@ -225,7 +225,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       cancelSignal,
     )
       .autoPlayResult.then(() =>
-        getLoadedReference(playbackObserver, mediaElement, true, cancelSignal).onUpdate(
+        getLoadedReference(playbackObserver, true, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
