@@ -31,7 +31,7 @@ import noop from "../../utils/noop";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
-import { ContentInitializer, ContentInitializerState } from "./types";
+import { ContentInitializer } from "./types";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
@@ -50,7 +50,6 @@ import listenToMediaError from "./utils/throw_on_media_error";
  * @class DirectFileContentInitializer
  */
 export default class DirectFileContentInitializer extends ContentInitializer {
-  public state: ContentInitializerState;
   /**
    * Initial options given to the `DirectFileContentInitializer`.
    */
@@ -67,13 +66,8 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    */
   constructor(settings: IDirectFileOptions) {
     super();
-    this.state = ContentInitializerState.Idle;
     this._settings = settings;
     this._initCanceller = new TaskCanceller();
-  }
-
-  public getState(): ContentInitializerState {
-    return this.state;
   }
 
   /**
@@ -97,8 +91,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       );
     }
 
-    this.state = ContentInitializerState.Loading;
-    this.trigger("stateChange", this.state);
     if (this._initCanceller.isUsed()) {
       return;
     }
@@ -210,8 +202,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   public dispose(): void {
     this._initCanceller.cancel();
     this._initCanceller = new TaskCanceller();
-    this.state = ContentInitializerState.Idle;
-    this.trigger("stateChange", this.state);
   }
 
   /**

@@ -59,7 +59,7 @@ import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import { MainThreadMessageType } from "../types";
 import type { ITextDisplayerOptions } from "./types";
-import { ContentInitializer, ContentInitializerState } from "./types";
+import { ContentInitializer } from "./types";
 import type { ICorePlaybackObservation } from "./utils/create_core_playback_observer";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
 import {
@@ -81,8 +81,6 @@ const generateContentId = idGenerator();
  * @class MediaSourceContentInitializer
  */
 export default class MediaSourceContentInitializer extends ContentInitializer {
-  public state: ContentInitializerState;
-
   /** Constructor settings associated to this `MultiThreadContentInitializer`. */
   private _settings: IInitializeArguments;
 
@@ -155,7 +153,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   constructor(settings: IInitializeArguments) {
     super();
-    this.state = ContentInitializerState.Idle;
     this._settings = settings;
     this._initCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller = new TaskCanceller();
@@ -168,10 +165,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     };
     this._queuedCoreMessages = null;
     this._isPlaybackReady = false;
-  }
-
-  public getState(): ContentInitializerState {
-    return this.state;
   }
 
   /**
@@ -350,11 +343,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       },
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
-
-    if (this.state === ContentInitializerState.Idle) {
-      this.state = ContentInitializerState.Preparing;
-      this.trigger("stateChange", this.state);
-    }
   }
 
   /**
@@ -379,8 +367,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {Object} playbackObserver
    */
   public start(playbackObserver: IMediaElementPlaybackObserver): void {
-    this.state = ContentInitializerState.Loading;
-    this.trigger("stateChange", this.state);
     if (this._initCanceller.isUsed()) {
       return;
     }
@@ -1367,8 +1353,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       }
       this._currentContentInfo = null;
     }
-    this.state = ContentInitializerState.Idle;
-    this.trigger("stateChange", this.state);
   }
 
   private _onFatalError(err: unknown) {
