@@ -578,7 +578,6 @@ function loadOrReloadPreparedContent(
     contentId,
     cmcdDataBuilder,
     manifest,
-    mediaSource,
     representationEstimator,
     segmentSinksStore,
     segmentQueueCreator,
@@ -633,7 +632,6 @@ function loadOrReloadPreparedContent(
 
   const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
     manifest,
-    mediaSource,
     playbackObserver,
     segmentSinksStore,
     {

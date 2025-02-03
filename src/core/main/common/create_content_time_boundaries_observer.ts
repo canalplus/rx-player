@@ -7,7 +7,9 @@ import type { IManifest, IPeriod } from "../../../manifest";
 import type { IMediaSourceInterface } from "../../../mse";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import type { IPlayerError } from "../../../public_types";
+import noop from "../../../utils/noop";
 import type { CancellationSignal } from "../../../utils/task_canceller";
+import type { IEndingPositionInformation } from "./content_time_boundaries_observer";
 import ContentTimeBoundariesObserver from "./content_time_boundaries_observer";
 
 export interface IContentTimeBoundariesObserverCallbacks {
@@ -24,7 +26,6 @@ export interface IContentTimeBoundariesObserverCallbacks {
  * Various methods from that class need then to be called at various events
  * (see `ContentTimeBoundariesObserver`).
  * @param {Object} manifest
- * @param {Object|null} mediaSource
  * @param {Object} streamObserver
  * @param {Object} segmentSinksStore
  * @param {Object} cancelSignal
@@ -32,23 +33,39 @@ export interface IContentTimeBoundariesObserverCallbacks {
  */
 export default function createContentTimeBoundariesObserver(
   manifest: IManifest,
-  // XXX TODO:
-  mediaSource: IMediaSourceInterface | null,
   streamObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
   segmentSinksStore: ISegmentSinksStore,
   callbacks: IContentTimeBoundariesObserverCallbacks,
   cancelSignal: CancellationSignal,
 ): ContentTimeBoundariesObserver {
-  cancelSignal.register(() => {
-    if (mediaSource !== null) {
-      mediaSource.interruptDurationSetting();
-    }
-  });
   const contentTimeBoundariesObserver = new ContentTimeBoundariesObserver(
     manifest,
     streamObserver,
     segmentSinksStore.getBufferTypes(),
   );
+  let mediaSource: IMediaSourceInterface | null = null;
+  let lastEndingPositionInformation: IEndingPositionInformation =
+    contentTimeBoundariesObserver.getCurrentEndingTime();
+  let isEndOfStream = false;
+  segmentSinksStore
+    .getMediaSourceInterface(cancelSignal)
+    .then((msi) => {
+      mediaSource = msi;
+      if (isEndOfStream) {
+        log.debug("Init: end-of-stream order received.");
+        mediaSource.maintainEndOfStream();
+      }
+      mediaSource.setDuration(
+        lastEndingPositionInformation.endingPosition,
+        lastEndingPositionInformation.isEnd,
+      );
+    })
+    .catch(noop);
+  cancelSignal.register(() => {
+    if (mediaSource !== null) {
+      mediaSource.interruptDurationSetting();
+    }
+  });
   cancelSignal.register(() => {
     contentTimeBoundariesObserver.dispose();
   });
@@ -59,24 +76,23 @@ export default function createContentTimeBoundariesObserver(
     callbacks.onPeriodChanged(period),
   );
   contentTimeBoundariesObserver.addEventListener("endingPositionChange", (evt) => {
+    lastEndingPositionInformation = evt;
     if (mediaSource !== null) {
       mediaSource.setDuration(evt.endingPosition, evt.isEnd);
     }
   });
   contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
+    isEndOfStream = true;
     if (mediaSource !== null) {
       log.debug("Init: end-of-stream order received.");
       mediaSource.maintainEndOfStream();
     }
   });
   contentTimeBoundariesObserver.addEventListener("resumeStream", () => {
+    isEndOfStream = false;
     if (mediaSource !== null) {
       mediaSource.stopEndOfStream();
     }
   });
-  const obj = contentTimeBoundariesObserver.getCurrentEndingTime();
-  if (mediaSource !== null) {
-    mediaSource.setDuration(obj.endingPosition, obj.isEnd);
-  }
   return contentTimeBoundariesObserver;
 }

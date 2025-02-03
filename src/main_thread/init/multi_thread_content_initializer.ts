@@ -126,6 +126,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     resolvers: Map<number, (value: ISegmentSinkMetrics | undefined) => void>;
   };
 
+  private _isPlaybackReady: boolean;
+
   /**
    * Create a new `MultiThreadContentInitializer`, associated to the given
    * settings.
@@ -143,6 +145,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       resolvers: new Map(),
     };
     this._queuedCoreMessages = null;
+    this._isPlaybackReady = false;
   }
 
   /**
@@ -382,11 +385,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         this._initCanceller.signal,
       );
       const contentInfo = this._currentContentInfo;
-      if (contentInfo !== null) {
-        contentInfo.contentDecryptor = contentDecryptor;
+      if (contentInfo === null) {
+        return;
       }
+      contentInfo.contentDecryptor = contentDecryptor;
 
-      const textDisplayer = contentInfo?.textDisplayer ?? null;
+      const textDisplayer = contentInfo.textDisplayer ?? null;
       textDisplayer?.attachMediaElement(mediaElement);
 
       mediaSourceStatus.onUpdate(
@@ -407,6 +411,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         },
         { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
       );
+      this._settings.coreInterface.sendMessage({
+        type: MainThreadMessageType.MediaElementReady,
+        contentId: contentInfo.contentId,
+        value: null,
+      });
     }, this._initCanceller.signal);
 
     /**
@@ -1668,13 +1677,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * playback.
    *
    * @param {Object} parameters
-   * @returns {boolean} - Returns `true` if all conditions where met for
-   * playback start.
    */
-  private _startPlaybackIfReady(parameters: IStartPlaybackParams): boolean {
+  private _startPlaybackIfReady(parameters: IStartPlaybackParams) {
     if (this._currentContentInfo === null || this._currentContentInfo.manifest === null) {
-      return false;
+      return;
     }
+    if (this._isPlaybackReady) {
+      return;
+    }
+    this._isPlaybackReady = true;
 
     /**
      * `true` when an `HTMLMediaElement` is available for playback.

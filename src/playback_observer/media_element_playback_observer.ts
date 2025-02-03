@@ -229,7 +229,6 @@ export default class PlaybackObserver {
     if (prevMediaElement !== null) {
       throw new Error("A media element was already attached to this PlaybackObserver");
     }
-    // XXX TODO: This line execute things in the wrong order I think :'(?
     this._mediaElementRef.setValue(mediaElement);
     if (this._canceller.isUsed()) {
       return;
