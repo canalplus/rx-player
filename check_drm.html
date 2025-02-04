@@ -1,0 +1,569 @@
+<!-- This page display what key systems are supported on the device. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    body {
+      background-color: #27272a;
+      margin: 20px;
+      color: #e4e4e7;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+        sans-serif;
+      padding-bottom: 200px;
+    }
+
+    table {
+      text-align: left;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: solid 1px #e4e4e7;
+      padding: 4px 10px;
+    }
+
+    .support-KO {
+      text-align: center;
+      color: red;
+    }
+
+    .support-OK {
+      text-align: center;
+      color: green;
+    }
+
+    .support-unknown {
+      text-align: center;
+      color: orange;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Media capabilities prober tool</h1>
+
+  <h3>User Agent:</h3>
+  <p id="useragent"></p>
+
+  <h3>Others infos</h3>
+  <p id="otherInfos"></p>
+
+  <p id="progressbar"></p>
+  <div id="results">
+    <h3>Minimal media configuration:</h3>
+    <table id="minimalMediaConfigurationResult"></table>
+
+    <h3>Configuration with persistent license:</h3>
+    <table id="persitantlicenseResult"></table>
+
+    <h3>Configuration with distinctive identifier required:</h3>
+    <table id="distinctiveIdentifierResult"></table>
+  </div>
+  <script>
+
+    let testAchieved = 0;
+    const keySystems = [
+      "com.microsoft.playready",
+      "com.microsoft.playready.hardware",
+      "com.microsoft.playready.software",
+      "com.microsoft.playready.recommendation",
+      "com.microsoft.playready.recommendation.2000",
+      "com.microsoft.playready.recommendation.3000",
+      "com.microsoft.playready.recommendation.esvm",
+      "com.widevine.alpha",
+      "com.apple.fps",
+      "com.apple.fps.1_0",
+    ];
+    const minimalMediaConfiguration = [
+      {
+        initDataTypes: ["cenc"],
+        audioCapabilities: [
+          {
+            robustness: "",
+            contentType: 'audio/mp4; codecs="mp4a.40.2"',
+          },
+        ],
+        videoCapabilities: [
+          {
+            robustness: "",
+            contentType: 'video/mp4;codecs="avc1.640028"',
+          },
+        ],
+        sessionTypes: ["temporary"],
+      },
+    ];
+
+    const persistentLicenseConfiguration = [
+      {
+        initDataTypes: ["cenc"],
+        audioCapabilities: [
+          {
+            robustness: "",
+            contentType: 'audio/mp4; codecs="mp4a.40.2"',
+          },
+        ],
+        videoCapabilities: [
+          {
+            robustness: "",
+            contentType: 'video/mp4;codecs="avc1.640028"',
+          },
+        ],
+        sessionTypes: ["persistent-license"],
+      },
+    ];
+
+    const distinctiveIdentifierConfiguration = [
+      {
+        initDataTypes: ["cenc"],
+        audioCapabilities: [
+          {
+            robustness: "",
+            contentType: 'audio/mp4; codecs="mp4a.40.2"',
+          },
+        ],
+        videoCapabilities: [
+          {
+            robustness: "",
+            contentType: 'video/mp4;codecs="avc1.640028"',
+          },
+        ],
+        sessionTypes: ["temporary"],
+        distinctiveIdentifier: "required",
+      },
+    ];
+
+    // widevine initData;
+    const initDataWidevine = new Uint8Array([
+      0, 0, 0, 96, 112, 115, 115, 104, 0, 0, 0, 0, 237, 239, 139, 169, 121,
+      214, 74, 206, 163, 200, 39, 220, 213, 29, 33, 237, 0, 0, 0, 64, 8, 1,
+      18, 16, 152, 28, 134, 221, 177, 134, 78, 139, 186, 110, 143, 92, 30,
+      232, 180, 46, 26, 8, 87, 105, 100, 101, 118, 105, 110, 101, 34, 26, 48,
+      49, 72, 84, 83, 57, 52, 84, 75, 55, 70, 68, 66, 86, 75, 82, 57, 69, 88,
+      48, 89, 83, 88, 88, 82, 51, 72, 227, 220, 149, 155, 6,
+    ]);
+    // playready initData
+    const initDataPlayReady = new Uint8Array([
+      0, 0, 3, 228, 112, 115, 115, 104, 0, 0, 0, 0, 154, 4, 240, 121, 152, 64,
+      66, 134, 171, 146, 230, 91, 224, 136, 95, 149, 0, 0, 3, 196, 196, 3, 0,
+      0, 1, 0, 1, 0, 186, 3, 60, 0, 87, 0, 82, 0, 77, 0, 72, 0, 69, 0, 65, 0,
+      68, 0, 69, 0, 82, 0, 32, 0, 120, 0, 109, 0, 108, 0, 110, 0, 115, 0, 61,
+      0, 34, 0, 104, 0, 116, 0, 116, 0, 112, 0, 58, 0, 47, 0, 47, 0, 115, 0,
+      99, 0, 104, 0, 101, 0, 109, 0, 97, 0, 115, 0, 46, 0, 109, 0, 105, 0, 99,
+      0, 114, 0, 111, 0, 115, 0, 111, 0, 102, 0, 116, 0, 46, 0, 99, 0, 111, 0,
+      109, 0, 47, 0, 68, 0, 82, 0, 77, 0, 47, 0, 50, 0, 48, 0, 48, 0, 55, 0,
+      47, 0, 48, 0, 51, 0, 47, 0, 80, 0, 108, 0, 97, 0, 121, 0, 82, 0, 101, 0,
+      97, 0, 100, 0, 121, 0, 72, 0, 101, 0, 97, 0, 100, 0, 101, 0, 114, 0, 34,
+      0, 32, 0, 118, 0, 101, 0, 114, 0, 115, 0, 105, 0, 111, 0, 110, 0, 61, 0,
+      34, 0, 52, 0, 46, 0, 48, 0, 46, 0, 48, 0, 46, 0, 48, 0, 34, 0, 62, 0,
+      60, 0, 68, 0, 65, 0, 84, 0, 65, 0, 62, 0, 60, 0, 80, 0, 82, 0, 79, 0,
+      84, 0, 69, 0, 67, 0, 84, 0, 73, 0, 78, 0, 70, 0, 79, 0, 62, 0, 60, 0,
+      75, 0, 69, 0, 89, 0, 76, 0, 69, 0, 78, 0, 62, 0, 49, 0, 54, 0, 60, 0,
+      47, 0, 75, 0, 69, 0, 89, 0, 76, 0, 69, 0, 78, 0, 62, 0, 60, 0, 65, 0,
+      76, 0, 71, 0, 73, 0, 68, 0, 62, 0, 65, 0, 69, 0, 83, 0, 67, 0, 84, 0,
+      82, 0, 60, 0, 47, 0, 65, 0, 76, 0, 71, 0, 73, 0, 68, 0, 62, 0, 60, 0,
+      47, 0, 80, 0, 82, 0, 79, 0, 84, 0, 69, 0, 67, 0, 84, 0, 73, 0, 78, 0,
+      70, 0, 79, 0, 62, 0, 60, 0, 75, 0, 73, 0, 68, 0, 62, 0, 99, 0, 107, 0,
+      66, 0, 48, 0, 55, 0, 66, 0, 78, 0, 76, 0, 115, 0, 107, 0, 101, 0, 85, 0,
+      113, 0, 48, 0, 113, 0, 100, 0, 56, 0, 51, 0, 102, 0, 84, 0, 98, 0, 65,
+      0, 61, 0, 61, 0, 60, 0, 47, 0, 75, 0, 73, 0, 68, 0, 62, 0, 60, 0, 76, 0,
+      65, 0, 95, 0, 85, 0, 82, 0, 76, 0, 62, 0, 104, 0, 116, 0, 116, 0, 112,
+      0, 58, 0, 47, 0, 47, 0, 100, 0, 114, 0, 109, 0, 46, 0, 99, 0, 97, 0,
+      110, 0, 97, 0, 108, 0, 45, 0, 112, 0, 108, 0, 117, 0, 115, 0, 46, 0, 99,
+      0, 111, 0, 109, 0, 47, 0, 60, 0, 47, 0, 76, 0, 65, 0, 95, 0, 85, 0, 82,
+      0, 76, 0, 62, 0, 60, 0, 76, 0, 85, 0, 73, 0, 95, 0, 85, 0, 82, 0, 76, 0,
+      62, 0, 104, 0, 116, 0, 116, 0, 112, 0, 58, 0, 47, 0, 47, 0, 100, 0, 114,
+      0, 109, 0, 46, 0, 99, 0, 97, 0, 110, 0, 97, 0, 108, 0, 45, 0, 112, 0,
+      108, 0, 117, 0, 115, 0, 46, 0, 99, 0, 111, 0, 109, 0, 47, 0, 60, 0, 47,
+      0, 76, 0, 85, 0, 73, 0, 95, 0, 85, 0, 82, 0, 76, 0, 62, 0, 60, 0, 68, 0,
+      83, 0, 95, 0, 73, 0, 68, 0, 62, 0, 121, 0, 89, 0, 73, 0, 80, 0, 68, 0,
+      66, 0, 99, 0, 97, 0, 49, 0, 107, 0, 109, 0, 77, 0, 102, 0, 76, 0, 54, 0,
+      48, 0, 73, 0, 115, 0, 102, 0, 103, 0, 65, 0, 81, 0, 61, 0, 61, 0, 60, 0,
+      47, 0, 68, 0, 83, 0, 95, 0, 73, 0, 68, 0, 62, 0, 60, 0, 67, 0, 85, 0,
+      83, 0, 84, 0, 79, 0, 77, 0, 65, 0, 84, 0, 84, 0, 82, 0, 73, 0, 66, 0,
+      85, 0, 84, 0, 69, 0, 83, 0, 32, 0, 120, 0, 109, 0, 108, 0, 110, 0, 115,
+      0, 61, 0, 34, 0, 34, 0, 62, 0, 60, 0, 101, 0, 110, 0, 99, 0, 114, 0,
+      121, 0, 112, 0, 116, 0, 105, 0, 111, 0, 110, 0, 114, 0, 101, 0, 102, 0,
+      62, 0, 51, 0, 49, 0, 50, 0, 95, 0, 52, 0, 48, 0, 50, 0, 52, 0, 95, 0,
+      50, 0, 48, 0, 49, 0, 56, 0, 49, 0, 50, 0, 55, 0, 49, 0, 48, 0, 56, 0,
+      60, 0, 47, 0, 101, 0, 110, 0, 99, 0, 114, 0, 121, 0, 112, 0, 116, 0,
+      105, 0, 111, 0, 110, 0, 114, 0, 101, 0, 102, 0, 62, 0, 60, 0, 47, 0, 67,
+      0, 85, 0, 83, 0, 84, 0, 79, 0, 77, 0, 65, 0, 84, 0, 84, 0, 82, 0, 73, 0,
+      66, 0, 85, 0, 84, 0, 69, 0, 83, 0, 62, 0, 60, 0, 67, 0, 72, 0, 69, 0,
+      67, 0, 75, 0, 83, 0, 85, 0, 77, 0, 62, 0, 85, 0, 47, 0, 116, 0, 115, 0,
+      85, 0, 89, 0, 82, 0, 103, 0, 77, 0, 122, 0, 119, 0, 61, 0, 60, 0, 47, 0,
+      67, 0, 72, 0, 69, 0, 67, 0, 75, 0, 83, 0, 85, 0, 77, 0, 62, 0, 60, 0,
+      47, 0, 68, 0, 65, 0, 84, 0, 65, 0, 62, 0, 60, 0, 47, 0, 87, 0, 82, 0,
+      77, 0, 72, 0, 69, 0, 65, 0, 68, 0, 69, 0, 82, 0, 62, 0, 0, 0, 0, 89,
+      112, 115, 115, 104, 0, 0, 0, 0, 237, 239, 139, 169, 121, 214, 74, 206,
+      163, 200, 39, 220, 213, 29, 33, 237, 0, 0, 0, 57, 8, 1, 18, 16, 236,
+      116, 64, 114, 75, 19, 71, 178, 148, 171, 74, 157, 243, 119, 211, 108,
+      26, 8, 87, 105, 100, 101, 118, 105, 110, 101, 34, 19, 51, 49, 50, 95,
+      52, 48, 50, 52, 95, 50, 48, 49, 56, 49, 50, 55, 49, 48, 56, 72, 227,
+      220, 149, 155, 6, 0, 0, 0, 144, 112, 115, 115, 104, 0, 0, 0, 0, 173,
+      180, 28, 36, 45, 191, 74, 109, 149, 139, 68, 87, 192, 210, 123, 149, 0,
+      0, 0, 112, 101, 121, 74, 106, 98, 50, 53, 48, 90, 87, 53, 48, 83, 87,
+      81, 105, 79, 105, 73, 122, 77, 84, 74, 102, 78, 68, 65, 121, 78, 70, 56,
+      121, 77, 68, 69, 52, 77, 84, 73, 51, 77, 84, 65, 52, 73, 105, 119, 105,
+      97, 50, 86, 53, 83, 87, 81, 105, 79, 105, 74, 108, 89, 122, 99, 48, 78,
+      68, 65, 51, 77, 105, 48, 48, 89, 106, 69, 122, 76, 84, 81, 51, 89, 106,
+      73, 116, 79, 84, 82, 104, 89, 105, 48, 48, 89, 84, 108, 107, 90, 106,
+      77, 51, 78, 50, 81, 122, 78, 109, 77, 105, 102, 81, 61, 61,
+    ]);
+    function i2hex(i) {
+      return ("0" + i.toString(16)).slice(-2);
+    }
+    // const r = Array.from(initDataPlayReady).map(i2hex).join("");
+
+    async function waitForMessageEvent(session) {
+      return new Promise((resolve, reject) => {
+        session.addEventListener("message", (event) => {
+          resolve(event);
+        });
+      });
+    }
+
+    function returnProviderName(keySystem) {
+      if (keySystem.includes("microsoft")) {
+        return "Microsoft";
+      }
+      if (keySystem.includes("widevine")) {
+        return "Widevine";
+      }
+      if (keySystem.includes("apple")) {
+        return "Apple";
+      }
+      return "Others";
+    }
+
+    async function checkOneKeySystem(keySystemIdentifier, configuration) {
+      const startTime = performance.now();
+      const checkStatus = {
+        requestMediaKeySystemAccess: undefined,
+        createMediaKeys: undefined,
+        createSession: undefined,
+        generateRequest: undefined,
+      };
+
+      /* Check `requestMediaKeySystemAccess` */
+      let keySystemAccess;
+      try {
+        keySystemAccess = await navigator.requestMediaKeySystemAccess(
+          keySystemIdentifier,
+          configuration
+        );
+        checkStatus.requestMediaKeySystemAccess = { support: true, time: performance.now() - startTime };
+      } catch (err) {
+        checkStatus.requestMediaKeySystemAccess = { support: false, time: performance.now() - startTime };
+        return {
+          provider: returnProviderName(keySystemIdentifier),
+          keySystem: keySystemIdentifier,
+          supported: false,
+          checkStatus,
+          error: err,
+          totalTime: performance.now() - startTime
+        };
+      }
+
+      if (keySystemAccess === undefined) {
+        checkStatus.requestMediaKeySystemAccess = { support: false, time: performance.now() - startTime };
+        return {
+          provider: returnProviderName(keySystemIdentifier),
+          keySystem: keySystemIdentifier,
+          supported: false,
+          checkStatus,
+          totalTime: performance.now() - startTime
+        };
+      }
+
+      /* Check `createMediaKeys` */
+
+      let checkTime = performance.now();
+
+      let mediaKeys;
+      try {
+        mediaKeys = await keySystemAccess.createMediaKeys();
+        checkStatus.createMediaKeys = { support: true, time: performance.now() - checkTime };
+      } catch (err) {
+        checkStatus.createMediaKeys = { support: false, time: performance.now() - checkTime };
+        return {
+          provider: returnProviderName(keySystemIdentifier),
+          keySystem: keySystemIdentifier,
+          supported: false,
+          checkStatus,
+          error: err,
+          totalTime: performance.now() - startTime
+        };
+      }
+      if (mediaKeys === undefined) {
+        checkStatus.createMediaKeys = { support: false, time: performance.now() - checkTime };
+        return {
+          provider: returnProviderName(keySystemIdentifier),
+          keySystem: keySystemIdentifier,
+          supported: false,
+          checkStatus,
+          totalTime: performance.now() - startTime
+        };
+      }
+
+      /* Check `createSession` */
+      checkTime = performance.now();
+
+      let session;
+      try {
+        const sessionType /* temporary or persistent-license */ =
+          configuration[0].sessionTypes[0];
+        session = await mediaKeys.createSession(sessionType);
+        checkStatus.createSession = { support: true, time: performance.now() - checkTime };
+      } catch (err) {
+        checkStatus.createSession = { support: false, time: performance.now() - checkTime };
+        return {
+          provider: returnProviderName(keySystemIdentifier),
+          keySystem: keySystemIdentifier,
+          supported: false,
+          checkStatus,
+          error: err,
+          totalTime: performance.now() - startTime
+        };
+      }
+      if (session === undefined) {
+        checkStatus.createSession = { support: false, time: performance.now() - checkTime };
+        return {
+          provider: returnProviderName(keySystemIdentifier),
+          keySystem: keySystemIdentifier,
+          supported: false,
+          checkStatus,
+          totalTime: performance.now() - startTime
+        };
+      }
+
+      /* Check `generateRequest` */
+      checkTime = performance.now()
+      let generateRequest;
+      let initData;
+      if (keySystemIdentifier.includes("widevine")) {
+        initData = initDataWidevine;
+      } else if (keySystemIdentifier.includes("playready")) {
+        initData = initDataPlayReady;
+      }
+      if (initData === undefined) {
+        // this page does not handle initData for the particular keySystem,
+        // just skip this step and consider it supported
+        return {
+          provider: returnProviderName(keySystemIdentifier),
+          keySystem: keySystemIdentifier,
+          supported: true,
+          checkStatus,
+          totalTime: performance.now() - startTime
+        };
+      }
+
+      try {
+        const [messageEvent, generateRequestResult] =
+          await Promise.all([
+            waitForMessageEvent(session),
+            session.generateRequest("cenc", initData),
+          ]);
+        checkStatus.generateRequest = { support: true, time: performance.now() - checkTime };
+      } catch (err) {
+        checkStatus.generateRequest = { support: false, time: performance.now() - checkTime };
+        return {
+          provider: returnProviderName(keySystemIdentifier),
+          keySystem: keySystemIdentifier,
+          supported: false,
+          checkStatus,
+          error: err,
+          totalTime: performance.now() - startTime
+        };
+      }
+      return {
+        provider: returnProviderName(keySystemIdentifier),
+        keySystem: keySystemIdentifier,
+        supported: true,
+        checkStatus,
+        totalTime: performance.now() - startTime
+      };
+    }
+    function renderKeySystemResult(resultElement, results) {
+      resultElement.innerHTML = "";
+
+      const tableHead = `
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Key System</th>
+                <th>Supported</th>
+                <th>requestMediaKeySystemAccess</th>
+                <th>createMediaKeys</th>
+                <th>createSession</th>
+                <th>generateRequest</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+        `;
+
+      const table = resultElement;
+      resultElement.innerHTML = tableHead;
+      let htmlBuffer = "";
+
+      // Count occurrences
+      const counts = {};
+      results.forEach((result) => {
+        if (counts[result.provider]) {
+          counts[result.provider]++;
+        } else {
+          counts[result.provider] = 1;
+        }
+      });
+
+      results.forEach((result) => {
+        htmlBuffer += `<tr>
+        ${counts[result.provider] > 0
+            ? `<td rowspan="${counts[result.provider]}">${result.provider}</td>`
+            : ""
+          }
+          <td>${result.keySystem}</td>
+          <td class="${result.supported ? "support-OK" : "support-KO"}">${result.supported ? "&#10004;" : "&#10060;"
+          }</td>
+
+          ${Object.keys(result.checkStatus)
+            .map(
+              (key) =>
+                `<td class="${result.checkStatus[key] === undefined
+                  ? "support-unknown"
+                  : result.checkStatus[key].support
+                    ? "support-OK"
+                    : "support-KO"
+                }">${result.checkStatus[key] === undefined
+                  ? "N/A"
+                  : result.checkStatus[key].support
+                    ? "&#10004;"
+                    : "&#10060;"
+                }
+                ${result.checkStatus[key] ? result.checkStatus[key].time.toFixed(1) + "ms" : ''}    
+                </td>`
+            )
+            .join("")}
+            <td>${result.totalTime.toFixed(1)}ms </td>
+        </tr>
+      `;
+        counts[result.provider] = 0;
+      });
+
+      table.innerHTML += htmlBuffer;
+    }
+
+    async function checkAllKeySystems(configuration, renderElement) {
+      useragent.textContent = navigator.userAgent;
+      otherInfos.innerHTML = `<p>IsSecureContext:  <span style="color:${isSecureContext ? "green" : "red"
+        }">${isSecureContext}</span></p>
+        `;
+      const results = []
+      for (const keySystem of keySystems) {
+        results.push(await checkOneKeySystem(keySystem, configuration))
+        testAchieved++;
+      }
+      // For parallel testing
+      // const results = keySystems.map((keySystem) => {
+      //   return checkOneKeySystem(keySystem, configuration);
+      // });
+
+      Promise.all(results).then((res) => {
+        console.log("checkAllKeySystems results:", res);
+
+        renderKeySystemResult(renderElement, res);
+      });
+    }
+    (async () => {
+      const hideProgress = displayProgress()
+
+      await checkAllKeySystems(
+        minimalMediaConfiguration,
+        minimalMediaConfigurationResult
+      );
+
+      await checkAllKeySystems(
+        persistentLicenseConfiguration,
+        persitantlicenseResult
+      );
+
+      await checkAllKeySystems(
+        distinctiveIdentifierConfiguration,
+        distinctiveIdentifierResult
+      );
+      hideProgress();
+    })()
+
+    function displayProgress() {
+      const nbOfTests = keySystems.length * 3 // for the 3 configurations
+      const progressBar = document.querySelector("#progressbar");
+      const resultsElement = document.querySelector("#results");
+      resultsElement.style.display = "none";
+
+      const intervalId = setInterval(() => {
+        progressBar.textContent = `Running test: ${testAchieved}/${nbOfTests} (In Progress...)`
+      }, 100)
+
+      return function cleanUp() {
+        clearInterval(intervalId)
+        progressBar.style.display = "none";
+        resultsElement.style.display = "block";
+      }
+    }
+
+    /**
+     *  Slowly scroll the page so it can be read on device without mouse/remote/controller.
+     * */
+    async function scrollPage() {
+      const scrollSpeed = 1; // Adjust this value for scroll speed
+      const stepDelay = 20; // Delay in milliseconds between scroll steps
+      const pauseAtBottom = 3000; // Pause duration at the bottom (in milliseconds)
+      const pauseAtTop = 3000; // Pause duration at the top (in milliseconds)
+      const interactionPause = 5000; // Pause scrolling when user interact with page
+      const EPSILON = 3; // Abritary value in px under which the page is considered to being scrolled down at maximum
+
+      let isUserInteracting = false;
+      let timeoutId;
+      function handleUserInteraction() {
+        // Disable scrolling and set a timeout to re-enable it after interactionPause
+        isUserInteracting = true;
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          isUserInteracting = false;
+        }, interactionPause);
+      }
+
+      // Attach event listeners to detect user interaction
+      document.addEventListener("mousemove", handleUserInteraction);
+      document.addEventListener("keydown", handleUserInteraction);
+      document.addEventListener("wheel", handleUserInteraction);
+
+      function scrollDown() {
+        if ( /* maximum scroll */ (window.document.documentElement.scrollHeight - window.innerHeight) - /* current scroll */ window.document.documentElement.scrollTop >= EPSILON) {
+          if (isUserInteracting === false) {
+            window.scrollTo(0, window.document.documentElement.scrollTop + scrollSpeed)
+          }
+          setTimeout(scrollDown, stepDelay)
+        } else {
+          // Stop at the bottom
+          setTimeout(scrollUp, pauseAtBottom);
+        }
+      }
+      function scrollUp() {
+        if (/* maximum scroll */ (window.document.documentElement.scrollHeight - window.innerHeight) - /* current scroll */ window.document.documentElement.scrollTop < EPSILON) {
+          if (isUserInteracting === false) {
+            window.scrollTo(0, 0);
+          }
+        }
+        setTimeout(scrollDown, stepDelay);
+      }
+      scrollDown()
+    }
+    scrollPage();
+  </script>
+</body>
+
+</html>
