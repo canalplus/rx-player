@@ -3525,7 +3525,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     log.info("API: Going to chained Manifest", nextUrl);
     const newOptions = { ...options, url: nextUrl, startAt: undefined };
     this._priv_reloadingMetadata = { options: newOptions };
-    this._priv_initializeContentPlayback(newOptions);
+    this._priv_initializeContentPlayback(newOptions, false);
     this._priv_lastAutoPlay = newOptions.autoPlay;
   }
 }
