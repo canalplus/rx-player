@@ -43347,6 +43347,7 @@ ${event}`
     canceller.linkToSignal(currentContentCanceller.signal);
     let imageUrl;
     const olderTaskSameContainer = thumbnailRequestsInfo.pendingRequests.get(container);
+    console.warn("HAS PREVIOUS", olderTaskSameContainer);
     olderTaskSameContainer == null ? void 0 : olderTaskSameContainer.cancel();
     thumbnailRequestsInfo.pendingRequests.set(container, canceller);
     const onFinished = () => {
@@ -43397,6 +43398,9 @@ ${event}`
           periodId: period.id,
           thumbnailTrackId: thumbnailTrack.id
         };
+      }
+      if (canceller.signal.cancellationError !== null) {
+        throw canceller.signal.cancellationError;
       }
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
@@ -78875,7 +78879,6 @@ ${event}`
       isContentLoaded: false,
       isLive: false,
       isLoading: false,
-      imageThumbnailContainerElement: document.createElement("div"),
       isPaused: false,
       isReloading: false,
       isSeeking: false,
@@ -78993,9 +78996,9 @@ ${event}`
         getAvailableThumbnailTracks(time) {
           return player.getAvailableThumbnailTracks({ time });
         },
-        renderThumbnail(time, thumbnailTrackId) {
+        renderThumbnail(container, time, thumbnailTrackId) {
           return player.renderThumbnail({
-            container: state.get("imageThumbnailContainerElement"),
+            container,
             time,
             thumbnailTrackId
           });
@@ -79541,23 +79544,10 @@ ${event}`
   }) {
     const videoThumbnailLoader = useModuleState(player, "videoThumbnailLoader");
     const videoElement = useModuleState(player, "videoThumbnailsElement");
-    const imageThumbnailElement = useModuleState(player, "imageThumbnailContainerElement");
     const parentElementRef = React10.useRef(null);
+    const imageThumbnailRef = React10.useRef(null);
     const [shouldDisplaySpinner, setShouldDisplaySpinner] = React10.useState(true);
     const ceiledTime = Math.ceil(time);
-    React10.useEffect(() => {
-      if (showVideoThumbnail) {
-        return;
-      }
-      if (parentElementRef.current !== null) {
-        parentElementRef.current.appendChild(imageThumbnailElement);
-      }
-      return () => {
-        if (parentElementRef.current !== null && parentElementRef.current.contains(imageThumbnailElement)) {
-          parentElementRef.current.removeChild(imageThumbnailElement);
-        }
-      };
-    }, [showVideoThumbnail]);
     React10.useEffect(() => {
       if (!showVideoThumbnail) {
         return;
@@ -79613,11 +79603,11 @@ ${event}`
               return acc.height > 100 ? acc : t;
             }
           }, null);
-          if (thumbnailTrack === null) {
+          if (thumbnailTrack === null || imageThumbnailRef.current === null) {
             hideSpinner();
             return;
           }
-          player.actions.renderThumbnail(ceiledTime, thumbnailTrack.id).then(hideSpinner).catch((err) => {
+          player.actions.renderThumbnail(imageThumbnailRef.current, ceiledTime, thumbnailTrack.id).then(hideSpinner).catch((err) => {
             if (typeof err === "object" && err !== null && err.code === "ABORTED") {
               return;
             } else {
@@ -79640,7 +79630,7 @@ ${event}`
         spinnerTimeout = window.setTimeout(() => {
           spinnerTimeout = null;
           setShouldDisplaySpinner(true);
-        }, 150);
+        }, 100);
       }
       function hideSpinner() {
         if (spinnerTimeout !== null) {
@@ -79657,6 +79647,7 @@ ${event}`
         style: xPosition !== null ? { transform: `translate(${xPosition}px, -136px)` } : {},
         ref: parentElementRef
       },
+      /* @__PURE__ */ React10.createElement("div", { style: { position: "absolute" }, ref: imageThumbnailRef }),
       shouldDisplaySpinner ? /* @__PURE__ */ React10.createElement("div", { style: DIV_SPINNER_STYLE }, /* @__PURE__ */ React10.createElement("img", { src: "./assets/spinner.gif", style: IMG_SPINNER_STYLE })) : null
     );
   }
