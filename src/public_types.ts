@@ -94,7 +94,7 @@ export interface ILoadVideoOptions {
   requestConfig?: IRequestConfig;
 
   /** Indicate the position the RxPlayer should start at on the loaded content. */
-  startAt?: IStartAtOption;
+  startAt?: IStartAtOption | undefined;
 
   /**
    * The "mode" in which the text tracks will be displayed.

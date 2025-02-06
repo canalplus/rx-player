@@ -1263,6 +1263,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_contentInfos = contentInfos;
     }
 
+    let chainedPreloadId: string | null = null;
+    playbackObserver.listen(
+      (obs) => {
+        if (obs.readyState >= 3 && obs.duration - obs.position.getPolled() < 10) {
+          const nextManifestUrls = this._priv_contentInfos?.manifest?.chainedManifests;
+          if (isNullOrUndefined(nextManifestUrls) || nextManifestUrls.length === 0) {
+            return;
+          }
+          const nextUrl = nextManifestUrls[0];
+          const newOptions = {
+            ...options,
+            url: nextUrl,
+            startAt: undefined,
+          } as ILoadVideoOptions;
+          chainedPreloadId = this.preloadVideo(newOptions).id;
+        }
+      },
+      { clearSignal: currentContentCanceller.signal },
+    );
+
     /**
      * `TaskCanceller` allowing to stop emitting `"seeking"` and `"seeked"`
      * events.
@@ -1278,7 +1298,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         }
         updateReloadingMetadata(newState);
         if (newState === "ENDED") {
-          this._priv_loadChainedManifests();
+          this._priv_loadChainedManifests(chainedPreloadId);
           if (currentContentCanceller.isUsed()) {
             return;
           }
@@ -3510,7 +3530,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Do nothing if no Manifest to chain to exist or if it's not possible to do
    * Manifest chaining in the current context.
    */
-  private _priv_loadChainedManifests(): void {
+  private _priv_loadChainedManifests(chainedPreloadId: string | null): void {
+    if (chainedPreloadId !== null) {
+      this.startPreload(chainedPreloadId);
+      return;
+    }
     const nextManifestUrls = this._priv_contentInfos?.manifest?.chainedManifests;
     if (isNullOrUndefined(nextManifestUrls) || nextManifestUrls.length === 0) {
       return;
