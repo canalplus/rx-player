@@ -2,10 +2,10 @@ import type { IMediaElement } from "../../../compat/browser_compatibility_types"
 import isCodecSupported from "../../../compat/is_codec_supported";
 import type { IManifestMetadata } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
-import type { ICodecSupportInfo } from "../../../multithread_types";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type ContentDecryptor from "../../decrypt";
 import { ContentDecryptorState } from "../../decrypt";
+import type { ICodecSupportInfo } from "../../types";
 
 /**
  * Returns a list of all codecs that the support is not known yet on the given
