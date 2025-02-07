@@ -45,7 +45,7 @@ import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { IAcceptedLogValue } from "../../utils/logger";
+import { IAcceptedLogValue } from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
