@@ -54,7 +54,7 @@ import arrayFind from "../../utils/array_find.ts";
 import assert, { assertUnreachable } from "../../utils/assert.ts";
 import idGenerator from "../../utils/id_generator.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
-import type { IAcceptedLogValue } from "../../utils/logger.ts";
+import { IAcceptedLogValue } from "../../utils/logger.ts";
 import objectAssign from "../../utils/object_assign.ts";
 import type { IReadOnlySharedReference } from "../../utils/reference.ts";
 import SharedReference from "../../utils/reference.ts";
