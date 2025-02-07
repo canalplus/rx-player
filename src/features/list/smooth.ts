@@ -16,7 +16,7 @@
 
 import initializeWorkerMain from "../../core/main/worker";
 import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
-import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 import smooth from "../../transports/smooth";
 import type { IFeaturesObject } from "../types";
 
@@ -29,7 +29,7 @@ function addSmoothFeature(features: IFeaturesObject): void {
     features.transports.smooth = smooth;
   }
   features.monothread = {
-    init: MultiThreadContentInitializer,
+    init: MediaSourceContentInitializer,
     coreInterface: MonoThreadCoreInterface,
     workerMain: initializeWorkerMain,
   };

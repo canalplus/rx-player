@@ -23,7 +23,7 @@ import type {
 } from "../main_thread/core_interface/types";
 import type ContentDecryptor from "../main_thread/decrypt";
 import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
-import type MultiThreadContentInitializer from "../main_thread/init/multi_thread_content_initializer";
+import type MediaSourceContentInitializer from "../main_thread/init/media_source_content_initializer";
 import type HTMLTextDisplayer from "../main_thread/text_displayer/html";
 import type NativeTextDisplayer from "../main_thread/text_displayer/native/native_text_displayer";
 import type MediaElementTracksStore from "../main_thread/tracks_store/media_element_tracks_store";
@@ -120,7 +120,7 @@ export interface IFeaturesObject {
    */
   monothread: {
     /** Class to load a content through the MediaSource API. */
-    init: typeof MultiThreadContentInitializer;
+    init: typeof MediaSourceContentInitializer;
     /** The RxPlayer's core logic. */
     workerMain: typeof IInitializeWorkerMain;
     /**
@@ -135,7 +135,7 @@ export interface IFeaturesObject {
    */
   multithread: {
     /** Class to load a content through the MediaSource API. */
-    init: typeof MultiThreadContentInitializer;
+    init: typeof MediaSourceContentInitializer;
     /**
      * Class allowing to exchange messages with the RxPlayer's `core`, here
      * running in another thread.

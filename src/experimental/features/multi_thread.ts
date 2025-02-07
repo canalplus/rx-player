@@ -1,6 +1,6 @@
 import type { IFeaturesObject } from "../../features/types";
 import { WorkerCoreInterface } from "../../main_thread/core_interface/multithread";
-import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 
 /**
  * Add ability to run the RxPlayer's main buffering logic in a WebMultiThread.
@@ -8,7 +8,7 @@ import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_c
  */
 function addMultiThreadFeature(features: IFeaturesObject): void {
   features.multithread = {
-    init: MultiThreadContentInitializer,
+    init: MediaSourceContentInitializer,
     coreInterface: WorkerCoreInterface,
   };
 }
