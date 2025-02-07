@@ -1,15 +1,15 @@
-import log from "../../../log";
-import type { ITextDisplayerData } from "../../../main_thread/types";
-import type { IRange } from "../../../utils/ranges";
-import { CancellationError } from "../../../utils/task_canceller";
-import type { ITextDisplayerInterface } from "../../segment_sinks";
+import log from "../../log";
+import type { ITextDisplayerData } from "../../main_thread/types";
+import type { IRange } from "../../utils/ranges";
+import { CancellationError } from "../../utils/task_canceller";
+import type { ITextDisplayerInterface } from "../segment_sinks";
 import type {
   IPushTextDataCoreMessage,
   IRemoveTextDataCoreMessage,
   IResetTextDisplayerCoreMessage,
   IStopTextDisplayerCoreMessage,
-} from "../../types";
-import { CoreMessageType } from "../../types";
+} from "../types";
+import { CoreMessageType } from "../types";
 
 /**
  * Implementation of an `ITextDisplayerInterface` running in a WebWorker

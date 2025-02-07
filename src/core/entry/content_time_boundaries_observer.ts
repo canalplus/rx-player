@@ -17,20 +17,20 @@
 import type {
   IStreamOrchestratorPlaybackObservation,
   IBufferType,
-} from "../../../core/types";
-import { MediaError } from "../../../errors";
+} from "../../core/types";
+import { MediaError } from "../../errors";
 import type {
   IManifest,
   IAdaptation,
   IRepresentationIndex,
   IPeriod,
-} from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
-import type { IPlayerError } from "../../../public_types";
-import EventEmitter from "../../../utils/event_emitter";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import SortedList from "../../../utils/sorted_list";
-import TaskCanceller from "../../../utils/task_canceller";
+} from "../../manifest";
+import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
+import type { IPlayerError } from "../../public_types";
+import EventEmitter from "../../utils/event_emitter";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import SortedList from "../../utils/sorted_list";
+import TaskCanceller from "../../utils/task_canceller";
 
 /**
  * Observes what's being played and take care of media events relating to time

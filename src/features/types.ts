@@ -15,7 +15,7 @@
  */
 
 import type { IMediaElement } from "../compat/browser_compatibility_types";
-import type IInitializeWorkerMain from "../core/main/worker";
+import type IInitializeCoreEntry from "../core/entry";
 import type { SegmentSink } from "../core/segment_sinks";
 import type {
   WorkerCoreInterface,
@@ -122,10 +122,10 @@ export interface IFeaturesObject {
     /** Class to load a content through the MediaSource API. */
     init: typeof MediaSourceContentInitializer;
     /** The RxPlayer's core logic. */
-    workerMain: typeof IInitializeWorkerMain;
+    initializeCoreEntry: typeof IInitializeCoreEntry;
     /**
      * Class allowing to exchange messages with the RxPlayer's `core`, here
-     * running in `workerMain`
+     * running in `coreEntry`
      */
     coreInterface: typeof MonoThreadCoreInterface;
   } | null;

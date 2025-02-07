@@ -3,7 +3,7 @@
  * on when running in a multithread mode.
  */
 
-import initializeWorkerMain from "./core/main/worker";
+import initializeCoreEntry from "./core/entry";
 import type { ICoreMessage } from "./core/types";
 import { CoreMessageType } from "./core/types";
 import log from "./experimental/tools/mediaCapabilitiesProber/log";
@@ -24,7 +24,7 @@ features.transports.dash = createDashPipelines;
 globalScope.onmessageerror = (_msg: MessageEvent) => {
   log.error("Worker: Error when receiving message from main thread.");
 };
-initializeWorkerMain((handler) => {
+initializeCoreEntry((handler) => {
   onmessage = handler;
 }, sendMessage);
 

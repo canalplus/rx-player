@@ -1,13 +1,13 @@
 import type {
   ISegmentSinksStore,
   IStreamOrchestratorPlaybackObservation,
-} from "../../../core/types";
-import log from "../../../log";
-import type { IManifest, IPeriod } from "../../../manifest";
-import type { IMediaSourceInterface } from "../../../mse";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
-import type { IPlayerError } from "../../../public_types";
-import type { CancellationSignal } from "../../../utils/task_canceller";
+} from "../../core/types";
+import log from "../../log";
+import type { IManifest, IPeriod } from "../../manifest";
+import type { IMediaSourceInterface } from "../../mse";
+import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
+import type { IPlayerError } from "../../public_types";
+import type { CancellationSignal } from "../../utils/task_canceller";
 import ContentTimeBoundariesObserver from "./content_time_boundaries_observer";
 
 export interface IContentTimeBoundariesObserverCallbacks {

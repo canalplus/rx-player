@@ -72,7 +72,7 @@ it:
    V  |    thread and process them.                                   |
   +-----------------------+             +--------------------------+  |
   |      Core Entry       |------------>|     Manifest Fetcher     |  |
-  |    (./core/entry/)    |   creates   |(./core/fetchers/manifest)|  |
+  |    (./core/entry)     |   creates   |(./core/fetchers/manifest)|  |
   +-----------------------+             +--------------------------+  |
      | Creates           |              Load and     |                |
      V                   |              refresh the  | Ask to load    |

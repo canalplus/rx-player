@@ -1019,7 +1019,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         log.info("API: Initializing MediaSource mode in the main thread");
         const coreInterface = new features.monothread.coreInterface();
         const coreInterfaceCallbacks = coreInterface.getCallbacks();
-        features.monothread.workerMain(
+        features.monothread.initializeCoreEntry(
           coreInterfaceCallbacks.setCoreMessageReceiver,
           coreInterfaceCallbacks.sendCoreMessage,
         );

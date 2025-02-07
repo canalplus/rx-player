@@ -1,5 +1,5 @@
-import type { ICorePlaybackObservation } from "../../../main_thread/init/utils/create_core_playback_observer";
-import type SegmentSinksStore from "../../segment_sinks";
+import type { ICorePlaybackObservation } from "../../main_thread/init/utils/create_core_playback_observer";
+import type SegmentSinksStore from "../segment_sinks";
 
 /**
  * Synchronize SegmentSinks with what has been buffered.

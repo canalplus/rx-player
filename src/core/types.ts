@@ -19,11 +19,11 @@ import type {
   IABRThrottlers,
   IResolutionInfo,
 } from "./adaptive";
+import type { IMessageReceiverCallback } from "./entry";
 import type {
   IManifestFetcherSettings,
   ISegmentQueueCreatorBackoffOptions,
 } from "./fetchers";
-import type { IMessageReceiverCallback } from "./main/worker";
 import type {
   IBufferedChunk,
   IBufferType,

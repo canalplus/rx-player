@@ -1,52 +1,52 @@
-import config from "../../../config";
-import { MediaError, OtherError } from "../../../errors";
-import features from "../../../features";
-import log from "../../../log";
+import config from "../../config";
+import { MediaError, OtherError } from "../../errors";
+import features from "../../features";
+import log from "../../log";
 import type {
   IContentInitializationData,
   IMainThreadMessage,
   IReferenceUpdateMessage,
   IThumbnailDataRequestMainMessage,
-} from "../../../main_thread/types";
-import { MainThreadMessageType } from "../../../main_thread/types";
-import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
-import { ObservationPosition } from "../../../playback_observer";
-import type { ICorePlaybackObservation } from "../../../playback_observer/core_playback_observer";
-import CorePlaybackObserver from "../../../playback_observer/core_playback_observer";
-import type { IPlayerError, ITrackType } from "../../../public_types";
-import arrayFind from "../../../utils/array_find";
-import assert, { assertUnreachable } from "../../../utils/assert";
-import type { ILogFormat, ILoggerLevel } from "../../../utils/logger";
-import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
-import objectAssign from "../../../utils/object_assign";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference from "../../../utils/reference";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller from "../../../utils/task_canceller";
+} from "../../main_thread/types";
+import { MainThreadMessageType } from "../../main_thread/types";
+import Manifest, { Adaptation, Period, Representation } from "../../manifest/classes";
+import { ObservationPosition } from "../../playback_observer";
+import type { ICorePlaybackObservation } from "../../playback_observer/core_playback_observer";
+import CorePlaybackObserver from "../../playback_observer/core_playback_observer";
+import type { IPlayerError, ITrackType } from "../../public_types";
+import arrayFind from "../../utils/array_find";
+import assert, { assertUnreachable } from "../../utils/assert";
+import type { ILogFormat, ILoggerLevel } from "../../utils/logger";
+import { scaleTimestamp } from "../../utils/monotonic_timestamp";
+import objectAssign from "../../utils/object_assign";
+import type { IReadOnlySharedReference } from "../../utils/reference";
+import SharedReference from "../../utils/reference";
+import type { CancellationSignal } from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamStatusPayload,
-} from "../../stream";
-import StreamOrchestrator from "../../stream";
+} from "../stream";
+import StreamOrchestrator from "../stream";
 import type {
   ICoreMessage,
   IDiscontinuityUpdateCoreMessagePayload,
   IResolutionInfo,
-} from "../../types";
-import { CoreMessageType } from "../../types";
-import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
-import type { IFreezeResolution } from "../common/FreezeResolver";
-import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
-import getThumbnailData from "../common/get_thumbnail_data";
-import synchronizeSegmentSinksOnObservation from "../common/synchronize_sinks_on_observation";
+} from "../types";
+import { CoreMessageType } from "../types";
 import ContentPreparer from "./content_preparer";
+import createContentTimeBoundariesObserver from "./create_content_time_boundaries_observer";
+import type { IFreezeResolution } from "./FreezeResolver";
+import getBufferedDataPerMediaBuffer from "./get_buffered_data_per_media_buffer";
+import getThumbnailData from "./get_thumbnail_data";
+import synchronizeSegmentSinksOnObservation from "./synchronize_sinks_on_observation";
 import { formatErrorForSender } from "./utils";
 
 export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => void;
 
 /**
- * Initialize a `WorkerMain`, which is the part of the RxPlayer acting as an
+ * Initialize a `CoreEntry`, which is the part of the RxPlayer acting as an
  * entry point to all its "core" code.
  *
  * Its role is to receive and react to messages coming from "main thead", which
@@ -57,7 +57,7 @@ export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => vo
  * @param {Function} sendMessage - Function allowing to send messages to the
  * "main thread" part of the RxPlayer logic.
  */
-export default function initializeWorkerMain(
+export default function initializeCoreEntry(
   setMessageReceiver: (cb: IMessageReceiverCallback) => void,
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
 ): void {
@@ -81,7 +81,7 @@ export default function initializeWorkerMain(
   };
 
   /**
-   * `true` once the worker has been initialized.
+   * `true` once the CoreEntry has been initialized.
    * Allow to enforce the fact that it is only initialized once.
    */
   let isInitialized = false;
@@ -104,7 +104,7 @@ export default function initializeWorkerMain(
    */
   let playbackObservationRef: SharedReference<ICorePlaybackObservation> | null = null;
   setMessageReceiver((e) => {
-    log.debug("Worker: received message", e.data.type);
+    log.debug("CE: received message", e.data.type);
 
     const msg = e.data;
     switch (msg.type) {
@@ -126,7 +126,7 @@ export default function initializeWorkerMain(
           ) {
             dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
               const error = err instanceof Error ? err.toString() : "Unknown Error";
-              log.error("Worker: Could not initialize DASH_WASM parser", error);
+              log.error("CE: Could not initialize DASH_WASM parser", error);
             });
           }
 
@@ -460,7 +460,7 @@ export default function initializeWorkerMain(
  * load.
  * @param {Object} refs - Collection of so-called "references": values
  * configuring playback that may be updated at any time and that the
- * WorkerMain should react on.
+ * CoreEntry should react on.
  */
 function prepareNewContent(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
@@ -547,7 +547,7 @@ function loadOrReloadPreparedContent(
   currentLoadCanceller.linkToSignal(parentCancelSignal);
 
   /**
-   * Stores last discontinuity update sent to the worker for each Period and type
+   * Stores last discontinuity update sent to the Core for each Period and type
    * combinations, at least until the corresponding `PeriodStreamCleared`
    * message.
    *
@@ -1157,7 +1157,7 @@ function sendThumbnailData(
 
 /**
  * Collection of so-called "references": values configuring playback that may
- * be updated at any time and that the WorkerMain should react on.
+ * be updated at any time and that the CoreEntry should react on.
  */
 export interface ICoreReferences {
   limitVideoResolution: SharedReference<IResolutionInfo>;
