@@ -379,11 +379,11 @@ export default function initializeCoreEntry(
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        if (preparedContent.workerTextSender === null) {
+        if (preparedContent.coreTextSender === null) {
           log.error("WP: Added text track but text track aren't enabled");
           return;
         }
-        preparedContent.workerTextSender.onPushedTrackSuccess(msg.value.ranges);
+        preparedContent.coreTextSender.onPushedTrackSuccess(msg.value.ranges);
         break;
       }
 
@@ -392,11 +392,11 @@ export default function initializeCoreEntry(
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        if (preparedContent.workerTextSender === null) {
+        if (preparedContent.coreTextSender === null) {
           log.error("WP: Added text track but text track aren't enabled");
           return;
         }
-        preparedContent.workerTextSender.onPushedTrackError(new Error(msg.value.message));
+        preparedContent.coreTextSender.onPushedTrackError(new Error(msg.value.message));
         break;
       }
 
@@ -405,11 +405,11 @@ export default function initializeCoreEntry(
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        if (preparedContent.workerTextSender === null) {
+        if (preparedContent.coreTextSender === null) {
           log.error("WP: Removed text track but text track aren't enabled");
           return;
         }
-        preparedContent.workerTextSender.onRemoveSuccess(msg.value.ranges);
+        preparedContent.coreTextSender.onRemoveSuccess(msg.value.ranges);
         break;
       }
 
@@ -418,11 +418,11 @@ export default function initializeCoreEntry(
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        if (preparedContent.workerTextSender === null) {
+        if (preparedContent.coreTextSender === null) {
           log.error("WP: Removed text track but text track aren't enabled");
           return;
         }
-        preparedContent.workerTextSender.onRemoveError(new Error(msg.value.message));
+        preparedContent.coreTextSender.onRemoveError(new Error(msg.value.message));
         break;
       }
 

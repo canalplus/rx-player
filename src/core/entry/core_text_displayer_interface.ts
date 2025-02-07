@@ -12,14 +12,14 @@ import type {
 import { CoreMessageType } from "../types";
 
 /**
- * Implementation of an `ITextDisplayerInterface` running in a WebWorker
- * (so, in a different thread than the `ITextDisplayer`).
+ * Implementation of an `ITextDisplayerInterface` for the Core, that can run in
+ * a WebWorker (so, in a different thread than the `ITextDisplayer`).
  *
- * @class WorkerTextDisplayerInterface
+ * @class CoreTextDisplayerInterface
  */
-export default class WorkerTextDisplayerInterface implements ITextDisplayerInterface {
+export default class CoreTextDisplayerInterface implements ITextDisplayerInterface {
   private _contentId: string;
-  private _messageSender: (msg: IWorkerTextDisplayerInterfaceMessage) => void;
+  private _messageSender: (msg: ICoreTextDisplayerInterfaceMessage) => void;
   public _queues: {
     pushTextData: Array<{
       resolve: (ranges: IRange[]) => void;
@@ -37,7 +37,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
    */
   constructor(
     contentId: string,
-    messageSender: (msg: IWorkerTextDisplayerInterfaceMessage) => void,
+    messageSender: (msg: ICoreTextDisplayerInterfaceMessage) => void,
   ) {
     this._contentId = contentId;
     this._messageSender = messageSender;
@@ -155,7 +155,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
   }
 }
 
-type IWorkerTextDisplayerInterfaceMessage =
+type ICoreTextDisplayerInterfaceMessage =
   | IPushTextDataCoreMessage
   | IRemoveTextDataCoreMessage
   | IStopTextDisplayerCoreMessage

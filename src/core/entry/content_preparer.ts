@@ -26,10 +26,10 @@ import SegmentSinksStore from "../segment_sinks";
 import type { INeedsMediaSourceReloadPayload } from "../stream";
 import type { IAttachMediaSourceCoreMessagePayload, ICoreMessage } from "../types";
 import { CoreMessageType } from "../types";
+import CoreTextDisplayerInterface from "./core_text_displayer_interface";
 import FreezeResolver from "./FreezeResolver";
 import TrackChoiceSetter from "./track_choice_setter";
 import { formatErrorForSender } from "./utils";
-import WorkerTextDisplayerInterface from "./worker_text_displayer_interface";
 
 /** Function allowing to associate a unique identifier to all created `MediaSource` */
 const generateMediaSourceId = idGenerator();
@@ -187,7 +187,7 @@ export default class ContentPreparer {
 
       const trackChoiceSetter = new TrackChoiceSetter();
 
-      const [mediaSource, segmentSinksStore, workerTextSender] =
+      const [mediaSource, segmentSinksStore, coreTextSender] =
         createMediaSourceInterfaceAndSegmentSinksStore(
           sendMessage,
           contentId,
@@ -211,7 +211,7 @@ export default class ContentPreparer {
         segmentSinksStore,
         segmentQueueCreator,
         fetchThumbnailData,
-        workerTextSender,
+        coreTextSender,
         trackChoiceSetter,
         useMseInWorker,
       };
@@ -347,21 +347,21 @@ export default class ContentPreparer {
       [],
     );
 
-    const [mediaSourceInterface, segmentSinksStore, workerTextSender] =
+    const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
         sendMessage,
         this._currentContent.contentId,
         {
           useMseInWorker: this._currentContent.useMseInWorker,
           hasVideo: this._hasVideo,
-          hasText: this._currentContent.workerTextSender !== null,
+          hasText: this._currentContent.coreTextSender !== null,
         },
         this._currentMediaSourceCanceller.signal,
       );
     this._currentContent.mediaSource = mediaSourceInterface;
     this._currentContent.segmentSinksStore = segmentSinksStore;
     this._currentContent.freezeResolver = new FreezeResolver(segmentSinksStore);
-    this._currentContent.workerTextSender = workerTextSender;
+    this._currentContent.coreTextSender = coreTextSender;
     return new Promise((res, rej) => {
       mediaSourceInterface.addEventListener(
         "mediaSourceOpen",
@@ -444,7 +444,7 @@ export interface IPreparedContentData {
    */
   segmentSinksStore: SegmentSinksStore;
   /** Allows to send timed text media data so it can be rendered. */
-  workerTextSender: WorkerTextDisplayerInterface | null;
+  coreTextSender: CoreTextDisplayerInterface | null;
   /**
    * Allows to create `SegmentQueue` which simplifies complex media segment
    * fetching.
@@ -484,7 +484,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
     hasText: boolean;
   },
   cancelSignal: CancellationSignal,
-): [IMediaSourceInterface, SegmentSinksStore, WorkerTextDisplayerInterface | null] {
+): [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null] {
   let mediaSourceInterface: IMediaSourceInterface;
   if (capabilities.useMseInWorker) {
     const mainMediaSource = new MainMediaSourceInterface(generateMediaSourceId());
@@ -520,7 +520,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
   }
 
   const textSender = capabilities.hasText
-    ? new WorkerTextDisplayerInterface(contentId, sendMessage)
+    ? new CoreTextDisplayerInterface(contentId, sendMessage)
     : null;
   const { hasVideo } = capabilities;
   const segmentSinksStore = new SegmentSinksStore(
