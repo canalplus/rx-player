@@ -1,9 +1,3 @@
-/**
- * This file regroups TypeScript types and enums only needed when running the
- * RxPlayer in a
- * multithread situation.
- */
-
 import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_sinks_store";
 import type {
   IResolutionInfo,
@@ -35,11 +29,11 @@ import type { ILogFormat, ILoggerLevel } from "./utils/logger";
 import type { IRange } from "./utils/ranges";
 
 /**
- * First message sent by the main thread to the WebWorker.
- * A WebWorker should only receive one `IInitMessage` at most and it should be
+ * First message sent by the main thread to the Core.
+ * The Core should only receive one `IInitMessage` at most and it should be
  * always the first message received.
  *
- * Allows for WebWorker initialization.
+ * Allows for Core initialization.
  */
 export interface IInitMessage {
   type: MainThreadMessageType.Init;
@@ -62,7 +56,7 @@ export interface IInitMessage {
     logFormat: ILogFormat;
     /**
      * If `true`, logs should be sent back to the main thread, through a
-     * `ILogMessageWorkerMessage` message.
+     * `ILogMessageCoreMessage` message.
      */
     sendBackLogs: boolean;
     /**
@@ -70,11 +64,12 @@ export interface IInitMessage {
      *
      * This is mostly useful for timestamp synchronization: by calling both
      * `performance.now` (the same call on the main thread made to calculate
-     * `timestamp` - but which is not synchronized initially to the WebWorker's)
-     * and `Date.now()` both on the main thread and on the WebWorker,
+     * `timestamp` - but which is not synchronized initially to the Core's)
+     * and `Date.now()` both on the main thread and on the Core,
      * calculating the difference between the two and comparing both the main
-     * thread's difference and the WebWorker's difference, you're able to
-     * produce a relatively-synchronized timestamp between the two.
+     * thread's difference and the Core's difference, you're able to
+     * produce a relatively-synchronized timestamp between the two if they
+     * happen to run in a different environment (e.g. in a WebWorker).
      */
     date: number;
     /**
@@ -132,8 +127,8 @@ export interface IContentInitializationData {
   /** Options relative to the fetching of media segments. */
   segmentRetryOptions: ISegmentQueueCreatorBackoffOptions;
   /**
-   * If `true`, MSE API should be used in the core part of the RxPlayer (in the
-   * WebWorker).
+   * If `true`, MSE API should be used in the core part of the RxPlayer when
+   * relying on a WebWorker.
    * If `false`, they should be relied on on main thread.
    *
    * This might depend on both browser capabilities and preferences. It is
@@ -152,13 +147,13 @@ export interface ILogLevelUpdateMessage {
     logFormat: ILogFormat;
     /**
      * If `true`, logs should be sent back to the main thread, through a
-     * `ILogMessageWorkerMessage` message.
+     * `ILogMessageCoreMessage` message.
      */
     sendBackLogs: boolean;
   };
 }
 
-/** Message sent by the main thread to update the Worker's global config. */
+/** Message sent by the main thread to update the Core's global config. */
 export interface IConfigUpdateMessage {
   type: MainThreadMessageType.ConfigUpdate;
   value: Partial<IDefaultConfig>;
@@ -239,7 +234,7 @@ export interface IStartPreparedContentMessageValue {
 
 /**
  * Message sent by the main thread when it has updated its list of supported
- * codecs and has reasons to think that the WebWorker is not aware of it
+ * codecs and has reasons to think that the Core is not aware of it
  * (e.g. their support was not set in a Manifest).
  */
 export interface ICodecSupportUpdateMessage {
@@ -255,7 +250,7 @@ export interface ICodecSupportInfo {
 }
 
 /**
- * Message sent by the main thread to the WebWorker regularly after an
+ * Message sent by the main thread to the Core regularly after an
  * `IPrepareContentMessage` to provide various media-related metadata
  * only obtainable on the main thread.
  *
@@ -433,8 +428,8 @@ export interface ISerializedPlaybackObservation {
 /**
  * Sent when the SourceBuffer linked to the given `mediaSourceId` and
  * `SourceBufferType`, running on the main thread, succeeded to perform the last
- * operation given to it (either through an `AppendBufferWorkerMessage` or a
- * `RemoveBufferWorkerMessage`).
+ * operation given to it (either through an `AppendBufferCoreMessage` or a
+ * `RemoveBufferCoreMessage`).
  */
 export interface ISourceBufferOperationSuccessMainMessage {
   type: MainThreadMessageType.SourceBufferSuccess;
@@ -446,7 +441,7 @@ export interface ISourceBufferOperationSuccessMainMessage {
   /**
    * Id uniquely identifying this SourceBuffer.
    * It should be the same `SourceBufferType` than the one on the
-   * `CreateSourceBufferWorkerMessage`.
+   * `CreateSourceBufferCoreMessage`.
    */
   sourceBufferType: SourceBufferType;
   /** Identify the corresponding SourceBuffer operation. */
@@ -482,7 +477,7 @@ export interface ISourceBufferErrorMainMessage {
 }
 
 /**
- * Sent by the main thread to a Worker when the MediaSource linked to the
+ * Sent by the main thread to the Core when the MediaSource linked to the
  * `mediaSourceId` changed its readyState.
  *
  * This message is only sent if the MediaSource is created on the main thread.
@@ -620,35 +615,33 @@ export type ISentError =
   | ISerializedOtherError;
 
 /**
- * Message sent by the WebWorker when its initialization, started implicitely
- * as soon as the `new Worker` call was made for it, has finished and succeeded.
+ * Message sent by the Core when its initialization has finished and succeeded.
  *
  * Once that message has been received, you can ensure that no
- * `IInitErrorWorkerMessage` will ever be received for the same worker.
+ * `IInitErrorCoreMessage` will ever be received for the same worker.
  *
  * Note that receiving this message is not a requirement before preparing and
  * loading a content, both initialization and content loading can be started in
  * parallel.
  */
-export interface IInitSuccessWorkerMessage {
-  type: WorkerMessageType.InitSuccess;
+export interface IInitSuccessCoreMessage {
+  type: CoreMessageType.InitSuccess;
   value: null;
 }
 
 /**
- * Message sent by the WebWorker when its initialization, started implicitely
- * as soon as the `new Worker` call was made for it, has finished and failed.
+ * Message sent by the Core when its initialization has finished and failed.
  *
  * Once that message has been received, you can ensure that no
- * `IInitErrorWorkerMessage` will ever be received for the same worker.
+ * `IInitErrorCoreMessage` will ever be received for the same worker.
  *
  * Note that you may received this message while preparing and/or loading a
  * content, both initialization and content loading can be started in
  * parallel.
  * As such, this message may be coupled with a content error.
  */
-export interface IInitErrorWorkerMessage {
-  type: WorkerMessageType.InitError;
+export interface IInitErrorCoreMessage {
+  type: CoreMessageType.InitError;
   value: {
     /** A string describing the error encountered. */
     errorMessage: string;
@@ -657,36 +650,36 @@ export interface IInitErrorWorkerMessage {
   };
 }
 
-export interface INeedsBufferFlushWorkerMessage {
-  type: WorkerMessageType.NeedsBufferFlush;
+export interface INeedsBufferFlushCoreMessage {
+  type: CoreMessageType.NeedsBufferFlush;
   contentId: string;
   value:
     | { relativeResumingPosition: number; relativePosHasBeenDefaulted: boolean }
     | undefined;
 }
 
-export interface IActivePeriodChangedWorkerMessage {
-  type: WorkerMessageType.ActivePeriodChanged;
+export interface IActivePeriodChangedCoreMessage {
+  type: CoreMessageType.ActivePeriodChanged;
   contentId: string;
   value: {
     periodId: string;
   };
 }
 
-export interface IWarningWorkerMessage {
-  type: WorkerMessageType.Warning;
+export interface IWarningCoreMessage {
+  type: CoreMessageType.Warning;
   contentId: string | undefined;
   value: ISentError;
 }
 
-export interface IAttachMediaSourceWorkerMessage {
-  type: WorkerMessageType.AttachMediaSource;
+export interface IAttachMediaSourceCoreMessage {
+  type: CoreMessageType.AttachMediaSource;
   contentId: string | undefined;
   mediaSourceId: string | undefined;
-  value: IAttachMediaSourceWorkerMessagePayload;
+  value: IAttachMediaSourceCoreMessagePayload;
 }
 
-export type IAttachMediaSourceWorkerMessagePayload =
+export type IAttachMediaSourceCoreMessagePayload =
   | {
       type: "handle";
       value: MediaProvider;
@@ -696,14 +689,14 @@ export type IAttachMediaSourceWorkerMessagePayload =
       value: string;
     };
 
-export interface ICreateMediaSourceWorkerMessage {
-  type: WorkerMessageType.CreateMediaSource;
+export interface ICreateMediaSourceCoreMessage {
+  type: CoreMessageType.CreateMediaSource;
   mediaSourceId: string;
   contentId: string;
 }
 
-export interface IAddSourceBufferWorkerMessage {
-  type: WorkerMessageType.AddSourceBuffer;
+export interface IAddSourceBufferCoreMessage {
+  type: CoreMessageType.AddSourceBuffer;
   mediaSourceId: string;
   value: {
     sourceBufferType: SourceBufferType;
@@ -711,8 +704,8 @@ export interface IAddSourceBufferWorkerMessage {
   };
 }
 
-export interface IAppendBufferWorkerMessage {
-  type: WorkerMessageType.SourceBufferAppend;
+export interface IAppendBufferCoreMessage {
+  type: CoreMessageType.SourceBufferAppend;
   mediaSourceId: string;
   sourceBufferType: SourceBufferType;
   operationId: string;
@@ -722,8 +715,8 @@ export interface IAppendBufferWorkerMessage {
   };
 }
 
-export interface IRemoveBufferWorkerMessage {
-  type: WorkerMessageType.SourceBufferRemove;
+export interface IRemoveBufferCoreMessage {
+  type: CoreMessageType.SourceBufferRemove;
   mediaSourceId: string;
   sourceBufferType: SourceBufferType;
   operationId: string;
@@ -735,15 +728,15 @@ export interface IRemoveBufferWorkerMessage {
   };
 }
 
-export interface IAbortBufferWorkerMessage {
-  type: WorkerMessageType.AbortSourceBuffer;
+export interface IAbortBufferCoreMessage {
+  type: CoreMessageType.AbortSourceBuffer;
   mediaSourceId: string;
   sourceBufferType: SourceBufferType;
   value: null;
 }
 
-export interface IUpdateMediaSourceDurationWorkerMessage {
-  type: WorkerMessageType.UpdateMediaSourceDuration;
+export interface IUpdateMediaSourceDurationCoreMessage {
+  type: CoreMessageType.UpdateMediaSourceDuration;
   mediaSourceId: string;
   value: {
     duration: number;
@@ -751,32 +744,32 @@ export interface IUpdateMediaSourceDurationWorkerMessage {
   };
 }
 
-export interface IInterruptMediaSourceDurationWorkerMessage {
-  type: WorkerMessageType.InterruptMediaSourceDurationUpdate;
+export interface IInterruptMediaSourceDurationCoreMessage {
+  type: CoreMessageType.InterruptMediaSourceDurationUpdate;
   mediaSourceId: string;
   value: null;
 }
 
-export interface IEndOfStreamWorkerMessage {
-  type: WorkerMessageType.EndOfStream;
+export interface IEndOfStreamCoreMessage {
+  type: CoreMessageType.EndOfStream;
   mediaSourceId: string;
   value: null;
 }
 
-export interface IStopEndOfStreamWorkerMessage {
-  type: WorkerMessageType.InterruptEndOfStream;
+export interface IStopEndOfStreamCoreMessage {
+  type: CoreMessageType.InterruptEndOfStream;
   mediaSourceId: string;
   value: null;
 }
 
-export interface IDisposeMediaSourceWorkerMessage {
-  type: WorkerMessageType.DisposeMediaSource;
+export interface IDisposeMediaSourceCoreMessage {
+  type: CoreMessageType.DisposeMediaSource;
   mediaSourceId: string;
   value: null;
 }
 
-export interface IAdaptationChangeWorkerMessage {
-  type: WorkerMessageType.AdaptationChanged;
+export interface IAdaptationChangeCoreMessage {
+  type: CoreMessageType.AdaptationChanged;
   contentId: string;
   value: {
     adaptationId: string | null;
@@ -785,8 +778,8 @@ export interface IAdaptationChangeWorkerMessage {
   };
 }
 
-export interface IRepresentationChangeWorkerMessage {
-  type: WorkerMessageType.RepresentationChanged;
+export interface IRepresentationChangeCoreMessage {
+  type: CoreMessageType.RepresentationChanged;
   contentId: string;
   value: {
     adaptationId: string;
@@ -796,10 +789,10 @@ export interface IRepresentationChangeWorkerMessage {
   };
 }
 
-/** Message sent by the Worker when the Manifest is first loaded. */
-export interface IManifestReadyWorkerMessage {
+/** Message sent by the Core when the Manifest is first loaded. */
+export interface IManifestReadyCoreMessage {
   /** Identify this particular message. */
-  type: WorkerMessageType.ManifestReady;
+  type: CoreMessageType.ManifestReady;
   /** The `contentId` linked to this Manifest. */
   contentId: string;
   value: {
@@ -809,7 +802,7 @@ export interface IManifestReadyWorkerMessage {
      * When possible, this should be a `Manifest` instance.
      *
      * Only if this is not possible (e.g. because the `Manifest` cannot be
-     * communicated as is between both Worker and main_thread) might you convert
+     * communicated as is between both Core and main_thread) might you convert
      * it to another object also respecting the `IManifestMetadata` interface.
      *
      * However doing this might lead to some loss of performance and minor
@@ -819,10 +812,10 @@ export interface IManifestReadyWorkerMessage {
   };
 }
 
-/** Message sent by the Worker everytime the Manifest is updated. */
-export interface IManifestUpdateWorkerMessage {
+/** Message sent by the Core everytime the Manifest is updated. */
+export interface IManifestUpdateCoreMessage {
   /** Identify this particular message. */
-  type: WorkerMessageType.ManifestUpdate;
+  type: CoreMessageType.ManifestUpdate;
   /** The `contentId` linked to this Manifest. */
   contentId: string | undefined;
   value: {
@@ -833,7 +826,7 @@ export interface IManifestUpdateWorkerMessage {
      * performance and allow some advanced features.
      *
      * Only if this is not possible (e.g. because the `Manifest` cannot be
-     * communicated as is between both Worker and main_thread) might you convert
+     * communicated as is between both Core and main_thread) might you convert
      * it to another object also respecting the `IManifestMetadata` interface.
      * In that last case, you're also authorized to reset the `periods` property
      * of that `IManifestMetadata` to an empty array to save up message-passing
@@ -847,26 +840,26 @@ export interface IManifestUpdateWorkerMessage {
   };
 }
 
-export interface IEncryptionDataEncounteredWorkerMessage {
-  type: WorkerMessageType.EncryptionDataEncountered;
+export interface IEncryptionDataEncounteredCoreMessage {
+  type: CoreMessageType.EncryptionDataEncountered;
   contentId: string | undefined;
   value: IContentProtection;
 }
 
-export interface IErrorWorkerMessage {
-  type: WorkerMessageType.Error;
+export interface IErrorCoreMessage {
+  type: CoreMessageType.Error;
   contentId: string | undefined;
   value: ISentError;
 }
 
-export interface IUpdatePlaybackRateWorkerMessage {
-  type: WorkerMessageType.UpdatePlaybackRate;
+export interface IUpdatePlaybackRateCoreMessage {
+  type: CoreMessageType.UpdatePlaybackRate;
   contentId: string | undefined;
   value: number;
 }
 
-export interface IReloadingMediaSourceWorkerMessage {
-  type: WorkerMessageType.ReloadingMediaSource;
+export interface IReloadingMediaSourceCoreMessage {
+  type: CoreMessageType.ReloadingMediaSource;
   contentId: string;
   value: {
     timeOffset: number;
@@ -875,14 +868,14 @@ export interface IReloadingMediaSourceWorkerMessage {
   };
 }
 
-export interface INeedsDecipherabilityFlushWorkerMessage {
-  type: WorkerMessageType.NeedsDecipherabilityFlush;
+export interface INeedsDecipherabilityFlushCoreMessage {
+  type: CoreMessageType.NeedsDecipherabilityFlush;
   contentId: string;
   value: null;
 }
 
-export interface ILockedStreamWorkerMessage {
-  type: WorkerMessageType.LockedStream;
+export interface ILockedStreamCoreMessage {
+  type: CoreMessageType.LockedStream;
   contentId: string;
   value: {
     /** Period concerned. */
@@ -892,8 +885,8 @@ export interface ILockedStreamWorkerMessage {
   };
 }
 
-export interface IBitrateEstimateChangeWorkerMessage {
-  type: WorkerMessageType.BitrateEstimateChange;
+export interface IBitrateEstimateChangeCoreMessage {
+  type: CoreMessageType.BitrateEstimateChange;
   contentId: string;
   value: {
     bitrate: number | undefined;
@@ -901,14 +894,14 @@ export interface IBitrateEstimateChangeWorkerMessage {
   };
 }
 
-export interface IInbandEventWorkerMessage {
-  type: WorkerMessageType.InbandEvent;
+export interface IInbandEventCoreMessage {
+  type: CoreMessageType.InbandEvent;
   contentId: string;
   value: IInbandEvent[];
 }
 
-export interface IPeriodStreamReadyWorkerMessage {
-  type: WorkerMessageType.PeriodStreamReady;
+export interface IPeriodStreamReadyCoreMessage {
+  type: CoreMessageType.PeriodStreamReady;
   contentId: string;
   value: {
     /** Period concerned. */
@@ -918,8 +911,8 @@ export interface IPeriodStreamReadyWorkerMessage {
   };
 }
 
-export interface IPeriodStreamClearedWorkerMessage {
-  type: WorkerMessageType.PeriodStreamCleared;
+export interface IPeriodStreamClearedCoreMessage {
+  type: CoreMessageType.PeriodStreamCleared;
   contentId: string;
   value: {
     /** `id` of the Period concerned. */
@@ -929,14 +922,14 @@ export interface IPeriodStreamClearedWorkerMessage {
   };
 }
 
-export interface IPushTextDataWorkerMessage {
-  type: WorkerMessageType.PushTextData;
+export interface IPushTextDataCoreMessage {
+  type: CoreMessageType.PushTextData;
   contentId: string;
   value: ITextDisplayerData;
 }
 
-export interface IRemoveTextDataWorkerMessage {
-  type: WorkerMessageType.RemoveTextData;
+export interface IRemoveTextDataCoreMessage {
+  type: CoreMessageType.RemoveTextData;
   contentId: string;
   value: {
     start: number;
@@ -944,33 +937,33 @@ export interface IRemoveTextDataWorkerMessage {
   };
 }
 
-export interface IStopTextDisplayerWorkerMessage {
-  type: WorkerMessageType.StopTextDisplayer;
+export interface IStopTextDisplayerCoreMessage {
+  type: CoreMessageType.StopTextDisplayer;
   contentId: string;
   value: null;
 }
 
-export interface IResetTextDisplayerWorkerMessage {
-  type: WorkerMessageType.ResetTextDisplayer;
+export interface IResetTextDisplayerCoreMessage {
+  type: CoreMessageType.ResetTextDisplayer;
   contentId: string;
   value: null;
 }
 
-export interface ILogMessageWorkerMessage {
-  type: WorkerMessageType.LogMessage;
+export interface ILogMessageCoreMessage {
+  type: CoreMessageType.LogMessage;
   value: {
     logLevel: ILoggerLevel;
     logs: Array<boolean | string | number | ISentError | null | undefined>;
   };
 }
 
-export interface IDiscontinuityUpdateWorkerMessage {
-  type: WorkerMessageType.DiscontinuityUpdate;
+export interface IDiscontinuityUpdateCoreMessage {
+  type: CoreMessageType.DiscontinuityUpdate;
   contentId: string;
-  value: IDiscontinuityUpdateWorkerMessagePayload;
+  value: IDiscontinuityUpdateCoreMessagePayload;
 }
 
-export interface IDiscontinuityUpdateWorkerMessagePayload {
+export interface IDiscontinuityUpdateCoreMessagePayload {
   periodId: string;
   bufferType: ITrackType;
   discontinuity: IDiscontinuityTimeInfo | null;
@@ -994,7 +987,7 @@ export interface IDiscontinuityTimeInfo {
 }
 
 export interface ISegmentSinkStoreUpdateMessage {
-  type: WorkerMessageType.SegmentSinkStoreUpdate;
+  type: CoreMessageType.SegmentSinkStoreUpdate;
   contentId: string;
   value: {
     segmentSinkMetrics: ISegmentSinkMetrics;
@@ -1002,8 +995,8 @@ export interface ISegmentSinkStoreUpdateMessage {
   };
 }
 
-export interface IThumbnailDataResponseWorkerMessage {
-  type: WorkerMessageType.ThumbnailDataResponse;
+export interface IThumbnailDataResponseCoreMessage {
+  type: CoreMessageType.ThumbnailDataResponse;
   contentId: string;
   value:
     | {
@@ -1018,7 +1011,7 @@ export interface IThumbnailDataResponseWorkerMessage {
       };
 }
 
-export const enum WorkerMessageType {
+export const enum CoreMessageType {
   AbortSourceBuffer = "abort-source-buffer",
   ActivePeriodChanged = "active-period-changed",
   AdaptationChanged = "adaptation-changed",
@@ -1059,42 +1052,42 @@ export const enum WorkerMessageType {
   ThumbnailDataResponse = "thumbnail-response",
 }
 
-export type IWorkerMessage =
-  | IAbortBufferWorkerMessage
-  | IActivePeriodChangedWorkerMessage
-  | IAdaptationChangeWorkerMessage
-  | IAddSourceBufferWorkerMessage
-  | IPushTextDataWorkerMessage
-  | IAppendBufferWorkerMessage
-  | IAttachMediaSourceWorkerMessage
-  | IBitrateEstimateChangeWorkerMessage
-  | ICreateMediaSourceWorkerMessage
-  | IDiscontinuityUpdateWorkerMessage
-  | IDisposeMediaSourceWorkerMessage
-  | IEncryptionDataEncounteredWorkerMessage
-  | IEndOfStreamWorkerMessage
-  | IErrorWorkerMessage
-  | IInbandEventWorkerMessage
-  | IInitSuccessWorkerMessage
-  | IInitErrorWorkerMessage
-  | IInterruptMediaSourceDurationWorkerMessage
-  | ILockedStreamWorkerMessage
-  | ILogMessageWorkerMessage
-  | IManifestReadyWorkerMessage
-  | IManifestUpdateWorkerMessage
-  | INeedsBufferFlushWorkerMessage
-  | INeedsDecipherabilityFlushWorkerMessage
-  | IPeriodStreamClearedWorkerMessage
-  | IPeriodStreamReadyWorkerMessage
-  | IReloadingMediaSourceWorkerMessage
-  | IRemoveBufferWorkerMessage
-  | IRemoveTextDataWorkerMessage
-  | IRepresentationChangeWorkerMessage
-  | IResetTextDisplayerWorkerMessage
-  | IStopEndOfStreamWorkerMessage
-  | IStopTextDisplayerWorkerMessage
-  | IUpdateMediaSourceDurationWorkerMessage
-  | IUpdatePlaybackRateWorkerMessage
-  | IWarningWorkerMessage
+export type ICoreMessage =
+  | IAbortBufferCoreMessage
+  | IActivePeriodChangedCoreMessage
+  | IAdaptationChangeCoreMessage
+  | IAddSourceBufferCoreMessage
+  | IPushTextDataCoreMessage
+  | IAppendBufferCoreMessage
+  | IAttachMediaSourceCoreMessage
+  | IBitrateEstimateChangeCoreMessage
+  | ICreateMediaSourceCoreMessage
+  | IDiscontinuityUpdateCoreMessage
+  | IDisposeMediaSourceCoreMessage
+  | IEncryptionDataEncounteredCoreMessage
+  | IEndOfStreamCoreMessage
+  | IErrorCoreMessage
+  | IInbandEventCoreMessage
+  | IInitSuccessCoreMessage
+  | IInitErrorCoreMessage
+  | IInterruptMediaSourceDurationCoreMessage
+  | ILockedStreamCoreMessage
+  | ILogMessageCoreMessage
+  | IManifestReadyCoreMessage
+  | IManifestUpdateCoreMessage
+  | INeedsBufferFlushCoreMessage
+  | INeedsDecipherabilityFlushCoreMessage
+  | IPeriodStreamClearedCoreMessage
+  | IPeriodStreamReadyCoreMessage
+  | IReloadingMediaSourceCoreMessage
+  | IRemoveBufferCoreMessage
+  | IRemoveTextDataCoreMessage
+  | IRepresentationChangeCoreMessage
+  | IResetTextDisplayerCoreMessage
+  | IStopEndOfStreamCoreMessage
+  | IStopTextDisplayerCoreMessage
+  | IUpdateMediaSourceDurationCoreMessage
+  | IUpdatePlaybackRateCoreMessage
+  | IWarningCoreMessage
   | ISegmentSinkStoreUpdateMessage
-  | IThumbnailDataResponseWorkerMessage;
+  | IThumbnailDataResponseCoreMessage;

@@ -1,16 +1,16 @@
-import type { IMainThreadMessage, IWorkerMessage } from "../../multithread_types";
+import type { IMainThreadMessage, ICoreMessage } from "../../internal_types";
 
 export default abstract class CoreInterface {
-  protected listeners: Array<(evt: IWorkerMessage) => void> = [];
+  protected listeners: Array<(evt: ICoreMessage) => void> = [];
   protected listenersError: Array<() => void> = [];
 
   public abstract sendMessage(msg: IMainThreadMessage): void;
 
-  public addMessageListener(cb: (evt: IWorkerMessage) => void): void {
+  public addMessageListener(cb: (evt: ICoreMessage) => void): void {
     this.listeners.push(cb);
   }
 
-  public removeMessageListener(cb: (evt: IWorkerMessage) => void): void {
+  public removeMessageListener(cb: (evt: ICoreMessage) => void): void {
     const index = this.listeners.indexOf(cb);
     if (index >= 0) {
       this.listeners.splice(index, 1);

@@ -46,6 +46,8 @@ import { ErrorCodes, ErrorTypes, formatError, MediaError } from "../../errors";
 import WorkerInitializationError from "../../errors/worker_initialization_error";
 import type { IFeature } from "../../features";
 import features, { addFeatures } from "../../features";
+import type { ICoreMessage } from "../../internal_types";
+import { MainThreadMessageType, CoreMessageType } from "../../internal_types";
 import log from "../../log";
 import type {
   IDecipherabilityStatusChangedElement,
@@ -63,8 +65,6 @@ import {
   ManifestMetadataFormat,
   getPeriodForTime,
 } from "../../manifest";
-import type { IWorkerMessage } from "../../multithread_types";
-import { MainThreadMessageType, WorkerMessageType } from "../../multithread_types";
 import type { IPlaybackObservation } from "../../playback_observer";
 import MediaElementPlaybackObserver from "../../playback_observer/media_element_playback_observer";
 import type {
@@ -533,8 +533,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         );
       };
       const handleInitMessages = (msg: MessageEvent) => {
-        const msgData = msg.data as unknown as IWorkerMessage;
-        if (msgData.type === WorkerMessageType.InitError) {
+        const msgData = msg.data as unknown as ICoreMessage;
+        if (msgData.type === CoreMessageType.InitError) {
           log.warn("API: Processing InitError worker message: detaching worker");
           if (this._priv_worker !== null) {
             this._priv_worker.removeEventListener("message", handleInitMessages);
@@ -547,7 +547,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
               "Worker parser initialization failed: " + msgData.value.errorMessage,
             ),
           );
-        } else if (msgData.type === WorkerMessageType.InitSuccess) {
+        } else if (msgData.type === CoreMessageType.InitSuccess) {
           log.info("API: InitSuccess received from worker.");
           if (this._priv_worker !== null) {
             this._priv_worker.removeEventListener("message", handleInitMessages);

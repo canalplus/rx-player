@@ -1,5 +1,11 @@
 import { MediaSource_ } from "../../../compat/browser_compatibility_types";
 import features from "../../../features";
+import type {
+  IAttachMediaSourceCoreMessagePayload,
+  IContentInitializationData,
+  ICoreMessage,
+} from "../../../internal_types";
+import { CoreMessageType } from "../../../internal_types";
 import log from "../../../log";
 import type { IManifest } from "../../../manifest";
 import { createRepresentationFilterFromFnString } from "../../../manifest";
@@ -7,12 +13,6 @@ import type Manifest from "../../../manifest/classes";
 import type { IMediaSourceInterface } from "../../../mse";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
 import WorkerMediaSourceInterface from "../../../mse/worker_media_source_interface";
-import type {
-  IAttachMediaSourceWorkerMessagePayload,
-  IContentInitializationData,
-  IWorkerMessage,
-} from "../../../multithread_types";
-import { WorkerMessageType } from "../../../multithread_types";
 import type { IPlayerError } from "../../../public_types";
 import idGenerator from "../../../utils/id_generator";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
@@ -111,7 +111,7 @@ export default class ContentPreparer {
    * @returns {Promise.<Object>}
    */
   public initializeNewContent(
-    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+    sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
     /** Allows to filter which Representations can be choosen. */
     throttlers: IRepresentationEstimatorThrottlers,
@@ -236,7 +236,7 @@ export default class ContentPreparer {
         "warning",
         (err: IPlayerError) => {
           sendMessage({
-            type: WorkerMessageType.Warning,
+            type: CoreMessageType.Warning,
             contentId,
             value: formatErrorForSender(err),
           });
@@ -262,7 +262,7 @@ export default class ContentPreparer {
         "error",
         (err: unknown) => {
           sendMessage({
-            type: WorkerMessageType.Error,
+            type: CoreMessageType.Error,
             contentId,
             value: formatErrorForSender(err),
           });
@@ -289,7 +289,7 @@ export default class ContentPreparer {
               return;
             }
             sendMessage({
-              type: WorkerMessageType.ManifestUpdate,
+              type: CoreMessageType.ManifestUpdate,
               contentId,
               value: { manifest, updates },
             });
@@ -334,7 +334,7 @@ export default class ContentPreparer {
    * @returns {Promise}
    */
   public reloadMediaSource(
-    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+    sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
     reloadInfo: INeedsMediaSourceReloadPayload,
   ): Promise<void> {
     this._currentMediaSourceCanceller.cancel();
@@ -346,7 +346,7 @@ export default class ContentPreparer {
 
     sendMessage(
       {
-        type: WorkerMessageType.ReloadingMediaSource,
+        type: CoreMessageType.ReloadingMediaSource,
         contentId: this._currentContent.contentId,
         value: reloadInfo,
       },
@@ -482,7 +482,7 @@ export interface IPreparedContentData {
  * @returns {Array.<Object>}
  */
 function createMediaSourceInterfaceAndSegmentSinksStore(
-  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentId: string,
   capabilities: {
     useMseInWorker: boolean;
@@ -496,7 +496,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
     const mainMediaSource = new MainMediaSourceInterface(generateMediaSourceId());
     mediaSourceInterface = mainMediaSource;
 
-    let sentMediaSourceLink: IAttachMediaSourceWorkerMessagePayload;
+    let sentMediaSourceLink: IAttachMediaSourceCoreMessagePayload;
     const handle = mainMediaSource.handle;
     if (handle.type === "handle") {
       sentMediaSourceLink = { type: "handle" as const, value: handle.value };
@@ -510,7 +510,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
 
     sendMessage(
       {
-        type: WorkerMessageType.AttachMediaSource,
+        type: CoreMessageType.AttachMediaSource,
         contentId,
         value: sentMediaSourceLink,
         mediaSourceId: mediaSourceInterface.id,

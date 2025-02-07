@@ -1,7 +1,7 @@
 import isCodecSupported from "../../../compat/is_codec_supported";
+import type { ICodecSupportInfo } from "../../../internal_types";
 import type { IManifestMetadata } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
-import type { ICodecSupportInfo } from "../../../multithread_types";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import type ContentDecryptor from "../../decrypt";
 import { ContentDecryptorState } from "../../decrypt";

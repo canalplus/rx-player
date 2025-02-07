@@ -16,6 +16,12 @@ import {
   SourceBufferError,
 } from "../../errors";
 import features from "../../features";
+import type {
+  ICreateMediaSourceCoreMessage,
+  ISentError,
+  ICoreMessage,
+} from "../../internal_types";
+import { MainThreadMessageType, CoreMessageType } from "../../internal_types";
 import log from "../../log";
 import type { IManifestMetadata } from "../../manifest";
 import {
@@ -24,12 +30,6 @@ import {
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
-import type {
-  ICreateMediaSourceWorkerMessage,
-  ISentError,
-  IWorkerMessage,
-} from "../../multithread_types";
-import { MainThreadMessageType, WorkerMessageType } from "../../multithread_types";
 import type {
   IReadOnlyPlaybackObserver,
   IMediaElementPlaybackObserver,
@@ -95,7 +95,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * It is set to `null` when there's no need to rely on that queue (either not
    * yet `prepare`d or already `start`ed).
    */
-  private _queuedCoreMessages: IWorkerMessage[] | null;
+  private _queuedCoreMessages: ICoreMessage[] | null;
 
   /**
    * Information relative to the current loaded content.
@@ -226,10 +226,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
     this._queuedCoreMessages = [];
     log.debug("MTCI: addEventListener prepare buffering core messages");
-    const onmessage = (msgData: IWorkerMessage): void => {
+    const onmessage = (msgData: ICoreMessage): void => {
       const type = msgData.type;
       switch (type) {
-        case WorkerMessageType.LogMessage: {
+        case CoreMessageType.LogMessage: {
           const formatted = msgData.value.logs.map((l) => {
             switch (typeof l) {
               case "string":
@@ -467,9 +467,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       );
     };
 
-    const onmessage = (msgData: IWorkerMessage) => {
+    const onmessage = (msgData: ICoreMessage) => {
       switch (msgData.type) {
-        case WorkerMessageType.AttachMediaSource: {
+        case CoreMessageType.AttachMediaSource: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -502,21 +502,21 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.Warning:
+        case CoreMessageType.Warning:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
           this.trigger("warning", formatCoreError(msgData.value));
           break;
 
-        case WorkerMessageType.Error:
+        case CoreMessageType.Error:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
           this._onFatalError(formatCoreError(msgData.value));
           break;
 
-        case WorkerMessageType.CreateMediaSource:
+        case CoreMessageType.CreateMediaSource:
           this._onCreateMediaSourceMessage(
             msgData,
             mediaElement,
@@ -525,7 +525,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           );
           break;
 
-        case WorkerMessageType.AddSourceBuffer:
+        case CoreMessageType.AddSourceBuffer:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -541,7 +541,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.SourceBufferAppend:
+        case CoreMessageType.SourceBufferAppend:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -583,7 +583,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.SourceBufferRemove:
+        case CoreMessageType.SourceBufferRemove:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -625,7 +625,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.AbortSourceBuffer:
+        case CoreMessageType.AbortSourceBuffer:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -645,7 +645,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.UpdateMediaSourceDuration:
+        case CoreMessageType.UpdateMediaSourceDuration:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -661,7 +661,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.InterruptMediaSourceDurationUpdate:
+        case CoreMessageType.InterruptMediaSourceDurationUpdate:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -677,7 +677,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.EndOfStream:
+        case CoreMessageType.EndOfStream:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -689,7 +689,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.InterruptEndOfStream:
+        case CoreMessageType.InterruptEndOfStream:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -701,7 +701,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.DisposeMediaSource:
+        case CoreMessageType.DisposeMediaSource:
           {
             if (
               this._currentContentInfo?.mainThreadMediaSource?.id !==
@@ -713,7 +713,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.NeedsBufferFlush: {
+        case CoreMessageType.NeedsBufferFlush: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -738,7 +738,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.ActivePeriodChanged: {
+        case CoreMessageType.ActivePeriodChanged: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -755,7 +755,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.AdaptationChanged: {
+        case CoreMessageType.AdaptationChanged: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -792,7 +792,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.RepresentationChanged: {
+        case CoreMessageType.RepresentationChanged: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -836,14 +836,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.EncryptionDataEncountered:
+        case CoreMessageType.EncryptionDataEncountered:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
           lastContentProtection.setValue(msgData.value);
           break;
 
-        case WorkerMessageType.ManifestReady: {
+        case CoreMessageType.ManifestReady: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -854,7 +854,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.ManifestUpdate: {
+        case CoreMessageType.ManifestUpdate: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -876,14 +876,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.UpdatePlaybackRate:
+        case CoreMessageType.UpdatePlaybackRate:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
           playbackObserver.setPlaybackRate(msgData.value);
           break;
 
-        case WorkerMessageType.BitrateEstimateChange:
+        case CoreMessageType.BitrateEstimateChange:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -893,14 +893,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           });
           break;
 
-        case WorkerMessageType.InbandEvent:
+        case CoreMessageType.InbandEvent:
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
           this.trigger("inbandEvents", msgData.value);
           break;
 
-        case WorkerMessageType.LockedStream: {
+        case CoreMessageType.LockedStream: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -921,7 +921,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.PeriodStreamReady: {
+        case CoreMessageType.PeriodStreamReady: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -992,7 +992,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.PeriodStreamCleared: {
+        case CoreMessageType.PeriodStreamCleared: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -1006,7 +1006,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.DiscontinuityUpdate: {
+        case CoreMessageType.DiscontinuityUpdate: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -1030,7 +1030,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.PushTextData: {
+        case CoreMessageType.PushTextData: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -1056,7 +1056,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.RemoveTextData: {
+        case CoreMessageType.RemoveTextData: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -1087,7 +1087,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.ResetTextDisplayer: {
+        case CoreMessageType.ResetTextDisplayer: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -1101,7 +1101,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.StopTextDisplayer: {
+        case CoreMessageType.StopTextDisplayer: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -1115,7 +1115,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.ReloadingMediaSource:
+        case CoreMessageType.ReloadingMediaSource:
           {
             if (this._currentContentInfo?.contentId !== msgData.contentId) {
               return;
@@ -1129,7 +1129,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.NeedsDecipherabilityFlush:
+        case CoreMessageType.NeedsDecipherabilityFlush:
           {
             if (this._currentContentInfo?.contentId !== msgData.contentId) {
               return;
@@ -1154,7 +1154,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           break;
 
-        case WorkerMessageType.SegmentSinkStoreUpdate: {
+        case CoreMessageType.SegmentSinkStoreUpdate: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -1169,15 +1169,15 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           break;
         }
 
-        case WorkerMessageType.InitSuccess:
-        case WorkerMessageType.InitError:
+        case CoreMessageType.InitSuccess:
+        case CoreMessageType.InitError:
           // Should already be handled by the API
           break;
 
-        case WorkerMessageType.LogMessage:
+        case CoreMessageType.LogMessage:
           // Already handled by prepare's handler
           break;
-        case WorkerMessageType.ThumbnailDataResponse: {
+        case CoreMessageType.ThumbnailDataResponse: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
@@ -1828,7 +1828,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * @param {Object} coreInterface - The interface to the core.
    */
   private _onCreateMediaSourceMessage(
-    msg: ICreateMediaSourceWorkerMessage,
+    msg: ICreateMediaSourceCoreMessage,
     mediaElement: IMediaElement,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     coreInterface: CoreInterface,

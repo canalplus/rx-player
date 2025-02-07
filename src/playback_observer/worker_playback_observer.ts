@@ -1,5 +1,5 @@
-import type { IUpdatePlaybackRateWorkerMessage } from "../multithread_types";
-import { WorkerMessageType } from "../multithread_types";
+import type { IUpdatePlaybackRateCoreMessage } from "../internal_types";
+import { CoreMessageType } from "../internal_types";
 import type { ITrackType } from "../public_types";
 import type { IRange } from "../utils/ranges";
 import type { IReadOnlySharedReference } from "../utils/reference";
@@ -78,13 +78,13 @@ export default class WorkerPlaybackObserver
 {
   private _src: IReadOnlySharedReference<IWorkerPlaybackObservation>;
   private _cancelSignal: CancellationSignal;
-  private _messageSender: (msg: IUpdatePlaybackRateWorkerMessage) => void;
+  private _messageSender: (msg: IUpdatePlaybackRateCoreMessage) => void;
   private _contentId: string;
 
   constructor(
     src: IReadOnlySharedReference<IWorkerPlaybackObservation>,
     contentId: string,
-    sendMessage: (msg: IUpdatePlaybackRateWorkerMessage) => void,
+    sendMessage: (msg: IUpdatePlaybackRateCoreMessage) => void,
     cancellationSignal: CancellationSignal,
   ) {
     this._src = src;
@@ -111,7 +111,7 @@ export default class WorkerPlaybackObserver
 
   public setPlaybackRate(playbackRate: number): void {
     this._messageSender({
-      type: WorkerMessageType.UpdatePlaybackRate,
+      type: CoreMessageType.UpdatePlaybackRate,
       contentId: this._contentId,
       value: playbackRate,
     });

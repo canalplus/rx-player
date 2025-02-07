@@ -1,12 +1,12 @@
+import type {
+  IRemoveTextDataCoreMessage,
+  IStopTextDisplayerCoreMessage,
+  IResetTextDisplayerCoreMessage,
+  IPushTextDataCoreMessage,
+} from "../../../internal_types";
+import { CoreMessageType } from "../../../internal_types";
 import log from "../../../log";
 import type { ITextDisplayerData } from "../../../main_thread/types";
-import type {
-  IRemoveTextDataWorkerMessage,
-  IStopTextDisplayerWorkerMessage,
-  IResetTextDisplayerWorkerMessage,
-  IPushTextDataWorkerMessage,
-} from "../../../multithread_types";
-import { WorkerMessageType } from "../../../multithread_types";
 import type { IRange } from "../../../utils/ranges";
 import { CancellationError } from "../../../utils/task_canceller";
 import type { ITextDisplayerInterface } from "../../segment_sinks";
@@ -50,7 +50,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
   public pushTextData(infos: ITextDisplayerData): Promise<IRange[]> {
     return new Promise((resolve, reject) => {
       this._messageSender({
-        type: WorkerMessageType.PushTextData,
+        type: CoreMessageType.PushTextData,
         contentId: this._contentId,
         value: infos,
       });
@@ -64,7 +64,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
   public remove(start: number, end: number): Promise<IRange[]> {
     return new Promise((resolve, reject) => {
       this._messageSender({
-        type: WorkerMessageType.RemoveTextData,
+        type: CoreMessageType.RemoveTextData,
         contentId: this._contentId,
         value: { start, end },
       });
@@ -77,7 +77,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
    */
   public reset(): void {
     this._messageSender({
-      type: WorkerMessageType.ResetTextDisplayer,
+      type: CoreMessageType.ResetTextDisplayer,
       contentId: this._contentId,
       value: null,
     });
@@ -89,7 +89,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
    */
   public stop(): void {
     this._messageSender({
-      type: WorkerMessageType.StopTextDisplayer,
+      type: CoreMessageType.StopTextDisplayer,
       contentId: this._contentId,
       value: null,
     });
@@ -156,7 +156,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
 }
 
 type IWorkerTextDisplayerInterfaceMessage =
-  | IPushTextDataWorkerMessage
-  | IRemoveTextDataWorkerMessage
-  | IStopTextDisplayerWorkerMessage
-  | IResetTextDisplayerWorkerMessage;
+  | IPushTextDataCoreMessage
+  | IRemoveTextDataCoreMessage
+  | IStopTextDisplayerCoreMessage
+  | IResetTextDisplayerCoreMessage;
