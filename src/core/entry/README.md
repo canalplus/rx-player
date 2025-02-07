@@ -6,7 +6,7 @@
 | Multithread environment | Should be runnable in a WebWorker entirely |
 
 [1] In a Multithreading mode, no file from that directory should ever be imported by
-external code but the `WorkerMain` to generate the worker bundle. In a monothreading mode,
+external code but the `CoreEntry` to generate the worker bundle. In a monothreading mode,
 any file may be directly imported.
 
 ## Overview

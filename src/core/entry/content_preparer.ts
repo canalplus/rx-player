@@ -1,40 +1,34 @@
-import { MediaSource_ } from "../../../compat/browser_compatibility_types";
-import features from "../../../features";
-import log from "../../../log";
-import type { IManifest } from "../../../manifest";
-import { createRepresentationFilterFromFnString } from "../../../manifest";
-import type Manifest from "../../../manifest/classes";
-import type { IMediaSourceInterface } from "../../../mse";
-import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
-import WorkerMediaSourceInterface from "../../../mse/worker_media_source_interface";
-import type {
-  IAttachMediaSourceWorkerMessagePayload,
-  IContentInitializationData,
-  IWorkerMessage,
-} from "../../../multithread_types";
-import { WorkerMessageType } from "../../../multithread_types";
-import type { IPlayerError } from "../../../public_types";
-import idGenerator from "../../../utils/id_generator";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type {
-  CancellationError,
-  CancellationSignal,
-} from "../../../utils/task_canceller";
-import TaskCanceller from "../../../utils/task_canceller";
-import type { IRepresentationEstimator } from "../../adaptive";
-import createAdaptiveRepresentationSelector from "../../adaptive";
-import type { IRepresentationEstimatorThrottlers } from "../../adaptive/adaptive_representation_selector";
-import CmcdDataBuilder from "../../cmcd";
-import type { IManifestRefreshSettings } from "../../fetchers";
-import { ManifestFetcher, SegmentQueueCreator } from "../../fetchers";
-import CdnPrioritizer from "../../fetchers/cdn_prioritizer";
-import createThumbnailFetcher from "../../fetchers/thumbnails/thumbnail_fetcher";
-import type { IThumbnailFetcher } from "../../fetchers/thumbnails/thumbnail_fetcher";
-import SegmentSinksStore from "../../segment_sinks";
-import FreezeResolver from "../common/FreezeResolver";
+import { MediaSource_ } from "../../compat/browser_compatibility_types";
+import features from "../../features";
+import log from "../../log";
+import type { IContentInitializationData } from "../../main_thread/types";
+import type { IManifest } from "../../manifest";
+import { createRepresentationFilterFromFnString } from "../../manifest";
+import type Manifest from "../../manifest/classes";
+import type { IMediaSourceInterface } from "../../mse";
+import MainMediaSourceInterface from "../../mse/main_media_source_interface";
+import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface";
+import type { IPlayerError } from "../../public_types";
+import idGenerator from "../../utils/id_generator";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
+import type { IRepresentationEstimator } from "../adaptive";
+import createAdaptiveRepresentationSelector from "../adaptive";
+import type { IRepresentationEstimatorThrottlers } from "../adaptive/adaptive_representation_selector";
+import CmcdDataBuilder from "../cmcd";
+import type { IManifestRefreshSettings } from "../fetchers";
+import { ManifestFetcher, SegmentQueueCreator } from "../fetchers";
+import CdnPrioritizer from "../fetchers/cdn_prioritizer";
+import createThumbnailFetcher from "../fetchers/thumbnails/thumbnail_fetcher";
+import type { IThumbnailFetcher } from "../fetchers/thumbnails/thumbnail_fetcher";
+import SegmentSinksStore from "../segment_sinks";
+import type { IAttachMediaSourceCoreMessagePayload, ICoreMessage } from "../types";
+import { CoreMessageType } from "../types";
+import CoreTextDisplayerInterface from "./core_text_displayer_interface";
+import FreezeResolver from "./FreezeResolver";
 import TrackChoiceSetter from "./track_choice_setter";
 import { formatErrorForSender } from "./utils";
-import WorkerTextDisplayerInterface from "./worker_text_displayer_interface";
 
 /** Function allowing to associate a unique identifier to all created `MediaSource` */
 const generateMediaSourceId = idGenerator();
@@ -110,7 +104,7 @@ export default class ContentPreparer {
    * @returns {Promise.<Object>}
    */
   public initializeNewContent(
-    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+    sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
     /** Allows to filter which Representations can be choosen. */
     throttlers: IRepresentationEstimatorThrottlers,
@@ -192,7 +186,7 @@ export default class ContentPreparer {
 
       const trackChoiceSetter = new TrackChoiceSetter();
 
-      const [mediaSource, segmentSinksStore, workerTextSender] =
+      const [mediaSource, segmentSinksStore, coreTextSender] =
         createMediaSourceInterfaceAndSegmentSinksStore(
           sendMessage,
           contentId,
@@ -216,7 +210,7 @@ export default class ContentPreparer {
         segmentSinksStore,
         segmentQueueCreator,
         fetchThumbnailData,
-        workerTextSender,
+        coreTextSender,
         trackChoiceSetter,
         useMseInWorker,
       };
@@ -235,7 +229,7 @@ export default class ContentPreparer {
         "warning",
         (err: IPlayerError) => {
           sendMessage({
-            type: WorkerMessageType.Warning,
+            type: CoreMessageType.Warning,
             contentId,
             value: formatErrorForSender(err),
           });
@@ -261,7 +255,7 @@ export default class ContentPreparer {
         "error",
         (err: unknown) => {
           sendMessage({
-            type: WorkerMessageType.Error,
+            type: CoreMessageType.Error,
             contentId,
             value: formatErrorForSender(err),
           });
@@ -288,7 +282,7 @@ export default class ContentPreparer {
               return;
             }
             sendMessage({
-              type: WorkerMessageType.ManifestUpdate,
+              type: CoreMessageType.ManifestUpdate,
               contentId,
               value: { manifest, updates },
             });
@@ -323,13 +317,16 @@ export default class ContentPreparer {
   }
 
   /**
-   * Signal the ContentPreparer that the MediaSource is "reloading".
+   * Change the MediaSource attached for the current content.
+   * It is assumed that main thread is already notified that such a reload is
+   * happening.
    *
    * The returned Promise resolves when it restarts being ready.
+   * @param {Function} sendMessage
    * @returns {Promise}
    */
   public reloadMediaSource(
-    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+    sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   ): Promise<void> {
     this._currentMediaSourceCanceller.cancel();
     if (this._currentContent === null) {
@@ -338,21 +335,21 @@ export default class ContentPreparer {
     this._currentContent.trackChoiceSetter.reset();
     this._currentMediaSourceCanceller = new TaskCanceller();
 
-    const [mediaSourceInterface, segmentSinksStore, workerTextSender] =
+    const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
         sendMessage,
         this._currentContent.contentId,
         {
           useMseInWorker: this._currentContent.useMseInWorker,
           hasVideo: this._hasVideo,
-          hasText: this._currentContent.workerTextSender !== null,
+          hasText: this._currentContent.coreTextSender !== null,
         },
         this._currentMediaSourceCanceller.signal,
       );
     this._currentContent.mediaSource = mediaSourceInterface;
     this._currentContent.segmentSinksStore = segmentSinksStore;
     this._currentContent.freezeResolver = new FreezeResolver(segmentSinksStore);
-    this._currentContent.workerTextSender = workerTextSender;
+    this._currentContent.coreTextSender = coreTextSender;
     return new Promise((res, rej) => {
       mediaSourceInterface.addEventListener(
         "mediaSourceOpen",
@@ -435,7 +432,7 @@ export interface IPreparedContentData {
    */
   segmentSinksStore: SegmentSinksStore;
   /** Allows to send timed text media data so it can be rendered. */
-  workerTextSender: WorkerTextDisplayerInterface | null;
+  coreTextSender: CoreTextDisplayerInterface | null;
   /**
    * Allows to create `SegmentQueue` which simplifies complex media segment
    * fetching.
@@ -467,7 +464,7 @@ export interface IPreparedContentData {
  * @returns {Array.<Object>}
  */
 function createMediaSourceInterfaceAndSegmentSinksStore(
-  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentId: string,
   capabilities: {
     useMseInWorker: boolean;
@@ -475,13 +472,13 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
     hasText: boolean;
   },
   cancelSignal: CancellationSignal,
-): [IMediaSourceInterface, SegmentSinksStore, WorkerTextDisplayerInterface | null] {
+): [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null] {
   let mediaSourceInterface: IMediaSourceInterface;
   if (capabilities.useMseInWorker) {
     const mainMediaSource = new MainMediaSourceInterface(generateMediaSourceId());
     mediaSourceInterface = mainMediaSource;
 
-    let sentMediaSourceLink: IAttachMediaSourceWorkerMessagePayload;
+    let sentMediaSourceLink: IAttachMediaSourceCoreMessagePayload;
     const handle = mainMediaSource.handle;
     if (handle.type === "handle") {
       sentMediaSourceLink = { type: "handle" as const, value: handle.value };
@@ -495,7 +492,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
 
     sendMessage(
       {
-        type: WorkerMessageType.AttachMediaSource,
+        type: CoreMessageType.AttachMediaSource,
         contentId,
         value: sentMediaSourceLink,
         mediaSourceId: mediaSourceInterface.id,
@@ -511,7 +508,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
   }
 
   const textSender = capabilities.hasText
-    ? new WorkerTextDisplayerInterface(contentId, sendMessage)
+    ? new CoreTextDisplayerInterface(contentId, sendMessage)
     : null;
   const { hasVideo } = capabilities;
   const segmentSinksStore = new SegmentSinksStore(

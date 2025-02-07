@@ -1,6 +1,6 @@
-import initializeWorkerMain from "../../core/main/worker";
+import initializeCoreEntry from "../../core/entry";
 import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
-import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 import type { IFeaturesObject } from "../types";
 
 /**
@@ -9,9 +9,9 @@ import type { IFeaturesObject } from "../types";
  */
 function addMediaSourceMainFeature(features: IFeaturesObject): void {
   features.monothread = {
-    init: MultiThreadContentInitializer,
+    init: MediaSourceContentInitializer,
     coreInterface: MonoThreadCoreInterface,
-    workerMain: initializeWorkerMain,
+    initializeCoreEntry,
   };
 }
 
