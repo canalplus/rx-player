@@ -231,7 +231,7 @@
     "regenerator-runtime": "0.14.1",
     "semver": "7.6.3",
     "typescript": "5.7.2",
-    "vitest": "2.1.8",
+    "vitest": "2.1.9",
     "webdriverio": "9.4.5"
   },
   "scripts-list": {
