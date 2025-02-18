@@ -1,79 +1,93 @@
 diff --git a/src/core/init/directfile_content_initializer.ts b/src/core/init/directfile_content_initializer.ts
-index 68a24d897..80f05baf7 100644
+index bc4edbee5..404732af6 100644
 --- a/src/core/init/directfile_content_initializer.ts
 +++ b/src/core/init/directfile_content_initializer.ts
-@@ -122,6 +122,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
-      * events when it cannot, as well as "unstalled" events when it get out of one.
-      */
-     const rebufferingController = new RebufferingController(playbackObserver,
-+                                                            null,
-                                                             null,
-                                                             speed);
+@@ -121,6 +121,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
+     const rebufferingController = new RebufferingController(
+       playbackObserver,
+       null,
++      null,
+       speed,
+     );
      rebufferingController.addEventListener("stalled", (evt) =>
 diff --git a/src/core/init/media_source_content_initializer.ts b/src/core/init/media_source_content_initializer.ts
-index 1cc84a4d5..ce3522ef0 100644
+index 7fdb13ba4..ca948ded5 100644
 --- a/src/core/init/media_source_content_initializer.ts
 +++ b/src/core/init/media_source_content_initializer.ts
-@@ -462,9 +462,20 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
+@@ -517,10 +517,27 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
+     const rebufferingController = this._createRebufferingController(
+       playbackObserver,
+       manifest,
++      segmentBuffersStore,
+       speed,
+       cancelSignal,
+     );
  
-     const rebufferingController = this._createRebufferingController(playbackObserver,
-                                                                     manifest,
-+                                                                    segmentBuffersStore,
-                                                                     speed,
-                                                                     cancelSignal);
--
-+    rebufferingController.addEventListener("needsReload", () => {
-+      // NOTE couldn't both be always calculated at event destination?
-+      // Maybe there are exceptions?
-+      const position = initialSeekPerformed.getValue() ?
-+        playbackObserver.getCurrentTime() :
-+        initialTime;
-+      const autoplay = initialPlayPerformed.getValue() ?
-+        !playbackObserver.getIsPaused() :
-+        autoPlay;
-+      onReloadOrder({ position, autoPlay: autoplay });
-+    }, cancelSignal);
-     const contentTimeBoundariesObserver = this
-       ._createContentTimeBoundariesObserver(manifest,
-                                             mediaSource,
-@@ -768,11 +779,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
++    rebufferingController.addEventListener(
++      "needsReload",
++      () => {
++        // NOTE couldn't both be always calculated at event destination?
++        // Maybe there are exceptions?
++        const position = initialSeekPerformed.getValue()
++          ? playbackObserver.getCurrentTime()
++          : initialTime;
++        const autoplay = initialPlayPerformed.getValue()
++          ? !playbackObserver.getIsPaused()
++          : autoPlay;
++        onReloadOrder({ position, autoPlay: autoplay });
++      },
++      cancelSignal,
++    );
++
+     const contentTimeBoundariesObserver = this._createContentTimeBoundariesObserver(
+       manifest,
+       mediaSource,
+@@ -862,6 +879,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
+    *     like discontinuity skipping.
+    * @param {Object} playbackObserver
+    * @param {Object} manifest
++   * @param {Object} segmentBuffersStore
+    * @param {Object} speed
+    * @param {Object} cancelSignal
+    * @returns {Object}
+@@ -869,12 +887,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    private _createRebufferingController(
-     playbackObserver : PlaybackObserver,
-     manifest : Manifest,
-+    segmentBuffersStore : SegmentBuffersStore,
-     speed : IReadOnlySharedReference<number>,
-     cancelSignal : CancellationSignal
-   ) : RebufferingController {
-     const rebufferingController = new RebufferingController(playbackObserver,
-                                                             manifest,
-+                                                            segmentBuffersStore,
-                                                             speed);
+     playbackObserver: PlaybackObserver,
+     manifest: Manifest,
++    segmentBuffersStore: SegmentBuffersStore,
+     speed: IReadOnlySharedReference<number>,
+     cancelSignal: CancellationSignal,
+   ): RebufferingController {
+     const rebufferingController = new RebufferingController(
+       playbackObserver,
+       manifest,
++      segmentBuffersStore,
+       speed,
+     );
      // Bubble-up events
-     rebufferingController.addEventListener("stalled",
 diff --git a/src/core/init/utils/rebuffering_controller.ts b/src/core/init/utils/rebuffering_controller.ts
-index f1753b8c2..93471ccaf 100644
+index f92026a41..2b6962d56 100644
 --- a/src/core/init/utils/rebuffering_controller.ts
 +++ b/src/core/init/utils/rebuffering_controller.ts
-@@ -30,7 +30,7 @@ import {
-   IPlaybackObservation,
-   PlaybackObserver,
- } from "../../api";
--import { IBufferType } from "../../segment_buffers";
-+import SegmentBuffersStore, { IBufferType } from "../../segment_buffers";
- import { IStallingSituation } from "../types";
+@@ -26,6 +26,7 @@ import { getNextRangeGap } from "../../../utils/ranges";
+ import type { IReadOnlySharedReference } from "../../../utils/reference";
+ import TaskCanceller from "../../../utils/task_canceller";
+ import type { IPlaybackObservation, PlaybackObserver } from "../../api";
++import type SegmentBuffersStore from "../../segment_buffers";
+ import type { IBufferType } from "../../segment_buffers";
+ import type { IStallingSituation } from "../types";
  
- 
-@@ -54,6 +54,7 @@ export default class RebufferingController
+@@ -47,6 +48,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
    /** Emit the current playback conditions */
-   private _playbackObserver : PlaybackObserver;
-   private _manifest : Manifest | null;
-+  private _segmentBuffersStore : SegmentBuffersStore | null;
-   private _speed : IReadOnlySharedReference<number>;
-   private _isStarted : boolean;
+   private _playbackObserver: PlaybackObserver;
+   private _manifest: Manifest | null;
++  private _segmentBuffersStore: SegmentBuffersStore | null;
+   private _speed: IReadOnlySharedReference<number>;
+   private _isStarted: boolean;
  
-@@ -65,6 +66,18 @@ export default class RebufferingController
+@@ -58,6 +60,18 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
  
-   private _canceller : TaskCanceller;
+   private _canceller: TaskCanceller;
  
 +  /**
 +   * If set to something else than `null`, this is the DOMHighResTimestamp as
@@ -85,19 +99,17 @@ index f1753b8c2..93471ccaf 100644
 +   *
 +   * It is also reset to `null` when and if there is no such issue anymore.
 +   */
-+  private _currentFreezeTimestamp : number | null;
++  private _currentFreezeTimestamp: number | null;
 +
    /**
     * @param {object} playbackObserver - emit the current playback conditions.
     * @param {Object} manifest - The Manifest of the currently-played content.
-@@ -72,16 +85,19 @@ export default class RebufferingController
-    */
+@@ -66,15 +80,18 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
    constructor(
-     playbackObserver : PlaybackObserver,
--    manifest: Manifest | null,
-+    manifest : Manifest | null,
-+    segmentBuffersStore : SegmentBuffersStore | null,
-     speed : IReadOnlySharedReference<number>
+     playbackObserver: PlaybackObserver,
+     manifest: Manifest | null,
++    segmentBuffersStore: SegmentBuffersStore | null,
+     speed: IReadOnlySharedReference<number>,
    ) {
      super();
      this._playbackObserver = playbackObserver;
@@ -110,29 +122,29 @@ index f1753b8c2..93471ccaf 100644
 +    this._currentFreezeTimestamp = null;
    }
  
-   public start() : void {
-@@ -154,6 +170,10 @@ export default class RebufferingController
-         Math.max(observation.pendingInternalSeek ?? 0, observation.position) :
-         null;
+   public start(): void {
+@@ -149,6 +166,10 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
+           ? Math.max(observation.pendingInternalSeek ?? 0, observation.position)
+           : null;
  
-+      if (this._checkDecipherabilityFreeze(observation)) {
-+        return ;
-+      }
++        if (this._checkDecipherabilityFreeze(observation)) {
++          return;
++        }
 +
-       if (freezing !== null) {
-         const now = performance.now();
+         if (freezing !== null) {
+           const now = performance.now();
  
-@@ -215,7 +235,7 @@ export default class RebufferingController
-           this.trigger("stalled", stalledReason);
-           return ;
-         } else {
--          log.warn("Init: ignored stall for too long, checking discontinuity",
-+          log.warn("Init: ignored stall for too long, considering it",
-                    now - ignoredStallTimeStamp);
-         }
-       }
-@@ -358,6 +378,96 @@ export default class RebufferingController
-   public destroy() : void {
+@@ -213,7 +234,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
+             return;
+           } else {
+             log.warn(
+-              "Init: ignored stall for too long, checking discontinuity",
++              "Init: ignored stall for too long, considering it",
+               now - ignoredStallTimeStamp,
+             );
+           }
+@@ -374,6 +395,92 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
+   public destroy(): void {
      this._canceller.cancel();
    }
 +
@@ -156,15 +168,12 @@ index f1753b8c2..93471ccaf 100644
 +   * decipherability freeze, in which case this method already performed the
 +   * right handling steps.
 +   */
-+  private _checkDecipherabilityFreeze(
-+    observation : IPlaybackObservation
-+  ): boolean {
-+    const { readyState,
-+            rebuffering,
-+            freezing } = observation;
-+    const bufferGap = observation.bufferGap !== undefined &&
-+      isFinite(observation.bufferGap) ? observation.bufferGap :
-+      0;
++  private _checkDecipherabilityFreeze(observation: IPlaybackObservation): boolean {
++    const { readyState, rebuffering, freezing } = observation;
++    const bufferGap =
++      observation.bufferGap !== undefined && isFinite(observation.bufferGap)
++        ? observation.bufferGap
++        : 0;
 +    if (
 +      this._segmentBuffersStore === null ||
 +      bufferGap < 6 ||
@@ -181,8 +190,7 @@ index f1753b8c2..93471ccaf 100644
 +    }
 +    const rebufferingForTooLong =
 +      rebuffering !== null && now - rebuffering.timestamp > 4000;
-+    const frozenForTooLong =
-+      freezing !== null && now - freezing.timestamp > 4000;
++    const frozenForTooLong = freezing !== null && now - freezing.timestamp > 4000;
 +
 +    if (
 +      (rebufferingForTooLong || frozenForTooLong) &&
@@ -198,7 +206,7 @@ index f1753b8c2..93471ccaf 100644
 +            const { representation } = segment.infos;
 +            if (representation.decipherable === false) {
 +              log.warn(
-+                "Init: we have undecipherable segments left in the buffer, reloading"
++                "Init: we have undecipherable segments left in the buffer, reloading",
 +              );
 +              this._currentFreezeTimestamp = null;
 +              this.trigger("needsReload", null);
@@ -216,7 +224,7 @@ index f1753b8c2..93471ccaf 100644
 +      if (!isClear && hasOnlyDecipherableSegments) {
 +        log.warn(
 +          "Init: we are frozen despite only having decipherable " +
-+          "segments left in the buffer, reloading"
++            "segments left in the buffer, reloading",
 +        );
 +        this._currentFreezeTimestamp = null;
 +        this.trigger("needsReload", null);
@@ -228,27 +236,25 @@ index f1753b8c2..93471ccaf 100644
  }
  
  /**
-@@ -581,6 +691,7 @@ class PlaybackRateUpdater {
+@@ -601,6 +708,7 @@ class PlaybackRateUpdater {
  export interface IRebufferingControllerEvent {
-   stalled : IStallingSituation;
-   unstalled : null;
-+  needsReload : null;
-   warning : IPlayerError;
+   stalled: IStallingSituation;
+   unstalled: null;
++  needsReload: null;
+   warning: IPlayerError;
  }
  
 diff --git a/src/parsers/texttracks/ttml/html/apply_extent.ts b/src/parsers/texttracks/ttml/html/apply_extent.ts
-index 5772fa8fb..eb3a051e4 100644
+index 2f66288b3..53602093c 100644
 --- a/src/parsers/texttracks/ttml/html/apply_extent.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_extent.ts
-@@ -54,7 +54,14 @@ export default function applyExtent(
-         secondExtent[2] === "%" ||
-         secondExtent[2] === "em")
-     {
+@@ -45,7 +45,12 @@ export default function applyExtent(element: HTMLElement, extent: string): void
+     }
+ 
+     if (secondExtent[2] === "px" || secondExtent[2] === "%" || secondExtent[2] === "em") {
 -      element.style.height = secondExtent[1] + secondExtent[2];
 +      const toNum = Number(secondExtent[1]);
-+      if (secondExtent[2] === "%" && !isNaN(toNum) &&
-+          (toNum < 0 || toNum > 100))
-+      {
++      if (secondExtent[2] === "%" && !isNaN(toNum) && (toNum < 0 || toNum > 100)) {
 +        element.style.width = "80%";
 +      } else {
 +        element.style.height = secondExtent[1] + secondExtent[2];
@@ -257,10 +263,10 @@ index 5772fa8fb..eb3a051e4 100644
        addClassName(element, "proportional-style");
        element.setAttribute("data-proportional-height", secondExtent[1]);
 diff --git a/src/parsers/texttracks/ttml/html/apply_line_height.ts b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-index 4f727229a..253aa1a72 100644
+index b1aa41a26..92a8796e0 100644
 --- a/src/parsers/texttracks/ttml/html/apply_line_height.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-@@ -14,16 +14,15 @@
+@@ -14,15 +14,14 @@
   * limitations under the License.
   */
  
@@ -273,16 +279,15 @@ index 4f727229a..253aa1a72 100644
 + * @param {HTMLElement} _element
   * @param {string} lineHeight
   */
- export default function applyLineHeight(
--  element : HTMLElement,
-+  _element : HTMLElement,
-   lineHeight : string
- ) : void {
+-export default function applyLineHeight(element: HTMLElement, lineHeight: string): void {
++export default function applyLineHeight(_element: HTMLElement, lineHeight: string): void {
    const trimmedLineHeight = lineHeight.trim();
-@@ -40,10 +39,10 @@ export default function applyLineHeight(
-       firstLineHeight[2] === "%" ||
-       firstLineHeight[2] === "em")
-   {
+   const splittedLineHeight = trimmedLineHeight.split(" ");
+ 
+@@ -38,10 +37,10 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
+     firstLineHeight[2] === "%" ||
+     firstLineHeight[2] === "em"
+   ) {
 -    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
 +    // element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
    } else if (firstLineHeight[2] === "c") {
@@ -294,18 +299,16 @@ index 4f727229a..253aa1a72 100644
      log.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
    }
 diff --git a/src/parsers/texttracks/ttml/html/apply_origin.ts b/src/parsers/texttracks/ttml/html/apply_origin.ts
-index 01a205aad..91d69fa3c 100644
+index d8d24b0bb..dc72b2144 100644
 --- a/src/parsers/texttracks/ttml/html/apply_origin.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_origin.ts
-@@ -53,7 +53,15 @@ export default function applyOrigin(
-         secondOrigin[2] === "%" ||
-         secondOrigin[2] === "em")
-     {
+@@ -44,7 +44,13 @@ export default function applyOrigin(element: HTMLElement, origin: string): void
+     }
+ 
+     if (secondOrigin[2] === "px" || secondOrigin[2] === "%" || secondOrigin[2] === "em") {
 -      element.style.top = secondOrigin[1] + secondOrigin[2];
 +      const toNum = Number(secondOrigin[1]);
-+      if (secondOrigin[2] === "%" && !isNaN(toNum) &&
-+          (toNum < 0 || toNum > 100))
-+      {
++      if (secondOrigin[2] === "%" && !isNaN(toNum) && (toNum < 0 || toNum > 100)) {
 +        element.style.bottom = "5%";
 +        element.style.left = "10%";
 +      } else {
@@ -314,3 +317,6 @@ index 01a205aad..91d69fa3c 100644
      } else if (secondOrigin[2] === "c") {
        addClassName(element, "proportional-style");
        element.setAttribute("data-proportional-top", secondOrigin[1]);
+-- 
+2.48.1
+
