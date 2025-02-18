@@ -9832,7 +9832,7 @@ var DirectFileContentInitializer = /*#__PURE__*/function (_ContentInitializer) {
      * Class trying to avoid various stalling situations, emitting "stalled"
      * events when it cannot, as well as "unstalled" events when it get out of one.
      */
-    var rebufferingController = new _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A(playbackObserver, null, speed);
+    var rebufferingController = new _utils_rebuffering_controller__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A(playbackObserver, null, null, speed);
     rebufferingController.addEventListener("stalled", function (evt) {
       return _this2.trigger("stalled", evt);
     });
@@ -20987,7 +20987,17 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
       speed: speed,
       startTime: initialTime
     }, cancelSignal);
-    var rebufferingController = this._createRebufferingController(playbackObserver, manifest, speed, cancelSignal);
+    var rebufferingController = this._createRebufferingController(playbackObserver, manifest, segmentBuffersStore, speed, cancelSignal);
+    rebufferingController.addEventListener("needsReload", function () {
+      // NOTE couldn't both be always calculated at event destination?
+      // Maybe there are exceptions?
+      var position = initialSeekPerformed.getValue() ? playbackObserver.getCurrentTime() : initialTime;
+      var autoplay = initialPlayPerformed.getValue() ? !playbackObserver.getIsPaused() : autoPlay;
+      onReloadOrder({
+        position: position,
+        autoPlay: autoplay
+      });
+    }, cancelSignal);
     var contentTimeBoundariesObserver = this._createContentTimeBoundariesObserver(manifest, mediaSource, streamObserver, segmentBuffersStore, cancelSignal);
     if (may_media_element_fail_on_undecipherable_data) {
       // On some devices, just reload immediately when data become undecipherable
@@ -21286,13 +21296,14 @@ var MediaSourceContentInitializer = /*#__PURE__*/function (_ContentInitializer) 
    *     like discontinuity skipping.
    * @param {Object} playbackObserver
    * @param {Object} manifest
+   * @param {Object} segmentBuffersStore
    * @param {Object} speed
    * @param {Object} cancelSignal
    * @returns {Object}
    */;
-  _proto._createRebufferingController = function _createRebufferingController(playbackObserver, manifest, speed, cancelSignal) {
+  _proto._createRebufferingController = function _createRebufferingController(playbackObserver, manifest, segmentBuffersStore, speed, cancelSignal) {
     var _this8 = this;
-    var rebufferingController = new rebuffering_controller/* default */.A(playbackObserver, manifest, speed);
+    var rebufferingController = new rebuffering_controller/* default */.A(playbackObserver, manifest, segmentBuffersStore, speed);
     // Bubble-up events
     rebufferingController.addEventListener("stalled", function (evt) {
       return _this8.trigger("stalled", evt);
@@ -21912,6 +21923,9 @@ function initializeContentDecryption(mediaElement, keySystems, protectionRef, ca
 /* harmony import */ var _utils_ranges__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3650);
 /* harmony import */ var _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2507);
 
+function _createForOfIteratorHelperLoose(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (t) return (t = t.call(r)).next.bind(t); if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var o = 0; return function () { return o >= r.length ? { done: !0 } : { done: !1, value: r[o++] }; }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 /**
  * Copyright 2015 CANAL+ Group
  *
@@ -21953,15 +21967,17 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
    * @param {Object} manifest - The Manifest of the currently-played content.
    * @param {Object} speed - The last speed set by the user
    */
-  function RebufferingController(playbackObserver, manifest, speed) {
+  function RebufferingController(playbackObserver, manifest, segmentBuffersStore, speed) {
     var _this;
     _this = _EventEmitter.call(this) || this;
     _this._playbackObserver = playbackObserver;
     _this._manifest = manifest;
+    _this._segmentBuffersStore = segmentBuffersStore;
     _this._speed = speed;
     _this._discontinuitiesStore = [];
     _this._isStarted = false;
     _this._canceller = new _utils_task_canceller__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay();
+    _this._currentFreezeTimestamp = null;
     return _this;
   }
   (0,_babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A)(RebufferingController, _EventEmitter);
@@ -22022,6 +22038,9 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
         ignoredStallTimeStamp = now;
       }
       lastSeekingPosition = observation.seeking ? Math.max((_a = observation.pendingInternalSeek) !== null && _a !== void 0 ? _a : 0, observation.position) : null;
+      if (_this2._checkDecipherabilityFreeze(observation)) {
+        return;
+      }
       if (freezing !== null) {
         var _now = performance.now();
         var referenceTimestamp = prevFreezingState === null ? freezing.timestamp : prevFreezingState.attemptTimestamp;
@@ -22072,7 +22091,7 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
           _this2.trigger("stalled", stalledReason);
           return;
         } else {
-          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: ignored stall for too long, checking discontinuity", _now2 - ignoredStallTimeStamp);
+          _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: ignored stall for too long, considering it", _now2 - ignoredStallTimeStamp);
         }
       }
       ignoredStallTimeStamp = null;
@@ -22179,6 +22198,75 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
    */;
   _proto.destroy = function destroy() {
     this._canceller.cancel();
+  }
+  /**
+   * Support of contents with DRM on all the platforms out there is a pain in
+   * the *ss considering all the DRM-related bugs there are.
+   *
+   * We found out a frequent issue which is to be unable to play despite having
+   * all the decryption keys to play what is currently buffered.
+   * When this happens, re-creating the buffers from scratch, with a reload, is
+   * usually sufficient to unlock the situation.
+   *
+   * Although we prefer providing more targeted fixes or telling to platform
+   * developpers to fix their implementation, it's not always possible.
+   * We thus resorted to developping an heuristic which detects such situation
+   * and reload in that case.
+   *
+   * @param {Object} observation - The last playback observation produced, it
+   * has to be recent (just triggered for example).
+   * @returns {boolean} - Returns `true` if it seems to be such kind of
+   * decipherability freeze, in which case this method already performed the
+   * right handling steps.
+   */;
+  _proto._checkDecipherabilityFreeze = function _checkDecipherabilityFreeze(observation) {
+    var readyState = observation.readyState,
+      rebuffering = observation.rebuffering,
+      freezing = observation.freezing;
+    var bufferGap = observation.bufferGap !== undefined && isFinite(observation.bufferGap) ? observation.bufferGap : 0;
+    if (this._segmentBuffersStore === null || bufferGap < 6 || rebuffering === null && freezing === null || readyState > 1) {
+      this._currentFreezeTimestamp = null;
+      return false;
+    }
+    var now = performance.now();
+    if (this._currentFreezeTimestamp === null) {
+      this._currentFreezeTimestamp = now;
+    }
+    var rebufferingForTooLong = rebuffering !== null && now - rebuffering.timestamp > 4000;
+    var frozenForTooLong = freezing !== null && now - freezing.timestamp > 4000;
+    if ((rebufferingForTooLong || frozenForTooLong) && this._currentFreezeTimestamp > 4000) {
+      var statusAudio = this._segmentBuffersStore.getStatus("audio");
+      var statusVideo = this._segmentBuffersStore.getStatus("video");
+      var hasOnlyDecipherableSegments = true;
+      var isClear = true;
+      for (var _i = 0, _arr = [statusAudio, statusVideo]; _i < _arr.length; _i++) {
+        var status = _arr[_i];
+        if (status.type === "initialized") {
+          for (var _iterator = _createForOfIteratorHelperLoose(status.value.getInventory()), _step; !(_step = _iterator()).done;) {
+            var segment = _step.value;
+            var representation = segment.infos.representation;
+            if (representation.decipherable === false) {
+              _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: we have undecipherable segments left in the buffer, reloading");
+              this._currentFreezeTimestamp = null;
+              this.trigger("needsReload", null);
+              return true;
+            } else if (representation.contentProtections !== undefined) {
+              isClear = false;
+              if (representation.decipherable !== true) {
+                hasOnlyDecipherableSegments = false;
+              }
+            }
+          }
+        }
+      }
+      if (!isClear && hasOnlyDecipherableSegments) {
+        _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: we are frozen despite only having decipherable " + "segments left in the buffer, reloading");
+        this._currentFreezeTimestamp = null;
+        this.trigger("needsReload", null);
+        return true;
+      }
+    }
+    return false;
   };
   return RebufferingController;
 }(_utils_event_emitter__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A);
@@ -37434,7 +37522,12 @@ function applyExtent(element, extent) {
       log/* default */.A.warn("TTML Parser: unhandled extent unit:", firstExtent[2]);
     }
     if (secondExtent[2] === "px" || secondExtent[2] === "%" || secondExtent[2] === "em") {
-      element.style.height = secondExtent[1] + secondExtent[2];
+      var toNum = Number(secondExtent[1]);
+      if (secondExtent[2] === "%" && !isNaN(toNum) && (toNum < 0 || toNum > 100)) {
+        element.style.width = "80%";
+      } else {
+        element.style.height = secondExtent[1] + secondExtent[2];
+      }
     } else if (secondExtent[2] === "c") {
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-height", secondExtent[1]);
@@ -37514,12 +37607,11 @@ function applyFontSize(element, fontSize) {
  */
 
 
-
 /**
- * @param {HTMLElement} element
+ * @param {HTMLElement} _element
  * @param {string} lineHeight
  */
-function applyLineHeight(element, lineHeight) {
+function applyLineHeight(_element, lineHeight) {
   var trimmedLineHeight = lineHeight.trim();
   var splittedLineHeight = trimmedLineHeight.split(" ");
   if (trimmedLineHeight === "auto") {
@@ -37530,10 +37622,10 @@ function applyLineHeight(element, lineHeight) {
     return;
   }
   if (firstLineHeight[2] === "px" || firstLineHeight[2] === "%" || firstLineHeight[2] === "em") {
-    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
+    // element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
   } else if (firstLineHeight[2] === "c") {
-    addClassName(element, "proportional-style");
-    element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
+    // addClassName(element, "proportional-style");
+    // element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
   } else {
     log/* default */.A.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
   }
@@ -37582,7 +37674,13 @@ function applyOrigin(element, origin) {
       log/* default */.A.warn("TTML Parser: unhandled origin unit:", firstOrigin[2]);
     }
     if (secondOrigin[2] === "px" || secondOrigin[2] === "%" || secondOrigin[2] === "em") {
-      element.style.top = secondOrigin[1] + secondOrigin[2];
+      var toNum = Number(secondOrigin[1]);
+      if (secondOrigin[2] === "%" && !isNaN(toNum) && (toNum < 0 || toNum > 100)) {
+        element.style.bottom = "5%";
+        element.style.left = "10%";
+      } else {
+        element.style.top = secondOrigin[1] + secondOrigin[2];
+      }
     } else if (secondOrigin[2] === "c") {
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-top", secondOrigin[1]);
@@ -53790,7 +53888,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.33.4";
+    _this.version = /* PLAYER_VERSION */"3.33.4-canal.2025021800";
     _this.log = src_log/* default */.A;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -56278,7 +56376,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
  * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
  */
 Player._priv_currentlyUsedVideoElements = new WeakSet();
-Player.version = /* PLAYER_VERSION */"3.33.4";
+Player.version = /* PLAYER_VERSION */"3.33.4-canal.2025021800";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
