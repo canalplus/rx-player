@@ -269,6 +269,11 @@ export default function RepresentationStream<TSegmentDataType>(
       };
     }
 
+    if (representation.decipherable !== true) {
+      neededSegments.length = 0;
+      neededInitSegment = null;
+    }
+
     const terminateVal = terminate.getValue();
     if (terminateVal === null) {
       segmentsToLoadRef.setValue({
