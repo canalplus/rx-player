@@ -33,7 +33,7 @@ function parseContentProtectionChildren(
   contentProtectionChildren: Array<ITNode | string>,
 ): [IContentProtectionChildren, Error[]] {
   const warnings: Error[] = [];
-  const cencPssh: Uint8Array[] = [];
+  const cencPssh: Array<{ value: Uint8Array }> = [];
   for (let i = 0; i < contentProtectionChildren.length; i++) {
     const currentElement = contentProtectionChildren[i];
     if (typeof currentElement !== "string" && currentElement.tagName === "cenc:pssh") {
@@ -45,12 +45,12 @@ function parseContentProtectionChildren(
           warnings.push(error);
         }
         if (toUint8Array !== null) {
-          cencPssh.push(toUint8Array);
+          cencPssh.push({ value: toUint8Array });
         }
       }
     }
   }
-  return [{ cencPssh }, warnings];
+  return [{ ["cenc:pssh"]: cencPssh }, warnings];
 }
 
 /**
@@ -72,7 +72,7 @@ function parseContentProtectionAttributes(root: ITNode): IContentProtectionAttri
         ret.value = attributeVal;
         break;
       case "cenc:default_KID":
-        ret.keyId = hexToBytes(attributeVal.replace(/-/g, ""));
+        ret["cenc:default_KID"] = hexToBytes(attributeVal.replace(/-/g, ""));
         break;
       case "ref":
         ret.ref = attributeVal;

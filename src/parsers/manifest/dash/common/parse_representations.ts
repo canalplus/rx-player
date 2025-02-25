@@ -23,7 +23,7 @@ import type { IParsedRepresentation } from "../../types.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
-  IScheme,
+  ISchemeIntermediateRepresentation,
 } from "../node_parser_types.ts";
 import type ContentProtectionParser from "./content_protection_parser.ts";
 import { convertSupplementalCodecsToRFC6381 } from "./convert_supplemental_codecs.ts";
@@ -42,13 +42,13 @@ import resolveBaseURLs from "./resolve_base_urls.ts";
 function combineInbandEventStreams(
   representation: IRepresentationIntermediateRepresentation,
   adaptation: IAdaptationSetIntermediateRepresentation,
-): IScheme[] | undefined {
+): ISchemeIntermediateRepresentation[] | undefined {
   const newSchemeId = [];
-  if (representation.children.inbandEventStreams !== undefined) {
-    newSchemeId.push(...representation.children.inbandEventStreams);
+  if (representation.children.InbandEventStream.length > 0) {
+    newSchemeId.push(...representation.children.InbandEventStream);
   }
-  if (adaptation.children.inbandEventStreams !== undefined) {
-    newSchemeId.push(...adaptation.children.inbandEventStreams);
+  if (adaptation.children.InbandEventStream.length > 0) {
+    newSchemeId.push(...adaptation.children.InbandEventStream);
   }
   if (newSchemeId.length === 0) {
     return undefined;
@@ -69,8 +69,8 @@ function getHDRInformation({
   codecs,
 }: {
   adaptationProfiles?: string | undefined;
-  essentialProperties?: IScheme[] | undefined;
-  supplementalProperties?: IScheme[] | undefined;
+  essentialProperties?: ISchemeIntermediateRepresentation[] | undefined;
+  supplementalProperties?: ISchemeIntermediateRepresentation[] | undefined;
   manifestProfiles?: string | undefined;
   codecs?: string | undefined;
 }): undefined | IHDRInformation {
@@ -82,7 +82,7 @@ function getHDRInformation({
   }
   const transferCharacteristicScheme = arrayFind(
     [...(essentialProperties ?? []), ...(supplementalProperties ?? [])],
-    (p) => p.schemeIdUri === "urn:mpeg:mpegB:cicp:TransferCharacteristics",
+    (p) => p.attributes.schemeIdUri === "urn:mpeg:mpegB:cicp:TransferCharacteristics",
   );
   if (transferCharacteristicScheme !== undefined) {
     // 1: ITU-R BT.709
@@ -102,7 +102,7 @@ function getHDRInformation({
     // 16: SMPTE ST 2084, ITU-R BT.2100 PQ
     // 17: SMPTE ST 428-1
     // 18: ARIB STD-B67 (HLG)
-    switch (transferCharacteristicScheme.value) {
+    switch (transferCharacteristicScheme.attributes.value) {
       case "15":
         return undefined; // SDR
       case "16":
@@ -134,7 +134,7 @@ export default function parseRepresentations(
     let representationID =
       representation.attributes.id !== undefined
         ? representation.attributes.id
-        : String(representation.attributes.bitrate) +
+        : String(representation.attributes.bandwidth) +
           (representation.attributes.height !== undefined
             ? `-${representation.attributes.height}`
             : "") +
@@ -184,16 +184,16 @@ export default function parseRepresentations(
 
     // Find bitrate
     let representationBitrate: number;
-    if (representation.attributes.bitrate === undefined) {
-      log.warn("dash", "No usable bitrate found in the Representation.");
+    if (representation.attributes.bandwidth === undefined) {
+      log.warn("dash", "No usable bandwidth found in the Representation.");
       representationBitrate = 0;
     } else {
-      representationBitrate = representation.attributes.bitrate;
+      representationBitrate = representation.attributes.bandwidth;
     }
 
     const representationBaseURLs = resolveBaseURLs(
       context.baseURLs,
-      representation.children.baseURLs,
+      representation.children.BaseURL,
     );
 
     const cdnMetadata =
@@ -217,12 +217,12 @@ export default function parseRepresentations(
     };
 
     if (
-      representation.children.supplementalProperties !== undefined &&
+      representation.children.SupplementalProperty.length > 0 &&
       arrayFind(
-        representation.children.supplementalProperties,
+        representation.children.SupplementalProperty,
         (r) =>
-          r.schemeIdUri === "tag:dolby.com,2018:dash:EC3_ExtensionType:2018" &&
-          r.value === "JOC",
+          r.attributes.schemeIdUri === "tag:dolby.com,2018:dash:EC3_ExtensionType:2018" &&
+          r.attributes.value === "JOC",
       ) !== undefined
     ) {
       parsedRepresentation.isSpatialAudio = true;
@@ -241,10 +241,10 @@ export default function parseRepresentations(
     }
 
     let supplementalCodecs: string | undefined;
-    if (representation.attributes.supplementalCodecs !== undefined) {
-      supplementalCodecs = representation.attributes.supplementalCodecs;
-    } else if (adaptation.attributes.supplementalCodecs !== undefined) {
-      supplementalCodecs = adaptation.attributes.supplementalCodecs;
+    if (representation.attributes["scte214:supplementalCodecs"] !== undefined) {
+      supplementalCodecs = representation.attributes["scte214:supplementalCodecs"];
+    } else if (adaptation.attributes["scte214:supplementalCodecs"] !== undefined) {
+      supplementalCodecs = adaptation.attributes["scte214:supplementalCodecs"];
     }
     if (supplementalCodecs !== undefined) {
       parsedRepresentation.supplementalCodecs =
@@ -275,8 +275,8 @@ export default function parseRepresentations(
     // Content Protection parsing
     {
       const contentProtIrArr = [
-        ...(adaptation.children.contentProtections ?? []),
-        ...(representation.children.contentProtections ?? []),
+        ...adaptation.children.ContentProtection,
+        ...representation.children.ContentProtection,
       ];
       for (const contentProtIr of contentProtIrArr) {
         context.contentProtectionParser.add(parsedRepresentation, contentProtIr);
@@ -285,8 +285,8 @@ export default function parseRepresentations(
 
     parsedRepresentation.hdrInfo = getHDRInformation({
       adaptationProfiles: adaptation.attributes.profiles,
-      supplementalProperties: adaptation.children.supplementalProperties,
-      essentialProperties: adaptation.children.essentialProperties,
+      supplementalProperties: adaptation.children.SupplementalProperty,
+      essentialProperties: adaptation.children.EssentialProperty,
       manifestProfiles: context.manifestProfiles,
       codecs,
     });

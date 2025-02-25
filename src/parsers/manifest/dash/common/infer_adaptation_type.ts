@@ -23,6 +23,7 @@ import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
+  ISchemeIntermediateRepresentation,
 } from "../node_parser_types.ts";
 
 /** Different "type" a parsed Adaptation can be. */
@@ -30,12 +31,6 @@ type IAdaptationType = "audio" | "video" | "text";
 
 /** Different `role`s a text Adaptation can be. */
 const SUPPORTED_TEXT_TYPES = ["subtitle", "caption"];
-
-/** Structure of a parsed "scheme-like" element in the MPD. */
-interface IScheme {
-  schemeIdUri?: string | undefined;
-  value?: string | undefined;
-}
 
 /**
  * From a thumbnail AdaptationSet, returns core information such as the number
@@ -54,17 +49,17 @@ export function getThumbnailAdaptationSetInfo(
 } | null {
   const thumbnailProp =
     arrayFind(
-      adaptation.children.essentialProperties ?? [],
+      adaptation.children.EssentialProperty ?? [],
       (p) =>
-        p.schemeIdUri === "http://dashif.org/guidelines/thumbnail_tile" ||
-        p.schemeIdUri === "http://dashif.org/thumbnail_tile",
+        p.attributes.schemeIdUri === "http://dashif.org/guidelines/thumbnail_tile" ||
+        p.attributes.schemeIdUri === "http://dashif.org/thumbnail_tile",
     ) ??
     arrayFind(
-      (representation ?? adaptation.children.representations[0])?.children
-        .essentialProperties ?? [],
+      (representation ?? adaptation.children.Representation[0])?.children
+        .EssentialProperty ?? [],
       (p) =>
-        p.schemeIdUri === "http://dashif.org/guidelines/thumbnail_tile" ||
-        p.schemeIdUri === "http://dashif.org/thumbnail_tile",
+        p.attributes.schemeIdUri === "http://dashif.org/guidelines/thumbnail_tile" ||
+        p.attributes.schemeIdUri === "http://dashif.org/thumbnail_tile",
     );
   if (thumbnailProp === undefined) {
     return null;
@@ -72,13 +67,13 @@ export function getThumbnailAdaptationSetInfo(
   const tilesRegex = /(\d+)x(\d+)/;
   if (
     thumbnailProp === undefined ||
-    thumbnailProp.value === undefined ||
-    !tilesRegex.test(thumbnailProp.value)
+    thumbnailProp.attributes.value === undefined ||
+    !tilesRegex.test(thumbnailProp.attributes.value)
   ) {
     log.warn("dash", "Invalid thumbnails Representation, no tile-related information");
     return null;
   }
-  const match = thumbnailProp.value.match(tilesRegex) as RegExpMatchArray;
+  const match = thumbnailProp.attributes.value.match(tilesRegex) as RegExpMatchArray;
   const horizontalTiles = parseInt(match[1], 10);
   const verticalTiles = parseInt(match[2], 10);
   return {
@@ -118,12 +113,12 @@ export default function inferAdaptationType(
   const adaptationCodecs = isNonEmptyString(adaptation.attributes.codecs)
     ? adaptation.attributes.codecs
     : null;
-  const adaptationRoles = !isNullOrUndefined(adaptation.children.roles)
-    ? adaptation.children.roles
+  const adaptationRoles = !isNullOrUndefined(adaptation.children.Role)
+    ? adaptation.children.Role
     : null;
   function fromMimeType(
     mimeType: string,
-    roles: IScheme[] | null,
+    roles: ISchemeIntermediateRepresentation[],
   ): IAdaptationType | undefined {
     const topLevel = mimeType.split("/")[0];
     if (
@@ -139,13 +134,13 @@ export default function inferAdaptationType(
     }
     // manage DASH-IF mp4-embedded subtitles and metadata
     if (mimeType === "application/mp4") {
-      if (roles !== null) {
+      if (roles.length > 0) {
         if (
           arrayFind(
             roles,
             (role) =>
-              role.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-              arrayIncludes(SUPPORTED_TEXT_TYPES, role.value),
+              role.attributes.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+              arrayIncludes(SUPPORTED_TEXT_TYPES, role.attributes.value),
           ) !== undefined
         ) {
           return "text";
@@ -175,7 +170,7 @@ export default function inferAdaptationType(
     }
   }
   if (adaptationMimeType !== null) {
-    const typeFromMimeType = fromMimeType(adaptationMimeType, adaptationRoles);
+    const typeFromMimeType = fromMimeType(adaptationMimeType, adaptationRoles ?? []);
     if (typeFromMimeType !== undefined) {
       return typeFromMimeType;
     }
@@ -191,7 +186,7 @@ export default function inferAdaptationType(
     const representation = representations[i];
     const { mimeType, codecs } = representation.attributes;
     if (mimeType !== undefined) {
-      const typeFromMimeType = fromMimeType(mimeType, adaptationRoles);
+      const typeFromMimeType = fromMimeType(mimeType, adaptationRoles ?? []);
       if (typeFromMimeType !== undefined) {
         return typeFromMimeType;
       }

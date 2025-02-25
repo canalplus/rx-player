@@ -89,6 +89,9 @@ pub enum TagName {
 
     /// Indicate a <Label> node
     Label = 21,
+
+    /// Indicate an <Initialization> node
+    Initialization = 22,
 }
 
 #[derive(PartialEq, Clone, Copy)]

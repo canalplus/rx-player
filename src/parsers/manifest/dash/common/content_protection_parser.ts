@@ -152,12 +152,13 @@ export default class ContentProtectionParser {
 
     // Referenced ContentProtection found, let's inherit its attributes
 
-    contentProt.children.cencPssh.push(...referenced.children.cencPssh);
+    contentProt.children["cenc:pssh"].push(...referenced.children["cenc:pssh"]);
     if (
-      contentProt.attributes.keyId === undefined &&
-      referenced.attributes.keyId !== undefined
+      contentProt.attributes["cenc:default_KID"] === undefined &&
+      referenced.attributes["cenc:default_KID"] !== undefined
     ) {
-      contentProt.attributes.keyId = referenced.attributes.keyId;
+      contentProt.attributes["cenc:default_KID"] =
+        referenced.attributes["cenc:default_KID"];
     }
     if (
       contentProt.attributes.schemeIdUri === undefined &&
@@ -211,10 +212,10 @@ function parseContentProtection(
       .toLowerCase();
   }
   if (
-    contentProtectionIr.attributes.keyId !== undefined &&
-    contentProtectionIr.attributes.keyId.length > 0
+    contentProtectionIr.attributes["cenc:default_KID"] !== undefined &&
+    contentProtectionIr.attributes["cenc:default_KID"].length > 0
   ) {
-    const kid = contentProtectionIr.attributes.keyId;
+    const kid = contentProtectionIr.attributes["cenc:default_KID"];
     if (representation.contentProtections === undefined) {
       representation.contentProtections = { keyIds: [kid], initData: [] };
     } else if (representation.contentProtections.keyIds === undefined) {
@@ -227,10 +228,10 @@ function parseContentProtection(
   if (systemId === undefined) {
     return;
   }
-  const { cencPssh } = contentProtectionIr.children;
+  const cencPssh = contentProtectionIr.children["cenc:pssh"];
   const values: Array<{ systemId: string; data: Uint8Array }> = [];
-  for (const data of cencPssh) {
-    values.push({ systemId, data });
+  for (const pssh of cencPssh) {
+    values.push({ systemId, data: pssh.value });
   }
   if (values.length === 0) {
     return;

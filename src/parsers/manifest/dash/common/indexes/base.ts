@@ -92,7 +92,7 @@ export interface IBaseIndexIndexArgument {
   timescale?: number;
   media?: string;
   indexRange?: [number, number];
-  initialization?: { media?: string; range?: [number, number] };
+  initialization?: { media?: string; range?: [number, number] } | undefined;
   startNumber?: number;
   endNumber?: number;
   /**

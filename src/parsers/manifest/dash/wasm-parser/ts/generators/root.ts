@@ -38,10 +38,11 @@ export function generateRootChildrenParser(
       case TagName.MPD: {
         rootObj.mpd = {
           children: {
-            baseURLs: [],
-            locations: [],
-            periods: [],
-            utcTimings: [],
+            BaseURL: [],
+            Location: [],
+            Period: [],
+            UTCTiming: [],
+            ContentProtection: [],
           },
           attributes: {},
         };

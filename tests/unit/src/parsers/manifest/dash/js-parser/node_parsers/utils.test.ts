@@ -155,33 +155,44 @@ describe("dash parser helpers", function () {
   describe("parseScheme", () => {
     it("should correctly parse an element with no known attribute", () => {
       const element1 = parseXml("<Foo />")[0] as ITNode;
-      expect(parseScheme(element1)).toEqual({});
+      expect(parseScheme(element1)).toEqual({
+        attributes: { schemeIdUri: undefined, value: undefined },
+      });
 
       const element2 = parseXml('<Foo test="" />')[0] as ITNode;
-      expect(parseScheme(element2)).toEqual({});
+      expect(parseScheme(element2)).toEqual({
+        attributes: { schemeIdUri: undefined, value: undefined },
+      });
     });
 
     it("should correctly parse an element with a correct schemeIdUri attribute", () => {
       const element1 = parseXml('<Foo schemeIdUri="foobar " />')[0] as ITNode;
-      expect(parseScheme(element1)).toEqual({ schemeIdUri: "foobar " });
+      expect(parseScheme(element1)).toEqual({
+        attributes: { schemeIdUri: "foobar ", value: undefined },
+      });
 
       const element2 = parseXml('<Foo schemeIdUri="" />')[0] as ITNode;
-      expect(parseScheme(element2)).toEqual({ schemeIdUri: "" });
+      expect(parseScheme(element2)).toEqual({
+        attributes: { schemeIdUri: "", value: undefined },
+      });
     });
 
     it("should correctly parse an element with a correct value attribute", () => {
       const element1 = parseXml('<Foo value="foobar " />')[0] as ITNode;
-      expect(parseScheme(element1)).toEqual({ value: "foobar " });
+      expect(parseScheme(element1)).toEqual({
+        attributes: { value: "foobar ", schemeIdUri: undefined },
+      });
 
       const element2 = parseXml('<Foo value="" />')[0] as ITNode;
-      expect(parseScheme(element2)).toEqual({ value: "" });
+      expect(parseScheme(element2)).toEqual({
+        attributes: { value: "", schemeIdUri: undefined },
+      });
     });
 
     it("should correctly parse an element with both attributes", () => {
       const element = parseXml('<Foo schemeIdUri="baz" value="foobar " />')[0] as ITNode;
       expect(parseScheme(element)).toEqual({
-        schemeIdUri: "baz",
-        value: "foobar ",
+        attributes: { schemeIdUri: "baz", value: "foobar " },
       });
     });
   });

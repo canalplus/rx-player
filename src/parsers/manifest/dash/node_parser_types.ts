@@ -42,7 +42,7 @@ export interface IMPDChildren {
    * This is the content of all `BaseURL` elements encountered in this MPD node,
    * from the first encountered to the last encountered.
    */
-  baseURLs: IBaseUrlIntermediateRepresentation[];
+  BaseURL: IBaseUrlIntermediateRepresentation[];
   /**
    * Location(s) at which the Manifest can be refreshed.
    *
@@ -50,23 +50,23 @@ export interface IMPDChildren {
    * node,
    * from the first encountered to the last encountered.
    */
-  locations: string[];
+  Location: Array<{ value: string }>;
   /**
    * Temporal subdivisions in that Manifest.
    *
    * This is the content of all `Period` elements encountered in this MPD node,
    * from the first encountered to the last encountered.
    */
-  periods: IPeriodIntermediateRepresentation[];
+  Period: IPeriodIntermediateRepresentation[];
   /**
    * Gives way to synchronize a clock to the server time.
    *
    * This is the content of all `UTCTiming` elements encountered in this MPD
    * node, from the first encountered to the last encountered.
    */
-  utcTimings: IScheme[];
+  UTCTiming: ISchemeIntermediateRepresentation[];
   /** Encryption-related metadata. */
-  contentProtections?: IContentProtectionIntermediateRepresentation[] | undefined;
+  ContentProtection: IContentProtectionIntermediateRepresentation[];
 }
 
 /* Intermediate representation for the root's attributes. */
@@ -89,7 +89,7 @@ export interface IMPDAttributes {
   availabilityStartTime?: number;
   availabilityEndTime?: number;
   publishTime?: number;
-  duration?: number; // mediaPresentationDuration
+  mediaPresentationDuration?: number;
   minimumUpdatePeriod?: number;
   minBufferTime?: number;
   timeShiftBufferDepth?: number;
@@ -122,27 +122,27 @@ export interface IPeriodChildren {
    * This is the content of all `AdaptationSet` elements encountered in this
    * node, from the first encountered to the last encountered.
    */
-  adaptations: IAdaptationSetIntermediateRepresentation[];
+  AdaptationSet: IAdaptationSetIntermediateRepresentation[];
   /**
    * Root URL on which further relative URLs make reference.
    *
    * This is the content of all `BaseURL` elements encountered in this node,
    * from the first encountered to the last encountered.
    */
-  baseURLs: IBaseUrlIntermediateRepresentation[];
+  BaseURL: IBaseUrlIntermediateRepresentation[];
   /**
    * Provide a template with which we will be able to request segments.
    */
-  segmentTemplate?: ISegmentTemplateIntermediateRepresentation | undefined;
+  SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
   /**
    * Allows to signal events linked to this Period.
    *
    * This is the content of all `EventStream` elements encountered in this
    * node, from the first encountered to the last encountered.
    */
-  eventStreams: IEventStreamIntermediateRepresentation[];
+  EventStream: IEventStreamIntermediateRepresentation[];
   /** Encryption-related metadata. */
-  contentProtections?: IContentProtectionIntermediateRepresentation[] | undefined;
+  ContentProtection: IContentProtectionIntermediateRepresentation[];
 }
 
 /* Intermediate representation for A Period node's attributes. */
@@ -167,8 +167,8 @@ export interface IPeriodAttributes {
   bitstreamSwitching?: boolean;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
-  xlinkHref?: string;
-  xlinkActuate?: string;
+  ["xlink:href"]?: string;
+  ["xlink:actuate"]?: string;
 
   /**
    * XML namespaces linked to the `<Period>` element.
@@ -186,24 +186,20 @@ export interface IAdaptationSetIntermediateRepresentation {
 }
 
 export interface IAdaptationSetChildren {
-  // required
-  baseURLs: IBaseUrlIntermediateRepresentation[];
-  representations: IRepresentationIntermediateRepresentation[];
-
-  // optional
-  accessibilities?: IScheme[] | undefined;
-  contentComponent?: IContentComponentAttributes | undefined;
+  BaseURL: IBaseUrlIntermediateRepresentation[];
+  Representation: IRepresentationIntermediateRepresentation[];
+  Accessibility: ISchemeIntermediateRepresentation[];
+  ContentComponent: IContentComponentIntermediateRepresentation[];
   /** Encryption-related metadata. */
-  contentProtections?: IContentProtectionIntermediateRepresentation[] | undefined;
-  essentialProperties?: IScheme[] | undefined;
-  inbandEventStreams?: IScheme[] | undefined;
-  roles?: IScheme[];
-  supplementalProperties?: IScheme[] | undefined;
-
-  segmentBase?: ISegmentBaseIntermediateRepresentation | undefined;
-  segmentList?: ISegmentListIntermediateRepresentation | undefined;
-  segmentTemplate?: ISegmentTemplateIntermediateRepresentation | undefined;
-  label?: string | undefined;
+  ContentProtection: IContentProtectionIntermediateRepresentation[];
+  EssentialProperty: ISchemeIntermediateRepresentation[];
+  InbandEventStream: ISchemeIntermediateRepresentation[];
+  Role: ISchemeIntermediateRepresentation[];
+  SupplementalProperty: ISchemeIntermediateRepresentation[];
+  SegmentBase: ISegmentBaseIntermediateRepresentation[];
+  SegmentList: ISegmentListIntermediateRepresentation[];
+  SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
+  Label: Array<{ value: string }>;
 }
 
 /* Intermediate representation for An AdaptationSet node's attributes. */
@@ -217,15 +213,15 @@ export interface IAdaptationSetAttributes {
   group?: number;
   height?: number;
   id?: string;
-  language?: string;
-  maxBitrate?: number;
+  lang?: string;
+  maxBandwidth?: number;
   maxFrameRate?: number;
   maxHeight?: number;
   maxPlayoutRate?: number;
   maxWidth?: number;
   maximumSAPPeriod?: number;
   mimeType?: string;
-  minBitrate?: number;
+  minBandwidth?: number;
   minFrameRate?: number;
   minHeight?: number;
   minWidth?: number;
@@ -235,7 +231,7 @@ export interface IAdaptationSetAttributes {
   segmentAlignment?: number | boolean;
   segmentProfiles?: string;
   subsegmentAlignment?: number | boolean;
-  supplementalCodecs?: string;
+  ["scte214:supplementalCodecs"]?: string;
   width?: number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
@@ -248,24 +244,21 @@ export interface IRepresentationIntermediateRepresentation {
 }
 
 export interface IRepresentationChildren {
-  // required
-  baseURLs: IBaseUrlIntermediateRepresentation[];
-
-  // optional
+  BaseURL: IBaseUrlIntermediateRepresentation[];
   /** Encryption-related metadata. */
-  contentProtections?: IContentProtectionIntermediateRepresentation[];
-  inbandEventStreams?: IScheme[];
-  segmentBase?: ISegmentBaseIntermediateRepresentation;
-  segmentList?: ISegmentListIntermediateRepresentation;
-  segmentTemplate?: ISegmentTemplateIntermediateRepresentation;
-  supplementalProperties?: IScheme[] | undefined;
-  essentialProperties?: IScheme[] | undefined;
+  ContentProtection: IContentProtectionIntermediateRepresentation[];
+  InbandEventStream: ISchemeIntermediateRepresentation[];
+  SegmentBase: ISegmentBaseIntermediateRepresentation[];
+  SegmentList: ISegmentListIntermediateRepresentation[];
+  SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
+  SupplementalProperty: ISchemeIntermediateRepresentation[];
+  EssentialProperty: ISchemeIntermediateRepresentation[];
 }
 
 /* Intermediate representation for A Representation node's attributes. */
 export interface IRepresentationAttributes {
   audioSamplingRate?: string;
-  bitrate?: number;
+  bandwidth?: number;
   codecs?: string;
   codingDependency?: boolean;
   frameRate?: number;
@@ -277,19 +270,27 @@ export interface IRepresentationAttributes {
   profiles?: string;
   qualityRanking?: number;
   segmentProfiles?: string;
-  supplementalCodecs?: string;
+  ["scte214:supplementalCodecs"]?: string;
   width?: number;
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
 }
 
 export interface ISegmentBaseIntermediateRepresentation {
+  children: ISegmentBaseChildren;
+  attributes: ISegmentBaseAttributes;
+}
+
+export interface ISegmentBaseChildren {
+  Initialization: IInitializationIntermediateRepresentation[];
+}
+
+export interface ISegmentBaseAttributes {
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
   duration?: number;
   indexRange?: [number, number];
   indexRangeExact?: boolean;
-  initialization?: IInitializationAttributes;
   media?: string;
   presentationTimeOffset?: number;
   startNumber?: number;
@@ -297,15 +298,26 @@ export interface ISegmentBaseIntermediateRepresentation {
   timescale?: number;
 }
 
+export interface IInitializationIntermediateRepresentation {
+  attributes: IInitializationAttributes;
+}
+
 export interface ISegmentListIntermediateRepresentation {
-  list: ISegmentUrlIntermediateRepresentation[];
+  children: ISegmentListChildren;
+  attributes: ISegmentListAttributes;
+}
+
+export interface ISegmentListChildren {
+  Initialization: IInitializationIntermediateRepresentation[];
+  SegmentURL: ISegmentUrlIntermediateRepresentation[];
+}
+
+export interface ISegmentListAttributes {
   availabilityTimeComplete?: boolean;
   availabilityTimeOffset?: number;
   duration?: number;
   indexRange?: [number, number];
   indexRangeExact?: boolean;
-  initialization?: IInitializationAttributes;
-  media?: string;
   presentationTimeOffset?: number;
   startNumber?: number;
   endNumber?: number;
@@ -313,6 +325,10 @@ export interface ISegmentListIntermediateRepresentation {
 }
 
 export interface ISegmentUrlIntermediateRepresentation {
+  attributes: ISegmentUrlAttributes;
+}
+
+export interface ISegmentUrlAttributes {
   media?: string;
   mediaRange?: [number, number];
   index?: string;
@@ -321,13 +337,17 @@ export interface ISegmentUrlIntermediateRepresentation {
 
 export interface IInitializationAttributes {
   range?: [number, number];
-  media?: string;
+  sourceURL?: string;
 }
 
 /** The ContentComponent once parsed. */
+export interface IContentComponentIntermediateRepresentation {
+  attributes: IContentComponentAttributes;
+}
+
 export interface IContentComponentAttributes {
   id?: string;
-  language?: string;
+  lang?: string;
   contentType?: string;
   par?: string;
 }
@@ -338,18 +358,29 @@ export interface IContentProtectionIntermediateRepresentation {
 }
 
 export interface IContentProtectionChildren {
-  cencPssh: Uint8Array[];
+  ["cenc:pssh"]: Array<{ value: Uint8Array }>;
 }
 
 export interface IContentProtectionAttributes {
   schemeIdUri?: string;
   value?: string;
-  keyId?: Uint8Array;
+  ["cenc:default_KID"]?: Uint8Array;
   refId?: string;
   ref?: string;
 }
 
 export interface ISegmentTemplateIntermediateRepresentation {
+  children: ISegmentTemplateChildren;
+  attributes: ISegmentTemplateAttributes;
+}
+
+export interface ISegmentTemplateChildren {
+  Initialization: IInitializationIntermediateRepresentation[];
+  timeline?: ISegmentTimelineElement[] | undefined;
+  timelineParser?: ITimelineParser | undefined;
+}
+
+export interface ISegmentTemplateAttributes {
   availabilityTimeComplete?: boolean | undefined;
   availabilityTimeOffset?: number | undefined;
   bitstreamSwitching?: boolean | undefined;
@@ -362,9 +393,7 @@ export interface ISegmentTemplateIntermediateRepresentation {
   startNumber?: number | undefined;
   endNumber?: number | undefined;
   timescale?: number | undefined;
-  initialization?: { media?: string } | undefined;
-  timeline?: ISegmentTimelineElement[] | undefined;
-  timelineParser?: ITimelineParser | undefined;
+  initialization?: string | undefined;
 }
 
 export interface ISegmentTimelineElement {
@@ -384,14 +413,18 @@ export interface IBaseUrlIntermediateRepresentation {
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */
-export interface IScheme {
+export interface ISchemeIntermediateRepresentation {
+  attributes: ISchemeAttributes;
+}
+
+export interface ISchemeAttributes {
   /**
    * Content of the `schemeIdUri` attribute for that scheme.
    *
    * `undefined` if no `schemeIdUri` attribute has been found.
    */
   schemeIdUri?: string | undefined;
-  /** Inner content of that scheme. */
+  /** Value attribute of that scheme. */
   value?: string | undefined;
 }
 
@@ -417,7 +450,7 @@ export interface IEventStreamAttributes {
 }
 
 export interface IEventStreamChildren {
-  events: IEventStreamEventIntermediateRepresentation[];
+  Event: IEventStreamEventIntermediateRepresentation[];
 }
 
 export interface IEventStreamEventIntermediateRepresentation {

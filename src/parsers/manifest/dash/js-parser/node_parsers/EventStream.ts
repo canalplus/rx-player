@@ -48,9 +48,8 @@ function parseEventStreamAttributes(root: ITNode): [IEventStreamAttributes, Erro
 
       case "timescale":
         parseValue(attributeVal, {
-          asKey: "timescale",
           parser: parseMPDInteger,
-          dashName: "timescale",
+          name: "timescale",
         });
         break;
 
@@ -119,5 +118,5 @@ export function createEventStreamIntermediateRepresentation(
     }
   }
 
-  return [{ children: { events }, attributes }, warnings];
+  return [{ children: { Event: events }, attributes }, warnings];
 }

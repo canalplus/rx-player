@@ -10,7 +10,9 @@ export function generateLabelElementParser(
   const textDecoder = new TextDecoder();
   return function onMPDAttribute(attr: AttributeName, ptr: number, len: number) {
     if (attr === AttributeName.Text) {
-      adaptationSet.label = parseString(textDecoder, linearMemory.buffer, ptr, len);
+      adaptationSet.Label.push({
+        value: parseString(textDecoder, linearMemory.buffer, ptr, len),
+      });
     }
   };
 }

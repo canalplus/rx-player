@@ -85,10 +85,12 @@ export interface IListIndex {
 export interface IListIndexIndexArgument {
   duration?: number | undefined;
   indexRange?: [number, number] | undefined;
-  initialization?: {
-    media?: string | undefined;
-    range?: [number, number] | undefined;
-  };
+  initialization?:
+    | {
+        media?: string | undefined;
+        range?: [number, number] | undefined;
+      }
+    | undefined;
   list: Array<{
     media?: string | undefined;
     mediaRange?: [number, number] | undefined;

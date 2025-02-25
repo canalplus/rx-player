@@ -43,7 +43,7 @@ export function generateEventStreamChildrenParser(
     switch (nodeId) {
       case TagName.EventStreamElt: {
         const event = {};
-        childrenObj.events.push(event);
+        childrenObj.Event.push(event);
         const attrParser = generateEventAttrParser(event, linearMemory, fullMpd);
         parsersStack.pushParsers(nodeId, noop, attrParser);
         break;

@@ -10,10 +10,11 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
   it("should return undefined if the given intermediate representation has no UTCTimings element", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
-        baseURLs: [],
-        locations: [],
-        periods: [],
-        utcTimings: [],
+        BaseURL: [],
+        Location: [],
+        Period: [],
+        UTCTiming: [],
+        ContentProtection: [],
       },
       attributes: {},
     };
@@ -23,19 +24,24 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
   it("should return undefined if the given intermediate representation has no http-iso UTCTimings element", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
-        baseURLs: [],
-        locations: [],
-        periods: [],
-        utcTimings: [
+        BaseURL: [],
+        Location: [],
+        Period: [],
+        UTCTiming: [
           {
-            schemeIdUri: "urn:mpeg:dash:utc:direct-iso:2014",
-            value: "foob",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:direct-iso:2014",
+              value: "foob",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2009",
-            value: "foob",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2009",
+              value: "foob",
+            },
           },
         ],
+        ContentProtection: [],
       },
       attributes: {},
     };
@@ -45,19 +51,26 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
   it("should return undefined if the given intermediate representation has no value for its http-iso UTCTimings element", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
-        baseURLs: [],
-        locations: [],
-        periods: [],
-        utcTimings: [
+        BaseURL: [],
+        Location: [],
+        Period: [],
+        ContentProtection: [],
+        UTCTiming: [
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:direct-iso:2014",
-            value: "foob",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:direct-iso:2014",
+              value: "foob",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+            },
           },
         ],
       },
@@ -69,13 +82,16 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
   it("should return the value of a single http-iso UTCTimings element", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
-        baseURLs: [],
-        locations: [],
-        periods: [],
-        utcTimings: [
+        BaseURL: [],
+        Location: [],
+        Period: [],
+        ContentProtection: [],
+        UTCTiming: [
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
-            value: "foobar2000",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+              value: "foobar2000",
+            },
           },
         ],
       },
@@ -87,21 +103,28 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
   it("should return the first value of multiple http-iso UTCTimings elements", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
-        baseURLs: [],
-        locations: [],
-        periods: [],
-        utcTimings: [
+        BaseURL: [],
+        Location: [],
+        Period: [],
+        ContentProtection: [],
+        UTCTiming: [
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
-            value: "foobar1000",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+              value: "foobar1000",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
-            value: "foobar2000",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+              value: "foobar2000",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
-            value: "foobar3000",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+              value: "foobar3000",
+            },
           },
         ],
       },
@@ -113,29 +136,40 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
   it("should return the first value of a http-iso UTCTimings element when mixed with other elements", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
-        baseURLs: [],
-        locations: [],
-        periods: [],
-        utcTimings: [
+        BaseURL: [],
+        Location: [],
+        Period: [],
+        ContentProtection: [],
+        UTCTiming: [
           {
-            schemeIdUri: "urn:mpeg:dash:utc:direct-iso:2014",
-            value: "foob",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:direct-iso:2014",
+              value: "foob",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
-            value: "foobar2000",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+              value: "foobar2000",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
-            value: "foobar1000",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+              value: "foobar1000",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:direct-iso:2014",
-            value: "foob",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:direct-iso:2014",
+              value: "foob",
+            },
           },
           {
-            schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
-            value: "foobar1000",
+            attributes: {
+              schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014",
+              value: "foobar1000",
+            },
           },
         ],
       },

@@ -15,7 +15,12 @@
  */
 
 import noop from "../../../../../../utils/noop.ts";
-import type { IMPDAttributes, IMPDChildren } from "../../../node_parser_types.ts";
+import type {
+  IContentProtectionIntermediateRepresentation,
+  IMPDAttributes,
+  IMPDChildren,
+  IPeriodIntermediateRepresentation,
+} from "../../../node_parser_types.ts";
 import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
@@ -43,7 +48,7 @@ export function generateMPDChildrenParser(
     switch (nodeId) {
       case TagName.BaseURL: {
         const baseUrl = { value: "", attributes: {} };
-        mpdChildren.baseURLs.push(baseUrl);
+        mpdChildren.BaseURL.push(baseUrl);
 
         const childrenParser = noop; // BaseURL have no sub-element
         const attributeParser = generateBaseUrlAttrParser(baseUrl, linearMemory);
@@ -52,11 +57,17 @@ export function generateMPDChildrenParser(
       }
 
       case TagName.Period: {
-        const period = {
-          children: { adaptations: [], baseURLs: [], eventStreams: [] },
+        const period: IPeriodIntermediateRepresentation = {
+          children: {
+            AdaptationSet: [],
+            BaseURL: [],
+            SegmentTemplate: [],
+            EventStream: [],
+            ContentProtection: [],
+          },
           attributes: {},
         };
-        mpdChildren.periods.push(period);
+        mpdChildren.Period.push(period);
         const childrenParser = generatePeriodChildrenParser(
           period.children,
           linearMemory,
@@ -69,24 +80,24 @@ export function generateMPDChildrenParser(
       }
 
       case TagName.UtcTiming: {
-        const utcTiming = {};
-        mpdChildren.utcTimings.push(utcTiming);
+        const utcTiming = { attributes: {} };
+        mpdChildren.UTCTiming.push(utcTiming);
 
         const childrenParser = noop; // UTCTiming have no sub-element
-        const attributeParser = generateSchemeAttrParser(utcTiming, linearMemory);
+        const attributeParser = generateSchemeAttrParser(
+          utcTiming.attributes,
+          linearMemory,
+        );
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
       }
 
       case TagName.ContentProtection: {
-        const contentProtection = {
-          children: { cencPssh: [] },
+        const contentProtection: IContentProtectionIntermediateRepresentation = {
+          children: { ["cenc:pssh"]: [] },
           attributes: {},
         };
-        if (mpdChildren.contentProtections === undefined) {
-          mpdChildren.contentProtections = [];
-        }
-        mpdChildren.contentProtections.push(contentProtection);
+        mpdChildren.ContentProtection.push(contentProtection);
         const contentProtAttrParser = generateContentProtectionAttrParser(
           contentProtection,
           linearMemory,
@@ -139,7 +150,7 @@ export function generateMPDAttrParser(
       }
       case AttributeName.MediaPresentationDuration:
         dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.duration = dataView.getFloat64(ptr, true);
+        mpdAttrs.mediaPresentationDuration = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.MinimumUpdatePeriod:
         dataView = new DataView(linearMemory.buffer);
@@ -167,7 +178,7 @@ export function generateMPDAttrParser(
         break;
       case AttributeName.Location: {
         const location = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        mpdChildren.locations.push(location);
+        mpdChildren.Location.push({ value: location });
         break;
       }
       case AttributeName.Namespace: {

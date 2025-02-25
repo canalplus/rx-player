@@ -43,13 +43,13 @@ export function generateContentProtectionAttrParser(
         break;
       case AttributeName.ContentProtectionKeyId: {
         const kid = parseString(textDecoder, linearMemory.buffer, ptr, len);
-        cpAttrs.keyId = hexToBytes(kid.replace(/-/g, ""));
+        cpAttrs["cenc:default_KID"] = hexToBytes(kid.replace(/-/g, ""));
         break;
       }
       case AttributeName.ContentProtectionCencPSSH:
         try {
           const b64 = parseString(textDecoder, linearMemory.buffer, ptr, len);
-          cpChildren.cencPssh.push(base64ToBytes(b64));
+          cpChildren["cenc:pssh"].push({ value: base64ToBytes(b64) });
         } catch (_) {
           /* TODO log error? register as warning? */
         }
