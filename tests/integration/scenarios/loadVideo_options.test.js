@@ -16,7 +16,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
-import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
+import { MULTI_THREAD } from "../../../dist/es2017/features/list/index.js";
 import {
   EMBEDDED_WORKER,
   EMBEDDED_DASH_WASM,

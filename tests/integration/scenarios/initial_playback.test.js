@@ -15,7 +15,7 @@
  */
 
 import RxPlayer from "../../../src/index.ts";
-import { MULTI_THREAD } from "../../../src/experimental/features";
+import { MULTI_THREAD } from "../../../dist/es2017/features/list/index.js";
 import {
   EMBEDDED_WORKER,
   EMBEDDED_DASH_WASM,

@@ -17,9 +17,10 @@ import {
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
+  MULTI_THREAD,
   SMOOTH,
 } from "../../../../src/features/list";
-import { METAPLAYLIST, MULTI_THREAD } from "../../../../src/experimental/features";
+import { METAPLAYLIST } from "../../../../src/experimental/features";
 import RxPlayer from "../../../../src/minimal";
 import { linkPlayerEventsToState } from "./events";
 import VideoThumbnailLoader, {

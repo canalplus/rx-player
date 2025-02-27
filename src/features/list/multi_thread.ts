@@ -6,13 +6,6 @@ import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_c
  * @param {Object} features
  */
 function addMultiThreadFeature(features: IFeaturesObject): void {
-  /* eslint-disable-next-line no-console */
-  console.warn(
-    "RxPlayer: `MULTI_THREAD` is no longer experimental.\n" +
-      'You should now import it through the "rx-player/features" path. ' +
-      "If you also relied on the `EMBEDDED_WORKER` feature, you should now also import " +
-      'it now through the "rx-player/features/embeds" instead.',
-  );
   features.multithread = { init: MultiThreadContentInitializer };
 }
 
