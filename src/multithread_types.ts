@@ -435,6 +435,8 @@ export interface ISerializedPlaybackObservation {
   canStream: boolean;
   /** If `true` the content is loaded until its maximum position. */
   fullyLoaded: boolean;
+  /** Indicates whether need to reload media source */
+  needReloadMediaSource: boolean;
 }
 
 /**

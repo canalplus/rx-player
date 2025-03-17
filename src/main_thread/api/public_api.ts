@@ -687,6 +687,24 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Destroy current media source and re-attach new one.
+   *
+   * This method is useful when the media source is corrupted and needs to be reloaded.
+   * In some of legacy CDM implementations (e.g. Tizen 3.0), they try to decrypt the segment with first loaded init segment
+   * When the assets starts with non-drm protected content and switch to drm protected segment
+   * CDM trying to use the unencrypted init segment to decrypt the encrypted segment user will see the content with green artifacts or black screen
+   *
+   * To fix this issue, we need to reload the media source to make sure the CDM is using the correct init segment
+   */
+  public reloadMediaSource(): void {
+    if (this._priv_contentInfos === null) {
+      throw new Error("API: No content is currently loaded.");
+    }
+
+    this._priv_contentInfos.playbackObserver.sendReloadMediaSourceRequest();
+  }
+
+  /**
    * Reload the last loaded content.
    * @param {Object} reloadOpts
    */
@@ -1019,6 +1037,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       });
     }
 
+    /** Global "playback observer" which will emit playback conditions */
+    const playbackObserver = new MediaElementPlaybackObserver(videoElement, {
+      withMediaSource: !isDirectFile,
+      lowLatencyMode,
+    });
+
     /** Future `this._priv_contentInfos` related to this content. */
     const contentInfos: IPublicApiContentInfos = {
       contentId: generateContentId(),
@@ -1034,6 +1058,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       tracksStore: null,
       mediaElementTracksStore,
       useWorker,
+      playbackObserver,
     };
 
     // Bind events
@@ -1112,12 +1137,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     //   - we can avoid involontarily catching events linked to the previous
     //     content.
     this.stop();
-
-    /** Global "playback observer" which will emit playback conditions */
-    const playbackObserver = new MediaElementPlaybackObserver(videoElement, {
-      withMediaSource: !isDirectFile,
-      lowLatencyMode,
-    });
 
     currentContentCanceller.signal.register(() => {
       playbackObserver.stop();
@@ -3431,6 +3450,8 @@ interface IPublicApiContentInfos {
    * content.
    */
   useWorker: boolean;
+
+  playbackObserver: MediaElementPlaybackObserver;
 }
 
 export default Player;

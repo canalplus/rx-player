@@ -94,6 +94,8 @@ export interface ICorePlaybackObservation {
   canStream: boolean;
   /** If `true` the content is loaded until its maximum position. */
   fullyLoaded: boolean;
+  /** Indicates whether need to reload media source */
+  needReloadMediaSource: boolean;
 }
 
 /**
@@ -173,6 +175,7 @@ export default function createCorePlaybackObserver(
         speed: lastSpeed,
         canStream: mediaSource?.streaming ?? true,
         fullyLoaded: observation.fullyLoaded,
+        needReloadMediaSource: observation.needReloadMediaSource,
       };
     }
 
