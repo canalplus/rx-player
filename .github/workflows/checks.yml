@@ -86,9 +86,9 @@ jobs:
       - run:
           sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
           ubuntu-restricted-extras
+      - run: npm ci
+      - run: npm run build
       - run: |
-          npm ci
-          npm run build
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
           # retry on failure
           if [ $? -ne 0 ]; then
@@ -113,9 +113,11 @@ jobs:
           cache: "npm"
 
       - shell: bash
+        run: npm ci
+      - shell: bash
+        run: npm run build
+      - shell: bash
         run: |
-          npm ci
-          npm run build
           npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
           # retry on failure
           if [ $? -ne 0 ]; then
