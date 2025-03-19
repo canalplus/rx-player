@@ -6,6 +6,7 @@ function getBrowserConfig(browser) {
       return {
         enabled: true,
         provider: "webdriverio",
+        headless: true,
         screenshotFailures: false,
         instances: [
           {
@@ -27,6 +28,7 @@ function getBrowserConfig(browser) {
       return {
         enabled: true,
         provider: "webdriverio",
+        headless: true,
         screenshotFailures: false,
         instances: [
           {
@@ -51,6 +53,7 @@ function getBrowserConfig(browser) {
       return {
         enabled: true,
         provider: "webdriverio",
+        headless: true,
         screenshotFailures: false,
         instances: [
           {
