@@ -227,14 +227,14 @@
     "github-buttons": "2.29.1",
     "html-entities": "2.5.2",
     "jsdom": "^26.0.0",
+    "playwright": "^1.51.1",
     "prettier": "^3.5.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "regenerator-runtime": "0.14.1",
     "semver": "7.7.1",
     "typescript": "5.7.3",
-    "vitest": "3.0.9",
-    "webdriverio": "9.9.0"
+    "vitest": "3.0.9"
   },
   "scripts-list": {
     " INFO ": "---- This field is read by the `list` npm script and allows to guide you through the RxPlayer's npm scripts ----",
