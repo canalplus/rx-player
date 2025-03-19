@@ -56,36 +56,23 @@ function getBrowserConfig(browser) {
           {
             browser: "edge",
             capabilities: {
-              "ms:edgeOptions": {
-                args: ["--autoplay-policy=no-user-gesture-required"],
-              },
+              "ms:edgeOptions": { args: ["--autoplay-policy=no-user-gesture-required"] },
             },
           },
         ],
       };
 
     default:
-      return {
-        enabled: false,
-      };
+      return { enabled: false };
   }
 }
 
 export default defineConfig({
   define: {
     // global variables
-    __TEST_CONTENT_SERVER__: {
-      URL: "127.0.0.1",
-      PORT: 3000,
-    },
-    __ENVIRONMENT__: {
-      PRODUCTION: 0,
-      DEV: 1,
-      CURRENT_ENV: 1,
-    },
-    __LOGGER_LEVEL__: {
-      CURRENT_LEVEL: '"NONE"',
-    },
+    __TEST_CONTENT_SERVER__: { URL: "127.0.0.1", PORT: 3000 },
+    __ENVIRONMENT__: { PRODUCTION: 0, DEV: 1, CURRENT_ENV: 1 },
+    __LOGGER_LEVEL__: { CURRENT_LEVEL: '"NONE"' },
     __BROWSER_NAME__: JSON.stringify(process.env.BROWSER_CONFIG),
   },
   test: {
@@ -99,7 +86,7 @@ export default defineConfig({
       // memory tests
       "tests/memory/**/*.[jt]s?(x)",
     ],
-    globalSetup: "tests/globalSetup.mjs",
+    // globalSetup: "tests/globalSetup.mjs",
     browser: getBrowserConfig(process.env.BROWSER_CONFIG ?? "chrome"),
   },
 });

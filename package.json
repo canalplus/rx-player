@@ -6,6 +6,7 @@
   "main": "./dist/commonjs/index.js",
   "module": "./dist/es2017/index.js",
   "browser": "./dist/es2017/index.js",
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/es2017/index.js",
@@ -188,7 +189,7 @@
     "start": "node ./scripts/start_demo_web_server.mjs",
     "start:wasm": "node ./scripts/start_demo_web_server.mjs --include-wasm",
     "test:integration": "npm run test:integration:chrome && npm run test:integration:firefox",
-    "test:integration:chrome": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest run tests/integration/scenarios",
+    "test:integration:chrome": "node ./tests/globalSetup.mjs & SERVER_PID=$!; trap 'kill $SERVER_PID' EXIT; cross-env BROWSER_CONFIG=chrome vitest run tests/integration/scenarios; kill $SERVER_PID",
     "test:integration:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/integration/scenarios",
     "test:integration:edge": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest run tests/integration/scenarios",
     "test:integration:edge:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest watch tests/integration/scenarios",

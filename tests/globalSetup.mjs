@@ -41,3 +41,5 @@ function removeAnnoyingDeprecationNotice() {
     return realConsoleWarn.apply(console, args);
   };
 }
+
+setup();
