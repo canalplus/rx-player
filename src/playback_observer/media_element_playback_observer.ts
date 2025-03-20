@@ -303,10 +303,6 @@ export default class PlaybackObserver {
     return generateReadOnlyObserver(this, transform, this._canceller.signal);
   }
 
-  public sendReloadMediaSourceRequest(): void {
-    this._generateObservationForEvent("need-reload-media-source");
-  }
-
   private _actuallySetCurrentTime(time: number): void {
     log.info("API: Seeking internally", time);
     this._internalSeeksIncoming.push(time);
@@ -514,7 +510,6 @@ export default class PlaybackObserver {
       bufferGap,
       currentRange,
       fullyLoaded,
-      needReloadMediaSource: tmpEvt === "need-reload-media-source",
     });
     if (log.hasLevel("DEBUG")) {
       log.debug(
@@ -643,7 +638,6 @@ function getMediaInfos(mediaElement: IMediaElement): IMediaInfos {
     playbackRate,
     readyState,
     seeking,
-    needReloadMediaSource: false,
   };
 }
 

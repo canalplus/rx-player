@@ -212,12 +212,7 @@ export default class FreezeResolver {
       UNFREEZING_DELTA_POSITION,
       FREEZING_FLUSH_FAILURE_DELAY,
     } = config.getCurrent();
-    const { readyState, rebuffering, freezing, fullyLoaded, needReloadMediaSource } =
-      observation;
-
-    if (needReloadMediaSource) {
-      return { type: "reload", value: null };
-    }
+    const { readyState, rebuffering, freezing, fullyLoaded } = observation;
 
     const freezingPosition = observation.position.getPolled();
     const bufferGap = normalizeBufferGap(observation.bufferGap);
@@ -586,6 +581,4 @@ export interface IFreezeResolverObservation {
   position: ObservationPosition;
   /** If `true` the content is loaded until its maximum position. */
   fullyLoaded: boolean;
-  /** Indicates whether need to reload media source */
-  needReloadMediaSource: boolean;
 }

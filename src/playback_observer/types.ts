@@ -31,9 +31,7 @@ export type IPlaybackObserverEventType =
   /** On the HTML5 event with the same name */
   | "ratechange"
   /** An internal seek happens */
-  | "internal-seeking"
-  /** Reload media source request happens */
-  | "need-reload-media-source";
+  | "internal-seeking";
 
 /** Information recuperated on the media element on each playback observation. */
 export interface IMediaInfos {
@@ -56,8 +54,6 @@ export interface IMediaInfos {
   readyState: number;
   /** Current `seeking` value on the mediaElement. */
   seeking: boolean;
-  /** Indicates whether need to reload media source */
-  needReloadMediaSource: boolean;
 }
 
 /** Categorize a pending seek operation. */
@@ -146,8 +142,6 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
   bufferGap: number | undefined;
   /** If `true` the content is loaded until its maximum position. */
   fullyLoaded: boolean;
-  /** Indicates whether need to reload media source */
-  needReloadMediaSource: boolean;
   /**
    * The buffered range we are currently playing.
    * `null` if no range is currently available.
