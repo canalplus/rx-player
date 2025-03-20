@@ -482,6 +482,8 @@ interface IBufferingInitializationInformation {
   enableFastSwitching: boolean;
   /** Behavior when a new video and/or audio codec is encountered. */
   onCodecSwitch: "continue" | "reload";
+  /** Whether to reload the media source for the first incompatible period switch. */
+  reloadMediaSourceForFirstIncompatiblePeriodSwitch: boolean;
 }
 
 function loadOrReloadPreparedContent(
@@ -609,6 +611,8 @@ function loadOrReloadPreparedContent(
       drmSystemId,
       enableFastSwitching,
       onCodecSwitch,
+      reloadMediaSourceForFirstIncompatiblePeriodSwitch:
+        val.reloadMediaSourceForFirstIncompatiblePeriodSwitch,
     },
     handleStreamOrchestratorCallbacks(),
     currentLoadCanceller.signal,
@@ -898,6 +902,8 @@ function loadOrReloadPreparedContent(
             drmSystemId: val.drmSystemId,
             enableFastSwitching: val.enableFastSwitching,
             onCodecSwitch: val.onCodecSwitch,
+            reloadMediaSourceForFirstIncompatiblePeriodSwitch:
+              val.reloadMediaSourceForFirstIncompatiblePeriodSwitch,
           },
           contentPreparer,
           playbackObservationRef,

@@ -114,6 +114,8 @@ interface IParsedLoadVideoOptionsBase {
   experimentalOptions: {
     enableRepresentationAvoidance: boolean;
   };
+  /** @see ILoadVideoOptions.reloadMediaSourceForFirstIncompatiblePeriodSwitch */
+  reloadMediaSourceForFirstIncompatiblePeriodSwitch: boolean;
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
 }
@@ -309,6 +311,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
   let mode: IRxPlayerMode;
   let textTrackElement: HTMLElement | undefined;
   let startAt: IParsedStartAtOption | undefined;
+  let reloadMediaSourceForFirstIncompatiblePeriodSwitch: boolean;
 
   const {
     DEFAULT_AUTO_PLAY,
@@ -455,6 +458,13 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     }
   }
 
+  if (!isNullOrUndefined(options.reloadMediaSourceForFirstIncompatiblePeriodSwitch)) {
+    reloadMediaSourceForFirstIncompatiblePeriodSwitch =
+      options.reloadMediaSourceForFirstIncompatiblePeriodSwitch;
+  } else {
+    reloadMediaSourceForFirstIncompatiblePeriodSwitch = false;
+  }
+
   const requestConfig = options.requestConfig ?? {};
 
   // All those eslint disable are needed because the option is voluntarily
@@ -491,6 +501,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
       enableRepresentationAvoidance:
         options.experimentalOptions?.enableRepresentationAvoidance === true,
     },
+    reloadMediaSourceForFirstIncompatiblePeriodSwitch,
   };
 }
 

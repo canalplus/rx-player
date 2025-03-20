@@ -43,6 +43,12 @@ import PeriodStream from "../period";
 import type { IStreamStatusPayload } from "../representation";
 import getTimeRangesForContent from "./get_time_ranges_for_content";
 
+type FirstIncompatiblePeriodSwitchIssueStatus =
+  | "INITIAL"
+  | "NEEDS_RELOAD"
+  | "NO_NEEDS_RELOAD"
+  | "RELOADED";
+
 /**
  * Create and manage the various "Streams" needed for the content to
  * play:
@@ -96,8 +102,44 @@ export default function StreamOrchestrator(
   orchestratorCancelSignal: CancellationSignal,
 ): void {
   const { manifest, initialPeriod } = content;
-  const { maxBufferAhead, maxBufferBehind, wantedBufferAhead, maxVideoBufferSize } =
-    options;
+
+  const {
+    maxBufferAhead,
+    maxBufferBehind,
+    wantedBufferAhead,
+    maxVideoBufferSize,
+    reloadMediaSourceForFirstIncompatiblePeriodSwitch,
+  } = options;
+
+  function isPeriodEncrypted(period: IPeriod): boolean {
+    const adaptations = period.adaptations.video;
+
+    return (
+      adaptations !== undefined &&
+      adaptations.some((adaptation) =>
+        adaptation.representations.some(
+          (representation) => representation.contentProtections !== undefined,
+        ),
+      )
+    );
+  }
+
+  let firstIncompatiblePeriodSwitchIssueStatus: FirstIncompatiblePeriodSwitchIssueStatus =
+    "INITIAL";
+
+  const isInitialPeriodEncrypted = isPeriodEncrypted(initialPeriod);
+
+  if (reloadMediaSourceForFirstIncompatiblePeriodSwitch) {
+    firstIncompatiblePeriodSwitchIssueStatus = isInitialPeriodEncrypted
+      ? "NO_NEEDS_RELOAD"
+      : "NEEDS_RELOAD";
+
+    // eslint-disable-next-line no-console
+    console.log(
+      "kx firstIncompatiblePeriodSwitchIssueStatus:",
+      firstIncompatiblePeriodSwitchIssueStatus,
+    );
+  }
 
   const {
     MINIMUM_MAX_BUFFER_AHEAD,
@@ -471,6 +513,23 @@ export default function StreamOrchestrator(
           if (basePeriod.containsTime(position.getWanted(), nextPeriod)) {
             return;
           }
+
+          const isNextPeriodEncrypted =
+            nextPeriod !== null && isPeriodEncrypted(nextPeriod);
+
+          if (
+            firstIncompatiblePeriodSwitchIssueStatus === "NEEDS_RELOAD" &&
+            isNextPeriodEncrypted &&
+            reloadMediaSourceForFirstIncompatiblePeriodSwitch
+          ) {
+            firstIncompatiblePeriodSwitchIssueStatus = "RELOADED";
+            callbacks.needsMediaSourceReload({
+              timeOffset: 0.1,
+              minimumPosition: undefined,
+              maximumPosition: undefined,
+            });
+          }
+
           log.info(
             "Stream: Destroying PeriodStream as the current playhead moved above it",
             bufferType,
@@ -652,6 +711,7 @@ export type IStreamOrchestratorOptions = IPeriodStreamOptions & {
   maxVideoBufferSize: IReadOnlySharedReference<number>;
   maxBufferAhead: IReadOnlySharedReference<number>;
   maxBufferBehind: IReadOnlySharedReference<number>;
+  reloadMediaSourceForFirstIncompatiblePeriodSwitch: boolean;
 };
 
 /** Callbacks called by the `StreamOrchestrator` on various events. */

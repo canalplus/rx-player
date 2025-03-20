@@ -1162,6 +1162,8 @@ export interface IInitializeArguments {
     maxBufferAhead: IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */
     maxBufferBehind: IReadOnlySharedReference<number>;
+    /** Whether to reload the media source for the first incompatible period switch. */
+    reloadMediaSourceForFirstIncompatiblePeriodSwitch: boolean;
     /**
      * Enable/Disable fastSwitching: allow to replace lower-quality segments by
      * higher-quality ones to have a faster transition.

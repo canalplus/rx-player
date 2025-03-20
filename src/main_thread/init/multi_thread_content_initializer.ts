@@ -1683,7 +1683,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       this._settings.startAt,
     );
     log.debug("MTCI: Initial time calculated:", initialTime);
-    const { enableFastSwitching, onCodecSwitch } = this._settings.bufferOptions;
+    const {
+      enableFastSwitching,
+      onCodecSwitch,
+      reloadMediaSourceForFirstIncompatiblePeriodSwitch,
+    } = this._settings.bufferOptions;
     const corePlaybackObserver = this._setUpModulesOnNewMediaSource(
       {
         initialTime,
@@ -1711,6 +1715,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         drmSystemId: drmInitStatus.drmSystemId,
         enableFastSwitching,
         onCodecSwitch,
+        reloadMediaSourceForFirstIncompatiblePeriodSwitch,
       },
     });
 
@@ -1890,6 +1895,8 @@ export interface IInitializeArguments {
     maxBufferAhead: IReadOnlySharedReference<number>;
     /** Max buffer size before the current position, in seconds (we GC further down). */
     maxBufferBehind: IReadOnlySharedReference<number>;
+    /** Whether to reload the media source for the first incompatible period switch. */
+    reloadMediaSourceForFirstIncompatiblePeriodSwitch: boolean;
     /**
      * Enable/Disable fastSwitching: allow to replace lower-quality segments by
      * higher-quality ones to have a faster transition.
