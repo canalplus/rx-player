@@ -33,7 +33,7 @@ import type { IMediaKeySession } from "../browser_compatibility_types";
  * @returns {Promise.<undefined>}
  */
 export default function closeSession(session: IMediaKeySession): Promise<void> {
-  const timeoutCanceller = new TaskCanceller();
+  const timeoutCanceller = new TaskCanceller("Close session timeout");
 
   return Promise.race([
     session.close().then(() => {

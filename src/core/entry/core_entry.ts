@@ -563,7 +563,7 @@ function loadPreparedContent(
   refs: ICoreReferences,
 ): IContentHandle {
   log.debug("Core", "Loading pepared content.");
-  const contentCanceller = new TaskCanceller();
+  const contentCanceller = new TaskCanceller("Start Content Worker");
 
   let currentLoadCanceller: TaskCanceller | null = null;
 
@@ -579,7 +579,7 @@ function loadPreparedContent(
 
   function startLoadingAt(startTime: number): void {
     currentLoadCanceller?.cancel();
-    currentLoadCanceller = new TaskCanceller();
+    currentLoadCanceller = new TaskCanceller("(Re)Loading Content Worker");
     currentLoadCanceller.linkToSignal(contentCanceller.signal);
 
     /**

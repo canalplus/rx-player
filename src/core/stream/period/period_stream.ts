@@ -125,7 +125,7 @@ export default function PeriodStream(
           return;
         }
 
-        const streamCanceller = new TaskCanceller();
+        const streamCanceller = new TaskCanceller("PS Adap " + bufferType);
         streamCanceller.linkToSignal(parentCancelSignal);
         currentStreamCanceller?.cancel(); // Cancel previously created stream if one
         currentStreamCanceller = streamCanceller;

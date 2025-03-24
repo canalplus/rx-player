@@ -85,7 +85,7 @@ export default class MainMediaSourceInterface
     super();
     this.id = id;
     this.sourceBuffers = [];
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("MSI Main");
 
     if (isNullOrUndefined(MediaSource_)) {
       throw new MediaError(
@@ -167,7 +167,7 @@ export default class MainMediaSourceInterface
   /** @see IMediaSourceInterface */
   public maintainEndOfStream() {
     if (this._endOfStreamCanceller === null) {
-      this._endOfStreamCanceller = new TaskCanceller();
+      this._endOfStreamCanceller = new TaskCanceller("MSI EOS");
       this._endOfStreamCanceller.linkToSignal(this._canceller.signal);
       log.debug("mse", "end-of-stream order received.");
       maintainEndOfStream(this._mediaSource, this._endOfStreamCanceller.signal);
@@ -231,7 +231,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   constructor(sbType: SourceBufferType, codec: string, sourceBuffer: ISourceBuffer) {
     this.type = sbType;
     this.codec = codec;
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("SBI Main");
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
@@ -361,7 +361,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   private _emptyCurrentQueue(): void {
-    const error = new CancellationError();
+    const error = new CancellationError("SBI empty");
     if (this._currentOperations.length > 0) {
       this._currentOperations.forEach((op) => {
         op.reject(error);

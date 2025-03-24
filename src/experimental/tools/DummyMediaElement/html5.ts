@@ -411,7 +411,7 @@ export class DummyMediaElement
     this._src = val;
     this.srcObject = null;
     this._currentContentCanceller?.cancel();
-    const canceller = new TaskCanceller();
+    const canceller = new TaskCanceller("DummyMediaElement src");
     this._currentContentCanceller = canceller;
     setTimeout(() => {
       while (this._pendingPlayPromises.length > 0) {
@@ -478,7 +478,7 @@ export class DummyMediaElement
         throw new Error("A DummyMediaElement can only be linked to a DummyMediaSource");
       }
       this._attachedMediaSource = val;
-      this._currentContentCanceller = new TaskCanceller();
+      this._currentContentCanceller = new TaskCanceller("DummyMediaElement srcObject");
       const intervalId = setInterval(() => {
         this._tick();
       }, TICK_INTERVAL);

@@ -54,7 +54,7 @@ export default function SessionEventsListener(
   const { getLicenseConfig = {} } = keySystemOptions;
 
   /** Allows to manually cancel everything the `SessionEventsListener` is doing. */
-  const manualCanceller = new TaskCanceller();
+  const manualCanceller = new TaskCanceller("DRM SEL");
   manualCanceller.linkToSignal(cancelSignal);
 
   if (!isNullOrUndefined(session.closed)) {

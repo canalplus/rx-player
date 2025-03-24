@@ -450,7 +450,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this.state = "STOPPED";
     this.videoElement = videoElement;
     Player._priv_registerVideoElement(this.videoElement);
-    const destroyCanceller = new TaskCanceller();
+    const destroyCanceller = new TaskCanceller("API Destroy");
     this._destroyCanceller = destroyCanceller;
 
     this._priv_pictureInPictureRef = getPictureOnPictureStateRef(
@@ -808,7 +808,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (features.createDebugElement === null) {
       throw new Error("Feature `DEBUG_ELEMENT` not added to the RxPlayer");
     }
-    const canceller = new TaskCanceller();
+    const canceller = new TaskCanceller("API Debug");
     features.createDebugElement(element, this, canceller.signal);
     return {
       dispose() {
@@ -939,7 +939,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const isDirectFile = transport === "directfile";
 
     /** Emit to stop the current content. */
-    const currentContentCanceller = new TaskCanceller();
+    const currentContentCanceller = new TaskCanceller("API Content");
 
     const videoElement = this.videoElement;
 
@@ -1355,7 +1355,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           if (playPauseEventsCanceller !== null) {
             playPauseEventsCanceller.cancel();
           }
-          playPauseEventsCanceller = new TaskCanceller();
+          playPauseEventsCanceller = new TaskCanceller("API Play/Pause");
           playPauseEventsCanceller.linkToSignal(currentContentCanceller.signal);
           if (willAutoPlay !== !videoElement.paused) {
             // paused status is not at the expected value on load: emit event
@@ -1410,7 +1410,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             seekEventsCanceller = null;
           }
         } else if (isLoadedState(this.state)) {
-          seekEventsCanceller = new TaskCanceller();
+          seekEventsCanceller = new TaskCanceller("API Seeks");
           seekEventsCanceller.linkToSignal(currentContentCanceller.signal);
           emitSeekEvents(
             playbackObserver,

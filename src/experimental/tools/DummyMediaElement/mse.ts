@@ -369,7 +369,7 @@ export class DummySourceBuffer
     this.onerror = null;
     this.onabort = null;
     this.hasMetadata = false;
-    this.canceller = new TaskCanceller();
+    this.canceller = new TaskCanceller("DummySourceBuffer");
     this.currentAppendCanceller = null;
     this._lastKeyId = null;
     this._callbacks = callbacks;
@@ -485,7 +485,7 @@ export class DummySourceBuffer
 
     this.updating = true;
 
-    const canceller = new TaskCanceller();
+    const canceller = new TaskCanceller("DummySourceBuffer append");
     canceller.linkToSignal(this.canceller.signal);
     this.currentAppendCanceller = canceller;
     this.eventScheduler

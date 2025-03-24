@@ -163,7 +163,7 @@ export default function StreamOrchestrator(
     let enableOutOfBoundsCheck = false;
 
     /** Cancels currently created `PeriodStream`s. */
-    let currentCanceller = new TaskCanceller();
+    let currentCanceller = new TaskCanceller("SO Streams " + bufferType);
     currentCanceller.linkToSignal(orchestratorCancelSignal);
 
     // Restart the current Stream when the wanted time is in another period
@@ -197,7 +197,7 @@ export default function StreamOrchestrator(
           callbacks.periodStreamCleared({ type: bufferType, manifest, period });
         }
         currentCanceller.cancel();
-        currentCanceller = new TaskCanceller();
+        currentCanceller = new TaskCanceller("SO Streams " + bufferType);
         currentCanceller.linkToSignal(orchestratorCancelSignal);
 
         // As previous callbacks may have performed unknown side-effects, just
@@ -361,7 +361,7 @@ export default function StreamOrchestrator(
       }
 
       currentCanceller.cancel();
-      currentCanceller = new TaskCanceller();
+      currentCanceller = new TaskCanceller("SO Streams " + bufferType);
       currentCanceller.linkToSignal(orchestratorCancelSignal);
 
       /** Remove from the `SegmentSink` all the concerned time ranges. */
@@ -495,7 +495,7 @@ export default function StreamOrchestrator(
     } | null = null;
 
     /** Emits when the `PeriodStream` linked to `basePeriod` should be destroyed. */
-    const currentStreamCanceller = new TaskCanceller();
+    const currentStreamCanceller = new TaskCanceller("SO Consecutive " + bufferType);
     currentStreamCanceller.linkToSignal(cancelSignal);
 
     // Stop current PeriodStream when the current position goes over the end of
@@ -610,7 +610,7 @@ export default function StreamOrchestrator(
         });
         nextStreamInfo.canceller.cancel();
       }
-      const nextStreamCanceller = new TaskCanceller();
+      const nextStreamCanceller = new TaskCanceller("SO Next " + bufferType);
       nextStreamCanceller.linkToSignal(cancelSignal);
       nextStreamInfo = { canceller: nextStreamCanceller, period: nextPeriod };
       manageConsecutivePeriodStreams(

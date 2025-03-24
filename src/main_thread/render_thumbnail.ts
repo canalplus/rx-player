@@ -50,7 +50,7 @@ export default async function renderThumbnail(
   }
 
   const { thumbnailRequestsInfo, currentContentCanceller } = contentInfos;
-  const canceller = new TaskCanceller();
+  const canceller = new TaskCanceller("Render Thumbnail");
   const unlinkCanceller = canceller.linkToSignal(currentContentCanceller.signal);
 
   let imageUrl: string | undefined;

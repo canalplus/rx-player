@@ -102,7 +102,7 @@ export default function RepresentationStream<TSegmentDataType>(
   const bufferType = adaptation.type;
 
   /** `TaskCanceller` stopping operations performed by the `RepresentationStream` */
-  const canceller = new TaskCanceller();
+  const canceller = new TaskCanceller("RepresentationStream");
   canceller.linkToSignal(parentCancelSignal);
 
   /** Saved initialization segment state for this representation. */

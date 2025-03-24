@@ -110,8 +110,8 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
-    this._sizeUpdateCanceller = new TaskCanceller();
-    this._subtitlesIntervalCanceller = new TaskCanceller();
+    this._sizeUpdateCanceller = new TaskCanceller("HTD Size");
+    this._subtitlesIntervalCanceller = new TaskCanceller("HTD Sub");
     this._buffer = new TextTrackCuesStore();
     this._currentCues = [];
     this._isAutoRefreshing = false;
@@ -232,7 +232,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       this.refreshSubtitles();
       this._isAutoRefreshing = false;
       this._subtitlesIntervalCanceller.cancel();
-      this._subtitlesIntervalCanceller = new TaskCanceller();
+      this._subtitlesIntervalCanceller = new TaskCanceller("HTD Sub");
     }
     return convertToRanges(this._buffered);
   }
@@ -248,7 +248,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
   public reset(): void {
     log.debug("text", "Resetting HTMLTextDisplayer");
     this.stop();
-    this._subtitlesIntervalCanceller = new TaskCanceller();
+    this._subtitlesIntervalCanceller = new TaskCanceller("HTD Sub");
   }
 
   public stop(): void {
@@ -314,7 +314,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     );
 
     if (proportionalCues.length > 0) {
-      this._sizeUpdateCanceller = new TaskCanceller();
+      this._sizeUpdateCanceller = new TaskCanceller("HTD Size");
       this._sizeUpdateCanceller.linkToSignal(this._subtitlesIntervalCanceller.signal);
       const { TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config.getCurrent();
       // update propertionally-sized elements periodically
@@ -360,7 +360,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     const startAutoRefresh = () => {
       stopAutoRefresh();
       this._isAutoRefreshing = true;
-      autoRefreshCanceller = new TaskCanceller();
+      autoRefreshCanceller = new TaskCanceller("HTD Auto-Refresh");
       autoRefreshCanceller.linkToSignal(cancellationSignal);
       const intervalId = setInterval(
         () => this.refreshSubtitles(),

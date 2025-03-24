@@ -39,7 +39,7 @@ export default function getLoadedReference(
   isDirectfile: boolean,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
-  const listenCanceller = new TaskCanceller();
+  const listenCanceller = new TaskCanceller("LoadedRef");
   listenCanceller.linkToSignal(cancelSignal);
   const isLoaded = new SharedReference(false, listenCanceller.signal);
   playbackObserver.listen(

@@ -133,15 +133,24 @@ export default class TaskCanceller {
    */
   private _trigger: (error: CancellationError) => void;
 
+  private _taskName: string | undefined;
+
   /**
    * Creates a new `TaskCanceller`, with its own `CancellationSignal` created
    * as its `signal` provide.
    * You can then pass this property to async task you wish to be cancellable.
+   * @param {string|undefined} taskName - Choosen descriptive "name" for the
+   * task, that will be added to the linked `CancellationError`'s message
+   * if/when thrown. The idea is that `TaskCanceller`-linked bugs are very hard
+   * to trace. By adding a descriptive string for the task, it makes the job of
+   * the RxPlayer maintainer easier to easily trace which task we're talking
+   * about.
    */
-  constructor() {
+  constructor(taskName: string | undefined) {
     const [trigger, register] = createCancellationFunctions();
     this._isUsed = false;
     this._trigger = trigger;
+    this._taskName = taskName;
     this.signal = new CancellationSignal(register);
   }
 
@@ -191,7 +200,7 @@ export default class TaskCanceller {
       return;
     }
     this._isUsed = true;
-    const cancellationError = srcError ?? new CancellationError();
+    const cancellationError = srcError ?? new CancellationError(this._taskName);
     this._trigger(cancellationError);
   }
 
@@ -337,9 +346,27 @@ export type ICancellationListener = (error: CancellationError) => void;
 export class CancellationError extends Error {
   public readonly name: "CancellationError";
 
-  constructor() {
-    const message = "This task was cancelled.";
+  /**
+   * Create a `CancellationError`
+   * @param {string|undefined} taskName - Choosen descriptive "name" for the
+   * task linked to that `CancellationError`, that will be added to this
+   * instance's error `message`.
+   * The idea is that `TaskCanceller`-linked bugs are very hard to trace.
+   * By adding a descriptive string for the task, it makes the job of the
+   * RxPlayer maintainer easier to easily trace which task we're talking
+   * about.
+   */
+  constructor(taskName: string | undefined) {
+    const message =
+      taskName !== undefined
+        ? `"${taskName}" task cancelled.`
+        : "This task was cancelled.";
     super(message);
+
+    if (taskName !== undefined) {
+      log.debug("utils", `task cancellation: "${taskName}"`);
+    }
+
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, CancellationError.prototype);
 

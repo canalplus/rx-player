@@ -143,7 +143,7 @@ export default function createThumbnailFetcher(
      * This is different than `cancellationSignal` which is linked to this call,
      * as several calls might share the same request.
      */
-    const requestCanceller = new TaskCanceller();
+    const requestCanceller = new TaskCanceller("Thumbnail request");
     const fetchPromise = doFetch();
     currRequestInfo = {
       thumbnailContext,

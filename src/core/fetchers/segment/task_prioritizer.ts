@@ -94,7 +94,7 @@ export default class TaskPrioritizer<T> {
           reject(err);
         };
 
-        const interrupter = new TaskCanceller();
+        const interrupter = new TaskCanceller(undefined);
         const unlinkInterrupter = interrupter.linkToSignal(cancelSignal);
         newTask.interrupter = interrupter;
         interrupter.signal.register(() => {
