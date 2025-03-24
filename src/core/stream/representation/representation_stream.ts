@@ -97,17 +97,9 @@ export default function RepresentationStream<TSegmentDataType>(
   const { bufferGoal, maxBufferSize, drmSystemId, fastSwitchThreshold } = options;
   const bufferType = adaptation.type;
 
-  /** `TaskCanceller` stopping ALL operations performed by the `RepresentationStream` */
-  const globalCanceller = new TaskCanceller();
-  globalCanceller.linkToSignal(parentCancelSignal);
-
-  /**
-   * `TaskCanceller` allowing to only stop segment loading and checking operations.
-   * This allows to stop only tasks linked to network resource usage, which is
-   * often a limited resource, while still letting buffer operations to finish.
-   */
-  const segmentsLoadingCanceller = new TaskCanceller();
-  segmentsLoadingCanceller.linkToSignal(globalCanceller.signal);
+  /** `TaskCanceller` stopping operations performed by the `RepresentationStream` */
+  const canceller = new TaskCanceller();
+  canceller.linkToSignal(parentCancelSignal);
 
   /** Saved initialization segment state for this representation. */
   const initSegmentState: IInitSegmentState = {
@@ -115,7 +107,7 @@ export default function RepresentationStream<TSegmentDataType>(
     uniqueId: null,
     isLoaded: false,
   };
-  globalCanceller.signal.register(() => {
+  canceller.signal.register(() => {
     // Free initialization segment if one has been declared
     if (initSegmentState.uniqueId !== null) {
       segmentBuffer.freeInitSegment(initSegmentState.uniqueId);
@@ -128,7 +120,7 @@ export default function RepresentationStream<TSegmentDataType>(
       initSegment: null,
       segmentQueue: [],
     },
-    segmentsLoadingCanceller.signal,
+    canceller.signal,
   );
 
   /** If `true`, the current Representation has a linked initialization segment. */
@@ -161,7 +153,7 @@ export default function RepresentationStream<TSegmentDataType>(
       callbacks.encryptionDataEncountered(
         encryptionData.map((d) => objectAssign({ content }, d)),
       );
-      if (globalCanceller.isUsed()) {
+      if (canceller.isUsed()) {
         return; // previous callback has stopped everything by side-effect
       }
     }
@@ -175,10 +167,10 @@ export default function RepresentationStream<TSegmentDataType>(
     hasInitSegment,
   );
   downloadingQueue.addEventListener("error", (err) => {
-    if (segmentsLoadingCanceller.signal.isCancelled()) {
+    if (canceller.signal.isCancelled()) {
       return; // ignore post requests-cancellation loading-related errors,
     }
-    globalCanceller.cancel(); // Stop every operations
+    canceller.cancel(); // Stop every operations
     callbacks.error(err);
   });
   downloadingQueue.addEventListener("parsedInitSegment", onParsedChunk);
@@ -186,7 +178,7 @@ export default function RepresentationStream<TSegmentDataType>(
   downloadingQueue.addEventListener("emptyQueue", checkStatus);
   downloadingQueue.addEventListener("requestRetry", (payload) => {
     callbacks.warning(payload.error);
-    if (segmentsLoadingCanceller.signal.isCancelled()) {
+    if (canceller.signal.isCancelled()) {
       return; // If the previous callback led to loading operations being stopped, skip
     }
     const retriedSegment = payload.segment;
@@ -199,35 +191,31 @@ export default function RepresentationStream<TSegmentDataType>(
   });
   downloadingQueue.addEventListener("fullyLoadedSegment", (segment) => {
     segmentBuffer
-      .endOfSegment(objectAssign({ segment }, content), globalCanceller.signal)
+      .endOfSegment(objectAssign({ segment }, content), canceller.signal)
       .catch(onFatalBufferError);
   });
   downloadingQueue.start();
-  segmentsLoadingCanceller.signal.register(() => {
+  canceller.signal.register(() => {
     downloadingQueue.removeEventListener();
     downloadingQueue.stop();
   });
 
   playbackObserver.listen(checkStatus, {
     includeLastObservation: false,
-    clearSignal: segmentsLoadingCanceller.signal,
+    clearSignal: canceller.signal,
   });
-  content.manifest.addEventListener(
-    "manifestUpdate",
-    checkStatus,
-    segmentsLoadingCanceller.signal,
-  );
+  content.manifest.addEventListener("manifestUpdate", checkStatus, canceller.signal);
   bufferGoal.onUpdate(checkStatus, {
     emitCurrentValue: false,
-    clearSignal: segmentsLoadingCanceller.signal,
+    clearSignal: canceller.signal,
   });
   maxBufferSize.onUpdate(checkStatus, {
     emitCurrentValue: false,
-    clearSignal: segmentsLoadingCanceller.signal,
+    clearSignal: canceller.signal,
   });
   terminate.onUpdate(checkStatus, {
     emitCurrentValue: false,
-    clearSignal: segmentsLoadingCanceller.signal,
+    clearSignal: canceller.signal,
   });
   checkStatus();
   return;
@@ -238,7 +226,7 @@ export default function RepresentationStream<TSegmentDataType>(
    * issues at the current time, calling the right callbacks if necessary.
    */
   function checkStatus(): void {
-    if (segmentsLoadingCanceller.isUsed()) {
+    if (canceller.isUsed()) {
       return; // Stop all buffer status checking if load operations are stopped
     }
     const observation = playbackObserver.getReference().getValue();
@@ -294,7 +282,7 @@ export default function RepresentationStream<TSegmentDataType>(
       log.debug("Stream: Urgent switch, terminate now.", bufferType);
       lastSegmentQueue.setValue({ initSegment: null, segmentQueue: [] });
       lastSegmentQueue.finish();
-      segmentsLoadingCanceller.cancel();
+      canceller.cancel();
       callbacks.terminating();
       return;
     } else {
@@ -319,7 +307,7 @@ export default function RepresentationStream<TSegmentDataType>(
       if (nextQueue.length === 0 && nextInit === null) {
         log.debug("Stream: No request left, terminate", bufferType);
         lastSegmentQueue.finish();
-        segmentsLoadingCanceller.cancel();
+        canceller.cancel();
         callbacks.terminating();
         return;
       }
@@ -334,7 +322,7 @@ export default function RepresentationStream<TSegmentDataType>(
       hasFinishedLoading: status.hasFinishedLoading,
       neededSegments: status.neededSegments,
     });
-    if (segmentsLoadingCanceller.signal.isCancelled()) {
+    if (canceller.signal.isCancelled()) {
       return; // previous callback has stopped loading operations by side-effect
     }
     const { UPTO_CURRENT_POSITION_CLEANUP } = config.getCurrent();
@@ -342,7 +330,7 @@ export default function RepresentationStream<TSegmentDataType>(
       const gcedPosition = Math.max(0, initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
       if (gcedPosition > 0) {
         segmentBuffer
-          .removeBuffer(0, gcedPosition, globalCanceller.signal)
+          .removeBuffer(0, gcedPosition, canceller.signal)
           .catch(onFatalBufferError);
       }
     }
@@ -361,11 +349,6 @@ export default function RepresentationStream<TSegmentDataType>(
       | IParsedInitSegmentPayload<TSegmentDataType>
       | IParsedSegmentPayload<TSegmentDataType>,
   ): void {
-    if (globalCanceller.isUsed()) {
-      // We should not do anything with segments if the `RepresentationStream`
-      // is not running anymore.
-      return;
-    }
     if (evt.segmentType === "init") {
       initSegmentState.isLoaded = true;
 
@@ -378,9 +361,6 @@ export default function RepresentationStream<TSegmentDataType>(
           callbacks.encryptionDataEncountered(
             allEncryptionData.map((p) => objectAssign({ content }, p)),
           );
-          if (globalCanceller.isUsed()) {
-            return; // previous callback has stopped everything by side-effect
-          }
         }
       }
 
@@ -397,7 +377,7 @@ export default function RepresentationStream<TSegmentDataType>(
             segmentData: evt.initializationData,
             segmentBuffer,
           },
-          globalCanceller.signal,
+          canceller.signal,
         )
           .then((result) => {
             if (result !== null) {
@@ -421,21 +401,18 @@ export default function RepresentationStream<TSegmentDataType>(
           callbacks.encryptionDataEncountered(
             allEncryptionData.map((p) => objectAssign({ content }, p)),
           );
-          if (globalCanceller.isUsed()) {
-            return; // previous callback has stopped everything by side-effect
-          }
         }
       }
 
       if (needsManifestRefresh === true) {
         callbacks.needsManifestRefresh();
-        if (globalCanceller.isUsed()) {
+        if (canceller.isUsed()) {
           return; // previous callback has stopped everything by side-effect
         }
       }
       if (inbandEvents !== undefined && inbandEvents.length > 0) {
         callbacks.inbandEvent(inbandEvents);
-        if (globalCanceller.isUsed()) {
+        if (canceller.isUsed()) {
           return; // previous callback has stopped everything by side-effect
         }
       }
@@ -450,7 +427,7 @@ export default function RepresentationStream<TSegmentDataType>(
           segment: evt.segment,
           segmentBuffer,
         },
-        globalCanceller.signal,
+        canceller.signal,
       )
         .then((result) => {
           if (result !== null) {
@@ -468,13 +445,13 @@ export default function RepresentationStream<TSegmentDataType>(
    * @param {*} err
    */
   function onFatalBufferError(err: unknown): void {
-    if (globalCanceller.isUsed() && err instanceof CancellationError) {
+    if (canceller.isUsed() && err instanceof CancellationError) {
       // The error is linked to cancellation AND we explicitely cancelled buffer
       // operations.
       // We can thus ignore it, it is very unlikely to lead to true buffer issues.
       return;
     }
-    globalCanceller.cancel();
+    canceller.cancel();
     callbacks.error(err);
   }
 }
