@@ -117,7 +117,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
         return;
       }
       this._updateToken = false;
-      this._canceller.cancel();
+      this._canceller.cancel("track update null");
 
       // has no point but let's still create one for simplicity sake
       this._canceller = new TaskCanceller("TD");
@@ -126,7 +126,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       return;
     }
     const { adaptation, switchingMode, relativeResumingPosition } = newTrackInfo;
-    this._canceller.cancel();
+    this._canceller.cancel("track update");
     this._canceller = new TaskCanceller("TD");
     const reference = this._constructLockedRepresentationsReference(newTrackInfo);
     if (!this._updateToken) {
@@ -238,7 +238,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    */
   public dispose(): void {
     this.removeEventListener();
-    this._canceller.cancel();
+    this._canceller.cancel("TD dispose");
     this._adaptationRef.finish();
   }
 }

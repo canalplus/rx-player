@@ -122,7 +122,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    * anymore.
    */
   public dispose() {
-    this._canceller.cancel();
+    this._canceller.cancel("MF dispose");
     this.removeEventListener();
   }
 
@@ -486,7 +486,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       );
       const timeoutId = setTimeout(
         () => {
-          nextRefreshCanceller.cancel();
+          nextRefreshCanceller.cancel("MF timeout");
           this._triggerNextManifestRefresh(manifest, {
             enablePartialRefresh,
             unsafeMode,
@@ -503,7 +503,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     if (manifest.expired !== null) {
       const timeoutId = setTimeout(() => {
         manifest.expired?.then(() => {
-          nextRefreshCanceller.cancel();
+          nextRefreshCanceller.cancel("MF expir");
           this._triggerNextManifestRefresh(manifest, {
             enablePartialRefresh: false,
             unsafeMode: unsafeModeEnabled,
@@ -573,7 +573,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       }
       const timeoutId = setTimeout(
         () => {
-          nextRefreshCanceller.cancel();
+          nextRefreshCanceller.cancel("MF timeout");
           this._triggerNextManifestRefresh(manifest, {
             enablePartialRefresh: false,
             unsafeMode: unsafeModeEnabled,

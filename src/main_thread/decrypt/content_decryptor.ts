@@ -352,7 +352,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       isInitDataQueueLocked: undefined,
       data: null,
     };
-    this._canceller.cancel();
+    this._canceller.cancel("CD dispose");
     this.trigger("stateChange", this._stateData.state);
   }
 
@@ -945,7 +945,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       isInitDataQueueLocked: undefined,
       data: null,
     };
-    this._canceller.cancel();
+    this._canceller.cancel("CD err");
     this.trigger("error", formattedErr);
 
     // The previous trigger might have lead to a disposal of the `ContentDecryptor`.

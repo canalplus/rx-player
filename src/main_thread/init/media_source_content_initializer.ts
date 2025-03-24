@@ -1300,7 +1300,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   public dispose(): void {
-    this._initCanceller.cancel();
+    this._initCanceller.cancel("Init MT dispose");
     if (this._currentContentInfo !== null) {
       if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
         this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
@@ -1313,7 +1313,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     if (this._initCanceller.isUsed()) {
       return;
     }
-    this._initCanceller.cancel();
+    this._initCanceller.cancel("Init MT dispose");
     this.trigger("error", err);
   }
 
@@ -1546,7 +1546,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     position: number,
     autoPlay: boolean,
   ) {
-    this._currentMediaSourceCanceller.cancel();
+    this._currentMediaSourceCanceller.cancel("Init MT MS R");
     this._currentMediaSourceCanceller = new TaskCanceller("Init MS");
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     mediaSourceStatus.setValue(MediaSourceInitializationStatus.AttachNow);

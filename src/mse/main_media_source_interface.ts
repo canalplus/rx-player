@@ -178,7 +178,7 @@ export default class MainMediaSourceInterface
   public stopEndOfStream() {
     if (this._endOfStreamCanceller !== null) {
       log.debug("mse", "resume-stream order received.");
-      this._endOfStreamCanceller.cancel();
+      this._endOfStreamCanceller.cancel("MSI stop EOS");
       this._endOfStreamCanceller = null;
     }
   }
@@ -186,7 +186,7 @@ export default class MainMediaSourceInterface
   /** @see IMediaSourceInterface */
   public dispose() {
     this.sourceBuffers.forEach((s) => s.dispose());
-    this._canceller.cancel();
+    this._canceller.cancel("MSI dispose");
     resetMediaSource(this._mediaSource);
   }
 }
@@ -361,7 +361,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   private _emptyCurrentQueue(): void {
-    const error = new CancellationError("SBI empty");
+    const error = new CancellationError("SBI empty", "empty");
     if (this._currentOperations.length > 0) {
       this._currentOperations.forEach((op) => {
         op.reject(error);

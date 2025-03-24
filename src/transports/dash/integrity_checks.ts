@@ -34,7 +34,7 @@ export function addSegmentIntegrityChecks<T>(
             cleanUpCancellers();
 
             // Cancel the request
-            requestCanceller.cancel();
+            requestCanceller.cancel("Integrity check failed");
 
             // Reject with thrown error
             reject(err);

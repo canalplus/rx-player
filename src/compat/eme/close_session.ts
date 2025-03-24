@@ -37,12 +37,12 @@ export default function closeSession(session: IMediaKeySession): Promise<void> {
 
   return Promise.race([
     session.close().then(() => {
-      timeoutCanceller.cancel();
+      timeoutCanceller.cancel("MKS close manual");
     }),
     // The `closed` promise may resolve, even if `close()` result has not
     // (seen at some point on Firefox).
     session.closed.then(() => {
-      timeoutCanceller.cancel();
+      timeoutCanceller.cancel("MKS closed Prom");
     }),
     waitTimeoutAndCheck(),
   ]);

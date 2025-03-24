@@ -158,7 +158,7 @@ export default function RepresentationStream<TSegmentDataType>(
     if (canceller.signal.isCancelled()) {
       return; // ignore post requests-cancellation loading-related errors,
     }
-    canceller.cancel(); // Stop every operations
+    canceller.cancel("SegmentQueue err"); // Stop every operations
     callbacks.error(err);
   });
   segmentQueue.addEventListener("parsedInitSegment", onParsedChunk, canceller.signal);
@@ -290,7 +290,7 @@ export default function RepresentationStream<TSegmentDataType>(
       });
       segmentsToLoadRef.setValue({ initSegment: null, segmentQueue: [] });
       segmentsToLoadRef.finish();
-      canceller.cancel();
+      canceller.cancel("RepresentationStream Urgent Termination");
       callbacks.terminating();
       return;
     } else {
@@ -321,7 +321,7 @@ export default function RepresentationStream<TSegmentDataType>(
           representationBitrate: content.representation.bitrate,
         });
         segmentsToLoadRef.finish();
-        canceller.cancel();
+        canceller.cancel("RepresentationStream non-urgent switch");
         callbacks.terminating();
         return;
       }
@@ -482,7 +482,7 @@ export default function RepresentationStream<TSegmentDataType>(
       },
       err instanceof Error ? err : null,
     );
-    canceller.cancel();
+    canceller.cancel("RepresentationStream fatal buffer err");
     callbacks.error(err);
   }
 }

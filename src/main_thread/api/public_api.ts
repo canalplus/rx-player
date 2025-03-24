@@ -691,7 +691,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   stop(): void {
     if (this._priv_contentInfos !== null) {
-      this._priv_contentInfos.currentContentCanceller.cancel();
+      this._priv_contentInfos.currentContentCanceller.cancel("stop");
     }
     this._priv_cleanUpCurrentContentState();
     if (this.state !== PLAYER_STATES.STOPPED) {
@@ -717,7 +717,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     // free resources linked to the Player instance
-    this._destroyCanceller.cancel();
+    this._destroyCanceller.cancel("destroy");
 
     this._priv_reloadingMetadata = {};
 
@@ -812,7 +812,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     features.createDebugElement(element, this, canceller.signal);
     return {
       dispose() {
-        canceller.cancel();
+        canceller.cancel("dispose");
       },
     };
   }
@@ -1343,7 +1343,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      */
     const triggerPlayPauseEventsWhenReady = (willAutoPlay: boolean) => {
       if (playPauseEventsCanceller !== null) {
-        playPauseEventsCanceller.cancel(); // cancel previous logic
+        playPauseEventsCanceller.cancel("reset"); // cancel previous logic
         playPauseEventsCanceller = null;
       }
       playerStateRef.onUpdate(
@@ -1353,7 +1353,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           }
           stopListeningToStateUpdates();
           if (playPauseEventsCanceller !== null) {
-            playPauseEventsCanceller.cancel();
+            playPauseEventsCanceller.cancel("reset");
           }
           playPauseEventsCanceller = new TaskCanceller("API Play/Pause");
           playPauseEventsCanceller.linkToSignal(currentContentCanceller.signal);
@@ -1406,7 +1406,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
         if (seekEventsCanceller !== null) {
           if (!isLoadedState(this.state)) {
-            seekEventsCanceller.cancel();
+            seekEventsCanceller.cancel("Player State Update");
             seekEventsCanceller = null;
           }
         } else if (isLoadedState(this.state)) {
@@ -3561,7 +3561,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       defaultReason: "An unknown error stopped content playback.",
     });
     formattedError.fatal = true;
-    contentInfos.currentContentCanceller.cancel();
+    contentInfos.currentContentCanceller.cancel("fatal err");
     this._priv_cleanUpCurrentContentState();
     this._priv_currentError = formattedError;
     log.error("API", "The player stopped because of an error", formattedError);

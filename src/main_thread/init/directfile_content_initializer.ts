@@ -191,7 +191,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * Stop content and free all resources linked to this `ContentIntializer`.
    */
   public dispose(): void {
-    this._initCanceller.cancel();
+    this._initCanceller.cancel("Directfile Init dispose");
   }
 
   /**
@@ -199,7 +199,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * @param {*} err - The fatal error in question.
    */
   private _onFatalError(err: unknown): void {
-    this._initCanceller.cancel();
+    this._initCanceller.cancel("Directfile Init err");
     this.trigger("error", err);
   }
 

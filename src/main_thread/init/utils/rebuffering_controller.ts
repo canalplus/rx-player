@@ -335,7 +335,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
    * forever.
    */
   public destroy(): void {
-    this._canceller.cancel();
+    this._canceller.cancel("RC destroy");
   }
 }
 
@@ -525,7 +525,7 @@ class PlaybackRateUpdater {
       return;
     }
     this._isRebuffering = true;
-    this._speedUpdateCanceller.cancel();
+    this._speedUpdateCanceller.cancel("PRU start rebuf");
     log.info("Init", "Pause playback to build buffer");
     this._playbackObserver.setPlaybackRate(0);
   }
@@ -553,7 +553,7 @@ class PlaybackRateUpdater {
    * `PlaybackRateUpdater` to have an effect anymore.
    */
   public dispose() {
-    this._speedUpdateCanceller.cancel();
+    this._speedUpdateCanceller.cancel("PRU dispose");
     this._isDisposed = true;
   }
 

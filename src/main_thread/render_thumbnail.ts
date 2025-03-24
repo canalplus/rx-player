@@ -56,13 +56,13 @@ export default async function renderThumbnail(
   let imageUrl: string | undefined;
 
   const olderTaskSameContainer = thumbnailRequestsInfo.pendingRequests.get(container);
-  olderTaskSameContainer?.cancel();
+  olderTaskSameContainer?.cancel("thumb same container");
 
   thumbnailRequestsInfo.pendingRequests.set(container, canceller);
 
   const onFinished = () => {
     unlinkCanceller();
-    canceller.cancel();
+    canceller.cancel("thumb finished");
     thumbnailRequestsInfo.pendingRequests.delete(container);
 
     // Let's revoke the URL after a round-trip to the event loop just in case

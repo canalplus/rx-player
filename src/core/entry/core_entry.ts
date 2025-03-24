@@ -573,12 +573,12 @@ function loadPreparedContent(
       return onMediaSourceReload();
     },
     stop: () => {
-      contentCanceller.cancel();
+      contentCanceller.cancel("ContentHandle stop");
     },
   };
 
   function startLoadingAt(startTime: number): void {
-    currentLoadCanceller?.cancel();
+    currentLoadCanceller?.cancel("Reloading content worker");
     currentLoadCanceller = new TaskCanceller("(Re)Loading Content Worker");
     currentLoadCanceller.linkToSignal(contentCanceller.signal);
 
@@ -980,7 +980,7 @@ function loadPreparedContent(
 
   function performMediaSourceReload(payload: INeedsMediaSourceReloadPayload): void {
     if (currentLoadCanceller !== null) {
-      currentLoadCanceller.cancel();
+      currentLoadCanceller.cancel("WM MS reload");
       currentLoadCanceller = null;
     }
     const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource.id;
@@ -1010,7 +1010,7 @@ function loadPreparedContent(
     const lastObservation = playbackObservationRef.getValue();
     const newInitialTime = lastObservation.position.getWanted();
     if (currentLoadCanceller !== null) {
-      currentLoadCanceller.cancel();
+      currentLoadCanceller.cancel("MediaSource reload");
       currentLoadCanceller = null;
     }
     const contentId = contentPreparer.getCurrentContent()?.contentId;

@@ -125,7 +125,7 @@ export default function initializeContentDecryption(
   });
 
   contentDecryptor.addEventListener("error", (error) => {
-    decryptorCanceller.cancel();
+    decryptorCanceller.cancel("CD err");
     callbacks.onError(error);
   });
 

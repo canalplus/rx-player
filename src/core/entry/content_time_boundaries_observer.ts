@@ -265,7 +265,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
    */
   public dispose() {
     this.removeEventListener();
-    this._canceller.cancel();
+    this._canceller.cancel("CTBO dispose");
   }
 
   private _addActivelyLoadedPeriod(period: IPeriod, bufferType: IBufferType): void {

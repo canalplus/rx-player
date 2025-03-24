@@ -218,7 +218,7 @@ export default function createThumbnailFetcher(
       }
       pendingRequestsInfo[requestIdx].referenceCount--;
       if (pendingRequestsInfo[requestIdx].referenceCount <= 0) {
-        requestCanceller.cancel();
+        requestCanceller.cancel("Thumbnail request aborted");
         pendingRequestsInfo.splice(requestIdx, 1);
       }
     }

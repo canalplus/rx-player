@@ -127,7 +127,7 @@ export default function PeriodStream(
 
         const streamCanceller = new TaskCanceller("PS Adap " + bufferType);
         streamCanceller.linkToSignal(parentCancelSignal);
-        currentStreamCanceller?.cancel(); // Cancel previously created stream if one
+        currentStreamCanceller?.cancel("PS adap update"); // Cancel previously created stream if one
         currentStreamCanceller = streamCanceller;
 
         if (choice === null) {
@@ -192,7 +192,7 @@ export default function PeriodStream(
           (a) => a.id === choice.adaptationId,
         );
         if (adaptation === undefined) {
-          currentStreamCanceller.cancel();
+          currentStreamCanceller.cancel("PS adap not found");
           log.warn("Stream", "Unfound chosen Adaptation choice", {
             adaptationId: choice.adaptationId,
           });
@@ -332,7 +332,7 @@ export default function PeriodStream(
         if (err instanceof CancellationError) {
           return;
         }
-        currentStreamCanceller?.cancel();
+        currentStreamCanceller?.cancel("PS err");
         callbacks.error(err);
       });
     },

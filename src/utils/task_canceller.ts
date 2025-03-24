@@ -28,7 +28,7 @@ import noop from "./noop";
  * To do that, the code which might ask for cancellation have to create a new
  * `TaskCanceller`:
  * ```js
- * const canceller = new TaskCanceller();
+ * const canceller = new TaskCanceller("my Task");
  * ```
  *
  * And has to provide its associated `CancellationSignal` to the code running
@@ -69,7 +69,7 @@ import noop from "./noop";
  *    // expected that the same Error instance is used when rejecting Promises.
  *    function onCancellation(error : CancellationError) {
  *      // abort asynchronous task
- *      myCancellableTask.cancel();
+ *      myCancellableTask.cancel(error.reason);
  *
  *      // In this example, reject the current pending Promise
  *      reject(CancellationError);
@@ -100,7 +100,7 @@ import noop from "./noop";
  * (even before the signal was given) and listen to possible CancellationErrors
  * to know when it was cancelled.
  * ```js
- * const canceller = new TaskCanceller();
+ * const canceller = new TaskCanceller("my Task");
  *
  * runAsyncTask(canceller.signal)
  *   .then(() => { console.log("Task succeeded!"); )
@@ -111,7 +111,7 @@ import noop from "./noop";
  *        console.log("Task failed:", err);
  *      }
  *   });
- * canceller.cancel(); // Cancel the task, calling registered callbacks
+ * canceller.cancel("Stopping"); // Cancel the task, calling registered callbacks
  * ```
  * @class TaskCanceller
  */
@@ -177,8 +177,8 @@ export default class TaskCanceller {
    * @returns {Function}
    */
   public linkToSignal(signal: CancellationSignal): () => void {
-    const unregister = signal.register(() => {
-      this.cancel();
+    const unregister = signal.register((error) => {
+      this.cancel(error.reason);
     });
     this.signal.register(unregister);
     return unregister;
@@ -189,18 +189,16 @@ export default class TaskCanceller {
    * `CancellationSignal` (its `signal` property) that a task should be aborted.
    *
    * Once called the `TaskCanceller` is permanently triggered.
-   *
-   * An optional CancellationError can be given in argument for when this
-   * cancellation is actually triggered as a chain reaction from a previous
-   * cancellation.
-   * @param {Error} [srcError]
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * cancellation. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public cancel(srcError?: CancellationError): void {
+  public cancel(reason: string | undefined): void {
     if (this._isUsed) {
       return;
     }
     this._isUsed = true;
-    const cancellationError = srcError ?? new CancellationError(this._taskName);
+    const cancellationError = new CancellationError(this._taskName, reason);
     this._trigger(cancellationError);
   }
 
@@ -346,6 +344,8 @@ export type ICancellationListener = (error: CancellationError) => void;
 export class CancellationError extends Error {
   public readonly name: "CancellationError";
 
+  public readonly reason: string | undefined;
+
   /**
    * Create a `CancellationError`
    * @param {string|undefined} taskName - Choosen descriptive "name" for the
@@ -356,21 +356,29 @@ export class CancellationError extends Error {
    * RxPlayer maintainer easier to easily trace which task we're talking
    * about.
    */
-  constructor(taskName: string | undefined) {
-    const message =
+  constructor(taskName: string | undefined, reason: string | undefined) {
+    let message =
       taskName !== undefined
         ? `"${taskName}" task cancelled.`
         : "This task was cancelled.";
-    super(message);
-
-    if (taskName !== undefined) {
-      log.debug("utils", `task cancellation: "${taskName}"`);
+    if (reason !== undefined) {
+      message += " Reason: " + reason;
     }
+    super(message);
 
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, CancellationError.prototype);
 
     this.name = "CancellationError";
+    this.reason = reason;
+
+    if (taskName !== undefined) {
+      log.debug(
+        "utils",
+        `task cancellation: "${taskName}"` +
+          (reason === undefined ? "" : ` - Reason: "${reason}"`),
+      );
+    }
   }
 }
 
