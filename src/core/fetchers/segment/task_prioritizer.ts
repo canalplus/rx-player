@@ -342,7 +342,7 @@ export default class TaskPrioritizer<T> {
     } else if (this._minPendingPriority === task.priority) {
       this._minPendingPriority = Math.min(...this._pendingTasks.map((t) => t.priority));
     }
-    task.interrupter?.cancel(); // Interrupt at last step because it calls external code
+    task.interrupter?.cancel("TP interrupt"); // Interrupt at last step because it calls external code
   }
 
   /**

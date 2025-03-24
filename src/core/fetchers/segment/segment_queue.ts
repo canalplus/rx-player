@@ -137,7 +137,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     content: ISegmentQueueContext,
     hasInitSegment: boolean,
   ): SharedReference<ISegmentQueueItem> {
-    this._currentContentInfo?.currentCanceller.cancel();
+    this._currentContentInfo?.currentCanceller.cancel("SQ reset");
     const downloadQueue = new SharedReference<ISegmentQueueItem>({
       initSegment: null,
       segmentQueue: [],
@@ -267,7 +267,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
    * Do nothing if no queue is active.
    */
   public stop() {
-    this._currentContentInfo?.currentCanceller.cancel();
+    this._currentContentInfo?.currentCanceller.cancel("SQ stop");
     this._currentContentInfo = null;
   }
 
@@ -278,7 +278,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     contentInfo: ISegmentQueueContentInfo,
   ): void {
     if (contentInfo.mediaSegmentRequest !== null) {
-      contentInfo.mediaSegmentRequest.canceller.cancel();
+      contentInfo.mediaSegmentRequest.canceller.cancel("SQ media restart");
     }
 
     const { downloadQueue, content, initSegmentInfoRef, currentCanceller } = contentInfo;
@@ -469,7 +469,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     const { content, initSegmentInfoRef } = contentInfo;
 
     if (contentInfo.initSegmentRequest !== null) {
-      contentInfo.initSegmentRequest.canceller.cancel();
+      contentInfo.initSegmentRequest.canceller.cancel("SQ init restart");
     }
     if (queuedInitSegment === null) {
       return;

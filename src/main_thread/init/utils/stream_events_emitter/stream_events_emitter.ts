@@ -93,7 +93,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
       ({ length: scheduledEventsLength }) => {
         if (scheduledEventsLength === 0) {
           if (isPollingEvents) {
-            cancelCurrentPolling.cancel();
+            cancelCurrentPolling.cancel("SSE no event");
             cancelCurrentPolling = new TaskCanceller("SEE Polling");
             cancelCurrentPolling.linkToSignal(cancelSignal);
             isPollingEvents = false;
@@ -149,7 +149,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
 
   public stop(): void {
     if (this._canceller !== null) {
-      this._canceller.cancel();
+      this._canceller.cancel("SSE stop");
       this._canceller = null;
     }
   }

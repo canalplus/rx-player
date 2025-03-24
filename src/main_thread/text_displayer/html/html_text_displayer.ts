@@ -231,7 +231,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     if (this._isAutoRefreshing && this._buffer.isEmpty()) {
       this.refreshSubtitles();
       this._isAutoRefreshing = false;
-      this._subtitlesIntervalCanceller.cancel();
+      this._subtitlesIntervalCanceller.cancel("HTD empty");
       this._subtitlesIntervalCanceller = new TaskCanceller("HTD Sub");
     }
     return convertToRanges(this._buffered);
@@ -260,14 +260,14 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     this._buffer.remove(0, Infinity);
     this._buffered.remove(0, Infinity);
     this._isAutoRefreshing = false;
-    this._subtitlesIntervalCanceller.cancel();
+    this._subtitlesIntervalCanceller.cancel("HTD stop");
   }
 
   /**
    * Remove the current cue from being displayed.
    */
   private _disableCurrentCues(): void {
-    this._sizeUpdateCanceller.cancel();
+    this._sizeUpdateCanceller.cancel("HTD disable curr");
     if (this._currentCues.length > 0) {
       for (const cue of this._currentCues) {
         safelyRemoveChild(this._textTrackElement, cue.element);
@@ -292,7 +292,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     // Remove and re-display everything
     // TODO More intelligent handling
 
-    this._sizeUpdateCanceller.cancel();
+    this._sizeUpdateCanceller.cancel("HTD display");
     for (const cue of this._currentCues) {
       safelyRemoveChild(this._textTrackElement, cue.element);
     }
@@ -353,7 +353,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     const stopAutoRefresh = () => {
       this._isAutoRefreshing = false;
       if (autoRefreshCanceller !== null) {
-        autoRefreshCanceller.cancel();
+        autoRefreshCanceller.cancel("HTD stop auto");
         autoRefreshCanceller = null;
       }
     };

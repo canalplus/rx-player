@@ -74,7 +74,7 @@ export default class MediaSourceDurationUpdater {
    */
   public updateDuration(newDuration: number, isRealEndKnown: boolean): void {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
-      this._currentMediaSourceDurationUpdateCanceller.cancel();
+      this._currentMediaSourceDurationUpdateCanceller.cancel("reset mdu");
     }
     this._currentMediaSourceDurationUpdateCanceller = new TaskCanceller(
       "MediaSource Duration Update",
@@ -96,7 +96,7 @@ export default class MediaSourceDurationUpdater {
     });
 
     function onMediaSourceOpenedStatusChanged() {
-      msOpenStatusCanceller.cancel();
+      msOpenStatusCanceller.cancel("ms opened");
       if (!isMediaSourceOpened.getValue()) {
         return;
       }
@@ -114,7 +114,7 @@ export default class MediaSourceDurationUpdater {
 
       return areSourceBuffersUpdating.onUpdate(
         (areUpdating) => {
-          sourceBuffersUpdatingCanceller.cancel();
+          sourceBuffersUpdatingCanceller.cancel("sb status update");
           sourceBuffersUpdatingCanceller = new TaskCanceller(undefined);
           sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
           if (areUpdating) {
@@ -138,7 +138,7 @@ export default class MediaSourceDurationUpdater {
    */
   public stopUpdating() {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
-      this._currentMediaSourceDurationUpdateCanceller.cancel();
+      this._currentMediaSourceDurationUpdateCanceller.cancel("stop MSDU");
       this._currentMediaSourceDurationUpdateCanceller = null;
     }
   }

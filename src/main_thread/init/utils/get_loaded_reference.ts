@@ -60,7 +60,7 @@ export default function getLoadedReference(
         }
         if (observation.duration > 0) {
           isLoaded.setValue(true);
-          listenCanceller.cancel();
+          listenCanceller.cancel("Loaded");
           return;
         }
       }
@@ -70,7 +70,7 @@ export default function getLoadedReference(
         if (observation.currentRange !== null || observation.ended) {
           if (!shouldValidateMetadata() || observation.duration > 0) {
             isLoaded.setValue(true);
-            listenCanceller.cancel();
+            listenCanceller.cancel("Loaded");
             return;
           }
         }

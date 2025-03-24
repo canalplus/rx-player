@@ -321,7 +321,7 @@ export async function scheduleRequestWithCdns<T>(
             return cleanAndReject(prevRequestError);
           }
           if (updatedPrioritaryCdn !== nextWantedCdn) {
-            canceller.cancel();
+            canceller.cancel("SR new prio CDN");
             waitPotentialBackoffAndRequest(updatedPrioritaryCdn, prevRequestError).then(
               cleanAndResolve,
               cleanAndReject,

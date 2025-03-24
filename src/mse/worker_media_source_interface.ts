@@ -155,7 +155,7 @@ export default class WorkerMediaSourceInterface
 
   public dispose() {
     this.sourceBuffers.forEach((s) => s.dispose());
-    this._canceller.cancel();
+    this._canceller.cancel("dispose WMSI");
     this._messageSender({
       type: CoreMessageType.DisposeMediaSource,
       mediaSourceId: this.id,
@@ -250,7 +250,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   ): void {
     const formattedErr =
       error.errorName === "CancellationError"
-        ? new CancellationError("Pending SBI Operation")
+        ? new CancellationError("Pending SBI Operation", "SBI Failure")
         : new SourceBufferError(error.errorName, error.message, error.isBufferFull);
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
@@ -260,7 +260,10 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
       mapElt.reject(formattedErr);
     }
 
-    const cancellationError = new CancellationError("Queued SBI Operation");
+    const cancellationError = new CancellationError(
+      "Queued SBI Operation",
+      "SBI failure",
+    );
     for (const operation of this._queuedOperations) {
       operation.reject(cancellationError);
     }
@@ -361,7 +364,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
 
   public dispose(): void {
     this.abort();
-    this._canceller.cancel();
+    this._canceller.cancel("dispose WSBI");
   }
 
   public getBuffered(): undefined {

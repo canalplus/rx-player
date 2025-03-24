@@ -117,7 +117,7 @@ class IE11MediaKeySession
         this._ss.close();
         this._ss = undefined;
       }
-      this._sessionClosingCanceller.cancel();
+      this._sessionClosingCanceller.cancel("ie11 MKS close");
       resolve();
     });
   }

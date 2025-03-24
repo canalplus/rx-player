@@ -175,7 +175,7 @@ export default function AdaptationStream(
   content.representations.onUpdate(
     (val) => {
       if (cancelCurrentStreams !== undefined) {
-        cancelCurrentStreams.cancel();
+        cancelCurrentStreams.cancel("AS rep restart");
       }
       const newRepIds = content.representations.getValue().representationIds;
 
@@ -196,7 +196,7 @@ export default function AdaptationStream(
         ) {
           return;
         }
-        adapStreamCanceller.cancel();
+        adapStreamCanceller.cancel("AS rep err");
         callbacks.error(err);
       });
     },
@@ -370,7 +370,7 @@ export default function AdaptationStream(
       inbandEvent: callbacks.inbandEvent,
       warning: callbacks.warning,
       error(err: unknown) {
-        adapStreamCanceller.cancel();
+        adapStreamCanceller.cancel("AS rep err");
         callbacks.error(err);
       },
       addedSegment(segmentInfo) {
@@ -380,7 +380,7 @@ export default function AdaptationStream(
         if (repStreamTerminatingCanceller.isUsed()) {
           return; // Already handled
         }
-        repStreamTerminatingCanceller.cancel();
+        repStreamTerminatingCanceller.cancel("AS rep term.");
         return recursivelyCreateRepresentationStreams(fnCancelSignal);
       },
     };
@@ -483,7 +483,7 @@ export default function AdaptationStream(
         }
       },
       terminating() {
-        bufferGoalCanceller.cancel();
+        bufferGoalCanceller.cancel("Rep term.");
         representationStreamCallbacks.terminating();
       },
     });

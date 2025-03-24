@@ -495,8 +495,8 @@ function getEstimateReference(
    */
   function restartEstimatesProductionFromCurrentConditions(): void {
     const representations = representationsRef.getValue();
-    currentEstimatesCanceller.cancel();
-    currentEstimatesCanceller = new TaskCanceller("Current estimates");
+    currentEstimatesCanceller.cancel("restart");
+    currentEstimatesCanceller = new TaskCanceller("ARS estimates");
     currentEstimatesCanceller.linkToSignal(stopAllEstimates);
     const newRef = createEstimateReference(
       representations,

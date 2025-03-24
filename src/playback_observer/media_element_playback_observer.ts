@@ -214,7 +214,7 @@ export default class PlaybackObserver {
    * more needed to avoid unnecessarily leaking resources.
    */
   public stop() {
-    this._canceller.cancel();
+    this._canceller.cancel("stop pbo");
   }
 
   /**

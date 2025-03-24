@@ -88,7 +88,7 @@ export default function triggerEndOfStream(
     onSourceBufferUpdate(
       sourceBuffer,
       () => {
-        innerCanceller.cancel();
+        innerCanceller.cancel("SB update");
         triggerEndOfStream(mediaSource, cancelSignal);
       },
       innerCanceller.signal,
@@ -98,7 +98,7 @@ export default function triggerEndOfStream(
   onRemoveSourceBuffers(
     sourceBuffers,
     () => {
-      innerCanceller.cancel();
+      innerCanceller.cancel("SB remove");
       triggerEndOfStream(mediaSource, cancelSignal);
     },
     innerCanceller.signal,
@@ -121,7 +121,7 @@ export function maintainEndOfStream(
     mediaSource,
     () => {
       log.debug("mse", "MediaSource re-opened while end-of-stream is active");
-      endOfStreamCanceller.cancel();
+      endOfStreamCanceller.cancel("MS re-opened");
       endOfStreamCanceller = new TaskCanceller("EOS");
       endOfStreamCanceller.linkToSignal(cancelSignal);
       triggerEndOfStream(mediaSource, endOfStreamCanceller.signal);
