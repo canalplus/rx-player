@@ -76,7 +76,9 @@ export default class MediaSourceDurationUpdater {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
       this._currentMediaSourceDurationUpdateCanceller.cancel();
     }
-    this._currentMediaSourceDurationUpdateCanceller = new TaskCanceller();
+    this._currentMediaSourceDurationUpdateCanceller = new TaskCanceller(
+      "MediaSource Duration Update",
+    );
 
     const mediaSource = this._mediaSource;
     const currentSignal = this._currentMediaSourceDurationUpdateCanceller.signal;
@@ -86,7 +88,7 @@ export default class MediaSourceDurationUpdater {
     );
 
     /** TaskCanceller triggered each time the MediaSource switches to and from "open". */
-    let msOpenStatusCanceller = new TaskCanceller();
+    let msOpenStatusCanceller = new TaskCanceller("MS Duration Update Open Listener");
     msOpenStatusCanceller.linkToSignal(currentSignal);
     isMediaSourceOpened.onUpdate(onMediaSourceOpenedStatusChanged, {
       emitCurrentValue: true,
@@ -98,20 +100,22 @@ export default class MediaSourceDurationUpdater {
       if (!isMediaSourceOpened.getValue()) {
         return;
       }
-      msOpenStatusCanceller = new TaskCanceller();
+      msOpenStatusCanceller = new TaskCanceller(
+        undefined /* we do not care for logs here */,
+      );
       msOpenStatusCanceller.linkToSignal(currentSignal);
       const areSourceBuffersUpdating = createSourceBuffersUpdatingReference(
         mediaSource.sourceBuffers,
         msOpenStatusCanceller.signal,
       );
       /** TaskCanceller triggered each time SourceBuffers' updating status changes */
-      let sourceBuffersUpdatingCanceller = new TaskCanceller();
+      let sourceBuffersUpdatingCanceller = new TaskCanceller(undefined);
       sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
 
       return areSourceBuffersUpdating.onUpdate(
         (areUpdating) => {
           sourceBuffersUpdatingCanceller.cancel();
-          sourceBuffersUpdatingCanceller = new TaskCanceller();
+          sourceBuffersUpdatingCanceller = new TaskCanceller(undefined);
           sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
           if (areUpdating) {
             return;

@@ -108,7 +108,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     this._pipelines = pipelines.manifest;
     this._transportName = pipelines.transportName;
     this._settings = settings;
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("Manifest Fetcher");
     this._isStarted = false;
     this._isRefreshPending = false;
     this._consecutiveUnsafeMode = 0;
@@ -469,7 +469,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      * be effectively considered.
      * `nextRefreshCanceller` will allow to cancel every other when one is triggered.
      */
-    const nextRefreshCanceller = new TaskCanceller();
+    const nextRefreshCanceller = new TaskCanceller("MF Refresh");
     nextRefreshCanceller.linkToSignal(this._canceller.signal);
 
     /* Function to manually schedule a Manifest refresh */

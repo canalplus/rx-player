@@ -67,7 +67,7 @@ export default class WorkerMediaSourceInterface
     super();
     this.id = id;
     this.sourceBuffers = [];
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("MSI");
     this.readyState = "closed";
     this._messageSender = messageSender;
 
@@ -226,7 +226,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   ) {
     this.type = sbType;
     this.codec = codec;
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("SBI");
     this._mediaSourceId = mediaSourceId;
     this._queuedOperations = [];
     this._pendingOperations = new Map();
@@ -250,7 +250,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   ): void {
     const formattedErr =
       error.errorName === "CancellationError"
-        ? new CancellationError()
+        ? new CancellationError("Pending SBI Operation")
         : new SourceBufferError(error.errorName, error.message, error.isBufferFull);
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
@@ -260,7 +260,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
       mapElt.reject(formattedErr);
     }
 
-    const cancellationError = new CancellationError();
+    const cancellationError = new CancellationError("Queued SBI Operation");
     for (const operation of this._queuedOperations) {
       operation.reject(cancellationError);
     }

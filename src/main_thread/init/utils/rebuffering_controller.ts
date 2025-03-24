@@ -79,7 +79,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     this._speed = speed;
     this._discontinuitiesStore = [];
     this._isStarted = false;
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("RC");
   }
 
   public start(): void {
@@ -507,7 +507,7 @@ class PlaybackRateUpdater {
     playbackObserver: IMediaElementPlaybackObserver,
     speed: IReadOnlySharedReference<number>,
   ) {
-    this._speedUpdateCanceller = new TaskCanceller();
+    this._speedUpdateCanceller = new TaskCanceller("PRU");
     this._isRebuffering = false;
     this._playbackObserver = playbackObserver;
     this._isDisposed = false;
@@ -541,7 +541,7 @@ class PlaybackRateUpdater {
       return;
     }
     this._isRebuffering = false;
-    this._speedUpdateCanceller = new TaskCanceller();
+    this._speedUpdateCanceller = new TaskCanceller("PRU");
     this._updateSpeed();
   }
 

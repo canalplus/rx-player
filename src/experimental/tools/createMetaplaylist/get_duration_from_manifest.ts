@@ -75,7 +75,7 @@ async function getDurationFromManifest(
       timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
       connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
       // We won't cancel
-      cancelSignal: new TaskCanceller().signal,
+      cancelSignal: new TaskCanceller(undefined).signal,
     });
     const { responseData } = response;
     const root = responseData.documentElement;
@@ -116,7 +116,7 @@ async function getDurationFromManifest(
     timeout: config.getCurrent().DEFAULT_REQUEST_TIMEOUT,
     connectionTimeout: config.getCurrent().DEFAULT_CONNECTION_TIMEOUT,
     // We won't cancel
-    cancelSignal: new TaskCanceller().signal,
+    cancelSignal: new TaskCanceller(undefined).signal,
   });
   const { responseData } = response;
   const metaplaylist = JSON.parse(responseData) as IMetaPlaylist;

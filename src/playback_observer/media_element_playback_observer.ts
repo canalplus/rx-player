@@ -160,7 +160,7 @@ export default class PlaybackObserver {
     this._mediaElementRef = new SharedReference<IMediaElement | null>(null);
     this._withMediaSource = options.withMediaSource;
     this._lowLatencyMode = options.lowLatencyMode;
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("PlaybackObserver");
     this._expectedSeekingPosition = null;
     this._pendingSeek = null;
     this._isSeekBlocked = false;

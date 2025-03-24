@@ -68,7 +68,7 @@ export default function AdaptationStream(
   const { manifest, period, adaptation } = content;
 
   /** Allows to cancel everything the `AdaptationStream` is doing. */
-  const adapStreamCanceller = new TaskCanceller();
+  const adapStreamCanceller = new TaskCanceller("AS " + adaptation.type);
   adapStreamCanceller.linkToSignal(parentCancelSignal);
 
   /**
@@ -187,7 +187,7 @@ export default function AdaptationStream(
         newRepIds,
       );
       representationsList.setValueIfChanged(newRepresentations);
-      cancelCurrentStreams = new TaskCanceller();
+      cancelCurrentStreams = new TaskCanceller("AS Reps " + adaptation.type);
       cancelCurrentStreams.linkToSignal(adapStreamCanceller.signal);
       onRepresentationsChoiceChange(val, cancelCurrentStreams.signal).catch((err) => {
         if (
@@ -295,7 +295,9 @@ export default function AdaptationStream(
      * terminating and as such the next one might be immediately created
      * recursively.
      */
-    const repStreamTerminatingCanceller = new TaskCanceller();
+    const repStreamTerminatingCanceller = new TaskCanceller(
+      "AS Reps Recurs " + adaptation.type,
+    );
     repStreamTerminatingCanceller.linkToSignal(fnCancelSignal);
     const { representation } = estimateRef.getValue();
     if (representation === null) {
@@ -412,7 +414,7 @@ export default function AdaptationStream(
     /** Set to `true` if we've encountered an error with this `RepresentationStream` */
     let hasEncounteredError = false;
 
-    const bufferGoalCanceller = new TaskCanceller();
+    const bufferGoalCanceller = new TaskCanceller("AS BG " + adaptation.type);
     bufferGoalCanceller.linkToSignal(fnCancelSignal);
 
     /** Actually built buffer size, in seconds. */

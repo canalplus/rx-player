@@ -81,7 +81,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
   ) {
     super();
 
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("Boundaries Observation");
     this._manifest = manifest;
     this._activeStreams = new Map();
     this._allBufferTypes = bufferTypes;

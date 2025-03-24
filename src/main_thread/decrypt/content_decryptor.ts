@@ -164,7 +164,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
     log.debug("DRM", "Starting ContentDecryptor logic.");
 
-    const canceller = new TaskCanceller();
+    const canceller = new TaskCanceller("DRM CD");
     this._currentSessions = [];
     this._canceller = canceller;
     this._initDataQueue = [];

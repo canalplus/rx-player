@@ -19,7 +19,7 @@ export function addSegmentIntegrityChecks<T>(
 ): ISegmentLoader<T> {
   return (url, context, loaderOptions, initialCancelSignal, callbacks) => {
     return new Promise((resolve, reject) => {
-      const requestCanceller = new TaskCanceller();
+      const requestCanceller = new TaskCanceller("integrity checks");
       const unlinkCanceller = requestCanceller.linkToSignal(initialCancelSignal);
       requestCanceller.signal.register(reject);
 

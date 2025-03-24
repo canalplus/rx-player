@@ -150,8 +150,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   constructor(settings: IInitializeArguments) {
     super();
     this._settings = settings;
-    this._initCanceller = new TaskCanceller();
-    this._currentMediaSourceCanceller = new TaskCanceller();
+    this._initCanceller = new TaskCanceller("Init");
+    this._currentMediaSourceCanceller = new TaskCanceller("Init MS");
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
     this._awaitingRequests = {
@@ -1547,7 +1547,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     autoPlay: boolean,
   ) {
     this._currentMediaSourceCanceller.cancel();
-    this._currentMediaSourceCanceller = new TaskCanceller();
+    this._currentMediaSourceCanceller = new TaskCanceller("Init MS");
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     mediaSourceStatus.setValue(MediaSourceInitializationStatus.AttachNow);
     this.trigger("reloadingMediaSource", { position, autoPlay });

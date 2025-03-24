@@ -78,13 +78,13 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     if (this._canceller !== null) {
       return;
     }
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("SEE");
 
     const cancelSignal = this._canceller.signal;
     const playbackObserver = this._playbackObserver;
 
     let isPollingEvents = false;
-    let cancelCurrentPolling = new TaskCanceller();
+    let cancelCurrentPolling = new TaskCanceller("SEE Polling");
     cancelCurrentPolling.linkToSignal(cancelSignal);
 
     this._scheduledEventsRef.setValue(refreshScheduledEventsList([], this._manifest));
@@ -94,7 +94,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
         if (scheduledEventsLength === 0) {
           if (isPollingEvents) {
             cancelCurrentPolling.cancel();
-            cancelCurrentPolling = new TaskCanceller();
+            cancelCurrentPolling = new TaskCanceller("SEE Polling");
             cancelCurrentPolling.linkToSignal(cancelSignal);
             isPollingEvents = false;
           }

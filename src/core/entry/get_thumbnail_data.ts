@@ -35,6 +35,6 @@ export default async function getThumbnailData(
   }
   return fetchThumbnails(
     { segment: wantedThumbnail, track: thumbnailTrack, period },
-    new TaskCanceller().signal,
+    new TaskCanceller(undefined).signal,
   );
 }

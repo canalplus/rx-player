@@ -67,7 +67,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   constructor(settings: IDirectFileOptions) {
     super();
     this._settings = settings;
-    this._initCanceller = new TaskCanceller();
+    this._initCanceller = new TaskCanceller("Directfile Init");
   }
 
   /**

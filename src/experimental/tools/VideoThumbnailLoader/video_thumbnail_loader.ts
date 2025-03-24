@@ -180,7 +180,7 @@ export default class VideoThumbnailLoader {
 
     let lastRepInfo: IVideoThumbnailLoaderRepresentationInfo;
     if (this._lastRepresentationInfo === null) {
-      const lastRepInfoCleaner = new TaskCanceller();
+      const lastRepInfoCleaner = new TaskCanceller("VTL Rep");
       const segmentFetcher = createSegmentFetcher({
         bufferType: "video",
         pipeline: loader.video,
@@ -235,7 +235,7 @@ export default class VideoThumbnailLoader {
 
     abortUnlistedSegmentRequests(lastRepInfo.pendingRequests, neededSegments);
 
-    const currentTaskCanceller = new TaskCanceller();
+    const currentTaskCanceller = new TaskCanceller("VTL Task");
 
     return lastRepInfo.sourceBuffer
       .catch((err) => {
@@ -272,7 +272,7 @@ export default class VideoThumbnailLoader {
           if (pending !== undefined) {
             promises.push(pending.promise);
           } else {
-            const requestCanceller = new TaskCanceller();
+            const requestCanceller = new TaskCanceller("VTL Req");
             const unlinkSignal = requestCanceller.linkToSignal(
               lastRepInfo.cleaner.signal,
             );

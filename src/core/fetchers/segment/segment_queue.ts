@@ -142,7 +142,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
       initSegment: null,
       segmentQueue: [],
     });
-    const currentCanceller = new TaskCanceller();
+    const currentCanceller = new TaskCanceller("SQ");
     currentCanceller.signal.register(() => {
       downloadQueue.finish();
     });
@@ -299,7 +299,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
         this.trigger("emptyQueue", null);
         return;
       }
-      const canceller = new TaskCanceller();
+      const canceller = new TaskCanceller("SQ Media");
       const unlinkCanceller =
         currentCanceller === null
           ? noop
@@ -475,7 +475,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
       return;
     }
 
-    const canceller = new TaskCanceller();
+    const canceller = new TaskCanceller("SQ Init");
     const unlinkCanceller =
       contentInfo.currentCanceller === null
         ? noop

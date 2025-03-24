@@ -187,7 +187,7 @@ describe("find_key_systems - ", () => {
       },
     ];
 
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
     const event1 = await getMediaKeySystemAccess(
       eme,
       mediaElement,
@@ -240,7 +240,7 @@ describe("find_key_systems - ", () => {
       },
     ];
 
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
     const event1 = await getMediaKeySystemAccess(
       eme,
       mediaElement,
@@ -304,7 +304,7 @@ describe("find_key_systems - ", () => {
       },
     ];
 
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
     const event1 = await getMediaKeySystemAccess(
       eme,
       mediaElement,

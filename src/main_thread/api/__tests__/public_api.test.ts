@@ -583,7 +583,7 @@ describe("API - Public API", () => {
       });
 
       it("should trigger videoRepresentationChange on representation change", async () => {
-        const taskCanceller = new TaskCanceller();
+        const taskCanceller = new TaskCanceller("Test content");
         const contentInfos: Partial<IPublicApiContentInfos> = {
           contentId: "123",
           originalUrl: undefined,
@@ -637,7 +637,7 @@ describe("API - Public API", () => {
       });
 
       it("should trigger audioRepresentationChange on representation change", async () => {
-        const taskCanceller = new TaskCanceller();
+        const taskCanceller = new TaskCanceller("Test content");
         const contentInfos: Partial<IPublicApiContentInfos> = {
           contentId: "123",
           originalUrl: undefined,
