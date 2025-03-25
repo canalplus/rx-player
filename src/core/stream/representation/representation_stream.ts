@@ -294,7 +294,7 @@ export default function RepresentationStream<TSegmentDataType>(
       });
       segmentsToLoadRef.setValue({ initSegment: null, segmentQueue: [] });
       segmentsToLoadRef.finish();
-      canceller.cancel("RepresentationStream: termination urgent");
+      canceller.cancel(terminateVal.reason);
       callbacks.terminating();
       return;
     } else {
@@ -325,7 +325,7 @@ export default function RepresentationStream<TSegmentDataType>(
           representationBitrate: content.representation.bitrate,
         });
         segmentsToLoadRef.finish();
-        canceller.cancel("RepresentationStream: empty queue + termination");
+        canceller.cancel(terminateVal.reason);
         callbacks.terminating();
         return;
       }

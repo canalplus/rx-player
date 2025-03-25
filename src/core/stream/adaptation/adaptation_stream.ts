@@ -332,7 +332,10 @@ export default function AdaptationStream(
             prevRepresentationBitrate: representation.bitrate,
             newRepresentationBitrate: estimate.representation.bitrate,
           });
-          return terminateCurrentStream.setValue({ urgent: true });
+          return terminateCurrentStream.setValue({
+            urgent: true,
+            reason: "Urgent Representation switch",
+          });
         } else {
           log.info("Stream", "slow Representation switch", {
             bufferType: adaptation.type,
@@ -340,7 +343,10 @@ export default function AdaptationStream(
             prevRepresentationBitrate: representation.bitrate,
             newRepresentationBitrate: estimate.representation.bitrate,
           });
-          return terminateCurrentStream.setValue({ urgent: false });
+          return terminateCurrentStream.setValue({
+            urgent: false,
+            reason: "Non-urgent Representation switch",
+          });
         }
       },
       {
