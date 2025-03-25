@@ -68,7 +68,7 @@ export default function AdaptationStream(
   const { manifest, period, adaptation } = content;
 
   /** Allows to cancel everything the `AdaptationStream` is doing. */
-  const adapStreamCanceller = new TaskCanceller("AS " + adaptation.type);
+  const adapStreamCanceller = new TaskCanceller("AdaptationStream " + adaptation.type);
   adapStreamCanceller.linkToSignal(parentCancelSignal);
 
   /**
@@ -175,7 +175,7 @@ export default function AdaptationStream(
   content.representations.onUpdate(
     (val) => {
       if (cancelCurrentStreams !== undefined) {
-        cancelCurrentStreams.cancel("AS rep restart");
+        cancelCurrentStreams.cancel("locked representations changed");
       }
       const newRepIds = content.representations.getValue().representationIds;
 
@@ -187,7 +187,9 @@ export default function AdaptationStream(
         newRepIds,
       );
       representationsList.setValueIfChanged(newRepresentations);
-      cancelCurrentStreams = new TaskCanceller("AS Reps " + adaptation.type);
+      cancelCurrentStreams = new TaskCanceller(
+        "AdaptationStream: RepresentationStream Group " + adaptation.type,
+      );
       cancelCurrentStreams.linkToSignal(adapStreamCanceller.signal);
       onRepresentationsChoiceChange(val, cancelCurrentStreams.signal).catch((err) => {
         if (
@@ -196,7 +198,7 @@ export default function AdaptationStream(
         ) {
           return;
         }
-        adapStreamCanceller.cancel("AS rep err");
+        adapStreamCanceller.cancel("RepresentationStream err");
         callbacks.error(err);
       });
     },
@@ -296,7 +298,7 @@ export default function AdaptationStream(
      * recursively.
      */
     const repStreamTerminatingCanceller = new TaskCanceller(
-      "AS Reps Recurs " + adaptation.type,
+      "AdaptationStream: RepresentationStream creation " + adaptation.type,
     );
     repStreamTerminatingCanceller.linkToSignal(fnCancelSignal);
     const { representation } = estimateRef.getValue();
@@ -370,7 +372,7 @@ export default function AdaptationStream(
       inbandEvent: callbacks.inbandEvent,
       warning: callbacks.warning,
       error(err: unknown) {
-        adapStreamCanceller.cancel("AS rep err");
+        adapStreamCanceller.cancel("RepresentationStream err cb");
         callbacks.error(err);
       },
       addedSegment(segmentInfo) {
@@ -380,7 +382,7 @@ export default function AdaptationStream(
         if (repStreamTerminatingCanceller.isUsed()) {
           return; // Already handled
         }
-        repStreamTerminatingCanceller.cancel("AS rep term.");
+        repStreamTerminatingCanceller.cancel("RepresentationStream terminating");
         return recursivelyCreateRepresentationStreams(fnCancelSignal);
       },
     };
@@ -414,7 +416,9 @@ export default function AdaptationStream(
     /** Set to `true` if we've encountered an error with this `RepresentationStream` */
     let hasEncounteredError = false;
 
-    const bufferGoalCanceller = new TaskCanceller("AS BG " + adaptation.type);
+    const bufferGoalCanceller = new TaskCanceller(
+      "AdaptationStream: BufferGoal " + adaptation.type,
+    );
     bufferGoalCanceller.linkToSignal(fnCancelSignal);
 
     /** Actually built buffer size, in seconds. */
@@ -483,7 +487,7 @@ export default function AdaptationStream(
         }
       },
       terminating() {
-        bufferGoalCanceller.cancel("Rep term.");
+        bufferGoalCanceller.cancel("Representation terminating");
         representationStreamCallbacks.terminating();
       },
     });

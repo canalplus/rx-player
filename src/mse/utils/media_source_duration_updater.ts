@@ -74,7 +74,7 @@ export default class MediaSourceDurationUpdater {
    */
   public updateDuration(newDuration: number, isRealEndKnown: boolean): void {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
-      this._currentMediaSourceDurationUpdateCanceller.cancel("reset mdu");
+      this._currentMediaSourceDurationUpdateCanceller.cancel("manual duration update");
     }
     this._currentMediaSourceDurationUpdateCanceller = new TaskCanceller(
       "MediaSource Duration Update",
@@ -88,7 +88,9 @@ export default class MediaSourceDurationUpdater {
     );
 
     /** TaskCanceller triggered each time the MediaSource switches to and from "open". */
-    let msOpenStatusCanceller = new TaskCanceller("MS Duration Update Open Listener");
+    let msOpenStatusCanceller = new TaskCanceller(
+      undefined /* we do not care for logs here */,
+    );
     msOpenStatusCanceller.linkToSignal(currentSignal);
     isMediaSourceOpened.onUpdate(onMediaSourceOpenedStatusChanged, {
       emitCurrentValue: true,
@@ -96,7 +98,7 @@ export default class MediaSourceDurationUpdater {
     });
 
     function onMediaSourceOpenedStatusChanged() {
-      msOpenStatusCanceller.cancel("ms opened");
+      msOpenStatusCanceller.cancel("MediaSource open status changed");
       if (!isMediaSourceOpened.getValue()) {
         return;
       }
@@ -114,7 +116,7 @@ export default class MediaSourceDurationUpdater {
 
       return areSourceBuffersUpdating.onUpdate(
         (areUpdating) => {
-          sourceBuffersUpdatingCanceller.cancel("sb status update");
+          sourceBuffersUpdatingCanceller.cancel("SourceBuffer status update");
           sourceBuffersUpdatingCanceller = new TaskCanceller(undefined);
           sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
           if (areUpdating) {

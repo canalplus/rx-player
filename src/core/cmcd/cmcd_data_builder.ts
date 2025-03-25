@@ -133,7 +133,7 @@ export default class CmcdDataBuilder {
   public startMonitoringPlayback(
     playbackObserver: IReadOnlyPlaybackObserver<ICmcdDataBuilderPlaybackObservation>,
   ): void {
-    this._canceller?.cancel("cmcd start");
+    this._canceller?.cancel("CmcdDataBuilder start");
     this._canceller = new TaskCanceller("CMCD monitoring");
     this._playbackObserver = playbackObserver;
     playbackObserver.listen(
@@ -151,7 +151,7 @@ export default class CmcdDataBuilder {
    * `stopMonitoringPlayback` call.
    */
   public stopMonitoringPlayback(): void {
-    this._canceller?.cancel("cmcd stop");
+    this._canceller?.cancel("CmcdDataBuilder stop");
     this._canceller = null;
     this._playbackObserver = null;
   }

@@ -102,7 +102,7 @@ export default function RepresentationStream<TSegmentDataType>(
   const bufferType = adaptation.type;
 
   /** `TaskCanceller` stopping operations performed by the `RepresentationStream` */
-  const canceller = new TaskCanceller("RepresentationStream");
+  const canceller = new TaskCanceller("RepresentationStream " + bufferType);
   canceller.linkToSignal(parentCancelSignal);
 
   /** Saved initialization segment state for this representation. */
@@ -158,7 +158,7 @@ export default function RepresentationStream<TSegmentDataType>(
     if (canceller.signal.isCancelled()) {
       return; // ignore post requests-cancellation loading-related errors,
     }
-    canceller.cancel("SegmentQueue err"); // Stop every operations
+    canceller.cancel("RepresentationStream: SegmentQueue err"); // Stop every operations
     callbacks.error(err);
   });
   segmentQueue.addEventListener("parsedInitSegment", onParsedChunk, canceller.signal);
@@ -195,7 +195,7 @@ export default function RepresentationStream<TSegmentDataType>(
   const segmentsToLoadRef = segmentQueue.resetForContent(
     content,
     hasInitSegment,
-    "new RS",
+    "new RepresentationStream in town",
   );
 
   canceller.signal.register((err) => {
@@ -294,7 +294,7 @@ export default function RepresentationStream<TSegmentDataType>(
       });
       segmentsToLoadRef.setValue({ initSegment: null, segmentQueue: [] });
       segmentsToLoadRef.finish();
-      canceller.cancel("RepresentationStream Urgent Termination");
+      canceller.cancel("RepresentationStream: termination urgent");
       callbacks.terminating();
       return;
     } else {
@@ -325,7 +325,7 @@ export default function RepresentationStream<TSegmentDataType>(
           representationBitrate: content.representation.bitrate,
         });
         segmentsToLoadRef.finish();
-        canceller.cancel("RepresentationStream non-urgent switch");
+        canceller.cancel("RepresentationStream: empty queue + termination");
         callbacks.terminating();
         return;
       }
@@ -486,7 +486,7 @@ export default function RepresentationStream<TSegmentDataType>(
       },
       err instanceof Error ? err : null,
     );
-    canceller.cancel("RepresentationStream fatal buffer err");
+    canceller.cancel("RepresentationStream: fatal buffer err");
     callbacks.error(err);
   }
 }

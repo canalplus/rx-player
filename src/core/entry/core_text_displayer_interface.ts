@@ -81,7 +81,7 @@ export default class CoreTextDisplayerInterface implements ITextDisplayerInterfa
       contentId: this._contentId,
       value: null,
     });
-    this._resetCurrentQueue("WTDI reset");
+    this._resetCurrentQueue("WorkerTextDisplayerInterface reset");
   }
 
   /**
@@ -97,7 +97,10 @@ export default class CoreTextDisplayerInterface implements ITextDisplayerInterfa
   }
 
   private _resetCurrentQueue(reason: string | undefined): void {
-    const error = new CancellationError("WTDI queue", reason ?? "reset");
+    const error = new CancellationError(
+      "WorkerTextDisplayerInterface queue",
+      reason ?? "reset",
+    );
     this._queues.pushTextData.forEach((elt) => {
       elt.reject(error);
     });

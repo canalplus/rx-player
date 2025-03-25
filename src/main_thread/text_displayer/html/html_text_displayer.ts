@@ -110,8 +110,10 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
-    this._sizeUpdateCanceller = new TaskCanceller("HTD Size");
-    this._subtitlesIntervalCanceller = new TaskCanceller("HTD Sub");
+    this._sizeUpdateCanceller = new TaskCanceller("HTMLTextDisplayer size updates");
+    this._subtitlesIntervalCanceller = new TaskCanceller(
+      "HTMLTextDisplayer subtitles updates",
+    );
     this._buffer = new TextTrackCuesStore();
     this._currentCues = [];
     this._isAutoRefreshing = false;
@@ -231,8 +233,10 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     if (this._isAutoRefreshing && this._buffer.isEmpty()) {
       this.refreshSubtitles();
       this._isAutoRefreshing = false;
-      this._subtitlesIntervalCanceller.cancel("HTD empty");
-      this._subtitlesIntervalCanceller = new TaskCanceller("HTD Sub");
+      this._subtitlesIntervalCanceller.cancel("HTMLTextDisplayer no cue");
+      this._subtitlesIntervalCanceller = new TaskCanceller(
+        "HTMLTextDisplayer subtitles updates",
+      );
     }
     return convertToRanges(this._buffered);
   }
@@ -247,8 +251,10 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 
   public reset(): void {
     log.debug("text", "Resetting HTMLTextDisplayer");
-    this.stop("HTD reset");
-    this._subtitlesIntervalCanceller = new TaskCanceller("HTD Sub");
+    this.stop("HTMLTextDisplayer reset");
+    this._subtitlesIntervalCanceller = new TaskCanceller(
+      "HTMLTextDisplayer subtitles updates",
+    );
   }
 
   public stop(reason: string | undefined): void {
@@ -294,7 +300,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     // Remove and re-display everything
     // TODO More intelligent handling
 
-    this._sizeUpdateCanceller.cancel("HTD display");
+    this._sizeUpdateCanceller.cancel("HTMLTextDisplayer display");
     for (const cue of this._currentCues) {
       safelyRemoveChild(this._textTrackElement, cue.element);
     }
@@ -316,7 +322,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     );
 
     if (proportionalCues.length > 0) {
-      this._sizeUpdateCanceller = new TaskCanceller("HTD Size");
+      this._sizeUpdateCanceller = new TaskCanceller("HTMLTextDisplayer size updates");
       this._sizeUpdateCanceller.linkToSignal(this._subtitlesIntervalCanceller.signal);
       const { TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config.getCurrent();
       // update propertionally-sized elements periodically
@@ -355,14 +361,16 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     const stopAutoRefresh = () => {
       this._isAutoRefreshing = false;
       if (autoRefreshCanceller !== null) {
-        autoRefreshCanceller.cancel("HTD stop auto");
+        autoRefreshCanceller.cancel("HTMLTextDisplayer stop auto-refresh");
         autoRefreshCanceller = null;
       }
     };
     const startAutoRefresh = () => {
       stopAutoRefresh();
       this._isAutoRefreshing = true;
-      autoRefreshCanceller = new TaskCanceller("HTD Auto-Refresh");
+      autoRefreshCanceller = new TaskCanceller(
+        "HTMLTextDisplayer subtitles auto-refresh",
+      );
       autoRefreshCanceller.linkToSignal(cancellationSignal);
       const intervalId = setInterval(
         () => this.refreshSubtitles(),

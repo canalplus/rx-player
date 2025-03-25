@@ -129,7 +129,7 @@ export default function initializeCoreEntry(
           }
 
           if (!msg.value.hasVideo) {
-            contentPreparer.disposeCurrentContent("WM init msg");
+            contentPreparer.disposeCurrentContent("Received Init msg");
             contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
           }
 
@@ -980,7 +980,7 @@ function loadPreparedContent(
 
   function performMediaSourceReload(payload: INeedsMediaSourceReloadPayload): void {
     if (currentLoadCanceller !== null) {
-      currentLoadCanceller.cancel("WM MS reload");
+      currentLoadCanceller.cancel("WorkerMain MediaSource reload");
       currentLoadCanceller = null;
     }
     const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource.id;

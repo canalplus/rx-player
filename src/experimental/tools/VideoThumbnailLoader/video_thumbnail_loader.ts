@@ -78,7 +78,7 @@ export default class VideoThumbnailLoader {
     const manifest = this._player.__priv_getManifest();
     if (manifest === null) {
       if (this._lastRepresentationInfo !== null) {
-        this._lastRepresentationInfo.cleaner.cancel("VTL no manifest");
+        this._lastRepresentationInfo.cleaner.cancel("VTL: no manifest");
         this._lastRepresentationInfo = null;
       }
       return Promise.reject(
@@ -94,7 +94,7 @@ export default class VideoThumbnailLoader {
     const content = getTrickModeInfo(time, manifest);
     if (content === null) {
       if (this._lastRepresentationInfo !== null) {
-        this._lastRepresentationInfo.cleaner.cancel("VTL no trickmode");
+        this._lastRepresentationInfo.cleaner.cancel("VTL: no trickmode");
         this._lastRepresentationInfo = null;
       }
       return Promise.reject(
@@ -109,7 +109,7 @@ export default class VideoThumbnailLoader {
       this._lastRepresentationInfo !== null &&
       !areSameRepresentation(this._lastRepresentationInfo.content, content)
     ) {
-      this._lastRepresentationInfo.cleaner.cancel("VTL diff rep.");
+      this._lastRepresentationInfo.cleaner.cancel("VTL: Representation is different");
       this._lastRepresentationInfo = null;
     }
 
@@ -120,7 +120,7 @@ export default class VideoThumbnailLoader {
 
     if (neededSegments.length === 0) {
       if (this._lastRepresentationInfo !== null) {
-        this._lastRepresentationInfo.cleaner.cancel("VTL no thumb");
+        this._lastRepresentationInfo.cleaner.cancel("VTL: no segment info");
         this._lastRepresentationInfo = null;
       }
       return Promise.reject(
@@ -166,7 +166,7 @@ export default class VideoThumbnailLoader {
     const loader = loaders[content.manifest.transport];
     if (loader === undefined) {
       if (this._lastRepresentationInfo !== null) {
-        this._lastRepresentationInfo.cleaner.cancel("VTL no parser");
+        this._lastRepresentationInfo.cleaner.cancel("VTL: no parser");
         this._lastRepresentationInfo = null;
       }
       return Promise.reject(
@@ -180,7 +180,7 @@ export default class VideoThumbnailLoader {
 
     let lastRepInfo: IVideoThumbnailLoaderRepresentationInfo;
     if (this._lastRepresentationInfo === null) {
-      const lastRepInfoCleaner = new TaskCanceller("VTL Rep");
+      const lastRepInfoCleaner = new TaskCanceller("VTL: Representation Info");
       const segmentFetcher = createSegmentFetcher({
         bufferType: "video",
         pipeline: loader.video,
@@ -235,12 +235,14 @@ export default class VideoThumbnailLoader {
 
     abortUnlistedSegmentRequests(lastRepInfo.pendingRequests, neededSegments);
 
-    const currentTaskCanceller = new TaskCanceller("VTL Task");
+    const currentTaskCanceller = new TaskCanceller("VTL: Task");
 
     return lastRepInfo.sourceBuffer
       .catch((err) => {
         if (this._lastRepresentationInfo !== null) {
-          this._lastRepresentationInfo.cleaner.cancel("VTL SB init failure");
+          this._lastRepresentationInfo.cleaner.cancel(
+            "VTL: SourceBuffer initialization failure",
+          );
           this._lastRepresentationInfo = null;
         }
         throw new VideoThumbnailLoaderError(
@@ -272,7 +274,7 @@ export default class VideoThumbnailLoader {
           if (pending !== undefined) {
             promises.push(pending.promise);
           } else {
-            const requestCanceller = new TaskCanceller("VTL Req");
+            const requestCanceller = new TaskCanceller("VTL: Request");
             const unlinkSignal = requestCanceller.linkToSignal(
               lastRepInfo.cleaner.signal,
             );
@@ -327,7 +329,7 @@ export default class VideoThumbnailLoader {
    */
   dispose(): void {
     if (this._lastRepresentationInfo !== null) {
-      this._lastRepresentationInfo.cleaner.cancel("VTL dispose");
+      this._lastRepresentationInfo.cleaner.cancel("VTL: dispose");
       this._lastRepresentationInfo = null;
     }
   }
@@ -382,7 +384,7 @@ function abortUnlistedSegmentRequests(
   pendingRequests
     .filter((req) => !neededSegments.some(({ id }) => id === req.segmentId))
     .forEach((req) => {
-      req.canceller.cancel("VTL abort unlisted");
+      req.canceller.cancel("VTL: abort unlisted segments");
     });
 }
 
