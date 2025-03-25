@@ -133,12 +133,6 @@ export default function StreamOrchestrator(
     firstIncompatiblePeriodSwitchIssueStatus = isInitialPeriodEncrypted
       ? "NO_NEEDS_RELOAD"
       : "NEEDS_RELOAD";
-
-    // eslint-disable-next-line no-console
-    console.log(
-      "kx firstIncompatiblePeriodSwitchIssueStatus:",
-      firstIncompatiblePeriodSwitchIssueStatus,
-    );
   }
 
   const {
