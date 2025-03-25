@@ -141,8 +141,8 @@ export default function initializeContentDecryption(
     callbacks.onKeyIdsCompatibilityUpdate(x);
   });
 
-  decryptorCanceller.signal.register(() => {
-    contentDecryptor.dispose();
+  decryptorCanceller.signal.register((err) => {
+    contentDecryptor.dispose(err.reason);
   });
 
   return {

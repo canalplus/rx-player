@@ -140,7 +140,7 @@ describe("decrypt - global tests - media key system access", () => {
             expect(contentDecryptor.getState()).toEqual(
               ContentDecryptorState.WaitingForAttachment,
             );
-            contentDecryptor.dispose();
+            contentDecryptor.dispose(undefined);
           } catch (err) {
             rej(err);
           }
@@ -184,7 +184,7 @@ describe("decrypt - global tests - media key system access", () => {
         }
 
         setTimeout(() => {
-          contentDecryptor1.dispose();
+          contentDecryptor1.dispose(undefined);
           const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
@@ -202,7 +202,7 @@ describe("decrypt - global tests - media key system access", () => {
               contentDecryptor2.attach();
               setTimeout(() => {
                 try {
-                  contentDecryptor2.dispose();
+                  contentDecryptor2.dispose(undefined);
                   expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
                   res();
                 } catch (err) {
@@ -254,7 +254,7 @@ describe("decrypt - global tests - media key system access", () => {
         }
 
         setTimeout(() => {
-          contentDecryptor1.dispose();
+          contentDecryptor1.dispose(undefined);
           const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
@@ -272,7 +272,7 @@ describe("decrypt - global tests - media key system access", () => {
               contentDecryptor2.attach();
               setTimeout(() => {
                 try {
-                  contentDecryptor2.dispose();
+                  contentDecryptor2.dispose(undefined);
                   expect(mockCreateMediaKeys).toHaveBeenCalledTimes(2);
                   res();
                 } catch (err) {
@@ -324,7 +324,7 @@ describe("decrypt - global tests - media key system access", () => {
         }
 
         setTimeout(() => {
-          contentDecryptor1.dispose();
+          contentDecryptor1.dispose(undefined);
           const contentDecryptor2 = new ContentDecryptor(eme, videoElt, ksConfig);
           let receivedStateChange2 = 0;
           contentDecryptor2.addEventListener("error", rej);
@@ -342,7 +342,7 @@ describe("decrypt - global tests - media key system access", () => {
               contentDecryptor2.attach();
               setTimeout(() => {
                 try {
-                  contentDecryptor2.dispose();
+                  contentDecryptor2.dispose(undefined);
                   expect(mockCreateMediaKeys).toHaveBeenCalledTimes(2);
                   res();
                 } catch (err) {

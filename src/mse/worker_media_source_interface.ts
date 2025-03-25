@@ -153,8 +153,13 @@ export default class WorkerMediaSourceInterface
     });
   }
 
-  public dispose() {
-    this.sourceBuffers.forEach((s) => s.dispose());
+  /**
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  public dispose(reason: string | undefined) {
+    this.sourceBuffers.forEach((s) => s.dispose(reason));
     this._canceller.cancel("dispose WMSI");
     this._messageSender({
       type: CoreMessageType.DisposeMediaSource,
@@ -362,9 +367,14 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     });
   }
 
-  public dispose(): void {
+  /**
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  public dispose(reason: string | undefined): void {
     this.abort();
-    this._canceller.cancel("dispose WSBI");
+    this._canceller.cancel(reason ?? "dispose WSBI");
   }
 
   public getBuffered(): undefined {

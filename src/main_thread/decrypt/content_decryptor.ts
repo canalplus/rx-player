@@ -343,8 +343,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
    *   - abort all operations.
    *
    * Once disposed, a `ContentDecryptor` cannot be used anymore.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose() {
+  public dispose(reason: string | undefined) {
     this.removeEventListener();
     this._stateData = {
       state: ContentDecryptorState.Disposed,
@@ -352,7 +355,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       isInitDataQueueLocked: undefined,
       data: null,
     };
-    this._canceller.cancel("CD dispose");
+    this._canceller.cancel(reason ?? "CD dispose");
     this.trigger("stateChange", this._stateData.state);
   }
 

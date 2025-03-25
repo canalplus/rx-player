@@ -106,8 +106,11 @@ export default class TextTrackRenderer {
    * Dispose of most ressources taken by the TextTrackRenderer.
    * /!\ The TextTrackRenderer will be unusable after this method has been
    * called.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose(): void {
-    this._displayer.stop();
+  public dispose(reason: string | undefined): void {
+    this._displayer.stop(reason);
   }
 }

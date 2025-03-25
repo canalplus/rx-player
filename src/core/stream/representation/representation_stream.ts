@@ -192,10 +192,14 @@ export default function RepresentationStream<TSegmentDataType>(
   );
 
   /** Emit the last scheduled downloading queue for segments. */
-  const segmentsToLoadRef = segmentQueue.resetForContent(content, hasInitSegment);
+  const segmentsToLoadRef = segmentQueue.resetForContent(
+    content,
+    hasInitSegment,
+    "new RS",
+  );
 
-  canceller.signal.register(() => {
-    segmentQueue.stop();
+  canceller.signal.register((err) => {
+    segmentQueue.stop(err.reason);
   });
 
   playbackObserver.listen(checkStatus, {
