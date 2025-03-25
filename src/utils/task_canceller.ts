@@ -28,7 +28,7 @@ import noop from "./noop";
  * To do that, the code which might ask for cancellation have to create a new
  * `TaskCanceller`:
  * ```js
- * const canceller = new TaskCanceller("my Task");
+ * const canceller = new TaskCanceller("my example task");
  * ```
  *
  * And has to provide its associated `CancellationSignal` to the code running
@@ -100,7 +100,7 @@ import noop from "./noop";
  * (even before the signal was given) and listen to possible CancellationErrors
  * to know when it was cancelled.
  * ```js
- * const canceller = new TaskCanceller("my Task");
+ * const canceller = new TaskCanceller("my async task");
  *
  * runAsyncTask(canceller.signal)
  *   .then(() => { console.log("Task succeeded!"); )
@@ -111,7 +111,9 @@ import noop from "./noop";
  *        console.log("Task failed:", err);
  *      }
  *   });
- * canceller.cancel("Stopping"); // Cancel the task, calling registered callbacks
+ *
+ * // Cancel the task (with a given reason), calling registered callbacks
+ * canceller.cancel("I changed my mind");
  * ```
  * @class TaskCanceller
  */
@@ -133,18 +135,21 @@ export default class TaskCanceller {
    */
   private _trigger: (error: CancellationError) => void;
 
+  /** Description for this task, if communicated. */
   private _taskName: string | undefined;
 
   /**
    * Creates a new `TaskCanceller`, with its own `CancellationSignal` created
-   * as its `signal` provide.
-   * You can then pass this property to async task you wish to be cancellable.
-   * @param {string|undefined} taskName - Choosen descriptive "name" for the
-   * task, that will be added to the linked `CancellationError`'s message
-   * if/when thrown. The idea is that `TaskCanceller`-linked bugs are very hard
-   * to trace. By adding a descriptive string for the task, it makes the job of
-   * the RxPlayer maintainer easier to easily trace which task we're talking
-   * about.
+   * as its `signal` property.
+   * You can then pass this `signal` property to async task you wish to be
+   * cancellable.
+   * @param {string|undefined} taskName - Descriptive "name" for the task you
+   * want to make cancellable. This is used for debugging purposes: this string
+   * will be linked to the thrown `CancellationError` (and will be logged) if
+   * the task is ever cancelled, making cancellation-related issues much easier
+   * to trace.
+   * By setting it to `undefined`, you indicate that this task does not need
+   * those supplementary debug information and does not need to be logged.
    */
   constructor(taskName: string | undefined) {
     const [trigger, register] = createCancellationFunctions();
@@ -189,9 +194,10 @@ export default class TaskCanceller {
    * `CancellationSignal` (its `signal` property) that a task should be aborted.
    *
    * Once called the `TaskCanceller` is permanently triggered.
-   * @param {string | undefined} reason - Human-inspectable reason behind the
-   * cancellation. Used for debugging matters, especially for debug log
-   * inspection.
+   * @param {string | undefined} reason - Human-readable reason that led to the
+   * cancellation of this task. This is used for debugging matters: the reason
+   * will be linked to the corresponding `CancellationError` instance.
+   * `undefined` if you don't want to give a reason.
    */
   public cancel(reason: string | undefined): void {
     if (this._isUsed) {
@@ -344,17 +350,22 @@ export type ICancellationListener = (error: CancellationError) => void;
 export class CancellationError extends Error {
   public readonly name: "CancellationError";
 
+  /**
+   * Human-readable reason for the cancellation.
+   * `undefined` if no reason was given.
+   */
   public readonly reason: string | undefined;
 
   /**
    * Create a `CancellationError`
-   * @param {string|undefined} taskName - Choosen descriptive "name" for the
-   * task linked to that `CancellationError`, that will be added to this
-   * instance's error `message`.
-   * The idea is that `TaskCanceller`-linked bugs are very hard to trace.
-   * By adding a descriptive string for the task, it makes the job of the
-   * RxPlayer maintainer easier to easily trace which task we're talking
-   * about.
+   * @param {string|undefined} taskName - Descriptive "name" for the task you
+   * just cancelled. This is used for debugging purposes: this string
+   *  will both be logged and be inserted in this `CancellationError`'s
+   *  `message` property.
+   * By setting it to `undefined`, you indicate that this task does not need
+   * those supplementary debug information and does not need to be logged.
+   * @param {string|undefined} reason - Human-readable reason for the
+   * cancellation.
    */
   constructor(taskName: string | undefined, reason: string | undefined) {
     let message =
