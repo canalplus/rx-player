@@ -163,7 +163,9 @@ export default function StreamOrchestrator(
     let enableOutOfBoundsCheck = false;
 
     /** Cancels currently created `PeriodStream`s. */
-    let currentCanceller = new TaskCanceller("SO Streams " + bufferType);
+    let currentCanceller = new TaskCanceller(
+      "StreamOrchestrator Streams for " + bufferType,
+    );
     currentCanceller.linkToSignal(orchestratorCancelSignal);
 
     // Restart the current Stream when the wanted time is in another period
@@ -196,8 +198,10 @@ export default function StreamOrchestrator(
           periodList.removeElement(period);
           callbacks.periodStreamCleared({ type: bufferType, manifest, period });
         }
-        currentCanceller.cancel("SO oob");
-        currentCanceller = new TaskCanceller("SO Streams " + bufferType);
+        currentCanceller.cancel("PeriodStream is out of bounds");
+        currentCanceller = new TaskCanceller(
+          "StreamOrchestrator Streams for " + bufferType,
+        );
         currentCanceller.linkToSignal(orchestratorCancelSignal);
 
         // As previous callbacks may have performed unknown side-effects, just
@@ -223,7 +227,7 @@ export default function StreamOrchestrator(
           if (orchestratorCancelSignal.isCancelled()) {
             return;
           }
-          currentCanceller.cancel("SO deciph update");
+          currentCanceller.cancel("decipherabilityUpdate event");
           callbacks.error(err);
         });
       },
@@ -265,7 +269,7 @@ export default function StreamOrchestrator(
           callbacks.periodStreamCleared(payload);
         },
         error(err: unknown): void {
-          currentCanceller.cancel("SO err");
+          currentCanceller.cancel("PeriodStream err callback");
           callbacks.error(err);
         },
       };
@@ -360,8 +364,10 @@ export default function StreamOrchestrator(
         callbacks.periodStreamCleared({ type: bufferType, manifest, period });
       }
 
-      currentCanceller.cancel("So deciph upd");
-      currentCanceller = new TaskCanceller("SO Streams " + bufferType);
+      currentCanceller.cancel("decipherability update");
+      currentCanceller = new TaskCanceller(
+        "StreamOrchestrator Streams for " + bufferType,
+      );
       currentCanceller.linkToSignal(orchestratorCancelSignal);
 
       /** Remove from the `SegmentSink` all the concerned time ranges. */
@@ -495,7 +501,9 @@ export default function StreamOrchestrator(
     } | null = null;
 
     /** Emits when the `PeriodStream` linked to `basePeriod` should be destroyed. */
-    const currentStreamCanceller = new TaskCanceller("SO Consecutive " + bufferType);
+    const currentStreamCanceller = new TaskCanceller(
+      "StreamOrchestrator current consecutive Streams " + bufferType,
+    );
     currentStreamCanceller.linkToSignal(cancelSignal);
 
     // Stop current PeriodStream when the current position goes over the end of
@@ -525,7 +533,7 @@ export default function StreamOrchestrator(
             manifest,
             period: basePeriod,
           });
-          currentStreamCanceller.cancel("SO pos above");
+          currentStreamCanceller.cancel("Position ahead of PeriodStream");
         }
       },
       { clearSignal: cancelSignal, includeLastObservation: true },
@@ -568,17 +576,17 @@ export default function StreamOrchestrator(
             manifest,
             period: nextStreamInfo.period,
           });
-          nextStreamInfo.canceller.cancel("SO prev active");
+          nextStreamInfo.canceller.cancel("previous PeriodStream is active");
           nextStreamInfo = null;
         }
         consecutivePeriodStreamCb.streamStatusUpdate(value);
       },
       error(err: unknown): void {
         if (nextStreamInfo !== null) {
-          nextStreamInfo.canceller.cancel("SO err prev");
+          nextStreamInfo.canceller.cancel("previous PeriodStream err");
           nextStreamInfo = null;
         }
-        currentStreamCanceller.cancel("SO err curr");
+        currentStreamCanceller.cancel("PeriodStream err");
         consecutivePeriodStreamCb.error(err);
       },
     };
@@ -608,9 +616,11 @@ export default function StreamOrchestrator(
           manifest,
           period: nextStreamInfo.period,
         });
-        nextStreamInfo.canceller.cancel("SO next recreat");
+        nextStreamInfo.canceller.cancel("PeriodStream recreation");
       }
-      const nextStreamCanceller = new TaskCanceller("SO Next " + bufferType);
+      const nextStreamCanceller = new TaskCanceller(
+        "StreamOrchestrator next PeriodStream " + bufferType,
+      );
       nextStreamCanceller.linkToSignal(cancelSignal);
       nextStreamInfo = { canceller: nextStreamCanceller, period: nextPeriod };
       manageConsecutivePeriodStreams(
@@ -682,7 +692,7 @@ export default function StreamOrchestrator(
                   manifest,
                   period: nextStreamInfo.period,
                 });
-                nextStreamInfo.canceller.cancel("SO next Period changed");
+                nextStreamInfo.canceller.cancel("Next Period changed");
                 nextStreamInfo = null;
               }
             }

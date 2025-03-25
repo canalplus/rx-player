@@ -89,7 +89,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    */
   constructor(adaptationRef: SharedReference<IAdaptationChoice | null | undefined>) {
     super();
-    this._canceller = new TaskCanceller("TD");
+    this._canceller = new TaskCanceller("TrackDispatcher initial");
     this._adaptationRef = adaptationRef;
     this._updateToken = false;
     this._lastEmitted = undefined;
@@ -120,14 +120,14 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       this._canceller.cancel("track update null");
 
       // has no point but let's still create one for simplicity sake
-      this._canceller = new TaskCanceller("TD");
+      this._canceller = new TaskCanceller("TrackDispatcher null");
       this._lastEmitted = null;
       this._adaptationRef.setValue(null);
       return;
     }
     const { adaptation, switchingMode, relativeResumingPosition } = newTrackInfo;
     this._canceller.cancel("track update");
-    this._canceller = new TaskCanceller("TD");
+    this._canceller = new TaskCanceller("TrackDispatcher " + adaptation.type);
     const reference = this._constructLockedRepresentationsReference(newTrackInfo);
     if (!this._updateToken) {
       return;
@@ -241,7 +241,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
    */
   public dispose(reason: string | undefined): void {
     this.removeEventListener();
-    this._canceller.cancel(reason ?? "TD dispose");
+    this._canceller.cancel(reason ?? "TrackDispatcher dispose");
     this._adaptationRef.finish();
   }
 }

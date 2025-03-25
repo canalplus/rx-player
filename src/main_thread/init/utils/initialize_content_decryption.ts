@@ -66,7 +66,7 @@ export default function initializeContentDecryption(
     return createEmeDisabledReference("EME feature not activated.");
   }
 
-  const decryptorCanceller = new TaskCanceller("CD");
+  const decryptorCanceller = new TaskCanceller("Init: Decryption Capabilities");
   decryptorCanceller.linkToSignal(cancelSignal);
   const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
     {
@@ -125,7 +125,7 @@ export default function initializeContentDecryption(
   });
 
   contentDecryptor.addEventListener("error", (error) => {
-    decryptorCanceller.cancel("CD err");
+    decryptorCanceller.cancel("ContentDecryptor err");
     callbacks.onError(error);
   });
 

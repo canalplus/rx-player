@@ -141,12 +141,12 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     hasInitSegment: boolean,
     reason: string | undefined,
   ): SharedReference<ISegmentQueueItem> {
-    this._currentContentInfo?.currentCanceller.cancel(reason ?? "SQ reset");
+    this._currentContentInfo?.currentCanceller.cancel(reason ?? "SegmentQueue reset");
     const downloadQueue = new SharedReference<ISegmentQueueItem>({
       initSegment: null,
       segmentQueue: [],
     });
-    const currentCanceller = new TaskCanceller("SQ");
+    const currentCanceller = new TaskCanceller("SegmentQueue " + content.adaptation.type);
     currentCanceller.signal.register(() => {
       downloadQueue.finish();
     });
@@ -199,7 +199,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
           log.debug("SF", "no more media segment to request. Cancelling queue.", {
             type: content.adaptation.type,
           });
-          this._restartMediaSegmentDownloadingQueue(currentContentInfo, "no more media");
+          this._restartMediaSegmentDownloadingQueue(
+            currentContentInfo,
+            "media segment queue empty",
+          );
           return;
         } else if (currentSegmentRequest === null) {
           // There's no request although there are needed segments: start requests
@@ -207,7 +210,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
             type: content.adaptation.type,
             queueLength: segmentQueue.length,
           });
-          this._restartMediaSegmentDownloadingQueue(currentContentInfo, "new media");
+          this._restartMediaSegmentDownloadingQueue(
+            currentContentInfo,
+            "media segment queue start",
+          );
           return;
         } else {
           const nextItem = segmentQueue[0];
@@ -218,7 +224,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
             });
             this._restartMediaSegmentDownloadingQueue(
               currentContentInfo,
-              "media changed",
+              "next media segment changed",
             );
             return;
           }
@@ -263,7 +269,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
         this._restartInitSegmentDownloadingQueue(
           currentContentInfo,
           next.initSegment,
-          "no init",
+          "init segment queue empty",
         );
       },
       { emitCurrentValue: true, clearSignal: currentCanceller.signal },
@@ -281,7 +287,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
    * inspection.
    */
   public stop(reason: string | undefined) {
-    this._currentContentInfo?.currentCanceller.cancel(reason ?? "SQ stop");
+    this._currentContentInfo?.currentCanceller.cancel(reason ?? "SegmentQueue stop");
     this._currentContentInfo = null;
   }
 
@@ -296,7 +302,9 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     reason: string | undefined,
   ): void {
     if (contentInfo.mediaSegmentRequest !== null) {
-      contentInfo.mediaSegmentRequest.canceller.cancel(reason ?? "SQ media restart");
+      contentInfo.mediaSegmentRequest.canceller.cancel(
+        reason ?? "SegmentQueue media restart",
+      );
     }
 
     const { downloadQueue, content, initSegmentInfoRef, currentCanceller } = contentInfo;
@@ -317,7 +325,9 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
         this.trigger("emptyQueue", null);
         return;
       }
-      const canceller = new TaskCanceller("SQ Media");
+      const canceller = new TaskCanceller(
+        "SegmentQueue media segments queue " + content.adaptation.type,
+      );
       const unlinkCanceller =
         currentCanceller === null
           ? noop
@@ -491,13 +501,17 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     const { content, initSegmentInfoRef } = contentInfo;
 
     if (contentInfo.initSegmentRequest !== null) {
-      contentInfo.initSegmentRequest.canceller.cancel(reason ?? "SQ init restart");
+      contentInfo.initSegmentRequest.canceller.cancel(
+        reason ?? "SegmentQueue init restart",
+      );
     }
     if (queuedInitSegment === null) {
       return;
     }
 
-    const canceller = new TaskCanceller("SQ Init");
+    const canceller = new TaskCanceller(
+      "SegmentQueue init segment " + content.adaptation.type,
+    );
     const unlinkCanceller =
       contentInfo.currentCanceller === null
         ? noop

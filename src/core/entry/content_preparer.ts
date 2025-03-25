@@ -85,9 +85,9 @@ export default class ContentPreparer {
    */
   constructor({ hasVideo }: { hasVideo: boolean }) {
     this._currentContent = null;
-    this._currentMediaSourceCanceller = new TaskCanceller("CP MS");
+    this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
     this._hasVideo = hasVideo;
-    const contentCanceller = new TaskCanceller("CP");
+    const contentCanceller = new TaskCanceller("ContentPreparer");
     this._contentCanceller = contentCanceller;
   }
 
@@ -112,7 +112,9 @@ export default class ContentPreparer {
     return new Promise((res, rej) => {
       this.disposeCurrentContent("new init");
       const contentCanceller = this._contentCanceller;
-      const currentMediaSourceCanceller = new TaskCanceller("CP MS");
+      const currentMediaSourceCanceller = new TaskCanceller(
+        "ContentPreparer MediaSource",
+      );
       this._currentMediaSourceCanceller = currentMediaSourceCanceller;
 
       currentMediaSourceCanceller.linkToSignal(contentCanceller.signal);
@@ -328,12 +330,12 @@ export default class ContentPreparer {
   public reloadMediaSource(
     sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   ): Promise<void> {
-    this._currentMediaSourceCanceller.cancel("CP MS reload");
+    this._currentMediaSourceCanceller.cancel("ContentPreparer MediaSource reload");
     if (this._currentContent === null) {
       return Promise.reject(new Error("CP: No content anymore"));
     }
     this._currentContent.trackChoiceSetter.reset();
-    this._currentMediaSourceCanceller = new TaskCanceller("CP MS");
+    this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
 
     const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
@@ -380,7 +382,7 @@ export default class ContentPreparer {
    */
   public disposeCurrentContent(reason: string | undefined) {
     this._contentCanceller.cancel(reason);
-    this._contentCanceller = new TaskCanceller("CP");
+    this._contentCanceller = new TaskCanceller("ContentPreparer");
   }
 }
 

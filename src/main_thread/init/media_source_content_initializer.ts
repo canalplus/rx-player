@@ -151,7 +151,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     super();
     this._settings = settings;
     this._initCanceller = new TaskCanceller("Init");
-    this._currentMediaSourceCanceller = new TaskCanceller("Init MS");
+    this._currentMediaSourceCanceller = new TaskCanceller("Init MediaSource");
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
     this._awaitingRequests = {
@@ -701,7 +701,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             if (sourceBuffer === undefined) {
               return;
             }
-            sourceBuffer.abort("MT worker msg abort SB");
+            sourceBuffer.abort("received AbortSourceBuffer message");
           }
           break;
 
@@ -735,7 +735,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             if (mediaSource?.id !== msgData.mediaSourceId) {
               return;
             }
-            mediaSource.interruptDurationSetting("MT interrupt msg");
+            mediaSource.interruptDurationSetting(
+              "received InterrupMediaSourceDurationUpdate message",
+            );
           }
           break;
 
@@ -1183,7 +1185,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               "Received StopTextDisplayer message but no text displayer exists",
             );
           } else {
-            textDisplayer.stop("stop text displayer msg");
+            textDisplayer.stop("received StopTextDisplayer message");
           }
           break;
         }
@@ -1302,7 +1304,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   public dispose(reason: string | undefined): void {
-    this._initCanceller.cancel("Init MT dispose");
+    this._initCanceller.cancel("Init dispose");
     if (this._currentContentInfo !== null) {
       if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
         this._currentContentInfo.mediaSourceInfo.mediaSource.dispose(reason);
@@ -1315,7 +1317,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     if (this._initCanceller.isUsed()) {
       return;
     }
-    this._initCanceller.cancel("Init MT dispose");
+    this._initCanceller.cancel("Init dispose due to fatal Error");
     this.trigger("error", err);
   }
 
@@ -1548,8 +1550,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     position: number,
     autoPlay: boolean,
   ) {
-    this._currentMediaSourceCanceller.cancel("Init MT MS R");
-    this._currentMediaSourceCanceller = new TaskCanceller("Init MS");
+    this._currentMediaSourceCanceller.cancel("Init MediaSource Reload");
+    this._currentMediaSourceCanceller = new TaskCanceller("Init MediaSource");
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     mediaSourceStatus.setValue(MediaSourceInitializationStatus.AttachNow);
     this.trigger("reloadingMediaSource", { position, autoPlay });

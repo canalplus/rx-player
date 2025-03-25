@@ -164,7 +164,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
     log.debug("DRM", "Starting ContentDecryptor logic.");
 
-    const canceller = new TaskCanceller("DRM CD");
+    const canceller = new TaskCanceller("ContentDecryptor");
     this._currentSessions = [];
     this._canceller = canceller;
     this._initDataQueue = [];
@@ -355,7 +355,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       isInitDataQueueLocked: undefined,
       data: null,
     };
-    this._canceller.cancel(reason ?? "CD dispose");
+    this._canceller.cancel(reason ?? "ContentDecryptor dispose");
     this.trigger("stateChange", this._stateData.state);
   }
 
@@ -948,7 +948,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
       isInitDataQueueLocked: undefined,
       data: null,
     };
-    this._canceller.cancel("CD err");
+    this._canceller.cancel("ContentDecryptor err");
     this.trigger("error", formattedErr);
 
     // The previous trigger might have lead to a disposal of the `ContentDecryptor`.

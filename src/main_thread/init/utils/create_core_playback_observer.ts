@@ -122,7 +122,7 @@ export default function createCorePlaybackObserver(
     observationRef: IReadOnlySharedReference<IPlaybackObservation>,
     parentObserverCancelSignal: CancellationSignal,
   ): IReadOnlySharedReference<ICorePlaybackObservation> {
-    const canceller = new TaskCanceller("Core PO");
+    const canceller = new TaskCanceller("Core PlaybackObserver");
     canceller.linkToSignal(parentObserverCancelSignal);
     canceller.linkToSignal(fnCancelSignal);
     const newRef = new SharedReference(
