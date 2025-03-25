@@ -160,8 +160,8 @@ export default class MainMediaSourceInterface
   }
 
   /** @see IMediaSourceInterface */
-  public interruptDurationSetting() {
-    this._durationUpdater.stopUpdating();
+  public interruptDurationSetting(reason: string | undefined) {
+    this._durationUpdater.stopUpdating(reason);
   }
 
   /** @see IMediaSourceInterface */
@@ -184,9 +184,9 @@ export default class MainMediaSourceInterface
   }
 
   /** @see IMediaSourceInterface */
-  public dispose() {
-    this.sourceBuffers.forEach((s) => s.dispose());
-    this._canceller.cancel("MSI dispose");
+  public dispose(reason: string | undefined) {
+    this.sourceBuffers.forEach((s) => s.dispose(reason));
+    this._canceller.cancel(reason ?? "MSI dispose");
     resetMediaSource(this._mediaSource);
   }
 }
@@ -290,7 +290,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   /** @see ISourceBufferInterface */
-  public abort(): void {
+  public abort(reason: string | undefined): void {
     try {
       this._sourceBuffer.abort();
     } catch (err) {
@@ -300,17 +300,17 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
         err instanceof Error ? err : "Unknown Error",
       );
     }
-    this._emptyCurrentQueue();
+    this._emptyCurrentQueue(reason);
   }
 
   /** @see ISourceBufferInterface */
-  public dispose(): void {
+  public dispose(reason: string | undefined): void {
     try {
       this._sourceBuffer.abort();
     } catch (_) {
       // we don't care
     }
-    this._emptyCurrentQueue();
+    this._emptyCurrentQueue(reason);
   }
 
   private _onError(evt: Event) {
@@ -360,8 +360,13 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._performNextOperation();
   }
 
-  private _emptyCurrentQueue(): void {
-    const error = new CancellationError("SBI empty", "empty");
+  /**
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * action. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  private _emptyCurrentQueue(reason: string | undefined): void {
+    const error = new CancellationError("SBI queue", reason);
     if (this._currentOperations.length > 0) {
       this._currentOperations.forEach((op) => {
         op.reject(error);

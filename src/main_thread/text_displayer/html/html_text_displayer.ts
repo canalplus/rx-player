@@ -247,27 +247,29 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 
   public reset(): void {
     log.debug("text", "Resetting HTMLTextDisplayer");
-    this.stop();
+    this.stop("HTD reset");
     this._subtitlesIntervalCanceller = new TaskCanceller("HTD Sub");
   }
 
-  public stop(): void {
+  public stop(reason: string | undefined): void {
     if (this._subtitlesIntervalCanceller.isUsed()) {
       return;
     }
     log.debug("text", "Stopping HTMLTextDisplayer");
-    this._disableCurrentCues();
+    this._disableCurrentCues(reason ?? "HTD stop");
     this._buffer.remove(0, Infinity);
     this._buffered.remove(0, Infinity);
     this._isAutoRefreshing = false;
-    this._subtitlesIntervalCanceller.cancel("HTD stop");
+    this._subtitlesIntervalCanceller.cancel(reason ?? "HTD stop");
   }
 
   /**
    * Remove the current cue from being displayed.
+   * @param {string} reason - Human-inspectable reason.
+   * Used for debugging matters, especially for debug log inspection.
    */
-  private _disableCurrentCues(): void {
-    this._sizeUpdateCanceller.cancel("HTD disable curr");
+  private _disableCurrentCues(reason: string): void {
+    this._sizeUpdateCanceller.cancel(reason);
     if (this._currentCues.length > 0) {
       for (const cue of this._currentCues) {
         safelyRemoveChild(this._textTrackElement, cue.element);
@@ -376,7 +378,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       this._videoElement,
       () => {
         stopAutoRefresh();
-        this._disableCurrentCues();
+        this._disableCurrentCues("seek");
       },
       cancellationSignal,
     );
@@ -405,7 +407,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     }
     const cues = this._buffer.get(time);
     if (cues.length === 0) {
-      this._disableCurrentCues();
+      this._disableCurrentCues("no cue");
     } else {
       this._displayCues(cues);
     }

@@ -89,16 +89,24 @@ export interface ISourceBufferInterface {
    * @returns {Promise.<Array.<Object>>}
    */
   remove(start: number, end: number): Promise<IRange[]>;
-  /** Abort all operations pending on the `SourceBuffer`. */
-  abort(): void;
+  /**
+   * Abort all operations pending on the `SourceBuffer`.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * abort. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  abort(reason: string | undefined): void;
   /**
    * Abort all operations pending on the `SourceBuffer` AND free up all
    * resources taken by the `ISourceBufferInterface`.
    *
    * The `ISourceBufferInterface` implementation might not be usable after
    * this call, it should mostly be called for clean-up.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  dispose(): void;
+  dispose(reason: string | undefined): void;
   /**
    * Returns the current range of buffered data, or `undefined` if this is not
    * obtainable synchronously.
@@ -247,8 +255,11 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
   /**
    * Interrupt a duration update background task previously started through
    * a `setDuration` call.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * interrupt. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  interruptDurationSetting(): void;
+  interruptDurationSetting(reason: string | undefined): void;
 
   /**
    * Signal to the `IMediaSourceInterface` that all media segments until the
@@ -272,8 +283,11 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
   /**
    * Free all resources taken by the `IMediaSourceInterface`, including all its
    * inner `ISourceBufferInterface` objects.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  dispose(): void;
+  dispose(reason: string | undefined): void;
 
   /**
    * Only set for `IMediaSourceInterface` objects which cannot rely on

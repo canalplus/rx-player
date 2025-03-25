@@ -38,16 +38,16 @@ export default function createContentTimeBoundariesObserver(
   callbacks: IContentTimeBoundariesObserverCallbacks,
   cancelSignal: CancellationSignal,
 ): ContentTimeBoundariesObserver {
-  cancelSignal.register(() => {
-    mediaSource.interruptDurationSetting();
+  cancelSignal.register((err) => {
+    mediaSource.interruptDurationSetting(err.reason);
   });
   const contentTimeBoundariesObserver = new ContentTimeBoundariesObserver(
     manifest,
     streamObserver,
     segmentSinksStore.getBufferTypes(),
   );
-  cancelSignal.register(() => {
-    contentTimeBoundariesObserver.dispose();
+  cancelSignal.register((err) => {
+    contentTimeBoundariesObserver.dispose(err.reason);
   });
   contentTimeBoundariesObserver.addEventListener("warning", (err) =>
     callbacks.onWarning(err),

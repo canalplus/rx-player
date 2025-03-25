@@ -92,8 +92,8 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
       this._playbackObserver,
       this._speed,
     );
-    this._canceller.signal.register(() => {
-      playbackRateUpdater.dispose();
+    this._canceller.signal.register((err) => {
+      playbackRateUpdater.dispose(err.reason);
     });
 
     this._playbackObserver.listen(
@@ -333,9 +333,12 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
   /**
    * Stops the `RebufferingController` from montoring stalling situations,
    * forever.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public destroy(): void {
-    this._canceller.cancel("RC destroy");
+  public destroy(reason: string | undefined): void {
+    this._canceller.cancel(reason ?? "RC destroy");
   }
 }
 
@@ -551,9 +554,12 @@ class PlaybackRateUpdater {
    *
    * Consequently, you should call the `dispose` method, when you don't want the
    * `PlaybackRateUpdater` to have an effect anymore.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * cancellation. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose() {
-    this._speedUpdateCanceller.cancel("PRU dispose");
+  public dispose(reason: string | undefined) {
+    this._speedUpdateCanceller.cancel(reason ?? "PRU dispose");
     this._isDisposed = true;
   }
 

@@ -254,10 +254,10 @@ export default class AudioVideoSegmentSink extends SegmentSink {
   }
 
   /** @see SegmentSink */
-  public dispose(): void {
+  public dispose(reason: string | undefined): void {
     try {
       log.debug("Stream", "Calling `dispose` on the SourceBufferInterface");
-      this._sourceBuffer.dispose();
+      this._sourceBuffer.dispose(reason);
     } catch (e) {
       log.debug(
         "Stream",

@@ -235,10 +235,13 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
   /**
    * Free the resources (e.g. `Manifest` event listeners) linked to this
    * `TrackDispatcher`.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose(): void {
+  public dispose(reason: string | undefined): void {
     this.removeEventListener();
-    this._canceller.cancel("TD dispose");
+    this._canceller.cancel(reason ?? "TD dispose");
     this._adaptationRef.finish();
   }
 }

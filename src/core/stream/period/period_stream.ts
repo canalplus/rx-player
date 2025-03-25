@@ -381,7 +381,7 @@ export default function PeriodStream(
           `${bufferType} Stream crashed. Aborting it.`,
           error instanceof Error ? error : "",
         );
-        segmentSinksStore.disposeSegmentSink(bufferType);
+        segmentSinksStore.disposeSegmentSink(bufferType, "adap stream err");
 
         const formattedError = formatError(error, {
           defaultCode: "NONE",

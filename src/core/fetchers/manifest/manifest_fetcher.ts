@@ -120,9 +120,12 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    *
    * Once `dispose` has been called. This `ManifestFetcher` cannot be relied on
    * anymore.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * cancellation. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose() {
-    this._canceller.cancel("MF dispose");
+  public dispose(reason: string | undefined) {
+    this._canceller.cancel(reason ?? "MF dispose");
     this.removeEventListener();
   }
 
@@ -709,7 +712,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       return;
     }
     this.trigger("error", err);
-    this.dispose();
+    this.dispose("MF fatal err");
   }
 }
 

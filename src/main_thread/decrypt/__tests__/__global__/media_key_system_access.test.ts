@@ -1282,7 +1282,7 @@ describe("decrypt - global tests - media key system access", () => {
     const mockRequestMediaKeySystemAccess = vi.fn().mockImplementation(() => {
       return Promise.resolve().then(() => {
         rmksHasBeenCalled = true;
-        contentDecryptor?.dispose();
+        contentDecryptor?.dispose(undefined);
         return Promise.reject("nope");
       });
     });

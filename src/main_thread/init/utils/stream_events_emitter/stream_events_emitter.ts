@@ -147,9 +147,14 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     this._scheduledEventsRef.setValue(refreshScheduledEventsList(prev, man));
   }
 
-  public stop(): void {
+  /**
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * stop. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  public stop(reason: string | undefined): void {
     if (this._canceller !== null) {
-      this._canceller.cancel("SSE stop");
+      this._canceller.cancel(reason ?? "SSE stop");
       this._canceller = null;
     }
   }

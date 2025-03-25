@@ -53,7 +53,7 @@ export default class MainThreadTextDisplayerInterface implements ITextDisplayerI
   /**
    * @see ITextDisplayerInterface
    */
-  public stop(): void {
-    this._displayer.stop();
+  public stop(reason?: string | undefined): void {
+    this._displayer.stop(reason);
   }
 }

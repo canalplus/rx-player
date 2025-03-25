@@ -135,10 +135,13 @@ export default class MediaSourceDurationUpdater {
 
   /**
    * Abort the last duration-setting operation and free its resources.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * stop. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public stopUpdating() {
+  public stopUpdating(reason: string | undefined) {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
-      this._currentMediaSourceDurationUpdateCanceller.cancel("stop MSDU");
+      this._currentMediaSourceDurationUpdateCanceller.cancel(reason ?? "stop MSDU");
       this._currentMediaSourceDurationUpdateCanceller = null;
     }
   }

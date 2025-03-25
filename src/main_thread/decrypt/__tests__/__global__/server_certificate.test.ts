@@ -67,7 +67,7 @@ describe("decrypt - global tests - server certificate", () => {
             contentDecryptor.attach();
           }, 5);
           setTimeout(() => {
-            contentDecryptor.dispose();
+            contentDecryptor.dispose(undefined);
             expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
             expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
             expect(mockCreateSession).not.toHaveBeenCalled();
@@ -121,7 +121,7 @@ describe("decrypt - global tests - server certificate", () => {
     });
     return new Promise<void>((res) => {
       setTimeout(() => {
-        contentDecryptor.dispose();
+        contentDecryptor.dispose(undefined);
         expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
         expect(mockCreateSession).toHaveBeenCalledTimes(1);
@@ -163,7 +163,7 @@ describe("decrypt - global tests - server certificate", () => {
     });
     return new Promise<void>((res) => {
       setTimeout(() => {
-        contentDecryptor.dispose();
+        contentDecryptor.dispose(undefined);
         expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
         expect(mockCreateSession).not.toHaveBeenCalled();
@@ -206,7 +206,7 @@ describe("decrypt - global tests - server certificate", () => {
     });
     return new Promise<void>((res) => {
       setTimeout(() => {
-        contentDecryptor.dispose();
+        contentDecryptor.dispose(undefined);
         expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockSetServerCertificate).toHaveBeenCalledTimes(1);
         expect(mockCreateSession).not.toHaveBeenCalled();
@@ -264,7 +264,7 @@ describe("decrypt - global tests - server certificate", () => {
     });
     return new Promise<void>((res) => {
       setTimeout(() => {
-        contentDecryptor.dispose();
+        contentDecryptor.dispose(undefined);
         expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
         expect(mockSetServerCertificate).not.toHaveBeenCalled();
         expect(mockCreateSession).toHaveBeenCalledTimes(1);

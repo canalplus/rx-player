@@ -475,7 +475,7 @@ async function checkGetLicense({
               "license-request",
             );
           }
-          contentDecryptor.dispose();
+          contentDecryptor.dispose(undefined);
           res();
         } catch (e) {
           rej(e);
