@@ -62,10 +62,7 @@ export default function initializeWorkerMain() {
    *
    * Creating a default one which may change on initialization.
    */
-  let contentPreparer = new ContentPreparer({
-    hasMseInWorker: false,
-    hasVideo: true,
-  });
+  let contentPreparer = new ContentPreparer({ hasVideo: true });
 
   /**
    * Abort all operations relative to the currently loaded content.
@@ -109,12 +106,9 @@ export default function initializeWorkerMain() {
           });
         }
 
-        if (!msg.value.hasVideo || msg.value.hasMseInWorker) {
+        if (!msg.value.hasVideo) {
           contentPreparer.disposeCurrentContent();
-          contentPreparer = new ContentPreparer({
-            hasMseInWorker: msg.value.hasMseInWorker,
-            hasVideo: msg.value.hasVideo,
-          });
+          contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
         }
 
         sendMessage({ type: WorkerMessageType.InitSuccess, value: null });

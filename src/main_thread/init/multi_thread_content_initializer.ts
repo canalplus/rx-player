@@ -1,5 +1,4 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import hasMseInWorker from "../../compat/has_mse_in_worker";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
@@ -170,7 +169,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return;
     }
     const contentId = generateContentId();
-    const { adaptiveOptions, transportOptions, worker } = this._settings;
+    const { adaptiveOptions, transportOptions, useMseInWorker, worker } = this._settings;
     const { wantedBufferAhead, maxVideoBufferSize, maxBufferAhead, maxBufferBehind } =
       this._settings.bufferOptions;
     const initialVideoBitrate = adaptiveOptions.initialBitrates.video;
@@ -185,6 +184,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       initialTime: undefined,
       autoPlay: undefined,
       initialPlayPerformed: null,
+      useMseInWorker,
     };
     sendMessage(worker, {
       type: MainThreadMessageType.PrepareContent,
@@ -202,6 +202,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           lowLatencyMode: this._settings.lowLatencyMode,
         },
         segmentRetryOptions: this._settings.segmentRequestOptions,
+        useMseInWorker,
       },
     });
     this._initCanceller.signal.register(() => {
@@ -1413,7 +1414,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       const updatedCodecs = updateManifestCodecSupport(
         manifest,
         this._currentContentInfo?.contentDecryptor ?? null,
-        hasMseInWorker,
+        this._currentContentInfo?.useMseInWorker ?? false,
       );
       if (updatedCodecs.length > 0) {
         sendMessage(this._settings.worker, {
@@ -1947,11 +1948,28 @@ export interface IMultiThreadContentInitializerContentInfos {
    * Set to `null` when those considerations are not taken.
    */
   contentDecryptor: IContentDecryptor | null;
+  /**
+   * If `true`, MSE API should be used in the core part of the RxPlayer (in the
+   * WebWorker).
+   * If `false`, they should be relied on on main thread.
+   */
+  useMseInWorker: boolean;
 }
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
 export interface IInitializeArguments {
+  /** WebWorker inside which the core code runs. */
   worker: Worker;
+  /**
+   * If `true`, MSE API should be used in the core part of the RxPlayer (in the
+   * WebWorker).
+   * If `false`, they should be relied on on main thread.
+   *
+   * This might depend on both browser capabilities and preferences. It is
+   * assumed that the caller perform all those checks, the `ContentInitializer`
+   * won't check again the validity of this value.
+   */
+  useMseInWorker: boolean;
   /** Options concerning the ABR logic. */
   adaptiveOptions: IAdaptiveRepresentationSelectorArguments;
   /** `true` if we should play when loaded. */

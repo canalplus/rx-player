@@ -56,14 +56,6 @@ export interface IInitMessage {
      * elements (`<audio>` tags).
      */
     hasVideo: boolean;
-    /**
-     * If `true` the current platform exposes Media Source extensions (MSE) API
-     * in a WebWorker environment.
-     *
-     * If `false`, every MSE API has to be called on the main thread, usually
-     * by messages posted by the WebWorker.
-     */
-    hasMseInWorker: boolean;
     /** Initial logging level that should be set. */
     logLevel: ILoggerLevel;
     /** Intitial logger's log format that should be set. */
@@ -148,6 +140,16 @@ export interface IContentInitializationData {
   manifestRetryOptions: Omit<IManifestFetcherSettings, "cmcdDataBuilder">;
   /** Options relative to the fetching of media segments. */
   segmentRetryOptions: ISegmentQueueCreatorBackoffOptions;
+  /**
+   * If `true`, MSE API should be used in the core part of the RxPlayer (in the
+   * WebWorker).
+   * If `false`, they should be relied on on main thread.
+   *
+   * This might depend on both browser capabilities and preferences. It is
+   * assumed that the caller perform all those checks, the core won't check
+   * again the validity of this value.
+   */
+  useMseInWorker: boolean;
 }
 
 export interface ILogLevelUpdateMessage {
