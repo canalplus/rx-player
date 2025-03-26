@@ -57,7 +57,6 @@ export interface IConstructorOptions {
   maxVideoBufferSize?: number;
   videoResolutionLimit?: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden?: boolean;
-  reloadMediaSourceForFirstIncompatiblePeriodSwitch?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-restricted-types
   videoElement?: HTMLMediaElement;
   baseBandwidth?: number;

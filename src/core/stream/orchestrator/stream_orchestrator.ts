@@ -43,12 +43,6 @@ import PeriodStream from "../period";
 import type { IStreamStatusPayload } from "../representation";
 import getTimeRangesForContent from "./get_time_ranges_for_content";
 
-type FirstIncompatiblePeriodSwitchIssueStatus =
-  | "INITIAL"
-  | "NEEDS_RELOAD"
-  | "NO_NEEDS_RELOAD"
-  | "RELOADED";
-
 /**
  * Create and manage the various "Streams" needed for the content to
  * play:
@@ -124,16 +118,7 @@ export default function StreamOrchestrator(
     );
   }
 
-  let firstIncompatiblePeriodSwitchIssueStatus: FirstIncompatiblePeriodSwitchIssueStatus =
-    "INITIAL";
-
   const isInitialPeriodEncrypted = isPeriodEncrypted(initialPeriod);
-
-  if (reloadMediaSourceForFirstIncompatiblePeriodSwitch) {
-    firstIncompatiblePeriodSwitchIssueStatus = isInitialPeriodEncrypted
-      ? "NO_NEEDS_RELOAD"
-      : "NEEDS_RELOAD";
-  }
 
   const {
     MINIMUM_MAX_BUFFER_AHEAD,
@@ -512,11 +497,10 @@ export default function StreamOrchestrator(
             nextPeriod !== null && isPeriodEncrypted(nextPeriod);
 
           if (
-            firstIncompatiblePeriodSwitchIssueStatus === "NEEDS_RELOAD" &&
+            !isInitialPeriodEncrypted &&
             isNextPeriodEncrypted &&
             reloadMediaSourceForFirstIncompatiblePeriodSwitch
           ) {
-            firstIncompatiblePeriodSwitchIssueStatus = "RELOADED";
             callbacks.needsMediaSourceReload({
               timeOffset: 0.1,
               minimumPosition: undefined,
