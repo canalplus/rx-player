@@ -409,7 +409,7 @@ export default function getMediaKeySystemAccess(
           value: {
             mediaKeySystemAccess: currentState.mediaKeySystemAccess,
             askedConfiguration: currentState.askedConfiguration,
-            options: currentState.keySystemOptions,
+            options: keySystemOptions,
           },
         });
       }
