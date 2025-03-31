@@ -263,6 +263,7 @@ export default class TrackChoiceManager {
     period: Period,
     adaptationRef: SharedReference<Adaptation | null | undefined>,
   ): void {
+    log.debug("TCM: Adding Track Reference", bufferType, period.id);
     const periodItem = getPeriodItem(this._periods, period);
     const adaptations = period.getSupportedAdaptations(bufferType);
     if (periodItem !== undefined) {
@@ -271,7 +272,7 @@ export default class TrackChoiceManager {
           `TrackChoiceManager: ${bufferType} already added for period`,
           period.start,
         );
-        return;
+        periodItem[bufferType]?.adaptationRef.finish();
       } else {
         periodItem[bufferType] = { adaptations, adaptationRef };
       }
@@ -287,6 +288,7 @@ export default class TrackChoiceManager {
    * @param {Period} period - The concerned Period.
    */
   public removePeriod(bufferType: "audio" | "text" | "video", period: Period): void {
+    log.debug("TCM: Removing Track Reference", bufferType, period.id);
     const periodIndex = findPeriodIndex(this._periods, period);
     if (periodIndex === undefined) {
       log.warn(`TrackChoiceManager: ${bufferType} not found for period`, period.start);
@@ -312,6 +314,7 @@ export default class TrackChoiceManager {
   }
 
   public resetPeriods(): void {
+    log.debug("TCM: Resetting Period Objects");
     while (this._periods.length() > 0) {
       this._periods.pop();
     }
