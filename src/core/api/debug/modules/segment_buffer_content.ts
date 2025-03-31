@@ -127,7 +127,7 @@ function constructRepresentationInfo(content: {
     isSignInterpreted,
     type: bufferType,
   } = content.adaptation;
-  const { id, height, width, bitrate, codec } = content.representation;
+  const { id, height, width, bitrate, codec, hdrInfo } = content.representation;
   let representationInfo = `"${id}" `;
   if (height !== undefined && width !== undefined) {
     representationInfo += `${width}x${height} `;
@@ -140,6 +140,9 @@ function constructRepresentationInfo(content: {
   }
   if (language !== undefined) {
     representationInfo += `l:"${language}" `;
+  }
+  if (bufferType === "video" && hdrInfo !== undefined) {
+    representationInfo += "hdr:1 ";
   }
   if (bufferType === "video" && typeof isSignInterpreted === "boolean") {
     representationInfo += `si:${isSignInterpreted ? 1 : 0} `;
