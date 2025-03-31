@@ -110,7 +110,7 @@ export default function getInitialTime(
       log.debug("Init: using startAt.fromLastPosition");
       const { fromLastPosition } = startAt;
       return fromLastPosition >= 0 ? max : Math.max(min, max + fromLastPosition);
-    } else if (!isNullOrUndefined(startAt.fromLivePosition)) {
+    } else if (!isNullOrUndefined(startAt.fromLivePosition) && manifest.isLive) {
       log.debug("Init: using startAt.fromLivePosition");
       const livePosition = getLivePosition(manifest) ?? max;
       const { fromLivePosition } = startAt;
