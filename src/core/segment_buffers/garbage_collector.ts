@@ -18,6 +18,7 @@ import log from "../../log";
 import { getInnerAndOuterTimeRanges } from "../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import type { CancellationSignal } from "../../utils/task_canceller";
+import TaskCanceller from "../../utils/task_canceller";
 import type { IReadOnlyPlaybackObserver } from "../api";
 import type { IStreamOrchestratorPlaybackObservation } from "../stream";
 import type { SegmentBuffer } from "./implementations";
@@ -70,6 +71,9 @@ export default function BufferGarbageCollector(
       maxBufferAhead.getValue(),
       cancellationSignal,
     ).catch((e) => {
+      if (cancellationSignal.isCancelled() && TaskCanceller.isCancellationError(e)) {
+        return;
+      }
       const errMsg = e instanceof Error ? e.message : "Unknown error";
       log.error("Could not run BufferGarbageCollector:", errMsg);
     });
