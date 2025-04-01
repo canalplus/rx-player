@@ -1,6 +1,34 @@
 # Changelog
 
-## Current dev build: v3.33.4-dev.2025021800
+## Current dev build: v3.33.5-dev.2025040100
+
+### Bug fixes
+
+- DRM: fix typo which prevented `MediaKeys` reusage on some devices including desktop
+  browsers [#1679]
+- DRM: Only ask for `"persistent-license"` `MediaKeySession` (and not also for
+  `"temporary"` license) when the `keySystems[].persistentLicense` option is set to `true`
+- DRM: Fix reusage of some `keySystems[]` option changing when reusing a
+  `MediaKeySystemAccess` with a different `keySystems[]` configuration [#1678]
+- DRM: Fix `KEY_UPDATE_ERROR` which was mistakenly inheriting the code `KEY_LOAD_ERROR`
+  [#1682]
+- Fix minor memory leak when switching RepresentationStream through ABR [#1681]
+- fix rare infinite rebuffering issues that may happen when updating tracks in a
+  `newAvailablePeriods` event [#1680]
+
+### Other improvements
+
+- Compat: Limit long "FREEZING" issues on Tizen (samsung) by awaiting for browser action
+  before seeking ourselves over a discontinuity [#1673]
+- DRM: Only reuse cached `MediaKeySystemAccess` if none is more wanted for the current
+  content [#1674]
+- DRM: Reuse cache even if key system type given in API is not the same
+- DEBUG_ELEMENT: Add buffer size estimate to debug buffer content graph [#1672]
+- DEBUG_ELEMENT: Add `hdr` information to video Representation [#1671]
+- Avoid error log when stopping a stream with a pending `BufferGarbageCollector` buffer
+  removal [#1685]
+
+## v3.33.4
 
 ### Bug fixes
 
