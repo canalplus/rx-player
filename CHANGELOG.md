@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.3.0-dev.2025031700
+## Current dev build: v4.3.0-dev.2025040100
 
 ### Features
 
@@ -16,6 +16,9 @@
 
 - Tracks API do not return unplayable representations by default [#1599]
 - MULTI_THREAD: Fix `onmessageerror` being undefined on older devices [#1585]
+- MULTI_THREAD: Do not attempt to play audio and/or video media data in a Worker whose
+  codec is not supported specifically in a Worker context (previous behavior led to some
+  fatal errors on Edge with HEVC support) [#1664]
 - Compat: On "FREEZING" try to un-freeze regardless of if the wanted position was reached
   to fix a remaining Tizen (Samsung) infinite rebuffering issue [#1586]
 - MULTI_THREAD: Fix error not being thrown on manifest update [#1653]
@@ -27,6 +30,9 @@
   communicated [#1604]
 - DRM: Fix reusage of some `keySystems[]` option changing when reusing a
   `MediaKeySystemAccess` with a different `keySystems[]` configuration [#1616]
+- DRM: Fix `KEY_UPDATE_ERROR` which was mistakenly inheriting the code `KEY_LOAD_ERROR`
+  [#1670]
+- Fix minor memory leak when switching RepresentationStream through ABR [#1665]
 - On Tizen, fix infinite loading that may occur in some condition if both the audio and
   video segments have a gap at the expected initial position [#1637]
 - fix rare infinite rebuffering issues that may happen when updating tracks in a
@@ -47,6 +53,8 @@
 - DEBUG_ELEMENT: Add buffer size estimate to debug buffer content graph [#1558]
 - DEBUG_ELEMENT: Add `hdr` information to video Representation [#1583]
 - Set LogFormat to `full` on RxPlayer's debug mode [#1625]
+- Avoid error log when stopping a stream with a pending `BufferGarbageCollector` buffer
+  removal [#1684]
 - tests: Our performance-regression tests now run on all RxPlayer updates to better
   protect against performance regressions [#1630]
 - CI/tests: CI integration tests on Edge and windows [#1621]
