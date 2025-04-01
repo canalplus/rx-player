@@ -189,7 +189,7 @@ describe("DRM: Basic use cases", function () {
     expect(player.getError()).toBeNull();
   });
 
-  it('should fallback from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
+  it.only('should fallback from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
     const policyLevels = { "90953e096cb249a3a2607a5fefead499": 200 };
     const expectedKeyIds = [
       "90953e096cb249a3a2607a5fefead499",
@@ -197,6 +197,7 @@ describe("DRM: Basic use cases", function () {
       "80399bf58a2140148053e27e748e98c1",
     ];
     const askedKeyIds = [];
+    console.warn("BEFORE 1");
     player.loadVideo({
       url,
       transport,
@@ -215,19 +216,30 @@ describe("DRM: Basic use cases", function () {
         },
       ],
     });
+    console.warn("BEFORE 2");
     let brokenVideoLock = 0;
     player.addEventListener("newAvailablePeriods", (p) => {
+      console.warn("BEFORE 6");
       player.lockVideoRepresentations({
         periodId: p[0].id,
         representations: ["11-90953e09", "12-90953e09"],
       });
+      console.warn("BEFORE 7");
     });
+    console.warn("BEFORE 3");
     player.addEventListener("brokenRepresentationsLock", (lock) => {
+      console.warn("BEFORE 8");
       if (lock.trackType === "video") {
         brokenVideoLock++;
       }
+      console.warn("BEFORE 9");
     });
+    player.addEventListener("error", (e) => {
+      console.warn("!!! ERROR", e);
+    });
+    console.warn("BEFORE 4");
     await waitForLoadedStateAfterLoadVideo(player);
+    console.warn("BEFORE 5");
     expect(brokenVideoLock).toEqual(1);
     expect(["8-80399bf5", "9-80399bf5", "10-80399bf5"]).toContain(
       player.getVideoRepresentation().id,

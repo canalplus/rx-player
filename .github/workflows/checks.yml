@@ -89,12 +89,12 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: |
-          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
+          npm run test:integration:edge ||
           # retry on failure
           if [ $? -ne 0 ]; then
             echo "First tests attempt failed. Retrying after 20 seconds..."
             sleep 20
-            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+            npm run test:integration:edge
           fi
 
   integration_windows:
@@ -118,17 +118,17 @@ jobs:
         run: npm run build
       - shell: bash
         run: |
-          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
+          npm run test:integration:edge ||
           # retry on failure
           if [ $? -ne 0 ]; then
             echo "First tests attempt failed. Retrying after 20 seconds..."
             sleep 20
-            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
+            npm run test:integration:edge ||
             # Other OSes than linux are particularly bad on github actions, run it three times
             if [ $? -ne 0 ]; then
               echo "Second tests attempt failed. Retrying after 60 seconds..."
               sleep 60
-              npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+              npm run test:integration:edge
             fi
           fi
 

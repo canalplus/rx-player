@@ -63,6 +63,7 @@ export function generateGetLicenseForFakeLicense({
           const challengeStr = textDecoder.decode(challenge);
           const challengeObj = JSON.parse(challengeStr);
           const keys = {};
+          console.warn("!!!! CHALLENGE", challengeStr);
           for (const kid of challengeObj.keyIds) {
             if (Array.isArray(expectedKeyIds)) {
               expect(expectedKeyIds).toContain(kid);
@@ -89,6 +90,7 @@ export function generateGetLicenseForFakeLicense({
                   failingKeyIds[k].fallbackOnLastTry === true
                 );
               });
+              console.warn("ERROR: ", error.noRetry, "-", error.fallbackOnLastTry);
               reject(error);
               return;
             }

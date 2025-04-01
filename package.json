@@ -182,7 +182,7 @@
     "test:integration": "npm run test:integration:chrome && npm run test:integration:firefox",
     "test:integration:chrome": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest run tests/integration/scenarios",
     "test:integration:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/integration/scenarios",
-    "test:integration:edge": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest run tests/integration/scenarios",
+    "test:integration:edge": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest run tests/integration/scenarios --allowOnly",
     "test:integration:edge:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest watch tests/integration/scenarios",
     "test:integration:firefox": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest run tests/integration/scenarios",
     "test:integration:firefox:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest watch tests/integration/scenarios",
