@@ -33,6 +33,7 @@ describe("find_key_systems - ", () => {
   it("should resolve if the keySystem is supported", async () => {
     /* mock implementation of requestMediaKeySystemAccess that support the keySystem */
     requestMediaKeySystemAccessMock.mockImplementation(() => ({
+      keySystem: "com.widevine.alpha",
       createMediaKeys: () => ({
         createSession: () => ({
           // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -66,6 +67,7 @@ describe("find_key_systems - ", () => {
 
     canRelyOnEMEMock.mockImplementation(() => false);
     requestMediaKeySystemAccessMock.mockImplementation(() => ({
+      keySystem: "com.widevine.alpha",
       createMediaKeys: () => ({
         createSession: () => ({
           generateRequest: () => {

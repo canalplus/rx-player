@@ -396,7 +396,7 @@ export default function getMediaKeySystemAccess(
         currentState !== null &&
         !shouldRenewMediaKeySystemAccess() &&
         // TODO: Do it with MediaKeySystemAccess.prototype.keySystem instead?
-        keyType === currentState.keySystemOptions.type &&
+        keyType === currentState.mediaKeySystemAccess.keySystem &&
         eme.implementation === currentState.emeImplementation.implementation &&
         isNewMediaKeySystemConfigurationCompatibleWithPreviousOne(
           keySystemConfiguration,
