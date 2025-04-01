@@ -54,7 +54,7 @@ export function parseCodec(unparsedCodec: string): { mimeType: string; codecs: s
   codecs = codecs.substring(LENGTH_OF_CODEC_PREFIX);
   // remove the leading and trailing quote
   if (codecs[0] === '"') {
-    codecs = codecs.substring(1, codecs.length - 2);
+    codecs = codecs.substring(1, codecs.length - 1);
   }
 
   return { mimeType, codecs };

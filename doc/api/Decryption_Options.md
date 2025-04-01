@@ -251,7 +251,7 @@ Note that if setting that property to `true` fixes your issue, it may be that it
 the [`maxSessionCacheSize`](#maxsessioncachesize) which is for now too high.
 
 However if your problem doesn't disappear after setting `closeSessionsOnStop` to `true`,
-you may try [`reuseMediaKeys`](#renewmediakeys) next.
+you may try [`reuseMediaKeys`](#reusemediakeys) next.
 
 ### reuseMediaKeys
 
@@ -597,3 +597,49 @@ The `type` property can be set to one of the three following values:
   you're setting the `audioCapabilitiesConfig` property) of the resulting
   [MediaKeySystemConfiguration](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration)
   wanted by the RxPlayer.
+
+### wantedSessionTypes
+
+_type_: `Array.<string> | undefined`
+
+Force a
+[`sessionTypes`](https://www.w3.org/TR/encrypted-media-2/#dom-mediakeysystemconfiguration-sessiontypes)
+value for the corresponding `MediaKeySystemConfiguration` asked when creating a
+[`MediaKeySystemAccess`](https://www.w3.org/TR/encrypted-media-2/#dom-mediakeysystemaccess)
+(the EME API concept).
+
+If not set, the RxPlayer will automatically ask for the most adapted `sessionTypes` based
+on your configuration for the current content. As such, this option is only needed for
+very specific usages.
+
+A case where you might want to set this option is if for example you want the ability to
+load both temporary and persistent licenses, regardless of the configuration applied to
+the current content. Setting in that case `wantedSessionTypes` to
+`["temporary", "persistent-license"]` will lead, if compatible, to the creation of a
+`MediaKeySystemAccess` able to handle both:
+
+- contents relying on temporary licenses, and:
+- contents relying on persistent licenses
+
+The RxPlayer will then be able to keep that same `MediaKeySystemAccess` on future
+`loadVideo` calls as long as they rely on either all or a subset of those session types -
+and as long as the rest of the new wanted configuration is also considered compatible with
+that `MediaKeySystemAccess`.
+
+Moreover, because our `MediaKeySession` cache (see
+[`maxSessionCacheSize`](#maxsessioncachesize)) is linked to a `MediaKeySystemAccess`,
+keeping the same one allows the RxPlayer to also keep the same cache (whereas changing
+`MediaKeySystemAccess` when changing contents resets that cache).
+
+Note that the current device has to be compatible to _ALL_ `sessionTypes` for that
+configuration to go through.
+
+#### Notes
+
+If this value is set to an array which does not contain `"persistent-license"`, we will
+assume that no persistent license will be requested for the current content, regardless of
+the [`persistentLicenseConfig`](#persistentlicenseconfig) option.
+
+If this value only contains `"persistent-license"` but the
+[`persistentLicenseConfig`](#persistentlicenseconfig) option is not set, we will load
+persistent licenses yet not persist them.

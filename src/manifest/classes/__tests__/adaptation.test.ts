@@ -51,6 +51,9 @@ const minimalRepresentationIndex: IRepresentationIndex = {
   addPredictedSegments() {
     /* noop */
   },
+  getTargetSegmentDuration() {
+    return undefined;
+  },
   _replace() {
     /* noop */
   },

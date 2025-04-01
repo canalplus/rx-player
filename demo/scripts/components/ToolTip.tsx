@@ -12,7 +12,7 @@ function ToolTip({
   offset: number;
   text: string;
   xPosition: number;
-}): JSX.Element {
+}): React.JSX.Element {
   const wrapperEl = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isNaN(+xPosition) || !wrapperEl.current) {

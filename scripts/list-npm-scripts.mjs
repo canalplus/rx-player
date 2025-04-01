@@ -26,7 +26,9 @@ async function run() {
 
   // Display groups
   const scriptsList = pkg["scripts-list"];
-  const groupNames = Object.keys(scriptsList);
+  const groupNames = Object.keys(scriptsList).filter((k) => {
+    return typeof scriptsList[k] === "object" && scriptsList[k] !== null;
+  });
   if (groupNames.length === 0) {
     console.log('Nothing found in "scripts-list" in the `package.json` file.');
     process.exit(0);
@@ -128,7 +130,7 @@ async function getChoice(maxNb) {
  * Redirect its stdin and stdout to ours, communicate signals, and exit when
  * the script exits.
  *
- * @param {string} cmd
+ * @param {string} script
  */
 function executeNpmScript(script) {
   const emphasizedCmdStr = emphasize(`npm run ${script}`);

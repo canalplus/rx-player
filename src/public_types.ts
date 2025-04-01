@@ -182,6 +182,23 @@ export interface ILoadVideoOptions {
    * When set to an object, enable "Common Media Client Data", or "CMCD".
    */
   cmcd?: ICmcdOptions | undefined;
+
+  /**
+   * Options which may be removed or updated at any RxPlayer release.
+   *
+   * Most of those are options which we temporarily test before making
+   * them part of the RxPlayer API.
+   */
+  experimentalOptions?:
+    | {
+        /**
+         * If `true`, the RxPlayer can enable its "Representation avoidance"
+         * mechanism, where it avoid loading Representation that it suspect
+         * have issues being decoded on the current device.
+         */
+        enableRepresentationAvoidance: boolean | undefined;
+      }
+    | undefined;
 }
 
 /** Value of the `serverSyncInfos` transport option. */
@@ -558,6 +575,51 @@ export interface IKeySystemOption {
    * `MediaKeySystemConfiguration` according to the EME API.
    */
   distinctiveIdentifier?: MediaKeysRequirement | undefined;
+
+  /**
+   * Force a `sessionTypes` value for the corresponding
+   * `MediaKeySystemConfiguration` asked when creating a
+   * `MediaKeySystemAccess` (the EME API concept).
+   *
+   * If not set, the RxPlayer will automatically ask for the most adapted
+   * `sessionTypes` based on your configuration for the current content. As
+   * such, this option is only needed for very specific usages.
+   *
+   * A case where you might want to set this value is if for example you want
+   * the ability to be able to load both temporary and persistent licenses,
+   * regardless of the configuration applied to the current content.
+   * Setting in that case `wantedSessionTypes` to
+   * `["temporary", "persistent-license"]` will lead, if compatible, to the
+   * creation of a `MediaKeySystemAccess` able to handle both:
+   *   - contents relying on temporary licenses, and:
+   *   - contents relying on persistent licenses
+   *
+   * The RxPlayer will then be able to keep that same `MediaKeySystemAccess` on
+   * future `loadVideo` calls as long as they rely on either all or a subset of
+   * those session types - and as long as the rest of the new wanted
+   * configuration is also considered compatible with that `MediaKeySystemAccess`.
+   *
+   * Moreover, because our `MediaKeySession` cache (see `maxSessionCacheSize`)
+   * is linked to a `MediaKeySystemAccess`, keeping the same one allows the
+   * RxPlayer to also keep the same cache (whereas changing
+   * `MediaKeySystemAccess` when changing contents resets that cache).
+   *
+   * Note that the current device has to be compatible to _ALL_ `sessionTypes`
+   * for that configuration to go through.
+   *
+   * Notes
+   * -----
+   *
+   * If this value is set to an array which does not contain
+   * `"persistent-license"`, we will assume that no persistent license will be
+   * requested for the current content, regardless of the
+   * `persistentLicenseConfig` option.
+   *
+   * If this value only contains `"persistent-license"` but the
+   * `persistentLicenseConfig` option is not set, we will load persistent
+   * licenses yet not persist them.
+   */
+  wantedSessionTypes?: string[] | undefined;
   /**
    * If true, all open `MediaKeySession` (JavaScript Objects linked to the keys
    * used to decrypt the content) will be closed when the current playback
@@ -1283,4 +1345,66 @@ export interface ITextTrackSetting {
 export interface IModeInformation {
   isDirectFile: boolean;
   useWorker: boolean;
+}
+
+/** Information returned by the `getAvailableThumbnailsTracks` method. */
+export interface IThumbnailTrackInfo {
+  /** Identifier identifying a particular thumbnail track. */
+  id: string;
+  /**
+   * Width in pixels of the individual thumbnails available in that
+   * thumbnail track.
+   */
+  width: number | undefined;
+  /**
+   * Height in pixels of the individual thumbnails available in that
+   * thumbnail track.
+   */
+  height: number | undefined;
+  /**
+   * Expected mime-type of the images in that thumbnail track (e.g.
+   * `image/jpeg` or `image/png`.
+   */
+  mimeType: string | undefined;
+}
+
+/**
+ * Options that can be provided to the `renderThumbnail` method
+ */
+export interface IThumbnailRenderingOptions {
+  /**
+   * HTMLElement inside which the thumbnail should be displayed.
+   *
+   * The resulting thumbnail will fill that container if the thumbnail loading
+   * and rendering operations succeeds.
+   *
+   * If there was already a thumbnail rendering request on that container, the
+   * previous operation is cancelled.
+   */
+  container: HTMLElement;
+  /** Position, in seconds, for which you want to provide an image thumbnail. */
+  time: number;
+  /**
+   * If set to `true`, we'll keep the potential previous thumbnail found inside
+   * the container if the current `renderThumbnail` call fail on an error.
+   * We'll still replace it if the new `renderThumbnail` call succeeds (with the
+   * new thumbnail).
+   *
+   * If set to `false`, to `undefined`, or not set, the previous thumbnail
+   * potentially found inside the container will also be removed if the new
+   * new `renderThumbnail` call fails.
+   *
+   * The default behavior (equivalent to `false`) is generally more expected, as
+   * you usually don't want to provide an unrelated preview thumbnail for a
+   * completely different time and prefer to display no thumbnail at all.
+   */
+  keepPreviousThumbnailOnError?: boolean | undefined;
+  /**
+   * If set, specify from which thumbnail track you want to display the
+   * thumbnail from. That identifier can be obtained from the
+   * `getThumbnailMetadata` call (the `id` property).
+   *
+   * This is mainly useful when encountering multiple thumbnail track qualities.
+   */
+  thumbnailTrackId?: string | undefined;
 }

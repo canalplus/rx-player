@@ -4,7 +4,7 @@
  * multithread situation.
  */
 
-import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "./core/segment_sinks/segment_sinks_store";
 import type {
   IResolutionInfo,
   IManifestFetcherSettings,
@@ -30,7 +30,7 @@ import type {
 } from "./mse";
 import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
 import type { ICmcdOptions, ITrackType } from "./public_types";
-import type { ITransportOptions } from "./transports";
+import type { IThumbnailResponse, ITransportOptions } from "./transports";
 import type { ILogFormat, ILoggerLevel } from "./utils/logger";
 import type { IRange } from "./utils/ranges";
 
@@ -108,6 +108,12 @@ export interface IContentInitializationData {
    * When set to an object, enable "Common Media Client Data", or "CMCD".
    */
   cmcd?: ICmcdOptions | undefined;
+  /**
+   * If `true`, the RxPlayer can enable its "Representation avoidance"
+   * mechanism, where it avoid loading Representation that it suspect
+   * have issues being decoded on the current device.
+   */
+  enableRepresentationAvoidance: boolean;
   /**
    * URL at which the content's Manifest is accessible.
    * `undefined` if unknown.
@@ -417,6 +423,18 @@ export interface ISerializedPlaybackObservation {
    * `undefined` if we cannot determine the buffer gap.
    */
   bufferGap: number | undefined;
+  /**
+   * Indicates whether the user agent believes it has enough buffered data to ensure
+   * uninterrupted playback for a meaningful period or needs more data.
+   * It also reflects whether the user agent can retrieve and buffer data in an
+   * energy-efficient manner while maintaining the desired memory usage.
+   * `true` indicates that the buffer is low, and more data should be buffered.
+   * `false` indicates that there is enough buffered data, and no additional data needs
+   *  to be buffered at this time.
+   */
+  canStream: boolean;
+  /** If `true` the content is loaded until its maximum position. */
+  fullyLoaded: boolean;
 }
 
 /**
@@ -515,6 +533,18 @@ export interface IRemoveTextDataErrorMessage {
   };
 }
 
+/** Message sent from main thread when it wants to fetch thumbnail data. */
+export interface IThumbnailDataRequestMainMessage {
+  type: MainThreadMessageType.ThumbnailDataRequest;
+  contentId: string;
+  value: {
+    requestId: number;
+    periodId: string;
+    thumbnailTrackId: string;
+    time: number;
+  };
+}
+
 /**
  * Template for a message originating from main thread to update
  * `SharedReference` objects (a common abstraction of the RxPlayer allowing for
@@ -538,7 +568,7 @@ export type IReferenceUpdateMessage =
 
 export interface IPullSegmentSinkStoreInfos {
   type: MainThreadMessageType.PullSegmentSinkStoreInfos;
-  value: { messageId: number };
+  value: { requestId: number };
 }
 
 export const enum MainThreadMessageType {
@@ -563,6 +593,7 @@ export const enum MainThreadMessageType {
   StopContent = "stop",
   TrackUpdate = "track-update",
   PullSegmentSinkStoreInfos = "pull-segment-sink-store-infos",
+  ThumbnailDataRequest = "thumbnail-request",
 }
 
 export type IMainThreadMessage =
@@ -586,7 +617,8 @@ export type IMainThreadMessage =
   | IPushTextDataErrorMessage
   | IRemoveTextDataErrorMessage
   | IMediaSourceReadyStateChangeMainMessage
-  | IPullSegmentSinkStoreInfos;
+  | IPullSegmentSinkStoreInfos
+  | IThumbnailDataRequestMainMessage;
 
 export type ISentError =
   | ISerializedNetworkError
@@ -937,8 +969,24 @@ export interface ISegmentSinkStoreUpdateMessage {
   contentId: string;
   value: {
     segmentSinkMetrics: ISegmentSinkMetrics;
-    messageId: number;
+    requestId: number;
   };
+}
+
+export interface IThumbnailDataResponseWorkerMessage {
+  type: WorkerMessageType.ThumbnailDataResponse;
+  contentId: string;
+  value:
+    | {
+        status: "error";
+        requestId: number;
+        error: ISentError;
+      }
+    | {
+        status: "success";
+        requestId: number;
+        data: IThumbnailResponse;
+      };
 }
 
 export const enum WorkerMessageType {
@@ -979,6 +1027,7 @@ export const enum WorkerMessageType {
   UpdatePlaybackRate = "update-playback-rate",
   Warning = "warning",
   SegmentSinkStoreUpdate = "segment-sink-store-update",
+  ThumbnailDataResponse = "thumbnail-response",
 }
 
 export type IWorkerMessage =
@@ -1018,4 +1067,5 @@ export type IWorkerMessage =
   | IUpdateMediaSourceDurationWorkerMessage
   | IUpdatePlaybackRateWorkerMessage
   | IWarningWorkerMessage
-  | ISegmentSinkStoreUpdateMessage;
+  | ISegmentSinkStoreUpdateMessage
+  | IThumbnailDataResponseWorkerMessage;

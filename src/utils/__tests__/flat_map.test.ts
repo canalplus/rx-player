@@ -1,23 +1,12 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import flatMap from "../flat_map";
 
-interface IProtoWithFlatMap {
-  flatMap?:
-    | (<U, This = undefined>(
-        callback: (
-          this: This,
-          value: unknown,
-          index: number,
-          array: unknown[],
-        ) => U | U[],
-        thisArg?: This | undefined,
-      ) => U[])
-    | undefined;
-}
+type ICustomArrayProto = Omit<typeof Array.prototype, "flatMap"> & {
+  flatMap?: typeof Array.prototype.flatMap | undefined;
+};
 
-const proto = Array.prototype as unknown as IProtoWithFlatMap;
+const proto: ICustomArrayProto = Array.prototype;
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
 const initialFlatMap = proto.flatMap;
 
 describe("utils - starts-with", () => {
@@ -39,9 +28,7 @@ describe("utils - starts-with", () => {
   if (typeof initialFlatMap === "function") {
     it("should call the original flatMap function if available", () => {
       proto.flatMap = initialFlatMap;
-      // TODO find what bother typescript here instead of adding "as any"
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mockFlatMap = vi.spyOn(proto as any, "flatMap");
+      const mockFlatMap = vi.spyOn(Array.prototype, "flatMap");
       const func1 = (x: number): number[] => [x, x + 1, x - 1];
       const func2 = (x: number): string => String(x) + "a";
       expect(flatMap([1, 2, 3], func1)).toEqual([1, 2, 0, 2, 3, 1, 3, 4, 2]);

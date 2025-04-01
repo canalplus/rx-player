@@ -551,6 +551,33 @@ const DEFAULT_CONFIG = {
   UNFREEZING_DELTA_POSITION: 0.001,
 
   /**
+   * `FREEZING` is a situation where the playback does not seem to advance despite
+   * all web indicators telling us we can.
+   * Those may be linked to device issues, but sometimes are just linked to
+   * performance or it may be just decryption negotiations taking more time than
+   * expected.
+   *
+   * Anyway we might in the RxPlayer "flush" the buffer in that situation to
+   * un-stuck playback (this is usually done by seeking close to the current
+   * position),
+   *
+   * Yet that "flush" attempt may not in the end be succesful.
+   *
+   * If a flush was performed more than `FREEZING_FLUSH_FAILURE_DELAY.MINIMUM`
+   * milliseconds ago and less than `FREEZING_FLUSH_FAILURE_DELAY.MAXIMUM`
+   * milliseconds ago, yet a `FREEZING` situation at roughly the same playback
+   * position (deviating from less than
+   * `FREEZING_FLUSH_FAILURE_DELAY.POSITION_DELTA` seconds from it) is
+   * encountered again, we will consider that the flushing attempt was unsuccesful
+   * and try more agressive solutions (such as reloading the content).
+   */
+  FREEZING_FLUSH_FAILURE_DELAY: {
+    MAXIMUM: 20000,
+    MINIMUM: 4000,
+    POSITION_DELTA: 1,
+  },
+
+  /**
    * The RxPlayer has a recurring logic which will synchronize the browser's
    * buffers' buffered time ranges with its internal representation in the
    * RxPlayer to then rely on that internal representation to determine where
@@ -850,7 +877,11 @@ const DEFAULT_CONFIG = {
    * Defined in order of importance (first will be tested first etc.)
    * @type {Array.<string>}
    */
-  EME_DEFAULT_AUDIO_CODECS: ['audio/mp4;codecs="mp4a.40.2"', "audio/webm;codecs=opus"],
+  EME_DEFAULT_AUDIO_CODECS: [
+    'audio/mp4;codecs="mp4a.40.2"',
+    'audio/webm;codecs="opus"',
+    'audio/mp4;codecs="ec-3"',
+  ],
 
   /**
    * Robustnesses used in the {audio,video}Capabilities of the
@@ -1183,6 +1214,31 @@ const DEFAULT_CONFIG = {
    * one.
    */
   DEFAULT_AUDIO_TRACK_SWITCHING_MODE: "seamless" as const,
+
+  /**
+   * The default number of times a thumbnail request will be re-performed when
+   * on error which justify a retry.
+   *
+   * Note that some errors do not use this counter:
+   *   - if the error is not due to the xhr, no retry will be peformed
+   *   - if the error is an HTTP error code, but not a 500-smthg or a 404, no
+   *     retry will be performed.
+   * @type Number
+   */
+  DEFAULT_MAX_THUMBNAIL_REQUESTS_RETRY_ON_ERROR: 1,
+
+  /**
+   * Default time interval after which a thumbnail request will timeout, in ms.
+   * @type {Number}
+   */
+  DEFAULT_THUMBNAIL_REQUEST_TIMEOUT: 10 * 1000,
+
+  /**
+   * Default connection time after which a thumbnail request conncection will
+   * timeout, in ms.
+   * @type {Number}
+   */
+  DEFAULT_THUMBNAIL_CONNECTION_TIMEOUT: 7 * 1000,
 };
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;

@@ -18,7 +18,7 @@ function Input({
   onChange: (newVal: string) => void;
   value?: string;
   placeholder?: string;
-}): JSX.Element {
+}): React.JSX.Element {
   const onInputChange = React.useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {
       onChange(evt.target.value);

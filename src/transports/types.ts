@@ -16,6 +16,7 @@
 
 import type { IInbandEvent } from "../core/types";
 import type { IManifest, ISegment } from "../manifest";
+import type { IThumbnailTrackMetadata } from "../manifest/types";
 import type { ICdnMetadata } from "../parsers/manifest";
 import type {
   ITrackType,
@@ -62,6 +63,8 @@ export interface ITransportPipelines {
   >;
   /** Functions allowing to load an parse text (e.g. subtitles) segments. */
   text: ISegmentPipeline<ILoadedTextSegmentFormat, ITextTrackSegmentData | null>;
+  /** Functions allowing to load image thumbnails. */
+  thumbnails: IThumbnailPipeline;
 }
 
 /** Name describing the transport pipeline. */
@@ -308,6 +311,46 @@ export interface IManifestParserOptions {
    */
   unsafeMode: boolean;
 }
+
+/** "Pipeline" for image thumbnails. */
+export interface IThumbnailPipeline {
+  loadThumbnail: IThumbnailLoader;
+  parseThumbnail: IThumbnailParser;
+}
+
+export type IThumbnailLoader = (
+  wantedCdn: ICdnMetadata | null,
+  thumbnail: ISegment,
+  options: IThumbnailLoaderOptions,
+  cancelSignal: CancellationSignal,
+) => Promise<IRequestedData<ArrayBuffer>>;
+
+export type IThumbnailParser = (
+  loadedThumbnail: ArrayBuffer,
+  context: IThumbnailContext,
+) => IThumbnailResponse;
+
+export interface IThumbnailContext {
+  /** Metadata about the wanted thumbnail. */
+  thumbnail: ISegment;
+  /** Metadata on the thumbnail track linked to that thumbnail. */
+  thumbnailTrack: IThumbnailTrackMetadata;
+}
+
+export interface IThumbnailResponse {
+  mimeType: string;
+  data: ArrayBuffer;
+  thumbnails: Array<{
+    height: number;
+    width: number;
+    offsetX: number;
+    offsetY: number;
+    start: number;
+    end: number;
+  }>;
+}
+
+export type IThumbnailLoaderOptions = ISegmentLoaderOptions;
 
 export interface IManifestParserCallbacks {
   onWarning: (warning: Error) => void;

@@ -20,7 +20,7 @@ function FocusedInput({
   onChange: (newVal: string) => void;
   value?: string;
   placeholder?: string;
-}): JSX.Element {
+}): React.JSX.Element {
   const inputEl = useRef<HTMLInputElement>(null);
   useEffect(
     () => {

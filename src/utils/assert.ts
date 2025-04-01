@@ -72,7 +72,7 @@ export function assertInterface<T>(
 ): void {
   assert(!isNullOrUndefined(o), `${name} should be an object`);
   for (const k in iface) {
-    if (iface.hasOwnProperty(k)) {
+    if (Object.prototype.hasOwnProperty.call(iface, k)) {
       assert(
         typeof o[k] === iface[k],
         `${name} should have property ${k} as a ${iface[k]}`,

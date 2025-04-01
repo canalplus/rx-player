@@ -982,3 +982,43 @@ rxPlayer.loadVideo({
   referenceDateTime: new Date(2015 - 05 - 29) / 1000,
 });
 ```
+
+### experimentalOptions.enableRepresentationAvoidance
+
+_type_: `Boolean|undefined`
+
+_defaults_: `false`
+
+<div class="warning">
+This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
+transport option</a>)
+</div>
+
+<div class="warning">
+This option is experimental. Its implementation and API may change in any version.
+</div>
+
+When set to `true`, the "Representation avoidance" mechanism will be enabled.
+
+Representation avoidance is a mechanism which allows to avoid some video and/or audio
+qualities if they are detected to lead to decoding issues.
+
+The detection of those playback issues is done during playback: the RxPlayer will e.g.
+notice that the current device is not able to decode the content coincidentally with a
+quality change, and thus stop playing the corresponding problematic quality.
+
+Though this detection logic should be robust, we still only allow it under an experimental
+option for now as we're currently testing whether the current implementation answers in a
+satisfactory manner the actual problems encountered in production, where some devices
+(mostly Television sets) have issues with specific video profiles and codecs.
+
+Example:
+
+```js
+rxPlayer.loadVideo({
+  // ...
+  experimentalOptions: {
+    enableRepresentationAvoidance: true,
+  },
+});
+```

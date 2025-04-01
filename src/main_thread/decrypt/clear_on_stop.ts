@@ -18,7 +18,7 @@ import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import shouldUnsetMediaKeys from "../../compat/should_unset_media_keys";
 import log from "../../log";
 import disposeDecryptionResources from "./dispose_decryption_resources";
-import MediaKeysInfosStore from "./utils/media_keys_infos_store";
+import MediaKeysAttacher from "./utils/media_keys_attacher";
 
 /**
  * Clear DRM-related resources that should be cleared when the current content
@@ -26,14 +26,14 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
  * @param {HTMLMediaElement} mediaElement
  * @returns {Promise}
  */
-export default function clearOnStop(mediaElement: IMediaElement): Promise<unknown> {
+export default async function clearOnStop(mediaElement: IMediaElement): Promise<unknown> {
   log.info("DRM: Clearing-up DRM session.");
   if (shouldUnsetMediaKeys()) {
     log.info("DRM: disposing current MediaKeys.");
     return disposeDecryptionResources(mediaElement);
   }
 
-  const currentState = MediaKeysInfosStore.getState(mediaElement);
+  const currentState = await MediaKeysAttacher.getAttachedMediaKeysState(mediaElement);
   if (
     currentState !== null &&
     currentState.keySystemOptions.closeSessionsOnStop === true

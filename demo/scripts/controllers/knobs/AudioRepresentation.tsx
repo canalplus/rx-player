@@ -14,7 +14,7 @@ function AudioRepresentationKnob({
 }: {
   player: IPlayerModule;
   className?: string;
-}): JSX.Element {
+}): React.JSX.Element {
   const isAudioRepresentationLocked = useModuleState(
     player,
     "audioRepresentationsLocked",

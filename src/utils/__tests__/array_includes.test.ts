@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import arrayIncludes from "../array_includes";
 
-// eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
+// eslint-disable-next-line no-restricted-properties
 const initialArrayIncludes = Array.prototype.includes;
 
 describe("utils - array-includes", () => {

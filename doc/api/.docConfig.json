@@ -61,6 +61,10 @@
       "displayName": "Playback Information"
     },
     {
+      "path": "./Thumbnails",
+      "displayName": "Thumbnails"
+    },
+    {
       "path": "./Static_Properties.md",
       "displayName": "RxPlayer Static Properties"
     },

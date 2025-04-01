@@ -2,8 +2,6 @@ import { describe, afterEach, it, expect } from "vitest";
 import globalScope from "../global_scope";
 import idGenerator from "../id_generator";
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 const oldNumberDef = globalScope.Number;
 
 describe("utils - idGenerator", () => {

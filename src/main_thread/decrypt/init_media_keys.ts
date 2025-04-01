@@ -18,9 +18,9 @@ import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import log from "../../log";
 import type { IKeySystemOption } from "../../public_types";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import { disableMediaKeys } from "./attach_media_keys";
 import type { IMediaKeysInfos } from "./get_media_keys";
 import getMediaKeysInfos from "./get_media_keys";
+import MediaKeysAttacher from "./utils/media_keys_attacher";
 
 /**
  * Get media keys infos from key system configs then attach media keys to media element.
@@ -48,7 +48,7 @@ export default async function initMediaKeys(
 
   if (shouldDisableOldMediaKeys) {
     log.debug("DRM: Disabling old MediaKeys");
-    await disableMediaKeys(mediaElement);
+    await MediaKeysAttacher.clearMediaKeys(mediaElement);
   }
   return mediaKeysInfo;
 }

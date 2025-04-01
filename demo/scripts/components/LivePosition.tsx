@@ -5,7 +5,7 @@ import * as React from "react";
  * @param {Object} props
  * @returns {Object}
  */
-function LivePosition({ className = "" }: { className?: string }): JSX.Element {
+function LivePosition({ className = "" }: { className?: string }): React.JSX.Element {
   return <div className={"position-infos live " + className}>Live</div>;
 }
 

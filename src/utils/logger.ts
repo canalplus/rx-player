@@ -117,7 +117,6 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
         : (_namespace: string, consoleFn: IConsoleFn): IConsoleFn => consoleFn;
 
     if (logFn === undefined) {
-      /* eslint-disable no-invalid-this */
       /* eslint-disable no-console */
       this.error =
         level >= this._levels.ERROR
@@ -136,7 +135,6 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
           ? generateLogFn("log", console.log.bind(console))
           : noop;
       /* eslint-enable no-console */
-      /* eslint-enable no-invalid-this */
     } else {
       const produceLogFn = (logLevel: ILoggerLevel) => {
         return level >= this._levels[logLevel]

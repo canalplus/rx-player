@@ -51,7 +51,7 @@ function Settings({
   tryRelyOnWorker: boolean;
   updateTryRelyOnWorker: (tryRelyOnWorker: boolean) => void;
   showOptions: boolean;
-}): JSX.Element | null {
+}): React.JSX.Element | null {
   const {
     videoResolutionLimit,
     maxBufferAhead,

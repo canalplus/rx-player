@@ -358,7 +358,7 @@ export default class TextTrackCuesStore {
       }
     }
 
-    if (cuesBuffer.length) {
+    if (cuesBuffer.length > 0) {
       const lastCue = cuesBuffer[cuesBuffer.length - 1];
       if (areNearlyEqual(lastCue.end, start, relativeDelta)) {
         // Match the end of the previous cue to the start of the following one

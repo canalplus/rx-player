@@ -22,7 +22,7 @@ function SubtitlesKnob({
 }: {
   player: IPlayerModule;
   className?: string | undefined;
-}): JSX.Element {
+}): React.JSX.Element {
   const currentSubtitle = useModuleState(player, "subtitle");
   const availableSubtitles = useModuleState(player, "availableSubtitles");
 

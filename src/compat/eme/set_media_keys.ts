@@ -1,8 +1,7 @@
 import log from "../../log";
 import sleep from "../../utils/sleep";
-import type { IMediaElement } from "../browser_compatibility_types";
+import type { IMediaElement, IMediaKeys } from "../browser_compatibility_types";
 import shouldAwaitSetMediaKeys from "../should_await_set_media_keys";
-import type { ICustomMediaKeys } from "./custom_media_keys";
 import type { IEmeApiImplementation } from "./eme-api-implementation";
 
 /**
@@ -14,7 +13,7 @@ import type { IEmeApiImplementation } from "./eme-api-implementation";
 export function setMediaKeys(
   emeImplementation: IEmeApiImplementation,
   mediaElement: IMediaElement,
-  mediaKeys: MediaKeys | ICustomMediaKeys | null,
+  mediaKeys: IMediaKeys | null,
 ): Promise<unknown> {
   const prom = emeImplementation
     .setMediaKeys(mediaElement, mediaKeys)

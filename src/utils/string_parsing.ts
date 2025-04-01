@@ -299,7 +299,7 @@ function utf8ToStr(data: Uint8Array): string {
   } else {
     // Let's implement a simple escape function
     // http://ecma-international.org/ecma-262/9.0/#sec-escape-string
-    const nonEscapedChar = /[A-Za-z0-9*_\+-\.\/]/;
+    const nonEscapedChar = /[A-Za-z0-9*_+-./]/;
     escaped = "";
     for (let i = 0; i < utf8Str.length; i++) {
       if (nonEscapedChar.test(utf8Str[i])) {

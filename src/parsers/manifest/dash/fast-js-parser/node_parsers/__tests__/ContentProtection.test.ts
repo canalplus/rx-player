@@ -17,7 +17,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
       [],
     ]);
 
-    const element2 = parseXml(`<ContentProtection ${attributeName}=\"\" />`)[0] as ITNode;
+    const element2 = parseXml(`<ContentProtection ${attributeName}="" />`)[0] as ITNode;
     expect(parseContentProtection(element2)).toEqual([
       { attributes: { [_variableName]: "" }, children: { cencPssh: [] } },
       [],

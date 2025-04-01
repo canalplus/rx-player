@@ -21,7 +21,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
     ]);
 
     const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}=\"false\" />`,
+      `<AdaptationSet ${attributeName}="false" />`,
       "text/xml",
     ).childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
@@ -93,7 +93,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
     ]);
 
     const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}=\"\" />`,
+      `<AdaptationSet ${attributeName}="" />`,
       "text/xml",
     ).childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
@@ -497,7 +497,7 @@ function testNumberOrBooleanAttribute(
     ]);
 
     const element2 = new DOMParser().parseFromString(
-      `<AdaptationSet ${attributeName}=\"false\" />`,
+      `<AdaptationSet ${attributeName}="false" />`,
       "text/xml",
     ).childNodes[0] as Element;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([

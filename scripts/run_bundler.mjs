@@ -17,69 +17,6 @@ import { pathToFileURL } from "url";
 import esbuild from "esbuild";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 
-// If true, this script is called directly
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const args = process.argv.slice(2);
-  if (args.includes("-h") || args.includes("--help")) {
-    displayHelp();
-    process.exit(0);
-  }
-
-  const inputFile = args[0];
-  if (inputFile === undefined) {
-    console.error("ERROR: no input file provided\n");
-    displayHelp();
-    process.exit(1);
-  }
-
-  const normalizedPath = path.normalize(inputFile);
-  if (!fs.existsSync(normalizedPath)) {
-    console.error(`ERROR: input file not found: ${normalizedPath}\n`);
-    displayHelp();
-    process.exit(1);
-  }
-
-  const shouldWatch = args.includes("-w") || args.includes("--watch");
-  const shouldMinify = args.includes("-m") || args.includes("--minify");
-  const production = args.includes("-p") || args.includes("--production-mode");
-  const globalScope = args.includes("-g") || args.includes("--globals");
-  const silent = args.includes("-s") || args.includes("--silent");
-
-  let outfile;
-  {
-    let outputIndex = args.indexOf("-o");
-    if (outputIndex < 0) {
-      outputIndex = args.indexOf("--output");
-    }
-    if (outputIndex >= 0) {
-      const wantedOutputFile = args[outputIndex + 1];
-      if (wantedOutputFile === undefined) {
-        console.error("ERROR: no output file provided\n");
-        displayHelp();
-        process.exit(1);
-      }
-      outfile = path.normalize(wantedOutputFile);
-    }
-  }
-
-  try {
-    runBundler(normalizedPath, {
-      watch: shouldWatch,
-      minify: shouldMinify,
-      production,
-      globalScope,
-      silent,
-      outfile,
-    }).catch((err) => {
-      console.error(`ERROR: ${err}\n`);
-      process.exit(1);
-    });
-  } catch (err) {
-    console.error(`ERROR: ${err}\n`);
-    process.exit(1);
-  }
-}
-
 /**
  * Run bundler with the given options.
  * @param {string} inputFile
@@ -178,23 +115,125 @@ export default async function runBundler(inputFile, options) {
   }
 }
 
+// If true, this script is called directly
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const args = process.argv.slice(2);
+  let shouldWatch = false;
+  let shouldMinify = false;
+  let production = false;
+  let globalScope = false;
+  let outputFile = "";
+  let silent = false;
+
+  if (args[0] === "-h" || args[0] === "--help") {
+    displayHelp();
+    process.exit(0);
+  }
+  for (let argOffset = 1; argOffset < args.length; argOffset++) {
+    const currentArg = args[argOffset];
+    switch (currentArg) {
+      case "-h":
+      case "--help":
+        displayHelp();
+        process.exit(0);
+        break;
+
+      case "-w":
+      case "--watch":
+        shouldWatch = true;
+        break;
+
+      case "-m":
+      case "--minify":
+        shouldMinify = true;
+        break;
+
+      case "-p":
+      case "--production-mode":
+        production = true;
+        break;
+
+      case "-g":
+      case "--globals":
+        globalScope = true;
+        break;
+
+      case "-s":
+      case "--silent":
+        silent = true;
+        break;
+
+      case "-o":
+      case "--output":
+        {
+          argOffset++;
+          const wantedOutput = args[argOffset];
+          if (wantedOutput === undefined) {
+            console.error("ERROR: no output file provided\n");
+            displayHelp();
+            process.exit(1);
+          }
+          outputFile = path.normalize(wantedOutput);
+        }
+        break;
+
+      default: {
+        console.error('ERROR: unknown option: "' + currentArg + '"\n');
+        displayHelp();
+        process.exit(1);
+      }
+    }
+  }
+
+  const inputFile = args[0];
+  if (inputFile === undefined) {
+    console.error("ERROR: no input file provided\n");
+    displayHelp();
+    process.exit(1);
+  }
+
+  const normalizedPath = path.normalize(inputFile);
+  if (!fs.existsSync(normalizedPath)) {
+    console.error(`ERROR: input file not found: ${inputFile}\n`);
+    displayHelp();
+    process.exit(1);
+  }
+
+  try {
+    runBundler(normalizedPath, {
+      watch: shouldWatch,
+      minify: shouldMinify,
+      production,
+      globalScope,
+      silent,
+      outfile: outputFile,
+    }).catch((err) => {
+      console.error(`ERROR: ${err}\n`);
+      process.exit(1);
+    });
+  } catch (err) {
+    console.error(`ERROR: ${err}\n`);
+    process.exit(1);
+  }
+}
+
 /**
  * Display through `console.log` an helping message relative to how to run this
  * script.
  */
 function displayHelp() {
   console.log(
-    `Usage: node run_bundler.mjs input-file [options]
+    `run_bundler.mjs: Produce a RxPlayer bundle (a single JS file containing the RxPlayer).
+
+Usage: node run_bundler.mjs <INPUT FILE> [OPTIONS]
+
 Available options:
-  -h, --help                  Display this help message
-  -m, --minify                Minify the built bundle
-  -o <path>, --output <path>  Specify an output file for the ES2017 bundle. To ignore to skip ES2017
-                              bundle generation.
+  -h, --help                  Display this help message.
+  -o <PATH>, --output <PATH>  Mandatory: Specify the output file.
+  -m, --minify                Minify the built bundle.
   -p, --production-mode       Build all files in production mode (less runtime checks, mostly).
   -g, --globals               Add the RxPlayer to the global scope.
-  -g, --global-scope          If set, enable "global scope mode" (the \`__GLOBAL_SCOPE__\` global
-                              symbol) on the bundle.
-  -s, --silent                Don't log to stdout/stderr when bundling
-  -w, --watch                 Re-build each time either the files it depends on changed`,
+  -s, --silent                Don't log to stdout/stderr when bundling.
+  -w, --watch                 Re-build each time any of the files depended on changed.`,
   );
 }

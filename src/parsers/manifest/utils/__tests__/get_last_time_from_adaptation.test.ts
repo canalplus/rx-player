@@ -48,6 +48,9 @@ function generateRepresentationIndex(
     canBeOutOfSyncError(): true {
       return true;
     },
+    getTargetSegmentDuration() {
+      return undefined;
+    },
     _replace() {
       /* noop */
     },

@@ -20,7 +20,7 @@ function SpeedKnob({
 }: {
   player: IPlayerModule;
   className?: string;
-}): JSX.Element {
+}): React.JSX.Element {
   const playbackRate = useModuleState(player, "playbackRate");
   let selectedIndex = AVAILABLE_RATES.findIndex((rate) => playbackRate === rate);
 

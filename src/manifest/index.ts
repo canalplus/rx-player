@@ -1,5 +1,5 @@
 import type {
-  IDecipherabilityUpdateElement,
+  IUpdatedRepresentationInfo,
   ICodecSupportInfo,
   Period,
   Adaptation,
@@ -9,6 +9,7 @@ import type {
   IRepresentationIndex,
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
+  IThumbnailTrack,
 } from "./classes";
 import type Manifest from "./classes";
 import { areSameContent, getLoggableSegmentId } from "./classes";
@@ -26,13 +27,14 @@ export type IAdaptation = Adaptation;
 export type IRepresentation = Representation;
 
 export type {
-  IDecipherabilityUpdateElement,
+  IUpdatedRepresentationInfo,
   ICodecSupportInfo,
   IPeriodsUpdateResult,
   IRepresentationIndex,
   ISegment,
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
+  IThumbnailTrack,
 };
 export { areSameContent, getLoggableSegmentId };
 export type {

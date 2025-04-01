@@ -179,6 +179,7 @@ export type IMediaSourceHandle =
 export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfaceEvents> {
   /** `id` uniquely identifying this `IMediaSourceInterface`. */
   id: string;
+
   /**
    * Last known `ReadyState` the underlying MSE `MediaSource` was at.
    *
@@ -186,6 +187,7 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * to be notified of its change.
    */
   readyState: ReadyState;
+
   /**
    * Mean to link the underlying `MediaSource` to an `HTMLMediaElement`.
    *
@@ -194,6 +196,7 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * message by itself to the main thread for MediaSource creation.
    */
   handle: IMediaSourceHandle | undefined;
+
   /**
    * List `ISourceBufferInterface` objects linked to this
    * `IMediaSourceInterface`.
@@ -203,6 +206,19 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * `ISourceBufferInterface` useful as a discriminant for that array.
    */
   sourceBuffers: ISourceBufferInterface[];
+
+  /**
+   * Indicates whether the user agent believes it has enough buffered data to ensure
+   * uninterrupted playback for a meaningful period or needs more data.
+   * It also reflects whether the user agent can retrieve and buffer data in an
+   * energy-efficient manner while maintaining the desired memory usage.
+   * The value can be `undefined` if the user agent does not provide this indicator.
+   * `true` indicates that the buffer is low, and more data should be buffered.
+   * `false` indicates that there is enough buffered data, and no additional data needs
+   *  to be buffered at this time.
+   */
+  streaming?: boolean;
+
   /**
    * Add a new `ISourceBufferInterface` (and its corresponding underlying MSE
    * `SourceBuffer` object) linked to the given `SourceBufferType`.
@@ -214,6 +230,7 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * can be created at most per-`IMediaSourceInterface`.
    */
   addSourceBuffer(sbType: SourceBufferType, codec: string): ISourceBufferInterface;
+
   /**
    * Update `duration` property (which in reality means more the "maximum
    * reachable position") in seconds linked to the `MediaSource` (which itself
@@ -226,11 +243,13 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * `interruptDurationSetting`.
    */
   setDuration(newDuration: number, isRealEndKnown: boolean): void;
+
   /**
    * Interrupt a duration update background task previously started through
    * a `setDuration` call.
    */
   interruptDurationSetting(): void;
+
   /**
    * Signal to the `IMediaSourceInterface` that all media segments until the
    * end of the current content has been pushed through its
@@ -244,15 +263,18 @@ export interface IMediaSourceInterface extends EventEmitter<IMediaSourceInterfac
    * new future content is now available, you should call `stopEndOfStream`.
    */
   maintainEndOfStream(): void;
+
   /**
    * Interrupt an `endOfStream` operation started with `maintainEndOfStream`.
    */
   stopEndOfStream(): void;
+
   /**
    * Free all resources taken by the `IMediaSourceInterface`, including all its
    * inner `ISourceBufferInterface` objects.
    */
   dispose(): void;
+
   /**
    * Only set for `IMediaSourceInterface` objects which cannot rely on
    * MediaSource API directly.
@@ -282,4 +304,10 @@ export interface IMediaSourceInterfaceEvents {
    * changed to `"close"`.
    */
   mediaSourceClose: null;
+
+  /**
+   * Indicate that the `IMediaSourceInterface`'s `streaming` property just
+   * changed.
+   */
+  streamingChanged: null;
 }

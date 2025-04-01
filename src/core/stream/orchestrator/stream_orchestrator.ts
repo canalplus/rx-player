@@ -17,11 +17,7 @@
 import config from "../../../config";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
-import type {
-  IManifest,
-  IDecipherabilityUpdateElement,
-  IPeriod,
-} from "../../../manifest";
+import type { IManifest, IUpdatedRepresentationInfo, IPeriod } from "../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import queueMicrotask from "../../../utils/queue_microtask";
@@ -295,7 +291,7 @@ export default function StreamOrchestrator(
      * @returns {Promise}
      */
     async function onDecipherabilityUpdates(
-      updates: IDecipherabilityUpdateElement[],
+      updates: IUpdatedRepresentationInfo[],
     ): Promise<void> {
       const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
       const ofCurrentType = updates.filter(

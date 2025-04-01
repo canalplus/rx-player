@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeySession } from "../../compat/eme";
+import type { IMediaKeySession } from "../../compat/browser_compatibility_types";
 import {
   onKeyError,
   onKeyMessage,
@@ -40,7 +40,7 @@ import checkKeyStatuses from "./utils/check_key_statuses";
  * @param {Object} cancelSignal
  */
 export default function SessionEventsListener(
-  session: MediaKeySession | ICustomMediaKeySession,
+  session: IMediaKeySession,
   keySystemOptions: IKeySystemOption,
   keySystem: string,
   callbacks: ISessionEventListenerCallbacks,
@@ -111,23 +111,23 @@ export default function SessionEventsListener(
         () => runGetLicense(message, messageType),
         backoffOptions,
         manualCanceller.signal,
-      )
-        .then((licenseObject) => {
+      ).then(
+        async (licenseObject) => {
           if (manualCanceller.isUsed()) {
-            return Promise.resolve();
+            return;
           }
           if (isNullOrUndefined(licenseObject)) {
             log.info("DRM: No license given, skipping session.update");
           } else {
             try {
-              return updateSessionWithMessage(session, licenseObject);
+              await updateSessionWithMessage(session, licenseObject);
             } catch (err) {
               manualCanceller.cancel();
               callbacks.onError(err);
             }
           }
-        })
-        .catch((err: unknown) => {
+        },
+        (err: unknown) => {
           if (manualCanceller.isUsed()) {
             return;
           }
@@ -148,7 +148,8 @@ export default function SessionEventsListener(
             }
           }
           callbacks.onError(formattedError);
-        });
+        },
+      );
     },
     manualCanceller.signal,
   );
@@ -248,7 +249,7 @@ export interface ISessionEventListenerCallbacks {
    */
   onKeyUpdate: (val: IKeyUpdateValue) => void;
   onWarning: (val: IPlayerError) => void;
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  /* eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents */
   onError: (val: unknown | BlacklistedSessionError) => void;
 }
 
@@ -286,7 +287,7 @@ function formatGetLicenseError(error: unknown): IPlayerError {
  * @returns {Promise}
  */
 async function updateSessionWithMessage(
-  session: MediaKeySession | ICustomMediaKeySession,
+  session: IMediaKeySession,
   message: BufferSource,
 ): Promise<void> {
   log.info("DRM: Updating MediaKeySession with message");

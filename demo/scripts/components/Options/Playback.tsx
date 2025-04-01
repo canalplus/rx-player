@@ -15,7 +15,7 @@ function PlaybackConfig({
   onAutoPlayChange: (val: boolean) => void;
   tryRelyOnWorker: boolean;
   onTryRelyOnWorkerChange: (val: boolean) => void;
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <>
       <li>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICustomMediaKeySession } from "../../compat/eme";
+import type { IMediaKeySession } from "../../compat/browser_compatibility_types";
 import log from "../../log";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import type { IProcessedProtectionData, IMediaKeySessionStores } from "./types";
@@ -193,7 +193,7 @@ async function createAndTryToRetrievePersistentSession(
 export interface INewSessionCreatedEvent {
   type: MediaKeySessionLoadingType.Created;
   value: {
-    mediaKeySession: MediaKeySession | ICustomMediaKeySession;
+    mediaKeySession: IMediaKeySession;
     sessionType: MediaKeySessionType;
     keySessionRecord: KeySessionRecord;
   };
@@ -202,7 +202,7 @@ export interface INewSessionCreatedEvent {
 export interface IPersistentSessionRecoveryEvent {
   type: MediaKeySessionLoadingType.LoadedPersistentSession;
   value: {
-    mediaKeySession: MediaKeySession | ICustomMediaKeySession;
+    mediaKeySession: IMediaKeySession;
     sessionType: MediaKeySessionType;
     keySessionRecord: KeySessionRecord;
   };

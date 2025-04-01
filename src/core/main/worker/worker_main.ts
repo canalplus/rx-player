@@ -8,6 +8,7 @@ import type {
   IDiscontinuityUpdateWorkerMessagePayload,
   IMainThreadMessage,
   IReferenceUpdateMessage,
+  IThumbnailDataRequestMainMessage,
 } from "../../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_types";
 import DashFastJsParser from "../../../parsers/manifest/dash/fast-js-parser";
@@ -19,6 +20,7 @@ import type { IPlayerError, ITrackType } from "../../../public_types";
 import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
 import assert, { assertUnreachable } from "../../../utils/assert";
+import globalScope from "../../../utils/global_scope";
 import type { ILogFormat, ILoggerLevel } from "../../../utils/logger";
 import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
@@ -33,7 +35,10 @@ import type {
 } from "../../stream";
 import StreamOrchestrator from "../../stream";
 import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
+import type { IFreezeResolution } from "../common/FreezeResolver";
 import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
+import getThumbnailData from "../common/get_thumbnail_data";
+import synchronizeSegmentSinksOnObservation from "../common/synchronize_sinks_on_observation";
 import ContentPreparer from "./content_preparer";
 import {
   limitVideoResolution,
@@ -80,7 +85,7 @@ export default function initializeWorkerMain() {
    */
   let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
 
-  onmessageerror = (_msg: MessageEvent) => {
+  globalScope.onmessageerror = (_msg: MessageEvent) => {
     log.error("MTCI: Error when receiving message from main thread.");
   };
   onmessage = function (e: MessageEvent<IMainThreadMessage>) {
@@ -149,6 +154,7 @@ export default function initializeWorkerMain() {
         currentLoadedContentTaskCanceller.signal.register(() => {
           currentContentObservationRef.finish();
         });
+        log.debug("WP: Loading new pepared content.");
         loadOrReloadPreparedContent(
           msg.value,
           contentPreparer,
@@ -400,7 +406,12 @@ export default function initializeWorkerMain() {
       }
 
       case MainThreadMessageType.PullSegmentSinkStoreInfos: {
-        sendSegmentSinksStoreInfos(contentPreparer, msg.value.messageId);
+        sendSegmentSinksStoreInfos(contentPreparer, msg.value.requestId);
+        break;
+      }
+
+      case MainThreadMessageType.ThumbnailDataRequest: {
+        sendThumbnailData(contentPreparer, msg);
         break;
       }
 
@@ -486,6 +497,7 @@ function loadOrReloadPreparedContent(
   playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
   parentCancelSignal: CancellationSignal,
 ) {
+  log.debug("WP: Loading prepared content");
   const currentLoadCanceller = new TaskCanceller();
   currentLoadCanceller.linkToSignal(parentCancelSignal);
 
@@ -515,6 +527,7 @@ function loadOrReloadPreparedContent(
   const {
     contentId,
     cmcdDataBuilder,
+    enableRepresentationAvoidance,
     manifest,
     mediaSource,
     representationEstimator,
@@ -522,23 +535,23 @@ function loadOrReloadPreparedContent(
     segmentQueueCreator,
   } = preparedContent;
   const { drmSystemId, enableFastSwitching, initialTime, onCodecSwitch } = val;
-  playbackObservationRef.onUpdate((observation) => {
-    if (preparedContent.decipherabilityFreezeDetector.needToReload(observation)) {
-      handleMediaSourceReload({
-        timeOffset: 0,
-        minimumPosition: 0,
-        maximumPosition: Infinity,
-      });
-    }
 
-    // Synchronize SegmentSinks with what has been buffered.
-    ["video" as const, "audio" as const, "text" as const].forEach((tType) => {
-      const segmentSinkStatus = segmentSinksStore.getStatus(tType);
-      if (segmentSinkStatus.type === "initialized") {
-        segmentSinkStatus.value.synchronizeInventory(observation.buffered[tType] ?? []);
+  playbackObservationRef.onUpdate(
+    (observation) => {
+      synchronizeSegmentSinksOnObservation(observation, segmentSinksStore);
+      const freezeResolution =
+        preparedContent.freezeResolver.onNewObservation(observation);
+      if (freezeResolution !== null) {
+        handleFreezeResolution(freezeResolution, {
+          contentId,
+          manifest,
+          handleMediaSourceReload,
+          enableRepresentationAvoidance,
+        });
       }
-    });
-  });
+    },
+    { clearSignal: currentLoadCanceller.signal },
+  );
 
   const initialPeriod =
     manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
@@ -590,7 +603,7 @@ function loadOrReloadPreparedContent(
   );
 
   StreamOrchestrator(
-    { initialPeriod: manifest.periods[0], manifest },
+    { initialPeriod, manifest },
     playbackObserver,
     representationEstimator,
     segmentSinksStore,
@@ -877,8 +890,15 @@ function loadOrReloadPreparedContent(
     if (currentLoadCanceller !== null) {
       currentLoadCanceller.cancel();
     }
+    log.debug(
+      "WP: Reloading MediaSource",
+      payload.timeOffset,
+      payload.minimumPosition,
+      payload.maximumPosition,
+    );
     contentPreparer.reloadMediaSource(payload).then(
       () => {
+        log.info("WP: MediaSource Reloaded, loading content again");
         loadOrReloadPreparedContent(
           {
             initialTime: newInitialTime,
@@ -943,7 +963,7 @@ function updateLoggerLevel(
  */
 function sendSegmentSinksStoreInfos(
   contentPreparer: ContentPreparer,
-  messageId: number,
+  requestId: number,
 ): void {
   const currentContent = contentPreparer.getCurrentContent();
   if (currentContent === null) {
@@ -953,6 +973,131 @@ function sendSegmentSinksStoreInfos(
   sendMessage({
     type: WorkerMessageType.SegmentSinkStoreUpdate,
     contentId: currentContent.contentId,
-    value: { segmentSinkMetrics: segmentSinksMetrics, messageId },
+    value: { segmentSinkMetrics: segmentSinksMetrics, requestId },
   });
+}
+
+/**
+ * Handle accordingly an `IFreezeResolution` object.
+ * @param {Object|null} freezeResolution - The `IFreezeResolution` suggested.
+ * @param {Object} param - Parameters that might be needed to implement the
+ * resolution.
+ * @param {string} param.contentId - `contentId` for the current content, used
+ * e.g. for message exchanges between threads.
+ * @param {Object} param.manifest - The current content's Manifest object.
+ * @param {Function} param.handleMediaSourceReload - Function to call if we need
+ * to ask for a "MediaSource reload".
+ * @param {Boolean} param.enableRepresentationAvoidance - If `true`, this
+ * function is authorized to mark `Representation` as "to avoid" if the
+ * `IFreezeResolution` object suggest it.
+ */
+function handleFreezeResolution(
+  freezeResolution: IFreezeResolution,
+  {
+    contentId,
+    manifest,
+    handleMediaSourceReload,
+    enableRepresentationAvoidance,
+  }: {
+    contentId: string;
+    manifest: Manifest;
+    handleMediaSourceReload: (payload: INeedsMediaSourceReloadPayload) => void;
+    enableRepresentationAvoidance: boolean;
+  },
+): void {
+  switch (freezeResolution.type) {
+    case "reload": {
+      log.info("WP: Planning reload due to freeze");
+      handleMediaSourceReload({
+        timeOffset: 0,
+        minimumPosition: 0,
+        maximumPosition: Infinity,
+      });
+      break;
+    }
+    case "flush": {
+      log.info("WP: Flushing buffer due to freeze");
+      sendMessage({
+        type: WorkerMessageType.NeedsBufferFlush,
+        contentId,
+        value: {
+          relativeResumingPosition: freezeResolution.value.relativeSeek,
+          relativePosHasBeenDefaulted: false,
+        },
+      });
+      break;
+    }
+    case "avoid-representations": {
+      log.info("WP: Planning Representation avoidance due to freeze");
+      const content = freezeResolution.value;
+      if (enableRepresentationAvoidance) {
+        manifest.addRepresentationsToAvoid(content);
+      }
+      handleMediaSourceReload({
+        timeOffset: 0,
+        minimumPosition: 0,
+        maximumPosition: Infinity,
+      });
+      break;
+    }
+    default:
+      assertUnreachable(freezeResolution);
+  }
+}
+
+/**
+ * Handles thumbnail requests and send back the result to the main thread.
+ * @param {ContentPreparer} contentPreparer
+ * @returns {void}
+ */
+function sendThumbnailData(
+  contentPreparer: ContentPreparer,
+  msg: IThumbnailDataRequestMainMessage,
+): void {
+  const preparedContent = contentPreparer.getCurrentContent();
+  const respondWithError = (err: unknown) => {
+    sendMessage({
+      type: WorkerMessageType.ThumbnailDataResponse,
+      contentId: msg.contentId,
+      value: {
+        status: "error",
+        requestId: msg.value.requestId,
+        error: formatErrorForSender(err),
+      },
+    });
+  };
+
+  if (
+    preparedContent === null ||
+    preparedContent.manifest === null ||
+    preparedContent.contentId !== msg.contentId
+  ) {
+    return respondWithError(new Error("Content changed"));
+  }
+
+  getThumbnailData(
+    preparedContent.fetchThumbnailData,
+    preparedContent.manifest,
+    msg.value.periodId,
+    msg.value.thumbnailTrackId,
+    msg.value.time,
+  ).then(
+    (result) => {
+      sendMessage(
+        {
+          type: WorkerMessageType.ThumbnailDataResponse,
+          contentId: msg.contentId,
+          value: {
+            status: "success",
+            requestId: msg.value.requestId,
+            data: result,
+          },
+        },
+        [result.data],
+      );
+    },
+    (err) => {
+      return respondWithError(err);
+    },
+  );
 }

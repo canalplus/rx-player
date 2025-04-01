@@ -431,7 +431,7 @@ The representationFilter will be called each time we load a
   - `hdrInfo` (`Object|undefined`): If the `Representation` is from a video track and if
     it has HDR information associated to it, this is set to an object describing the hdr
     characteristics of the track. (see
-    [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+    [HDR support documentation](.././Miscellaneous/hdr.md#hdrinfo))
 
   - `contentProtections` (`Object|undefined`): Encryption information linked to this
     content.

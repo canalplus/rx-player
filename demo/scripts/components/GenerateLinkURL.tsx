@@ -4,7 +4,11 @@ import * as React from "react";
  * @param {Object} props
  * @returns {Object}
  */
-function GeneratedLinkURL({ url }: { url: string | undefined | null }): JSX.Element {
+function GeneratedLinkURL({
+  url,
+}: {
+  url: string | undefined | null;
+}): React.JSX.Element {
   if (url === undefined || url === null || url === "") {
     return (
       <span>

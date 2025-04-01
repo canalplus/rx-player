@@ -258,7 +258,7 @@ export default class PlaybackObserver {
   /**
    * Register a callback so it regularly receives playback observations.
    * @param {Function} cb
-   * @param {Object} options - Configuration options:
+   * @param {Object} params - Configuration parameters:
    *   - `includeLastObservation`: If set to `true` the last observation will
    *     be first emitted synchronously.
    *   - `clearSignal`: If set, the callback will be unregistered when this
@@ -266,17 +266,17 @@ export default class PlaybackObserver {
    */
   public listen(
     cb: (observation: IPlaybackObservation, stopListening: () => void) => void,
-    options?: {
+    params: {
       includeLastObservation?: boolean | undefined;
-      clearSignal?: CancellationSignal | undefined;
+      clearSignal: CancellationSignal;
     },
   ) {
-    if (this._canceller.isUsed() || options?.clearSignal?.isCancelled() === true) {
+    if (this._canceller.isUsed() || params.clearSignal.isCancelled()) {
       return noop;
     }
     this._observationRef.onUpdate(cb, {
-      clearSignal: options?.clearSignal,
-      emitCurrentValue: options?.includeLastObservation,
+      clearSignal: params.clearSignal,
+      emitCurrentValue: params.includeLastObservation,
     });
   }
 
@@ -467,6 +467,13 @@ export default class PlaybackObserver {
             Infinity;
     }
 
+    const fullyLoaded = hasLoadedUntilTheEnd(
+      basePosition,
+      currentRange,
+      mediaTimings.ended,
+      mediaTimings.duration,
+      this._lowLatencyMode,
+    );
     const rebufferingStatus = getRebufferingStatus({
       previousObservation,
       currentObservation: mediaTimings,
@@ -475,7 +482,7 @@ export default class PlaybackObserver {
       lowLatencyMode: this._lowLatencyMode,
       withMediaSource: this._withMediaSource,
       bufferGap,
-      currentRange,
+      fullyLoaded,
     });
 
     const freezingStatus = getFreezingStatus(
@@ -502,6 +509,7 @@ export default class PlaybackObserver {
       freezing: freezingStatus,
       bufferGap,
       currentRange,
+      fullyLoaded,
     });
     if (log.hasLevel("DEBUG")) {
       log.debug(
@@ -646,7 +654,7 @@ function getRebufferingStatus({
   withMediaSource,
   lowLatencyMode,
   bufferGap,
-  currentRange,
+  fullyLoaded,
 }: {
   /** Previous Playback Observation produced. */
   previousObservation: IPlaybackObservation;
@@ -676,36 +684,17 @@ function getRebufferingStatus({
    * `undefined` if we cannot determine this due to a browser issue.
    */
   bufferGap: number | undefined;
-  /**
-   * Range of buffered data where the current position is (`basePosition`).
-   *
-   * `null` if we've no buffered data at the current position.
-   * `undefined` if we cannot determine this due to a browser issue.
-   */
-  currentRange: { start: number; end: number } | null | undefined;
+  /** If `true` the content is loaded until its maximum position. */
+  fullyLoaded: boolean;
 }): IRebufferingStatus | null {
   const { REBUFFERING_GAP } = config.getCurrent();
-  const {
-    position: currentTime,
-    duration,
-    paused,
-    readyState,
-    ended,
-  } = currentObservation;
+  const { position: currentTime, paused, readyState, ended } = currentObservation;
 
   const {
     rebuffering: prevRebuffering,
     event: prevEvt,
     position: prevTime,
   } = previousObservation;
-
-  const fullyLoaded = hasLoadedUntilTheEnd(
-    basePosition,
-    currentRange,
-    ended,
-    duration,
-    lowLatencyMode,
-  );
 
   const canSwitchToRebuffering =
     readyState >= 1 &&
@@ -837,7 +826,7 @@ function getFreezingStatus(
   bufferGap: number | undefined,
 ): IFreezingStatus | null {
   const { MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING } = config.getCurrent();
-  if (prevObservation.freezing) {
+  if (prevObservation.freezing !== null) {
     if (
       currentInfo.ended ||
       currentInfo.paused ||
@@ -943,5 +932,6 @@ function getInitialObservation(mediaElement: IMediaElement): IPlaybackObservatio
     freezing: null,
     bufferGap: 0,
     currentRange: null,
+    fullyLoaded: false,
   });
 }

@@ -108,6 +108,11 @@ events and so on.
     [`videoCapabilities`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-videocapabilities)
     property.
 
+  - [`keySystems[].wantedSessionTypes`](../api/Decryption_Options.md#wantedsessiontypes):
+    Allows the configuration of the
+    [`sessionTypes`](https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-sessionTypes)
+    property.
+
 - [`autoPlay`](../api/Loading_a_Content.md#autoplay): Allows to automatically play after a
   content is loaded.
 
@@ -183,6 +188,10 @@ events and so on.
 
 - [`mode`](../api/Loading_a_Content.md#mode): Force the content to be loaded in a
   `"mulithread"` mode or not.
+
+- [`experimentalOptions.enableRepresentationAvoidance`](../api/Loading_a_Content.md#experimentaloptionsenablerepresentationavoidance):
+  Enable the "Representation Avoidance" mechanism, allowing to work around some playback
+  issues.
 
 ## Static methods
 
@@ -387,6 +396,12 @@ events and so on.
 - [`getCurrentModeInformation`](../api/Playback_Information/getCurrentModeInformation.md):
   Returns information on which "mode" the current content is playing (e.g.:
   multithreading).
+
+- [`getAvailableThumbnailTracks`](../api/Thumbnails/getAvailableThumbnailTracks.md):
+  Returns the list of available thumbnail tracks for a specific position.
+
+- [`renderThumbnail`](../api/Thumbnails/renderThumbnail.md): Render a thumbnail
+  corresponding to a specific time.
 
 ## Static Properties
 

@@ -21,7 +21,7 @@ import findCompleteBox from "./find_complete_box";
  * Take a chunk of ISOBMFF data and extract complete `moof`+`mdat` subsegments
  * which are ready to be decoded.
  * Returns a tuple of two containing first an array of those subsegments
- * followed by tha last un-decodable part.
+ * followed by the last un-decodable part.
  * @param {Uint8Array} buffer
  * @returns {Array}
  */

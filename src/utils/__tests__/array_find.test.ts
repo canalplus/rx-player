@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import arrayFind from "../array_find";
 
-// eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
+// eslint-disable-next-line no-restricted-properties
 const initialArrayFind = Array.prototype.find;
 
 describe("utils - arrayFind", () => {

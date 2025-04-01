@@ -25,9 +25,17 @@ import type {
 } from "../../core/adaptive";
 import AdaptiveRepresentationSelector from "../../core/adaptive";
 import CmcdDataBuilder from "../../core/cmcd";
-import { ManifestFetcher, SegmentQueueCreator } from "../../core/fetchers";
+import {
+  CdnPrioritizer,
+  createThumbnailFetcher,
+  ManifestFetcher,
+  SegmentQueueCreator,
+} from "../../core/fetchers";
 import createContentTimeBoundariesObserver from "../../core/main/common/create_content_time_boundaries_observer";
-import DecipherabilityFreezeDetector from "../../core/main/common/DecipherabilityFreezeDetector";
+import type { IFreezeResolution } from "../../core/main/common/FreezeResolver";
+import FreezeResolver from "../../core/main/common/FreezeResolver";
+import getThumbnailData from "../../core/main/common/get_thumbnail_data";
+import synchronizeSegmentSinksOnObservation from "../../core/main/common/synchronize_sinks_on_observation";
 import SegmentSinksStore from "../../core/segment_sinks";
 import type {
   IStreamOrchestratorOptions,
@@ -49,9 +57,9 @@ import type {
   IKeySystemOption,
   IPlayerError,
 } from "../../public_types";
-import type { ITransportPipelines } from "../../transports";
+import type { IThumbnailResponse, ITransportPipelines } from "../../transports";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import assert from "../../utils/assert";
+import assert, { assertUnreachable } from "../../utils/assert";
 import createCancellablePromise from "../../utils/create_cancellable_promise";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
@@ -204,7 +212,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._initCanceller.signal,
     );
 
-    this._initializeMediaSourceAndDecryption(mediaElement)
+    this._setupInitialMediaSourceAndDecryption(mediaElement)
       .then((initResult) =>
         this._onInitialMediaSourceReady(
           mediaElement,
@@ -230,6 +238,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._manifestFetcher.updateContentUrls(urls, refreshNow);
   }
 
+  /**
+   * Stop content and free all resources linked to this
+   * `MediaSourceContentInitializer`.
+   */
   public dispose(): void {
     this._initCanceller.cancel();
   }
@@ -252,7 +264,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {HTMLMediaElement|null} mediaElement
    * @returns {Promise.<Object>}
    */
-  private _initializeMediaSourceAndDecryption(mediaElement: IMediaElement): Promise<{
+  private _setupInitialMediaSourceAndDecryption(mediaElement: IMediaElement): Promise<{
     mediaSource: MainMediaSourceInterface;
     drmSystemId: string | undefined;
     unlinkMediaSource: TaskCanceller;
@@ -439,11 +451,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       bufferOptions,
     );
 
+    const cdnPrioritizer = new CdnPrioritizer(initCanceller.signal);
     const segmentQueueCreator = new SegmentQueueCreator(
       transport,
+      cdnPrioritizer,
       this._cmcdDataBuilder,
       segmentRequestOptions,
-      initCanceller.signal,
     );
 
     this._refreshManifestCodecSupport(manifest);
@@ -452,80 +465,85 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return;
     }
 
-    const bufferOnMediaSource = this._startBufferingOnMediaSource.bind(this);
-    const triggerEvent = this.trigger.bind(this);
-    const onFatalError = this._onFatalError.bind(this);
-
     // handle initial load and reloads
-    recursivelyLoadOnMediaSource(
-      initialMediaSource,
-      initialTime,
-      autoPlay,
-      initialMediaSourceCanceller,
-    );
-
-    /**
-     * Load the content defined by the Manifest in the mediaSource given at the
-     * given position and playing status.
-     * This function recursively re-call itself when a MediaSource reload is
-     * wanted.
-     * @param {MediaSource} mediaSource
-     * @param {number} startingPos
-     * @param {Object} currentCanceller
-     * @param {boolean} shouldPlay
-     */
-    function recursivelyLoadOnMediaSource(
-      mediaSource: MainMediaSourceInterface,
-      startingPos: number,
-      shouldPlay: boolean,
-      currentCanceller: TaskCanceller,
-    ): void {
-      const opts = {
+    this._setupContentWithNewMediaSource(
+      {
         mediaElement,
         playbackObserver,
-        mediaSource,
-        initialTime: startingPos,
-        autoPlay: shouldPlay,
+        mediaSource: initialMediaSource,
+        initialTime,
+        autoPlay,
         manifest,
         representationEstimator,
+        cdnPrioritizer,
         segmentQueueCreator,
         speed,
         bufferOptions: subBufferOptions,
-      };
-      bufferOnMediaSource(opts, onReloadMediaSource, currentCanceller.signal);
+      },
+      initialMediaSourceCanceller,
+    );
+  }
 
-      function onReloadMediaSource(reloadOrder: {
-        position: number;
-        autoPlay: boolean;
-      }): void {
-        currentCanceller.cancel();
-        if (initCanceller.isUsed()) {
-          return;
-        }
-        triggerEvent("reloadingMediaSource", reloadOrder);
-        if (initCanceller.isUsed()) {
-          return;
-        }
+  /**
+   * Load the content defined by the Manifest in the mediaSource given at the
+   * given position and playing status.
+   * This function recursively re-call itself when a MediaSource reload is
+   * wanted.
+   * @param {Object} args
+   * @param {Object} currentCanceller
+   */
+  private _setupContentWithNewMediaSource(
+    args: IBufferingMediaSettings,
+    currentCanceller: TaskCanceller,
+  ): void {
+    this._startLoadingContentOnMediaSource(
+      args,
+      this._createReloadMediaSourceCallback(args, currentCanceller),
+      currentCanceller.signal,
+    );
+  }
 
-        const newCanceller = new TaskCanceller();
-        newCanceller.linkToSignal(initCanceller.signal);
-        createMediaSource(mediaElement, newCanceller.signal)
-          .then((newMediaSource) => {
-            recursivelyLoadOnMediaSource(
-              newMediaSource,
-              reloadOrder.position,
-              reloadOrder.autoPlay,
-              newCanceller,
-            );
-          })
-          .catch((err) => {
-            if (newCanceller.isUsed()) {
-              return;
-            }
-            onFatalError(err);
-          });
+  /**
+   * Create `IReloadMediaSourceCallback` allowing to handle reload orders.
+   * @param {Object} args
+   * @param {Object} currentCanceller
+   */
+  private _createReloadMediaSourceCallback(
+    args: IBufferingMediaSettings,
+    currentCanceller: TaskCanceller,
+  ): IReloadMediaSourceCallback {
+    const initCanceller = this._initCanceller;
+    return (reloadOrder: { position: number; autoPlay: boolean }): void => {
+      currentCanceller.cancel();
+      if (initCanceller.isUsed()) {
+        return;
       }
-    }
+      this.trigger("reloadingMediaSource", reloadOrder);
+      if (initCanceller.isUsed()) {
+        return;
+      }
+
+      const newCanceller = new TaskCanceller();
+      newCanceller.linkToSignal(initCanceller.signal);
+      createMediaSource(args.mediaElement, newCanceller.signal)
+        .then((newMediaSource) => {
+          this._setupContentWithNewMediaSource(
+            {
+              ...args,
+              mediaSource: newMediaSource,
+              initialTime: reloadOrder.position,
+              autoPlay: reloadOrder.autoPlay,
+            },
+            newCanceller,
+          );
+        })
+        .catch((err) => {
+          if (newCanceller.isUsed()) {
+            return;
+          }
+          this._onFatalError(err);
+        });
+    };
   }
 
   /**
@@ -534,7 +552,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * @param {function} onReloadOrder
    * @param {Object} cancelSignal
    */
-  private _startBufferingOnMediaSource(
+  private _startLoadingContentOnMediaSource(
     args: IBufferingMediaSettings,
     onReloadOrder: IReloadMediaSourceCallback,
     cancelSignal: CancellationSignal,
@@ -548,9 +566,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       mediaSource,
       playbackObserver,
       representationEstimator,
+      cdnPrioritizer,
       segmentQueueCreator,
       speed,
     } = args;
+    const { transport } = this._initSettings;
 
     const initialPeriod =
       manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
@@ -609,11 +629,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       (isPerformed, stopListening) => {
         if (isPerformed) {
           stopListening();
-          const streamEventsEmitter = new StreamEventsEmitter(
-            manifest,
-            mediaElement,
-            playbackObserver,
-          );
+          const streamEventsEmitter = new StreamEventsEmitter(manifest, playbackObserver);
           manifest.addEventListener(
             "manifestUpdate",
             () => {
@@ -668,9 +684,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       speed,
       cancelSignal,
     );
-    const decipherabilityFreezeDetector = new DecipherabilityFreezeDetector(
-      segmentSinksStore,
-    );
+    const freezeResolver = new FreezeResolver(segmentSinksStore);
 
     if (mayMediaElementFailOnUndecipherableData) {
       // On some devices, just reload immediately when data become undecipherable
@@ -685,36 +699,32 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       );
     }
 
-    playbackObserver.listen(
+    coreObserver.listen(
       (observation) => {
-        if (decipherabilityFreezeDetector.needToReload(observation)) {
-          let position: number;
-          const lastObservation = playbackObserver.getReference().getValue();
-          if (lastObservation.position.isAwaitingFuturePosition()) {
-            position = lastObservation.position.getWanted();
-          } else {
-            position = playbackObserver.getCurrentTime();
-          }
+        synchronizeSegmentSinksOnObservation(observation, segmentSinksStore);
+        const freezeResolution = freezeResolver.onNewObservation(observation);
+        if (freezeResolution === null) {
+          return;
+        }
 
+        // TODO: The following method looks generic, we may be able to factorize
+        // it with other reload handlers after some work.
+        const triggerReload = () => {
+          const lastObservation = playbackObserver.getReference().getValue();
+          const position = lastObservation.position.isAwaitingFuturePosition()
+            ? lastObservation.position.getWanted()
+            : (coreObserver.getCurrentTime() ?? lastObservation.position.getPolled());
           const autoplay = initialPlayPerformed.getValue()
             ? !playbackObserver.getIsPaused()
             : autoPlay;
           onReloadOrder({ position, autoPlay: autoplay });
-        }
-      },
-      { clearSignal: cancelSignal },
-    );
+        };
 
-    // Synchronize SegmentSinks with what has been buffered.
-    coreObserver.listen(
-      (observation) => {
-        ["video" as const, "audio" as const, "text" as const].forEach((tType) => {
-          const segmentSinkStatus = segmentSinksStore.getStatus(tType);
-          if (segmentSinkStatus.type === "initialized") {
-            segmentSinkStatus.value.synchronizeInventory(
-              observation.buffered[tType] ?? [],
-            );
-          }
+        handleFreezeResolution(freezeResolution, {
+          enableRepresentationAvoidance: this._initSettings.enableRepresentationAvoidance,
+          manifest,
+          triggerReload,
+          playbackObserver,
         });
       },
       { clearSignal: cancelSignal },
@@ -740,7 +750,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     autoPlayResult
       .then(() => {
-        getLoadedReference(playbackObserver, mediaElement, false, cancelSignal).onUpdate(
+        getLoadedReference(playbackObserver, false, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
@@ -748,6 +758,23 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                 getSegmentSinkMetrics: async () => {
                   return new Promise((resolve) =>
                     resolve(segmentSinksStore.getSegmentSinksMetrics()),
+                  );
+                },
+                getThumbnailData: async (
+                  periodId: string,
+                  thumbnailTrackId: string,
+                  time: number,
+                ): Promise<IThumbnailResponse> => {
+                  const fetchThumbnails = createThumbnailFetcher(
+                    transport.thumbnails,
+                    cdnPrioritizer,
+                  );
+                  return getThumbnailData(
+                    fetchThumbnails,
+                    manifest,
+                    periodId,
+                    thumbnailTrackId,
+                    time,
                   );
                 },
               });
@@ -785,7 +812,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return {
         needsBufferFlush: (payload?: INeedsBufferFlushPayload) => {
           let wantedSeekingTime: number;
-          const currentTime = playbackObserver.getCurrentTime();
+          const lastObservation = playbackObserver.getReference().getValue();
+          const currentTime = lastObservation.position.isAwaitingFuturePosition()
+            ? lastObservation.position.getWanted()
+            : mediaElement.currentTime;
           const relativeResumingPosition = payload?.relativeResumingPosition ?? 0;
           const canBeApproximateSeek = Boolean(payload?.relativePosHasBeenDefaulted);
 
@@ -909,7 +939,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (cancelSignal.isCancelled()) {
             return; // Previous call has stopped streams due to a side-effect
           }
-          self.trigger("periodStreamCleared", value);
+          self.trigger("periodStreamCleared", {
+            type: value.type,
+            periodId: value.period.id,
+          });
         },
 
         bitrateEstimateChange: (value) => {
@@ -1168,6 +1201,12 @@ export interface IInitializeArguments {
    * When set to an object, enable "Common Media Client Data", or "CMCD".
    */
   cmcd?: ICmcdOptions | undefined;
+  /**
+   * If `true`, the RxPlayer can enable its "Representation avoidance"
+   * mechanism, where it avoid loading Representation that it suspect
+   * have issues being decoded on the current device.
+   */
+  enableRepresentationAvoidance: boolean;
   /** Every encryption configuration set. */
   keySystems: IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
@@ -1239,6 +1278,11 @@ interface IBufferingMediaSettings {
   playbackObserver: IMediaElementPlaybackObserver;
   /** Estimate the right Representation. */
   representationEstimator: IRepresentationEstimator;
+  /**
+   * Interface allowing to prioritize CDN between one another depending on past
+   * performances, content steering, etc.
+   */
+  cdnPrioritizer: CdnPrioritizer;
   /** Module to facilitate segment fetching. */
   segmentQueueCreator: SegmentQueueCreator;
   /** Last wanted playback rate. */
@@ -1357,3 +1401,61 @@ type IReloadMediaSourceCallback = (reloadOrder: {
   position: number;
   autoPlay: boolean;
 }) => void;
+
+/**
+ * Handle accordingly an `IFreezeResolution` object.
+ * @param {Object|null} freezeResolution - The `IFreezeResolution` suggested.
+ * @param {Object} param - Parameters that might be needed to implement the
+ * resolution.
+ * @param {Object} param.manifest - The current content's Manifest object.
+ * @param {Object} param.playbackObserver - Object regularly emitting playback
+ * conditions.
+ * @param {Function} param.triggerReload - Function to call if we need to ask
+ * for a "MediaSource reload".
+ * @param {Boolean} param.enableRepresentationAvoidance - If `true`, this
+ * function is authorized to mark `Representation` as "to avoid" if the
+ * `IFreezeResolution` object suggest it.
+ */
+function handleFreezeResolution(
+  freezeResolution: IFreezeResolution,
+  {
+    playbackObserver,
+    enableRepresentationAvoidance,
+    manifest,
+    triggerReload,
+  }: {
+    playbackObserver: IMediaElementPlaybackObserver;
+    enableRepresentationAvoidance: boolean;
+    manifest: IManifest;
+    triggerReload: () => void;
+  },
+): void {
+  switch (freezeResolution.type) {
+    case "reload": {
+      log.info("Init: Planning reload due to freeze");
+      triggerReload();
+      break;
+    }
+    case "flush": {
+      log.info("Init: Flushing buffer due to freeze");
+      const observation = playbackObserver.getReference().getValue();
+      const currentTime = observation.position.isAwaitingFuturePosition()
+        ? observation.position.getWanted()
+        : playbackObserver.getCurrentTime();
+      const relativeResumingPosition = freezeResolution.value.relativeSeek;
+      const wantedSeekingTime = currentTime + relativeResumingPosition;
+      playbackObserver.setCurrentTime(wantedSeekingTime);
+      break;
+    }
+    case "avoid-representations": {
+      const contents = freezeResolution.value;
+      if (enableRepresentationAvoidance) {
+        manifest.addRepresentationsToAvoid(contents);
+      }
+      triggerReload();
+      break;
+    }
+    default:
+      assertUnreachable(freezeResolution);
+  }
+}

@@ -228,6 +228,16 @@ export default class MetaRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns the `duration` of each segment in the context of its Manifest (i.e.
+   * as the Manifest anounces them, actual segment duration may be different due
+   * to approximations), in seconds.
+   * @returns {number}
+   */
+  getTargetSegmentDuration(): { duration: number; isPrecize: boolean } | undefined {
+    return this._wrappedIndex.getTargetSegmentDuration();
+  }
+
+  /**
    * @param {Object} newIndex
    */
   public _replace(newIndex: IRepresentationIndex): void {

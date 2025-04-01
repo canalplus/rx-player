@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import type { ICustomMediaKeys, ICustomMediaKeySystemAccess } from "../../compat/eme";
+import type {
+  IMediaElement,
+  IMediaKeySystemAccess,
+  IMediaKeys,
+} from "../../compat/browser_compatibility_types";
 import eme, { getInitData } from "../../compat/eme";
 import config from "../../config";
 import { EncryptedMediaError, OtherError } from "../../errors";
@@ -30,7 +33,6 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import { objectValues } from "../../utils/object_values";
 import { bytesToHex } from "../../utils/string_parsing";
 import TaskCanceller from "../../utils/task_canceller";
-import attachMediaKeys from "./attach_media_keys";
 import createOrLoadSession from "./create_or_load_session";
 import type { ICodecSupportList } from "./find_key_system";
 import type { IMediaKeysInfos } from "./get_media_keys";
@@ -57,6 +59,7 @@ import {
   areSomeKeyIdsContainedIn,
 } from "./utils/key_id_comparison";
 import type KeySessionRecord from "./utils/key_session_record";
+import MediaKeysAttacher from "./utils/media_keys_attacher";
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able
@@ -287,8 +290,12 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     };
 
     log.debug("DRM: Attaching current MediaKeys");
-    attachMediaKeys(mediaElement, stateToAttach, this._canceller.signal)
+    MediaKeysAttacher.attach(mediaElement, stateToAttach)
       .then(async () => {
+        if (this._isStopped()) {
+          // We might be stopped since then
+          return;
+        }
         this._stateData.isMediaKeysAttached = MediaKeyAttachmentStatus.Attached;
 
         const { serverCertificate } = options;
@@ -526,13 +533,14 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     this._lockInitDataQueue();
 
     let wantedSessionType: MediaKeySessionType;
-    if (isNullOrUndefined(options.persistentLicenseConfig)) {
-      wantedSessionType = "temporary";
-    } else if (!canCreatePersistentSession(mediaKeySystemAccess)) {
-      log.warn('DRM: Cannot create "persistent-license" session: not supported');
-      wantedSessionType = "temporary";
-    } else {
+    if (
+      canCreatePersistentSession(mediaKeySystemAccess) &&
+      (!isNullOrUndefined(options.persistentLicenseConfig) ||
+        !canCreateTemporarySession(mediaKeySystemAccess))
+    ) {
       wantedSessionType = "persistent-license";
+    } else {
+      wantedSessionType = "temporary";
     }
 
     const {
@@ -987,10 +995,21 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
  * @returns {Boolean}
  */
 function canCreatePersistentSession(
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess,
+  mediaKeySystemAccess: IMediaKeySystemAccess,
 ): boolean {
   const { sessionTypes } = mediaKeySystemAccess.getConfiguration();
   return sessionTypes !== undefined && arrayIncludes(sessionTypes, "persistent-license");
+}
+
+/**
+ * Returns `true` if the given MediaKeySystemAccess can create
+ * "temporary" MediaKeySessions.
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess
+ * @returns {Boolean}
+ */
+function canCreateTemporarySession(mediaKeySystemAccess: IMediaKeySystemAccess): boolean {
+  const { sessionTypes } = mediaKeySystemAccess.getConfiguration();
+  return sessionTypes !== undefined && arrayIncludes(sessionTypes, "temporary");
 }
 
 /**
@@ -1363,9 +1382,9 @@ interface IActiveSessionInfo {
  */
 interface IAttachedMediaKeysData {
   /** The MediaKeySystemAccess which allowed to create the MediaKeys instance. */
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  mediaKeySystemAccess: IMediaKeySystemAccess;
   /** The MediaKeys instance. */
-  mediaKeys: MediaKeys | ICustomMediaKeys;
+  mediaKeys: IMediaKeys;
   stores: IMediaKeySessionStores;
   options: IKeySystemOption;
 }

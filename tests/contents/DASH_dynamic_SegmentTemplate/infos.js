@@ -1,9 +1,7 @@
 const BASE_URL =
   "http://" +
-  // eslint-disable-next-line no-undef
   __TEST_CONTENT_SERVER__.URL +
   ":" +
-  // eslint-disable-next-line no-undef
   __TEST_CONTENT_SERVER__.PORT +
   "/DASH_dynamic_SegmentTemplate/media/";
 

@@ -73,7 +73,7 @@ function objectAssign<T extends object, U extends object[]>(
   for (const source of sources) {
     for (const key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         to[key] = source[key as keyof typeof source];
       }
     }
@@ -81,9 +81,8 @@ function objectAssign<T extends object, U extends object[]>(
   return to as MergeRecursively<T, U>;
 }
 
-// eslint-disable-next-line @typescript-eslint/unbound-method, no-restricted-properties
+// eslint-disable-next-line no-restricted-properties
 export default typeof Object.assign === "function"
   ? // eslint-disable-next-line no-restricted-properties
     Object.assign
-  : // eslint-disable-next-line  @typescript-eslint/unbound-method
-    objectAssign;
+  : objectAssign;

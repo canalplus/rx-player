@@ -47,7 +47,7 @@ function RequestConfig({
   onCmcdChange: (val: string) => void;
   segmentRequestTimeout: number;
   segmentRetry: number;
-}): JSX.Element {
+}): React.JSX.Element {
   /* Value of the `segmentRetry` input */
   const [segmentRetryStr, setSegmentRetryStr] = useState(String(segmentRetry));
   /* Value of the `segmentRequestTimeout` input */

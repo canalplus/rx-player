@@ -51,7 +51,7 @@ export function findDefaultVideoCodec(): string {
  * @returns {string}
  */
 export function findDefaultAudioCodec(): string {
-  const audioCodecs = ['audio/mp4;codecs="mp4a.40.2"', "audio/webm;codecs=opus"];
+  const audioCodecs = ['audio/mp4;codecs="mp4a.40.2"', 'audio/webm;codecs="opus"'];
   if (
     isNullOrUndefined(MediaSource_) ||
     typeof MediaSource_.isTypeSupported !== "function"

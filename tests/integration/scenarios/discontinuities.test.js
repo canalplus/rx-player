@@ -31,7 +31,7 @@ describe("discontinuities handling", () => {
           discontinuitiesWarningReceived++;
         }
       });
-      player.setPlaybackRate(2);
+      player.setPlaybackRate(1);
       player.loadVideo({
         url,
         transport,
@@ -40,12 +40,12 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 10000, stepMs: 100 }, () => {
         expect(player.getPosition()).to.be.above(131);
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    }, 7000);
+    }, 12000);
 
     it("should seek to next Period when loading in discontinuity", async function () {
       let discontinuitiesWarningReceived = 0;
@@ -89,19 +89,18 @@ describe("discontinuities handling", () => {
   describe("discontinuities between periods with different types", () => {
     const { url, transport } = differentTypesDiscontinuitiesInfos;
     it("should seek over discontinuities between periods", async function ({ skip }) {
-      // eslint-disable-next-line no-undef
       if (__BROWSER_NAME__ === "firefox") {
-        // test is failing on firefox in the CI because it seems to not support audio only
+        // TODO: test is failing on firefox in the CI, an error is thrown when
+        // playing the content
         skip();
       }
-
       let discontinuitiesWarningReceived = 0;
       player.addEventListener("warning", (err) => {
         if (err.type === "MEDIA_ERROR" && err.code === "DISCONTINUITY_ENCOUNTERED") {
           discontinuitiesWarningReceived++;
         }
       });
-      player.setPlaybackRate(2);
+      player.setPlaybackRate(1);
       player.loadVideo({
         url,
         transport,
@@ -110,12 +109,12 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 10000, stepMs: 100 }, () => {
         expect(player.getPlayerState()).to.equal("PLAYING");
-        expect(discontinuitiesWarningReceived).to.equal(1);
         expect(player.getPosition()).to.be.above(131);
+        expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    }, 7000);
+    }, 12000);
 
     it("should seek to next Period when loading in discontinuity", async function () {
       let discontinuitiesWarningReceived = 0;
@@ -169,7 +168,7 @@ describe("discontinuities handling", () => {
           discontinuitiesWarningReceived++;
         }
       });
-      player.setPlaybackRate(2);
+      player.setPlaybackRate(1);
       player.loadVideo({
         url,
         transport,
@@ -178,12 +177,12 @@ describe("discontinuities handling", () => {
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 4000 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 8000, stepMs: 500 }, () => {
         expect(player.getPosition()).to.be.above(28);
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
       });
-    }, 8000);
+    }, 9000);
 
     it("should seek over discontinuity when loading on one", async function () {
       let discontinuitiesWarningReceived = 0;

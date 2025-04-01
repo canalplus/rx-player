@@ -17,7 +17,7 @@ function Checkbox({
   name: string;
   checked: boolean;
   children?: string;
-}): JSX.Element {
+}): React.JSX.Element {
   const onInputChange = React.useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {
       onChange(getCheckBoxValue(evt.target));

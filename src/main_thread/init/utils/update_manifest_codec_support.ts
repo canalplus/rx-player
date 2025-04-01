@@ -56,13 +56,15 @@ export function getCodecsWithUnknownSupport(
  * Because probing for codec support is always synchronous in the main thread,
  * calling this function ensures that support is now known.
  *
- * @param {Object} manifest
- * @param {Object|null} contentDecryptor
- * @returns {boolean}
+ * @param {Object} manifest - The manifest to update
+ * @param {Object|null} contentDecryptor - The current content decryptor
+ * @param {boolean} isPlayingWithMSEinWorker - True if WebWorker is used with MSE in worker
+ * @returns {Array.<Object>}
  */
 export function updateManifestCodecSupport(
   manifest: IManifestMetadata,
   contentDecryptor: ContentDecryptor | null,
+  isPlayingWithMSEinWorker: boolean,
 ): ICodecSupportInfo[] {
   const codecSupportMap: Map<
     string,
@@ -131,6 +133,14 @@ export function updateManifestCodecSupport(
       let hasSupportedCodec: boolean = false;
       let hasCodecWithUndefinedSupport: boolean = false;
       adaptation.representations.forEach((representation) => {
+        if (
+          representation.isCodecSupportedInWebWorker === false &&
+          isPlayingWithMSEinWorker
+        ) {
+          representation.isSupported = false;
+          return;
+        }
+
         if (representation.isSupported !== undefined) {
           if (representation.isSupported) {
             hasSupportedCodec = true;

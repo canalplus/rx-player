@@ -508,6 +508,22 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
+   * Returns the `duration` of each segment in the context of its Manifest (i.e.
+   * as the Manifest anounces them, actual segment duration may be different due
+   * to approximations), in seconds.
+   * @returns {number}
+   */
+  getTargetSegmentDuration(): {
+    duration: number;
+    isPrecize: boolean;
+  } {
+    return {
+      duration: this._index.duration / this._index.timescale,
+      isPrecize: true,
+    };
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _replace(newIndex: TemplateRepresentationIndex): void {

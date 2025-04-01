@@ -98,7 +98,6 @@ describe("API - MediaElementTracksStore", () => {
         language: "es",
         mode: "hidden",
       } as TextTrack);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       (
         fakeMediaElement.textTracks as {
           onaddtrack: ((arg: TrackEvent) => void) | undefined;

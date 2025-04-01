@@ -32,6 +32,7 @@ function generateFakePeriod({
     duration: end === undefined ? undefined : end - (start ?? 0),
     streamEvents: [],
     adaptations: {},
+    thumbnailTracks: [],
     refreshCodecSupport() {
       // noop
     },
@@ -57,6 +58,7 @@ function generateFakePeriod({
         id: id ?? String(start),
         streamEvents: [],
         adaptations: {},
+        thumbnailTracks: [],
       };
     },
   };
@@ -393,7 +395,7 @@ describe("Manifest - updatePeriods", () => {
       removedPeriods: [],
       updatedPeriods: [
         {
-          period: { id: "p2", start: 60, streamEvents: [] },
+          period: { id: "p2", start: 60, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
       ],
@@ -434,7 +436,7 @@ describe("Manifest - updatePeriods", () => {
       removedPeriods: [],
       updatedPeriods: [
         {
-          period: { id: "p2", start: 60, streamEvents: [] },
+          period: { id: "p2", start: 60, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
       ],
@@ -527,11 +529,11 @@ describe("Manifest - updatePeriods", () => {
       removedPeriods: [{ id: "p1.5", start: 69, end: 70 }],
       updatedPeriods: [
         {
-          period: { id: "p1", start: 60, end: 69, streamEvents: [] },
+          period: { id: "p1", start: 60, end: 69, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
         {
-          period: { id: "p2", start: 70, streamEvents: [] },
+          period: { id: "p2", start: 70, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
       ],
@@ -805,11 +807,11 @@ describe("Manifest - updatePeriods", () => {
       removedPeriods: [],
       updatedPeriods: [
         {
-          period: { id: "p1", start: 60, end: 70, streamEvents: [] },
+          period: { id: "p1", start: 60, end: 70, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
         {
-          period: { id: "p2", start: 70, streamEvents: [] },
+          period: { id: "p2", start: 70, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
       ],
@@ -865,11 +867,11 @@ describe("Manifest - updatePeriods", () => {
       removedPeriods: [{ id: "p2", start: 70, end: 80 }],
       updatedPeriods: [
         {
-          period: { id: "p1", start: 60, end: 70, streamEvents: [] },
+          period: { id: "p1", start: 60, end: 70, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
         {
-          period: { id: "p3", start: 80, streamEvents: [] },
+          period: { id: "p3", start: 80, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
       ],
@@ -928,11 +930,11 @@ describe("Manifest - updatePeriods", () => {
       ],
       updatedPeriods: [
         {
-          period: { id: "p1", start: 60, end: 70, streamEvents: [] },
+          period: { id: "p1", start: 60, end: 70, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
         {
-          period: { id: "p3", start: 80, end: 90, streamEvents: [] },
+          period: { id: "p3", start: 80, end: 90, streamEvents: [], thumbnailTracks: [] },
           result: fakeUpdatePeriodInPlaceRes,
         },
       ],

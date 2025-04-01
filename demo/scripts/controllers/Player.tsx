@@ -23,7 +23,7 @@ const { useCallback, useEffect, useRef, useState } = React;
 // time in ms while seeking/loading/buffering after which the spinner is shown
 const SPINNER_TIMEOUT = 300;
 
-function Player(): JSX.Element {
+function Player(): React.JSX.Element {
   const [
     defaultAudioRepresentationsSwitchingMode,
     setDefaultAudioRepresentationsSwitchingMode,

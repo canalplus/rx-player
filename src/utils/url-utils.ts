@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNonEmptyString from "./is_non_empty_string";
 import startsWith from "./starts_with";
 
 // Scheme part of an url (e.g. "http://").
@@ -33,7 +34,7 @@ const schemeRe = /^(?:[a-z]+:)?\/\//i;
  * 5th match is the fragment (e.g "nose")
  * */
 const urlComponentRegex =
-  /^(?:([^:\/?#]+):)?(?:\/\/([^\/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/;
+  /^(?:([^:/?#]+):)?(?:\/\/([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/;
 
 /**
  * In a given URL, find the index at which the filename begins.
@@ -135,12 +136,12 @@ function getRelativeUrl(baseUrl: string, newUrl: string): string | null {
   let result = relativePath;
   if (relativePath === "" && newParts.query === baseParts.query) {
     // path and query is the same, we don't need to rewrite it
-  } else if (newParts.query) {
+  } else if (isNonEmptyString(newParts.query)) {
     result += "?";
     result += newParts.query;
   }
 
-  if (newParts.fragment) {
+  if (isNonEmptyString(newParts.fragment)) {
     result += "#";
     result += newParts.fragment;
   }
@@ -153,14 +154,14 @@ function getRelativeUrl(baseUrl: string, newUrl: string): string | null {
  * @param base
  * @param relative
  * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5
- * @example base: http://example.com | relative: /b/c | output: http://example.com/b/c
+ * @example base: http://example.com | relative: /b/c | output: http://example.com/b/c
  * @returns the resolved url
  */
 function _resolveURL(base: string, relative: string) {
   const baseParts = parseURL(base);
   const relativeParts = parseURL(relative);
 
-  if (relativeParts.scheme) {
+  if (isNonEmptyString(relativeParts.scheme)) {
     return formatURL(relativeParts);
   }
 
@@ -172,7 +173,7 @@ function _resolveURL(base: string, relative: string) {
     fragment: relativeParts.fragment,
   };
 
-  if (relativeParts.authority) {
+  if (isNonEmptyString(relativeParts.authority)) {
     target.authority = relativeParts.authority;
     target.path = removeDotSegment(relativeParts.path);
     return formatURL(target);
@@ -180,7 +181,7 @@ function _resolveURL(base: string, relative: string) {
 
   if (relativeParts.path === "") {
     target.path = baseParts.path;
-    if (!relativeParts.query) {
+    if (!isNonEmptyString(relativeParts.query)) {
       target.query = baseParts.query;
     }
   } else {
@@ -255,20 +256,20 @@ function parseURL(url: string): IParsedURL {
  */
 function formatURL(parts: IParsedURL): string {
   let url = "";
-  if (parts.scheme) {
+  if (isNonEmptyString(parts.scheme)) {
     url += parts.scheme + ":";
   }
 
-  if (parts.authority) {
+  if (isNonEmptyString(parts.authority)) {
     url += "//" + parts.authority;
   }
   url += parts.path;
 
-  if (parts.query) {
+  if (isNonEmptyString(parts.query)) {
     url += "?" + parts.query;
   }
 
-  if (parts.fragment) {
+  if (isNonEmptyString(parts.fragment)) {
     url += "#" + parts.fragment;
   }
   return url;
@@ -321,7 +322,7 @@ function removeDotSegment(path: string): string {
  * @see https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3
  */
 function mergePaths(baseParts: IParsedURL, relativePath: string): string {
-  if (baseParts.authority && baseParts.path === "") {
+  if (isNonEmptyString(baseParts.authority) && baseParts.path === "") {
     return "/" + relativePath;
   }
   const basePath = baseParts.path;

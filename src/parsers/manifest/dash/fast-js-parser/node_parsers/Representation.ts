@@ -103,6 +103,13 @@ function parseRepresentationChildren(
         }
         break;
       }
+      case "EssentialProperty":
+        if (isNullOrUndefined(children.essentialProperties)) {
+          children.essentialProperties = [parseScheme(currentElement)];
+        } else {
+          children.essentialProperties.push(parseScheme(currentElement));
+        }
+        break;
       case "SupplementalProperty":
         if (isNullOrUndefined(children.supplementalProperties)) {
           children.supplementalProperties = [parseScheme(currentElement)];

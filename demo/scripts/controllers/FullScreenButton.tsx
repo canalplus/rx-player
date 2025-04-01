@@ -27,7 +27,7 @@ function FullscreenButton({
   playerWrapperElementRef: { current: HTMLElement | null };
   player: IPlayerModule;
   className: string;
-}): JSX.Element {
+}): React.JSX.Element {
   const hasCurrentContent = useModuleState(player, "hasCurrentContent");
   const isInitiallyFullscreen = useMemo(() => isFullscreen(), []);
   const [isCurrentlyFullScreen, setIsCurrentlyFullScreen] =

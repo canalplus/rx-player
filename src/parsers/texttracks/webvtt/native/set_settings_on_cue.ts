@@ -69,7 +69,7 @@ export default function setSettingsOnCue(
   }
 
   if (isNonEmptyString(settings.position)) {
-    const positionRegex = /^([\d\.]+)%(?:,(line-left|line-right|center))?$/;
+    const positionRegex = /^([\d.]+)%(?:,(line-left|line-right|center))?$/;
     const positionArr = positionRegex.exec(settings.position);
     if (Array.isArray(positionArr) && positionArr.length >= 2) {
       const position = parseInt(positionArr[1], 10);

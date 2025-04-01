@@ -90,6 +90,19 @@ function linkPlayerEventsToState(
     player.removeEventListener("playerStateChange", onStateUpdate);
   });
 
+  player.addEventListener("play", onPlayPauseChange);
+  abortSignal.addEventListener("abort", () => {
+    player.removeEventListener("play", onPlayPauseChange);
+  });
+  player.addEventListener("pause", onPlayPauseChange);
+  abortSignal.addEventListener("abort", () => {
+    player.removeEventListener("pause", onPlayPauseChange);
+  });
+
+  function onPlayPauseChange(): void {
+    state.update("isPaused", player.isPaused());
+  }
+
   async function updateBufferedData(): Promise<void> {
     if (player.getPlayerState() === "STOPPED") {
       return;
@@ -236,6 +249,7 @@ function linkPlayerEventsToState(
         break;
       case "STOPPED":
         stopPositionUpdates();
+        stateUpdates.isPaused = true;
         stateUpdates.audioRepresentation = undefined;
         stateUpdates.autoPlayBlocked = false;
         stateUpdates.videoRepresentation = undefined;

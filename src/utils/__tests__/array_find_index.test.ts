@@ -1,7 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import arrayFindIndex from "../array_find_index";
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
 // eslint-disable-next-line no-restricted-properties
 const initialArrayFindIndex = Array.prototype.findIndex;
 

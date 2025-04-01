@@ -44,6 +44,18 @@ export default class MainMediaSourceInterface
   public sourceBuffers: MainSourceBufferInterface[];
   /** @see IMediaSourceInterface */
   public readyState: ReadyState;
+  /**
+   * The `ManagedMediaSource.streaming` attribute
+   * Indicates whether the user agent believes it has enough buffered data to ensure
+   * uninterrupted playback for a meaningful period or needs more data.
+   * It also reflects whether the user agent can retrieve and buffer data in an
+   * energy-efficient manner while maintaining the desired memory usage.
+   * The value can be `undefined` if the user agent does not provide this indicator.
+   * `true` indicates that the buffer is low, and more data should be buffered.
+   * `false` indicates that there is enough buffered data, and no additional data needs
+   *  to be buffered at this time.
+   */
+  public streaming?: boolean;
   /** The MSE `MediaSource` instance linked to that `IMediaSourceInterface`. */
   private _mediaSource: IMediaSource;
   /**
@@ -117,6 +129,17 @@ export default class MainMediaSourceInterface
       },
       this._canceller.signal,
     );
+    if (this._mediaSource.streaming !== undefined) {
+      this.streaming = this._mediaSource.streaming;
+    }
+    this._mediaSource.addEventListener("startstreaming", () => {
+      this.streaming = true;
+      this.trigger("streamingChanged", null);
+    });
+    this._mediaSource.addEventListener("endstreaming", () => {
+      this.streaming = false;
+      this.trigger("streamingChanged", null);
+    });
   }
 
   /** @see IMediaSourceInterface */
@@ -212,52 +235,8 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._operationQueue = [];
     this._currentOperations = [];
 
-    const onError = (evt: Event) => {
-      let error: Error;
-      if ((evt as unknown as Error) instanceof Error) {
-        error = evt as unknown as Error;
-      } else if ((evt as unknown as { error: Error }).error instanceof Error) {
-        error = (evt as unknown as { error: Error }).error;
-      } else {
-        error = new Error("Unknown SourceBuffer Error");
-      }
-      const currentOps = this._currentOperations;
-      this._currentOperations = [];
-      if (currentOps.length === 0) {
-        log.error("SBI: error for an unknown operation", error);
-      } else {
-        const rejected = new SourceBufferError(
-          error.name,
-          error.message,
-          error.name === "QuotaExceededError",
-        );
-        for (const op of currentOps) {
-          op.reject(rejected);
-        }
-      }
-    };
-    const onUpdateEnd = () => {
-      const currentOps = this._currentOperations;
-      this._currentOperations = [];
-      try {
-        for (const op of currentOps) {
-          op.resolve(convertToRanges(this._sourceBuffer.buffered));
-        }
-      } catch (err) {
-        for (const op of currentOps) {
-          if (err instanceof Error && err.name === "InvalidStateError") {
-            // Most likely the SourceBuffer just has been removed from the
-            // `MediaSource`.
-            // Just return an empty buffered range.
-            op.resolve([]);
-          } else {
-            op.reject(err);
-          }
-        }
-      }
-      this._performNextOperation();
-    };
-
+    const onError = this._onError.bind(this);
+    const onUpdateEnd = this._onUpdateEnd.bind(this);
     sourceBuffer.addEventListener("updateend", onUpdateEnd);
     sourceBuffer.addEventListener("error", onError);
     this._canceller.signal.register(() => {
@@ -323,6 +302,53 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       // we don't care
     }
     this._emptyCurrentQueue();
+  }
+
+  private _onError(evt: Event) {
+    let error: Error;
+    if ((evt as unknown as Error) instanceof Error) {
+      error = evt as unknown as Error;
+    } else if ((evt as unknown as { error: Error }).error instanceof Error) {
+      error = (evt as unknown as { error: Error }).error;
+    } else {
+      error = new Error("Unknown SourceBuffer Error");
+    }
+    const currentOps = this._currentOperations;
+    this._currentOperations = [];
+    if (currentOps.length === 0) {
+      log.error("SBI: error for an unknown operation", error);
+    } else {
+      const rejected = new SourceBufferError(
+        error.name,
+        error.message,
+        error.name === "QuotaExceededError",
+      );
+      for (const op of currentOps) {
+        op.reject(rejected);
+      }
+    }
+  }
+
+  private _onUpdateEnd() {
+    const currentOps = this._currentOperations;
+    this._currentOperations = [];
+    try {
+      for (const op of currentOps) {
+        op.resolve(convertToRanges(this._sourceBuffer.buffered));
+      }
+    } catch (err) {
+      for (const op of currentOps) {
+        if (err instanceof Error && err.name === "InvalidStateError") {
+          // Most likely the SourceBuffer just has been removed from the
+          // `MediaSource`.
+          // Just return an empty buffered range.
+          op.resolve([]);
+        } else {
+          op.reject(err);
+        }
+      }
+    }
+    this._performNextOperation();
   }
 
   private _emptyCurrentQueue(): void {

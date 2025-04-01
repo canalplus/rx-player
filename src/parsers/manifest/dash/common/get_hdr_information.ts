@@ -67,6 +67,23 @@ export function getWEBMHDRInformation(
   }
 
   if (tc !== undefined) {
+    // 1: ITU-R BT.709
+    // 2: Unspecified
+    // 4: Gamma 2.2 curve
+    // 5: Gamma 2.8 curve
+    // 6: SMPTE 170M
+    // 7: SMPTE 240M
+    // 8: Linear
+    // 9: Logarithmic (100:1 range)
+    // 10: Logarithmic (100 * Sqrt(10) : 1 range)
+    // 11: IEC 61966-2-4
+    // 12: ITU-R BT.1361 Extended Colour Gamut
+    // 13: IEC 61966-2-1 (sRGB or sYCC)
+    // 14: ITU-R BT.2020 10-bit system
+    // 15: ITU-R BT.2020 12-bit system
+    // 16: SMPTE ST 2084, ITU-R BT.2100 PQ
+    // 17: SMPTE ST 428-1
+    // 18: ARIB STD-B67 (HLG)
     if (tc === "16") {
       eotf = "pq";
     } else if (tc === "18") {

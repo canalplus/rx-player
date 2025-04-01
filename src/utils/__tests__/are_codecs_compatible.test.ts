@@ -1,5 +1,25 @@
 import { describe, it, expect } from "vitest";
-import areCodecsCompatible from "../are_codecs_compatible";
+import areCodecsCompatible, { parseCodec } from "../are_codecs_compatible";
+
+describe("parseCodec", () => {
+  it("should return audio/mp4 and mp4a.42.2", () => {
+    const { mimeType, codecs } = parseCodec('audio/mp4;codecs="mp4a.42.2"');
+    expect(mimeType).toBe("audio/mp4");
+    expect(codecs).toBe("mp4a.42.2");
+  });
+
+  it("should return video/mp4 and avc1.64001f", () => {
+    const { mimeType, codecs } = parseCodec('video/mp4;codecs="avc1.64001f"');
+    expect(mimeType).toBe("video/mp4");
+    expect(codecs).toBe("avc1.64001f");
+  });
+
+  it("should return audio/mp4 and ec-3", () => {
+    const { mimeType, codecs } = parseCodec('audio/mp4;codecs="ec-3"');
+    expect(mimeType).toBe("audio/mp4");
+    expect(codecs).toBe("ec-3");
+  });
+});
 
 describe("are_codecs_compatible", () => {
   it("should return false as one is different from the other", () => {

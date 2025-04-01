@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isSeekingApproximate from "../../../compat/is_seeking_approximate";
 import config from "../../../config";
 import type { IBufferType } from "../../../core/types";
 import { MediaError } from "../../../errors";
@@ -95,39 +96,16 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
       playbackRateUpdater.dispose();
     });
 
-    let prevFreezingState: { attemptTimestamp: number } | null = null;
-
     this._playbackObserver.listen(
       (observation) => {
         const discontinuitiesStore = this._discontinuitiesStore;
         const { buffered, position, readyState, rebuffering, freezing } = observation;
 
-        const {
-          BUFFER_DISCONTINUITY_THRESHOLD,
-          FREEZING_STALLED_DELAY,
-          UNFREEZING_SEEK_DELAY,
-          UNFREEZING_DELTA_POSITION,
-        } = config.getCurrent();
+        const { BUFFER_DISCONTINUITY_THRESHOLD, FREEZING_STALLED_DELAY } =
+          config.getCurrent();
 
         if (freezing !== null) {
           const now = getMonotonicTimeStamp();
-
-          const referenceTimestamp =
-            prevFreezingState === null
-              ? freezing.timestamp
-              : prevFreezingState.attemptTimestamp;
-
-          if (
-            !position.isAwaitingFuturePosition() &&
-            now - referenceTimestamp > UNFREEZING_SEEK_DELAY
-          ) {
-            log.warn("Init: trying to seek to un-freeze player");
-            this._playbackObserver.setCurrentTime(
-              this._playbackObserver.getCurrentTime() + UNFREEZING_DELTA_POSITION,
-            );
-            prevFreezingState = { attemptTimestamp: now };
-          }
-
           if (now - freezing.timestamp > FREEZING_STALLED_DELAY) {
             if (rebuffering === null) {
               playbackRateUpdater.stopRebuffering();
@@ -137,8 +115,6 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
             this.trigger("stalled", "freezing");
             return;
           }
-        } else {
-          prevFreezingState = null;
         }
 
         if (rebuffering === null) {
@@ -173,19 +149,34 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
         if (position.isAwaitingFuturePosition()) {
           playbackRateUpdater.stopRebuffering();
           log.debug("Init: let rebuffering happen as we're awaiting a future position");
-          this.trigger("stalled", stalledReason);
-          return;
+        } else {
+          playbackRateUpdater.startRebuffering();
         }
 
-        playbackRateUpdater.startRebuffering();
-
-        if (this._manifest === null) {
+        if (
+          this._manifest === null ||
+          (isSeekingApproximate &&
+            // Don't handle discontinuities on devices with broken seeks before
+            // enough time have passed because seeking brings more risks to
+            // lead to a lengthy rebuffering-exiting process
+            getMonotonicTimeStamp() - rebuffering.timestamp <= 1000)
+        ) {
           this.trigger("stalled", stalledReason);
           return;
         }
 
         /** Position at which data is awaited. */
         const { position: stalledPosition } = rebuffering;
+
+        /**
+         * We may still be in the process of waiting for a position to be seeked
+         * to. When calculating a potential position to e.g. skip over
+         * discontinuities, we should compare it to that "target" position if
+         * one, not the one we're currently playing.
+         */
+        const targetTime = observation.position.isAwaitingFuturePosition()
+          ? observation.position.getWanted()
+          : this._playbackObserver.getCurrentTime();
 
         if (
           stalledPosition !== null &&
@@ -199,10 +190,10 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           );
           if (skippableDiscontinuity !== null) {
             const realSeekTime = skippableDiscontinuity + 0.001;
-            if (realSeekTime <= this._playbackObserver.getCurrentTime()) {
+            if (realSeekTime <= targetTime) {
               log.info(
                 "Init: position to seek already reached, no seeking",
-                this._playbackObserver.getCurrentTime(),
+                targetTime,
                 realSeekTime,
               );
             } else {
@@ -235,11 +226,13 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           positionBlockedAt,
         );
         if (
+          (!isSeekingApproximate ||
+            getMonotonicTimeStamp() - rebuffering.timestamp > 1000) &&
           this._speed.getValue() > 0 &&
           nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD
         ) {
           const seekTo = positionBlockedAt + nextBufferRangeGap + EPSILON;
-          if (this._playbackObserver.getCurrentTime() < seekTo) {
+          if (targetTime < seekTo) {
             log.warn(
               "Init: discontinuity encountered inferior to the threshold",
               positionBlockedAt,
@@ -262,8 +255,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           if (period.end !== undefined && period.end <= positionBlockedAt) {
             if (
               this._manifest.periods[i + 1].start > positionBlockedAt &&
-              this._manifest.periods[i + 1].start >
-                this._playbackObserver.getCurrentTime()
+              this._manifest.periods[i + 1].start > targetTime
             ) {
               const nextPeriod = this._manifest.periods[i + 1];
               this._playbackObserver.setCurrentTime(nextPeriod.start);
@@ -311,7 +303,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     }
     const observation = this._playbackObserver.getReference().getValue();
     if (
-      !observation.rebuffering ||
+      observation.rebuffering === null ||
       observation.paused ||
       this._speed.getValue() <= 0 ||
       (bufferType !== "audio" && bufferType !== "video")
@@ -477,7 +469,7 @@ function generateDiscontinuityError(stalledPosition: number, seekTo: number): Me
     "DISCONTINUITY_ENCOUNTERED",
     "A discontinuity has been encountered at position " +
       String(stalledPosition) +
-      ", seeked at position " +
+      ", seeking at position " +
       String(seekTo),
   );
 }

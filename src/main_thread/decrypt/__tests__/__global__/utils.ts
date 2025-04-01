@@ -15,7 +15,8 @@ export const defaultKSConfig: MediaKeySystemConfiguration[] = [
   {
     audioCapabilities: [
       { contentType: 'audio/mp4;codecs="mp4a.40.2"' },
-      { contentType: "audio/webm;codecs=opus" },
+      { contentType: 'audio/webm;codecs="opus"' },
+      { contentType: 'audio/mp4;codecs="ec-3"' },
     ],
     distinctiveIdentifier: "optional" as const,
     initDataTypes: ["cenc"] as const,
@@ -38,9 +39,11 @@ export const defaultPRRecommendationKSConfig: MediaKeySystemConfiguration[] = [
   {
     audioCapabilities: [
       { robustness: "3000", contentType: 'audio/mp4;codecs="mp4a.40.2"' },
-      { robustness: "3000", contentType: "audio/webm;codecs=opus" },
+      { robustness: "3000", contentType: 'audio/webm;codecs="opus"' },
+      { robustness: "3000", contentType: 'audio/mp4;codecs="ec-3"' },
       { robustness: "2000", contentType: 'audio/mp4;codecs="mp4a.40.2"' },
-      { robustness: "2000", contentType: "audio/webm;codecs=opus" },
+      { robustness: "2000", contentType: 'audio/webm;codecs="opus"' },
+      { robustness: "2000", contentType: 'audio/mp4;codecs="ec-3"' },
     ],
     distinctiveIdentifier: "optional" as const,
     initDataTypes: ["cenc"] as const,
@@ -79,7 +82,8 @@ export const defaultWidevineConfig: MediaKeySystemConfiguration[] = (() => {
   const audioCapabilities = flatMap(ROBUSTNESSES, (robustness) => {
     return [
       { contentType: 'audio/mp4;codecs="mp4a.40.2"', robustness },
-      { contentType: "audio/webm;codecs=opus", robustness },
+      { contentType: 'audio/webm;codecs="opus"', robustness },
+      { contentType: 'audio/mp4;codecs="ec-3"', robustness },
     ];
   });
   return [{ ...defaultKSConfig[0], audioCapabilities, videoCapabilities }];
@@ -115,7 +119,6 @@ export class MediaKeyStatusMapImpl {
       key: BufferSource,
       parent: MediaKeyStatusMapImpl,
     ) => void,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     thisArg?: unknown,
   ): void {
     this._map.forEach((value, key) => callbackfn.bind(thisArg, value, key, this));
@@ -273,7 +276,6 @@ class MockedDecryptorEventEmitter extends EventEmitter<{
 /**
  * Mock functions coming from the compat directory.
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function mockCompat(
   presets: {
     canReuseMediaKeys?: MockInstance;

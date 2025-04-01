@@ -6,17 +6,48 @@ import { describe, it, expect } from "vitest";
  */
 function mockPositivesResultsRMKSA() {
   const saveRMKSA = navigator.requestMediaKeySystemAccess;
-  navigator.requestMediaKeySystemAccess = (_, configurations) => {
+  const saveSetMediaKeys = HTMLMediaElement.prototype.setMediaKeys;
+  HTMLMediaElement.prototype.setMediaKeys = () => {
+    return Promise.resolve();
+  };
+  navigator.requestMediaKeySystemAccess = (type, configurations) => {
     return new Promise((resolve) => {
       resolve({
+        keySystem: type,
         getConfiguration: () => {
           return configurations[0];
+        },
+        createMediaKeys: () => {
+          return {
+            setServerCertificate: () => Promise.resolve(),
+            createSession: () => {
+              return {
+                addEventListener: () => {
+                  /* noop */
+                },
+                removeEventListener: () => {
+                  /* noop */
+                },
+                load: () => {
+                  return Promise.reject(new Error("Do not load"));
+                },
+                generateRequest: () => {
+                  return Promise.resolve();
+                },
+                close: () => {
+                  return Promise.resolve();
+                },
+                update: () => {},
+              };
+            },
+          };
         },
       });
     });
   };
   return function reset() {
     navigator.requestMediaKeySystemAccess = saveRMKSA;
+    HTMLMediaElement.prototype.setMediaKeys = saveSetMediaKeys;
   };
 }
 
@@ -27,7 +58,7 @@ function mockPositivesResultsRMKSA() {
 function mockMixedResultsRMKSA() {
   let i = 0;
   const saveRMKSA = navigator.requestMediaKeySystemAccess;
-  navigator.requestMediaKeySystemAccess = (_, configurations) => {
+  navigator.requestMediaKeySystemAccess = (type, configurations) => {
     return new Promise((resolve, reject) => {
       i++;
       if (i % 2) {
@@ -35,8 +66,34 @@ function mockMixedResultsRMKSA() {
         return;
       }
       resolve({
+        keySystem: type,
         getConfiguration: () => {
           return configurations[0];
+        },
+        createMediaKeys: () => {
+          return {
+            setServerCertificate: () => Promise.resolve(),
+            createSession: () => {
+              return {
+                addEventListener: () => {
+                  /* noop */
+                },
+                removeEventListener: () => {
+                  /* noop */
+                },
+                load: () => {
+                  return Promise.reject(new Error("Do not load"));
+                },
+                generateRequest: () => {
+                  return Promise.resolve();
+                },
+                close: () => {
+                  return Promise.resolve();
+                },
+                update: () => {},
+              };
+            },
+          };
         },
       });
     });

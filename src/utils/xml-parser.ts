@@ -6,6 +6,8 @@
  * https://github.com/TobiasNickel/tXml
  */
 
+import isNonEmptyString from "./is_non_empty_string";
+
 // import arrayIncludes from "./array_includes";
 
 /**
@@ -94,7 +96,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
     out = parseChildren("");
   }
 
-  if (options.filter) {
+  if (options.filter !== undefined) {
     out = filter(out, options.filter);
   }
   return out;
@@ -106,7 +108,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
    */
   function parseChildren(tagName: string): Array<ITNode | string> {
     const children: Array<ITNode | string> = [];
-    while (src[pos]) {
+    while (src[pos] !== undefined) {
       if (src.charCodeAt(pos) === openBracketCC) {
         if (src.charCodeAt(pos + 1) === slashCC) {
           const closeStart = pos + 2;
@@ -170,7 +172,10 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
             const startDoctype = pos + 1;
             pos += 2;
             let encapsuled = false;
-            while ((src.charCodeAt(pos) !== closeBracketCC || encapsuled) && src[pos]) {
+            while (
+              (src.charCodeAt(pos) !== closeBracketCC || encapsuled) &&
+              src[pos] !== undefined
+            ) {
               if (src.charCodeAt(pos) === openCornerBracketCC) {
                 encapsuled = true;
               } else if (encapsuled && src.charCodeAt(pos) === closeCornerBracketCC) {
@@ -221,7 +226,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
 
   function parseName(): string {
     const start = pos;
-    while (nameSpacer.indexOf(src[pos]) === -1 && src[pos]) {
+    while (nameSpacer.indexOf(src[pos]) === -1 && src[pos] !== undefined) {
       pos++;
     }
     return src.slice(start, pos);
@@ -235,7 +240,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
     let children: Array<ITNode | string> = [];
 
     // parsing attributes
-    while (src.charCodeAt(pos) !== closeBracketCC && src[pos]) {
+    while (src.charCodeAt(pos) !== closeBracketCC && src[pos] !== undefined) {
       const c = src.charCodeAt(pos);
       if ((c > 64 && c < 91) || (c > 96 && c < 123)) {
         // if('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.indexOf(src[pos])!==-1 ){
@@ -243,7 +248,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
         // search beginning of the string
         let code = src.charCodeAt(pos);
         while (
-          code &&
+          !isNaN(code) &&
           code !== singleQuoteCC &&
           code !== doubleQuoteCC &&
           !((code > 64 && code < 91) || (code > 96 && code < 123)) &&
@@ -298,7 +303,7 @@ function parseXml(src: string, options: ITParseOptions = {}): Array<ITNode | str
     const r = new RegExp(
       "\\s" + options.attrName + "\\s*=['\"]" + options.attrValue + "['\"]",
     ).exec(src);
-    if (r) {
+    if (r !== null) {
       return r.index;
     } else {
       return -1;
@@ -328,7 +333,7 @@ function filter(
           child.children,
           f,
           dept + 1,
-          (path ? path + "." : "") + i + "." + child.tagName,
+          (isNonEmptyString(path) ? path + "." : "") + i + "." + child.tagName,
         );
         out = out.concat(kids);
       }

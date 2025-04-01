@@ -23,7 +23,7 @@ const GitHubButton = ({
   dataText?: string;
   title?: string;
   children?: React.ReactNode;
-}): JSX.Element => {
+}): React.JSX.Element => {
   const aRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {

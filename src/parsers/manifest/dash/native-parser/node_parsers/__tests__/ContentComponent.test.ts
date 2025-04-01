@@ -14,7 +14,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
     });
 
     const element2 = new DOMParser().parseFromString(
-      `<contentComponent ${attributeName}=\"\" />`,
+      `<contentComponent ${attributeName}="" />`,
       "text/xml",
     ).childNodes[0] as Element;
     expect(parseContentComponent(element2)).toEqual({ [_variableName]: "" });

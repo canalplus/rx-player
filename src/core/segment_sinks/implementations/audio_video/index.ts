@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-import AudioVideoSegmentSink from "./audio_video_segment_buffer";
+import AudioVideoSegmentSink from "./audio_video_segment_sink";
 export default AudioVideoSegmentSink;

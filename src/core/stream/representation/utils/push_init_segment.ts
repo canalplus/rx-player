@@ -62,9 +62,6 @@ export default async function pushInitSegment<T>(
   },
   cancelSignal: CancellationSignal,
 ): Promise<IStreamEventAddedSegmentPayload | null> {
-  if (cancelSignal.cancellationError !== null) {
-    throw cancelSignal.cancellationError;
-  }
   const codec = content.representation.getMimeTypeString();
   const data: IPushedChunkData<T> = {
     initSegmentUniqueId,

@@ -1,0 +1,12 @@
+{
+  "pages": [
+    {
+      "path": "./renderThumbnail.md",
+      "displayName": "renderThumbnail"
+    },
+    {
+      "path": "./getAvailableThumbnailTracks.md",
+      "displayName": "getAvailableThumbnailTracks"
+    }
+  ]
+}

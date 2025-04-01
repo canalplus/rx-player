@@ -33,7 +33,7 @@ function ProgressBar({
   maximumPosition: number | null | undefined;
   onMouseMove: (pos: number, evt: React.MouseEvent) => void;
   onMouseOut: (evt: React.MouseEvent) => void;
-}): JSX.Element {
+}): React.JSX.Element {
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const usedMinimum = minimumPosition ?? 0;
   const usedMaximum = maximumPosition ?? 300;

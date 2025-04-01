@@ -40,6 +40,7 @@ import type {
   ITextTrack,
   IVideoRepresentation,
   IVideoTrack,
+  IThumbnailTrackInfo,
 } from "../../../../src/public_types";
 
 RxPlayer.addFeatures([
@@ -65,7 +66,6 @@ RxPlayer.addFeatures([
 
 declare const __INCLUDE_WASM_PARSER__: boolean;
 
-// eslint-disable-next-line no-undef
 if (__INCLUDE_WASM_PARSER__) {
   RxPlayer.addFeatures([DASH_WASM]);
   DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" }).catch((err) => {
@@ -304,22 +304,10 @@ const PlayerModule = declareModule(
         player.play().catch(() => {
           // ignored
         });
-
-        const isStopped = state.get("isStopped");
-        const hasEnded = state.get("hasEnded");
-        if (!isStopped && !hasEnded) {
-          state.update("isPaused", false);
-        }
       },
 
       pause() {
         player.pause();
-
-        const isStopped = state.get("isStopped");
-        const hasEnded = state.get("hasEnded");
-        if (!isStopped && !hasEnded) {
-          state.update("isPaused", true);
-        }
       },
 
       stop() {
@@ -337,6 +325,22 @@ const PlayerModule = declareModule(
 
       unmute() {
         player.unMute();
+      },
+
+      getAvailableThumbnailTracks(time: number): IThumbnailTrackInfo[] {
+        return player.getAvailableThumbnailTracks({ time });
+      },
+
+      renderThumbnail(
+        container: HTMLElement,
+        time: number,
+        thumbnailTrackId: string,
+      ): Promise<void> {
+        return player.renderThumbnail({
+          container,
+          time,
+          thumbnailTrackId,
+        });
       },
 
       setDefaultVideoRepresentationSwitchingMode(
@@ -455,7 +459,7 @@ const PlayerModule = declareModule(
       player
         .attachWorker({
           workerUrl: "./worker.js",
-          dashWasmUrl: "./mpd-parser.wasm",
+          dashWasmUrl: __INCLUDE_WASM_PARSER__ ? "./mpd-parser.wasm" : undefined,
         })
         .catch((err) => {
           // eslint-disable-next-line no-console

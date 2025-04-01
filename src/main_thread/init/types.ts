@@ -15,7 +15,7 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types";
 import type {
   IPeriodsUpdateResult,
@@ -27,6 +27,7 @@ import type {
 } from "../../manifest";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
 import type { IPlayerError } from "../../public_types";
+import type { IThumbnailResponse } from "../../transports";
 import EventEmitter from "../../utils/event_emitter";
 import type SharedReference from "../../utils/reference";
 import type {
@@ -146,6 +147,17 @@ export interface IContentInitializerEvents {
    */
   loaded: {
     getSegmentSinkMetrics: null | (() => Promise<ISegmentSinkMetrics | undefined>);
+    /**
+     * Fetch the thumbnail data of the given Period for the corresponding time.
+     * If there's no thumbnail for that Period or if the request fails, reject
+     * the Promise with a given reason.
+     * @param {number} time
+     */
+    getThumbnailData: (
+      periodId: string,
+      thumbnailTrackId: string,
+      time: number,
+    ) => Promise<IThumbnailResponse>;
   };
   /** Event emitted when a stream event is encountered. */
   streamEvent: IPublicStreamEvent | IPublicNonFiniteStreamEvent;
@@ -192,12 +204,13 @@ export interface IContentInitializerEvents {
      */
     type: IBufferType;
     /**
-     * The `Period` linked to the `PeriodStream` we just removed.
+     * The `id` property of the `Period` linked to the `PeriodStream` we just
+     * removed.
      *
      * The combination of this and `Period` should give you enough information
      * about which `PeriodStream` has been removed.
      */
-    period: IPeriodMetadata;
+    periodId: string;
   };
   /** Emitted when a new `Adaptation` is being considered. */
   adaptationChange: IAdaptationChangeEventPayload;

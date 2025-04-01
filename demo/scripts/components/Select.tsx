@@ -24,7 +24,7 @@ function Select({
   selected: { index: number | undefined; value: string | undefined };
   options?: string[] | Array<{ name: string; disabled: boolean }>;
   disabled: boolean;
-}): JSX.Element {
+}): React.JSX.Element {
   let selectedIndex = typeof selected.index === "number" ? selected.index : undefined;
 
   const optionsEl = options.map((val, index) => {

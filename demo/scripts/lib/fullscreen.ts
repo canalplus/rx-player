@@ -1,12 +1,33 @@
+const doc: Document & {
+  mozFullScreenElement?: typeof document.fullscreenElement | null | undefined;
+  webkitFullscreenElement?: typeof document.fullscreenElement | null | undefined;
+  msFullscreenElement?: typeof document.fullscreenElement | null | undefined;
+  mozCancelFullScreen?: typeof document.exitFullscreen | null | undefined;
+  webkitExitFullscreen?: typeof document.exitFullscreen | null | undefined;
+  msExitFullscreen?: typeof document.exitFullscreen | null | undefined;
+} = document;
+
+type ICompatHTMLElement = HTMLElement & {
+  msRequestFullscreen?: typeof HTMLElement.prototype.requestFullscreen | null | undefined;
+  mozRequestFullScreen?:
+    | typeof HTMLElement.prototype.requestFullscreen
+    | null
+    | undefined;
+  webkitRequestFullscreen?:
+    | ((x: unknown) => Promise<unknown> | undefined | null)
+    | null
+    | undefined;
+};
+
 /**
  * Add the given callback as an event listener of any "fullscreenchange" event.
  * @param {Function} listener
  */
 export function addFullscreenListener(listener: () => void): void {
-  document.addEventListener("webkitfullscreenchange", listener, false);
-  document.addEventListener("mozfullscreenchange", listener, false);
-  document.addEventListener("fullscreenchange", listener, false);
-  document.addEventListener("MSFullscreenChange", listener, false);
+  doc.addEventListener("webkitfullscreenchange", listener, false);
+  doc.addEventListener("mozfullscreenchange", listener, false);
+  doc.addEventListener("fullscreenchange", listener, false);
+  doc.addEventListener("MSFullscreenChange", listener, false);
 }
 
 /**
@@ -15,10 +36,10 @@ export function addFullscreenListener(listener: () => void): void {
  * @param {Function} listener
  */
 export function removeFullscreenListener(listener: () => void): void {
-  document.removeEventListener("webkitfullscreenchange", listener, false);
-  document.removeEventListener("mozfullscreenchange", listener, false);
-  document.removeEventListener("fullscreenchange", listener, false);
-  document.removeEventListener("MSFullscreenChange", listener, false);
+  doc.removeEventListener("webkitfullscreenchange", listener, false);
+  doc.removeEventListener("mozfullscreenchange", listener, false);
+  doc.removeEventListener("fullscreenchange", listener, false);
+  doc.removeEventListener("MSFullscreenChange", listener, false);
 }
 
 /**
@@ -29,14 +50,10 @@ export function removeFullscreenListener(listener: () => void): void {
  */
 export function isFullscreen(): boolean {
   return !!(
-    (
-      document.fullscreenElement ||
-      /* eslint-disable */
-      (document as any).mozFullScreenElement ||
-      (document as any).webkitFullscreenElement ||
-      (document as any).msFullscreenElement
-    )
-    /* eslint-enable */
+    doc.fullscreenElement ||
+    doc.mozFullScreenElement ||
+    doc.webkitFullscreenElement ||
+    doc.msFullscreenElement
   );
 }
 
@@ -44,20 +61,31 @@ export function isFullscreen(): boolean {
  * Request fullScreen action on a given element.
  * @param {HTMLElement} elt
  */
-export function requestFullscreen(elt: HTMLElement): void {
+export function requestFullscreen(elt: ICompatHTMLElement): void {
   if (!isFullscreen()) {
-    /* eslint-disable */
+    let prom;
     if (elt.requestFullscreen) {
-      elt.requestFullscreen();
-    } else if ((elt as any).msRequestFullscreen) {
-      (elt as any).msRequestFullscreen();
-    } else if ((elt as any).mozRequestFullScreen) {
-      (elt as any).mozRequestFullScreen();
-    } else if ((elt as any).webkitRequestFullscreen) {
+      prom = elt.requestFullscreen();
+    } else if (elt.msRequestFullscreen) {
+      prom = elt.msRequestFullscreen();
+    } else if (elt.mozRequestFullScreen) {
+      prom = elt.mozRequestFullScreen();
+    } else if (elt.webkitRequestFullscreen) {
       // TODO Open issue in TypeScript?
-      (elt as any).webkitRequestFullscreen((Element as any).ALLOW_KEYBOARD_INPUT);
+      prom = elt.webkitRequestFullscreen(
+        (
+          Element as typeof Element & {
+            ALLOW_KEYBOARD_INPUT?: unknown;
+          }
+        ).ALLOW_KEYBOARD_INPUT,
+      );
     }
-    /* eslint-enable */
+    if (prom && typeof prom.catch === "function") {
+      prom.catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error("Failed to go into fullscreen:", err);
+      });
+    }
   }
 }
 
@@ -68,16 +96,21 @@ export function requestFullscreen(elt: HTMLElement): void {
  */
 export function exitFullscreen() {
   if (isFullscreen()) {
-    /* eslint-disable */
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if ((document as any).msExitFullscreen) {
-      (document as any).msExitFullscreen();
-    } else if ((document as any).mozCancelFullScreen) {
-      (document as any).mozCancelFullScreen();
-    } else if ((document as any).webkitExitFullscreen) {
-      (document as any).webkitExitFullscreen();
+    let prom;
+    if (doc.exitFullscreen) {
+      prom = doc.exitFullscreen();
+    } else if (doc.msExitFullscreen) {
+      prom = doc.msExitFullscreen();
+    } else if (doc.mozCancelFullScreen) {
+      prom = doc.mozCancelFullScreen();
+    } else if (doc.webkitExitFullscreen) {
+      prom = doc.webkitExitFullscreen();
     }
-    /* eslint-enable */
+    if (prom && typeof prom.catch === "function") {
+      prom.catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error("Failed to go into fullscreen:", err);
+      });
+    }
   }
 }

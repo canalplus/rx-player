@@ -15,9 +15,7 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import { setMediaKeys } from "../../compat/eme/set_media_keys";
-import log from "../../log";
-import MediaKeysInfosStore from "./utils/media_keys_infos_store";
+import MediaKeysAttacher from "./utils/media_keys_attacher";
 
 /**
  * Free up all ressources taken by the content decryption logic.
@@ -27,14 +25,5 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 export default async function disposeDecryptionResources(
   mediaElement: IMediaElement,
 ): Promise<unknown> {
-  const currentState = MediaKeysInfosStore.getState(mediaElement);
-  if (currentState === null) {
-    return undefined;
-  }
-
-  log.info("DRM: Disposing of the current MediaKeys");
-  const { loadedSessionsStore } = currentState;
-  MediaKeysInfosStore.clearState(mediaElement);
-  await loadedSessionsStore.closeAllSessions();
-  return setMediaKeys(currentState.emeImplementation, mediaElement, null);
+  return MediaKeysAttacher.clearMediaKeys(mediaElement);
 }

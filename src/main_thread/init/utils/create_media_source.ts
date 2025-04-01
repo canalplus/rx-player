@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
+import {
+  isManagedMediaSource,
+  type IMediaElement,
+} from "../../../compat/browser_compatibility_types";
 import clearElementSrc from "../../../compat/clear_element_src";
 import log from "../../../log";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
@@ -54,6 +57,42 @@ export function resetMediaElement(
     }
   }
 }
+/**
+ * Temporarily disables remote playback on a media element by setting the
+ * `disableRemotePlayback` attribute to `true` when using a `ManagedMediaSource`.
+ * The original value of the `disableRemotePlayback` attribute is restored when
+ * the cancellation signal is triggered.
+ *
+ * This is useful when the `ManagedMediaSource` is being used and
+ * the media element needs to ensure that remote playback (e.g., Airplay) is disabled
+ * during the playback session.
+ * @param {HTMLElement} mediaElement - The media element whose `disableRemotePlayback`
+ * attribute will be modified.
+ * @param {CancellationSignal} cancellationSignal - The signal that, when triggered,
+ * restores the `disableRemotePlayback` attribute to its original value.
+ */
+export function disableRemotePlaybackOnManagedMediaSource(
+  mediaElement: IMediaElement,
+  cancellationSignal: CancellationSignal,
+) {
+  if (isManagedMediaSource && "disableRemotePlayback" in mediaElement) {
+    const disableRemotePlaybackPreviousValue = mediaElement.disableRemotePlayback;
+    cancellationSignal.register(() => {
+      /**
+       * Restore the `disableRemotePlayback` attribute to its previous value.
+       * This ensures that the media element's state is the same as it was before
+       * calling `RxPlayer.loadVideo` in the application.
+       */
+      mediaElement.disableRemotePlayback = disableRemotePlaybackPreviousValue;
+    });
+    /**
+     * Using ManagedMediaSource needs to disableRemotePlayback or to provide
+     * an Airplay source alternative, such as HLS.
+     * https://github.com/w3c/media-source/issues/320
+     */
+    mediaElement.disableRemotePlayback = true;
+  }
+}
 
 /**
  * Create a MediaSource instance and attach it to the given mediaElement element's
@@ -76,6 +115,7 @@ function createMediaSource(
   const oldSrc = isNonEmptyString(mediaElement.src) ? mediaElement.src : null;
   resetMediaElement(mediaElement, oldSrc);
   const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
+  disableRemotePlaybackOnManagedMediaSource(mediaElement, unlinkSignal);
   unlinkSignal.register(() => {
     mediaSource.dispose();
   });
@@ -106,7 +146,6 @@ export default function openMediaSource(
       },
       unlinkSignal,
     );
-
     log.info("MTCI: Attaching MediaSource URL to the media element");
     if (mediaSource.handle.type === "handle") {
       mediaElement.srcObject = mediaSource.handle.value;

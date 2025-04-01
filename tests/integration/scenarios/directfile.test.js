@@ -59,17 +59,22 @@ describe("basic playback use cases: direct file", function () {
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(0.5);
-    player.play();
+    await player.play();
+    await sleep(2000);
+    const now = performance.now();
     const lastPosition = player.getPosition();
-    await sleep(600);
-    expect(player.getPlayerState()).to.equal("PLAYING");
-    expect(player.getPosition()).to.be.below(0.5);
-    expect(player.getPosition()).to.be.above(0.15);
-    expect(player.getPosition()).to.be.above(lastPosition);
-    expect(player.getCurrentBufferGap()).to.be.above(0);
-    expect(player.getVideoElement().buffered.start(0)).to.be.below(player.getPosition());
-    expect(player.getPlaybackRate()).to.equal(0.5);
-  });
+    await checkAfterSleepWithBackoff({ stepMs: 100, maxTimeMs: 3000 }, () => {
+      const elapsed = (performance.now() - now) / 1000;
+      expect(player.getPosition()).to.be.below(lastPosition + elapsed / 1.7);
+      expect(player.getPosition()).to.be.above(lastPosition + elapsed * 0.3);
+      expect(player.getPosition()).to.be.above(lastPosition);
+      expect(player.getVideoElement().buffered.start(0)).to.be.below(
+        player.getPosition(),
+      );
+      expect(player.getPlaybackRate()).to.equal(0.5);
+      expect(player.getVideoElement().playbackRate).to.equal(0.5);
+    });
+  }, 5000);
 
   it("should play faster for a speed superior to 1", async function () {
     player.loadVideo({
@@ -78,7 +83,7 @@ describe("basic playback use cases: direct file", function () {
     });
     await waitForLoadedStateAfterLoadVideo(player);
     player.setPlaybackRate(3);
-    player.play();
+    await player.play();
     await sleep(1200);
     expect(player.getPlayerState()).to.equal("PLAYING");
     expect(player.getPosition()).to.be.below(4);

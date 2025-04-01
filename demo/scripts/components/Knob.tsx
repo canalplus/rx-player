@@ -17,7 +17,7 @@ function Knob({
   options: string[];
   selected: { index: number | undefined; value: string | undefined };
   disabled: boolean;
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <div className={`knob ${className}`}>
       <span className="knob-name">{name}</span>

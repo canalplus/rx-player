@@ -1,4 +1,4 @@
-import { expect, describe, it, afterEach } from "vitest";
+import { expect, describe, afterEach, test } from "vitest";
 import RxPlayer from "../../src";
 import VideoThumbnailLoader, {
   DASH_LOADER,
@@ -19,8 +19,12 @@ describe("Memory tests", () => {
     }
   });
 
-  it(
+  test(
     "should not have a sensible memory leak after playing a content",
+    {
+      timeout: 15 * 60 * 1000,
+      retry: 2,
+    },
     async function () {
       if (
         window.performance == null ||
@@ -63,14 +67,14 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(2e6);
     },
-    {
-      timeout: 15 * 60 * 1000,
-      retry: 2,
-    },
   );
 
-  it(
+  test(
     "should not have a sensible memory leak after 5000 LOADED states and adaptive streaming",
+    {
+      timeout: 10 * 60 * 1000,
+      retry: 2,
+    },
     async function () {
       if (
         window.performance == null ||
@@ -115,14 +119,14 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(7e6);
     },
-    {
-      timeout: 10 * 60 * 1000,
-      retry: 2,
-    },
   );
 
-  it(
+  test(
     "should not have a sensible memory leak after 50000 instances of the RxPlayer",
+    {
+      timeout: 30 * 60 * 1000,
+      retry: 2,
+    },
     async function () {
       if (
         window.performance == null ||
@@ -159,14 +163,14 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(7e6);
     },
-    {
-      timeout: 30 * 60 * 1000,
-      retry: 2,
-    },
   );
 
-  it(
+  test(
     "should not have a sensible memory leak after many video quality switches",
+    {
+      timeout: 15 * 60 * 1000,
+      retry: 2,
+    },
     async function () {
       if (
         window.performance == null ||
@@ -232,15 +236,15 @@ describe("Memory tests", () => {
     `);
       expect(heapDifference).to.be.below(9e6);
     },
-    {
-      timeout: 15 * 60 * 1000,
-      retry: 2,
-    },
   );
 
   // TODO FIXME This one failed after a chrome update, no idea why for now
-  it.skip(
+  test.skip(
     "should not have a sensible memory leak after 1000 setTime calls of VideoThumbnailLoader",
+    {
+      timeout: 5 * 60 * 1000,
+      retry: 2,
+    },
     async function () {
       if (
         window.performance == null ||
@@ -290,10 +294,6 @@ describe("Memory tests", () => {
       | Difference (B)         | ${heapDifference}
     `);
       expect(heapDifference).to.be.below(1e6);
-    },
-    {
-      timeout: 5 * 60 * 1000,
-      retry: 2,
     },
   );
 });

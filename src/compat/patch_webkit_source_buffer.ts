@@ -67,7 +67,7 @@ export default function patchWebkitSourceBuffer(): void {
     const sourceBufferWebkitProto = sourceBufferWebkitRef.prototype;
 
     for (const fnName in EventEmitter.prototype) {
-      if (EventEmitter.prototype.hasOwnProperty(fnName)) {
+      if (Object.prototype.hasOwnProperty.call(EventEmitter.prototype, fnName)) {
         (sourceBufferWebkitProto as unknown as Record<string, unknown>)[fnName] = (
           EventEmitter.prototype as unknown as Record<string, unknown>
         )[fnName];

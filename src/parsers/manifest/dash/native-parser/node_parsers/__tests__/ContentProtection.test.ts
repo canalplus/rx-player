@@ -17,7 +17,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
     ]);
 
     const element2 = new DOMParser().parseFromString(
-      `<ContentProtection ${attributeName}=\"\" />`,
+      `<ContentProtection ${attributeName}="" />`,
       "text/xml",
     ).childNodes[0] as Element;
     expect(parseContentProtection(element2)).toEqual([
@@ -66,7 +66,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
   xmlns:cenc="urn:mpeg:cenc:2013"
   xmlns:mspr="urn:microsoft:playready"
   xmlns:scte35="urn:scte:scte35:2014:xml+bin">
-  <ContentProtection cenc:default_KID=\"dead-beef\" />
+  <ContentProtection cenc:default_KID="dead-beef" />
 </MPD>
 `,
         "text/xml",

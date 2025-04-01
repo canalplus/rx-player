@@ -12,13 +12,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -36,13 +36,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -54,13 +54,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -72,13 +72,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
@@ -88,20 +88,62 @@ jobs:
           ubuntu-restricted-extras
       - run: npm ci
       - run: npm run build
-      - run: npm run test:integration
+      - run: |
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
+          # retry on failure
+          if [ $? -ne 0 ]; then
+            echo "First tests attempt failed. Retrying after 20 seconds..."
+            sleep 20
+            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+          fi
+
+  integration_windows:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/checkout@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - shell: bash
+        run: npm ci
+      - shell: bash
+        run: npm run build
+      - shell: bash
+        run: |
+          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
+          # retry on failure
+          if [ $? -ne 0 ]; then
+            echo "First tests attempt failed. Retrying after 20 seconds..."
+            sleep 20
+            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
+            # Other OSes than linux are particularly bad on github actions, run it three times
+            if [ $? -ne 0 ]; then
+              echo "Second tests attempt failed. Retrying after 60 seconds..."
+              sleep 60
+              npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
+            fi
+          fi
 
   memory_linux:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"

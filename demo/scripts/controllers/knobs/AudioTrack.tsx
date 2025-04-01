@@ -25,7 +25,7 @@ function AudioTrackKnob({
 }: {
   player: IPlayerModule;
   className?: string | undefined;
-}): JSX.Element {
+}): React.JSX.Element {
   const currentAudioTrack = useModuleState(player, "audioTrack");
   const availableAudioTracks = useModuleState(player, "availableAudioTracks");
 

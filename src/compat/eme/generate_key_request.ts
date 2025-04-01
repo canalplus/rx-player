@@ -17,8 +17,8 @@
 import log from "../../log";
 import { getNextBoxOffsets } from "../../parsers/containers/isobmff";
 import { be4toi, concat } from "../../utils/byte_parsing";
+import type { IMediaKeySession } from "../browser_compatibility_types";
 import { PSSH_TO_INTEGER } from "./constants";
-import type { ICustomMediaKeySession } from "./custom_media_keys";
 
 /**
  * Modify "initialization data" sent to a `generateKeyRequest` EME call to
@@ -120,16 +120,16 @@ export function patchInitData(initData: Uint8Array): Uint8Array {
 
 /**
  * Generate a request from session.
- * @param {MediaKeySession} session - MediaKeySession on which the request will
+ * @param {MediaKeySession} session - MediaKeySession on which the request will
  * be done.
  * @param {string} initializationDataType - Initialization data type given e.g.
  * by the "encrypted" event for the corresponding request.
- * @param {Uint8Array} initializationData - Initialization data given e.g. by
+ * @param {Uint8Array} initializationData - Initialization data given e.g. by
  * the "encrypted" event for the corresponding request.
  * @returns {Promise} - Emit when done. Errors if fails.
  */
 export default function generateKeyRequest(
-  session: MediaKeySession | ICustomMediaKeySession,
+  session: IMediaKeySession,
   initializationDataType: string | undefined,
   initializationData: Uint8Array,
 ): Promise<unknown> {

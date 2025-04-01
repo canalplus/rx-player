@@ -57,15 +57,35 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
   private _currentContentInfo: ISegmentQueueContentInfo | null;
 
   /**
+   * Indicates whether the segment queue is inturrupted or if
+   * it is authorized to download segment data.
+   * Updating this value to `true` should stop the
+   * loading of new media data. Updating this value to `false` should
+   * restart the downloading queue.
+   * Note: this does not affect the downloading of init segment as
+   * they are always downloaded, regardless of this property value.
+   *
+   * This option can be used to temporarly reduce the usage of the
+   * network.
+   */
+  private isMediaSegmentQueueInterrupted: SharedReference<boolean>;
+
+  /**
    * Create a new `SegmentQueue`.
    *
    * @param {Object} segmentFetcher - Interface to facilitate the download of
    * segments.
+   * @param {Object} isMediaSegmentQueueInterrupted - Reference to a boolean indicating
+   * if the media segment queue is interrupted.
    */
-  constructor(segmentFetcher: IPrioritizedSegmentFetcher<T>) {
+  constructor(
+    segmentFetcher: IPrioritizedSegmentFetcher<T>,
+    isMediaSegmentQueueInterrupted: SharedReference<boolean>,
+  ) {
     super();
     this._segmentFetcher = segmentFetcher;
     this._currentContentInfo = null;
+    this.isMediaSegmentQueueInterrupted = isMediaSegmentQueueInterrupted;
   }
 
   /**
@@ -138,6 +158,19 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
       mediaSegmentAwaitingInitMetadata: null,
     };
     this._currentContentInfo = currentContentInfo;
+
+    this.isMediaSegmentQueueInterrupted.onUpdate(
+      (val) => {
+        if (!val) {
+          log.debug(
+            "SQ: Media segment can be loaded again, restarting queue.",
+            content.adaptation.type,
+          );
+          this._restartMediaSegmentDownloadingQueue(currentContentInfo);
+        }
+      },
+      { clearSignal: currentCanceller.signal },
+    );
 
     // Listen for asked media segments
     downloadQueue.onUpdate(
@@ -257,6 +290,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     const { downloadQueue, content, initSegmentInfoRef, currentCanceller } = contentInfo;
 
     const recursivelyRequestSegments = (): void => {
+      if (this.isMediaSegmentQueueInterrupted.getValue()) {
+        log.debug("SQ: Segment fetching postponed because it cannot stream now.");
+        return;
+      }
       const { segmentQueue } = downloadQueue.getValue();
       const startingSegment = segmentQueue[0];
       if (currentCanceller !== null && currentCanceller.isUsed()) {

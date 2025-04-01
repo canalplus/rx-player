@@ -22,7 +22,7 @@ function VideoTrackKnob({
 }: {
   player: IPlayerModule;
   className?: string;
-}): JSX.Element {
+}): React.JSX.Element {
   const currentVideoTrack = useModuleState(player, "videoTrack");
   const availableVideoTracks = useModuleState(player, "availableVideoTracks");
   const [options, selectedIndex]: [string[], number] = React.useMemo(() => {

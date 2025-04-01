@@ -16,13 +16,6 @@
 
 import type { IListener } from "../utils/event_emitter";
 import globalScope from "../utils/global_scope";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-
-/** Regular MediaKeys type + optional functions present in IE11. */
-interface ICompatMediaKeysConstructor {
-  isTypeSupported?: (type: string) => boolean; // IE11 only
-  new (keyType?: string): MediaKeys; // argument for IE11 only
-}
 
 /**
  * Browser implementation of a VTTCue constructor.
@@ -116,6 +109,8 @@ export interface IMediaSourceEventMap {
   sourceopen: Event;
   sourceended: Event;
   sourceclose: Event;
+  startstreaming: Event;
+  endstreaming: Event;
 }
 
 /**
@@ -136,6 +131,7 @@ export interface IMediaSource extends IEventTarget<IMediaSourceEventMap> {
   handle?: MediaProvider | IMediaSource | undefined;
   readyState: "closed" | "open" | "ended";
   sourceBuffers: ISourceBufferList;
+  streaming?: boolean | undefined;
 
   addSourceBuffer(type: string): ISourceBuffer;
   clearLiveSeekableRange(): void;
@@ -189,18 +185,22 @@ export interface ISourceBuffer extends IEventTarget<ISourceBufferEventMap> {
   onupdatestart: ((evt: Event) => void) | null;
 }
 
+export interface IMediaEncryptedEvent extends MediaEncryptedEvent {
+  forceSessionRecreation?: boolean;
+}
+
 /** Events potentially dispatched by an `IMediaElement` */
 export interface IMediaElementEventMap {
   canplay: Event;
   canplaythrough: Event;
-  encrypted: MediaEncryptedEvent;
+  encrypted: IMediaEncryptedEvent;
   ended: Event;
   enterpictureinpicture: Event;
   error: Event;
   leavepictureinpicture: Event;
   loadeddata: Event;
   loadedmetadata: Event;
-  needkey: MediaEncryptedEvent;
+  needkey: IMediaEncryptedEvent;
   pause: Event;
   play: Event;
   playing: Event;
@@ -212,7 +212,7 @@ export interface IMediaElementEventMap {
   visibilitychange: Event;
   volumechange: Event;
   waiting: Event;
-  webkitneedkey: MediaEncryptedEvent;
+  webkitneedkey: IMediaEncryptedEvent;
 }
 
 /**
@@ -239,7 +239,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   duration: number;
   ended: boolean;
   error: MediaError | null;
-  mediaKeys: null | MediaKeys;
+  mediaKeys: null | IMediaKeys;
   muted: boolean;
   nodeName: string;
   paused: boolean;
@@ -252,6 +252,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   srcObject?: undefined | null | MediaProvider;
   textTracks: TextTrackList | never[];
   volume: number;
+  disableRemotePlayback?: boolean;
 
   addTextTrack: (kind: TextTrackKind) => TextTrack;
   appendChild<T extends Node>(x: T): void;
@@ -261,14 +262,26 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   play(): Promise<void>;
   removeAttribute(attr: string): void;
   removeChild(x: unknown): void;
-  setMediaKeys(x: MediaKeys | null): Promise<void>;
+  setMediaKeys(x: IMediaKeys | null): Promise<void>;
 
-  onencrypted: ((evt: MediaEncryptedEvent) => void) | null;
+  onencrypted: ((evt: IMediaEncryptedEvent) => void) | null;
   oncanplay: ((evt: Event) => void) | null;
   oncanplaythrough: ((evt: Event) => void) | null;
   onended: ((evt: Event) => void) | null;
-  onenterpictureinpicture?: ((evt: Event) => void) | null;
-  onleavepictureinpicture?: ((evt: Event) => void) | null;
+  onenterpictureinpicture?:
+    | ((
+        evt: Event & {
+          pictureInPictureWindow: ICompatPictureInPictureWindow;
+        },
+      ) => void)
+    | null;
+  onleavepictureinpicture?:
+    | ((
+        evt: Event & {
+          pictureInPictureWindow: ICompatPictureInPictureWindow;
+        },
+      ) => void)
+    | null;
   onerror: ((evt: Event) => void) | null;
   onloadeddata: ((evt: Event) => void) | null;
   onloadedmetadata: ((evt: Event) => void) | null;
@@ -293,44 +306,50 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
   msSetMediaKeys?: (mediaKeys: unknown) => void;
   webkitSetMediaKeys?: (mediaKeys: unknown) => void;
   webkitKeys?: {
-    createSession?: (mimeType: string, initData: BufferSource) => MediaKeySession;
+    createSession?: (mimeType: string, initData: BufferSource) => IMediaKeySession;
   };
   audioTracks?: ICompatAudioTrackList;
   videoTracks?: ICompatVideoTrackList;
 }
 
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testMediaElement(x: HTMLMediaElement) {
-  assertCompatibleIMediaElement(x);
+export interface IMediaKeySystemAccess {
+  readonly keySystem: string;
+  getConfiguration(): MediaKeySystemConfiguration;
+  createMediaKeys(): Promise<IMediaKeys>;
 }
-function assertCompatibleIMediaElement(_x: IMediaElement) {
-  // Noop
+
+export interface IMediaKeys {
+  isTypeSupported?: (type: string) => boolean; // IE11 only
+  createSession(sessionType?: MediaKeySessionType): IMediaKeySession;
+  setServerCertificate(serverCertificate: BufferSource): Promise<boolean>;
 }
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testMediaSource(x: MediaSource) {
-  assertCompatibleIMediaSource(x);
+
+export interface IMediaKeySession extends IEventTarget<MediaKeySessionEventMap> {
+  readonly closed: Promise<MediaKeySessionClosedReason>;
+  readonly expiration: number;
+  readonly keyStatuses: MediaKeyStatusMap;
+  readonly sessionId: string;
+  close(): Promise<void>;
+  generateRequest(_initDataType: string, _initData: BufferSource): Promise<void>;
+  load(sessionId: string): Promise<boolean>;
+  remove(): Promise<void>;
+  update(response: BufferSource): Promise<void>;
 }
-function assertCompatibleIMediaSource(_x: IMediaSource) {
-  // Noop
+
+// Trick to ensure our own types are compatible to TypeScript's
+function assertTypeCompatibility<T, _U extends T>(): void {
+  // noop
 }
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testSourceBuffer(x: SourceBuffer) {
-  assertCompatibleISourceBuffer(x);
-}
-function assertCompatibleISourceBuffer(_x: ISourceBuffer) {
-  // Noop
-}
-// @ts-expect-error unused function, just used for compile-time typechecking
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-restricted-types
-function testSourceBufferList(x: SourceBufferList) {
-  assertCompatibleISourceBufferList(x);
-}
-function assertCompatibleISourceBufferList(_x: ISourceBufferList) {
-  // Noop
-}
+
+/* eslint-disable @typescript-eslint/no-restricted-types */
+assertTypeCompatibility<IMediaElement, HTMLMediaElement>();
+assertTypeCompatibility<IMediaSource, MediaSource>();
+assertTypeCompatibility<ISourceBuffer, SourceBuffer>();
+assertTypeCompatibility<ISourceBufferList, SourceBufferList>();
+assertTypeCompatibility<IMediaKeySystemAccess, MediaKeySystemAccess>();
+assertTypeCompatibility<IMediaKeys, MediaKeys>();
+assertTypeCompatibility<IMediaKeySession, MediaKeySession>();
+/* eslint-enable @typescript-eslint/no-restricted-types */
 
 /**
  * AudioTrackList implementation (that TS forgot).
@@ -399,24 +418,29 @@ interface ICompatVideoTrack {
 export interface ICompatPictureInPictureWindow extends EventTarget {
   width: number;
   height: number;
+  onresize: ((evt: Event) => void) | null;
 }
 
-/* eslint-disable */
 /** MediaSource implementation, including vendored implementations. */
-const gs = globalScope as any;
+const gs = globalScope as typeof window & {
+  MozMediaSource?: typeof MediaSource | undefined | null;
+  WebKitMediaSource?: typeof MediaSource | undefined | null;
+  MSMediaSource?: typeof MediaSource | undefined | null;
+  ManagedMediaSource?: typeof MediaSource | undefined | null;
+};
+
 const MediaSource_:
   | { new (): IMediaSource; isTypeSupported(type: string): boolean }
   | undefined =
-  gs === undefined
-    ? undefined
-    : !isNullOrUndefined(gs.MediaSource)
-      ? gs.MediaSource
-      : !isNullOrUndefined(gs.MozMediaSource)
-        ? gs.MozMediaSource
-        : !isNullOrUndefined(gs.WebKitMediaSource)
-          ? gs.WebKitMediaSource
-          : gs.MSMediaSource;
-/* eslint-enable */
+  gs?.MediaSource ??
+  gs?.MozMediaSource ??
+  gs?.WebKitMediaSource ??
+  gs?.MSMediaSource ??
+  gs?.ManagedMediaSource ??
+  undefined;
+
+const isManagedMediaSource =
+  MediaSource_ !== undefined && MediaSource_ === gs?.ManagedMediaSource;
 
 /** List an HTMLMediaElement's possible values for its readyState property. */
 const READY_STATES = {
@@ -443,9 +467,8 @@ export type {
   ICompatVideoTrackList,
   ICompatAudioTrack,
   ICompatVideoTrack,
-  ICompatMediaKeysConstructor,
   ICompatTextTrack,
   ICompatVTTCue,
   ICompatVTTCueConstructor,
 };
-export { MediaSource_, READY_STATES };
+export { MediaSource_, isManagedMediaSource, READY_STATES };

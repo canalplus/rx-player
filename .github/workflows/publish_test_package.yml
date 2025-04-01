@@ -58,7 +58,7 @@ jobs:
         id: npm-pack
 
       - name: Upload archive to release
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@04733e069f2d7f7f0b4aebc4fbdbce8613b03ccd
         id: upload-action
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}

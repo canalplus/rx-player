@@ -9,8 +9,8 @@ function Option({
   children,
 }: {
   title: string;
-  children: JSX.Element;
-}): JSX.Element {
+  children: React.JSX.Element;
+}): React.JSX.Element {
   return (
     <div className="optionWrapper">
       <h4 className="optionTitle">{title}</h4>

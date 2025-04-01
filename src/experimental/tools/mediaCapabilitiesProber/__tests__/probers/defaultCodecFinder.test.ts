@@ -78,7 +78,7 @@ describe("MediaCapabilitiesProber probers - findDefaultAudioCodec", () => {
   it("should find default audio codec", async () => {
     const mockIsTypeSupported = vi.fn((codec: string) => {
       return (
-        codec === 'audio/mp4;codecs="mp4a.40.2"' || codec === "audio/webm;codecs=opus"
+        codec === 'audio/mp4;codecs="mp4a.40.2"' || codec === 'audio/webm;codecs="opus"'
       );
     });
     vi.doMock("../../../../../compat/browser_compatibility_types", () => ({

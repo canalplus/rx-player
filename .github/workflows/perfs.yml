@@ -1,14 +1,23 @@
 name: Performance tests
+
 on:
   pull_request:
-    types: [labeled]
+    types: [opened, synchronize, reopened]
+
+# Abort if new commit since then
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   perf-tests:
-    if: ${{ github.event.label.name == 'Performance checks' }}
+    if:
+      ${{ !contains(github.event.pull_request.labels.*.name, 'skip-performance-checks') }}
     runs-on: [ubuntu-latest]
+    permissions:
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
         with:
@@ -21,4 +30,24 @@ jobs:
       - run: npm ci
       - run: export DISPLAY=:99
       - run: sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
-      - run: node tests/performance/run.mjs
+      - run:
+          node tests/performance/run.mjs --branch $GITHUB_BASE_REF --remote-git-url
+          https://github.com/canalplus/rx-player.git --report perf-report.md
+      - name: Post comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { readFileSync, existsSync } = require('fs');
+            if (!existsSync("./perf-report.md")) {
+              return;
+            }
+            const fileContent =  readFileSync("./perf-report.md").toString();
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              // TODO: generate comment header inside the report file instead of here for better portability?
+              // We should already have access to the sha1 through `git` and the destination branch through the command line arguments.
+              body: fileContent,
+            })

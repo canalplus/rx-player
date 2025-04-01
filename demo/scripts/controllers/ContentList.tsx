@@ -19,9 +19,18 @@ import GeneratedLinkURL from "../components/GenerateLinkURL";
 import GenerateLinkButton from "../components/GenerateLinkButton";
 import type { IKeySystemOption, ILoadVideoOptions } from "../../../src/public_types";
 
-/* eslint-disable */
-const win = window as any;
-const MediaKeys_ =
+const win = window as typeof window & {
+  MozMediaKeys?: typeof MediaKeys | undefined | null;
+  WebKitMediaKeys?: typeof MediaKeys | undefined | null;
+  MSMediaKeys?: typeof MediaKeys | undefined | null;
+  ManagedMediaKeys?: typeof MediaKeys | undefined | null;
+};
+
+const MediaKeys_:
+  | (typeof MediaKeys & {
+      isTypeSupported?: ((type: string) => boolean) | null | undefined;
+    })
+  | null =
   win.MediaKeys || win.MozMediaKeys || win.WebKitMediaKeys || win.MSMediaKeys || null;
 
 const HAS_EME_APIs =
@@ -29,8 +38,14 @@ const HAS_EME_APIs =
   (MediaKeys_ != null &&
     MediaKeys_.prototype &&
     typeof MediaKeys_.isTypeSupported === "function") ||
-  typeof (HTMLVideoElement.prototype as any).webkitGenerateKeyRequest === "function";
-/* eslint-enable */
+  typeof (
+    HTMLVideoElement.prototype as HTMLVideoElement & {
+      webkitGenerateKeyRequest?:
+        | ((keyType: string, initData: ArrayBuffer) => void)
+        | null
+        | undefined;
+    }
+  ).webkitGenerateKeyRequest === "function";
 
 const IS_HTTPS = window.location.protocol.startsWith("https");
 
@@ -253,7 +268,7 @@ function ContentList({
   loadVideo: (opts: ILoadVideoOptions) => void;
   showOptions: boolean;
   onOptionToggle: () => void;
-}): JSX.Element {
+}): React.JSX.Element {
   const initialContents = React.useMemo(() => {
     return constructContentList();
   }, []);

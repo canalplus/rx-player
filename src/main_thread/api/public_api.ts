@@ -33,7 +33,7 @@ import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
 import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import config from "../../config";
-import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type {
   IAdaptationChoice,
   IInbandEvent,
@@ -62,6 +62,7 @@ import {
   getMinimumSafePosition,
   ManifestMetadataFormat,
   createRepresentationFilterFromFnString,
+  getPeriodForTime,
 } from "../../manifest";
 import type { IWorkerMessage } from "../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../multithread_types";
@@ -101,7 +102,10 @@ import type {
   ITrackType,
   IModeInformation,
   IWorkerSettings,
+  IThumbnailTrackInfo,
+  IThumbnailRenderingOptions,
 } from "../../public_types";
+import type { IThumbnailResponse } from "../../transports";
 import arrayFind from "../../utils/array_find";
 import arrayIncludes from "../../utils/array_includes";
 import assert, { assertUnreachable } from "../../utils/assert";
@@ -123,6 +127,7 @@ import {
   getKeySystemConfiguration,
 } from "../decrypt";
 import type { ContentInitializer } from "../init";
+import renderThumbnail from "../render_thumbnail";
 import type { IMediaElementTracksStore, ITSPeriodObject } from "../tracks_store";
 import TracksStore from "../tracks_store";
 import type { IParsedLoadVideoOptions, IParsedStartAtOption } from "./option_utils";
@@ -384,14 +389,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Function passed from the ContentInitializer that return segment sinks metrics.
-   * This is used for monitor and debugging.
-   */
-  private _priv_segmentSinkMetricsCallback:
-    | null
-    | (() => Promise<ISegmentSinkMetrics | undefined>);
-
-  /**
    * @constructor
    * @param {Object} options
    */
@@ -411,7 +408,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */ "4.2.0";
+    this.version = /* PLAYER_VERSION */ "4.3.0";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -466,8 +463,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_lastAutoPlay = false;
 
     this._priv_worker = null;
-
-    this._priv_segmentSinkMetricsCallback = null;
 
     const onVolumeChange = () => {
       this.trigger("volumeChange", {
@@ -759,6 +754,87 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
+   * Returns an array decribing the various thumbnail tracks that can be
+   * encountered at the wanted time or Period.
+   * @param {Object} arg
+   * @param {number|undefined} [arg.time] - The position to check for thumbnail
+   * tracks, in seconds.
+   * @param {string|undefined} [arg.periodId] - The Period to check for
+   * thumbnail tracks.
+   * If not set and if `arg.time` is also not set, the current Period will be
+   * considered.
+   * @returns {Array.<Object>}
+   */
+  public getAvailableThumbnailTracks({
+    time,
+    periodId,
+  }: {
+    time?: number | undefined;
+    periodId?: string | undefined;
+  } = {}): IThumbnailTrackInfo[] {
+    if (this._priv_contentInfos === null || this._priv_contentInfos.manifest === null) {
+      return [];
+    }
+    const { manifest } = this._priv_contentInfos;
+    let period;
+    if (time !== undefined) {
+      period = getPeriodForTime(this._priv_contentInfos.manifest, time);
+      if (period === undefined || period.thumbnailTracks.length === 0) {
+        return [];
+      }
+    } else if (periodId !== undefined) {
+      period = arrayFind(manifest.periods, (p) => p.id === periodId);
+      if (period === undefined) {
+        log.error("API: getAvailableThumbnailTracks: periodId not found");
+        return [];
+      }
+    } else {
+      const { currentPeriod } = this._priv_contentInfos;
+      if (currentPeriod === null) {
+        return [];
+      }
+      period = currentPeriod;
+    }
+    return period.thumbnailTracks.map((t) => {
+      return {
+        id: t.id,
+        width: Math.floor(t.width / t.horizontalTiles),
+        height: Math.floor(t.height / t.verticalTiles),
+        mimeType: t.mimeType,
+      };
+    });
+  }
+
+  /**
+   * Render inside the given `container` the thumbnail corresponding to the
+   * given time.
+   *
+   * If no thumbnail is available at that time or if the RxPlayer does not succeed
+   * to load or render it, reject the corresponding Promise and remove the
+   * potential previous thumbnail from the container.
+   *
+   * If a new `renderThumbnail` call is made with the same `container` before it
+   * had time to finish, the Promise is also rejected but the previous thumbnail
+   * potentially found in the container is untouched.
+   *
+   * @param {Object|undefined} options
+   * @returns {Promise}
+   */
+  public async renderThumbnail(options: IThumbnailRenderingOptions): Promise<void> {
+    if (isNullOrUndefined(options.time)) {
+      throw new Error(
+        "You have to provide a `time` property to `renderThumbnail`, indicating the wanted thumbnail time in seconds.",
+      );
+    }
+    if (isNullOrUndefined(options.container)) {
+      throw new Error(
+        "You have to provide a `container` property to `renderThumbnail`, specifying the HTML Element in which the thumbnail should be inserted.",
+      );
+    }
+    return renderThumbnail(this._priv_contentInfos, options);
+  }
+
+  /**
    * From given options, initialize content playback.
    * @param {Object} options
    */
@@ -783,6 +859,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       segmentLoader,
       serverSyncInfos,
       mode,
+      experimentalOptions,
       __priv_manifestUpdateUrl,
       __priv_patchLastSegmentInSidx,
       url,
@@ -935,6 +1012,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           autoPlay,
           bufferOptions,
           cmcd,
+          enableRepresentationAvoidance:
+            experimentalOptions.enableRepresentationAvoidance,
           keySystems,
           lowLatencyMode,
           transport: transportPipelines,
@@ -977,6 +1056,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           autoPlay,
           bufferOptions,
           cmcd,
+          enableRepresentationAvoidance:
+            experimentalOptions.enableRepresentationAvoidance,
           keySystems,
           lowLatencyMode,
           transportOptions,
@@ -1029,6 +1110,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       tracksStore: null,
       mediaElementTracksStore,
       useWorker,
+      segmentSinkMetricsCallback: null,
+      fetchThumbnailDataCallback: null,
+      thumbnailRequestsInfo: {
+        pendingRequests: new WeakMap(),
+        lastResponse: null,
+      },
     };
 
     // Bind events
@@ -1047,7 +1134,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (contentInfos.tracksStore !== null) {
         contentInfos.tracksStore.resetPeriodObjects();
       }
-      this._priv_segmentSinkMetricsCallback = null;
+      if (this._priv_contentInfos !== null) {
+        this._priv_contentInfos.segmentSinkMetricsCallback = null;
+      }
       this._priv_lastAutoPlay = payload.autoPlay;
     });
     initializer.addEventListener("inbandEvents", (inbandEvents) =>
@@ -1091,7 +1180,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onDecipherabilityUpdate(contentInfos, updates),
     );
     initializer.addEventListener("loaded", (evt) => {
-      this._priv_segmentSinkMetricsCallback = evt.getSegmentSinkMetrics;
+      if (this._priv_contentInfos !== null) {
+        this._priv_contentInfos.segmentSinkMetricsCallback = evt.getSegmentSinkMetrics;
+        this._priv_contentInfos.fetchThumbnailDataCallback = evt.getThumbnailData;
+      }
     });
 
     // Now, that most events are linked, prepare the next content.
@@ -1241,7 +1333,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           seekEventsCanceller = new TaskCanceller();
           seekEventsCanceller.linkToSignal(currentContentCanceller.signal);
           emitSeekEvents(
-            videoElement,
             playbackObserver,
             () => this.trigger("seeking", null),
             () => this.trigger("seeked", null),
@@ -1335,7 +1426,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * `false` otherwise.
    */
   isPaused(): boolean {
-    if (this.videoElement) {
+    if (this.videoElement !== null) {
       if (arrayIncludes(["LOADING", "RELOADING"], this.state)) {
         return !this._priv_lastAutoPlay;
       } else {
@@ -1634,7 +1725,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     const playPromise = this.videoElement.play();
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     if (isNullOrUndefined(playPromise) || typeof playPromise.catch !== "function") {
       return Promise.resolve();
     }
@@ -1927,7 +2017,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     let periodId: string | undefined;
-    let filterPlayableRepresentations: boolean;
+    let filterPlayableRepresentations = true;
     if (typeof arg === "string") {
       periodId = arg;
     } else {
@@ -1986,7 +2076,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     let periodId: string | undefined;
-    let filterPlayableRepresentations: boolean;
+    let filterPlayableRepresentations = true;
     if (typeof arg === "string") {
       periodId = arg;
     } else {
@@ -2027,7 +2117,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     let periodId: string | undefined;
-    let filterPlayableRepresentations: boolean;
+    let filterPlayableRepresentations = true;
     if (typeof arg === "string") {
       periodId = arg;
     } else {
@@ -2086,7 +2176,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     let periodId: string | undefined;
-    let filterPlayableRepresentations: boolean;
+    let filterPlayableRepresentations = true;
     if (typeof arg === "string") {
       periodId = arg;
     } else {
@@ -2451,11 +2541,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * @returns
    */
   async __priv_getSegmentSinkMetrics(): Promise<undefined | ISegmentSinkMetrics> {
-    if (this._priv_segmentSinkMetricsCallback === null) {
-      return undefined;
-    } else {
-      return this._priv_segmentSinkMetricsCallback();
-    }
+    return this._priv_contentInfos?.segmentSinkMetricsCallback?.();
   }
 
   /**
@@ -2523,7 +2609,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     this._priv_contentInfos?.tracksStore?.dispose();
     this._priv_contentInfos?.mediaElementTracksStore?.dispose();
     this._priv_contentInfos = null;
-    this._priv_segmentSinkMetricsCallback = null;
 
     this._priv_contentEventsMemory = {};
 
@@ -2778,7 +2863,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // Emit initial events for the Period
     if (!isNullOrUndefined(tracksStore)) {
       const periodRef = tracksStore.getPeriodObjectFromPeriod(period);
-      if (periodRef) {
+      if (periodRef !== undefined) {
         const audioTrack = tracksStore.getChosenAudioTrack(periodRef, true);
         this._priv_triggerEventIfNotStopped("audioTrackChange", audioTrack, cancelSignal);
         const textTrack = tracksStore.getChosenTextTrack(periodRef);
@@ -2849,12 +2934,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_onPeriodStreamCleared(
     contentInfos: IPublicApiContentInfos,
-    value: { type: IBufferType; period: IPeriodMetadata },
+    value: { type: IBufferType; periodId: string },
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
-    const { type, period } = value;
+    const { type, periodId } = value;
     const tracksStore = contentInfos.tracksStore;
 
     // Clean-up track choices from TracksStore
@@ -2863,7 +2948,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "text":
       case "video":
         if (!isNullOrUndefined(tracksStore)) {
-          tracksStore.removeTrackReference(type, period);
+          tracksStore.removeTrackReference(type, periodId);
         }
         break;
     }
@@ -2872,23 +2957,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const { activeAdaptations, activeRepresentations } = contentInfos;
     if (
       !isNullOrUndefined(activeAdaptations) &&
-      !isNullOrUndefined(activeAdaptations[period.id])
+      !isNullOrUndefined(activeAdaptations[periodId])
     ) {
-      const activePeriodAdaptations = activeAdaptations[period.id];
+      const activePeriodAdaptations = activeAdaptations[periodId];
       delete activePeriodAdaptations[type];
       if (Object.keys(activePeriodAdaptations).length === 0) {
-        delete activeAdaptations[period.id];
+        delete activeAdaptations[periodId];
       }
     }
 
     if (
       !isNullOrUndefined(activeRepresentations) &&
-      !isNullOrUndefined(activeRepresentations[period.id])
+      !isNullOrUndefined(activeRepresentations[periodId])
     ) {
-      const activePeriodRepresentations = activeRepresentations[period.id];
+      const activePeriodRepresentations = activeRepresentations[periodId];
       delete activePeriodRepresentations[type];
       if (Object.keys(activePeriodRepresentations).length === 0) {
-        delete activeRepresentations[period.id];
+        delete activeRepresentations[periodId];
       }
     }
   }
@@ -3330,7 +3415,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 }
-Player.version = /* PLAYER_VERSION */ "4.2.0";
+Player.version = /* PLAYER_VERSION */ "4.3.0";
 
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
@@ -3365,7 +3450,7 @@ interface IPublicAPIEvent {
 }
 
 /** State linked to a particular contents loaded by the public API. */
-interface IPublicApiContentInfos {
+export interface IPublicApiContentInfos {
   /**
    * Unique identifier for this `IPublicApiContentInfos` object.
    * Allows to identify and thus compare this `contentInfos` object with another
@@ -3427,6 +3512,45 @@ interface IPublicApiContentInfos {
    * content.
    */
   useWorker: boolean;
+  /**
+   * Function passed from the ContentInitializer that return segment sinks metrics.
+   * This is used for monitor and debugging.
+   */
+  segmentSinkMetricsCallback: null | (() => Promise<ISegmentSinkMetrics | undefined>);
+  /**
+   * Function allowing to retrieve thumbnails from a content.
+   */
+  fetchThumbnailDataCallback:
+    | null
+    | ((
+        periodId: string,
+        thumbnailTrackId: string,
+        time: number,
+      ) => Promise<IThumbnailResponse>);
+  /** Metadata related to thumbnail rendering for the current content. */
+  thumbnailRequestsInfo: {
+    /**
+     * Thumbnail requests that are still pending, identified by the thumbnail
+     * container.
+     * The value allows to cancel that task.
+     */
+    pendingRequests: WeakMap<HTMLElement, TaskCanceller>;
+    /**
+     * Metadata about the last requested thumbnails.
+     *
+     * This is an optimization to avoid an unnecessary request and round-trip to
+     * the core code as many times thumbnail previews asked by applications are
+     * really close to the last asked one, often in the same thumbnail resource.
+     */
+    lastResponse: {
+      /** Actual thumbnail data response from core RxPlayer code. */
+      response: IThumbnailResponse;
+      /** The identifier for the Period for which that request was made. */
+      periodId: string;
+      /** The identifier for the thumbnail track for which that request was made. */
+      thumbnailTrackId: string;
+    } | null;
+  };
 }
 
 export default Player;

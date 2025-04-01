@@ -73,7 +73,7 @@ following situations:
   reached before the RxPlayer had time to load new media data.
 
   When running in "multithreading" mode, loading segments (and in browsers supporting the
-  feature, even buffering segments) is perfomed concurrently to any computation linked to
+  feature, even buffering segments) is performed concurrently to any computation linked to
   your user interface, ensuring that this important buffering operation can run without
   being blocked.
 
@@ -88,7 +88,7 @@ This "multithread" mode is added as an "experimental" feature.
 Like all other experimental features, it **is** considered stable enough to run in
 production. What we mean by "experimental" in the RxPlayer API is just that we may change
 its API at any RxPlayer version without impacting the RxPlayer's major version due to
-semantic versionning principles.
+semantic versioning principles.
 
 For example, a new minor RxPlayer version could bring with it a complete API change
 regarding the corresponding `MULTI_THREAD` feature. Still, potential changes would be

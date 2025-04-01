@@ -310,7 +310,6 @@ export async function scheduleRequestWithCdns<T>(
     const canceller = new TaskCanceller();
     const unlinkCanceller = canceller.linkToSignal(cancellationSignal);
     return new Promise<T>((res, rej) => {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       cdnPrioritizer?.addEventListener(
         "priorityChange",
         () => {

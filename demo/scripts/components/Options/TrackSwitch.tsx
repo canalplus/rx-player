@@ -20,7 +20,7 @@ function TrackSwitchConfig({
   onCodecSwitch: string;
   onCodecSwitchChange: (val: string) => void;
   onEnableFastSwitchingChange: (val: boolean) => void;
-}): JSX.Element {
+}): React.JSX.Element {
   let defaultAudioTrackSwitchingModeDescMsg;
   switch (defaultAudioTrackSwitchingMode) {
     case "reload":

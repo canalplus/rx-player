@@ -6,7 +6,7 @@ function StickToLiveEdgeButton({
 }: {
   isStickingToTheLiveEdge: boolean;
   changeStickToLiveEdge: (newVal: boolean) => void;
-}): JSX.Element {
+}): React.JSX.Element {
   const onClick = React.useCallback(() => {
     changeStickToLiveEdge(!isStickingToTheLiveEdge);
   }, [changeStickToLiveEdge, isStickingToTheLiveEdge]);

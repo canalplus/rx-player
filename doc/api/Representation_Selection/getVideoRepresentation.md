@@ -36,7 +36,7 @@ method will return an object with the following properties:
 - `frameRate` (`number|undefined`): The video frame rate, in frames per second.
 
 - `hdrInfo` (`Object|undefined`) Information about the hdr characteristics of the
-  Representation. (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+  Representation. (see [HDR support documentation](.././Miscellaneous/hdr.md#hdrinfo))
 
 - `contentProtections` (`Object|undefined`): Encryption information linked to this
   Representation.

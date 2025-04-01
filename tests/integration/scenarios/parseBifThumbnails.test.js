@@ -1,10 +1,12 @@
-import canalBIF from "../../contents/imagetracks/example.bif?arraybuffer";
+import canalBifInfo from "../../contents/imagetracks/infos.js";
 import { parseBifThumbnails } from "../../../dist/es2017/tools";
 import { describe, it, expect } from "vitest";
 
 describe("parseBifThumbnails", () => {
-  it("should correctly parse given thumbnails", () => {
-    const parsedBIFs = parseBifThumbnails(canalBIF);
+  it("should correctly parse given thumbnails", async () => {
+    const bifRes = await fetch(canalBifInfo.url);
+    const bifAb = await bifRes.arrayBuffer();
+    const parsedBIFs = parseBifThumbnails(bifAb);
     expect(typeof parsedBIFs).to.equal("object");
     expect(parsedBIFs.version).to.equal("0.0.0.0");
     expect(parsedBIFs.images).to.be.an.instanceof(Array);

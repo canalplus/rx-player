@@ -25,7 +25,7 @@ function VideoAdaptiveSettings({
   throttleVideoBitrateWhenHidden: boolean;
   onVideoResolutionLimitChange: (newVal: { index: number; value: string }) => void;
   onThrottleVideoBitrateWhenHiddenChange: (newVal: boolean) => void;
-}): JSX.Element {
+}): React.JSX.Element {
   let defaultVideoRepresentationsSwitchingModeDescMsg;
   switch (defaultVideoRepresentationsSwitchingMode) {
     case "reload":

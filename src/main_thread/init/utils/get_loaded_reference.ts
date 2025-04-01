@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "../../../compat/should_wait_for_data_before_loaded";
 import shouldWaitForHaveEnoughData from "../../../compat/should_wait_for_have_enough_data";
@@ -31,14 +30,12 @@ import TaskCanceller from "../../../utils/task_canceller";
  * Returns an `IReadOnlySharedReference` that switches to `true` once the
  * content is considered loaded (i.e. once it can begin to be played).
  * @param {Object} playbackObserver
- * @param {HTMLMediaElement} mediaElement
  * @param {boolean} isDirectfile - `true` if this is a directfile content
  * @param {Object} cancelSignal
  * @returns {Object}
  */
 export default function getLoadedReference(
   playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
-  mediaElement: IMediaElement,
   isDirectfile: boolean,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
@@ -58,10 +55,10 @@ export default function getLoadedReference(
       if (!shouldWaitForDataBeforeLoaded(isDirectfile)) {
         // The duration is NaN if no media data is available,
         // which means media is not loaded yet.
-        if (isNaN(mediaElement.duration)) {
+        if (isNaN(observation.duration)) {
           return;
         }
-        if (mediaElement.duration > 0) {
+        if (observation.duration > 0) {
           isLoaded.setValue(true);
           listenCanceller.cancel();
           return;
@@ -71,7 +68,7 @@ export default function getLoadedReference(
       const minReadyState = shouldWaitForHaveEnoughData() ? 4 : 3;
       if (observation.readyState >= minReadyState) {
         if (observation.currentRange !== null || observation.ended) {
-          if (!shouldValidateMetadata() || mediaElement.duration > 0) {
+          if (!shouldValidateMetadata() || observation.duration > 0) {
             isLoaded.setValue(true);
             listenCanceller.cancel();
             return;

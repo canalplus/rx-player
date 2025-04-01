@@ -112,8 +112,8 @@ const capabilites: { [key: string]: ICapabilities } = {
 
 /**
  * Get probed configuration.
- * @param {Object} config
- * @param {Array<string>} probers
+ * @param {Object} config
+ * @param {Array<string>} probers
  * @returns {Object}
  */
 export default function getProbedConfiguration(

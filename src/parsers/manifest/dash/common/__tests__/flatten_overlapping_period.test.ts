@@ -17,9 +17,9 @@ describe("flattenOverlappingPeriods", function () {
     const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [
-      { id: "1", start: 0, duration: 60, adaptations: {} },
-      { id: "2", start: 60, duration: 60, adaptations: {} },
-      { id: "3", start: 60, duration: 60, adaptations: {} },
+      { id: "1", start: 0, duration: 60, thumbnailTracks: [], adaptations: {} },
+      { id: "2", start: 60, duration: 60, thumbnailTracks: [], adaptations: {} },
+      { id: "3", start: 60, duration: 60, thumbnailTracks: [], adaptations: {} },
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
@@ -42,9 +42,9 @@ describe("flattenOverlappingPeriods", function () {
     const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [
-      { id: "1", start: 0, duration: 60, adaptations: {} },
-      { id: "2", start: 60, duration: 60, adaptations: {} },
-      { id: "3", start: 90, duration: 60, adaptations: {} },
+      { id: "1", start: 0, duration: 60, thumbnailTracks: [], adaptations: {} },
+      { id: "2", start: 60, duration: 60, thumbnailTracks: [], adaptations: {} },
+      { id: "3", start: 90, duration: 60, thumbnailTracks: [], adaptations: {} },
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
@@ -70,9 +70,9 @@ describe("flattenOverlappingPeriods", function () {
     const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [
-      { id: "1", start: 0, duration: 60, adaptations: {} },
-      { id: "2", start: 60, duration: 60, adaptations: {} },
-      { id: "3", start: 50, duration: 120, adaptations: {} },
+      { id: "1", start: 0, duration: 60, thumbnailTracks: [], adaptations: {} },
+      { id: "2", start: 60, duration: 60, thumbnailTracks: [], adaptations: {} },
+      { id: "3", start: 50, duration: 120, thumbnailTracks: [], adaptations: {} },
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);
@@ -97,13 +97,16 @@ describe("flattenOverlappingPeriods", function () {
   it("should keep last announced period from multiple periods with same start and end", function () {
     const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
-    const periods = [{ id: "1", start: 0, duration: 60, adaptations: {} }];
+    const periods = [
+      { id: "1", start: 0, duration: 60, thumbnailTracks: [], adaptations: {} },
+    ];
 
     for (let i = 1; i <= 100; i++) {
       periods.push({
         id: i.toString(),
         start: 60,
         duration: 60,
+        thumbnailTracks: [],
         adaptations: {},
       });
     }
@@ -127,9 +130,9 @@ describe("flattenOverlappingPeriods", function () {
     const mockLog = vi.spyOn(log, "warn").mockImplementation(vi.fn());
 
     const periods = [
-      { id: "1", start: 40, duration: 20, adaptations: {} },
-      { id: "2", start: 60, duration: 20, adaptations: {} },
-      { id: "3", start: 20, duration: 100, adaptations: {} },
+      { id: "1", start: 40, duration: 20, thumbnailTracks: [], adaptations: {} },
+      { id: "2", start: 60, duration: 20, thumbnailTracks: [], adaptations: {} },
+      { id: "3", start: 20, duration: 100, thumbnailTracks: [], adaptations: {} },
     ];
 
     const flattenPeriods = flattenOverlappingPeriods(periods);

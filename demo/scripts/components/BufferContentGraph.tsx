@@ -121,7 +121,7 @@ export default function BufferContentGraph({
   maximumPosition: number | null | undefined;
   seek: (pos: number) => void;
   type: "audio" | "video" | "text";
-}>): JSX.Element {
+}>): React.JSX.Element {
   const randomColors = useMemo<string[]>(() => shuffleArray(COLORS), []);
   const [tipVisible, setTipVisible] = useState(false);
   const [tipPosition, setTipPosition] = useState(0);

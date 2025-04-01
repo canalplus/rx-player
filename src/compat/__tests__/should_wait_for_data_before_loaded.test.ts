@@ -42,7 +42,6 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     expect(shouldWaitForDataBeforeLoaded(false)).toBe(true);
   });
 
-  // eslint-disable-next-line max-len
   it("should return false if we are on the Safari browser and in directfile mode", async () => {
     vi.doMock("../browser_detection", () => {
       return {

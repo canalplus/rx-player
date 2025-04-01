@@ -45,5 +45,6 @@
       "type": "version",
       "link": "https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"
     }
-  ]
+  ],
+  "siteMapRoot": "https://developers.canal-plus.com/rx-player/doc/"
 }

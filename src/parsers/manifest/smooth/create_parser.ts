@@ -681,6 +681,7 @@ function createSmoothStreamingParser(
           end: periodEnd,
           id: "gen-smooth-period-0",
           start: periodStart,
+          thumbnailTracks: [],
         },
       ],
       suggestedPresentationDelay,

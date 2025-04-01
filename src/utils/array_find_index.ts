@@ -34,7 +34,7 @@ export default function arrayFindIndex<T>(
   predicate: (arg: T, index: number, fullArray: T[]) => boolean,
   thisArg?: unknown,
 ): number {
-  // eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
+  // eslint-disable-next-line no-restricted-properties
   if (typeof (Array.prototype as ArrayWithFindIndex<T>).findIndex === "function") {
     // eslint-disable-next-line no-restricted-properties
     return (arr as ArrayWithFindIndex<T>).findIndex(predicate, thisArg);

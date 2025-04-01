@@ -19,7 +19,7 @@ const DEFAULT_CONTENT_SERVER_PORT = 3000;
  * @param {number} port
  * @returns {Object}
  */
-export function createContentServer(port = DEFAULT_CONTENT_SERVER_PORT) {
+export default function createContentServer(port = DEFAULT_CONTENT_SERVER_PORT) {
   const server = createServer(function (req, res) {
     if (routeObj[req.url] == null) {
       res.setHeader("Content-Type", "text/plain");
@@ -42,7 +42,7 @@ export function createContentServer(port = DEFAULT_CONTENT_SERVER_PORT) {
     if (typeof urlObj.path === "string") {
       try {
         data = fs.readFileSync(urlObj.path);
-      } catch (err) {
+      } catch (_err) {
         res.setHeader("Content-Type", "text/plain");
         answerWithCORS(res, 404, "404 Page Not Found");
         return;
@@ -143,10 +143,3 @@ function parseRangeHeader(rangeHeader, dataLength) {
   }
   return [rangesNb[0], rangesNb[1]];
 }
-/** Default export that returns a teardown function that is executed by
- * Vitest on test run
- * @see https://vitest.dev/config/#globalsetup
- * */
-export default () => {
-  createContentServer();
-};

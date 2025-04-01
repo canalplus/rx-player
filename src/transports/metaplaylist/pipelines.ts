@@ -398,5 +398,14 @@ export default function (options: ITransportOptions): ITransportPipelines {
     audio: audioPipeline,
     video: videoPipeline,
     text: textTrackPipeline,
+    thumbnails: {
+      loadThumbnail: () =>
+        Promise.reject(
+          new Error("Thumbnail tracks aren't implemented with MetaPlaylist"),
+        ),
+      parseThumbnail: () => {
+        throw new Error("Thumbnail tracks aren't implemented with MetaPlaylist");
+      },
+    },
   };
 }

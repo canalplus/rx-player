@@ -15,7 +15,7 @@ const supplementalCodecSeparator = /[, ]+/g;
  * to be compliant with what MSE APIs expect
  *
  * @param {string} val - The codec string to parse
- * @returns { Array.<string | undefined | null>}
+ * @returns { Array.<string | undefined | null>}
  */
 export function convertSupplementalCodecsToRFC6381(val: string): string {
   if (isNonEmptyString(val)) {

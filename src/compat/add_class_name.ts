@@ -24,10 +24,7 @@ let hasClassList: boolean | undefined;
  */
 export default function addClassName(elt: HTMLElement, className: string): void {
   if (hasClassList === undefined) {
-    hasClassList =
-      elt.classList !== undefined &&
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      typeof elt.classList.add === "function";
+    hasClassList = elt.classList !== undefined && typeof elt.classList.add === "function";
   }
 
   if (hasClassList) {

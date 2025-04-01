@@ -430,6 +430,29 @@ export interface IRepresentationIndex {
   initialize(segmentList: ISegmentInformation[]): void;
 
   /**
+   * Returns an approximate for the duration of that `RepresentationIndex`s
+   * segments, in seconds in the context of its Manifest (i.e. as the Manifest
+   * anounces them, actual segment duration may be different due to
+   * approximations), with the exception of the last one (that usually is
+   * shorter).
+   * @returns {number}
+   */
+  getTargetSegmentDuration():
+    | {
+        /** Approximate duration of any segments but the last one in seconds. */
+        duration: number;
+        /**
+         * If `true`, the given duration should be relatively precize for all
+         * segments but the last one.
+         *
+         * If `false`, `duration` indicates only a general idea of what can be
+         * expected.
+         */
+        isPrecize: boolean;
+      }
+    | undefined;
+
+  /**
    * Add segments to a RepresentationIndex that were predicted after parsing the
    * segment linked to `currentSegment`.
    * @param {Array.<Object>} nextSegments - The segment information parsed.

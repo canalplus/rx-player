@@ -1,7 +1,8 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import hasMseInWorker from "../../compat/has_mse_in_worker";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
-import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_buffers_store";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
@@ -40,7 +41,7 @@ import type {
   IKeySystemOption,
   IPlayerError,
 } from "../../public_types";
-import type { ITransportOptions } from "../../transports";
+import type { IThumbnailResponse, ITransportOptions } from "../../transports";
 import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
 import idGenerator from "../../utils/id_generator";
@@ -59,7 +60,10 @@ import sendMessage from "./send_message";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
-import { resetMediaElement } from "./utils/create_media_source";
+import {
+  resetMediaElement,
+  disableRemotePlaybackOnManagedMediaSource,
+} from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
@@ -112,14 +116,30 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
-  /**
-   * Stores the resolvers and the current messageId that is sent to the web worker to
-   * receive segment sink metrics.
-   * The purpose of collecting metrics is for monitoring and debugging.
-   */
-  private _segmentMetrics: {
-    lastMessageId: number;
-    resolvers: Map<number, (value: ISegmentSinkMetrics | undefined) => void>;
+  private _awaitingRequests: {
+    nextRequestId: number;
+    /**
+     * Stores the resolvers and the current messageId that is sent to the web worker to
+     * receive segment sink metrics.
+     * The purpose of collecting metrics is for monitoring and debugging.
+     */
+    pendingSinkMetrics: Map<
+      number /* request id */,
+      {
+        resolve: (value: ISegmentSinkMetrics | undefined) => void;
+      }
+    >;
+    /**
+     * Stores the resolvers and the current messageId that is sent to the web worker to
+     * receive image thumbnails.
+     */
+    pendingThumbnailFetching: Map<
+      number /* request id */,
+      {
+        resolve: (value: IThumbnailResponse) => void;
+        reject: (error: Error) => void;
+      }
+    >;
   };
 
   /**
@@ -134,9 +154,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     this._currentMediaSourceCanceller = new TaskCanceller();
     this._currentMediaSourceCanceller.linkToSignal(this._initCanceller.signal);
     this._currentContentInfo = null;
-    this._segmentMetrics = {
-      lastMessageId: 0,
-      resolvers: new Map(),
+    this._awaitingRequests = {
+      nextRequestId: 0,
+      pendingSinkMetrics: new Map(),
+      pendingThumbnailFetching: new Map(),
     };
     this._queuedWorkerMessages = null;
   }
@@ -170,6 +191,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       value: {
         contentId,
         cmcd: this._settings.cmcd,
+        enableRepresentationAvoidance: this._settings.enableRepresentationAvoidance,
         url: this._settings.url,
         hasText: this._hasTextBufferFeature(),
         transportOptions,
@@ -460,6 +482,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                     resetMediaElement(mediaElement, mediaSourceLink.value);
                   });
                 }
+                disableRemotePlaybackOnManagedMediaSource(
+                  mediaElement,
+                  this._currentMediaSourceCanceller.signal,
+                );
                 mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
               }
             },
@@ -683,7 +709,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          const currentTime = mediaElement.currentTime;
+          const lastObservation = playbackObserver.getReference().getValue();
+          const currentTime = lastObservation.position.isAwaitingFuturePosition()
+            ? lastObservation.position.getWanted()
+            : mediaElement.currentTime;
           const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
           const canBeApproximateSeek = Boolean(
             msgData.value?.relativePosHasBeenDefaulted,
@@ -901,46 +930,52 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           const ref = new SharedReference<IAdaptationChoice | null | undefined>(
             undefined,
           );
-          ref.onUpdate((adapChoice) => {
-            if (this._currentContentInfo === null) {
-              ref.finish();
-              return;
-            }
-            if (!isNullOrUndefined(adapChoice)) {
-              adapChoice.representations.onUpdate((repChoice, stopListening) => {
-                if (this._currentContentInfo === null) {
-                  stopListening();
-                  return;
-                }
-                sendMessage(this._settings.worker, {
-                  type: MainThreadMessageType.RepresentationUpdate,
-                  contentId: this._currentContentInfo.contentId,
-                  value: {
-                    periodId: msgData.value.periodId,
-                    adaptationId: adapChoice.adaptationId,
-                    bufferType: msgData.value.bufferType,
-                    choice: repChoice,
+          ref.onUpdate(
+            (adapChoice) => {
+              if (this._currentContentInfo === null) {
+                ref.finish();
+                return;
+              }
+              if (!isNullOrUndefined(adapChoice)) {
+                adapChoice.representations.onUpdate(
+                  (repChoice, stopListening) => {
+                    if (this._currentContentInfo === null) {
+                      stopListening();
+                      return;
+                    }
+                    sendMessage(this._settings.worker, {
+                      type: MainThreadMessageType.RepresentationUpdate,
+                      contentId: this._currentContentInfo.contentId,
+                      value: {
+                        periodId: msgData.value.periodId,
+                        adaptationId: adapChoice.adaptationId,
+                        bufferType: msgData.value.bufferType,
+                        choice: repChoice,
+                      },
+                    });
                   },
-                });
+                  { clearSignal: this._initCanceller.signal },
+                );
+              }
+              sendMessage(this._settings.worker, {
+                type: MainThreadMessageType.TrackUpdate,
+                contentId: this._currentContentInfo.contentId,
+                value: {
+                  periodId: msgData.value.periodId,
+                  bufferType: msgData.value.bufferType,
+                  choice: isNullOrUndefined(adapChoice)
+                    ? adapChoice
+                    : {
+                        adaptationId: adapChoice.adaptationId,
+                        switchingMode: adapChoice.switchingMode,
+                        initialRepresentations: adapChoice.representations.getValue(),
+                        relativeResumingPosition: adapChoice.relativeResumingPosition,
+                      },
+                },
               });
-            }
-            sendMessage(this._settings.worker, {
-              type: MainThreadMessageType.TrackUpdate,
-              contentId: this._currentContentInfo.contentId,
-              value: {
-                periodId: msgData.value.periodId,
-                bufferType: msgData.value.bufferType,
-                choice: isNullOrUndefined(adapChoice)
-                  ? adapChoice
-                  : {
-                      adaptationId: adapChoice.adaptationId,
-                      switchingMode: adapChoice.switchingMode,
-                      initialRepresentations: adapChoice.representations.getValue(),
-                      relativeResumingPosition: adapChoice.relativeResumingPosition,
-                    },
-              },
-            });
-          });
+            },
+            { clearSignal: this._initCanceller.signal },
+          );
           this.trigger("periodStreamReady", {
             period,
             type: msgData.value.bufferType,
@@ -956,15 +991,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           ) {
             return;
           }
-          const period = arrayFind(
-            this._currentContentInfo.manifest.periods,
-            (p) => p.id === msgData.value.periodId,
-          );
-          if (period === undefined) {
-            return;
-          }
           this.trigger("periodStreamCleared", {
-            period,
+            periodId: msgData.value.periodId,
             type: msgData.value.bufferType,
           });
           break;
@@ -1122,9 +1150,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          const resolveFn = this._segmentMetrics.resolvers.get(msgData.value.messageId);
-          if (resolveFn !== undefined) {
-            resolveFn(msgData.value.segmentSinkMetrics);
+          const sinkObj = this._awaitingRequests.pendingSinkMetrics.get(
+            msgData.value.requestId,
+          );
+          if (sinkObj !== undefined) {
+            sinkObj.resolve(msgData.value.segmentSinkMetrics);
           } else {
             log.error("MTCI: Failed to send segment sink store update");
           }
@@ -1139,6 +1169,24 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         case WorkerMessageType.LogMessage:
           // Already handled by prepare's handler
           break;
+        case WorkerMessageType.ThumbnailDataResponse: {
+          if (this._currentContentInfo?.contentId !== msgData.contentId) {
+            return;
+          }
+          const tObj = this._awaitingRequests.pendingThumbnailFetching.get(
+            msgData.value.requestId,
+          );
+          if (tObj !== undefined) {
+            if (msgData.value.status === "error") {
+              tObj.reject(formatWorkerError(msgData.value.error));
+            } else {
+              tObj.resolve(msgData.value.data);
+            }
+          } else {
+            log.error("MTCI: Failed to send segment sink store update");
+          }
+          break;
+        }
         default:
           assertUnreachable(msgData);
       }
@@ -1365,6 +1413,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       const updatedCodecs = updateManifestCodecSupport(
         manifest,
         this._currentContentInfo?.contentDecryptor ?? null,
+        hasMseInWorker,
       );
       if (updatedCodecs.length > 0) {
         sendMessage(this._settings.worker, {
@@ -1550,11 +1599,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       (isPerformed, stopListening) => {
         if (isPerformed) {
           stopListening();
-          const streamEventsEmitter = new StreamEventsEmitter(
-            manifest,
-            mediaElement,
-            playbackObserver,
-          );
+          const streamEventsEmitter = new StreamEventsEmitter(manifest, playbackObserver);
           currentContentInfo.streamEventsEmitter = streamEventsEmitter;
           streamEventsEmitter.addEventListener(
             "event",
@@ -1579,29 +1624,65 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       { clearSignal: cancelSignal, emitCurrentValue: true },
     );
 
-    const _getSegmentSinkMetrics: () => Promise<
-      ISegmentSinkMetrics | undefined
-    > = async () => {
-      this._segmentMetrics.lastMessageId++;
-      const messageId = this._segmentMetrics.lastMessageId;
+    const _getSegmentSinkMetrics = async (): Promise<ISegmentSinkMetrics | undefined> => {
+      this._awaitingRequests.nextRequestId++;
+      const requestId = this._awaitingRequests.nextRequestId;
       sendMessage(this._settings.worker, {
         type: MainThreadMessageType.PullSegmentSinkStoreInfos,
-        value: { messageId },
+        value: { requestId },
       });
       return new Promise((resolve, reject) => {
         const rejectFn = (err: CancellationError) => {
           cancelSignal.deregister(rejectFn);
-          this._segmentMetrics.resolvers.delete(messageId);
+          this._awaitingRequests.pendingSinkMetrics.delete(requestId);
           return reject(err);
         };
-        this._segmentMetrics.resolvers.set(
-          messageId,
-          (value: ISegmentSinkMetrics | undefined) => {
+        this._awaitingRequests.pendingSinkMetrics.set(requestId, {
+          resolve: (value: ISegmentSinkMetrics | undefined) => {
             cancelSignal.deregister(rejectFn);
-            this._segmentMetrics.resolvers.delete(messageId);
+            this._awaitingRequests.pendingSinkMetrics.delete(requestId);
             resolve(value);
           },
-        );
+        });
+        cancelSignal.register(rejectFn);
+      });
+    };
+    const _getThumbnailsData = async (
+      periodId: string,
+      thumbnailTrackId: string,
+      time: number,
+    ): Promise<IThumbnailResponse> => {
+      if (this._currentContentInfo === null) {
+        return Promise.reject(new Error("Cannot fetch thumbnails: No content loaded."));
+      }
+      this._awaitingRequests.nextRequestId++;
+      const requestId = this._awaitingRequests.nextRequestId;
+      sendMessage(this._settings.worker, {
+        type: MainThreadMessageType.ThumbnailDataRequest,
+        contentId: this._currentContentInfo.contentId,
+        value: { requestId, periodId, thumbnailTrackId, time },
+      });
+
+      return new Promise((resolve, reject) => {
+        const rejectFn = (err: CancellationError) => {
+          cleanUp();
+          reject(err);
+        };
+        const cleanUp = () => {
+          cancelSignal.deregister(rejectFn);
+          this._awaitingRequests.pendingThumbnailFetching.delete(requestId);
+        };
+
+        this._awaitingRequests.pendingThumbnailFetching.set(requestId, {
+          resolve: (value: IThumbnailResponse) => {
+            cleanUp();
+            resolve(value);
+          },
+          reject: (value: unknown) => {
+            cleanUp();
+            reject(value);
+          },
+        });
         cancelSignal.register(rejectFn);
       });
     };
@@ -1612,12 +1693,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
      */
     autoPlayResult
       .then(() => {
-        getLoadedReference(playbackObserver, mediaElement, false, cancelSignal).onUpdate(
+        getLoadedReference(playbackObserver, false, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
               this.trigger("loaded", {
                 getSegmentSinkMetrics: _getSegmentSinkMetrics,
+                getThumbnailData: _getThumbnailsData,
               });
             }
           },
@@ -1787,6 +1869,10 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                 resetMediaElement(mediaElement, url);
               });
               mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
+              disableRemotePlaybackOnManagedMediaSource(
+                mediaElement,
+                this._currentMediaSourceCanceller.signal,
+              );
             }
           },
           {
@@ -1892,6 +1978,12 @@ export interface IInitializeArguments {
    * When set to an object, enable "Common Media Client Data", or "CMCD".
    */
   cmcd?: ICmcdOptions | undefined;
+  /**
+   * If `true`, the RxPlayer can enable its "Representation avoidance"
+   * mechanism, where it avoid loading Representation that it suspect
+   * have issues being decoded on the current device.
+   */
+  enableRepresentationAvoidance: boolean;
   /** Every encryption configuration set. */
   keySystems: IKeySystemOption[];
   /** `true` to play low-latency contents optimally. */
@@ -1985,7 +2077,7 @@ function bindNumberReferencesToWorker(
         // overload, but the body here is not aware of that.
         sendMessage(worker, {
           type: MainThreadMessageType.ReferenceUpdate,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
           value: { name: ref[1] as any, newVal: newVal as any },
         });
       },

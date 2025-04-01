@@ -15,7 +15,7 @@ function PositionInfos({
   className?: string | undefined;
   position?: number | undefined;
   duration?: number | undefined;
-}): JSX.Element {
+}): React.JSX.Element {
   const convertTime = duration >= 60 * 60 ? toHours : toMinutes;
   return (
     <div className={"position-infos " + className}>

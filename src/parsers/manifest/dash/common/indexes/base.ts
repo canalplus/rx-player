@@ -434,6 +434,29 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns the `duration` of each segment in the context of its Manifest (i.e.
+   * as the Manifest anounces them, actual segment duration may be different due
+   * to approximations), in seconds.
+   *
+   * NOTE: we could here do a median or a mean but I chose to be lazy (and
+   * more performant) by returning the duration of the first element instead.
+   * As `isPrecize` is `false`, the rest of the code should be notified that
+   * this is only an approximation.
+   * @returns {number}
+   */
+  getTargetSegmentDuration(): { duration: number; isPrecize: boolean } | undefined {
+    const { timeline, timescale } = this._index;
+    const firstElementInTimeline = timeline[0];
+    if (firstElementInTimeline === undefined) {
+      return undefined;
+    }
+    return {
+      duration: firstElementInTimeline.duration / timescale,
+      isPrecize: false,
+    };
+  }
+
+  /**
    * Replace in-place this `BaseRepresentationIndex` information by the
    * information from another one.
    * @param {Object} newIndex

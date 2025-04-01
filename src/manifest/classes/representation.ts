@@ -15,7 +15,7 @@
  */
 
 import log from "../../log";
-import type { IRepresentationMetadata } from "../../manifest";
+import { isRepresentationPlayable, type IRepresentationMetadata } from "../../manifest";
 import type {
   ICdnMetadata,
   IContentProtections,
@@ -112,6 +112,17 @@ class Representation implements IRepresentationMetadata {
    * @see ITrackType
    */
   public trackType: ITrackType;
+  /**
+   * When set to `true`, the `Representation` should not be played, unless
+   * there's no other choice.
+   *
+   * Note that this property should __NEVER__ be updated directly on an
+   * instanciated `Representation`, you are supposed to rely on
+   * `Manifest` methods for this.
+   */
+  public shouldBeAvoided: boolean;
+  /** If the codec is supported with MSE in worker */
+  public isCodecSupportedInWebWorker: boolean | undefined;
 
   /**
    * @param {Object} args
@@ -124,6 +135,7 @@ class Representation implements IRepresentationMetadata {
   ) {
     this.id = args.id;
     this.uniqueId = generateRepresentationUniqueId();
+    this.shouldBeAvoided = false;
     this.bitrate = args.bitrate;
     this.codecs = [];
     this.trackType = trackType;
@@ -430,6 +442,23 @@ class Representation implements IRepresentationMetadata {
   }
 
   /**
+   * Returns `true` if the `Representation` has a high chance of being playable on
+   * the current device (its codec seems supported and we don't consider it to be
+   * un-decipherable).
+   *
+   * Returns `false` if the `Representation` has a high chance of being unplayable
+   * on the current device (its codec seems unsupported and/or we consider it to
+   * be un-decipherable).
+   *
+   * Returns `undefined` if we don't know as the codec has not been checked yet.
+   *
+   * @returns {boolean|undefined}
+   */
+  public isPlayable(): boolean | undefined {
+    return isRepresentationPlayable(this);
+  }
+
+  /**
    * Format the current `Representation`'s properties into a
    * `IRepresentationMetadata` format which can better be communicated through
    * another thread.
@@ -457,6 +486,7 @@ class Representation implements IRepresentationMetadata {
       hdrInfo: this.hdrInfo,
       contentProtections: this.contentProtections,
       decipherable: this.decipherable,
+      isCodecSupportedInWebWorker: this.isCodecSupportedInWebWorker,
     };
   }
 }

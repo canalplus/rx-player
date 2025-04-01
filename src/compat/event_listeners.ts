@@ -29,8 +29,8 @@ import type {
   ICompatPictureInPictureWindow,
   IEventTarget,
   IMediaElement,
+  IMediaEncryptedEvent,
 } from "./browser_compatibility_types";
-import type { ICustomMediaEncryptedEvent } from "./eme/custom_media_keys/types";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 
@@ -112,7 +112,7 @@ function createCompatibleEventListener(
   prefixes?: string[],
 ): (
   element: IEventTargetLike,
-  listener: (event: ICustomMediaEncryptedEvent) => void,
+  listener: (event: IMediaEncryptedEvent) => void,
   cancelSignal: CancellationSignal,
 ) => void;
 
@@ -176,16 +176,14 @@ function createCompatibleEventListener(
         (element as IEventEmitterLike).addEventListener(eventName, listener);
       } else {
         hasSetOnFn = true;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (element as any)["on" + eventName] = listener;
+        element[("on" + eventName) as keyof IEventTargetLike] = listener;
       }
       cancelSignal.register(() => {
         if (typeof element.removeEventListener === "function") {
           (element as IEventEmitterLike).removeEventListener(eventName, listener);
         }
         if (hasSetOnFn) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-          delete (element as any)["on" + eventName];
+          delete element[("on" + eventName) as keyof IEventTargetLike];
         }
       });
     });

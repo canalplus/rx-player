@@ -15,7 +15,7 @@ function PlayPauseButton({
 }: {
   className?: string | undefined;
   player: IPlayerModule;
-}): JSX.Element {
+}): React.JSX.Element {
   const cannotLoadMetadata = useModuleState(player, "cannotLoadMetadata");
   const isPaused = useModuleState(player, "isPaused");
   const isContentLoaded = useModuleState(player, "isContentLoaded");

@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
+import type { MockInstance } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Logger from "../logger";
 
 /**
@@ -17,6 +18,48 @@ import Logger from "../logger";
  */
 
 describe("utils - Logger", () => {
+  const logMsgs: unknown[][] = [];
+  const errorMsgs: unknown[][] = [];
+  const warningMsgs: unknown[][] = [];
+  const infoMsgs: unknown[][] = [];
+  const debugMsgs: unknown[][] = [];
+  let mockLog: MockInstance;
+  let mockError: MockInstance;
+  let mockWarn: MockInstance;
+  let mockInfo: MockInstance;
+  let mockDebug: MockInstance;
+
+  beforeEach(() => {
+    mockLog = vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
+      logMsgs.push(args);
+    });
+    mockError = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
+      errorMsgs.push(args);
+    });
+    mockWarn = vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {
+      warningMsgs.push(args);
+    });
+    mockInfo = vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
+      infoMsgs.push(args);
+    });
+    mockDebug = vi.spyOn(console, "debug").mockImplementation((...args: unknown[]) => {
+      debugMsgs.push(args);
+    });
+  });
+
+  afterEach(() => {
+    mockLog.mockRestore();
+    mockError.mockRestore();
+    mockWarn.mockRestore();
+    mockInfo.mockRestore();
+    mockDebug.mockRestore();
+    logMsgs.length = 0;
+    errorMsgs.length = 0;
+    warningMsgs.length = 0;
+    infoMsgs.length = 0;
+    debugMsgs.length = 0;
+  });
+
   it('should set a default logger level of "NONE"', () => {
     const logger = new Logger();
     expect(logger.getLevel()).toEqual("NONE");
@@ -72,12 +115,6 @@ describe("utils - Logger", () => {
   });
 
   it('should never call console.* functions if logger level is set to "NONE"', () => {
-    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
-    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
-    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
-    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
-
     const logger = new Logger();
     logger.error("test");
     logger.warn("test");
@@ -96,12 +133,6 @@ describe("utils - Logger", () => {
   });
 
   it('should only call console.error if logger level is set to "ERROR"', () => {
-    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
-    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
-    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
-    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
-
     const logger = new Logger();
     logger.setLevel("ERROR", "standard");
     logger.error("test");
@@ -121,12 +152,6 @@ describe("utils - Logger", () => {
   });
 
   it('should call console.{error,warn} if logger level is set to "WARNING"', () => {
-    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
-    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
-    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
-    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
-
     const logger = new Logger();
     logger.setLevel("WARNING", "standard");
     logger.error("test");
@@ -146,12 +171,6 @@ describe("utils - Logger", () => {
   });
 
   it('should call console.{error,warn,info} if logger level is set to "INFO"', () => {
-    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
-    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
-    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
-    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
-
     const logger = new Logger();
     logger.setLevel("INFO", "standard");
     logger.error("test");
@@ -171,12 +190,6 @@ describe("utils - Logger", () => {
   });
 
   it('should call console.{error,warn,info, log} if logger level is set to "DEBUG"', () => {
-    const mockLog = vi.spyOn(console, "log").mockImplementation(vi.fn());
-    const mockError = vi.spyOn(console, "error").mockImplementation(vi.fn());
-    const mockWarn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
-    const mockInfo = vi.spyOn(console, "info").mockImplementation(vi.fn());
-    const mockDebug = vi.spyOn(console, "debug").mockImplementation(vi.fn());
-
     const logger = new Logger();
     logger.setLevel("DEBUG", "standard");
     logger.error("test");
@@ -263,35 +276,6 @@ describe("utils - Logger", () => {
   });
 
   it('should format logs with more information when `LogFormat` is set to "full"', () => {
-    const logMsgs: unknown[][] = [];
-    const errorMsgs: unknown[][] = [];
-    const warningMsgs: unknown[][] = [];
-    const infoMsgs: unknown[][] = [];
-    const debugMsgs: unknown[][] = [];
-    const mockLog = vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
-      logMsgs.push(args);
-    });
-    const mockError = vi
-      .spyOn(console, "error")
-      .mockImplementation((...args: unknown[]) => {
-        errorMsgs.push(args);
-      });
-    const mockWarn = vi
-      .spyOn(console, "warn")
-      .mockImplementation((...args: unknown[]) => {
-        warningMsgs.push(args);
-      });
-    const mockInfo = vi
-      .spyOn(console, "info")
-      .mockImplementation((...args: unknown[]) => {
-        infoMsgs.push(args);
-      });
-    const mockDebug = vi
-      .spyOn(console, "debug")
-      .mockImplementation((...args: unknown[]) => {
-        debugMsgs.push(args);
-      });
-
     const logger = new Logger();
 
     logger.setLevel("DEBUG", "full");

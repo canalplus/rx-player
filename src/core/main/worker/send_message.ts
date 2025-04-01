@@ -11,8 +11,10 @@ export default function sendMessage(
     postMessage(msg);
   } else {
     // TypeScript made a mistake here, and 2busy2fix
-    // eslint-disable-next-line
-    (postMessage as any)(msg, transferables);
+    (postMessage as (msg: IWorkerMessage, transferables: Transferable[]) => void)(
+      msg,
+      transferables,
+    );
   }
 }
 

@@ -5,7 +5,6 @@ import addMultiThreadFeature from "../multi_thread";
 
 describe("Features list - EME", () => {
   it("should add the ContentDecryptor in the current features", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const featureObject: IFeaturesObject = {} as IFeaturesObject;
     addMultiThreadFeature(featureObject);
     expect(featureObject).toEqual({

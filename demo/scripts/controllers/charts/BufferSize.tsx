@@ -60,7 +60,7 @@ const NUMBER_GRID_LINES_HEIGHT = 10;
  * @param {Object} props
  * @returns {Object}
  */
-function BufferSizeChart({ module }: { module: IChartModule }): JSX.Element {
+function BufferSizeChart({ module }: { module: IChartModule }): React.JSX.Element {
   const data = useModuleState(module, "data");
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const canvasCtx = useRef<CanvasRenderingContext2D | null>(null);

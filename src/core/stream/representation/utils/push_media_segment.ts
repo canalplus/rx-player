@@ -68,9 +68,6 @@ export default async function pushMediaSegment<T>(
   if (parsedSegment.chunkData === null) {
     return null;
   }
-  if (cancelSignal.cancellationError !== null) {
-    throw cancelSignal.cancellationError;
-  }
   const { chunkData, chunkInfos, chunkOffset, chunkSize, appendWindow } = parsedSegment;
   const codec = content.representation.getMimeTypeString();
   const { APPEND_WINDOW_SECURITIES } = config.getCurrent();

@@ -2,7 +2,7 @@ import * as React from "react";
 import useModuleState from "../lib/useModuleState";
 import type { IPlayerModule } from "../modules/player/index";
 
-function PlayerError({ error }: { error: Error }): JSX.Element {
+function PlayerError({ error }: { error: Error }): React.JSX.Element {
   const message: string =
     typeof error.message === "string" ? error.message : String(error);
 
@@ -15,7 +15,7 @@ function PlayerError({ error }: { error: Error }): JSX.Element {
   );
 }
 
-function ErrorDisplayer({ player }: { player: IPlayerModule }): JSX.Element {
+function ErrorDisplayer({ player }: { player: IPlayerModule }): React.JSX.Element {
   const error = useModuleState(player, "error");
   return (
     <div className="player-error">{error ? <PlayerError error={error} /> : null}</div>

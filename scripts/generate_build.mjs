@@ -11,10 +11,6 @@
  * ```sh
  * node generate_build.mjs
  * ```
- *
- * For now it heavily relies on unix-like utilities such as `find` and `sed` and
- * spawns new process to run them inside that script.
- * More cross-platform and safer solutions should be found in the future.
  */
 
 import { spawn } from "child_process";
@@ -27,7 +23,7 @@ import removeDir from "./utils/remove_dir.mjs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
-const ROOT_DIR = path.join(currentDirectory, "../");
+const ROOT_DIR = path.join(currentDirectory, "..");
 const BUILD_ARTEFACTS_TO_REMOVE = [
   "dist/commonjs",
   "dist/es2017",
@@ -37,23 +33,8 @@ const BUILD_ARTEFACTS_TO_REMOVE = [
 const WORKER_IN_FILE = path.join(ROOT_DIR, "src/worker_entry_point.ts");
 const WORKER_OUT_FILE = path.join(ROOT_DIR, "dist/worker.js");
 
-// If true, this script is called directly
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { argv } = process;
-  if (argv.includes("-h") || argv.includes("--help")) {
-    displayHelp();
-    process.exit(0);
-  }
-  const devMode = argv.includes("-d") || argv.includes("--dev-mode");
-  const noCheck = argv.includes("-n") || argv.includes("--no-check");
-  generateBuild({
-    devMode,
-    noCheck,
-  });
-}
-
 /**
- * @param {Object|undefined} options
+ * @param {Object|undefined} [options]
  * @param {boolean|undefined} [options.devMode]
  * @param {boolean|undefined} [options.noCheck]
  * @returns {Promise}
@@ -65,12 +46,12 @@ export default async function generateBuild(options = {}) {
     console.log(" 🧹 Removing previous build artefacts...");
     await removePreviousBuildArtefacts();
 
-    const distDir = path.join(ROOT_DIR, "./dist");
+    const distDir = path.join(ROOT_DIR, "dist");
     if (!fs.existsSync(distDir)) {
       fs.mkdirSync(distDir);
     }
 
-    const dashWasmDir = path.join(distDir, "./mpd-parser.wasm");
+    const dashWasmDir = path.join(distDir, "mpd-parser.wasm");
     if (!fs.existsSync(dashWasmDir)) {
       console.log(" 🏭 Generating WebAssembly file...");
       await spawnProm(
@@ -157,9 +138,15 @@ async function compile(opts) {
 }
 
 /**
+ * Spawn a shell with the command given in argument, alongside that command's
+ * arguments.
+ * Return a Promise that resolves if the command exited with the exit code `0`
+ * or rejects if the exit code is not zero.
  * @param {string} command
  * @param {Array.<string>} args
- * @param {Function} errorOnCode
+ * @param {Function} errorOnCode - Callback which will be called if the command
+ * has an exit code different than `0`, with the exit code in argument. The
+ * value returned by that callback will be the value rejected by the Promise.
  */
 function spawnProm(command, args, errorOnCode) {
   return new Promise((res, rej) => {
@@ -172,13 +159,58 @@ function spawnProm(command, args, errorOnCode) {
   });
 }
 
+// If true, this script is called directly
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const args = process.argv.slice(2);
+  let devMode = false;
+  let noCheck = false;
+  for (let argOffset = 0; argOffset < args.length; argOffset++) {
+    const currentArg = args[argOffset];
+    switch (currentArg) {
+      case "-h":
+      case "--help":
+        displayHelp();
+        process.exit(0);
+        break;
+      case "-d":
+      case "--dev-mode":
+        devMode = true;
+        break;
+      case "-n":
+      case "--no-check":
+        noCheck = true;
+        break;
+      default: {
+        console.error('ERROR: unknown option: "' + currentArg + '"\n');
+        displayHelp();
+        process.exit(1);
+      }
+    }
+  }
+  try {
+    generateBuild({
+      devMode,
+      noCheck,
+    }).catch((err) => {
+      console.error(`ERROR: ${err}\n`);
+      process.exit(1);
+    });
+  } catch (err) {
+    console.error(`ERROR: ${err}\n`);
+    process.exit(1);
+  }
+}
+
 /**
  * Display through `console.log` an helping message relative to how to run this
  * script.
  */
 function displayHelp() {
   console.log(
-    `Usage: node build_worker.mjs [options]
+    `generate_build.mjs: Produce the main RxPlayer's builds (do not produce RxPlayer bundles).
+
+Usage: node build_worker.mjs [OPTIONS]
+
 Options:
   -h, --help             Display this help
   -p, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)

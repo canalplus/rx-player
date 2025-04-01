@@ -39,7 +39,7 @@ Each of the objects in the returned array have the following properties:
   - `frameRate` (`number|undefined`): The video framerate.
 
   - `hdrInfo` (`Object|undefined`) Information about the hdr characteristics of the track.
-    (see [HDR support documentation](../Miscellaneous/hdr.md#hdrinfo))
+    (see [HDR support documentation](.././Miscellaneous/hdr.md#hdrinfo))
 
   - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
     Representation is supported by the current platform.

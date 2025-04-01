@@ -73,7 +73,7 @@ export interface IParsedTTMLCue {
   /** An object containing TTML parameters */
   ttParams: ITTParameters;
   shouldTrimWhiteSpace: boolean;
-  /** TTML body as a DOM Element */
+  /** TTML body as a DOM Element */
   body: Element | null;
 }
 

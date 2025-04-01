@@ -1,84 +1,126 @@
 import RxPlayer from "rx-player";
-import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
+import { MULTI_THREAD } from "rx-player/experimental/features";
+import { EMBEDDED_WORKER } from "rx-player/experimental/features/embeds";
+import { multiAdaptationSetsInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
+import { declareTestGroup, testEnd, testStart } from "./lib";
 
-let player;
+declareTestGroup(
+  "content loading monothread",
+  async () => {
+    // --- 1: load ---
 
-test();
+    testStart("loading");
+    const player = new RxPlayer({
+      initialVideoBitrate: Infinity,
+      initialAudioBitrate: Infinity,
+      videoElement: document.getElementsByTagName("video")[0],
+    });
+    player.loadVideo({
+      url: multiAdaptationSetsInfos.url,
+      transport: multiAdaptationSetsInfos.transport,
+    });
+    await waitForLoadedStateAfterLoadVideo(player);
+    testEnd("loading");
+    await sleep(10);
 
-async function test() {
-  await sleep(200);
-  const timeBeforeLoad = performance.now();
-  player = new RxPlayer({
-    initialVideoBitrate: Infinity,
-    initialAudioBitrate: Infinity,
-    videoElement: document.getElementsByTagName("video")[0],
-  });
-  player.loadVideo({
-    url: manifestInfos.url,
-    transport: manifestInfos.transport,
-  });
-  await waitForLoadedStateAfterLoadVideo(player);
-  const timeToLoad = performance.now() - timeBeforeLoad;
-  sendTestResult("loading", timeToLoad);
-  await sleep(1);
-  const timeBeforeSeek = performance.now();
-  player.seekTo(20);
-  await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
-  const timeToSeek = performance.now() - timeBeforeSeek;
-  sendTestResult("seeking", timeToSeek);
-  reloadIfNeeded();
-}
+    // --- 2: seek ---
 
-function sendTestResult(testName, testResult) {
-  fetch("http://127.0.0.1:6789", {
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-    body: JSON.stringify({
-      type: "value",
-      data: { name: testName, value: testResult },
-    }),
-  });
-}
+    testStart("seeking");
+    player.seekTo(20);
+    await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    testEnd("seeking");
+    await sleep(10);
 
-function sendLog(log) {
-  fetch("http://127.0.0.1:6789", {
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-    body: JSON.stringify({ type: "log", data: log }),
-  }).catch((err) => {
-    // eslint-disable-next-line no-console
-    console.error("Error: Cannot send log due to a request error.", err);
-  });
-}
+    // -- 3: change audio track + reload ---
 
-function reloadIfNeeded() {
-  const testNumber = getTestNumber();
-  if (testNumber < 100) {
-    location.hash = "#" + (testNumber + 1);
-    location.reload();
-  } else {
-    sendDone();
-  }
-}
+    testStart("audio-track-reload");
+    const audioTracks = player.getAvailableAudioTracks();
+    if (audioTracks.length < 2) {
+      throw new Error("Not enough audio tracks for audio track switching");
+    }
 
-function sendDone() {
-  fetch("http://127.0.0.1:6789", {
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-    body: JSON.stringify({ type: "done" }),
-  });
-}
+    for (const audioTrack of audioTracks) {
+      if (!audioTrack.active) {
+        player.setAudioTrack({ trackId: audioTrack.id, switchingMode: "reload" });
+      }
+    }
+    await waitForPlayerState(player, "PAUSED");
+    testEnd("audio-track-reload");
 
-function getTestNumber() {
-  if (location.hash === "") {
-    return 1;
-  }
-  return Number(location.hash.substring(1));
-}
+    player.dispose();
+    await sleep(10); // ensure dispose is done
+  },
+  20000,
+);
 
-// Allow to display logs in the RxPlayer source code
-window.sendLog = sendLog;
+declareTestGroup(
+  "content loading multithread",
+  async () => {
+    // --- 1: cold loading (Worker attachment etc.) ---
+
+    testStart("cold loading multithread");
+    const player = new RxPlayer({
+      initialVideoBitrate: Infinity,
+      initialAudioBitrate: Infinity,
+      videoElement: document.getElementsByTagName("video")[0],
+    });
+    RxPlayer.addFeatures([MULTI_THREAD]);
+    player.attachWorker({
+      workerUrl: EMBEDDED_WORKER,
+    });
+    player.loadVideo({
+      url: multiAdaptationSetsInfos.url,
+      transport: multiAdaptationSetsInfos.transport,
+      mode: "multithread",
+    });
+    await waitForLoadedStateAfterLoadVideo(player);
+    testEnd("cold loading multithread");
+    await sleep(10);
+
+    // --- 2: seek ---
+
+    testStart("seeking multithread");
+    player.seekTo(20);
+    await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    testEnd("seeking multithread");
+    await sleep(10);
+
+    // -- 3: change audio track + reload ---
+
+    testStart("audio-track-reload multithread");
+    const audioTracks = player.getAvailableAudioTracks();
+    if (audioTracks.length < 2) {
+      throw new Error("Not enough audio tracks for audio track switching");
+    }
+
+    for (const audioTrack of audioTracks) {
+      if (!audioTrack.active) {
+        player.setAudioTrack({ trackId: audioTrack.id, switchingMode: "reload" });
+      }
+    }
+    await waitForPlayerState(player, "PAUSED");
+    testEnd("audio-track-reload multithread");
+
+    player.stop();
+
+    // --- 4: hot loading ---
+
+    await sleep(10);
+    testStart("hot loading multithread");
+    player.loadVideo({
+      url: multiAdaptationSetsInfos.url,
+      transport: multiAdaptationSetsInfos.transport,
+      mode: "multithread",
+    });
+    await waitForLoadedStateAfterLoadVideo(player);
+    testEnd("hot loading multithread");
+
+    player.dispose();
+    await sleep(10); // ensure dispose is done
+  },
+  20000,
+);

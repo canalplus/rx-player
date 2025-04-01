@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.commonjs.json",
-  "exclude": ["./src/**/*.test.ts", "./src/globals.prod.d.ts"]
+  "exclude": ["./src/**/*.test.ts", "./src/**/__tests__/**", "./src/globals.prod.d.ts"]
 }

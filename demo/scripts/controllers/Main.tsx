@@ -3,7 +3,7 @@ import * as React from "react";
 import GitHubButton from "../components/GitHubButton";
 import Player from "./Player";
 
-function MainComponent(): JSX.Element {
+function MainComponent(): React.JSX.Element {
   return (
     <React.Fragment>
       <header>

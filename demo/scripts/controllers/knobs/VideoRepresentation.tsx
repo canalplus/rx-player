@@ -14,7 +14,7 @@ function VideoRepresentationKnob({
 }: {
   player: IPlayerModule;
   className?: string;
-}): JSX.Element {
+}): React.JSX.Element {
   const isVideoRepresentationLocked = useModuleState(
     player,
     "videoRepresentationsLocked",

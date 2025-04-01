@@ -93,5 +93,14 @@ export default function getLocalManifestPipelines(
     audio: segmentPipeline,
     video: segmentPipeline,
     text: textTrackPipeline,
+    thumbnails: {
+      loadThumbnail: () =>
+        Promise.reject(
+          new Error("Thumbnail tracks aren't implemented with the local transport"),
+        ),
+      parseThumbnail: () => {
+        throw new Error("Thumbnail tracks aren't implemented with the local transport");
+      },
+    },
   };
 }

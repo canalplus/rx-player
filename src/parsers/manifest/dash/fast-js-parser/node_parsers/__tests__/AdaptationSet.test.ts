@@ -19,9 +19,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
       [],
     ]);
 
-    const element2 = parseXml(
-      `<AdaptationSet ${attributeName}=\"false\" />`,
-    )[0] as ITNode;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="false" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: false },
@@ -81,7 +79,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
       [],
     ]);
 
-    const element2 = parseXml(`<AdaptationSet ${attributeName}=\"\" />`)[0] as ITNode;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: "" },
@@ -407,9 +405,7 @@ function testNumberOrBooleanAttribute(
       [],
     ]);
 
-    const element2 = parseXml(
-      `<AdaptationSet ${attributeName}=\"false\" />`,
-    )[0] as ITNode;
+    const element2 = parseXml(`<AdaptationSet ${attributeName}="false" />`)[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: false },

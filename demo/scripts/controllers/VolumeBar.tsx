@@ -15,7 +15,7 @@ function VolumeBar({
   player, // current volume percentage
 }: {
   player: IPlayerModule;
-}): JSX.Element {
+}): React.JSX.Element {
   const { volume, muted } = useModuleState(player, "volumeInfo");
   const elementRef = React.useRef<HTMLDivElement>(null);
 

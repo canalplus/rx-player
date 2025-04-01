@@ -170,7 +170,7 @@ let isA1KStb40xx = false;
     isPanasonic = true;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
     isXbox = true;
-  } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx")) {
+  } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx") !== -1) {
     isA1KStb40xx = true;
   }
 })();

@@ -47,6 +47,9 @@ const minimalIndex: IRepresentationIndex = {
   canBeOutOfSyncError(): true {
     return true;
   },
+  getTargetSegmentDuration() {
+    return undefined;
+  },
   _replace() {
     return;
   },
@@ -79,6 +82,7 @@ describe("Manifest - Representation", () => {
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
     expect(spyCodecCache).toHaveBeenCalledWith("", "", false);
+    spyCodecCache.mockClear();
   });
 
   it("should be able to add a height attribute", () => {
@@ -103,6 +107,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should be able to add a width attribute", () => {
@@ -127,6 +132,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should be able to add a codecs attribute", () => {
@@ -151,6 +157,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should be able to add a supplementalCodecs attribute", () => {
@@ -176,6 +183,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should be able to add a mimeType attribute", () => {
@@ -200,6 +208,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should be able to add a contentProtections attribute", () => {
@@ -236,6 +245,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should be able to add a frameRate attribute", () => {
@@ -262,6 +272,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should be able to return an exploitable codecs + mimeType string", () => {
@@ -339,6 +350,7 @@ describe("Manifest - Representation", () => {
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
     expect(spyCodecCache).toHaveBeenCalledWith("audio/mp4", "mp4a.40.2", false);
+    spyCodecCache.mockClear();
   });
 
   it("should not check support for a text media buffer", () => {
@@ -351,6 +363,7 @@ describe("Manifest - Representation", () => {
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
     const spyCodecCache = vi.spyOn(cache, "isSupported");
+    spyCodecCache.mockReset(); // TODO: find out why this is necessary
     const representation = new Representation(args, "text", cache);
     expect(representation.codecs).toEqual(["boop"]);
     expect(representation.mimeType).toBe("bip");
@@ -358,6 +371,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(0);
+    spyCodecCache.mockClear();
   });
 
   it("should not set isSupported if codec cache returns undefined", () => {
@@ -377,6 +391,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should have both supplementalCodecs and codecs if codec cache returns undefined", () => {
@@ -397,6 +412,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 
   it("should only have codecs if codec cache returns false for the supplementalCodecs and true for the codecs", () => {
@@ -422,6 +438,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalled();
+    spyCodecCache.mockClear();
   });
 
   it("should have both supplementalCodecs and codecs if codec cache returns undefined for the former and true for the latter", () => {
@@ -447,6 +464,7 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(undefined);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalled();
+    spyCodecCache.mockClear();
   });
 
   it("should only have supplementalCodecs if codec cache returns true for the former", () => {
@@ -471,5 +489,6 @@ describe("Manifest - Representation", () => {
     expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
   });
 });

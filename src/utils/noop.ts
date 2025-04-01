@@ -21,5 +21,5 @@
  * is needed.
  * Also, it allows to avoid telling eslint to ignore empty blocks everywhere.
  */
-// eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 export default function (): void {}

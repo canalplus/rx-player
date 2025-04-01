@@ -174,24 +174,22 @@ class SharedReference<T> {
    * @param {Function} cb - Callback to be called each time the reference is
    * updated. Takes as first argument its new value and in second argument a
    * callback allowing to unregister the callback.
-   * @param {Object|undefined} [options]
-   * @param {Object|undefined} [options.clearSignal] - Allows to provide a
-   * CancellationSignal which will unregister the callback when it emits.
-   * @param {boolean|undefined} [options.emitCurrentValue] - If `true`, the
+   * @param {Object} params
+   * @param {Object} params.clearSignal - Allows to provide a CancellationSignal
+   * which will unregister the callback when it emits.
+   * @param {boolean|undefined} [params.emitCurrentValue] - If `true`, the
    * callback will also be immediately called with the current value.
    */
   public onUpdate(
     cb: (val: T, stopListening: () => void) => void,
-    options?:
-      | {
-          clearSignal?: CancellationSignal | undefined;
-          emitCurrentValue?: boolean | undefined;
-        }
-      | undefined,
+    params: {
+      clearSignal: CancellationSignal;
+      emitCurrentValue?: boolean | undefined;
+    },
   ): void {
     const unlisten = (): void => {
-      if (options?.clearSignal !== undefined) {
-        options.clearSignal.deregister(unlisten);
+      if (params.clearSignal !== undefined) {
+        params.clearSignal.deregister(unlisten);
       }
       if (cbObj.hasBeenCleared) {
         return;
@@ -206,7 +204,7 @@ class SharedReference<T> {
     const cbObj = { trigger: cb, complete: unlisten, hasBeenCleared: false };
     this._listeners.push(cbObj);
 
-    if (options?.emitCurrentValue === true) {
+    if (params.emitCurrentValue === true) {
       cb(this._value, unlisten);
     }
 
@@ -214,10 +212,7 @@ class SharedReference<T> {
       unlisten();
       return;
     }
-    if (options?.clearSignal === undefined) {
-      return;
-    }
-    options.clearSignal.register(unlisten);
+    params.clearSignal.register(unlisten);
   }
 
   /**
@@ -240,13 +235,13 @@ class SharedReference<T> {
    * ```
    * @param {Function} cb - Callback to be called each time the reference is
    * updated. Takes the new value in argument.
-   * @param {Object | undefined} [options]
-   * @param {Object | undefined} [options.clearSignal] - Allows to provide a
+   * @param {Object} params
+   * @param {Object} params.clearSignal - Allows to provide a
    * CancellationSignal which will unregister the callback when it emits.
    */
   public waitUntilDefined(
     cb: (val: Exclude<T, undefined>) => void,
-    options?: { clearSignal?: CancellationSignal | undefined } | undefined,
+    params: { clearSignal: CancellationSignal },
   ): void {
     this.onUpdate(
       (val: T, stopListening) => {
@@ -255,7 +250,7 @@ class SharedReference<T> {
           cb(this._value as Exclude<T, undefined>);
         }
       },
-      { clearSignal: options?.clearSignal, emitCurrentValue: true },
+      { clearSignal: params.clearSignal, emitCurrentValue: true },
     );
   }
 

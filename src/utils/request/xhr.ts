@@ -49,7 +49,7 @@ export default function request(
   options: IRequestOptions<"document">,
 ): Promise<IRequestResponse<Document, "document">>;
 export default function request(
-  options: IRequestOptions<"json">, // eslint-disable-next-line @typescript-eslint/no-restricted-types
+  options: IRequestOptions<"json">,
 ): Promise<IRequestResponse<object, "json">>;
 export default function request(
   options: IRequestOptions<"blob">,
@@ -108,7 +108,7 @@ export default function request<T>(
     if (!isNullOrUndefined(headers)) {
       const _headers = headers;
       for (const key in _headers) {
-        if (_headers.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(_headers, key)) {
           xhr.setRequestHeader(key, _headers[key]);
         }
       }

@@ -19,6 +19,7 @@ import type {
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
+  IThumbnailTrackMetadata,
 } from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
@@ -237,9 +238,7 @@ export function toAudioTrack(
     audioDescription: adaptation.isAudioDescription === true,
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        )
+      ? adaptation.representations.filter((r) => isRepresentationPlayable(r) === true)
       : adaptation.representations
     ).map(toAudioRepresentation),
     label: adaptation.label,
@@ -283,7 +282,7 @@ export function toVideoTrack(
           const representations = (
             filterPlayable
               ? trickModeAdaptation.representations.filter(
-                  (r) => r.isSupported === true && r.decipherable !== false,
+                  (r) => isRepresentationPlayable(r) === true,
                 )
               : trickModeAdaptation.representations
           ).map(toVideoRepresentation);
@@ -302,9 +301,7 @@ export function toVideoTrack(
   const videoTrack: IVideoTrack = {
     id: adaptation.id,
     representations: (filterPlayable
-      ? adaptation.representations.filter(
-          (r) => r.isSupported === true && r.decipherable !== false,
-        )
+      ? adaptation.representations.filter((r) => isRepresentationPlayable(r) === true)
       : adaptation.representations
     ).map(toVideoRepresentation),
     label: adaptation.label,
@@ -387,6 +384,29 @@ export function toTaggedTrack(adaptation: IAdaptation): ITaggedTrack {
     case "text":
       return { type: "text", track: toTextTrack(adaptation) };
   }
+}
+
+/**
+ * Returns `true` if the `Representation` has a high chance of being playable on
+ * the current device (its codec seems supported and we don't consider it to be
+ * un-decipherable).
+ *
+ * Returns `false` if the `Representation` has a high chance of being unplayable
+ * on the current device (its codec seems unsupported and/or we consider it to
+ * be un-decipherable).
+ *
+ * Returns `undefined` if we don't know as the codec has not been checked yet.
+ *
+ * @param {Object} representation
+ * @returns {boolean|undefined}
+ */
+export function isRepresentationPlayable(
+  representation: IRepresentationMetadata,
+): boolean | undefined {
+  if (representation.decipherable === false) {
+    return false;
+  }
+  return representation.isSupported;
 }
 
 /**
@@ -558,7 +578,8 @@ export function replicateUpdatesOnManifestMetadata(
 ) {
   for (const prop of Object.keys(newManifest)) {
     if (prop !== "periods") {
-      // eslint-disable-next-line
+      // trust me bro
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       (baseManifest as any)[prop] = (newManifest as any)[prop];
     }
   }
@@ -579,9 +600,45 @@ export function replicateUpdatesOnManifestMetadata(
         const basePeriod = baseManifest.periods[periodIdx];
         for (const prop of Object.keys(newPeriod)) {
           if (prop !== "adaptations") {
-            // eslint-disable-next-line
+            // trust me bro
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
             (basePeriod as any)[prop] = (newPeriod as any)[prop];
           }
+        }
+
+        for (const removedThumbnailTrack of updatedPeriod.result.removedThumbnailTracks) {
+          for (
+            let thumbIdx = 0;
+            thumbIdx < basePeriod.thumbnailTracks.length;
+            thumbIdx++
+          ) {
+            if (basePeriod.thumbnailTracks[thumbIdx].id === removedThumbnailTrack.id) {
+              basePeriod.thumbnailTracks.splice(thumbIdx, 1);
+              break;
+            }
+          }
+        }
+        for (const updatedThumbnailTrack of updatedPeriod.result.updatedThumbnailTracks) {
+          const newThumbnailTrack = updatedThumbnailTrack;
+          for (
+            let thumbIdx = 0;
+            thumbIdx < basePeriod.thumbnailTracks.length;
+            thumbIdx++
+          ) {
+            if (basePeriod.thumbnailTracks[thumbIdx].id === newThumbnailTrack.id) {
+              const baseThumbnailTrack = basePeriod.thumbnailTracks[thumbIdx];
+              for (const prop of Object.keys(newThumbnailTrack) as Array<
+                keyof IThumbnailTrackMetadata
+              >) {
+                // eslint-disable-next-line
+                (baseThumbnailTrack as any)[prop] = newThumbnailTrack[prop];
+              }
+              break;
+            }
+          }
+        }
+        for (const addedThumbnailTrack of updatedPeriod.result.addedThumbnailTracks) {
+          basePeriod.thumbnailTracks.push(addedThumbnailTrack);
         }
 
         for (const removedAdaptation of updatedPeriod.result.removedAdaptations) {

@@ -240,7 +240,6 @@ describe("API - Public API", () => {
         if (videoElement === null) {
           throw new Error("The API is disposed");
         }
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (videoElement.muted) {
           videoElement.muted = false;
         }
@@ -268,7 +267,6 @@ describe("API - Public API", () => {
         if (videoElement === null) {
           throw new Error("The API is disposed");
         }
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (videoElement.muted) {
           videoElement.muted = false;
         }

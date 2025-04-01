@@ -32,7 +32,7 @@ function BufferOptions({
   onMaxVideoBufferSizeChange: (newVal: number) => void;
   onMaxBufferBehindChange: (newVal: number) => void;
   onMaxBufferAheadChange: (newVal: number) => void;
-}): JSX.Element {
+}): React.JSX.Element {
   /* Value of the `wantedBufferAhead` input */
   const [wantedBufferAheadStr, setWantedBufferAheadStr] = useState(
     String(wantedBufferAhead),

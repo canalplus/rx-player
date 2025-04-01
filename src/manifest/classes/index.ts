@@ -16,9 +16,10 @@
 
 import Adaptation from "./adaptation";
 import type { ICodecSupportInfo } from "./codec_support_cache";
-import type { IDecipherabilityUpdateElement, IManifestParsingOptions } from "./manifest";
+import type { IUpdatedRepresentationInfo, IManifestParsingOptions } from "./manifest";
 import Manifest from "./manifest";
 import Period from "./period";
+import type { IThumbnailTrack } from "./period";
 import Representation from "./representation";
 import type {
   IMetaPlaylistPrivateInfos,
@@ -36,12 +37,13 @@ export type { IPeriodsUpdateResult } from "./update_periods";
 export type {
   IBufferedChunkInfos,
   ICodecSupportInfo,
-  IDecipherabilityUpdateElement,
+  IUpdatedRepresentationInfo,
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
   IPrivateInfos,
   ISegment,
+  IThumbnailTrack,
 };
 export {
   areSameContent,

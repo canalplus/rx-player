@@ -5,7 +5,6 @@ import { ProberStatus } from "../../types";
 
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   it("should throw if matchMedia is undefined", async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const origMatchMedia = globalScope.matchMedia;
     (
       globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
@@ -14,8 +13,7 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     const probeMediaDisplayInfos = (
       await vi.importActual("../../probers/mediaDisplayInfos")
     ).default as typeof IProbeMediaDisplayInfos;
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    expect(probeMediaDisplayInfos({})).rejects.toThrowError(
+    await expect(probeMediaDisplayInfos({})).rejects.toThrowError(
       "MediaCapabilitiesProber >>> API_CALL: matchMedia not available",
     );
     (
@@ -24,7 +22,6 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should throw if no colorSpace in display configuration", async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => true);
     globalScope.matchMedia = mockMatchMedia as unknown as typeof globalScope.matchMedia;
@@ -55,7 +52,6 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should throw if no display in configuration", async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => true);
     globalScope.matchMedia = mockMatchMedia as unknown as typeof globalScope.matchMedia;
@@ -84,7 +80,6 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should throw if mediaMatch called with bad arguments", async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => ({
       media: "not all",
@@ -120,7 +115,6 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should resolves with `Supported` if color space is supported", async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => ({
       matches: true,
@@ -153,7 +147,6 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   });
 
   it("should resolves with `NotSupported` if color space is not supported", async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => ({
       matches: false,

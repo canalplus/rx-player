@@ -48,6 +48,9 @@ function generateRepresentationIndex(
     addPredictedSegments(): void {
       return;
     },
+    getTargetSegmentDuration() {
+      return undefined;
+    },
     _replace() {
       /* noop */
     },

@@ -78,7 +78,7 @@ export function replaceRepresentationDASHTokens(
       .replace(/\$\$/g, "$")
       .replace(/\$RepresentationID\$/g, String(id))
       .replace(
-        /\$Bandwidth(\%0(\d+)d)?\$/g,
+        /\$Bandwidth(%0(\d+)d)?\$/g,
         processFormatedToken(bitrate === undefined ? 0 : bitrate),
       );
   }
@@ -110,13 +110,13 @@ export function createDashUrlDetokenizer(
     } else {
       return url
         .replace(/\$\$/g, "$")
-        .replace(/\$Number(\%0(\d+)d)?\$/g, (_x, _y, widthStr: string) => {
+        .replace(/\$Number(%0(\d+)d)?\$/g, (_x, _y, widthStr: string) => {
           if (nb === undefined) {
             throw new Error("Segment number not defined in a $Number$ scheme");
           }
           return processFormatedToken(nb)(_x, _y, widthStr);
         })
-        .replace(/\$Time(\%0(\d+)d)?\$/g, (_x, _y, widthStr: string) => {
+        .replace(/\$Time(%0(\d+)d)?\$/g, (_x, _y, widthStr: string) => {
           if (time === undefined) {
             throw new Error("Segment time not defined in a $Time$ scheme");
           }

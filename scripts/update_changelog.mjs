@@ -22,7 +22,7 @@ import { fileURLToPath, pathToFileURL } from "url";
 import { exec } from "child_process";
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_CHANGELOG_PATH = join(currentDir, "../CHANGELOG.md");
+const DEFAULT_CHANGELOG_PATH = join(currentDir, "..", "CHANGELOG.md");
 
 const NOTICE_OPENER_CLOSER = "---";
 const NOTICE_PREFIX = `⚠️  The following "proposed additional changelog lines" were automatically
@@ -40,12 +40,6 @@ The resulting file will be the one commited.
 
 ### Proposed additional changelog lines:
 `;
-// const NOTICE_EMPTY = `No merge request found since last changelog update.`;
-
-// XXX TODO?:
-// - We didn't find any merge commit since the last time the changelog file was
-//   udated. Do you want to skip manual changelog editing (only if no update
-//   since last release)
 
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -322,7 +316,6 @@ async function checkUpdateTypeWithUser(previousTopH2, newTopH2, defaultBehaviour
     case "y":
     case "yes":
       console.log("Writing CHANGELOG.md...");
-      // XXX TODO
       return defaultBehaviour;
     case "n":
     case "no":
@@ -469,7 +462,7 @@ function getChangelogLines() {
         for (let i = 0; i < splitted.length; i += 2) {
           const mergeSubject = splitted[i];
           const mergeBody = splitted[i + 1];
-          const match = mergeSubject.match(/\ #\d+ /);
+          const match = mergeSubject.match(/ #\d+ /);
           if (match !== null) {
             const issueNumber = match[0].trim();
             linesToAdd.push(mergeBody.trim() + ` [${issueNumber}]`);
@@ -545,14 +538,13 @@ async function readChar(query) {
  * script.
  */
 function displayHelp() {
-  /* eslint-disable no-console */
   console.log(
-    /* eslint-disable indent */
-    `Usage: node update_changelog.mjs [options] <version>
+    `update_changelog.mjs: Automatically update the CHANGELOG.md file.
+
+Usage: node update_changelog.mjs [OPTIONS] <VERSION>
+
 Options:
 -h, --help             Display this help
 -d, --dev              This is for a development release`,
-    /* eslint-enable indent */
   );
-  /* eslint-enable no-console */
 }

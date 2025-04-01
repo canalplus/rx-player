@@ -14,7 +14,7 @@ function testStringAttribute(attributeName: string, variableName?: string): void
       [_variableName]: "foobar",
     });
 
-    const element2 = parseXml(`<contentComponent ${attributeName}=\"\" />`)[0] as ITNode;
+    const element2 = parseXml(`<contentComponent ${attributeName}="" />`)[0] as ITNode;
     expect(parseContentComponent(element2)).toEqual({ [_variableName]: "" });
   });
 }

@@ -25,6 +25,5 @@ import type { ICompatVTTCue } from "./browser_compatibility_types";
 export default function isVTTCue(
   cue: ICompatVTTCue | TextTrackCue,
 ): cue is ICompatVTTCue {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   return typeof globalScope.VTTCue === "function" && cue instanceof globalScope.VTTCue;
 }

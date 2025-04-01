@@ -36,20 +36,17 @@ export default function generateReadOnlyObserver<TSource, TDest>(
     },
     listen(
       cb: (observation: TDest, stopListening: () => void) => void,
-      options?: {
+      params: {
         includeLastObservation?: boolean | undefined;
-        clearSignal?: CancellationSignal | undefined;
+        clearSignal: CancellationSignal;
       },
     ): void {
-      if (
-        cancellationSignal.isCancelled() ||
-        options?.clearSignal?.isCancelled() === true
-      ) {
+      if (cancellationSignal.isCancelled() || params.clearSignal.isCancelled()) {
         return;
       }
       mappedRef.onUpdate(cb, {
-        clearSignal: options?.clearSignal,
-        emitCurrentValue: options?.includeLastObservation,
+        clearSignal: params.clearSignal,
+        emitCurrentValue: params.includeLastObservation,
       });
     },
     deriveReadOnlyObserver<TNext>(

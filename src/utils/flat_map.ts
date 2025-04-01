@@ -25,11 +25,10 @@ type ArrayWithFlatMap<T> = T[] & {
 /**
  * Map each element using a mapping function, then flat the result into
  * a new array.
- * @param {Array.<*>} originalArray
- * @param {Function} fn
+ * @param {Array.<*>} originalArray
+ * @param {Function} fn
  */
 export default function flatMap<T, U>(originalArray: T[], fn: (arg: T) => U[] | U): U[] {
-  // eslint-disable-next-line @typescript-eslint/unbound-method
   if (typeof (Array.prototype as ArrayWithFlatMap<T>).flatMap === "function") {
     return (originalArray as ArrayWithFlatMap<T>).flatMap(fn);
   }

@@ -7,8 +7,9 @@
  * path and a key path have been given) static file server.
  */
 
-import { access, createReadStream, readFile } from "fs";
-import { join, extname } from "path";
+import { access, createReadStream, readFile, existsSync } from "fs";
+import { join, extname, normalize } from "path";
+import { pathToFileURL } from "url";
 import { promisify } from "util";
 import http from "http";
 import https from "https";
@@ -26,6 +27,171 @@ const MIME_TYPES = {
   ico: "image/x-icon",
   svg: "image/svg+xml",
 };
+
+// If true, this script is called directly
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const args = process.argv.slice(2);
+
+  let normalizedPath;
+  let certificateFile;
+  let keyFile;
+  let httpPort;
+  let httpsPort;
+  for (let argOffset = 0; argOffset < args.length; argOffset++) {
+    const currentArg = args[argOffset];
+    switch (currentArg) {
+      case "-h":
+      case "--help":
+        displayHelp();
+        process.exit(0);
+        break;
+
+      case "-d":
+      case "--directory":
+        {
+          argOffset++;
+          const wantedDirectoryFile = args[argOffset];
+          if (wantedDirectoryFile === undefined) {
+            console.error("ERROR: no directory file provided\n");
+            displayHelp();
+            process.exit(1);
+          }
+          normalizedPath = normalize(wantedDirectoryFile);
+          if (!existsSync(normalizedPath)) {
+            console.error(`ERROR: root path not found: ${wantedDirectoryFile}\n`);
+            displayHelp();
+            process.exit(1);
+          }
+        }
+        break;
+
+      case "-c":
+      case "--certificate":
+        {
+          argOffset++;
+          const wantedCertificateFile = args[argOffset];
+          if (wantedCertificateFile === undefined) {
+            console.error("ERROR: no certificate file provided\n");
+            displayHelp();
+            process.exit(1);
+          }
+          certificateFile = normalize(wantedCertificateFile);
+          if (!existsSync(certificateFile)) {
+            console.error(
+              `ERROR: certificate file not found: ${wantedCertificateFile}\n`,
+            );
+            displayHelp();
+            process.exit(1);
+          }
+        }
+        break;
+
+      case "-k":
+      case "--key":
+        {
+          argOffset++;
+          const wantedKeyFile = args[argOffset];
+          if (wantedKeyFile === undefined) {
+            console.error("ERROR: no key file provided\n");
+            displayHelp();
+            process.exit(1);
+          }
+          keyFile = normalize(wantedKeyFile);
+          if (!existsSync(keyFile)) {
+            console.error(`ERROR: key file not found: ${wantedKeyFile}\n`);
+            displayHelp();
+            process.exit(1);
+          }
+        }
+        break;
+
+      case "-p":
+      case "-http":
+        {
+          argOffset++;
+          const wantedHttpPort = args[argOffset];
+          if (wantedHttpPort === undefined) {
+            console.error("ERROR: no http port provided\n");
+            displayHelp();
+            process.exit(1);
+          }
+          httpPort = +wantedHttpPort;
+          if (isNaN(httpPort)) {
+            console.error(
+              'ERROR: Invalid HTTP port configured. Should be a number, received "' +
+                wantedHttpPort +
+                '"\n',
+            );
+            displayHelp();
+            process.exit(1);
+          }
+        }
+        break;
+
+      case "-s":
+      case "-https":
+        {
+          argOffset++;
+          const wantedHttpsPort = args[argOffset];
+          if (wantedHttpsPort === undefined) {
+            console.error("ERROR: no https port provided\n");
+            displayHelp();
+            process.exit(1);
+          }
+          httpsPort = +wantedHttpsPort;
+          if (isNaN(httpsPort)) {
+            console.error(
+              'ERROR: Invalid HTTPS port configured. Should be a number, received "' +
+                wantedHttpsPort +
+                '"\n',
+            );
+            displayHelp();
+            process.exit(1);
+          }
+        }
+        break;
+
+      default: {
+        console.error('ERROR: unknown option: "' + currentArg + '"\n');
+        displayHelp();
+        process.exit(1);
+      }
+    }
+  }
+
+  if (normalizedPath === undefined) {
+    normalizedPath = normalize(process.cwd());
+  }
+
+  if (certificateFile !== undefined && keyFile === undefined) {
+    console.warn(
+      "⚠️ Certificate path communicated but no private key. Not running in HTTPS.",
+    );
+    certificateFile = undefined;
+  }
+
+  if (keyFile !== undefined && certificateFile === undefined) {
+    console.warn("⚠️ Private key communicated but no certificate. Not running in HTTPS.");
+    keyFile = undefined;
+  }
+
+  try {
+    const { listeningPromise } = launchStaticServer(normalizedPath, {
+      certificatePath: certificateFile,
+      keyPath: keyFile,
+      verbose: true,
+      httpPort: httpPort ?? 8000,
+      httpsPort: httpsPort ?? 8443,
+    });
+    listeningPromise.catch((err) => {
+      console.error(`ERROR: ${err}\n`);
+      process.exit(1);
+    });
+  } catch (err) {
+    console.error(`ERROR: ${err}\n`);
+    process.exit(1);
+  }
+}
 
 /**
  * Launch the static server and begin to serve on the configured port.
@@ -74,6 +240,7 @@ export default function launchStaticServer(path, config) {
     httpServer.listen(config.httpPort, onHttpConnection);
 
     if (!shouldStartHttps) {
+      httpsServerStatus = "disabled";
       return;
     }
 
@@ -124,17 +291,19 @@ export default function launchStaticServer(path, config) {
         httpServerStatus = "error";
         if (httpsServerStatus === "success") {
           res({ http: false, https: true });
-        } else if (httpsServerStatus === "error") {
+        } else if (httpsServerStatus === "error" || httpsServerStatus === "disabled") {
           rej(err);
         }
         httpServer.close();
         return;
       }
       httpServerStatus = "success";
-      console.log(
-        `[${getHumanReadableHours()}] ` +
-          `Listening HTTP at http://localhost:${config.httpPort}`,
-      );
+      if (config.verbose) {
+        console.log(
+          `[${getHumanReadableHours()}] ` +
+            `Listening HTTP at http://localhost:${config.httpPort}`,
+        );
+      }
       if (httpsServerStatus !== null) {
         res({ https: httpsServerStatus === "success", http: true });
       }
@@ -159,10 +328,12 @@ export default function launchStaticServer(path, config) {
         return;
       }
       httpsServerStatus = "success";
-      console.log(
-        `[${getHumanReadableHours()}] ` +
-          `Listening HTTPS at https://localhost:${config.httpsPort}`,
-      );
+      if (config.verbose) {
+        console.log(
+          `[${getHumanReadableHours()}] ` +
+            `Listening HTTPS at https://localhost:${config.httpsPort}`,
+        );
+      }
       if (httpServerStatus !== null) {
         res({ https: true, http: httpServerStatus === "success" });
       }
@@ -207,4 +378,29 @@ async function prepareFile(baseDirectory, url) {
   const ext = extname(filePath).substring(1).toLowerCase();
   const stream = createReadStream(filePath);
   return { ext, stream };
+}
+
+/**
+ * Display through `console.log` an helping message relative to how to run this
+ * script.
+ */
+function displayHelp() {
+  console.log(
+    `launch_static_server.mjs: Serve files inside a given directory via HTTP and HTTPS.
+
+Usage: node launch_static_server.mjs [OPTIONS]
+
+Options:
+  -d <PATH>, --directory <PATH>    Path to the directory whose files will be served.
+                                   Defaults to the current working directory.
+  -p <NUMBER>, --http <NUMBER>     Configure the port listening for HTTP connections.
+                                   8000 by default.
+  -s <NUMBER>, --https <NUMBER>    Configure the port listening for HTTPS connections.
+                                   Also requires "-c" and "-k" options to be set.
+                                   8443 by default.
+  -c <PATH>, --certificate <PATH>  Only required for HTTPS connections.
+                                   Path to the corresponding certificate file.
+  -k <PATH>, --key <PATH>          Only required for HTTPS connections.
+                                   Path to the corresponding private key.`,
+  );
 }

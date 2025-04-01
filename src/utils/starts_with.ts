@@ -29,7 +29,6 @@ export default function startsWith(
   searchString: string,
   position?: number,
 ): boolean {
-  // eslint-disable-next-line @typescript-eslint/unbound-method
   // eslint-disable-next-line no-restricted-properties
   if (typeof String.prototype.startsWith === "function") {
     // eslint-disable-next-line no-restricted-properties

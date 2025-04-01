@@ -36,6 +36,15 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     expect(player.getPosition()).to.be.within(118, 122);
   }
 
+  async function goJustBeforeSecondPeriod() {
+    player.seekTo(97);
+    await sleep(10);
+    if (player.getPlayerState() !== "PAUSED") {
+      await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING", "FREEZING"]);
+    }
+    expect(player.getPosition()).to.be.within(95, 100);
+  }
+
   async function goToFirstPeriod() {
     player.seekTo(5);
     await sleep(10);
@@ -491,6 +500,442 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
       checkVideoTrack({ all: true, test: /avc1\.42C014/ }, undefined);
       expect(player.getPosition()).to.be.within(0, 1);
+    });
+  });
+
+  describe("lockVideoRepresentations/lockAudioRepresentations", () => {
+    it("should allow locking an audio/video quality on newAvailablePeriods", async () => {
+      const lockedVideoRepresentations = {};
+      const lockedAudioRepresentations = {};
+      const requestedVideoSegments = [];
+      const requestedAudioSegments = [];
+      player = new RxPlayer();
+
+      const segmentLoader = (info, callbacks) => {
+        if (info.trackType === "video") {
+          requestedVideoSegments.push(info.url);
+        } else if (info.trackType === "audio") {
+          requestedAudioSegments.push(info.url);
+        }
+        callbacks.fallback();
+      };
+
+      let eventCalled = 0;
+      player.addEventListener("newAvailablePeriods", (periods) => {
+        if (eventCalled === 0) {
+          expect(requestedAudioSegments).toHaveLength(0);
+          expect(requestedVideoSegments).toHaveLength(0);
+        }
+        for (const period of periods) {
+          const videoTrack = player.getVideoTrack(period.id);
+          lockedVideoRepresentations[period.id] = [videoTrack.representations[0].id];
+          player.lockVideoRepresentations({
+            periodId: period.id,
+            representations: lockedVideoRepresentations[period.id],
+          });
+
+          const audioTrack = player.getAudioTrack(period.id);
+          lockedAudioRepresentations[period.id] = [audioTrack.representations[0].id];
+          player.lockAudioRepresentations({
+            periodId: period.id,
+            representations: lockedAudioRepresentations[period.id],
+          });
+        }
+        eventCalled++;
+      });
+
+      player.loadVideo({
+        url: multiAdaptationSetsInfos.url,
+        transport: multiAdaptationSetsInfos.transport,
+        segmentLoader,
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+      expect(eventCalled).to.equal(1);
+
+      const firstPlayedPeriod = player.getCurrentPeriod();
+      expect(Object.keys(lockedVideoRepresentations)).toHaveLength(1);
+      expect(lockedVideoRepresentations[firstPlayedPeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[firstPlayedPeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[firstPlayedPeriod.id],
+      );
+
+      const requestedVideoSegmentsNb = requestedVideoSegments.length;
+      expect(requestedVideoSegmentsNb).toBeGreaterThan(1);
+      for (const seg of requestedVideoSegments) {
+        expect(seg).toContain(lockedVideoRepresentations[firstPlayedPeriod.id]);
+      }
+
+      expect(Object.keys(lockedAudioRepresentations)).toHaveLength(1);
+      expect(lockedAudioRepresentations[firstPlayedPeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[firstPlayedPeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[firstPlayedPeriod.id],
+      );
+
+      const requestedAudioSegmentsNb = requestedAudioSegments.length;
+      expect(requestedAudioSegmentsNb).toBeGreaterThan(1);
+      for (const seg of requestedAudioSegments) {
+        expect(seg).toContain(lockedAudioRepresentations[firstPlayedPeriod.id]);
+      }
+
+      let availablePeriods = player.getAvailablePeriods();
+      expect(availablePeriods).toHaveLength(1);
+
+      await goToSecondPeriod();
+      expect(eventCalled).to.equal(2);
+
+      const newPeriod = player.getCurrentPeriod();
+      expect(newPeriod.id).not.toEqual(firstPlayedPeriod.id);
+
+      expect(Object.keys(lockedVideoRepresentations)).toHaveLength(2);
+      expect(lockedVideoRepresentations[newPeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[newPeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[newPeriod.id],
+      );
+
+      expect(requestedVideoSegments.length).toBeGreaterThan(requestedVideoSegmentsNb);
+      for (let i = requestedVideoSegmentsNb; i < requestedVideoSegments.length; i++) {
+        const seg = requestedVideoSegments[i];
+        expect(seg).toContain(lockedVideoRepresentations[newPeriod.id]);
+      }
+
+      expect(Object.keys(lockedAudioRepresentations)).toHaveLength(2);
+      expect(lockedAudioRepresentations[newPeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[newPeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[newPeriod.id],
+      );
+
+      expect(requestedAudioSegments.length).toBeGreaterThan(requestedAudioSegmentsNb);
+      for (let i = requestedAudioSegmentsNb; i < requestedAudioSegments.length; i++) {
+        const seg = requestedAudioSegments[i];
+        expect(seg).toContain(lockedAudioRepresentations[newPeriod.id]);
+      }
+
+      availablePeriods = player.getAvailablePeriods();
+      expect(availablePeriods).toHaveLength(2);
+    });
+
+    it("should allow locking an audio/video quality on newAvailablePeriods for a future Period", async () => {
+      const lockedVideoRepresentations = {};
+      const lockedAudioRepresentations = {};
+      const requestedVideoSegments = [];
+      const requestedAudioSegments = [];
+      player = new RxPlayer();
+
+      const segmentLoader = (info, callbacks) => {
+        if (info.trackType === "video") {
+          requestedVideoSegments.push(info.url);
+        } else if (info.trackType === "audio") {
+          requestedAudioSegments.push(info.url);
+        }
+        callbacks.fallback();
+      };
+
+      let eventCalled = 0;
+      player.addEventListener("newAvailablePeriods", (periods) => {
+        if (eventCalled === 0) {
+          expect(requestedAudioSegments).toHaveLength(0);
+          expect(requestedVideoSegments).toHaveLength(0);
+        }
+        for (const period of periods) {
+          const videoTrack = player.getVideoTrack(period.id);
+          lockedVideoRepresentations[period.id] = [videoTrack.representations[0].id];
+          player.lockVideoRepresentations({
+            periodId: period.id,
+            representations: lockedVideoRepresentations[period.id],
+          });
+
+          const audioTrack = player.getAudioTrack(period.id);
+          lockedAudioRepresentations[period.id] = [audioTrack.representations[0].id];
+          player.lockAudioRepresentations({
+            periodId: period.id,
+            representations: lockedAudioRepresentations[period.id],
+          });
+        }
+        eventCalled++;
+      });
+
+      player.setWantedBufferAhead(15);
+      player.loadVideo({
+        url: multiAdaptationSetsInfos.url,
+        transport: multiAdaptationSetsInfos.transport,
+        segmentLoader,
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+      expect(eventCalled).to.equal(1);
+
+      const firstPlayedPeriod = player.getCurrentPeriod();
+
+      expect(Object.keys(lockedVideoRepresentations)).toHaveLength(1);
+      expect(lockedVideoRepresentations[firstPlayedPeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[firstPlayedPeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[firstPlayedPeriod.id],
+      );
+
+      const requestedVideoSegmentsNb = requestedVideoSegments.length;
+      expect(requestedVideoSegmentsNb).toBeGreaterThan(1);
+      for (const seg of requestedVideoSegments) {
+        expect(seg).toContain(lockedVideoRepresentations[firstPlayedPeriod.id]);
+      }
+
+      expect(Object.keys(lockedAudioRepresentations)).toHaveLength(1);
+      expect(lockedAudioRepresentations[firstPlayedPeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[firstPlayedPeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[firstPlayedPeriod.id],
+      );
+
+      const requestedAudioSegmentsNb = requestedAudioSegments.length;
+      expect(requestedAudioSegmentsNb).toBeGreaterThan(1);
+      for (const seg of requestedAudioSegments) {
+        expect(seg).toContain(lockedAudioRepresentations[firstPlayedPeriod.id]);
+      }
+
+      let availablePeriods = player.getAvailablePeriods();
+      expect(availablePeriods).toHaveLength(1);
+
+      await goJustBeforeSecondPeriod();
+      await sleep(100);
+      expect(eventCalled).to.equal(2);
+
+      const newPeriod = player.getCurrentPeriod();
+      expect(newPeriod.id).toEqual(firstPlayedPeriod.id);
+
+      expect(Object.keys(lockedVideoRepresentations)).toHaveLength(2);
+      expect(lockedVideoRepresentations[newPeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[newPeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[newPeriod.id],
+      );
+
+      expect(Object.keys(lockedAudioRepresentations)).toHaveLength(2);
+      expect(lockedAudioRepresentations[newPeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[newPeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[newPeriod.id],
+      );
+
+      availablePeriods = player.getAvailablePeriods();
+      expect(availablePeriods).toHaveLength(2);
+
+      const futurePeriod = availablePeriods[1];
+      expect(futurePeriod.id).not.toEqual(firstPlayedPeriod.id);
+
+      expect(lockedVideoRepresentations[futurePeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[futurePeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[futurePeriod.id],
+      );
+
+      expect(requestedVideoSegments.length).toBeGreaterThan(requestedVideoSegmentsNb);
+      for (let i = requestedVideoSegmentsNb; i < requestedVideoSegments.length; i++) {
+        const seg = requestedVideoSegments[i];
+        expect(seg).toContain(lockedVideoRepresentations[futurePeriod.id]);
+      }
+
+      expect(lockedAudioRepresentations[futurePeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[futurePeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[futurePeriod.id],
+      );
+
+      expect(requestedAudioSegments.length).toBeGreaterThan(requestedAudioSegmentsNb);
+      for (let i = requestedAudioSegmentsNb; i < requestedAudioSegments.length; i++) {
+        const seg = requestedAudioSegments[i];
+        expect(seg).toContain(lockedAudioRepresentations[futurePeriod.id]);
+      }
+    });
+
+    it("should allow locking an audio/video quality on trackChange even if that's a bad idea", async () => {
+      const lockedVideoRepresentations = {};
+      const lockedAudioRepresentations = {};
+      player = new RxPlayer();
+
+      let audioEventCalled = 0;
+      let videoEventCalled = 0;
+      player.addEventListener("audioTrackChange", (audioTrack) => {
+        const period = player.getCurrentPeriod();
+        lockedAudioRepresentations[period.id] = [audioTrack.representations[0].id];
+        player.lockAudioRepresentations({
+          periodId: period.id,
+          representations: lockedAudioRepresentations[period.id],
+        });
+        audioEventCalled++;
+      });
+
+      player.addEventListener("videoTrackChange", (videoTrack) => {
+        const period = player.getCurrentPeriod();
+        lockedVideoRepresentations[period.id] = [videoTrack.representations[0].id];
+        player.lockVideoRepresentations({
+          periodId: period.id,
+          representations: lockedVideoRepresentations[period.id],
+        });
+        videoEventCalled++;
+      });
+
+      player.loadVideo({
+        url: multiAdaptationSetsInfos.url,
+        transport: multiAdaptationSetsInfos.transport,
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+      expect(audioEventCalled).to.equal(1);
+      expect(videoEventCalled).to.equal(1);
+
+      const firstPlayedPeriod = player.getCurrentPeriod();
+
+      expect(Object.keys(lockedVideoRepresentations)).toHaveLength(1);
+      expect(lockedVideoRepresentations[firstPlayedPeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[firstPlayedPeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[firstPlayedPeriod.id],
+      );
+
+      expect(Object.keys(lockedAudioRepresentations)).toHaveLength(1);
+      expect(lockedAudioRepresentations[firstPlayedPeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[firstPlayedPeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[firstPlayedPeriod.id],
+      );
+
+      let availablePeriods = player.getAvailablePeriods();
+      expect(availablePeriods).toHaveLength(1);
+
+      await goToSecondPeriod();
+      expect(audioEventCalled).to.equal(2);
+      expect(videoEventCalled).to.equal(2);
+
+      const newPeriod = player.getCurrentPeriod();
+      expect(newPeriod.id).not.toEqual(firstPlayedPeriod.id);
+
+      expect(Object.keys(lockedVideoRepresentations)).toHaveLength(2);
+      expect(lockedVideoRepresentations[newPeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[newPeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[newPeriod.id],
+      );
+
+      expect(Object.keys(lockedAudioRepresentations)).toHaveLength(2);
+      expect(lockedAudioRepresentations[newPeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[newPeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[newPeriod.id],
+      );
+
+      availablePeriods = player.getAvailablePeriods();
+      expect(availablePeriods).toHaveLength(2);
+    });
+
+    it("should allow locking an audio/video quality on periodChange even if that's a bad idea", async () => {
+      const lockedVideoRepresentations = {};
+      const lockedAudioRepresentations = {};
+      player = new RxPlayer();
+
+      let periodEventCalled = 0;
+      player.addEventListener("periodChange", (period) => {
+        const videoTrack = player.getVideoTrack();
+        lockedVideoRepresentations[period.id] = [videoTrack.representations[0].id];
+        player.lockVideoRepresentations({
+          periodId: period.id,
+          representations: lockedVideoRepresentations[period.id],
+        });
+
+        const audioTrack = player.getAudioTrack();
+        lockedAudioRepresentations[period.id] = [audioTrack.representations[0].id];
+        player.lockAudioRepresentations({
+          periodId: period.id,
+          representations: lockedAudioRepresentations[period.id],
+        });
+        periodEventCalled++;
+      });
+
+      player.loadVideo({
+        url: multiAdaptationSetsInfos.url,
+        transport: multiAdaptationSetsInfos.transport,
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+      expect(periodEventCalled).to.equal(1);
+
+      const firstPlayedPeriod = player.getCurrentPeriod();
+
+      expect(Object.keys(lockedVideoRepresentations)).toHaveLength(1);
+      expect(lockedVideoRepresentations[firstPlayedPeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[firstPlayedPeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[firstPlayedPeriod.id],
+      );
+
+      expect(Object.keys(lockedAudioRepresentations)).toHaveLength(1);
+      expect(lockedAudioRepresentations[firstPlayedPeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[firstPlayedPeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[firstPlayedPeriod.id],
+      );
+
+      let availablePeriods = player.getAvailablePeriods();
+      expect(availablePeriods).toHaveLength(1);
+
+      await goToSecondPeriod();
+      expect(periodEventCalled).to.equal(2);
+
+      const newPeriod = player.getCurrentPeriod();
+      expect(newPeriod.id).not.toEqual(firstPlayedPeriod.id);
+
+      expect(Object.keys(lockedVideoRepresentations)).toHaveLength(2);
+      expect(lockedVideoRepresentations[newPeriod.id]).toHaveLength(1);
+      expect(player.getLockedVideoRepresentations()).toEqual(
+        lockedVideoRepresentations[newPeriod.id],
+      );
+      expect(player.getLockedVideoRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedVideoRepresentations[newPeriod.id],
+      );
+
+      expect(Object.keys(lockedAudioRepresentations)).toHaveLength(2);
+      expect(lockedAudioRepresentations[newPeriod.id]).toHaveLength(1);
+      expect(player.getLockedAudioRepresentations()).toEqual(
+        lockedAudioRepresentations[newPeriod.id],
+      );
+      expect(player.getLockedAudioRepresentations(player.getCurrentPeriod().id)).toEqual(
+        lockedAudioRepresentations[newPeriod.id],
+      );
+
+      availablePeriods = player.getAvailablePeriods();
+      expect(availablePeriods).toHaveLength(2);
     });
   });
 });

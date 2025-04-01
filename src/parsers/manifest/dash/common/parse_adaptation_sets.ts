@@ -23,14 +23,21 @@ import arrayFindIndex from "../../../../utils/array_find_index";
 import arrayIncludes from "../../../../utils/array_includes";
 import isNonEmptyString from "../../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { IParsedAdaptation, IParsedAdaptations } from "../../types";
+import type {
+  IParsedAdaptation,
+  IParsedAdaptations,
+  IParsedRepresentation,
+  IParsedThumbnailTrack,
+} from "../../types";
 import type {
   IAdaptationSetIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
 } from "../node_parser_types";
 import attachTrickModeTrack from "./attach_trickmode_track";
 import type ContentProtectionParser from "./content_protection_parser";
-import inferAdaptationType from "./infer_adaptation_type";
+import inferAdaptationType, {
+  getThumbnailAdaptationSetInfo,
+} from "./infer_adaptation_type";
 import type { IRepresentationContext } from "./parse_representations";
 import parseRepresentations from "./parse_representations";
 import resolveBaseURLs from "./resolve_base_urls";
@@ -240,7 +247,7 @@ function getAdaptationSetSwitchingIDs(
         return supplementalProperty.value
           .split(",")
           .map((id) => id.trim())
-          .filter((id) => id);
+          .filter((id) => isNonEmptyString(id));
       }
     }
   }
@@ -259,11 +266,15 @@ function getAdaptationSetSwitchingIDs(
 export default function parseAdaptationSets(
   adaptationsIR: IAdaptationSetIntermediateRepresentation[],
   context: IAdaptationSetContext,
-): IParsedAdaptations {
+): {
+  adaptations: IParsedAdaptations;
+  thumbnailTracks: IParsedThumbnailTrack[];
+} {
   const parsedAdaptations: Record<
     ITrackType,
     Array<[IParsedAdaptation, IAdaptationSetOrderingData]>
   > = { video: [], audio: [], text: [] };
+  const parsedThumbnailTracks: IParsedThumbnailTrack[] = [];
   const trickModeAdaptations: Array<{
     adaptation: IParsedAdaptation;
     trickModeAttachedAdaptationIds: string[];
@@ -297,14 +308,7 @@ export default function parseAdaptationSets(
         (context.availabilityTimeOffset ?? 0);
     }
 
-    const adaptationMimeType = adaptation.attributes.mimeType;
-    const adaptationCodecs = adaptation.attributes.codecs;
-    const type = inferAdaptationType(
-      representationsIR,
-      isNonEmptyString(adaptationMimeType) ? adaptationMimeType : null,
-      isNonEmptyString(adaptationCodecs) ? adaptationCodecs : null,
-      !isNullOrUndefined(adaptationChildren.roles) ? adaptationChildren.roles : null,
-    );
+    const type = inferAdaptationType(adaptation, representationsIR);
     if (type === undefined) {
       continue;
     }
@@ -407,6 +411,15 @@ export default function parseAdaptationSets(
       context.unsafelyBaseOnPreviousPeriod?.getAdaptation(adaptationID) ?? null;
 
     const representations = parseRepresentations(representationsIR, adaptation, reprCtxt);
+
+    if (type === "thumbnails") {
+      const track = createThumbnailTracks(adaptation, representations);
+      if (track !== null) {
+        parsedThumbnailTracks.push(...track);
+      }
+      continue;
+    }
+
     const parsedAdaptationSet: IParsedAdaptation = {
       id: adaptationID,
       representations,
@@ -505,7 +518,10 @@ export default function parseAdaptationSets(
   );
   parsedAdaptations.video.sort(compareAdaptations);
   attachTrickModeTrack(adaptationsPerType, trickModeAdaptations);
-  return adaptationsPerType;
+  return {
+    adaptations: adaptationsPerType,
+    thumbnailTracks: parsedThumbnailTracks,
+  };
 }
 
 /** Metadata allowing to order AdaptationSets between one another. */
@@ -522,6 +538,73 @@ interface IAdaptationSetOrderingData {
   priority: number;
   /** Index of this AdaptationSet in the original MPD, starting from `0`. */
   indexInMpd: number;
+}
+
+/**
+ * From the given attributes, returns a parsed thumbnail track, or null if it
+ * fails to do so.
+ * @param {Object} adaptation
+ * @param {Array.<Object>} representations
+ * @returns {Object|null}
+ */
+function createThumbnailTracks(
+  adaptation: IAdaptationSetIntermediateRepresentation,
+  representations: IParsedRepresentation[],
+): IParsedThumbnailTrack[] {
+  const tracks = [];
+  for (let i = 0; i < representations.length; i++) {
+    const representation = representations[i];
+    if (representation !== undefined) {
+      if (representation.mimeType === undefined) {
+        log.warn("DASH: Invalid thumbnails Representation, no mime-type");
+        continue;
+      }
+      const tileInfo = getThumbnailAdaptationSetInfo(
+        adaptation,
+        adaptation.children.representations[i],
+      );
+      if (tileInfo === null) {
+        continue;
+      }
+      if (representation.height === undefined) {
+        log.warn("DASH: Invalid thumbnails Representation, no height information");
+        continue;
+      }
+      if (representation.width === undefined) {
+        log.warn("DASH: Invalid thumbnails Representation, no width information");
+        continue;
+      }
+
+      const start = representation.index.getFirstAvailablePosition() ?? undefined;
+      const end = representation.index.getEnd() ?? undefined;
+
+      let segmentDuration;
+      const targetDuration = representation.index.getTargetSegmentDuration();
+      if (targetDuration !== undefined && targetDuration.isPrecize) {
+        segmentDuration = targetDuration.duration;
+      } else {
+        log.warn("DASH: Cannot produce duration estimate for thumbnail track");
+      }
+
+      tracks.push({
+        id: representation.id,
+        cdnMetadata: representation.cdnMetadata,
+        index: representation.index,
+        mimeType: representation.mimeType,
+        height: representation.height,
+        width: representation.width,
+        horizontalTiles: tileInfo.horizontalTiles,
+        verticalTiles: tileInfo.verticalTiles,
+        start,
+        end,
+        tileDuration:
+          segmentDuration === undefined
+            ? undefined
+            : segmentDuration / (tileInfo.horizontalTiles * tileInfo.verticalTiles),
+      });
+    }
+  }
+  return tracks;
 }
 
 /**

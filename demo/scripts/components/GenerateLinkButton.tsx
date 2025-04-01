@@ -6,7 +6,7 @@ function GenerateLinkButton({
 }: {
   enabled: boolean;
   onClick: () => void;
-}): JSX.Element {
+}): React.JSX.Element {
   return (
     <button
       aria-label="Generate link for the current custom button"

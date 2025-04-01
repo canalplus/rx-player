@@ -225,12 +225,16 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       cancelSignal,
     )
       .autoPlayResult.then(() =>
-        getLoadedReference(playbackObserver, mediaElement, true, cancelSignal).onUpdate(
+        getLoadedReference(playbackObserver, true, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
               this.trigger("loaded", {
                 getSegmentSinkMetrics: null,
+                getThumbnailData: () =>
+                  Promise.reject(
+                    new Error("Thumbnail data not available with directfile contents"),
+                  ),
               });
             }
           },

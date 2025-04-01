@@ -7,8 +7,8 @@
 /demo/worker.js
 
 /tests/performance/node_modules
-/tests/performance/bundle1.js
-/tests/performance/bundle2.js
+/tests/performance/previous.js
+/tests/performance/current.js
 /tests/performance/package.json
 /tests/performance/package-lock.json
 

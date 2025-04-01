@@ -19,7 +19,7 @@ function Button({
   value: string;
   disabled: boolean;
   title?: string;
-}): JSX.Element {
+}): React.JSX.Element {
   if (disabled) {
     return (
       <button

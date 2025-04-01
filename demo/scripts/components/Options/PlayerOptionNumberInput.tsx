@@ -25,7 +25,7 @@ function PlayerOptionNumberInput({
   defaultValueAsNumber: number;
   isDisabled: boolean;
   onResetClick: () => void;
-}): JSX.Element {
+}): React.JSX.Element {
   const shouldBeDisabled = parseFloat(valueAsString) === defaultValueAsNumber;
   const onInputChange = React.useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {

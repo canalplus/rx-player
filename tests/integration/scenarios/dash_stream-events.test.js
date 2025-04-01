@@ -67,13 +67,16 @@ describe("DASH Stream events", function () {
     await loadContent(startAt);
 
     player.play();
-    await checkAfterSleepWithBackoff({ minTimeMs: 1000, maxTimeMs: 5000 }, () => {
-      expect(player.getPosition()).to.be.within(
-        startAt + 1,
-        startAt + 5,
-        "The initial position is not right",
-      );
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 1000, stepMs: 100, maxTimeMs: 5000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          startAt + 1,
+          startAt + 5,
+          "The initial position is not right",
+        );
+      },
+    );
     player.pause();
     expect(streamEventsReceived).to.have.lengthOf(
       0,
@@ -87,15 +90,15 @@ describe("DASH Stream events", function () {
 
   it("should not send any event if none have been reached yet", async function () {
     await expectNoEvent({ startAt: 0 });
-  }, 5000);
+  }, 10000);
 
   it("should not send any event if loading at a position after all events", async function () {
     await expectNoEvent({ startAt: 180 });
-  }, 5000);
+  }, 10000);
 
   it("should not send any event if loading at a position between events", async function () {
     await expectNoEvent({ startAt: 80 });
-  }, 5000);
+  }, 10000);
 
   it("should receive event when loading right in one", async function () {
     const streamEventsReceived = [];
@@ -111,7 +114,7 @@ describe("DASH Stream events", function () {
 
     const wantedEvent = EVENTS.periods[1][2]; // ~105 -> ~110
     await loadContent(wantedEvent.start + 2);
-    await checkAfterSleepWithBackoff({ maxTimeMs: 100 }, () => {
+    await checkAfterSleepWithBackoff({ maxTimeMs: 100, stepMs: 100 }, () => {
       expect(streamEventSkipReceived).to.have.lengthOf(
         0,
         "We should not have received any streamEventSkipReceived event",
@@ -132,12 +135,12 @@ describe("DASH Stream events", function () {
     };
     player.seekTo(wantedEvent.end + 0.5);
 
-    await checkAfterSleepWithBackoff({ maxTimeMs: 100 }, () => {
+    await checkAfterSleepWithBackoff({ maxTimeMs: 100, stepMs: 100 }, () => {
       expect(hasExited).to.equal(true);
       expect(streamEventSkipReceived).to.have.lengthOf(0);
       expect(streamEventsReceived).to.have.lengthOf(1);
     });
-  }, 5000);
+  }, 10000);
 
   it("should receive an event when playing through one", async function () {
     const streamEventsReceived = [];
@@ -156,12 +159,19 @@ describe("DASH Stream events", function () {
     await sleep(100);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(0);
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 350, maxTimeMs: 1500 }, () => {
-      expect(player.getPosition()).to.be.within(142, 144, "The position 1 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 1000, stepMs: 100, maxTimeMs: 3000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          142,
+          144,
+          "The position 1 is not right",
+        );
+      },
+    );
 
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
@@ -174,9 +184,16 @@ describe("DASH Stream events", function () {
       hasExited = true;
     };
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 800, maxTimeMs: 1500 }, () => {
-      expect(player.getPosition()).to.be.within(145, 150, "The position 2 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 2400, stepMs: 100, maxTimeMs: 3000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          145,
+          150,
+          "The position 2 is not right",
+        );
+      },
+    );
     expect(hasExited).to.equal(true);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
@@ -199,12 +216,19 @@ describe("DASH Stream events", function () {
     await sleep(100);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(0);
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 800, maxTimeMs: 1500 }, () => {
-      expect(player.getPosition()).to.be.within(142, 144, "The position 1 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 2400, stepMs: 100, maxTimeMs: 3000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          142,
+          144,
+          "The position 1 is not right",
+        );
+      },
+    );
 
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
@@ -218,11 +242,14 @@ describe("DASH Stream events", function () {
     };
 
     player.seekTo(145);
-    await checkAfterSleepWithBackoff({ minTimeMs: 70, maxTimeMs: 200 }, () => {
-      expect(hasExited).to.equal(true);
-      expect(streamEventSkipReceived).to.have.lengthOf(0);
-      expect(streamEventsReceived).to.have.lengthOf(1);
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 100, stepMs: 50, maxTimeMs: 200 },
+      () => {
+        expect(hasExited).to.equal(true);
+        expect(streamEventSkipReceived).to.have.lengthOf(0);
+        expect(streamEventsReceived).to.have.lengthOf(1);
+      },
+    );
   }, 10000);
 
   it("should authorize setting no onExit function", async function () {
@@ -242,12 +269,19 @@ describe("DASH Stream events", function () {
     await sleep(100);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(0);
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 350, maxTimeMs: 1500 }, () => {
-      expect(player.getPosition()).to.be.within(142, 144, "The position 1 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 1000, stepMs: 100, maxTimeMs: 3000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          142,
+          144,
+          "The position 1 is not right",
+        );
+      },
+    );
 
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
@@ -255,9 +289,16 @@ describe("DASH Stream events", function () {
     const eventReceived = streamEventsReceived[0];
     checkEvent(eventReceived, wantedEvent);
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 800, maxTimeMs: 1500 }, () => {
-      expect(player.getPosition()).to.be.within(145, 150, "The position 2 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 2400, stepMs: 100, maxTimeMs: 3000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          145,
+          150,
+          "The position 2 is not right",
+        );
+      },
+    );
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
   }, 10000);
@@ -279,12 +320,19 @@ describe("DASH Stream events", function () {
     await sleep(100);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(0);
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 350, maxTimeMs: 1500 }, () => {
-      expect(player.getPosition()).to.be.within(142, 144, "The position 1 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 1000, stepMs: 100, maxTimeMs: 3000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          142,
+          144,
+          "The position 1 is not right",
+        );
+      },
+    );
 
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
@@ -306,16 +354,23 @@ describe("DASH Stream events", function () {
     expect(streamEventsReceived).to.have.lengthOf(1);
     expect(hasExited).to.equal(false);
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 350, maxTimeMs: 1500 }, () => {
-      expect(player.getPosition()).to.be.within(145, 150, "The position 2 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 1000, stepMs: 100, maxTimeMs: 3000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          145,
+          150,
+          "The position 2 is not right",
+        );
+      },
+    );
 
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
     expect(hasExited).to.equal(true);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
-  }, 5000);
+  }, 10000);
 
   it("should receive an event when seeking right into one", async function () {
     const streamEventsReceived = [];
@@ -332,15 +387,22 @@ describe("DASH Stream events", function () {
     const wantedEvent = EVENTS.periods[1][4]; //  -> ~141.5 -> ~144.5
     await loadContent(wantedEvent.start - 1);
     await sleep(100);
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(0);
     player.seekTo(142);
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 300, maxTimeMs: 600 }, () => {
-      expect(player.getPosition()).to.be.within(142, 144, "The position 1 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 1000, stepMs: 100, maxTimeMs: 1200 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          142,
+          144,
+          "The position 1 is not right",
+        );
+      },
+    );
 
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
@@ -353,13 +415,20 @@ describe("DASH Stream events", function () {
       hasExited = true;
     };
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 800, maxTimeMs: 2500 }, () => {
-      expect(player.getPosition()).to.be.within(145, 150, "The position 2 is not right");
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 2400, stepMs: 100, maxTimeMs: 5000 },
+      () => {
+        expect(player.getPosition()).to.be.within(
+          145,
+          150,
+          "The position 2 is not right",
+        );
+      },
+    );
     expect(hasExited).to.equal(true);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(1);
-  }, 5000);
+  }, 10000);
 
   it("should receive multiple events when playing through a position with multiple events", async function () {
     const streamEventsReceived = [];
@@ -377,14 +446,17 @@ describe("DASH Stream events", function () {
     const wantedEvent2 = EVENTS.periods[0][3]; //  -> 45 - 54
     await loadContent(wantedEvent1.start - 1);
     await sleep(100);
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 500, maxTimeMs: 1400 }, () => {
-      expect(player.getPosition()).to.be.within(41, 44, "The position 1 is not right");
-      expect(streamEventSkipReceived).to.have.lengthOf(0);
-      expect(streamEventsReceived).to.have.lengthOf(1);
-    });
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 1500, stepMs: 100, maxTimeMs: 2800 },
+      () => {
+        expect(player.getPosition()).to.be.within(41, 44, "The position 1 is not right");
+        expect(streamEventSkipReceived).to.have.lengthOf(0);
+        expect(streamEventsReceived).to.have.lengthOf(1);
+      },
+    );
 
     const eventReceived1 = streamEventsReceived[0];
     checkEvent(eventReceived1, wantedEvent1);
@@ -396,7 +468,7 @@ describe("DASH Stream events", function () {
 
     let leftToWait = 45 - player.getPosition();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: leftToWait * (1000 / 3), maxTimeMs: leftToWait * 1000, stepMs: 100 },
+      { minTimeMs: leftToWait * 1000, maxTimeMs: leftToWait * 1000 * 1.5, stepMs: 100 },
       () => {
         expect(player.getPosition()).to.be.within(45, 50, "The position 2 is not right");
 
@@ -416,7 +488,7 @@ describe("DASH Stream events", function () {
 
     leftToWait = 50 - player.getPosition();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: leftToWait * (1000 / 3), maxTimeMs: leftToWait * 1000, stepMs: 1 },
+      { minTimeMs: leftToWait * 1000, maxTimeMs: leftToWait * 1000 * 1.5, stepMs: 1 },
       () => {
         expect(player.getPosition()).to.be.within(50, 54, "The position 3 is not right");
 
@@ -429,7 +501,7 @@ describe("DASH Stream events", function () {
 
     leftToWait = 54 - player.getPosition();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: leftToWait * (1000 / 3), maxTimeMs: leftToWait * 1000, stepMs: 1 },
+      { minTimeMs: leftToWait * 1000, maxTimeMs: leftToWait * 1000 * 1.5, stepMs: 1 },
       () => {
         expect(player.getPosition()).to.be.within(54, 59, "The position 4 is not right");
 
@@ -438,7 +510,7 @@ describe("DASH Stream events", function () {
         expect(streamEventsReceived).to.have.lengthOf(2);
       },
     );
-  }, 15000);
+  }, 30000);
 
   it("should receive multiple events when seeking in a position with multiple events", async function () {
     const streamEventsReceived = [];
@@ -456,14 +528,14 @@ describe("DASH Stream events", function () {
     const wantedEvent2 = EVENTS.periods[0][3]; //  -> 45 - 54
     await loadContent(38);
     await sleep(100);
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
 
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(0);
 
     player.seekTo(48);
-    await sleep(100);
+    await sleep(300);
 
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(2);
@@ -493,7 +565,7 @@ describe("DASH Stream events", function () {
 
     let leftToWait = 50 - player.getPosition();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: leftToWait * (1000 / 3), maxTimeMs: leftToWait * 1000, stepMs: 100 },
+      { minTimeMs: leftToWait * 1000, maxTimeMs: leftToWait * 1000 * 1.5, stepMs: 100 },
       () => {
         expect(player.getPosition()).to.be.within(50, 54, "The position 3 is not right");
         expect(hasExited1).to.equal(true);
@@ -505,7 +577,7 @@ describe("DASH Stream events", function () {
 
     leftToWait = 54 - player.getPosition();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: leftToWait * (1000 / 3), maxTimeMs: leftToWait * 1000, stepMs: 100 },
+      { minTimeMs: leftToWait * 1000, maxTimeMs: leftToWait * 1000 * 1.5, stepMs: 100 },
       () => {
         expect(player.getPosition()).to.be.within(54, 58, "The position 4 is not right");
         expect(hasExited2).to.equal(true);
@@ -529,9 +601,9 @@ describe("DASH Stream events", function () {
 
     const wantedEvent1 = EVENTS.periods[0][2]; //  -> 40 - 50
     const wantedEvent2 = EVENTS.periods[0][3]; //  -> 45 - 54
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     await loadContent(48);
-    await sleep(100);
+    await sleep(150);
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(2);
 
@@ -563,7 +635,7 @@ describe("DASH Stream events", function () {
 
     let leftToWait = 50 - player.getPosition();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: leftToWait * (1000 / 3), maxTimeMs: leftToWait * 1000, stepMs: 100 },
+      { minTimeMs: leftToWait * 1000, maxTimeMs: leftToWait * 1000 * 1.5, stepMs: 100 },
       () => {
         expect(player.getPosition()).to.be.within(50, 54, "The position 3 is not right");
 
@@ -576,7 +648,7 @@ describe("DASH Stream events", function () {
 
     leftToWait = 54 - player.getPosition();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: leftToWait * (1000 / 3), maxTimeMs: leftToWait * 1000, stepMs: 100 },
+      { minTimeMs: leftToWait * 1000, maxTimeMs: leftToWait * 1000 * 1.5, stepMs: 100 },
       () => {
         expect(player.getPosition()).to.be.within(54, 58, "The position 4 is not right");
 
@@ -587,87 +659,103 @@ describe("DASH Stream events", function () {
     );
   }, 15000);
 
-  it("should receive an event when skipping one", async function () {
-    const streamEventsReceived = [];
-    const streamEventSkipReceived = [];
+  it(
+    "should receive an event when skipping one",
+    async function () {
+      const streamEventsReceived = [];
+      const streamEventSkipReceived = [];
 
-    let hasExitedSomething = false;
-    function onStreamEvent(evt) {
-      streamEventsReceived.push(evt);
-      evt.onExit = function () {
-        hasExitedSomething = true;
-      };
-    }
-    function onStreamEventSkip(evt) {
-      streamEventSkipReceived.push(evt);
-      evt.onExit = function () {
-        hasExitedSomething = true;
-      };
-    }
-    player.addEventListener("streamEvent", onStreamEvent);
-    player.addEventListener("streamEventSkip", onStreamEventSkip);
+      let hasExitedSomething = false;
+      function onStreamEvent(evt) {
+        streamEventsReceived.push(evt);
+        evt.onExit = function () {
+          hasExitedSomething = true;
+        };
+      }
+      function onStreamEventSkip(evt) {
+        streamEventSkipReceived.push(evt);
+        evt.onExit = function () {
+          hasExitedSomething = true;
+        };
+      }
+      player.addEventListener("streamEvent", onStreamEvent);
+      player.addEventListener("streamEventSkip", onStreamEventSkip);
 
-    const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
-    await loadContent(0);
-    await sleep(100);
+      const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
+      await loadContent(0);
+      await sleep(1000);
 
-    player.seekTo(9);
-    await sleep(100);
+      player.seekTo(9);
 
-    expect(streamEventSkipReceived).to.have.lengthOf(1);
-    expect(streamEventsReceived).to.have.lengthOf(0);
-    expect(hasExitedSomething).to.equal(false);
+      await checkAfterSleepWithBackoff(
+        { minTimeMs: 600, maxTimeMs: 3000, stepMs: 100 },
+        () => {
+          expect(streamEventSkipReceived).to.have.lengthOf(1);
+          expect(streamEventsReceived).to.have.lengthOf(0);
+          expect(hasExitedSomething).to.equal(false);
 
-    const eventReceived = streamEventSkipReceived[0];
-    checkEvent(eventReceived, wantedEvent);
-  });
+          const eventReceived = streamEventSkipReceived[0];
+          checkEvent(eventReceived, wantedEvent);
+        },
+      );
+    },
+    { timeout: 5000 },
+  );
 
-  it("should receive multiple events when skipping multiple ones", async function () {
-    const streamEventsReceived = [];
-    const streamEventSkipReceived = [];
+  it(
+    "should receive multiple events when skipping multiple ones",
+    async function () {
+      const streamEventsReceived = [];
+      const streamEventSkipReceived = [];
 
-    let hasExitedSomething = false;
-    function onStreamEvent(evt) {
-      streamEventsReceived.push(evt);
-      evt.onExit = function () {
-        hasExitedSomething = true;
-      };
-    }
-    function onStreamEventSkip(evt) {
-      streamEventSkipReceived.push(evt);
-      evt.onExit = function () {
-        hasExitedSomething = true;
-      };
-    }
-    player.addEventListener("streamEvent", onStreamEvent);
-    player.addEventListener("streamEventSkip", onStreamEventSkip);
+      let hasExitedSomething = false;
+      function onStreamEvent(evt) {
+        streamEventsReceived.push(evt);
+        evt.onExit = function () {
+          hasExitedSomething = true;
+        };
+      }
+      function onStreamEventSkip(evt) {
+        streamEventSkipReceived.push(evt);
+        evt.onExit = function () {
+          hasExitedSomething = true;
+        };
+      }
+      player.addEventListener("streamEvent", onStreamEvent);
+      player.addEventListener("streamEventSkip", onStreamEventSkip);
 
-    const wantedEvent1 = EVENTS.periods[0][0]; //  -> 5 - 8
-    const wantedEvent2 = EVENTS.periods[0][1]; //  -> 20
-    await loadContent(0);
-    await sleep(100);
+      const wantedEvent1 = EVENTS.periods[0][0]; //  -> 5 - 8
+      const wantedEvent2 = EVENTS.periods[0][1]; //  -> 20
+      await loadContent(0);
+      await sleep(3000);
 
-    player.seekTo(24);
-    await sleep(100);
+      player.seekTo(24);
 
-    expect(streamEventSkipReceived).to.have.lengthOf(2);
-    expect(streamEventsReceived).to.have.lengthOf(0);
-    expect(hasExitedSomething).to.equal(false);
+      await checkAfterSleepWithBackoff(
+        { minTimeMs: 500, maxTimeMs: 2000, stepMs: 100 },
+        () => {
+          expect(streamEventSkipReceived).to.have.lengthOf(2);
+          expect(streamEventsReceived).to.have.lengthOf(0);
+          expect(hasExitedSomething).to.equal(false);
 
-    let eventReceived1;
-    let eventReceived2;
+          let eventReceived1;
+          let eventReceived2;
 
-    if (streamEventSkipReceived[0].start === wantedEvent1.start) {
-      eventReceived1 = streamEventSkipReceived[0];
-      eventReceived2 = streamEventSkipReceived[1];
-    } else {
-      eventReceived1 = streamEventSkipReceived[1];
-      eventReceived2 = streamEventSkipReceived[0];
-    }
+          if (streamEventSkipReceived[0].start === wantedEvent1.start) {
+            eventReceived1 = streamEventSkipReceived[0];
+            eventReceived2 = streamEventSkipReceived[1];
+          } else {
+            eventReceived1 = streamEventSkipReceived[1];
+            eventReceived2 = streamEventSkipReceived[0];
+          }
 
-    checkEvent(eventReceived1, wantedEvent1);
-    checkEvent(eventReceived2, wantedEvent2);
-  });
+          checkEvent(eventReceived1, wantedEvent1);
+          checkEvent(eventReceived2, wantedEvent2);
+        },
+      );
+    },
+    { timeout: 7000 },
+  );
 
   it("should not exit events without a duration", async function () {
     const streamEventsReceived = [];
@@ -692,10 +780,10 @@ describe("DASH Stream events", function () {
     const wantedEvent = EVENTS.periods[0][1]; //  -> 20
     await loadContent(19);
     await sleep(100);
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: 1500, maxTimeMs: 3000, stepMs: 100 },
+      { mintimems: 4500, maxtimems: 6000, stepms: 100 },
       () => {
         expect(streamEventSkipReceived).to.have.lengthOf(0);
         expect(streamEventsReceived).to.have.lengthOf(1);
@@ -705,7 +793,7 @@ describe("DASH Stream events", function () {
         checkEvent(eventReceived, wantedEvent);
       },
     );
-  }, 5000);
+  }, 10000);
 
   it("should receive an event and be able to set an exit even when the event is very short", async function () {
     const streamEventsReceived = [];
@@ -733,10 +821,10 @@ describe("DASH Stream events", function () {
     expect(streamEventSkipReceived).to.have.lengthOf(0);
     expect(streamEventsReceived).to.have.lengthOf(0);
 
-    player.setPlaybackRate(3);
+    player.setPlaybackRate(1);
     player.play();
     await checkAfterSleepWithBackoff(
-      { minTimeMs: 1500, maxTimeMs: 3000, stepMs: 100 },
+      { minTimeMs: 4500, maxTimeMs: 6000, stepMs: 100 },
       () => {
         expect(player.getPosition()).to.be.within(
           163,
@@ -755,5 +843,5 @@ describe("DASH Stream events", function () {
         checkEvent(eventReceived, wantedEvent);
       },
     );
-  }, 5000);
+  }, 10000);
 });

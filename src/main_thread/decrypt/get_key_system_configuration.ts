@@ -15,7 +15,7 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import MediaKeysInfosStore from "./utils/media_keys_infos_store";
+import MediaKeysAttacher from "./utils/media_keys_attacher";
 
 /**
  * Returns the name of the current key system used as well as its configuration,
@@ -26,7 +26,7 @@ import MediaKeysInfosStore from "./utils/media_keys_infos_store";
 export default function getKeySystemConfiguration(
   mediaElement: IMediaElement,
 ): [string, MediaKeySystemConfiguration] | null {
-  const currentState = MediaKeysInfosStore.getState(mediaElement);
+  const currentState = MediaKeysAttacher.getAwaitedState(mediaElement);
   if (currentState === null) {
     return null;
   }

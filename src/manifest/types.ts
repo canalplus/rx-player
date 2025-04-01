@@ -254,6 +254,62 @@ export interface IPeriodMetadata {
   adaptations: Partial<Record<ITrackType, IAdaptationMetadata[]>>;
   /** Array containing every stream event happening on the period */
   streamEvents: IManifestStreamEvent[];
+  /** If set to an object, this Period has a thumbnail track. */
+  thumbnailTracks: IThumbnailTrackMetadata[];
+}
+
+/** Describes metadata about a single image thumbnail track. */
+export interface IThumbnailTrackMetadata {
+  /** Identify that thumbnail track. */
+  id: string;
+  /** Estimated mime-type for the loaded thumbnails (e.g. `"image/jpeg"`). */
+  mimeType: string;
+  /**
+   * A loaded thumbnail's height in pixels. Note that there can be multiple actual
+   * thumbnails per loaded thumbnail resource (see `horizontalTiles` and
+   * `verticalTiles` properties.
+   */
+  height: number;
+  /**
+   * A loaded thumbnail's width in pixels. Note that there can be multiple actual
+   * thumbnails per loaded thumbnail resource (see `horizontalTiles` and
+   * `verticalTiles` properties.
+   */
+  width: number;
+  /**
+   * Thumbnail tracks are usually grouped together. This is the number of
+   * images contained horizontally in a whole loaded thumbnail resource.
+   */
+  horizontalTiles: number;
+  /**
+   * Thumbnail tracks are usually grouped together. This is the number of
+   * images contained vertically in a whole loaded thumbnail resource.
+   */
+  verticalTiles: number;
+  /**
+   * Starting `position` the first thumbnail of this thumbnail track applies to,
+   * if known.
+   */
+  start: number | undefined;
+  /**
+   * Ending `position` the last thumbnail of this thumbnail track applies to,
+   * if known.
+   */
+  end: number | undefined;
+  /**
+   * Thumbnail tracks are usually grouped together into separate tiles.
+   * This is the amount of time in seconds each tile spans.
+   */
+  tileDuration: number | undefined;
+}
+
+export interface ILoadedThumbnailData {
+  data: BufferSource;
+  mimeType: string;
+  start: number;
+  end?: number | undefined;
+  height?: number | undefined;
+  width?: number | undefined;
 }
 
 /**
@@ -432,4 +488,6 @@ export interface IRepresentationMetadata {
   decipherable?: boolean | undefined;
   /** Encryption information for this Representation. */
   contentProtections?: IContentProtections | undefined;
+  /** If the codec is supported with MSE in worker */
+  isCodecSupportedInWebWorker?: boolean | undefined;
 }

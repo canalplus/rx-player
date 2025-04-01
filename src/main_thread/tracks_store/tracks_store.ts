@@ -30,6 +30,7 @@ import type {
 } from "../../manifest";
 import {
   getSupportedAdaptations,
+  isRepresentationPlayable,
   toAudioTrack,
   toTextTrack,
   toVideoTrack,
@@ -362,6 +363,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     period: IPeriodMetadata,
     adaptationRef: SharedReference<IAdaptationChoice | null | undefined>,
   ): void {
+    log.debug("TS: Adding Track Reference", bufferType, period.id);
     let periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
     if (periodObj === undefined) {
       // The Period has not yet been added.
@@ -382,7 +384,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       log.error(
         `TS: Subject already added for ${bufferType} ` + `and Period ${period.start}`,
       );
-      return;
+      periodObj[bufferType].dispatcher.dispose();
     }
 
     const dispatcher = new TrackDispatcher(adaptationRef);
@@ -399,7 +401,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
             return false;
           }
           const playableRepresentations = adaptation.representations.filter(
-            (r) => r.isSupported === true && r.decipherable !== false,
+            (r) => isRepresentationPlayable(r) === true,
           );
           return playableRepresentations.length > 0;
         },
@@ -495,15 +497,23 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * Remove shared reference to choose an "audio", "video" or "text" Adaptation
    * for a Period.
    * @param {string} bufferType - The concerned buffer type
-   * @param {Period} period - The concerned Period.
+   * @param {string} periodId - The concerned Period's `id`.
    */
   public removeTrackReference(
     bufferType: "audio" | "text" | "video",
-    period: IPeriodMetadata,
+    periodId: string,
   ): void {
-    const periodIndex = findPeriodIndex(this._storedPeriodInfo, period);
+    log.debug("TS: Removing Track Reference", bufferType, periodId);
+    let periodIndex;
+    for (let i = 0; i < this._storedPeriodInfo.length; i++) {
+      const periodI = this._storedPeriodInfo[i];
+      if (periodI.period.id === periodId) {
+        periodIndex = i;
+        break;
+      }
+    }
     if (periodIndex === undefined) {
-      log.warn(`TS: ${bufferType} not found for period`, period.start);
+      log.warn(`TS: ${bufferType} not found for period`, periodId);
       return;
     }
 
@@ -512,7 +522,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     if (choiceItem?.dispatcher === null) {
       log.warn(
         `TS: TrackDispatcher already removed for ${bufferType} ` +
-          `and Period ${period.start}`,
+          `and Period ${periodId}`,
       );
       return;
     }
@@ -592,6 +602,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * You might want to call this API when restarting playback.
    */
   public resetPeriodObjects(): void {
+    log.debug("TS: Resetting Period Objects");
     for (let i = this._storedPeriodInfo.length - 1; i >= 0; i--) {
       const storedObj = this._storedPeriodInfo[i];
       storedObj.audio.dispatcher?.dispose();
@@ -1374,26 +1385,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       periodObj.video.dispatcher !== null &&
       periodObj.audio.dispatcher !== null
     );
-  }
-}
-
-/**
- * Returns the index of the given `period` in the given `periods`
- * Array.
- * Returns `undefined` if that `period` is not found.
- * @param {Object} periods
- * @param {Object} period
- * @returns {number|undefined}
- */
-function findPeriodIndex(
-  periods: ITSPeriodObject[],
-  period: IPeriodMetadata,
-): number | undefined {
-  for (let i = 0; i < periods.length; i++) {
-    const periodI = periods[i];
-    if (periodI.period.id === period.id) {
-      return i;
-    }
   }
 }
 

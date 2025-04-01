@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import type {
+  IMediaElement,
+  IMediaKeySystemAccess,
+} from "../../compat/browser_compatibility_types";
 import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
-import type { ICustomMediaKeySystemAccess } from "../../compat/eme";
 import eme from "../../compat/eme";
 import {
   generatePlayReadyInitData,
@@ -32,7 +34,7 @@ import arrayIncludes from "../../utils/array_includes";
 import flatMap from "../../utils/flat_map";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationSignal } from "../../utils/task_canceller";
-import MediaKeysInfosStore from "./utils/media_keys_infos_store";
+import MediaKeysAttacher from "./utils/media_keys_attacher";
 
 type MediaKeysRequirement = "optional" | "required" | "not-allowed";
 
@@ -44,7 +46,7 @@ export type ICodecSupportList = Array<{
 
 export interface IMediaKeySystemAccessInfos {
   /** `MediaKeySystemAccess` to use to create `MediaKeys` instances. */
-  mediaKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
+  mediaKeySystemAccess: IMediaKeySystemAccess;
   /**
    * The MediaKeySystemConfiguration that has been provided to the
    * `requestMediaKeySystemAccess` API.
@@ -81,65 +83,81 @@ interface IKeySystemType {
    * system.
    */
   keyName: string | undefined;
-  /** keyType: keySystem type (e.g. "com.widevine.alpha") */
+  /** KeySystem type (e.g. "com.widevine.alpha") */
   keyType: string;
-  /** keySystem {Object}: the original keySystem object */
+  /** The original keySystem object */
   keySystemOptions: IKeySystemOption;
 }
 
 /**
- * @param {Array.<Object>} keySystems
- * @param {MediaKeySystemAccess} currentKeySystemAccess
- * @param {Object} currentKeySystemOptions
- * @returns {null|Object}
+ * Takes a `newConfiguration` `MediaKeySystemConfiguration`, that is intended
+ * for the creation of a `MediaKeySystemAccess`, and a `prevConfiguration`
+ * `MediaKeySystemConfiguration`, that was the one used at creation of the
+ * current `MediaKeySystemAccess`.
+ *
+ * This function will then return `true` if it determined that the new
+ * configuration is conceptually compatible with the one used before, and
+ * `false` otherwise.
+ * @param {Object} newConfiguration - New wanted `MediaKeySystemConfiguration`
+ * @param {Object} prevConfiguration - The `MediaKeySystemConfiguration` that is
+ * relied on util now.
+ * @returns {boolean} - `true` if `newConfiguration` is compatible with
+ * `prevConfiguration`.
  */
-function checkCachedMediaKeySystemAccess(
-  keySystems: IKeySystemOption[],
-  askedConfiguration: MediaKeySystemConfiguration,
-  currentKeySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess,
-  currentKeySystemOptions: IKeySystemOption,
-): null | {
-  keySystemOptions: IKeySystemOption;
-  askedConfiguration: MediaKeySystemConfiguration;
-  keySystemAccess: MediaKeySystemAccess | ICustomMediaKeySystemAccess;
-} {
-  const mksConfiguration = currentKeySystemAccess.getConfiguration();
-  if (shouldRenewMediaKeySystemAccess() || isNullOrUndefined(mksConfiguration)) {
-    return null;
+function isNewMediaKeySystemConfigurationCompatibleWithPreviousOne(
+  newConfiguration: MediaKeySystemConfiguration,
+  prevConfiguration: MediaKeySystemConfiguration,
+): boolean {
+  if (newConfiguration.label !== prevConfiguration.label) {
+    return false;
   }
 
-  const firstCompatibleOption = keySystems.filter((ks) => {
-    // TODO Do it with MediaKeySystemAccess.prototype.keySystem instead
-    if (ks.type !== currentKeySystemOptions.type) {
-      return false;
-    }
-
-    if (
-      (!isNullOrUndefined(ks.persistentLicenseConfig) ||
-        ks.persistentState === "required") &&
-      mksConfiguration.persistentState !== "required"
-    ) {
-      return false;
-    }
-
-    if (
-      ks.distinctiveIdentifier === "required" &&
-      mksConfiguration.distinctiveIdentifier !== "required"
-    ) {
-      return false;
-    }
-
-    return true;
-  })[0];
-
-  if (firstCompatibleOption !== undefined) {
-    return {
-      keySystemOptions: firstCompatibleOption,
-      keySystemAccess: currentKeySystemAccess,
-      askedConfiguration,
-    };
+  const prevDistinctiveIdentifier = prevConfiguration.distinctiveIdentifier ?? "optional";
+  const newDistinctiveIdentifier = newConfiguration.distinctiveIdentifier ?? "optional";
+  if (prevDistinctiveIdentifier !== newDistinctiveIdentifier) {
+    return false;
   }
-  return null;
+
+  const prevPersistentState = prevConfiguration.persistentState ?? "optional";
+  const newPersistentState = newConfiguration.persistentState ?? "optional";
+  if (prevPersistentState !== newPersistentState) {
+    return false;
+  }
+
+  const prevInitDataTypes = prevConfiguration.initDataTypes ?? [];
+  const newInitDataTypes = newConfiguration.initDataTypes ?? [];
+  if (!isArraySubsetOf(newInitDataTypes, prevInitDataTypes)) {
+    return false;
+  }
+
+  const prevSessionTypes = prevConfiguration.sessionTypes ?? [];
+  const newSessionTypes = newConfiguration.sessionTypes ?? [];
+  if (!isArraySubsetOf(newSessionTypes, prevSessionTypes)) {
+    return false;
+  }
+
+  for (const prop of ["audioCapabilities", "videoCapabilities"] as const) {
+    const newCapabilities = newConfiguration[prop] ?? [];
+    const prevCapabilities = prevConfiguration[prop] ?? [];
+    const wasFound = newCapabilities.every((n) => {
+      for (let i = 0; i < prevCapabilities.length; i++) {
+        const prevCap = prevCapabilities[i];
+        if (
+          (prevCap.robustness ?? "") === (n.robustness ?? "") ||
+          (prevCap.encryptionScheme ?? null) === (n.encryptionScheme ?? null) ||
+          (prevCap.robustness ?? "") === (n.robustness ?? "")
+        ) {
+          return true;
+        }
+      }
+      return false;
+    });
+    if (!wasFound) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -168,13 +186,23 @@ function buildKeySystemConfigurations(
   keySystemTypeInfo: IKeySystemType,
 ): MediaKeySystemConfiguration[] {
   const { keyName, keyType, keySystemOptions: keySystem } = keySystemTypeInfo;
-  const sessionTypes = ["temporary"];
+  let sessionTypes: string[];
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";
 
-  if (!isNullOrUndefined(keySystem.persistentLicenseConfig)) {
+  if (Array.isArray(keySystem.wantedSessionTypes)) {
+    sessionTypes = keySystem.wantedSessionTypes;
+    if (
+      arrayIncludes(keySystem.wantedSessionTypes, "persistent-license") &&
+      !isNullOrUndefined(keySystem.persistentLicenseConfig)
+    ) {
+      persistentState = "required";
+    }
+  } else if (!isNullOrUndefined(keySystem.persistentLicenseConfig)) {
     persistentState = "required";
-    sessionTypes.push("persistent-license");
+    sessionTypes = ["persistent-license"];
+  } else {
+    sessionTypes = ["temporary"];
   }
 
   if (!isNullOrUndefined(keySystem.persistentState)) {
@@ -390,43 +418,7 @@ export default function getMediaKeySystemAccess(
   cancelSignal: CancellationSignal,
 ): Promise<IFoundMediaKeySystemAccessEvent> {
   log.info("DRM: Searching for compatible MediaKeySystemAccess");
-  const currentState = MediaKeysInfosStore.getState(mediaElement);
-  if (currentState !== null) {
-    if (eme.implementation === currentState.emeImplementation.implementation) {
-      // Fast way to find a compatible keySystem if the currently loaded
-      // one as exactly the same compatibility options.
-      const cachedKeySystemAccess = checkCachedMediaKeySystemAccess(
-        keySystemsConfigs,
-        currentState.askedConfiguration,
-        currentState.mediaKeySystemAccess,
-        currentState.keySystemOptions,
-      );
-      if (cachedKeySystemAccess !== null) {
-        log.info("DRM: Found cached compatible keySystem");
-        return Promise.resolve({
-          type: "reuse-media-key-system-access" as const,
-          value: {
-            mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
-            askedConfiguration: cachedKeySystemAccess.askedConfiguration,
-            options: cachedKeySystemAccess.keySystemOptions,
-            codecSupport: extractCodecSupportListFromConfiguration(
-              cachedKeySystemAccess.askedConfiguration,
-              cachedKeySystemAccess.keySystemAccess.getConfiguration(),
-            ),
-          },
-        });
-      }
-    }
-  }
-
-  /**
-   * Array of set keySystems for this content.
-   * Each item of this array is an object containing the following keys:
-   *   - keyName {string}: keySystem canonical name (e.g. "widevine")
-   *   - keyType {string}: keySystem type (e.g. "com.widevine.alpha")
-   *   - keySystem {Object}: the original keySystem object
-   * @type {Array.<Object>}
-   */
+  /** Array of set keySystems for this content. */
   const keySystemsType: IKeySystemType[] = keySystemsConfigs.reduce(
     (arr: IKeySystemType[], keySystemOptions) => {
       const { EME_KEY_SYSTEMS } = config.getCurrent();
@@ -489,8 +481,37 @@ export default function getMediaKeySystemAccess(
     );
 
     let keySystemAccess;
+    const currentState = await MediaKeysAttacher.getAttachedMediaKeysState(mediaElement);
     for (let configIdx = 0; configIdx < keySystemConfigurations.length; configIdx++) {
       const keySystemConfiguration = keySystemConfigurations[configIdx];
+
+      // Check if the current `MediaKeySystemAccess` created cannot be reused here
+      if (
+        currentState !== null &&
+        !shouldRenewMediaKeySystemAccess() &&
+        // TODO: Do it with MediaKeySystemAccess.prototype.keySystem instead?
+        keyType === currentState.mediaKeySystemAccess.keySystem &&
+        eme.implementation === currentState.emeImplementation.implementation &&
+        isNewMediaKeySystemConfigurationCompatibleWithPreviousOne(
+          keySystemConfiguration,
+          currentState.askedConfiguration,
+        )
+      ) {
+        log.info("DRM: Found cached compatible keySystem");
+        return Promise.resolve({
+          type: "reuse-media-key-system-access" as const,
+          value: {
+            mediaKeySystemAccess: currentState.mediaKeySystemAccess,
+            askedConfiguration: currentState.askedConfiguration,
+            options: keySystemOptions,
+            codecSupport: extractCodecSupportListFromConfiguration(
+              currentState.askedConfiguration,
+              currentState.mediaKeySystemAccess.getConfiguration(),
+            ),
+          },
+        });
+      }
+
       try {
         keySystemAccess = await testKeySystem(keyType, [keySystemConfiguration]);
         log.info("DRM: Found compatible keysystem", keyType, index + 1);
@@ -548,4 +569,19 @@ export async function testKeySystem(
     }
   }
   return keySystemAccess;
+}
+
+/**
+ * Returns `true` if `arr1`'s values are entirely contained in `arr2`.
+ * @param {string} arr1
+ * @param {string} arr2
+ * @return {boolean}
+ */
+function isArraySubsetOf(arr1: string[], arr2: string[]): boolean {
+  for (let i = 0; i < arr1.length; i++) {
+    if (!arrayIncludes(arr2, arr1[i])) {
+      return false;
+    }
+  }
+  return true;
 }

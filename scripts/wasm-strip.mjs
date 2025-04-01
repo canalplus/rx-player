@@ -152,7 +152,7 @@ function onFatalError(err, tmpName) {
   if (tmpName !== undefined) {
     try {
       unlinkSync(tmpName);
-    } catch (err) {
+    } catch (_err) {
       console.error("Error: Could not remove temporary file:", tmpName);
     }
   }
@@ -359,7 +359,7 @@ async function getTmpName(fileName) {
       tmpFileName = fileName + ".tmp" + (i === 1 ? "" : `_${i}`);
       await access(tmpFileName);
       i++;
-    } catch (e) {
+    } catch (_e) {
       return tmpFileName;
     }
   }

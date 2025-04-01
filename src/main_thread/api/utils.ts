@@ -30,7 +30,6 @@ import type { CancellationSignal } from "../../utils/task_canceller";
 import type { ContentInitializer, IStallingSituation } from "../init";
 
 /**
- * @param {HTMLMediaElement} mediaElement
  * @param {Object} playbackObserver - Observes playback conditions on
  * `mediaElement`.
  * @param {function} onSeeking - Callback called when a seeking operation starts
@@ -41,13 +40,12 @@ import type { ContentInitializer, IStallingSituation } from "../init";
  * remove all listeners this function has registered.
  */
 export function emitSeekEvents(
-  mediaElement: IMediaElement | null,
   playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
   onSeeking: () => void,
   onSeeked: () => void,
   cancelSignal: CancellationSignal,
 ): void {
-  if (cancelSignal.isCancelled() || mediaElement === null) {
+  if (cancelSignal.isCancelled()) {
     return;
   }
 

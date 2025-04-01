@@ -349,6 +349,25 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   /**
+   * Returns the `duration` of each segment in the context of its Manifest (i.e.
+   * as the Manifest anounces them, actual segment duration may be different due
+   * to approximations), in seconds.
+   *
+   * NOTE: we could here do a median or a mean but I chose to be lazy (and
+   * more performant) by returning the duration of the first element instead.
+   * As `isPrecize` is `false`, the rest of the code should be notified that
+   * this is only an approximation.
+   * @returns {number}
+   */
+  getTargetSegmentDuration(): { duration: number; isPrecize: boolean } | undefined {
+    const { duration, timescale } = this._index;
+    return {
+      duration: duration / timescale,
+      isPrecize: true,
+    };
+  }
+
+  /**
    * @param {Object} newIndex
    */
   _replace(newIndex: ListRepresentationIndex): void {

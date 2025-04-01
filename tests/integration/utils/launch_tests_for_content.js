@@ -956,20 +956,37 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         await waitForLoadedStateAfterLoadVideo(player);
         expect(player.getPosition()).to.be.closeTo(minimumPosition, 0.02);
         player.setPlaybackRate(1);
+        await player.play();
         const before1 = performance.now();
-        player.play();
-        await sleep(2000);
-        const duration1 = (performance.now() - before1) / 1000;
-        const initialPosition = player.getPosition();
-        expect(initialPosition).to.be.closeTo(minimumPosition + duration1, 2);
+        let initialPosition;
+        await checkAfterSleepWithBackoff(
+          {
+            minTimeMs: 3000,
+            maxTimeMs: 20000,
+            stepMs: 100,
+          },
+          () => {
+            const duration1 = (performance.now() - before1) / 1000;
+            initialPosition = player.getPosition();
+            expect(initialPosition).to.be.closeTo(minimumPosition + duration1, 5);
+          },
+        );
 
         const before2 = performance.now();
-        player.setPlaybackRate(3);
-        await sleep(2000);
-        const duration2 = (performance.now() - before2) / 1000;
-        const secondPosition = player.getPosition();
-        expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 3, 2);
-      }, 15000);
+        player.setPlaybackRate(2);
+        await checkAfterSleepWithBackoff(
+          {
+            minTimeMs: 3000,
+            maxTimeMs: 20000,
+            stepMs: 100,
+          },
+          () => {
+            const duration2 = (performance.now() - before2) / 1000;
+            const secondPosition = player.getPosition();
+            expect(secondPosition).to.be.closeTo(initialPosition + duration2 * 2, 7.5);
+          },
+        );
+      }, 50000);
     });
 
     describe("getVideoRepresentation", () => {

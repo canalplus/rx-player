@@ -29,7 +29,7 @@ import probeMediaConfiguration from "./probeMediaConfiguration";
 /**
  * Probe configuration and get status from result.
  * @param {Object} config
- * @param {Array.<Object>} browserAPIS
+ * @param {Array.<Object>} browserAPIS
  * @returns {Promise.<string>}
  */
 function getStatusFromConfiguration(

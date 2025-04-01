@@ -1,5 +1,64 @@
 # Changelog
 
+## v4.3.0
+
+### Features
+
+- Add the possibility to rely on `ManagedMediaSource` on iOS devices [#1562]
+- DASH: Implement DASH Thumbnail tracks by adding `renderThumbnail` and
+  `getAvailableThumbnailTracks` API [#1496]
+- DRM: Add `keySystems[].wantedSessionTypes` `loadVideo` option to also initialize a DRM
+  config for future contents, not just the current one [#1604]
+- Add `experimentalOptions.enableRepresentationAvoidance` option to `loadVideo` to enable
+  our new Representation avoidance mechanism [#1523]
+
+### Bug fixes
+
+- Tracks API do not return unplayable representations by default [#1599]
+- MULTI_THREAD: Fix `onmessageerror` being undefined on older devices [#1585]
+- MULTI_THREAD: Do not attempt to play audio and/or video media data in a Worker whose
+  codec is not supported specifically in a Worker context (previous behavior led to some
+  fatal errors on Edge with HEVC support) [#1664]
+- Compat: On "FREEZING" try to un-freeze regardless of if the wanted position was reached
+  to fix a remaining Tizen (Samsung) infinite rebuffering issue [#1586]
+- MULTI_THREAD: Fix error not being thrown on manifest update [#1653]
+- DRM: check that ec-3 codec is supported when encrypted [#1657]
+- DRM: fix typo which prevented `MediaKeys` reusage on some devices including desktop
+  browsers [#1615]
+- DRM: Only ask for `"persistent-license"` `MediaKeySession` (and not also for
+  `"temporary"` license) when only a `keySystems[].persistentLicenseConfig` is
+  communicated [#1604]
+- DRM: Fix reusage of some `keySystems[]` option changing when reusing a
+  `MediaKeySystemAccess` with a different `keySystems[]` configuration [#1616]
+- DRM: Fix `KEY_UPDATE_ERROR` which was mistakenly inheriting the code `KEY_LOAD_ERROR`
+  [#1670]
+- Fix minor memory leak when switching RepresentationStream through ABR [#1665]
+- On Tizen, fix infinite loading that may occur in some condition if both the audio and
+  video segments have a gap at the expected initial position [#1637]
+- fix rare infinite rebuffering issues that may happen when updating tracks in a
+  `newAvailablePeriods` event [#1643]
+- MULTI_THREAD: Fix potential leak when cleaning now inexistant Period [#1644]
+
+### Other improvements
+
+- Compat: Limit long "FREEZING" issues on Tizen (samsung) by awaiting for browser action
+  before seeking ourselves over a discontinuity [#1587]
+- DRM: Only reuse cached `MediaKeySystemAccess` if none is more wanted for the current
+  content [#1591]
+- MULTI_THREAD: Some `LOADING` and `RELOADING` attempts may have taken more time than
+  necessary due to a wrong "initial Period prediction", this is fixed [#1628]
+- Improve `FREEZING` work-arounds by reloading if our initial strategies do not give a
+  result [#1523]
+- DRM: Reuse cache even if key system type given in API is not the same [#1611]
+- DEBUG_ELEMENT: Add buffer size estimate to debug buffer content graph [#1558]
+- DEBUG_ELEMENT: Add `hdr` information to video Representation [#1583]
+- Set LogFormat to `full` on RxPlayer's debug mode [#1625]
+- Avoid error log when stopping a stream with a pending `BufferGarbageCollector` buffer
+  removal [#1684]
+- tests: Our performance-regression tests now run on all RxPlayer updates to better
+  protect against performance regressions [#1630]
+- CI/tests: CI integration tests on Edge and windows [#1621]
+
 ## v4.2.0 (2024-10-17)
 
 ### Features
@@ -26,7 +85,8 @@
 - Fix rare cases where the active Period would not be advertised by the RxPlayer [#1502]
 - Actually trigger a `BUFFER_FULL_ERROR` when `QuotaExceededError` mitigations after
   `appendBuffer` MSE calls don't work #1546
-- Fix issues when handling a `QuotaExceededError` after an `appendBuffer` MSE call [#1546, #1559]
+- Fix issues when handling a `QuotaExceededError` after an `appendBuffer` MSE call [#1546,
+  #1559]
 - Directfile/Compat: Fix `startAt.fromLastPosition` handling on Safari when playing
   directfile contents [#1548]
 - DRM/Compat: Re-create MediaKeys for each content on Philips' NETTV, and `KSTB40XX`
@@ -72,7 +132,8 @@
 
 ### Bug fixes
 
-- DASH: support absolute path in URL resolution with RFC 3986 implementation [#1443, #1440]
+- DASH: support absolute path in URL resolution with RFC 3986 implementation [#1443,
+  #1440]
 - DASH: fix cases of blinking subtitles [#1416, #1424]
 - Fix precision issues of the `maxVideoBufferSize` API [#1421]
 - DASH: Prevent multiple loading of the same segment for some DASH low-latency contents
@@ -86,7 +147,8 @@
 - MULTI_THREAD: Perform several actions so that our `MULTI_THREAD` experimental feature
   now works on older browser and on the Playstation 4 [#1401, #1402]
 - Directfile/Compat: On safari on iOS no longer stay stuck in buffering when `autoPlay` is
-  set to `false` or not set and the video element has the attribute "playsinline" [#1408, #1390]
+  set to `false` or not set and the video element has the attribute "playsinline" [#1408,
+  #1390]
 - Directfile/compat: On safari mobile in directfile mode, do not stay in an infinite
   `LOADING` state if the `duration` is set to `NaN` (rare issue in a normally-unsupported
   multiple RxPlayer-per-media-element scenario) [#1393]
@@ -725,7 +787,8 @@
 - TypeScript: Add IBitrateEstimate, IPositionUpdate and IPlayerState types to the exported
   types [#1084]
 - Remove dependency on pinkie's promise ponyfill [#1058, #1090]
-- tests: add performance tests, to better catch and avoid performance regressions [#1053, #1062]
+- tests: add performance tests, to better catch and avoid performance regressions [#1053,
+  #1062]
 - DRM: Refactor DRM logic for better maintainability. DRM-linked logs are now prefixed by
   `DRM:` instead of `EME:` like previously [#1042]
 
@@ -869,7 +932,8 @@
 - Update used RxJS version to 7.0.0, which might bring with it a smaller size and better
   performances [#954]
 - demo: remove Chart.js dependency (we found that its new API documentation and errors
-  were too impenetrable) and replace the "Buffer Size" chart by a homemade one. [#955, #957]
+  were too impenetrable) and replace the "Buffer Size" chart by a homemade one. [#955,
+  #957]
 
 ## v3.24.0 (2021-04-01)
 
@@ -877,7 +941,8 @@
 
 - Add `inbandEvent` event for when an event is encountered in a media segment [#892]
 - DRM: Add `singleLicensePer` `keySystems` option to be able to signal in advance that the
-  current content has a single license, even if it has multiple encryption keys [#863, #904]
+  current content has a single license, even if it has multiple encryption keys [#863,
+  #904]
 - DRM: Add `keySystems[].licenseStorage.disableRetroCompatibility` boolean to unlock
   optimizations when compatibility with EME sessions persisted in older RxPlayer versions
   is not important [#919]

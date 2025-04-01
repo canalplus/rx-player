@@ -16,10 +16,10 @@
 
 import config from "../../../config";
 import type { ISegmentPipeline, ITransportPipelines } from "../../../transports";
-import type { CancellationSignal } from "../../../utils/task_canceller";
+import type SharedReference from "../../../utils/reference";
 import type CmcdDataBuilder from "../../cmcd";
 import type { IBufferType } from "../../segment_sinks";
-import CdnPrioritizer from "../cdn_prioritizer";
+import type CdnPrioritizer from "../cdn_prioritizer";
 import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher";
 import type { ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher";
 import createSegmentFetcher, { getSegmentFetcherRequestOptions } from "./segment_fetcher";
@@ -60,17 +60,16 @@ export default class SegmentQueueCreator {
 
   /**
    * @param {Object} transport
+   * @param {Object} cdnPrioritizer
+   * @param {Object|null} cmcdDataBuilder
    * @param {Object} options
-   * @param {Object} cancelSignal
    */
   constructor(
     transport: ITransportPipelines,
+    cdnPrioritizer: CdnPrioritizer,
     cmcdDataBuilder: CmcdDataBuilder | null,
     options: ISegmentQueueCreatorBackoffOptions,
-    cancelSignal: CancellationSignal,
   ) {
-    const cdnPrioritizer = new CdnPrioritizer(cancelSignal);
-
     const { MIN_CANCELABLE_PRIORITY, MAX_HIGH_PRIORITY_LEVEL } = config.getCurrent();
     this._transport = transport;
     this._prioritizer = new TaskPrioritizer({
@@ -89,6 +88,8 @@ export default class SegmentQueueCreator {
    * @param {string} bufferType - The type of buffer concerned (e.g. "audio",
    * "video", etc.)
    * @param {Object} eventListeners
+   * @param {Object} isMediaSegmentQueueInterrupted - Wheter the downloading of media
+   * segment should be interrupted or not.
    * @returns {Object} - `SegmentQueue`, which is an abstraction allowing to
    * perform a queue of segment requests for a given media type (here defined by
    * `bufferType`) with associated priorities.
@@ -96,6 +97,7 @@ export default class SegmentQueueCreator {
   public createSegmentQueue(
     bufferType: IBufferType,
     eventListeners: ISegmentFetcherLifecycleCallbacks,
+    isMediaSegmentQueueInterrupted: SharedReference<boolean>,
   ): SegmentQueue<unknown> {
     const requestOptions = getSegmentFetcherRequestOptions(this._backoffOptions);
     const pipelines = this._transport[bufferType];
@@ -113,7 +115,7 @@ export default class SegmentQueueCreator {
       this._prioritizer,
       segmentFetcher,
     );
-    return new SegmentQueue(prioritizedSegmentFetcher);
+    return new SegmentQueue(prioritizedSegmentFetcher, isMediaSegmentQueueInterrupted);
   }
 }
 
