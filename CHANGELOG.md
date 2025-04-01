@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v3.33.5-dev.2025040100
+## v3.33.5
 
 ### Bug fixes
 
