@@ -180,7 +180,7 @@ var isA1KStb40xx = false;
     isPanasonic = true;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
     isXbox = true;
-  } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx")) {
+  } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx") !== -1) {
     isA1KStb40xx = true;
   }
 })();
@@ -4139,7 +4139,7 @@ function getEmeApiImplementation(preferredApiType) {
             initDataTypes: ["cenc"],
             distinctiveIdentifier: "not-allowed",
             persistentState: "required",
-            sessionTypes: ["temporary", "persistent-license"]
+            sessionTypes: ["persistent-license"]
           };
           if (videoCapabilities !== undefined) {
             keySystemConfigurationResponse.videoCapabilities = videoCapabilities;
@@ -5116,38 +5116,71 @@ var flat_map = __webpack_require__(3262);
 
 
 /**
- * @param {Array.<Object>} keySystems
- * @param {Object} askedConfiguration
- * @param {MediaKeySystemAccess} currentKeySystemAccess
- * @param {Object} currentKeySystemOptions
- * @returns {null|Object}
+ * Takes a `newConfiguration` `MediaKeySystemConfiguration`, that is intended
+ * for the creation of a `MediaKeySystemAccess`, and a `prevConfiguration`
+ * `MediaKeySystemConfiguration`, that was the one used at creation of the
+ * current `MediaKeySystemAccess`.
+ *
+ * This function will then return `true` if it determined that the new
+ * configuration is conceptually compatible with the one used before, and
+ * `false` otherwise.
+ * @param {Object} newConfiguration - New wanted `MediaKeySystemConfiguration`
+ * @param {Object} prevConfiguration - The `MediaKeySystemConfiguration` that is
+ * relied on util now.
+ * @returns {boolean} - `true` if `newConfiguration` is compatible with
+ * `prevConfiguration`.
  */
-function checkCachedMediaKeySystemAccess(keySystems, askedConfiguration, currentKeySystemAccess, currentKeySystemOptions) {
-  var mksConfiguration = currentKeySystemAccess.getConfiguration();
-  if (shouldRenewMediaKeySystemAccess() || mksConfiguration == null) {
-    return null;
+function isNewMediaKeySystemConfigurationCompatibleWithPreviousOne(newConfiguration, prevConfiguration) {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+  if (newConfiguration.label !== prevConfiguration.label) {
+    return false;
   }
-  var firstCompatibleOption = keySystems.filter(function (ks) {
-    // TODO Do it with MediaKeySystemAccess.prototype.keySystem instead
-    if (ks.type !== currentKeySystemOptions.type) {
-      return false;
-    }
-    if ((ks.persistentLicense === true || ks.persistentStateRequired === true) && mksConfiguration.persistentState !== "required") {
-      return false;
-    }
-    if (ks.distinctiveIdentifierRequired === true && mksConfiguration.distinctiveIdentifier !== "required") {
-      return false;
-    }
-    return true;
-  })[0];
-  if (firstCompatibleOption != null) {
-    return {
-      keySystemOptions: firstCompatibleOption,
-      keySystemAccess: currentKeySystemAccess,
-      askedConfiguration: askedConfiguration
-    };
+  var prevDistinctiveIdentifier = (_a = prevConfiguration.distinctiveIdentifier) !== null && _a !== void 0 ? _a : "optional";
+  var newDistinctiveIdentifier = (_b = newConfiguration.distinctiveIdentifier) !== null && _b !== void 0 ? _b : "optional";
+  if (prevDistinctiveIdentifier !== newDistinctiveIdentifier) {
+    return false;
   }
-  return null;
+  var prevPersistentState = (_c = prevConfiguration.persistentState) !== null && _c !== void 0 ? _c : "optional";
+  var newPersistentState = (_d = newConfiguration.persistentState) !== null && _d !== void 0 ? _d : "optional";
+  if (prevPersistentState !== newPersistentState) {
+    return false;
+  }
+  var prevInitDataTypes = (_e = prevConfiguration.initDataTypes) !== null && _e !== void 0 ? _e : [];
+  var newInitDataTypes = (_f = newConfiguration.initDataTypes) !== null && _f !== void 0 ? _f : [];
+  if (!isArraySubsetOf(newInitDataTypes, prevInitDataTypes)) {
+    return false;
+  }
+  var prevSessionTypes = (_g = prevConfiguration.sessionTypes) !== null && _g !== void 0 ? _g : [];
+  var newSessionTypes = (_h = newConfiguration.sessionTypes) !== null && _h !== void 0 ? _h : [];
+  if (!isArraySubsetOf(newSessionTypes, prevSessionTypes)) {
+    return false;
+  }
+  var _loop = function _loop() {
+      var prop = _arr[_i];
+      var newCapabilities = (_j = newConfiguration[prop]) !== null && _j !== void 0 ? _j : [];
+      var prevCapabilities = (_k = prevConfiguration[prop]) !== null && _k !== void 0 ? _k : [];
+      var wasFound = newCapabilities.every(function (n) {
+        var _a, _b, _c, _d, _e, _f;
+        for (var i = 0; i < prevCapabilities.length; i++) {
+          var prevCap = prevCapabilities[i];
+          if (((_a = prevCap.robustness) !== null && _a !== void 0 ? _a : "") === ((_b = n.robustness) !== null && _b !== void 0 ? _b : "") || ((_c = prevCap.encryptionScheme) !== null && _c !== void 0 ? _c : null) === ((_d = n.encryptionScheme) !== null && _d !== void 0 ? _d : null) || ((_e = prevCap.robustness) !== null && _e !== void 0 ? _e : "") === ((_f = n.robustness) !== null && _f !== void 0 ? _f : "")) {
+            return true;
+          }
+        }
+        return false;
+      });
+      if (!wasFound) {
+        return {
+          v: false
+        };
+      }
+    },
+    _ret;
+  for (var _i = 0, _arr = ["audioCapabilities", "videoCapabilities"]; _i < _arr.length; _i++) {
+    _ret = _loop();
+    if (_ret) return _ret.v;
+  }
+  return true;
 }
 /**
  * Find key system canonical name from key system type.
@@ -5157,8 +5190,8 @@ function checkCachedMediaKeySystemAccess(keySystems, askedConfiguration, current
 function findKeySystemCanonicalName(ksType) {
   var _config$getCurrent = config/* default */.A.getCurrent(),
     EME_KEY_SYSTEMS = _config$getCurrent.EME_KEY_SYSTEMS;
-  for (var _i = 0, _Object$keys = Object.keys(EME_KEY_SYSTEMS); _i < _Object$keys.length; _i++) {
-    var ksName = _Object$keys[_i];
+  for (var _i2 = 0, _Object$keys = Object.keys(EME_KEY_SYSTEMS); _i2 < _Object$keys.length; _i2++) {
+    var ksName = _Object$keys[_i2];
     if ((0,array_includes/* default */.A)(EME_KEY_SYSTEMS[ksName], ksType)) {
       return ksName;
     }
@@ -5183,7 +5216,7 @@ function buildKeySystemConfigurations(ksName, ksType, keySystem) {
   var distinctiveIdentifier = "optional";
   if (keySystem.persistentLicense === true) {
     persistentState = "required";
-    sessionTypes.push("persistent-license");
+    sessionTypes = ["persistent-license"];
   }
   if (keySystem.persistentStateRequired === true) {
     persistentState = "required";
@@ -5297,33 +5330,7 @@ function buildKeySystemConfigurations(ksName, ksType, keySystem) {
  */
 function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) {
   log/* default */.A.info("DRM: Searching for compatible MediaKeySystemAccess");
-  var currentState = media_keys_infos_store/* default */.A.getState(mediaElement);
-  if (currentState !== null) {
-    if (eme.implementation === currentState.emeImplementation.implementation) {
-      // Fast way to find a compatible keySystem if the currently loaded
-      // one as exactly the same compatibility options.
-      var cachedKeySystemAccess = checkCachedMediaKeySystemAccess(keySystemsConfigs, currentState.askedConfiguration, currentState.mediaKeySystemAccess, currentState.keySystemOptions);
-      if (cachedKeySystemAccess !== null) {
-        log/* default */.A.info("DRM: Found cached compatible keySystem");
-        return Promise.resolve({
-          type: "reuse-media-key-system-access",
-          value: {
-            mediaKeySystemAccess: cachedKeySystemAccess.keySystemAccess,
-            askedConfiguration: cachedKeySystemAccess.askedConfiguration,
-            options: cachedKeySystemAccess.keySystemOptions
-          }
-        });
-      }
-    }
-  }
-  /**
-   * Array of set keySystems for this content.
-   * Each item of this array is an object containing the following keys:
-   *   - keyName {string}: keySystem canonical name (e.g. "widevine")
-   *   - keyType {string}: keySystem type (e.g. "com.widevine.alpha")
-   *   - keySystem {Object}: the original keySystem object
-   * @type {Array.<Object>}
-   */
+  /** Array of set keySystems for this content. */
   var keySystemsType = keySystemsConfigs.reduce(function (arr, keySystemOptions) {
     var _config$getCurrent3 = config/* default */.A.getCurrent(),
       EME_KEY_SYSTEMS = _config$getCurrent3.EME_KEY_SYSTEMS;
@@ -5365,7 +5372,7 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
   }
   function _recursivelyTestKeySystems() {
     _recursivelyTestKeySystems = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee(index) {
-      var _keySystemsType$index, keyName, keyType, keySystemOptions, keySystemConfigurations, keySystemAccess, configIdx, keySystemConfiguration;
+      var chosenType, keyName, keyType, keySystemOptions, keySystemConfigurations, keySystemAccess, currentState, configIdx, keySystemConfiguration;
       return regenerator_default().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -5381,20 +5388,38 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
             }
             throw new Error("requestMediaKeySystemAccess is not implemented in your browser.");
           case 4:
-            _keySystemsType$index = keySystemsType[index], keyName = _keySystemsType$index.keyName, keyType = _keySystemsType$index.keyType, keySystemOptions = _keySystemsType$index.keySystemOptions;
+            chosenType = keySystemsType[index];
+            keyName = chosenType.keyName, keyType = chosenType.keyType, keySystemOptions = chosenType.keySystemOptions;
             keySystemConfigurations = buildKeySystemConfigurations(keyName, keyType, keySystemOptions);
             log/* default */.A.debug("DRM: Request keysystem access " + keyType + "," + (index + 1 + " of " + keySystemsType.length));
+            currentState = media_keys_infos_store/* default */.A.getState(mediaElement);
             configIdx = 0;
-          case 8:
+          case 10:
             if (!(configIdx < keySystemConfigurations.length)) {
-              _context.next = 26;
+              _context.next = 31;
               break;
             }
-            keySystemConfiguration = keySystemConfigurations[configIdx];
-            _context.prev = 10;
-            _context.next = 13;
+            keySystemConfiguration = keySystemConfigurations[configIdx]; // Check if the current `MediaKeySystemAccess` created cannot be reused here
+            if (!(currentState !== null && !shouldRenewMediaKeySystemAccess() &&
+            // TODO: Do it with MediaKeySystemAccess.prototype.keySystem instead?
+            keyType === currentState.mediaKeySystemAccess.keySystem && eme.implementation === currentState.emeImplementation.implementation && isNewMediaKeySystemConfigurationCompatibleWithPreviousOne(keySystemConfiguration, currentState.askedConfiguration))) {
+              _context.next = 15;
+              break;
+            }
+            log/* default */.A.info("DRM: Found cached compatible keySystem");
+            return _context.abrupt("return", Promise.resolve({
+              type: "reuse-media-key-system-access",
+              value: {
+                mediaKeySystemAccess: currentState.mediaKeySystemAccess,
+                askedConfiguration: currentState.askedConfiguration,
+                options: keySystemOptions
+              }
+            }));
+          case 15:
+            _context.prev = 15;
+            _context.next = 18;
             return testKeySystem(keyType, [keySystemConfiguration]);
-          case 13:
+          case 18:
             keySystemAccess = _context.sent;
             log/* default */.A.info("DRM: Found compatible keysystem", keyType, index + 1);
             return _context.abrupt("return", {
@@ -5405,26 +5430,26 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
                 mediaKeySystemAccess: keySystemAccess
               }
             });
-          case 18:
-            _context.prev = 18;
-            _context.t0 = _context["catch"](10);
+          case 23:
+            _context.prev = 23;
+            _context.t0 = _context["catch"](15);
             log/* default */.A.debug("DRM: Rejected access to keysystem", keyType, index + 1, configIdx);
             if (!(cancelSignal.cancellationError !== null)) {
-              _context.next = 23;
+              _context.next = 28;
               break;
             }
             throw cancelSignal.cancellationError;
-          case 23:
+          case 28:
             configIdx++;
-            _context.next = 8;
+            _context.next = 10;
             break;
-          case 26:
+          case 31:
             return _context.abrupt("return", recursivelyTestKeySystems(index + 1));
-          case 27:
+          case 32:
           case "end":
             return _context.stop();
         }
-      }, _callee, null, [[10, 18]]);
+      }, _callee, null, [[15, 23]]);
     }));
     return _recursivelyTestKeySystems.apply(this, arguments);
   }
@@ -5441,6 +5466,12 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
 function testKeySystem(_x2, _x3) {
   return _testKeySystem.apply(this, arguments);
 }
+/**
+ * Returns `true` if `arr1`'s values are entirely contained in `arr2`.
+ * @param {string} arr1
+ * @param {string} arr2
+ * @return {boolean}
+ */
 function _testKeySystem() {
   _testKeySystem = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee2(keyType, keySystemConfigurations) {
     var keySystemAccess, mediaKeys, session, initData;
@@ -5481,6 +5512,14 @@ function _testKeySystem() {
     }, _callee2, null, [[4, 14]]);
   }));
   return _testKeySystem.apply(this, arguments);
+}
+function isArraySubsetOf(arr1, arr2) {
+  for (var i = 0; i < arr1.length; i++) {
+    if (!(0,array_includes/* default */.A)(arr2, arr1[i])) {
+      return false;
+    }
+  }
+  return true;
 }
 // EXTERNAL MODULE: ./src/parsers/containers/isobmff/get_box.ts
 var get_box = __webpack_require__(8797);
@@ -7904,21 +7943,46 @@ function SessionEventsListener(session, keySystemOptions, keySystem, callbacks, 
     var backoffOptions = getLicenseBackoffOptions(getLicenseConfig.retry);
     retryPromiseWithBackoff(function () {
       return runGetLicense(message, messageType);
-    }, backoffOptions, manualCanceller.signal).then(function (licenseObject) {
-      if (manualCanceller.isUsed()) {
-        return Promise.resolve();
-      }
-      if ((0,is_null_or_undefined/* default */.A)(licenseObject)) {
-        log/* default */.A.info("DRM: No license given, skipping session.update");
-      } else {
-        try {
-          return updateSessionWithMessage(session, licenseObject);
-        } catch (err) {
-          manualCanceller.cancel();
-          callbacks.onError(err);
-        }
-      }
-    })["catch"](function (err) {
+    }, backoffOptions, manualCanceller.signal).then( /*#__PURE__*/function () {
+      var _ref = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee(licenseObject) {
+        return regenerator_default().wrap(function _callee$(_context) {
+          while (1) switch (_context.prev = _context.next) {
+            case 0:
+              if (!manualCanceller.isUsed()) {
+                _context.next = 2;
+                break;
+              }
+              return _context.abrupt("return");
+            case 2:
+              if (!(0,is_null_or_undefined/* default */.A)(licenseObject)) {
+                _context.next = 6;
+                break;
+              }
+              log/* default */.A.info("DRM: No license given, skipping session.update");
+              _context.next = 15;
+              break;
+            case 6:
+              _context.prev = 6;
+              _context.next = 9;
+              return updateSessionWithMessage(session, licenseObject);
+            case 9:
+              _context.next = 15;
+              break;
+            case 11:
+              _context.prev = 11;
+              _context.t0 = _context["catch"](6);
+              manualCanceller.cancel();
+              callbacks.onError(_context.t0);
+            case 15:
+            case "end":
+              return _context.stop();
+          }
+        }, _callee, null, [[6, 11]]);
+      }));
+      return function (_x) {
+        return _ref.apply(this, arguments);
+      };
+    }(), function (err) {
       if (manualCanceller.isUsed()) {
         return;
       }
@@ -7941,7 +8005,7 @@ function SessionEventsListener(session, keySystemOptions, keySystem, callbacks, 
    * @param {Event} keyStatusesEvent
    * @returns {Promise}
    */
-  function handleKeyStatusesChangeEvent(_x) {
+  function handleKeyStatusesChangeEvent(_x2) {
     return _handleKeyStatusesChangeEvent.apply(this, arguments);
   }
   /**
@@ -7951,70 +8015,70 @@ function SessionEventsListener(session, keySystemOptions, keySystem, callbacks, 
    *   - call onKeyUpdate callback when the MediaKeyStatus of any key is updated
    */
   function _handleKeyStatusesChangeEvent() {
-    _handleKeyStatusesChangeEvent = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee2(keyStatusesEvent) {
+    _handleKeyStatusesChangeEvent = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee3(keyStatusesEvent) {
       var runOnKeyStatusesChangeCallback, _runOnKeyStatusesChangeCallback;
-      return regenerator_default().wrap(function _callee2$(_context2) {
-        while (1) switch (_context2.prev = _context2.next) {
+      return regenerator_default().wrap(function _callee3$(_context3) {
+        while (1) switch (_context3.prev = _context3.next) {
           case 0:
             _runOnKeyStatusesChangeCallback = function _runOnKeyStatusesChan2() {
-              _runOnKeyStatusesChangeCallback = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee() {
+              _runOnKeyStatusesChangeCallback = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee2() {
                 var ret, err;
-                return regenerator_default().wrap(function _callee$(_context) {
-                  while (1) switch (_context.prev = _context.next) {
+                return regenerator_default().wrap(function _callee2$(_context2) {
+                  while (1) switch (_context2.prev = _context2.next) {
                     case 0:
                       if (!manualCanceller.isUsed()) {
-                        _context.next = 2;
+                        _context2.next = 2;
                         break;
                       }
-                      return _context.abrupt("return");
+                      return _context2.abrupt("return");
                     case 2:
                       if (!(typeof keySystemOptions.onKeyStatusesChange === "function")) {
-                        _context.next = 24;
+                        _context2.next = 24;
                         break;
                       }
-                      _context.prev = 3;
-                      _context.next = 6;
+                      _context2.prev = 3;
+                      _context2.next = 6;
                       return keySystemOptions.onKeyStatusesChange(keyStatusesEvent, session);
                     case 6:
-                      ret = _context.sent;
+                      ret = _context2.sent;
                       if (!manualCanceller.isUsed()) {
-                        _context.next = 9;
+                        _context2.next = 9;
                         break;
                       }
-                      return _context.abrupt("return");
+                      return _context2.abrupt("return");
                     case 9:
-                      _context.next = 18;
+                      _context2.next = 18;
                       break;
                     case 11:
-                      _context.prev = 11;
-                      _context.t0 = _context["catch"](3);
+                      _context2.prev = 11;
+                      _context2.t0 = _context2["catch"](3);
                       if (!cancelSignal.isCancelled()) {
-                        _context.next = 15;
+                        _context2.next = 15;
                         break;
                       }
-                      return _context.abrupt("return");
+                      return _context2.abrupt("return");
                     case 15:
                       err = new encrypted_media_error/* default */.A("KEY_STATUS_CHANGE_ERROR", "Unknown `onKeyStatusesChange` error");
-                      if (!(0,is_null_or_undefined/* default */.A)(_context.t0) && (0,is_non_empty_string/* default */.A)(_context.t0.message)) {
-                        err.message = _context.t0.message;
+                      if (!(0,is_null_or_undefined/* default */.A)(_context2.t0) && (0,is_non_empty_string/* default */.A)(_context2.t0.message)) {
+                        err.message = _context2.t0.message;
                       }
                       throw err;
                     case 18:
                       if (!(0,is_null_or_undefined/* default */.A)(ret)) {
-                        _context.next = 22;
+                        _context2.next = 22;
                         break;
                       }
                       log/* default */.A.info("DRM: No license given, skipping session.update");
-                      _context.next = 24;
+                      _context2.next = 24;
                       break;
                     case 22:
-                      _context.next = 24;
+                      _context2.next = 24;
                       return updateSessionWithMessage(session, ret);
                     case 24:
                     case "end":
-                      return _context.stop();
+                      return _context2.stop();
                   }
-                }, _callee, null, [[3, 11]]);
+                }, _callee2, null, [[3, 11]]);
               }));
               return _runOnKeyStatusesChangeCallback.apply(this, arguments);
             };
@@ -8022,13 +8086,13 @@ function SessionEventsListener(session, keySystemOptions, keySystem, callbacks, 
               return _runOnKeyStatusesChangeCallback.apply(this, arguments);
             };
             log/* default */.A.info("DRM: keystatuseschange event received", session.sessionId);
-            _context2.next = 5;
+            _context3.next = 5;
             return Promise.all([runOnKeyStatusesChangeCallback(), Promise.resolve(checkAndHandleCurrentKeyStatuses())]);
           case 5:
           case "end":
-            return _context2.stop();
+            return _context3.stop();
         }
-      }, _callee2);
+      }, _callee3);
     }));
     return _handleKeyStatusesChangeEvent.apply(this, arguments);
   }
@@ -8123,7 +8187,7 @@ function formatGetLicenseError(error) {
  * @param {ArrayBuffer|TypedArray|null} message
  * @returns {Promise}
  */
-function updateSessionWithMessage(_x2, _x3) {
+function updateSessionWithMessage(_x3, _x4) {
   return _updateSessionWithMessage.apply(this, arguments);
 }
 /**
@@ -8134,30 +8198,30 @@ function updateSessionWithMessage(_x2, _x3) {
  * @extends Error
  */
 function _updateSessionWithMessage() {
-  _updateSessionWithMessage = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee3(session, message) {
+  _updateSessionWithMessage = (0,asyncToGenerator/* default */.A)( /*#__PURE__*/regenerator_default().mark(function _callee4(session, message) {
     var reason;
-    return regenerator_default().wrap(function _callee3$(_context3) {
-      while (1) switch (_context3.prev = _context3.next) {
+    return regenerator_default().wrap(function _callee4$(_context4) {
+      while (1) switch (_context4.prev = _context4.next) {
         case 0:
           log/* default */.A.info("DRM: Updating MediaKeySession with message");
-          _context3.prev = 1;
-          _context3.next = 4;
+          _context4.prev = 1;
+          _context4.next = 4;
           return session.update(message);
         case 4:
-          _context3.next = 10;
+          _context4.next = 10;
           break;
         case 6:
-          _context3.prev = 6;
-          _context3.t0 = _context3["catch"](1);
-          reason = _context3.t0 instanceof Error ? _context3.t0.toString() : "`session.update` failed";
+          _context4.prev = 6;
+          _context4.t0 = _context4["catch"](1);
+          reason = _context4.t0 instanceof Error ? _context4.t0.toString() : "`session.update` failed";
           throw new encrypted_media_error/* default */.A("KEY_UPDATE_ERROR", reason);
         case 10:
           log/* default */.A.info("DRM: MediaKeySession update succeeded.");
         case 11:
         case "end":
-          return _context3.stop();
+          return _context4.stop();
       }
-    }, _callee3, null, [[1, 6]]);
+    }, _callee4, null, [[1, 6]]);
   }));
   return _updateSessionWithMessage.apply(this, arguments);
 }
@@ -14961,6 +15025,7 @@ var WeakMapMemory = /*#__PURE__*/function () {
  */
 
 
+
 /**
  * Perform cleaning of the buffer according to the values set by the user
  * each time `playbackObserver` emits and each times the
@@ -14987,6 +15052,9 @@ function BufferGarbageCollector(_ref, cancellationSignal) {
   });
   function clean() {
     clearBuffer(segmentBuffer, lastPosition, maxBufferBehind.getValue(), maxBufferAhead.getValue(), cancellationSignal)["catch"](function (e) {
+      if (cancellationSignal.isCancelled() && task_canceller/* default */.Ay.isCancellationError(e)) {
+        return;
+      }
       var errMsg = e instanceof Error ? e.message : "Unknown error";
       log/* default */.A.error("Could not run BufferGarbageCollector:", errMsg);
     });
@@ -16679,12 +16747,6 @@ function _pushInitSegment() {
       while (1) switch (_context.prev = _context.next) {
         case 0:
           playbackObserver = _ref.playbackObserver, content = _ref.content, initSegmentUniqueId = _ref.initSegmentUniqueId, segment = _ref.segment, segmentData = _ref.segmentData, segmentBuffer = _ref.segmentBuffer;
-          if (!(cancelSignal.cancellationError !== null)) {
-            _context.next = 3;
-            break;
-          }
-          throw cancelSignal.cancellationError;
-        case 3:
           codec = content.representation.getMimeTypeString();
           data = {
             initSegmentUniqueId: initSegmentUniqueId,
@@ -16699,12 +16761,12 @@ function _pushInitSegment() {
             start: 0,
             end: 0
           }, content);
-          _context.next = 8;
+          _context.next = 6;
           return appendSegmentToBuffer(playbackObserver, segmentBuffer, {
             data: data,
             inventoryInfos: inventoryInfos
           }, cancelSignal);
-        case 8:
+        case 6:
           buffered = segmentBuffer.getBufferedRanges();
           return _context.abrupt("return", {
             content: content,
@@ -16712,7 +16774,7 @@ function _pushInitSegment() {
             buffered: buffered,
             segmentData: segmentData
           });
-        case 10:
+        case 8:
         case "end":
           return _context.stop();
       }
@@ -16763,12 +16825,6 @@ function _pushMediaSegment() {
           }
           return _context.abrupt("return", null);
         case 3:
-          if (!(cancelSignal.cancellationError !== null)) {
-            _context.next = 5;
-            break;
-          }
-          throw cancelSignal.cancellationError;
-        case 5:
           chunkData = parsedSegment.chunkData, chunkInfos = parsedSegment.chunkInfos, chunkOffset = parsedSegment.chunkOffset, chunkSize = parsedSegment.chunkSize, appendWindow = parsedSegment.appendWindow;
           codec = content.representation.getMimeTypeString();
           _config$getCurrent = config/* default */.A.getCurrent(), APPEND_WINDOW_SECURITIES = _config$getCurrent.APPEND_WINDOW_SECURITIES; // Cutting exactly at the start or end of the appendWindow can lead to
@@ -16797,12 +16853,12 @@ function _pushMediaSegment() {
             start: estimatedStart,
             end: estimatedEnd
           }, content);
-          _context.next = 18;
+          _context.next = 16;
           return appendSegmentToBuffer(playbackObserver, segmentBuffer, {
             data: data,
             inventoryInfos: inventoryInfos
           }, cancelSignal);
-        case 18:
+        case 16:
           buffered = segmentBuffer.getBufferedRanges();
           return _context.abrupt("return", {
             content: content,
@@ -16810,7 +16866,7 @@ function _pushMediaSegment() {
             buffered: buffered,
             segmentData: chunkData
           });
-        case 20:
+        case 18:
         case "end":
           return _context.stop();
       }
@@ -16902,23 +16958,16 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
     drmSystemId = options.drmSystemId,
     fastSwitchThreshold = options.fastSwitchThreshold;
   var bufferType = adaptation.type;
-  /** `TaskCanceller` stopping ALL operations performed by the `RepresentationStream` */
-  var globalCanceller = new task_canceller/* default */.Ay();
-  globalCanceller.linkToSignal(parentCancelSignal);
-  /**
-   * `TaskCanceller` allowing to only stop segment loading and checking operations.
-   * This allows to stop only tasks linked to network resource usage, which is
-   * often a limited resource, while still letting buffer operations to finish.
-   */
-  var segmentsLoadingCanceller = new task_canceller/* default */.Ay();
-  segmentsLoadingCanceller.linkToSignal(globalCanceller.signal);
+  /** `TaskCanceller` stopping operations performed by the `RepresentationStream` */
+  var canceller = new task_canceller/* default */.Ay();
+  canceller.linkToSignal(parentCancelSignal);
   /** Saved initialization segment state for this representation. */
   var initSegmentState = {
     segment: representation.index.getInitSegment(),
     uniqueId: null,
     isLoaded: false
   };
-  globalCanceller.signal.register(function () {
+  canceller.signal.register(function () {
     // Free initialization segment if one has been declared
     if (initSegmentState.uniqueId !== null) {
       segmentBuffer.freeInitSegment(initSegmentState.uniqueId);
@@ -16928,7 +16977,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
   var lastSegmentQueue = new reference/* default */.A({
     initSegment: null,
     segmentQueue: []
-  }, segmentsLoadingCanceller.signal);
+  }, canceller.signal);
   /** If `true`, the current Representation has a linked initialization segment. */
   var hasInitSegment = initSegmentState.segment !== null;
   if (!hasInitSegment) {
@@ -16956,7 +17005,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
           content: content
         }, d);
       }));
-      if (globalCanceller.isUsed()) {
+      if (canceller.isUsed()) {
         return; // previous callback has stopped everything by side-effect
       }
     }
@@ -16964,10 +17013,10 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
   /** Will load every segments in `lastSegmentQueue` */
   var downloadingQueue = new DownloadingQueue(content, lastSegmentQueue, segmentFetcher, hasInitSegment);
   downloadingQueue.addEventListener("error", function (err) {
-    if (segmentsLoadingCanceller.signal.isCancelled()) {
+    if (canceller.signal.isCancelled()) {
       return; // ignore post requests-cancellation loading-related errors,
     }
-    globalCanceller.cancel(); // Stop every operations
+    canceller.cancel(); // Stop every operations
     callbacks.error(err);
   });
   downloadingQueue.addEventListener("parsedInitSegment", onParsedChunk);
@@ -16975,7 +17024,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
   downloadingQueue.addEventListener("emptyQueue", checkStatus);
   downloadingQueue.addEventListener("requestRetry", function (payload) {
     callbacks.warning(payload.error);
-    if (segmentsLoadingCanceller.signal.isCancelled()) {
+    if (canceller.signal.isCancelled()) {
       return; // If the previous callback led to loading operations being stopped, skip
     }
     var retriedSegment = payload.segment;
@@ -16989,29 +17038,29 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
   downloadingQueue.addEventListener("fullyLoadedSegment", function (segment) {
     segmentBuffer.endOfSegment((0,object_assign/* default */.A)({
       segment: segment
-    }, content), globalCanceller.signal)["catch"](onFatalBufferError);
+    }, content), canceller.signal)["catch"](onFatalBufferError);
   });
   downloadingQueue.start();
-  segmentsLoadingCanceller.signal.register(function () {
+  canceller.signal.register(function () {
     downloadingQueue.removeEventListener();
     downloadingQueue.stop();
   });
   playbackObserver.listen(checkStatus, {
     includeLastObservation: false,
-    clearSignal: segmentsLoadingCanceller.signal
+    clearSignal: canceller.signal
   });
-  content.manifest.addEventListener("manifestUpdate", checkStatus, segmentsLoadingCanceller.signal);
+  content.manifest.addEventListener("manifestUpdate", checkStatus, canceller.signal);
   bufferGoal.onUpdate(checkStatus, {
     emitCurrentValue: false,
-    clearSignal: segmentsLoadingCanceller.signal
+    clearSignal: canceller.signal
   });
   maxBufferSize.onUpdate(checkStatus, {
     emitCurrentValue: false,
-    clearSignal: segmentsLoadingCanceller.signal
+    clearSignal: canceller.signal
   });
   terminate.onUpdate(checkStatus, {
     emitCurrentValue: false,
-    clearSignal: segmentsLoadingCanceller.signal
+    clearSignal: canceller.signal
   });
   checkStatus();
   return;
@@ -17022,7 +17071,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
    */
   function checkStatus() {
     var _a, _b;
-    if (segmentsLoadingCanceller.isUsed()) {
+    if (canceller.isUsed()) {
       return; // Stop all buffer status checking if load operations are stopped
     }
     var observation = playbackObserver.getReference().getValue();
@@ -17063,7 +17112,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
         segmentQueue: []
       });
       lastSegmentQueue.finish();
-      segmentsLoadingCanceller.cancel();
+      canceller.cancel();
       callbacks.terminating();
       return;
     } else {
@@ -17083,7 +17132,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
       if (nextQueue.length === 0 && nextInit === null) {
         log/* default */.A.debug("Stream: No request left, terminate", bufferType);
         lastSegmentQueue.finish();
-        segmentsLoadingCanceller.cancel();
+        canceller.cancel();
         callbacks.terminating();
         return;
       }
@@ -17097,7 +17146,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
       hasFinishedLoading: status.hasFinishedLoading,
       neededSegments: status.neededSegments
     });
-    if (segmentsLoadingCanceller.signal.isCancelled()) {
+    if (canceller.signal.isCancelled()) {
       return; // previous callback has stopped loading operations by side-effect
     }
     var _config$getCurrent = config/* default */.A.getCurrent(),
@@ -17105,7 +17154,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
     if (status.isBufferFull) {
       var gcedPosition = Math.max(0, initialWantedTime - UPTO_CURRENT_POSITION_CLEANUP);
       if (gcedPosition > 0) {
-        segmentBuffer.removeBuffer(0, gcedPosition, globalCanceller.signal)["catch"](onFatalBufferError);
+        segmentBuffer.removeBuffer(0, gcedPosition, canceller.signal)["catch"](onFatalBufferError);
       }
     }
     if (status.shouldRefreshManifest) {
@@ -17118,11 +17167,6 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
    * @param {Object} evt
    */
   function onParsedChunk(evt) {
-    if (globalCanceller.isUsed()) {
-      // We should not do anything with segments if the `RepresentationStream`
-      // is not running anymore.
-      return;
-    }
     if (evt.segmentType === "init") {
       initSegmentState.isLoaded = true;
       // Now that the initialization segment has been parsed - which may have
@@ -17136,9 +17180,6 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
               content: content
             }, p);
           }));
-          if (globalCanceller.isUsed()) {
-            return; // previous callback has stopped everything by side-effect
-          }
         }
       }
       if (evt.initializationData !== null) {
@@ -17152,7 +17193,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
           segment: evt.segment,
           segmentData: evt.initializationData,
           segmentBuffer: segmentBuffer
-        }, globalCanceller.signal).then(function (result) {
+        }, canceller.signal).then(function (result) {
           if (result !== null) {
             callbacks.addedSegment(result);
           }
@@ -17175,20 +17216,17 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
               content: content
             }, p);
           }));
-          if (globalCanceller.isUsed()) {
-            return; // previous callback has stopped everything by side-effect
-          }
         }
       }
       if (needsManifestRefresh === true) {
         callbacks.needsManifestRefresh();
-        if (globalCanceller.isUsed()) {
+        if (canceller.isUsed()) {
           return; // previous callback has stopped everything by side-effect
         }
       }
       if (inbandEvents !== undefined && inbandEvents.length > 0) {
         callbacks.inbandEvent(inbandEvents);
-        if (globalCanceller.isUsed()) {
+        if (canceller.isUsed()) {
           return; // previous callback has stopped everything by side-effect
         }
       }
@@ -17200,7 +17238,7 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
         parsedSegment: evt,
         segment: evt.segment,
         segmentBuffer: segmentBuffer
-      }, globalCanceller.signal).then(function (result) {
+      }, canceller.signal).then(function (result) {
         if (result !== null) {
           callbacks.addedSegment(result);
         }
@@ -17214,13 +17252,13 @@ function RepresentationStream(_ref, callbacks, parentCancelSignal) {
    * @param {*} err
    */
   function onFatalBufferError(err) {
-    if (globalCanceller.isUsed() && err instanceof task_canceller/* CancellationError */.AL) {
+    if (canceller.isUsed() && err instanceof task_canceller/* CancellationError */.AL) {
       // The error is linked to cancellation AND we explicitely cancelled buffer
       // operations.
       // We can thus ignore it, it is very unlikely to lead to true buffer issues.
       return;
     }
-    globalCanceller.cancel();
+    canceller.cancel();
     callbacks.error(err);
   }
 }
@@ -22077,7 +22115,7 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
       }
       ignoredStallTimeStamp = null;
       playbackRateUpdater.startRebuffering();
-      if (_this2._manifest === null) {
+      if (_this2._manifest === null || _compat_is_seeking_approximate__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A && performance.now() - rebuffering.timestamp <= 1000) {
         _this2.trigger("stalled", stalledReason);
         return;
       }
@@ -22106,7 +22144,7 @@ var RebufferingController = /*#__PURE__*/function (_EventEmitter) {
       // implementation that might drop an injected segment, or in
       // case of small discontinuity in the content.
       var nextBufferRangeGap = (0,_utils_ranges__WEBPACK_IMPORTED_MODULE_5__/* .getNextRangeGap */ .Td)(buffered, freezePosition);
-      if (_this2._speed.getValue() > 0 && nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
+      if ((!_compat_is_seeking_approximate__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A || performance.now() - rebuffering.timestamp > 1000) && _this2._speed.getValue() > 0 && nextBufferRangeGap < BUFFER_DISCONTINUITY_THRESHOLD) {
         var seekTo = freezePosition + nextBufferRangeGap + EPSILON;
         if (_this2._playbackObserver.getCurrentTime() < seekTo) {
           _log__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A.warn("Init: discontinuity encountered inferior to the threshold", freezePosition, seekTo, BUFFER_DISCONTINUITY_THRESHOLD);
@@ -50797,11 +50835,11 @@ module.exports = _regeneratorRuntime, module.exports.__esModule = true, module.e
 function _typeof(o) {
   "@babel/helpers - typeof";
 
-  return (module.exports = _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
+  return module.exports = _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) {
     return typeof o;
   } : function (o) {
     return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o;
-  }, module.exports.__esModule = true, module.exports["default"] = module.exports), _typeof(o);
+  }, module.exports.__esModule = true, module.exports["default"] = module.exports, _typeof(o);
 }
 module.exports = _typeof, module.exports.__esModule = true, module.exports["default"] = module.exports;
 
@@ -52691,12 +52729,14 @@ var TrackChoiceManager = /*#__PURE__*/function () {
    * @param {Object} adaptationRef
    */;
   _proto.addPeriod = function addPeriod(bufferType, period, adaptationRef) {
+    var _a;
+    src_log/* default */.A.debug("TCM: Adding Track Reference", bufferType, period.id);
     var periodItem = getPeriodItem(this._periods, period);
     var adaptations = period.getSupportedAdaptations(bufferType);
     if (periodItem !== undefined) {
       if (periodItem[bufferType] !== undefined) {
         src_log/* default */.A.warn("TrackChoiceManager: " + bufferType + " already added for period", period.start);
-        return;
+        (_a = periodItem[bufferType]) === null || _a === void 0 ? void 0 : _a.adaptationRef.finish();
       } else {
         periodItem[bufferType] = {
           adaptations: adaptations,
@@ -52720,6 +52760,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
    * @param {Period} period - The concerned Period.
    */;
   _proto.removePeriod = function removePeriod(bufferType, period) {
+    src_log/* default */.A.debug("TCM: Removing Track Reference", bufferType, period.id);
     var periodIndex = findPeriodIndex(this._periods, period);
     if (periodIndex === undefined) {
       src_log/* default */.A.warn("TrackChoiceManager: " + bufferType + " not found for period", period.start);
@@ -52736,6 +52777,7 @@ var TrackChoiceManager = /*#__PURE__*/function () {
     }
   };
   _proto.resetPeriods = function resetPeriods() {
+    src_log/* default */.A.debug("TCM: Resetting Period Objects");
     while (this._periods.length() > 0) {
       this._periods.pop();
     }
@@ -53790,7 +53832,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.33.4";
+    _this.version = /* PLAYER_VERSION */"3.33.5-dev.2025040100";
     _this.log = src_log/* default */.A;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -56278,7 +56320,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
  * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
  */
 Player._priv_currentlyUsedVideoElements = new WeakSet();
-Player.version = /* PLAYER_VERSION */"3.33.4";
+Player.version = /* PLAYER_VERSION */"3.33.5-dev.2025040100";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
