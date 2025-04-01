@@ -60,7 +60,12 @@ describe("DRM: server certificate", function () {
     player.stop();
     await sleep(10);
     expect(serverCertificateSpy).not.toHaveBeenCalled();
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 
@@ -85,7 +90,12 @@ describe("DRM: server certificate", function () {
     await sleep(10);
     expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
     expect(serverCertificateSpy).toHaveBeenNthCalledWith(1, new Uint8Array([1, 2, 3]));
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 
@@ -113,7 +123,12 @@ describe("DRM: server certificate", function () {
       1,
       new Uint8Array([1, 2, 3]).buffer,
     );
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 
@@ -136,7 +151,12 @@ describe("DRM: server certificate", function () {
     player.stop();
     await sleep(10);
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    }
     expect(serverCertificateSpy).toHaveBeenCalledTimes(0);
 
     const serverCertificate = new Uint8Array([1, 2, 3]);
@@ -158,7 +178,12 @@ describe("DRM: server certificate", function () {
     player.stop();
     await sleep(10);
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    }
     expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
     expect(serverCertificateSpy).toHaveBeenNthCalledWith(1, new Uint8Array([1, 2, 3]));
   });
@@ -207,7 +232,12 @@ describe("DRM: server certificate", function () {
     await sleep(10);
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
     expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 
@@ -256,7 +286,12 @@ describe("DRM: server certificate", function () {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
     expect(serverCertificateSpy).toHaveBeenCalledTimes(2);
     expect(serverCertificateSpy).toHaveBeenNthCalledWith(2, new Uint8Array([1, 2, 3, 4]));
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(3);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 
@@ -304,7 +339,12 @@ describe("DRM: server certificate", function () {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(2);
     expect(serverCertificateSpy).toHaveBeenCalledTimes(2);
     expect(serverCertificateSpy).toHaveBeenNthCalledWith(2, new Uint8Array([1, 2, 3]));
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(4);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 
@@ -353,7 +393,12 @@ describe("DRM: server certificate", function () {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(2);
     expect(serverCertificateSpy).toHaveBeenCalledTimes(2);
     expect(serverCertificateSpy).toHaveBeenNthCalledWith(2, new Uint8Array([1, 2, 3]));
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(4);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 
@@ -400,7 +445,12 @@ describe("DRM: server certificate", function () {
     await sleep(10);
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
     expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(3);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 
@@ -447,7 +497,12 @@ describe("DRM: server certificate", function () {
     await sleep(10);
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
     expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(3);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
 
     player.loadVideo({
@@ -470,7 +525,12 @@ describe("DRM: server certificate", function () {
     expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
     expect(serverCertificateSpy).toHaveBeenCalledTimes(2);
     expect(serverCertificateSpy).toHaveBeenNthCalledWith(2, new Uint8Array([1, 2, 3]));
-    expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    if (__BROWSER_NAME__ === "edge") {
+      // There also is the initial key system check on Edge
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(3);
+    } else {
+      expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
+    }
     expect(dummy.mediaKeys.sessions).toHaveLength(2);
   });
 });
