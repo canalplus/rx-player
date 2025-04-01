@@ -357,7 +357,7 @@ describe("decrypt - global tests - media key system access", () => {
       return {
         ...conf,
         persistentState: "required",
-        sessionTypes: ["temporary", "persistent-license"],
+        sessionTypes: ["persistent-license"],
       };
     });
     expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
@@ -399,7 +399,7 @@ describe("decrypt - global tests - media key system access", () => {
         return {
           ...conf,
           persistentState: "required",
-          sessionTypes: ["temporary", "persistent-license"],
+          sessionTypes: ["persistent-license"],
         };
       },
     );
@@ -657,7 +657,7 @@ describe("decrypt - global tests - media key system access", () => {
         return {
           ...conf,
           persistentState: "required",
-          sessionTypes: ["temporary", "persistent-license"],
+          sessionTypes: ["persistent-license"],
         };
       });
     const expectedPersistentConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map(
@@ -665,7 +665,7 @@ describe("decrypt - global tests - media key system access", () => {
         return {
           ...conf,
           persistentState: "required",
-          sessionTypes: ["temporary", "persistent-license"],
+          sessionTypes: ["persistent-license"],
         };
       },
     );
@@ -764,7 +764,7 @@ describe("decrypt - global tests - media key system access", () => {
         return {
           ...conf,
           persistentState: "required",
-          sessionTypes: ["temporary", "persistent-license"],
+          sessionTypes: ["persistent-license"],
         };
       });
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
@@ -810,7 +810,7 @@ describe("decrypt - global tests - media key system access", () => {
         return {
           ...conf,
           persistentState: "required",
-          sessionTypes: ["temporary", "persistent-license"],
+          sessionTypes: ["persistent-license"],
         };
       },
     );
@@ -819,7 +819,7 @@ describe("decrypt - global tests - media key system access", () => {
         return {
           ...conf,
           persistentState: "required",
-          sessionTypes: ["temporary", "persistent-license"],
+          sessionTypes: ["persistent-license"],
         };
       });
     const expectedIdentifierConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map(
@@ -917,7 +917,7 @@ describe("decrypt - global tests - media key system access", () => {
         return {
           ...conf,
           persistentState: "required",
-          sessionTypes: ["temporary", "persistent-license"],
+          sessionTypes: ["persistent-license"],
         };
       });
     expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);

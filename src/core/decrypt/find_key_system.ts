@@ -179,13 +179,13 @@ function buildKeySystemConfigurations(
   ksType: string | undefined,
   keySystem: IKeySystemOption,
 ): MediaKeySystemConfiguration[] {
-  const sessionTypes = ["temporary"];
+  let sessionTypes = ["temporary"];
   let persistentState: MediaKeysRequirement = "optional";
   let distinctiveIdentifier: MediaKeysRequirement = "optional";
 
   if (keySystem.persistentLicense === true) {
     persistentState = "required";
-    sessionTypes.push("persistent-license");
+    sessionTypes = ["persistent-license"];
   }
 
   if (keySystem.persistentStateRequired === true) {

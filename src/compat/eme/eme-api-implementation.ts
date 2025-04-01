@@ -245,7 +245,7 @@ function getEmeApiImplementation(
             initDataTypes: ["cenc"],
             distinctiveIdentifier: "not-allowed" as const,
             persistentState: "required" as const,
-            sessionTypes: ["temporary", "persistent-license"],
+            sessionTypes: ["persistent-license"],
           };
           if (videoCapabilities !== undefined) {
             keySystemConfigurationResponse.videoCapabilities = videoCapabilities;
