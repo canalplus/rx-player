@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isEdgeChromium } from "./browser_detection";
+import { isEdgeChromium, isFirefox } from "./browser_detection";
 
 /**
  * This functions tells if the RxPlayer can trust the browser when it has
@@ -31,11 +31,17 @@ import { isEdgeChromium } from "./browser_detection";
  *   'generateRequest' on 'MediaKeySession': Failed to create MF PR CdmSession".
  *   In this particular case, the work-around was to consider recommendation.3000 as not supported
  *   and try another keySystem.
+ *
+ * - On Firefox v.137:
+ *   Similar issue with requestMediaKeySystemAccess that resolves correctly with
+ *   'com.microsoft.playready.recommendation.3000' but fail at the `createMediaKeys``
+ *   step with error `WMFCDMProxy: Init: WMFCDM init error`
+ *
  * @param keySystem - The key system in use.
  * @returns {boolean}
  */
 export function canRelyOnRequestMediaKeySystemAccess(keySystem: string): boolean {
-  if (isEdgeChromium && keySystem.indexOf("playready") !== -1) {
+  if ((isEdgeChromium || isFirefox) && keySystem.indexOf("playready") !== -1) {
     return false;
   }
   return true;
