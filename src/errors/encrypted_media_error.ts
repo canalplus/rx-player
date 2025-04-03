@@ -29,7 +29,9 @@ export default class EncryptedMediaError extends Error {
   public readonly name: "EncryptedMediaError";
   public readonly type: "ENCRYPTED_MEDIA_ERROR";
   public readonly code: IEncryptedMediaErrorCode;
-  public readonly keyStatuses?: IEncryptedMediaErrorKeyStatusObject[];
+  public readonly keyStatuses: IEncryptedMediaErrorKeyStatusObject[] | undefined;
+  public readonly mediaKeySystemConfiguration: MediaKeySystemConfiguration | undefined;
+  public readonly keySystem: string | undefined;
   public fatal: boolean;
   private _originalMessage: string;
 
@@ -40,18 +42,44 @@ export default class EncryptedMediaError extends Error {
   constructor(
     code: "KEY_STATUS_CHANGE_ERROR",
     reason: string,
-    supplementaryInfos: { keyStatuses: IEncryptedMediaErrorKeyStatusObject[] },
+    supplementaryInfos: {
+      keyStatuses: IEncryptedMediaErrorKeyStatusObject[];
+      mediaKeySystemAccessConfiguration: MediaKeySystemConfiguration;
+      keySystem: string;
+    },
   );
   constructor(
-    code: Omit<IEncryptedMediaErrorCode, "KEY_STATUS_CHANGE_ERROR">,
+    code: Omit<
+      IEncryptedMediaErrorCode,
+      | "KEY_STATUS_CHANGE_ERROR"
+      | "INCOMPATIBLE_KEYSYSTEMS"
+      | "INVALID_KEY_SYSTEM"
+      | "MEDIA_IS_ENCRYPTED_ERROR"
+    >,
     reason: string,
+    supplementaryInfos: {
+      keyStatuses: undefined;
+      mediaKeySystemAccessConfiguration: MediaKeySystemConfiguration;
+      keySystem: string;
+    },
+  );
+  constructor(
+    code: "INCOMPATIBLE_KEYSYSTEMS" | "INVALID_KEY_SYSTEM" | "MEDIA_IS_ENCRYPTED_ERROR",
+    reason: string,
+    supplementaryInfos: {
+      keyStatuses: undefined;
+      mediaKeySystemAccessConfiguration: undefined;
+      keySystem: undefined;
+    },
   );
   constructor(
     code: IEncryptedMediaErrorCode,
     reason: string,
-    supplementaryInfos?:
-      | { keyStatuses?: IEncryptedMediaErrorKeyStatusObject[] | undefined }
-      | undefined,
+    supplementaryInfos: {
+      keyStatuses: IEncryptedMediaErrorKeyStatusObject[] | undefined;
+      mediaKeySystemAccessConfiguration: MediaKeySystemConfiguration | undefined;
+      keySystem: string | undefined;
+    },
   ) {
     super(errorMessage(code, reason));
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
@@ -64,9 +92,10 @@ export default class EncryptedMediaError extends Error {
     this._originalMessage = reason;
     this.fatal = false;
 
-    if (typeof supplementaryInfos?.keyStatuses === "string") {
-      this.keyStatuses = supplementaryInfos.keyStatuses;
-    }
+    this.keyStatuses = supplementaryInfos.keyStatuses;
+    this.mediaKeySystemConfiguration =
+      supplementaryInfos.mediaKeySystemAccessConfiguration;
+    this.keySystem = supplementaryInfos.keySystem;
   }
 
   /**
@@ -81,6 +110,8 @@ export default class EncryptedMediaError extends Error {
       code: this.code,
       reason: this._originalMessage,
       keyStatuses: this.keyStatuses,
+      mediaKeySystemConfiguration: this.mediaKeySystemConfiguration,
+      keySystem: this.keySystem,
     };
   }
 }
@@ -95,4 +126,6 @@ export interface ISerializedEncryptedMediaError {
         keyId: ArrayBuffer;
       }>
     | undefined;
+  mediaKeySystemConfiguration: MediaKeySystemConfiguration | undefined;
+  keySystem: string | undefined;
 }

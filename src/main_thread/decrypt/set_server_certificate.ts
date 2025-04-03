@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import type { IMediaKeys } from "../../compat/browser_compatibility_types";
+import type {
+  IMediaKeys,
+  IMediaKeySystemAccess,
+} from "../../compat/browser_compatibility_types";
 import { EncryptedMediaError, isKnownError } from "../../errors";
 import log from "../../log";
 import type { IPlayerError } from "../../public_types";
@@ -32,11 +35,15 @@ import ServerCertificateStore from "./utils/server_certificate_store";
  *
  * @param {MediaKeys} mediaKeys
  * @param {ArrayBuffer} serverCertificate
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess - The
+ * `MediaKeySystemAccess` that produced the `MediaKeys` instance provided.
+ * This parameter is mainly useful for error generation.
  * @returns {Promise}
  */
 async function setServerCertificate(
   mediaKeys: IMediaKeys,
   serverCertificate: BufferSource,
+  mediaKeySystemAccess: IMediaKeySystemAccess,
 ): Promise<unknown> {
   try {
     const res = await mediaKeys.setServerCertificate(serverCertificate);
@@ -51,7 +58,11 @@ async function setServerCertificate(
     );
     const reason =
       error instanceof Error ? error.toString() : "`setServerCertificate` error";
-    throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", reason);
+    throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", reason, {
+      keyStatuses: undefined,
+      mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+      keySystem: mediaKeySystemAccess.keySystem,
+    });
   }
 }
 
@@ -60,11 +71,15 @@ async function setServerCertificate(
  * and complete.
  * @param {MediaKeys} mediaKeys
  * @param {ArrayBuffer} serverCertificate
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess - The
+ * `MediaKeySystemAccess` that produced the `MediaKeys` instance provided.
+ * This parameter is mainly useful for error generation.
  * @returns {Promise.<Object>}
  */
 export default async function trySettingServerCertificate(
   mediaKeys: IMediaKeys,
   serverCertificate: BufferSource,
+  mediaKeySystemAccess: IMediaKeySystemAccess,
 ): Promise<
   | { type: "success"; value: unknown }
   | { type: "already-has-one" }
@@ -90,7 +105,11 @@ export default async function trySettingServerCertificate(
   // Calling `prepare` allow to invalidate temporarily that status.
   ServerCertificateStore.prepare(mediaKeys);
   try {
-    const result = await setServerCertificate(mediaKeys, serverCertificate);
+    const result = await setServerCertificate(
+      mediaKeys,
+      serverCertificate,
+      mediaKeySystemAccess,
+    );
     ServerCertificateStore.set(mediaKeys, serverCertificate);
     return { type: "success", value: result };
   } catch (error) {
@@ -99,6 +118,11 @@ export default async function trySettingServerCertificate(
       : new EncryptedMediaError(
           "LICENSE_SERVER_CERTIFICATE_ERROR",
           "Unknown error when setting the server certificate.",
+          {
+            keyStatuses: undefined,
+            mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+            keySystem: mediaKeySystemAccess.keySystem,
+          },
         );
     return { type: "error" as const, value: formattedErr };
   }

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import type { IMediaKeySession } from "../../../compat/browser_compatibility_types";
+import type {
+  IMediaKeySession,
+  IMediaKeySystemAccess,
+} from "../../../compat/browser_compatibility_types";
 import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid";
 import { EncryptedMediaError } from "../../../errors";
 import log from "../../../log";
@@ -79,13 +82,14 @@ type IKeyStatusesForEach = (
  * @param {MediaKeySession} session - The MediaKeySession from which the keys
  * will be checked.
  * @param {Object} options
- * @param {String} keySystem - The configuration keySystem used for deciphering
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess - The
+ * `MediaKeySystemAccess` that produced the linked `MediaKeys` instance.
  * @returns {Object} - Warnings to send, whitelisted and blacklisted key ids.
  */
 export default function checkKeyStatuses(
   session: IMediaKeySession,
   options: IKeyStatusesCheckingOptions,
-  keySystem: string,
+  mediaKeySystemAccess: IMediaKeySystemAccess,
 ): {
   warning: EncryptedMediaError | undefined;
   blacklistedKeyIds: Uint8Array[];
@@ -107,7 +111,10 @@ export default function checkKeyStatuses(
         ];
       })();
 
-      const keyId = getUUIDKidFromKeyStatusKID(keySystem, new Uint8Array(keyStatusKeyId));
+      const keyId = getUUIDKidFromKeyStatusKID(
+        mediaKeySystemAccess.keySystem,
+        new Uint8Array(keyStatusKeyId),
+      );
 
       const keyStatusObj = { keyId: keyId.buffer, keyStatus };
 
@@ -120,7 +127,11 @@ export default function checkKeyStatuses(
           const error = new EncryptedMediaError(
             "KEY_STATUS_CHANGE_ERROR",
             `A decryption key expired (${bytesToHex(keyId)})`,
-            { keyStatuses: [keyStatusObj, ...badKeyStatuses] },
+            {
+              keyStatuses: [keyStatusObj, ...badKeyStatuses],
+              keySystem: mediaKeySystemAccess.keySystem,
+              mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+            },
           );
 
           if (onKeyExpiration === "error" || onKeyExpiration === undefined) {
@@ -153,7 +164,11 @@ export default function checkKeyStatuses(
           const error = new EncryptedMediaError(
             "KEY_STATUS_CHANGE_ERROR",
             `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
-            { keyStatuses: [keyStatusObj, ...badKeyStatuses] },
+            {
+              keyStatuses: [keyStatusObj, ...badKeyStatuses],
+              keySystem: mediaKeySystemAccess.keySystem,
+              mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+            },
           );
           switch (onKeyInternalError) {
             case undefined:
@@ -185,7 +200,11 @@ export default function checkKeyStatuses(
           const error = new EncryptedMediaError(
             "KEY_STATUS_CHANGE_ERROR",
             `A "${keyStatus}" status has been encountered (${bytesToHex(keyId)})`,
-            { keyStatuses: [keyStatusObj, ...badKeyStatuses] },
+            {
+              keyStatuses: [keyStatusObj, ...badKeyStatuses],
+              keySystem: mediaKeySystemAccess.keySystem,
+              mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+            },
           );
           switch (onKeyOutputRestricted) {
             case undefined:
@@ -223,7 +242,11 @@ export default function checkKeyStatuses(
     warning = new EncryptedMediaError(
       "KEY_STATUS_CHANGE_ERROR",
       "One or several problematic key statuses have been encountered",
-      { keyStatuses: badKeyStatuses },
+      {
+        keyStatuses: badKeyStatuses,
+        keySystem: mediaKeySystemAccess.keySystem,
+        mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+      },
     );
   }
   return { warning, blacklistedKeyIds, whitelistedKeyIds };

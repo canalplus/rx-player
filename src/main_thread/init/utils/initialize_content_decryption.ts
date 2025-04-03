@@ -155,7 +155,11 @@ export default function initializeContentDecryption(
       value: EncryptedMediaError;
     };
   } {
-    const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
+    const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg, {
+      keyStatuses: undefined,
+      mediaKeySystemAccessConfiguration: undefined,
+      keySystem: undefined,
+    });
     const ref = new SharedReference({
       initializationState: { type: "initialized" as const, value: null },
       drmSystemId: undefined,

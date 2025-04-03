@@ -1246,7 +1246,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             return;
           }
           stopListening();
-          const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg);
+          const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg, {
+            keyStatuses: undefined,
+            mediaKeySystemAccessConfiguration: undefined,
+            keySystem: undefined,
+          });
           this._onFatalError(err);
         },
         { clearSignal: cancelSignal },
@@ -2103,13 +2107,14 @@ function formatWorkerError(sentError: ISentError): IPlayerError {
         tracks: sentError.tracks,
       });
     case "EncryptedMediaError":
-      if (sentError.code === "KEY_STATUS_CHANGE_ERROR") {
-        return new EncryptedMediaError(sentError.code, sentError.reason, {
-          keyStatuses: sentError.keyStatuses ?? [],
-        });
-      } else {
-        return new EncryptedMediaError(sentError.code, sentError.reason);
-      }
+      // We assume that everything have already been checked Worker-side here
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return new EncryptedMediaError(sentError.code, sentError.reason, {
+        keyStatuses: sentError.keyStatuses,
+        mediaKeySystemAccessConfiguration: sentError.mediaKeySystemConfiguration,
+        keySystem: sentError.keySystem,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
     case "OtherError":
       return new OtherError(sentError.code, sentError.reason);
   }

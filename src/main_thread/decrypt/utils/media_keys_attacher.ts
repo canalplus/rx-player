@@ -255,6 +255,12 @@ async function attachMediaKeys(
     throw new EncryptedMediaError(
       "MEDIA_KEYS_ATTACHMENT_ERROR",
       "Could not attach the MediaKeys to the media element: " + errMessage,
+      {
+        keyStatuses: undefined,
+        mediaKeySystemAccessConfiguration:
+          mediaKeysInfo.mediaKeySystemAccess.getConfiguration(),
+        keySystem: mediaKeysInfo.mediaKeySystemAccess.keySystem,
+      },
     );
   }
 }

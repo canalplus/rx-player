@@ -463,6 +463,11 @@ export default function getMediaKeySystemAccess(
         "No key system compatible with your wanted " +
           "configuration has been found in the current " +
           "browser.",
+        {
+          keyStatuses: undefined,
+          mediaKeySystemAccessConfiguration: undefined,
+          keySystem: undefined,
+        },
       );
     }
 
