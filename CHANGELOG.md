@@ -1,5 +1,12 @@
 # Changelog
 
+## Current dev build: v4.3.1-dev.2025040700
+
+### Bug fixes
+
+- Firefox: check extensively Playready DRMs support before using them to work-around
+  recent firefox issue with PlayReady integration [#1691]
+
 ## v4.3.0
 
 ### Features
