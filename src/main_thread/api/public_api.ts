@@ -549,7 +549,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
           hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
-          hasMseInWorker,
         },
       });
       log.addEventListener(
@@ -1068,6 +1067,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           textTrackOptions,
           worker: this._priv_worker,
           url,
+          useMseInWorker: hasMseInWorker,
         });
       }
     } else {
