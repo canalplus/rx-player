@@ -257,8 +257,7 @@ async function attachMediaKeys(
       "Could not attach the MediaKeys to the media element: " + errMessage,
       {
         keyStatuses: undefined,
-        mediaKeySystemAccessConfiguration:
-          mediaKeysInfo.mediaKeySystemAccess.getConfiguration(),
+        keySystemConfiguration: mediaKeysInfo.mediaKeySystemAccess.getConfiguration(),
         keySystem: mediaKeysInfo.mediaKeySystemAccess.keySystem,
       },
     );

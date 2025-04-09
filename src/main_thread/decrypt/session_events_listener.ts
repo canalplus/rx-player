@@ -77,7 +77,7 @@ export default function SessionEventsListener(
       callbacks.onError(
         new EncryptedMediaError("KEY_ERROR", (evt as Event).type, {
           keyStatuses: undefined,
-          mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+          keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
           keySystem: mediaKeySystemAccess.keySystem,
         }),
       );
@@ -287,7 +287,7 @@ function formatGetLicenseError(
       "The license server took too much time to " + "respond.",
       {
         keyStatuses: undefined,
-        mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+        keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
         keySystem: mediaKeySystemAccess.keySystem,
       },
     );
@@ -298,7 +298,7 @@ function formatGetLicenseError(
     "An error occured when calling `getLicense`.",
     {
       keyStatuses: undefined,
-      mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+      keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
       keySystem: mediaKeySystemAccess.keySystem,
     },
   );
@@ -332,7 +332,7 @@ async function updateSessionWithMessage(
     const reason = error instanceof Error ? error.toString() : "`session.update` failed";
     throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason, {
       keyStatuses: undefined,
-      mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+      keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
       keySystem: mediaKeySystemAccess.keySystem,
     });
   }

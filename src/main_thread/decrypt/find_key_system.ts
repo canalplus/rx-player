@@ -465,7 +465,7 @@ export default function getMediaKeySystemAccess(
           "browser.",
         {
           keyStatuses: undefined,
-          mediaKeySystemAccessConfiguration: undefined,
+          keySystemConfiguration: undefined,
           keySystem: undefined,
         },
       );

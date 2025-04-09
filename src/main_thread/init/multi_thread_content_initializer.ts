@@ -1248,7 +1248,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           stopListening();
           const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg, {
             keyStatuses: undefined,
-            mediaKeySystemAccessConfiguration: undefined,
+            keySystemConfiguration: undefined,
             keySystem: undefined,
           });
           this._onFatalError(err);
@@ -2111,7 +2111,7 @@ function formatWorkerError(sentError: ISentError): IPlayerError {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return new EncryptedMediaError(sentError.code, sentError.reason, {
         keyStatuses: sentError.keyStatuses,
-        mediaKeySystemAccessConfiguration: sentError.mediaKeySystemConfiguration,
+        keySystemConfiguration: sentError.keySystemConfiguration,
         keySystem: sentError.keySystem,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);

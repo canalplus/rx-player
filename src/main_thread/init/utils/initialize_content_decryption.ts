@@ -157,7 +157,7 @@ export default function initializeContentDecryption(
   } {
     const err = new EncryptedMediaError("MEDIA_IS_ENCRYPTED_ERROR", errMsg, {
       keyStatuses: undefined,
-      mediaKeySystemAccessConfiguration: undefined,
+      keySystemConfiguration: undefined,
       keySystem: undefined,
     });
     const ref = new SharedReference({

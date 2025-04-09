@@ -130,7 +130,7 @@ export default function checkKeyStatuses(
             {
               keyStatuses: [keyStatusObj, ...badKeyStatuses],
               keySystem: mediaKeySystemAccess.keySystem,
-              mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+              keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
             },
           );
 
@@ -167,7 +167,7 @@ export default function checkKeyStatuses(
             {
               keyStatuses: [keyStatusObj, ...badKeyStatuses],
               keySystem: mediaKeySystemAccess.keySystem,
-              mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+              keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
             },
           );
           switch (onKeyInternalError) {
@@ -203,7 +203,7 @@ export default function checkKeyStatuses(
             {
               keyStatuses: [keyStatusObj, ...badKeyStatuses],
               keySystem: mediaKeySystemAccess.keySystem,
-              mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+              keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
             },
           );
           switch (onKeyOutputRestricted) {
@@ -245,7 +245,7 @@ export default function checkKeyStatuses(
       {
         keyStatuses: badKeyStatuses,
         keySystem: mediaKeySystemAccess.keySystem,
-        mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+        keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
       },
     );
   }

@@ -30,7 +30,7 @@ export default class EncryptedMediaError extends Error {
   public readonly type: "ENCRYPTED_MEDIA_ERROR";
   public readonly code: IEncryptedMediaErrorCode;
   public readonly keyStatuses: IEncryptedMediaErrorKeyStatusObject[] | undefined;
-  public readonly mediaKeySystemConfiguration: MediaKeySystemConfiguration | undefined;
+  public readonly keySystemConfiguration: MediaKeySystemConfiguration | undefined;
   public readonly keySystem: string | undefined;
   public fatal: boolean;
   private _originalMessage: string;
@@ -44,7 +44,7 @@ export default class EncryptedMediaError extends Error {
     reason: string,
     supplementaryInfos: {
       keyStatuses: IEncryptedMediaErrorKeyStatusObject[];
-      mediaKeySystemAccessConfiguration: MediaKeySystemConfiguration;
+      keySystemConfiguration: MediaKeySystemConfiguration;
       keySystem: string;
     },
   );
@@ -59,7 +59,7 @@ export default class EncryptedMediaError extends Error {
     reason: string,
     supplementaryInfos: {
       keyStatuses: undefined;
-      mediaKeySystemAccessConfiguration: MediaKeySystemConfiguration;
+      keySystemConfiguration: MediaKeySystemConfiguration;
       keySystem: string;
     },
   );
@@ -68,7 +68,7 @@ export default class EncryptedMediaError extends Error {
     reason: string,
     supplementaryInfos: {
       keyStatuses: undefined;
-      mediaKeySystemAccessConfiguration: undefined;
+      keySystemConfiguration: undefined;
       keySystem: undefined;
     },
   );
@@ -77,7 +77,7 @@ export default class EncryptedMediaError extends Error {
     reason: string,
     supplementaryInfos: {
       keyStatuses: IEncryptedMediaErrorKeyStatusObject[] | undefined;
-      mediaKeySystemAccessConfiguration: MediaKeySystemConfiguration | undefined;
+      keySystemConfiguration: MediaKeySystemConfiguration | undefined;
       keySystem: string | undefined;
     },
   ) {
@@ -93,8 +93,7 @@ export default class EncryptedMediaError extends Error {
     this.fatal = false;
 
     this.keyStatuses = supplementaryInfos.keyStatuses;
-    this.mediaKeySystemConfiguration =
-      supplementaryInfos.mediaKeySystemAccessConfiguration;
+    this.keySystemConfiguration = supplementaryInfos.keySystemConfiguration;
     this.keySystem = supplementaryInfos.keySystem;
   }
 
@@ -110,7 +109,7 @@ export default class EncryptedMediaError extends Error {
       code: this.code,
       reason: this._originalMessage,
       keyStatuses: this.keyStatuses,
-      mediaKeySystemConfiguration: this.mediaKeySystemConfiguration,
+      keySystemConfiguration: this.keySystemConfiguration,
       keySystem: this.keySystem,
     };
   }
@@ -126,6 +125,6 @@ export interface ISerializedEncryptedMediaError {
         keyId: ArrayBuffer;
       }>
     | undefined;
-  mediaKeySystemConfiguration: MediaKeySystemConfiguration | undefined;
+  keySystemConfiguration: MediaKeySystemConfiguration | undefined;
   keySystem: string | undefined;
 }

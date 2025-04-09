@@ -721,7 +721,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           error instanceof Error ? error.toString() : "Unknown error",
           {
             keyStatuses: undefined,
-            mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+            keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
             keySystem: mediaKeySystemAccess.keySystem,
           },
         );

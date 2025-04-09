@@ -60,7 +60,7 @@ async function setServerCertificate(
       error instanceof Error ? error.toString() : "`setServerCertificate` error";
     throw new EncryptedMediaError("LICENSE_SERVER_CERTIFICATE_ERROR", reason, {
       keyStatuses: undefined,
-      mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+      keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
       keySystem: mediaKeySystemAccess.keySystem,
     });
   }
@@ -120,7 +120,7 @@ export default async function trySettingServerCertificate(
           "Unknown error when setting the server certificate.",
           {
             keyStatuses: undefined,
-            mediaKeySystemAccessConfiguration: mediaKeySystemAccess.getConfiguration(),
+            keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
             keySystem: mediaKeySystemAccess.keySystem,
           },
         );

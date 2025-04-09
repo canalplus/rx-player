@@ -38,7 +38,7 @@ describe("Errors - isKnownError", () => {
       "toto",
       {
         keyStatuses: undefined,
-        mediaKeySystemAccessConfiguration: undefined,
+        keySystemConfiguration: undefined,
         keySystem: undefined,
       },
     );

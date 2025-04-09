@@ -9,7 +9,7 @@ describe("errors - EncryptedMediaError", () => {
       reason,
       {
         keyStatuses: undefined,
-        mediaKeySystemAccessConfiguration: undefined,
+        keySystemConfiguration: undefined,
         keySystem: undefined,
       },
     );
@@ -28,7 +28,7 @@ describe("errors - EncryptedMediaError", () => {
       reason,
       {
         keyStatuses: undefined,
-        mediaKeySystemAccessConfiguration: undefined,
+        keySystemConfiguration: undefined,
         keySystem: undefined,
       },
     );

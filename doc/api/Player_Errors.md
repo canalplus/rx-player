@@ -395,8 +395,8 @@ They have the following properties:
   Note that it is not set for some errors for which it wouldn't make sense, such as for
   `EncryptedMediaError` instances with the `code` `MEDIA_IS_ENCRYPTED_ERROR`.
 
-- `mediaKeySystemConfiguration` (`MediaKeySystemAccessConfiguration | undefined`): If
-  known, the
+- `keySystemConfiguration` (`MediaKeySystemAccessConfiguration | undefined`): If known,
+  the
   [`MediaKeySystemAccessConfiguration`](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySystemAccess/getConfiguration)
   of the `MediaKeySystemAccess` that encountered the error. This might be useful to for
   example be able to check the key system's robustness (e.g. PlayReady SL3000 vs SL2000,
