@@ -10,23 +10,27 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
     vi.doMock("../browser_detection", () => {
       return {
         isIE11: false,
+        isEdgeChromium: false,
+        isFirefox: false,
       };
     });
     const shouldRenewMediaKeySystemAccess = (
       await vi.importActual("../should_renew_media_key_system_access")
     ).default as typeof IShouldRenewMediaKeySystemAccess;
-    expect(shouldRenewMediaKeySystemAccess()).toBe(false);
+    expect(shouldRenewMediaKeySystemAccess("com.microsoft.playready")).toBe(false);
   });
 
   it("should return true if we are on IE11", async () => {
     vi.doMock("../browser_detection", () => {
       return {
         isIE11: true,
+        isEdgeChromium: false,
+        isFirefox: false,
       };
     });
     const shouldRenewMediaKeySystemAccess = (
       await vi.importActual("../should_renew_media_key_system_access")
     ).default as typeof IShouldRenewMediaKeySystemAccess;
-    expect(shouldRenewMediaKeySystemAccess()).toBe(true);
+    expect(shouldRenewMediaKeySystemAccess("com.microsoft.playready")).toBe(true);
   });
 });
