@@ -1,6 +1,9 @@
 # Changelog
 
-## Current dev build: v4.3.1-dev.2025040700
+## Current dev build: v4.3.1-dev.2025041001
+
+- fix(DRM): renew the mediaKeySystemAccess on Edge and Firefox when using a Playready keySystem. [#1694]
+- [MULTI_THREAD] Communicate to `/init` whether we're relying on MSE-in-worker [#1669]
 
 ### Bug fixes
 
