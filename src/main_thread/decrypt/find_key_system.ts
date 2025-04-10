@@ -488,7 +488,7 @@ export default function getMediaKeySystemAccess(
       // Check if the current `MediaKeySystemAccess` created cannot be reused here
       if (
         currentState !== null &&
-        !shouldRenewMediaKeySystemAccess() &&
+        !shouldRenewMediaKeySystemAccess(currentState.mediaKeySystemAccess.keySystem) &&
         // TODO: Do it with MediaKeySystemAccess.prototype.keySystem instead?
         keyType === currentState.mediaKeySystemAccess.keySystem &&
         eme.implementation === currentState.emeImplementation.implementation &&

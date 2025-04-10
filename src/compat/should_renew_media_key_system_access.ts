@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { isIE11 } from "./browser_detection";
+import { isIE11, isEdgeChromium, isFirefox } from "./browser_detection";
 
 /**
  * Returns true if the current target require the MediaKeySystemAccess to be
  * renewed on each content.
  * @returns {Boolean}
  */
-export default function shouldRenewMediaKeySystemAccess(): boolean {
-  return isIE11;
+export default function shouldRenewMediaKeySystemAccess(keySystem: string): boolean {
+  return keySystem.indexOf("playready") !== -1 && (isIE11 || isEdgeChromium || isFirefox);
 }
