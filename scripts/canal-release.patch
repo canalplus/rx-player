@@ -74,15 +74,15 @@ index 856449c2f..b924ed248 100644
        addClassName(element, "proportional-style");
        element.setAttribute("data-proportional-top", secondOrigin[1]);
 diff --git a/src/compat/should_renew_media_key_system_access.ts b/src/compat/should_renew_media_key_system_access.ts
-index aee6041df..0b198959f 100644
+index daacea5fb..ed235e6ed 100644
 --- a/src/compat/should_renew_media_key_system_access.ts
 +++ b/src/compat/should_renew_media_key_system_access.ts
-@@ -14,13 +14,25 @@
+@@ -14,13 +14,28 @@
   * limitations under the License.
   */
  
--import { isIE11 } from "./browser_detection";
-+import { isIE11, isPlayStation5 } from "./browser_detection";
+-import { isIE11, isEdgeChromium, isFirefox } from "./browser_detection";
++import { isIE11, isEdgeChromium, isFirefox, isPlayStation5 } from "./browser_detection";
  
  /**
   * Returns true if the current target require the MediaKeySystemAccess to be
@@ -101,7 +101,10 @@ index aee6041df..0b198959f 100644
 + * when creating too many mediaKeys.
   * @returns {Boolean}
   */
- export default function shouldRenewMediaKeySystemAccess(): boolean {
--  return isIE11;
-+  return isIE11 || isPlayStation5;
+ export default function shouldRenewMediaKeySystemAccess(keySystem: string): boolean {
+-  return keySystem.indexOf("playready") !== -1 && (isIE11 || isEdgeChromium || isFirefox);
++  return (
++    (keySystem.indexOf("playready") !== -1 && (isIE11 || isEdgeChromium || isFirefox)) ||
++    isPlayStation5
++  );
  }
