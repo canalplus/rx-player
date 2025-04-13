@@ -400,7 +400,7 @@ describe("API - parseLoadVideoOptions", () => {
     });
   });
 
-  it("should set a default object if both a Manifest loader and transport is given", () => {
+  it("should set a default object if both a function Manifest loader and transport is given", () => {
     const manifestLoader = (): never => {
       throw new Error("Should not execute");
     };
@@ -413,7 +413,50 @@ describe("API - parseLoadVideoOptions", () => {
       ...defaultLoadVideoOptions,
       transport: "bar",
       lowLatencyMode: false,
-      manifestLoader,
+      manifestLoader: {
+        fn: manifestLoader,
+      },
+    });
+  });
+
+  it("should set a default object if both a Manifest loader with a `workerId` and transport is given", () => {
+    expect(
+      parseLoadVideoOptions({
+        transport: "bar",
+        manifestLoader: {
+          workerId: "Remain In Light",
+        },
+      }),
+    ).toEqual({
+      ...defaultLoadVideoOptions,
+      transport: "bar",
+      lowLatencyMode: false,
+      manifestLoader: {
+        workerId: "Remain In Light",
+      },
+    });
+  });
+
+  it("should set a default object if both a Manifest loader with fn+`workerId` and transport is given", () => {
+    const manifestLoader = (): never => {
+      throw new Error("Should not execute");
+    };
+    expect(
+      parseLoadVideoOptions({
+        transport: "bar",
+        manifestLoader: {
+          fn: manifestLoader,
+          workerId: "Speaking in Tongues",
+        },
+      }),
+    ).toEqual({
+      ...defaultLoadVideoOptions,
+      transport: "bar",
+      lowLatencyMode: false,
+      manifestLoader: {
+        fn: manifestLoader,
+        workerId: "Speaking in Tongues",
+      },
     });
   });
 
@@ -928,7 +971,7 @@ If badly set, continue will be used as default`,
     });
   });
 
-  it("should authorize setting a `segmentLoader` option", () => {
+  it("should authorize setting a function `segmentLoader` option", () => {
     const func = vi.fn();
     expect(
       parseLoadVideoOptions({
@@ -941,7 +984,114 @@ If badly set, continue will be used as default`,
       url: "foo",
       transport: "bar",
       lowLatencyMode: false,
-      segmentLoader: func,
+      segmentLoader: {
+        fn: func,
+      },
+    });
+  });
+
+  it("should authorize setting a `segmentLoader` option with a workerId", () => {
+    expect(
+      parseLoadVideoOptions({
+        segmentLoader: {
+          workerId: "To Be Kind",
+        },
+        url: "foo",
+        transport: "bar",
+      }),
+    ).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      lowLatencyMode: false,
+      segmentLoader: {
+        workerId: "To Be Kind",
+      },
+    });
+  });
+
+  it("should authorize setting a `segmentLoader` option with both a workerId and fn", () => {
+    const func = vi.fn();
+    expect(
+      parseLoadVideoOptions({
+        segmentLoader: {
+          fn: func,
+          workerId: "The Seer",
+        },
+        url: "foo",
+        transport: "bar",
+      }),
+    ).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      lowLatencyMode: false,
+      segmentLoader: {
+        fn: func,
+        workerId: "The Seer",
+      },
+    });
+  });
+
+  it("should authorize setting a function `representationFilter` option", () => {
+    const func = vi.fn();
+    expect(
+      parseLoadVideoOptions({
+        representationFilter: func,
+        url: "foo",
+        transport: "bar",
+      }),
+    ).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      lowLatencyMode: false,
+      representationFilter: {
+        fn: func,
+      },
+    });
+  });
+
+  it("should authorize setting a `representationFilter` option with a workerId", () => {
+    expect(
+      parseLoadVideoOptions({
+        representationFilter: {
+          workerId: "Dummy",
+        },
+        url: "foo",
+        transport: "bar",
+      }),
+    ).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      lowLatencyMode: false,
+      representationFilter: {
+        workerId: "Dummy",
+      },
+    });
+  });
+
+  it("should authorize setting a `representationFilter` option with both a workerId and fn", () => {
+    const func = vi.fn();
+    expect(
+      parseLoadVideoOptions({
+        representationFilter: {
+          fn: func,
+          workerId: "Third",
+        },
+        url: "foo",
+        transport: "bar",
+      }),
+    ).toEqual({
+      ...defaultLoadVideoOptions,
+      url: "foo",
+      transport: "bar",
+      lowLatencyMode: false,
+      representationFilter: {
+        fn: func,
+        workerId: "Third",
+      },
     });
   });
 

@@ -10,7 +10,13 @@ import type { IDefaultConfig } from "../default_config";
 import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
 import type { SourceBufferType } from "../mse";
 import type { IFreezingStatus, IRebufferingStatus } from "../playback_observer";
-import type { ICmcdOptions, IRepresentationFilter, ITrackType } from "../public_types";
+import type {
+  ICmcdOptions,
+  IManifestLoader,
+  IRepresentationFilter,
+  ISegmentLoader,
+  ITrackType,
+} from "../public_types";
 import type { ITransportOptions } from "../transports";
 import type { ILogFormat, ILoggerLevel } from "../utils/logger";
 import type { IRange } from "../utils/ranges";
@@ -114,8 +120,29 @@ export interface IContentInitializationData {
    */
   transport: string;
   /** Options relative to the streaming protocol. */
-  transportOptions: Omit<ITransportOptions, "representationFilter"> & {
-    representationFilter?: IRepresentationFilter | string | undefined;
+  transportOptions: Omit<
+    ITransportOptions,
+    "representationFilter" | "manifestLoader" | "segmentLoader"
+  > & {
+    manifestLoader:
+      | {
+          fn?: IManifestLoader | undefined;
+          workerId?: string | undefined;
+        }
+      | undefined;
+    segmentLoader:
+      | {
+          fn?: ISegmentLoader | undefined;
+          workerId?: string | undefined;
+        }
+      | undefined;
+    representationFilter:
+      | undefined
+      | {
+          fn?: IRepresentationFilter | undefined;
+          eval?: string | undefined;
+          workerId?: string | undefined;
+        };
   };
   /** Initial video bitrate on which the adaptive logic will base itself. */
   initialVideoBitrate?: number | undefined;
@@ -572,6 +599,17 @@ export interface IPullSegmentSinkStoreInfos {
   value: { requestId: number };
 }
 
+/** Message sent by the application to the worker. */
+export interface IAppDefinedMessage {
+  type: MainThreadMessageType.AppDefined;
+  value: {
+    /** "name" for this event, application-defined. */
+    name: string;
+    /** application-defined payload for this event. */
+    payload: unknown;
+  };
+}
+
 export const enum MainThreadMessageType {
   Init = "init",
   PushTextDataSuccess = "add-text-success",
@@ -596,6 +634,7 @@ export const enum MainThreadMessageType {
   TrackUpdate = "track-update",
   PullSegmentSinkStoreInfos = "pull-segment-sink-store-infos",
   ThumbnailDataRequest = "thumbnail-request",
+  AppDefined = "app-defined",
 }
 
 export type IMainThreadMessage =
@@ -621,4 +660,5 @@ export type IMainThreadMessage =
   | IRemoveTextDataErrorMessage
   | IMediaSourceReadyStateChangeMainMessage
   | IPullSegmentSinkStoreInfos
-  | IThumbnailDataRequestMainMessage;
+  | IThumbnailDataRequestMainMessage
+  | IAppDefinedMessage;

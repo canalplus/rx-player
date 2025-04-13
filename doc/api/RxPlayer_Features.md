@@ -83,8 +83,8 @@ it cannot do so.
 
 **[2]**: Both the `DASH` and `DASH_WASM` features only concern DASH contents loaded in
 main thread. If you just want to load DASH content in
-[`"multithread"` mode](../api/Miscellaneous/MultiThreading.md), you don't need any of
-those features, but the `MULTI_THREAD` feature instead.
+[`"multithread"` mode](../Getting_Started/MultiThreading.md), you don't need any of those
+features, but the `MULTI_THREAD` feature instead.
 
 **[3]**: The `"native"` and `"html"` `textTrackMode` are options set when loading a new
 content through the [`loadVideo` method](../api/Loading_a_Content.md). To help you choose
@@ -108,7 +108,7 @@ between those two:
 They are already implicitly imported when adding any of the corresponding text parsers.
 
 **[7]**: The `MULTI_THREAD` feature has its own setup, detailed in the
-[corresponding documentation page](../api/Miscellaneous/MultiThreading.md).
+[corresponding documentation page](../Getting_Started/MultiThreading.md).
 
 ---
 

@@ -110,5 +110,7 @@ jobs:
           ubuntu-restricted-extras
       - name: Install JS dependencies
         run: npm ci
+      - name: Build RxPlayer
+        run: npm run build
       - name: Run memory tests
         run: npm run test:memory

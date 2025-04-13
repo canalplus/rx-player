@@ -47,6 +47,16 @@
       "require": "./dist/commonjs/experimental/tools/*/index.js",
       "default": "./dist/es2017/experimental/tools/*/index.js"
     },
+    "./experimental/worker": {
+      "import": "./dist/es2017/importable_worker.js",
+      "require": "./dist/commonjs/importable_worker.js",
+      "default": "./dist/es2017/importable_worker.js"
+    },
+    "./experimental/worker/features": {
+      "import": "./dist/es2017/experimental/features/worker/index.js",
+      "require": "./dist/commonjs/experimental/features/worker/index.js",
+      "default": "./dist/es2017/experimental/features/worker/index.js"
+    },
     "./features": {
       "import": "./dist/es2017/features/list/index.js",
       "require": "./dist/commonjs/features/list/index.js",
@@ -103,6 +113,12 @@
       ],
       "experimental/tools/*": [
         "./dist/es2017/experimental/tools/*/index.d.ts"
+      ],
+      "experimental/worker": [
+        "./dist/es2017/importable_worker.d.ts"
+      ],
+      "experimental/worker/features": [
+        "./dist/es2017/experimental/features/worker/index.d.ts"
       ],
       "features": [
         "./dist/es2017/features/list/index.d.ts"
@@ -185,9 +201,9 @@
     "test:integration:edge:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest watch tests/integration/scenarios",
     "test:integration:firefox": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest run tests/integration/scenarios",
     "test:integration:firefox:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest watch tests/integration/scenarios",
-    "test:integration:notice": "echo \"~~~ ⚠️ NOTICE ⚠️\n~~~ Integration tests have two dependencies: a local RxPlayer build and ffmpeg.\n~~~ Make sure you:\n~~~ 1.  Have an ffmpeg executable in your path and,\n~~~ 2.  You built an up-to-date RxPlayer through the \\`build\\` npm script.\n\"",
-    "test:memory": "cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
-    "test:memory:chrome:watch": "cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
+    "test:integration:notice": "echo \"~~~ ⚠️ NOTICE ⚠️\n~~~ Tests have two dependencies: a local RxPlayer build and ffmpeg.\n~~~ Make sure you:\n~~~ 1.  Have an ffmpeg executable in your path and,\n~~~ 2.  You built an up-to-date RxPlayer through the \\`build\\` npm script.\n\"",
+    "test:memory": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
+    "test:memory:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:unit": "vitest --config vitest.config.unit.mjs",
     "test:unit:watch": "vitest --config vitest.config.unit.mjs --watch",
     "update-version": "bash ./scripts/update-version-number.sh"
@@ -265,7 +281,7 @@
         "test:unit": "Launch unit tests",
         "test:unit:watch": "Launch unit tests and restart them each one of its file changes"
       },
-      "Memory tests (test memory usage to avoid memory leaks)": {
+      "Memory tests (test memory usage to avoid memory leaks, call the `build` script BEFORE running them)": {
         "test:memory": "Launch memory tests",
         "test:memory:chrome:watch": "Launch memory tests in Chrome each times the files update"
       }

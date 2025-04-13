@@ -6,6 +6,8 @@
 /demo/bundle.js
 /demo/worker.js
 
+/tests/worker_bundle.js
+/tests/embedded_worker_bundle.js
 /tests/performance/node_modules
 /tests/performance/previous.js
 /tests/performance/current.js

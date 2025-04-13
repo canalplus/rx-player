@@ -20,8 +20,18 @@
  * @param {RxPlayer} player
  * @returns {Promise}
  */
-function waitForLoadedStateAfterLoadVideo(player) {
-  return waitForState(player, "LOADED", ["LOADING"]);
+async function waitForLoadedStateAfterLoadVideo(player) {
+  try {
+    await waitForState(player, "LOADED", ["LOADING"]);
+  } catch (err) {
+    if (player.getPlayerState() !== "STOPPED") {
+      return;
+    }
+    const playerError = player.getError();
+    if (playerError !== null) {
+      throw playerError;
+    }
+  }
 }
 
 /**
@@ -41,6 +51,13 @@ export default function waitForState(player, wantedState, whitelist) {
         player.removeEventListener("playerStateChange", onPlayerStateChange);
         resolve();
       } else if (whitelist && !whitelist.includes(state)) {
+        if (state === "STOPPED") {
+          const playerError = player.getError();
+          if (playerError !== null) {
+            reject(playerError);
+            return;
+          }
+        }
         reject(new Error("invalid state: " + state));
       }
     }

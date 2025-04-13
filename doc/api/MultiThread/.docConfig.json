@@ -1,0 +1,12 @@
+{
+  "pages": [
+    {
+      "path": "./attachWorker.md",
+      "displayName": "attachWorker"
+    },
+    {
+      "path": "./getWorkerInterface.md",
+      "displayName": "getWorkerInterface"
+    }
+  ]
+}

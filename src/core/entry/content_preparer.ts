@@ -8,7 +8,12 @@ import type Manifest from "../../manifest/classes";
 import type { IMediaSourceInterface } from "../../mse";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface";
-import type { IPlayerError } from "../../public_types";
+import type {
+  IPlayerError,
+  IRepresentationFilter,
+  ISegmentLoader,
+  IManifestLoader,
+} from "../../public_types";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
@@ -101,6 +106,8 @@ export default class ContentPreparer {
    * Reject if it failed to do so.
    * @param {Object} context - Information on the content that should be
    * initialized.
+   * @param {Object} corePlugins - Callbacks that may have been registered by
+   * the application if it loaded the core independently as a worker.
    * @returns {Promise.<Object>}
    */
   public initializeNewContent(
@@ -108,6 +115,7 @@ export default class ContentPreparer {
     context: IContentInitializationData,
     /** Allows to filter which Representations can be choosen. */
     throttlers: IRepresentationEstimatorThrottlers,
+    corePlugins: ICorePlugins,
   ): Promise<IManifest> {
     return new Promise((res, rej) => {
       this.disposeCurrentContent("new init");
@@ -140,13 +148,36 @@ export default class ContentPreparer {
         );
         return;
       }
-      const representationFilter =
-        typeof transportOptions.representationFilter === "string"
-          ? createRepresentationFilterFromFnString(transportOptions.representationFilter)
-          : transportOptions.representationFilter;
+      let manifestLoader;
+      let segmentLoader;
+      let representationFilter;
+      if (typeof transportOptions.representationFilter?.eval === "string") {
+        representationFilter = createRepresentationFilterFromFnString(
+          transportOptions.representationFilter.eval,
+        );
+      } else if (typeof transportOptions.representationFilter?.workerId === "string") {
+        representationFilter = corePlugins.representationFilters.get(
+          transportOptions.representationFilter.workerId,
+        );
+      }
+
+      if (typeof transportOptions.manifestLoader?.workerId === "string") {
+        manifestLoader = corePlugins.manifestLoaders.get(
+          transportOptions.manifestLoader.workerId,
+        );
+      }
+
+      if (typeof transportOptions.segmentLoader?.workerId === "string") {
+        segmentLoader = corePlugins.segmentLoaders.get(
+          transportOptions.segmentLoader.workerId,
+        );
+      }
+
       const transportPipelines = transportFn({
         ...transportOptions,
         representationFilter,
+        manifestLoader,
+        segmentLoader,
       });
 
       const cmcdDataBuilder =
@@ -456,6 +487,12 @@ export interface IPreparedContentData {
    * If `false`, they should be relied on on main thread.
    */
   useMseInWorker: boolean;
+}
+
+export interface ICorePlugins {
+  representationFilters: Map<string, IRepresentationFilter>;
+  segmentLoaders: Map<string, ISegmentLoader>;
+  manifestLoaders: Map<string, IManifestLoader>;
 }
 
 /**

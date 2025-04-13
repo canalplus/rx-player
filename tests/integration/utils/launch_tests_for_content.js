@@ -1,10 +1,8 @@
 import { describe, afterEach, beforeEach, it, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
-import {
-  EMBEDDED_WORKER,
-  EMBEDDED_DASH_WASM,
-} from "../../../dist/es2017/__GENERATED_CODE/index.js";
+import { EMBEDDED_DASH_WASM } from "../../../dist/es2017/__GENERATED_CODE/index.js";
+import TestWorkerEmbed from "../../embedded_worker_bundle";
 import sleep from "../../utils/sleep.js";
 import waitForState, {
   waitForLoadedStateAfterLoadVideo,
@@ -80,7 +78,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
       player = new RxPlayer();
       if (multithread === true) {
         player.attachWorker({
-          workerUrl: EMBEDDED_WORKER,
+          workerUrl: TestWorkerEmbed,
           dashWasmUrl: EMBEDDED_DASH_WASM,
         });
       }
@@ -92,17 +90,39 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
 
     describe("loadVideo", () => {
       it("should fetch the manifest then the init segments", async function () {
-        let manifestLoaderCalledTimes = 0;
+        let mainThreadManifestLoaderCalledTimes = 0;
+        let mainThreadSegmentLoaderCalledTimes = 0;
+        let workerManifestLoaderCalledTimes = 0;
+        let workerSegmentLoaderCalledTimes = 0;
+        let validManifestLoaderCallTimes = 0;
         const requestedSegments = [];
+
         const manifestLoader = (man, callbacks) => {
+          mainThreadManifestLoaderCalledTimes++;
           expect(manifestInfos.url).to.equal(man.url);
-          manifestLoaderCalledTimes++;
           callbacks.fallback();
+          validManifestLoaderCallTimes++;
         };
+
         const segmentLoader = (info, callbacks) => {
           requestedSegments.push(info.url);
+          mainThreadSegmentLoaderCalledTimes++;
           callbacks.fallback();
         };
+
+        if (multithread === true) {
+          const workerInterface = player.getWorkerInterface();
+          expect(workerInterface).not.toBeNull();
+          workerInterface.addMessageListener("manifest-loader", (man) => {
+            workerManifestLoaderCalledTimes++;
+            expect(manifestInfos.url).to.equal(man.url);
+            validManifestLoaderCallTimes++;
+          });
+          workerInterface.addMessageListener("segment-loader", (info) => {
+            workerSegmentLoaderCalledTimes++;
+            requestedSegments.push(info.url);
+          });
+        }
 
         // Lock the lowest bitrate to facilitate the test
         lockLowestBitrates(player);
@@ -110,18 +130,43 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          manifestLoader,
-          segmentLoader,
+          manifestLoader: {
+            fn: manifestLoader,
+            workerId: "default-manifest-loader",
+          },
+          segmentLoader: {
+            fn: segmentLoader,
+            workerId: "default-segment-loader",
+          },
         });
         await sleep(0);
 
+        assertLoadedPlayerMode();
+
         // should only have the manifest for now
-        expect(manifestLoaderCalledTimes).to.equal(1);
+        const mode = player.getCurrentModeInformation();
+        expect(mainThreadManifestLoaderCalledTimes).to.equal(mode.useWorker ? 0 : 1);
+        expect(workerManifestLoaderCalledTimes).to.equal(0);
+        expect(validManifestLoaderCallTimes).to.equal(mode.useWorker ? 0 : 1);
 
         expect(player.getPlayerState()).to.equal("LOADING");
         const loadingTime = performance.now();
         await waitForLoadedStateAfterLoadVideo(player);
         expect(performance.now() - loadingTime).to.be.at.most(1000);
+
+        if (mode.useWorker) {
+          expect(mainThreadManifestLoaderCalledTimes).to.equal(0);
+          expect(workerManifestLoaderCalledTimes).to.equal(1);
+          expect(validManifestLoaderCallTimes).to.equal(1);
+          expect(mainThreadSegmentLoaderCalledTimes).to.equal(0);
+          expect(workerSegmentLoaderCalledTimes).to.be.above(2);
+        } else {
+          expect(mainThreadManifestLoaderCalledTimes).to.equal(1);
+          expect(workerManifestLoaderCalledTimes).to.equal(0);
+          expect(validManifestLoaderCallTimes).to.equal(1);
+          expect(mainThreadSegmentLoaderCalledTimes).to.be.above(2);
+          expect(workerSegmentLoaderCalledTimes).to.equal(0);
+        }
 
         const firstPeriodAdaptationsInfos = periodsInfos[firstPeriodIndex].adaptations;
         const audioRepresentationInfos =
@@ -170,7 +215,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         }
       });
 
-      if (transport === "dash" || transport === "smooth") {
+      // `initialManifest` is not handled in multithread mode
+      if ((transport === "dash" || transport === "smooth") && multithread !== true) {
         it("should not do the initial manifest request if an `initialManifest` option is set as a string", async function () {
           const initialManifest = await (await fetch(manifestInfos.url)).text();
           let manifestLoaderCalledTimes = 0;
@@ -192,6 +238,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           });
 
           await waitForLoadedStateAfterLoadVideo(player);
+          assertLoadedPlayerMode();
           expect(manifestLoaderCalledTimes).to.equal(0);
           expect(segmentLoaderLoaderCalledTimes).to.be.at.least(1);
         });
@@ -245,6 +292,9 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           transport,
         });
         await waitForLoadedStateAfterLoadVideo(player);
+
+        assertLoadedPlayerMode();
+
         if (!manifestInfos.isLive) {
           expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 0.1);
         } else {
@@ -270,6 +320,9 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           startAt: { position: manifestInfos.minimumPosition + 2 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
+
+        assertLoadedPlayerMode();
+
         expect(player.getPosition()).to.be.closeTo(
           manifestInfos.minimumPosition + 2,
           0.1,
@@ -289,6 +342,9 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           startAt: { position: manifestInfos.minimumPosition + 2 },
         });
         await waitForLoadedStateAfterLoadVideo(player);
+
+        assertLoadedPlayerMode();
+
         expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition + 2, 1);
         player.stop();
         player.reload({ reloadAt: { relative: 5 } });
@@ -306,6 +362,9 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           startAt: { position: manifestInfos.minimumPosition },
         });
         await waitForLoadedStateAfterLoadVideo(player);
+
+        assertLoadedPlayerMode();
+
         expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 0.1);
         player.seekTo({ position: manifestInfos.minimumPosition + 5 });
         await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
@@ -330,6 +389,9 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         });
         player.reload();
         await waitForLoadedStateAfterLoadVideo(player);
+
+        assertLoadedPlayerMode();
+
         expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 2);
       });
       it("should reload even when the last content was not yet loaded", async function () {
@@ -343,6 +405,9 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         await sleep(5);
         player.reload();
         await waitForLoadedStateAfterLoadVideo(player);
+
+        assertLoadedPlayerMode();
+
         expect(player.getPosition()).to.be.closeTo(manifestInfos.minimumPosition, 2);
       });
       it("should not reload when no content was yet loaded", async function () {
@@ -366,6 +431,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           "SEEKING",
           "RELOADING",
         ]);
+
+        assertLoadedPlayerMode();
       });
       it("should reload without autoplay when the current content is not yet loaded with autoPlay off", async function () {
         lockLowestBitrates(player);
@@ -381,6 +448,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           "SEEKING",
           "RELOADING",
         ]);
+
+        assertLoadedPlayerMode();
       });
       it("should reload with autoplay when the current content is loaded and playing", async function () {
         lockLowestBitrates(player);
@@ -399,6 +468,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           "SEEKING",
           "RELOADING",
         ]);
+
+        assertLoadedPlayerMode();
       });
       it("should reload without autoplay when the current content is loaded and paused", async function () {
         lockLowestBitrates(player);
@@ -424,6 +495,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           "SEEKING",
           "RELOADING",
         ]);
+
+        assertLoadedPlayerMode();
       });
       it("should reload with autoplay when the last content was not yet loaded with autoPlay on", async function () {
         lockLowestBitrates(player);
@@ -442,6 +515,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           "SEEKING",
           "RELOADING",
         ]);
+
+        assertLoadedPlayerMode();
       });
       it("should reload without autoplay when the last content was not yet loaded with autoPlay off", async function () {
         lockLowestBitrates(player);
@@ -459,6 +534,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           "SEEKING",
           "RELOADING",
         ]);
+
+        assertLoadedPlayerMode();
       });
       it("should reload with autoplay when the last content was loaded and playing", async function () {
         lockLowestBitrates(player);
@@ -479,6 +556,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           "SEEKING",
           "RELOADING",
         ]);
+
+        assertLoadedPlayerMode();
       });
       it("should reload without autoplay when the last content was loaded and paused", async function () {
         lockLowestBitrates(player);
@@ -506,6 +585,8 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           "SEEKING",
           "RELOADING",
         ]);
+
+        assertLoadedPlayerMode();
       });
       it("should respect `autoPlay` reload setting even if the non-yet loaded content had a different autoPlay setting", async () => {
         lockLowestBitrates(player);
@@ -1527,11 +1608,21 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          segmentLoader: () => {
-            /* do nothing */
+          segmentLoader: {
+            fn: () => {
+              if (multithread === true) {
+                throw new Error(
+                  "Unexpected main thread segmentLoader in multithread mode",
+                );
+              }
+              /* do nothing */
+            },
+            workerId: "hanging-segment-loader",
           },
         });
+
         await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
+          assertLoadedPlayerMode();
           const audioTracks = player.getAvailableAudioTracks();
 
           const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
@@ -1573,11 +1664,21 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          segmentLoader: () => {
-            /* do nothing */
+          segmentLoader: {
+            fn: () => {
+              if (multithread === true) {
+                throw new Error(
+                  "Unexpected main thread segmentLoader in multithread mode",
+                );
+              }
+              /* do nothing */
+            },
+            workerId: "hanging-segment-loader",
           },
         });
+
         await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
+          assertLoadedPlayerMode();
           const textTracks = player.getAvailableTextTracks();
 
           const textAdaptations = manifestInfos.periods[0].adaptations.text;
@@ -1617,11 +1718,21 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         player.loadVideo({
           url: manifestInfos.url,
           transport,
-          segmentLoader: () => {
-            /* do nothing */
+          segmentLoader: {
+            fn: () => {
+              if (multithread === true) {
+                throw new Error(
+                  "Unexpected main thread segmentLoader in multithread mode",
+                );
+              }
+              /* do nothing */
+            },
+            workerId: "hanging-segment-loader",
           },
         });
+
         await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
+          assertLoadedPlayerMode();
           const videoTracks = player.getAvailableVideoTracks();
 
           const videoAdaptations = manifestInfos.periods[0].adaptations.video;
@@ -1743,4 +1854,11 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
       }, 30000);
     });
   });
+
+  function assertLoadedPlayerMode() {
+    const mode = player.getCurrentModeInformation();
+    expect(mode).not.toBeNull();
+    expect(mode.useWorker).toEqual(multithread === true);
+    expect(mode.isDirectFile).toEqual(false);
+  }
 }

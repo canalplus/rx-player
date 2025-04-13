@@ -41,6 +41,8 @@ import type {
   IKeySystemOption,
   IPlayerError,
   IRepresentationFilter,
+  IManifestLoader,
+  ISegmentLoader,
 } from "../../public_types";
 import type { IThumbnailResponse, ITransportOptions } from "../../transports";
 import arrayFind from "../../utils/array_find";
@@ -1280,6 +1282,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           }
           break;
         }
+        case CoreMessageType.AppDefined:
+          break;
         default:
           assertUnreachable(msgData);
       }
@@ -2146,8 +2150,29 @@ export interface IInitializeArguments {
    */
   transport: string;
   /** Options relative to the streaming protocol. */
-  transportOptions: Omit<ITransportOptions, "representationFilter"> & {
-    representationFilter?: IRepresentationFilter | string | undefined;
+  transportOptions: Omit<
+    ITransportOptions,
+    "representationFilter" | "manifestLoader" | "segmentLoader"
+  > & {
+    manifestLoader:
+      | undefined
+      | {
+          fn?: IManifestLoader | undefined;
+          workerId?: string | undefined;
+        };
+    segmentLoader:
+      | undefined
+      | {
+          fn?: ISegmentLoader | undefined;
+          workerId?: string | undefined;
+        };
+    representationFilter:
+      | undefined
+      | {
+          fn?: IRepresentationFilter | undefined;
+          eval?: string | undefined;
+          workerId?: string | undefined;
+        };
   };
   /** Settings linked to Manifest requests. */
   manifestRequestSettings: {
