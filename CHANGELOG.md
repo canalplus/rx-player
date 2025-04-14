@@ -1,14 +1,19 @@
 # Changelog
 
-## Current dev build: v4.3.1-dev.2025041003
+## Current dev build: v4.4.0-dev.2025041400
+
+### Features
+
+- DRM: Add `keySystem` and `keySystemConfiguration` to most `EncryptedMediaError` so an
+  application can determine which key system caused an issue [#1690]
 
 ### Bug fixes
 
-- fix(DRM): renew the mediaKeySystemAccess on Edge and Firefox when using a Playready
-  keySystem to work-around frequent DRM issues. [#1694]
-- fix(DRM): On Firefox check extensively Playready DRMs support before using them to
+- DRM: renew the mediaKeySystemAccess on Edge and Firefox when using a Playready keySystem
+  to work-around frequent DRM issues. [#1694]
+- DRM: On Firefox check extensively Playready DRMs support before using them to
   work-around recent firefox issue with PlayReady integration [#1691]
-- [MULTI_THREAD] Communicate to `/init` whether we're relying on MSE-in-worker [#1669]
+- MULTI_THREAD: Communicate to `/init` whether we're relying on MSE-in-worker [#1669]
 
 ## v4.3.0
 
