@@ -138,6 +138,9 @@ fi
 npm run releases:changelog -- $version
 
 $EDITOR CHANGELOG.md
+echo "Running prettier on CHANGELOG.md..."
+npx prettier --write CHANGELOG.md --log-level silent
+echo ""
 
 if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
   echo "-- Current CHANGELOG.md Status: --"
@@ -234,6 +237,9 @@ else
 fi
 
 $EDITOR CHANGELOG.md
+echo "Running prettier on CHANGELOG.md..."
+npx prettier --write CHANGELOG.md --log-level silent
+echo ""
 if [ -n "$(git status --porcelain)" ]; then
   emphasized_log "Commiting CHANGELOG.md update..."
   git add CHANGELOG.md

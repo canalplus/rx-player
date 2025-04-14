@@ -100,6 +100,9 @@ fi
 npm run releases:changelog -- $dev_version -d
 
 $EDITOR CHANGELOG.md
+echo "Running prettier on CHANGELOG.md..."
+npx prettier --write CHANGELOG.md --log-level silent
+echo ""
 
 if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
   echo "-- Current CHANGELOG.md Status: --"
