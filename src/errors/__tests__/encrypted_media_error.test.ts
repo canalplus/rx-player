@@ -4,13 +4,21 @@ import EncryptedMediaError from "../encrypted_media_error";
 describe("errors - EncryptedMediaError", () => {
   it("should format an EncryptedMediaError", () => {
     const reason = "test";
-    const encryptedMediaError = new EncryptedMediaError("KEY_LOAD_TIMEOUT", reason);
+    const encryptedMediaError = new EncryptedMediaError(
+      "MEDIA_IS_ENCRYPTED_ERROR",
+      reason,
+      {
+        keyStatuses: undefined,
+        keySystemConfiguration: undefined,
+        keySystem: undefined,
+      },
+    );
     expect(encryptedMediaError).toBeInstanceOf(Error);
     expect(encryptedMediaError.name).toBe("EncryptedMediaError");
     expect(encryptedMediaError.type).toBe("ENCRYPTED_MEDIA_ERROR");
-    expect(encryptedMediaError.code).toBe("KEY_LOAD_TIMEOUT");
+    expect(encryptedMediaError.code).toBe("MEDIA_IS_ENCRYPTED_ERROR");
     expect(encryptedMediaError.fatal).toBe(false);
-    expect(encryptedMediaError.message).toBe("KEY_LOAD_TIMEOUT: test");
+    expect(encryptedMediaError.message).toBe("MEDIA_IS_ENCRYPTED_ERROR: test");
   });
 
   it("should be able to set it as fatal", () => {
@@ -18,6 +26,11 @@ describe("errors - EncryptedMediaError", () => {
     const encryptedMediaError = new EncryptedMediaError(
       "INCOMPATIBLE_KEYSYSTEMS",
       reason,
+      {
+        keyStatuses: undefined,
+        keySystemConfiguration: undefined,
+        keySystem: undefined,
+      },
     );
     encryptedMediaError.fatal = true;
     expect(encryptedMediaError).toBeInstanceOf(Error);

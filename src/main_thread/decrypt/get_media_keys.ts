@@ -157,6 +157,10 @@ async function createMediaKeys(
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error when creating MediaKeys.";
-    throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message);
+    throw new EncryptedMediaError("CREATE_MEDIA_KEYS_ERROR", message, {
+      keyStatuses: undefined,
+      keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
+      keySystem: mediaKeySystemAccess.keySystem,
+    });
   }
 }

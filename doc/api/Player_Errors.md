@@ -382,11 +382,34 @@ the following properties:
 Those errors are linked to the "Encrypted Media Extensions" API. They concern various
 DRM-related problems.
 
-They all have a `type` property equal to `"ENCRYPTED_MEDIA_ERROR"`.
+They have the following properties:
 
-When its code is set to `KEY_STATUS_CHANGE_ERROR`, an ENCRYPTED_MEDIA_ERROR generally also
-have a `keyStatuses` property, which is documented in the corresponding
-`KEY_STATUS_CHANGE_ERROR` code explanation below.
+- `type` (`string`): Equal to `"ENCRYPTED_MEDIA_ERROR"`.
+
+- `keySystem` (`string | undefined`): If known, the
+  [`keySystem`](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySystemAccess/keySystem)
+  of the `MediaKeySystemAccess` that encountered the error. This might be useful to check
+  e.g. if the error was encountered while relying on PlayReady, Widevine or other
+  indentified technologies.
+
+  Note that it is not set for some errors for which it wouldn't make sense, such as for
+  `EncryptedMediaError` instances with the `code` `MEDIA_IS_ENCRYPTED_ERROR`.
+
+- `keySystemConfiguration` (`MediaKeySystemAccessConfiguration | undefined`): If known,
+  the
+  [`MediaKeySystemAccessConfiguration`](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySystemAccess/getConfiguration)
+  of the `MediaKeySystemAccess` that encountered the error. This might be useful to for
+  example be able to check the key system's robustness (e.g. PlayReady SL3000 vs SL2000,
+  or Widevine L3 vs L1) when the Error was encountered.
+
+  Note that it is not set for some errors for which it wouldn't make sense, such as for
+  `EncryptedMediaError` instances with the `code` `MEDIA_IS_ENCRYPTED_ERROR`.
+
+- `keyStatuses` (`Array.<Object>`): Only set for `EncryptedMediaError` instances which
+  have the `code` `KEY_STATUS_CHANGE_ERROR`.
+
+  This corresponds to the corresponding statuses. More information in the code's
+  documentation below.
 
 #### codes
 

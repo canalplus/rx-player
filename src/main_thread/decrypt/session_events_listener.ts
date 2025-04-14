@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import type { IMediaKeySession } from "../../compat/browser_compatibility_types";
+import type {
+  IMediaKeySession,
+  IMediaKeySystemAccess,
+} from "../../compat/browser_compatibility_types";
 import {
   onKeyError,
   onKeyMessage,
@@ -35,14 +38,15 @@ import checkKeyStatuses from "./utils/check_key_statuses";
  * depending on the configuration given.
  * @param {MediaKeySession} session - The MediaKeySession concerned.
  * @param {Object} keySystemOptions - The key system options.
- * @param {String} keySystem - The configuration keySystem used for deciphering
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess - The
+ * `MediaKeySystemAccess` that produced the linked `MediaKeys` instance.
  * @param {Object} callbacks
  * @param {Object} cancelSignal
  */
 export default function SessionEventsListener(
   session: IMediaKeySession,
   keySystemOptions: IKeySystemOption,
-  keySystem: string,
+  mediaKeySystemAccess: IMediaKeySystemAccess,
   callbacks: ISessionEventListenerCallbacks,
   cancelSignal: CancellationSignal,
 ): void {
@@ -70,7 +74,13 @@ export default function SessionEventsListener(
     session,
     (evt) => {
       manualCanceller.cancel();
-      callbacks.onError(new EncryptedMediaError("KEY_ERROR", (evt as Event).type));
+      callbacks.onError(
+        new EncryptedMediaError("KEY_ERROR", (evt as Event).type, {
+          keyStatuses: undefined,
+          keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
+          keySystem: mediaKeySystemAccess.keySystem,
+        }),
+      );
     },
     manualCanceller.signal,
   );
@@ -120,7 +130,11 @@ export default function SessionEventsListener(
             log.info("DRM: No license given, skipping session.update");
           } else {
             try {
-              await updateSessionWithMessage(session, licenseObject);
+              await updateSessionWithMessage(
+                session,
+                licenseObject,
+                mediaKeySystemAccess,
+              );
             } catch (err) {
               manualCanceller.cancel();
               callbacks.onError(err);
@@ -132,7 +146,7 @@ export default function SessionEventsListener(
             return;
           }
           manualCanceller.cancel();
-          const formattedError = formatGetLicenseError(err);
+          const formattedError = formatGetLicenseError(err, mediaKeySystemAccess);
 
           if (!isNullOrUndefined(err)) {
             const { fallbackOnLastTry } = err as {
@@ -170,7 +184,7 @@ export default function SessionEventsListener(
     const { warning, blacklistedKeyIds, whitelistedKeyIds } = checkKeyStatuses(
       session,
       keySystemOptions,
-      keySystem,
+      mediaKeySystemAccess,
     );
     if (warning !== undefined) {
       callbacks.onWarning(warning);
@@ -237,7 +251,8 @@ export default function SessionEventsListener(
         error instanceof GetLicenseTimeoutError ||
         isNullOrUndefined(error) ||
         (error as { noRetry?: boolean }).noRetry !== true,
-      onRetry: (error: unknown) => callbacks.onWarning(formatGetLicenseError(error)),
+      onRetry: (error: unknown) =>
+        callbacks.onWarning(formatGetLicenseError(error, mediaKeySystemAccess)),
     };
   }
 }
@@ -257,19 +272,35 @@ export interface ISessionEventListenerCallbacks {
  * Format an error returned by a `getLicense` call to a proper form as defined
  * by the RxPlayer's API.
  * @param {*} error
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess - The
+ * `MediaKeySystemAccess` that produced the linked `MediaKeys` instance.
+ * This parameter is mainly useful for error generation.
  * @returns {Error}
  */
-function formatGetLicenseError(error: unknown): IPlayerError {
+function formatGetLicenseError(
+  error: unknown,
+  mediaKeySystemAccess: IMediaKeySystemAccess,
+): IPlayerError {
   if (error instanceof GetLicenseTimeoutError) {
     return new EncryptedMediaError(
       "KEY_LOAD_TIMEOUT",
       "The license server took too much time to " + "respond.",
+      {
+        keyStatuses: undefined,
+        keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
+        keySystem: mediaKeySystemAccess.keySystem,
+      },
     );
   }
 
   const err = new EncryptedMediaError(
     "KEY_LOAD_ERROR",
     "An error occured when calling `getLicense`.",
+    {
+      keyStatuses: undefined,
+      keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
+      keySystem: mediaKeySystemAccess.keySystem,
+    },
   );
   if (
     !isNullOrUndefined(error) &&
@@ -284,18 +315,26 @@ function formatGetLicenseError(error: unknown): IPlayerError {
  * Call MediaKeySession.update with the given `message`, if defined.
  * @param {MediaKeySession} session
  * @param {ArrayBuffer|TypedArray|null} message
+ * @param {MediaKeySystemAccess} mediaKeySystemAccess - The
+ * `MediaKeySystemAccess` that produced the linked `MediaKeys` instance.
+ * This parameter is mainly useful for error generation.
  * @returns {Promise}
  */
 async function updateSessionWithMessage(
   session: IMediaKeySession,
   message: BufferSource,
+  mediaKeySystemAccess: IMediaKeySystemAccess,
 ): Promise<void> {
   log.info("DRM: Updating MediaKeySession with message");
   try {
     await session.update(message);
   } catch (error) {
     const reason = error instanceof Error ? error.toString() : "`session.update` failed";
-    throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason);
+    throw new EncryptedMediaError("KEY_UPDATE_ERROR", reason, {
+      keyStatuses: undefined,
+      keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
+      keySystem: mediaKeySystemAccess.keySystem,
+    });
   }
   log.info("DRM: MediaKeySession update succeeded.");
 }

@@ -33,7 +33,15 @@ describe("Errors - isKnownError", () => {
   });
 
   it("should return true for an EncryptedMediaError", () => {
-    const encryptedMediaError = new EncryptedMediaError("KEY_UPDATE_ERROR", "toto");
+    const encryptedMediaError = new EncryptedMediaError(
+      "INCOMPATIBLE_KEYSYSTEMS",
+      "toto",
+      {
+        keyStatuses: undefined,
+        keySystemConfiguration: undefined,
+        keySystem: undefined,
+      },
+    );
     expect(isKnownError(encryptedMediaError)).toBe(true);
   });
 });

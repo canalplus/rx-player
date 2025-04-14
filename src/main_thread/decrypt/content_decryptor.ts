@@ -300,7 +300,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
 
         const { serverCertificate } = options;
         if (!isNullOrUndefined(serverCertificate)) {
-          const resSsc = await setServerCertificate(mediaKeys, serverCertificate);
+          const resSsc = await setServerCertificate(
+            mediaKeys,
+            serverCertificate,
+            mediaKeySystemAccess,
+          );
           if (resSsc.type === "error") {
             this.trigger("warning", resSsc.value);
           }
@@ -584,7 +588,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
     SessionEventsListener(
       mediaKeySession,
       options,
-      mediaKeySystemAccess.keySystem,
+      mediaKeySystemAccess,
       {
         onKeyUpdate: (value: IKeyUpdateValue): void => {
           const linkedKeys = getKeyIdsLinkedToSession(
@@ -715,6 +719,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
         throw new EncryptedMediaError(
           "KEY_GENERATE_REQUEST_ERROR",
           error instanceof Error ? error.toString() : "Unknown error",
+          {
+            keyStatuses: undefined,
+            keySystemConfiguration: mediaKeySystemAccess.getConfiguration(),
+            keySystem: mediaKeySystemAccess.keySystem,
+          },
         );
       }
     }
