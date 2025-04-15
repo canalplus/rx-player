@@ -148,6 +148,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   let globalScope = false;
   let outputFile = "";
   let silent = false;
+  let name;
 
   if (args[0] === "-h" || args[0] === "--help") {
     displayHelp();
@@ -185,6 +186,19 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       case "-s":
       case "--silent":
         silent = true;
+        break;
+
+      case "-n":
+      case "--name":
+        {
+          argOffset++;
+          name = args[argOffset];
+          if (name === undefined) {
+            console.error("ERROR: no name provided\n");
+            displayHelp();
+            process.exit(1);
+          }
+        }
         break;
 
       case "-o":
@@ -231,6 +245,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       globalScope,
       silent,
       outfile: outputFile,
+      name,
     }).catch((err) => {
       console.error(`ERROR: ${err}\n`);
       process.exit(1);
@@ -257,6 +272,7 @@ Available options:
   -m, --minify                Minify the built bundle.
   -p, --production-mode       Build all files in production mode (less runtime checks, mostly).
   -g, --globals               Add the RxPlayer to the global scope.
+  -n, --name                  Optional "name" to refer to your bundle. Will be used for in log output outputs.
   -s, --silent                Don't log to stdout/stderr when bundling.
   -w, --watch                 Re-build each time any of the files depended on changed.`,
   );
