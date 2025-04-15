@@ -13,9 +13,7 @@
 import { stat } from "fs";
 import { join } from "path";
 import { pathToFileURL } from "url";
-import esbuild from "esbuild";
 import rootDirectory from "./utils/project_root_directory.mjs";
-import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 import runBundler from "./run_bundler.mjs";
 
 const WORKER_IN_FILE = join(rootDirectory, "src/worker_entry_point.ts");
@@ -68,6 +66,7 @@ export default function buildDemo(options = {}) {
   }
 
   const promWorkerBuild = runBundler(WORKER_IN_FILE, {
+    name: "RxPlayer Worker",
     watch,
     minify,
     production: !isDevMode,
@@ -75,74 +74,17 @@ export default function buildDemo(options = {}) {
     silent: !verbose,
   });
 
-  /** Declare a plugin to anounce when a build begins and ends */
-  const consolePlugin = {
-    name: "onEnd",
-    setup(build) {
-      build.onStart(() => {
-        if (verbose) {
-          console.log(
-            `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` + "New demo build started",
-          );
-        }
-      });
-      build.onEnd((result) => {
-        if (!verbose) {
-          return;
-        }
-        if (result.errors.length > 0 || result.warnings.length > 0) {
-          const { errors, warnings } = result;
-          console.log(
-            `\x1b[33m[${getHumanReadableHours()}]\x1b[0m ` +
-              `Demo re-built with ${errors.length} error(s) and ` +
-              ` ${warnings.length} warning(s) `,
-          );
-          return;
-        }
-        console.log(
-          `\x1b[32m[${getHumanReadableHours()}]\x1b[0m ` + `Demo updated at ${outfile}!`,
-        );
-      });
-    },
-  };
-
-  const meth = watch ? "context" : "build";
-
-  // Create a context for incremental builds
-  const promDemoBuild = esbuild[meth]({
-    entryPoints: [join(rootDirectory, "demo/scripts/index.tsx")],
-    bundle: true,
-    target: "es2017",
+  const promDemoBuild = runBundler(join(rootDirectory, "demo/scripts/index.tsx"), {
+    name: "Demo files",
+    watch,
     minify,
     outfile,
-    plugins: [consolePlugin],
-    define: {
-      "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-      __INCLUDE_WASM_PARSER__: JSON.stringify(includeWasmParser),
-      __ENVIRONMENT__: JSON.stringify({
-        PRODUCTION: 0,
-        DEV: 1,
-        CURRENT_ENV: isDevMode ? 1 : 0,
-      }),
-      __LOGGER_LEVEL__: JSON.stringify({
-        CURRENT_LEVEL: "INFO",
-      }),
-      __GLOBAL_SCOPE__: JSON.stringify(true),
+    production: !isDevMode,
+    silent: !verbose,
+    globals: {
+      __INCLUDE_WASM_PARSER__: String(includeWasmParser),
     },
-  })
-    .then((context) => {
-      if (watch) {
-        return context.watch();
-      }
-    })
-    .catch((err) => {
-      if (verbose) {
-        console.error(
-          `\x1b[31m[${getHumanReadableHours()}]\x1b[0m Demo build failed:`,
-          err,
-        );
-      }
-    });
+  });
 
   return Promise.all([promWorkerBuild, promDemoBuild]);
 }

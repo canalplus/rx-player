@@ -21,6 +21,8 @@ import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
  * Run bundler with the given options.
  * @param {string} inputFile
  * @param {Object} options
+ * @param {boolean} [options.name] - The "name" associated to your bundle, will
+ * be used in logs if `options.silent` is set to `false`.
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.globalScope] - If `true`, enable global scope mode
  * (the `__GLOBAL_SCOPE__` global symbol will be set to `true` in the bundle).
@@ -34,6 +36,7 @@ import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
  * @returns {Promise}
  */
 export default async function runBundler(inputFile, options) {
+  const name = options.name;
   const minify = !!options.minify;
   const watch = !!options.watch;
   const isDevMode = !options.production;
@@ -48,18 +51,28 @@ export default async function runBundler(inputFile, options) {
   const esbuildStepsPlugin = {
     name: "bundler-steps",
     setup(build) {
-      build.onStart(() => logWarning(`Bundling of ${inputFile} started`));
+      build.onStart(() => {
+        if (name != null) {
+          logWarning(`Bundling for "${name}" started. (${inputFile}).`);
+        } else {
+          logWarning(`Bundling of "${inputFile}" started.`);
+        }
+      });
       build.onEnd((result) => {
         if (result.errors.length > 0 || result.warnings.length > 0) {
           const { errors, warnings } = result;
           logWarning(
-            `File re-bundle of ${inputFile} failed with ${errors.length} error(s) and ` +
+            `Re-bundling for "${name ?? inputFile}" failed with ${errors.length} error(s) and ` +
               ` ${warnings.length} warning(s) `,
           );
           return;
         }
         if (outfile !== undefined) {
-          logSuccess(`File updated at ${outfile}!`);
+          if (name != null) {
+            logSuccess(`Bundling for "${name}" succeeded. (${outfile}).`);
+          } else {
+            logSuccess(`Bundling of "${outfile}" succeeded.`);
+          }
         }
       });
     },
@@ -92,7 +105,7 @@ export default async function runBundler(inputFile, options) {
       return context.watch();
     }
   } catch (err) {
-    logError(`Bundling failed for ${inputFile}:`, err);
+    logError(`Bundling failed for "${name ?? inputFile}":`, err);
     throw err;
   }
 
