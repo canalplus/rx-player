@@ -2,13 +2,13 @@
 /* eslint-env node */
 
 import { exec, spawn } from "child_process";
-import esbuild from "esbuild";
 import * as fs from "fs/promises";
 import { createServer } from "http";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import launchStaticServer from "../../scripts/launch_static_server.mjs";
 import removeDir from "../../scripts/utils/remove_dir.mjs";
+import runBundler from "../../scripts/run_bundler.mjs";
 import createContentServer from "../contents/server.mjs";
 import { rmSync, writeFileSync } from "fs";
 
@@ -465,7 +465,7 @@ async function initializePerformanceTestsPages({ branchName, remoteGitUrl }) {
  */
 async function prepareCurrentRxPlayerTests() {
   await linkCurrentRxPlayer();
-  await createBundle({ output: "current.js", minify: false, production: true });
+  await createBundle({ output: "current.js", minify: true, production: true });
 }
 
 /**
@@ -480,7 +480,7 @@ async function prepareCurrentRxPlayerTests() {
  */
 async function prepareLastRxPlayerTests({ branchName, remoteGitUrl }) {
   await linkRxPlayerBranch({ branchName, remoteGitUrl });
-  await createBundle({ output: "previous.js", minify: false, production: true });
+  await createBundle({ output: "previous.js", minify: true, production: true });
 }
 
 /**
@@ -981,35 +981,26 @@ function getSamplePerScenarios(samplesObj) {
  * in "development" mode, which has supplementary assertions.
  * @returns {Promise}
  */
-function createBundle(options) {
+async function createBundle(options) {
   const minify = !!options.minify;
-  const isDevMode = !options.production;
-  return esbuild
-    .build({
-      entryPoints: [path.join(currentDirectory, "src", "main.js")],
-      bundle: true,
+  try {
+    await runBundler(path.join(currentDirectory, "src", "main.js"), {
       minify,
+      silent: true,
+      globalScope: false,
+      production: true,
+      watch: false,
       outfile: path.join(currentDirectory, options.output),
-      define: {
+      globals: {
         __TEST_CONTENT_SERVER__: JSON.stringify({
           URL: "127.0.0.1",
           PORT: "3000",
         }),
-        "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-        __ENVIRONMENT__: JSON.stringify({
-          PRODUCTION: 0,
-          DEV: 1,
-          CURRENT_ENV: isDevMode ? 1 : 0,
-        }),
-        __LOGGER_LEVEL__: JSON.stringify({
-          CURRENT_LEVEL: "INFO",
-        }),
-        __GLOBAL_SCOPE__: JSON.stringify(false),
       },
-    })
-    .catch((err) => {
-      throw new Error(`Demo build failed:`, err);
     });
+  } catch (err) {
+    throw new Error(`Performance build failed:`, err);
+  }
 }
 
 /**
