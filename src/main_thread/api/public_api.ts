@@ -489,6 +489,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           new WorkerInitializationError("INCOMPATIBLE_ERROR", "Worker unavailable"),
         );
       }
+
+      // if the user already attach worker before
+      // terminate the previous worker to release the resources
+      if (this._priv_worker !== null) {
+        this._priv_worker.terminate();
+      }
+
       if (typeof workerSettings.workerUrl === "string") {
         this._priv_worker = new Worker(workerSettings.workerUrl);
       } else {
