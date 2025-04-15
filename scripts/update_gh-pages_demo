@@ -28,7 +28,7 @@ if ! [ "$current_branch" == "stable" ]; then
 fi
 
 # Generate demo
-npm run demo:min
+npm run demo -- --minify
 
 if [ -n "$(git status --porcelain doc)" ]; then
   echo "ERROR: Please commit your modifications to \"stable\""

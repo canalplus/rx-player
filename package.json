@@ -146,16 +146,11 @@
   "sideEffects": false,
   "scripts": {
     "build": "node ./scripts/generate_build.mjs",
-    "build:noCheck": "node ./scripts/generate_build.mjs --no-check",
     "build:all": "npm run clean:build && npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
-    "build:dev": "node ./scripts/generate_build.mjs --dev-mode",
-    "build:dev:noCheck": "node ./scripts/generate_build.mjs --dev-mode --no-check",
     "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "bash ./scripts/build_wasm_release.sh",
     "bundle": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals -o dist/rx-player.js",
     "bundle:min": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals -o dist/rx-player.min.js --minify",
-    "bundle:min:watch": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals -o dist/rx-player.min.js --minify --watch",
-    "bundle:watch": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals -o dist/rx-player.js --watch",
     "certificate": "bash ./scripts/generate_certificate",
     "check": "npm run check:types && npm run lint && npm run check:types:unit_tests",
     "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run lint:scripts && npm run test:unit && npm run test:integration && npm run test:memory && node -r esm ./scripts/check_nodejs_import_compatibility.js",
@@ -165,10 +160,7 @@
     "check:types": "tsc --noEmit --project .",
     "check:types:unit_tests": "tsc --noEmit --project ./tsconfig.unit-tests.json",
     "check:types:watch": "tsc --noEmit --watch --project .",
-    "clean:wasm": "node scripts/utils/remove_dir.mjs dist/mpd-parser.wasm && node scripts/utis/remove_dir.mjs ./src/parsers/manifest/dash/wasm-parser/target",
     "demo": "node ./scripts/build_demo.mjs --production-mode",
-    "demo:min": "node ./scripts/build_demo.mjs --production-mode --minify",
-    "demo:watch": "node ./scripts/build_demo.mjs --watch --production-mode",
     "doc": "readme.doc --clean --input doc/ --output doc/generated -p \"$(cat VERSION)\"",
     "fmt:prettier": "prettier --write .",
     "fmt:prettier:check": "prettier . --check",
@@ -187,7 +179,6 @@
     "releases:doc": "bash ./scripts/update_gh-pages_doc",
     "releases:official": "bash ./scripts/make-official-release.sh",
     "start": "node ./scripts/start_demo_web_server.mjs",
-    "start:wasm": "node ./scripts/start_demo_web_server.mjs --include-wasm",
     "test:integration": "npm run test:integration:chrome && npm run test:integration:firefox",
     "test:integration:chrome": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest run tests/integration/scenarios",
     "test:integration:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/integration/scenarios",
@@ -199,10 +190,9 @@
     "test:memory": "cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
     "test:memory:chrome:watch": "cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:unit": "vitest --config vitest.config.unit.mjs",
-    "test:unit:watch": "cross-env WATCH=true vitest --config vitest.config.unit.mjs",
+    "test:unit:watch": "vitest --config vitest.config.unit.mjs --watch",
     "update-version": "npm run version --git-tag-version=false",
-    "version": "bash ./scripts/update-version",
-    "wasm-strip": "node scripts/wasm-strip.mjs dist/mpd-parser.wasm"
+    "version": "bash ./scripts/update-version"
   },
   "repository": {
     "type": "git",
@@ -242,11 +232,8 @@
   "scripts-list": {
     " INFO ": "---- This field is read by the `list` npm script and allows to guide you through the RxPlayer's npm scripts ----",
     "Build a demo page (e.g. to test a code change)": {
-      "start": "Build the demo with the non-minified RxPlayer and serve it on a local server. Re-build on file updates.",
-      "start:wasm": "Build the demo with the non-minified RxPlayer including the DASH WebAssembly MPD parser and serve it on a local server. Re-build on file updates.",
-      "demo": "Build the demo in demo/bundle.js",
-      "demo:min": "Build the demo and minify it in demo/bundle.js",
-      "demo:watch": "Build the demo in demo/bundle.js each times the files update.",
+      "start": "Build the demo with the non-minified RxPlayer and serve it on a local server. Re-build on file updates.\nUse `--help` option (`-- --help` when using `npm run`) to list options.",
+      "demo": "Build the demo in demo/bundle.js.\nUse `--help` option (`-- --help` when using `npm run`) to list options.",
       "check:demo": "Check the validity of the demo directory by running the type checker and linter on it",
       "check:demo:types": "Check TypeScript types in demo files",
       "lint:demo": "Run linter on demo files",
@@ -275,8 +262,8 @@
         "test:integration:chrome:watch": "Launch integration tests in Chrome each times the files update",
         "test:integration:firefox": "Launch integration tests in a Firefox browser.",
         "test:integration:firefox:watch": "Launch integration tests in Firefox each times the files update",
-        "test:integration:Edge": "Launch integration tests in an Edge browser.",
-        "test:integration:Edge:watch": "Launch integration tests in Edge each times the files update"
+        "test:integration:edge": "Launch integration tests in an Edge browser.",
+        "test:integration:edge:watch": "Launch integration tests in Edge each times the files update"
       },
       "Unit tests (test particular functions)": {
         "test:unit": "Launch unit tests",
@@ -289,16 +276,12 @@
     },
     "Build the player or one of its sub-parts": {
       "Regular builds (used by JS bundlers)": {
-        "build": "Build the rx-player code in release mode",
-        "build:dev": "Build the rx-player code in development mode (more runtime checks, non-minified worker)",
-        "build:noCheck": "Build the rx-player code in release mode without performing compile-time type checks",
-        "build:dev:noCheck": "Build the rx-player code in development mode (more runtime checks, non-minified worker) without performing compile-time type checks"
+        "build": "Build the rx-player code in release mode. Use `--help` option (`-- --help` when using `npm run`) to list options.",
+        "build -- --dev-mode": "Build the rx-player code in development mode (more runtime checks, non-minified worker)"
       },
       "Legacy bundle builds (single-file bundles exporting to window.RxPlayer)": {
-        "bundle": "Build the player in dist/rx-player.js",
-        "bundle:min": "Build the player and minify it in dist/rx-player.min.js",
-        "bundle:min:watch": "Build the player in dist/rx-player.js each times the files update",
-        "bundle:watch": "Build the player as a minified version in dist/rx-player.min.js each times the files update"
+        "bundle": "Build the player in dist/rx-player.js. Use `--help` option (`-- --help` when using `npm run`) to list options.",
+        "bundle:min": "Build the player and minify it in dist/rx-player.min.js."
       },
       "WebAssembly MPD parser builds (needs Rust, Cargo and binaryen)": {
         "build:wasm:debug": "Build the DASH MPD parser written in rust as WebAssembly into debug mode, and output the result as dist/mpd-parser.wasm",
