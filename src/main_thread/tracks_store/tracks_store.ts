@@ -1212,9 +1212,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   private _removePeriodObject(index: number) {
-    if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-      assert(index < this._storedPeriodInfo.length, "Invalid index for Period removal");
-    }
+    assert(index < this._storedPeriodInfo.length);
     const oldPeriodItem = this._storedPeriodInfo[index];
     this._storedPeriodInfo[index].isRemoved = true;
     this._storedPeriodInfo.splice(index, 1);

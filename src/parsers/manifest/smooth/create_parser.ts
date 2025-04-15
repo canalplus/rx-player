@@ -301,9 +301,7 @@ function createSmoothStreamingParser(
     const language = root.getAttribute("Language");
     const UrlAttr = root.getAttribute("Url");
     const UrlPathWithTokens = UrlAttr === null ? "" : UrlAttr;
-    if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-      assert(UrlPathWithTokens !== "");
-    }
+    assert(UrlPathWithTokens !== "");
 
     const { qualityLevels, cNodes } = reduceChildren<{
       qualityLevels: ISmoothParsedQualityLevel[];

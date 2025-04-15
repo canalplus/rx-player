@@ -101,11 +101,9 @@ export default class TextTrackCuesStore {
    * @param {Number} _to
    */
   remove(from: number, _to: number): void {
-    if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-      assert(from >= 0);
-      assert(_to >= 0);
-      assert(_to > from);
-    }
+    assert(from >= 0);
+    assert(_to >= 0);
+    assert(_to > from);
 
     const to = Math.max(from, _to);
     const cuesBuffer = this._cuesBuffer;
