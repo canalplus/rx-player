@@ -34,6 +34,9 @@ import PROJECT_ROOT_DIRECTORY from "./utils/project_root_directory.mjs";
  * @param {boolean} [options.silent] - If `true`, we won't output logs.
  * @param {string} [options.outfile] - Destination of the produced es2017
  * bundle. To ignore to skip ES2017 bundle generation.
+ * @param {Object} [options.globals] - Optional globally-defined identifiers, as
+ * a key-value objects, where the object is a string (trick: if you want to
+ * replace an identifier with a string, call `JSON.stringify` on it).
  * @returns {Promise}
  */
 export default async function runBundler(inputFile, options) {
@@ -43,6 +46,7 @@ export default async function runBundler(inputFile, options) {
   const isDevMode = !options.production;
   const isSilent = options.silent;
   const outfile = options.outfile;
+  const globals = options.globals;
   const relativeInFile = path.relative(PROJECT_ROOT_DIRECTORY, inputFile);
   const relativeOutfile =
     outfile === undefined
@@ -105,6 +109,7 @@ export default async function runBundler(inputFile, options) {
         }),
         __LOGGER_LEVEL__: JSON.stringify({ CURRENT_LEVEL: isDevMode ? "INFO" : "NONE" }),
         __GLOBAL_SCOPE__: JSON.stringify(globalScope),
+        ...globals,
       },
     });
     if (watch) {
