@@ -246,12 +246,10 @@ export interface INativeTextTracksBufferSegmentData {
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  // @ts-expect-error: uncalled function just for type checking
-  function _checkType(input: ITextTrackSegmentData): void {
-    function checkEqual(_arg: INativeTextTracksBufferSegmentData): void {
-      /* nothing */
-    }
-    checkEqual(input);
+// @ts-expect-error: uncalled function just for type checking
+function _checkType(input: ITextTrackSegmentData): void {
+  function checkEqual(_arg: INativeTextTracksBufferSegmentData): void {
+    /* nothing */
   }
+  checkEqual(input);
 }

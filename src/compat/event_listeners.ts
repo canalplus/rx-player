@@ -159,13 +159,11 @@ function createCompatibleEventListener(
           }
         });
       } else {
-        if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-          log.warn(
-            `compat: element ${element.tagName}` +
-              " does not support any of these events: " +
-              prefixedEvents.join(", "),
-          );
-        }
+        log.warn(
+          `compat: element ${element.tagName}` +
+            " does not support any of these events: " +
+            prefixedEvents.join(", "),
+        );
         return;
       }
     }
