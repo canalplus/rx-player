@@ -124,6 +124,9 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       case "--include-wasm":
         includeWasmParser = true;
         break;
+      case "--":
+        argOffset = args.length;
+        break;
       default: {
         console.error('ERROR: unknown option: "' + currentArg + '"\n');
         displayHelp();
