@@ -36,7 +36,11 @@ async function run() {
   console.log("\x1b[33m~~~~~~~~~~~~~~~~ RxPlayer scripts ~~~~~~~~~~~~~~~~\n");
   console.log("\x1b[34m============ What do you want to do? =============\n");
   groupNames.forEach((key, groupIdx) => {
-    console.log(`\x1b[32m${groupIdx + 1}.\x1b[37m ${key}`);
+    const lineIndentedKey = addPrefixOnLineBreak(
+      key,
+      " ".repeat(String(groupIdx + 1).length + 2),
+    );
+    console.log(`\x1b[32m${groupIdx + 1}.\x1b[37m ${lineIndentedKey}`);
   });
   console.log("");
   const groupChoiceNum = await getChoice(groupNames.length);
@@ -68,20 +72,26 @@ async function run() {
       groupEntries.forEach(([name, val]) => {
         if (typeof val === "string") {
           commandArray.push(name);
-          console.log(
-            `${indentation}${emphasize(currCommandNb + ".")} [${emphasize(
-              `npm run ${name}`,
-            )}]:`,
+          const commandLineBeginningStr = `${indentation}${emphasize(currCommandNb + ".")} [`;
+          const numberOfSpacesForCommandNumber = String(currCommandNb).length;
+          const numberOfSpacesAtCommand =
+            indentation.length + numberOfSpacesForCommandNumber + 3;
+          const commandStr = addPrefixOnLineBreak(
+            emphasize(`npm run ${name}`),
+            " ".repeat(numberOfSpacesAtCommand),
           );
-          const nbLength = String(currCommandNb).length;
-          let numberSpace = "";
-          for (let i = 0; i < nbLength; i++) {
-            numberSpace += " ";
-          }
-          console.log(`${indentation}${numberSpace}  ${val}\n`);
+          console.log(commandLineBeginningStr + commandStr + "]:");
+
+          const numberOfSpacesForDescription =
+            indentation.length + numberOfSpacesForCommandNumber + 2;
+          const descriptionIndent = " ".repeat(numberOfSpacesForDescription);
+          console.log(
+            descriptionIndent + addPrefixOnLineBreak(val, descriptionIndent) + "\n",
+          );
           currCommandNb++;
         } else if (typeof val === "object") {
-          console.log(`${indentation}\x1b[33m${name}\x1b[37m\n`);
+          const indentedName = addPrefixOnLineBreak(name, indentation);
+          console.log(`${indentation}\x1b[33m${indentedName}\x1b[37m\n`);
           const deeper = Object.entries(val);
           recusivelyDiplayGroupCommands(deeper, indentation + "  ");
           console.log("");
@@ -89,6 +99,15 @@ async function run() {
       });
     }
   }
+}
+
+/**
+ * @param {string} str - The string which will be indented on line breaks.
+ * @param {string} prefix - The prefix you want to add at the beginning of each
+ * line break (e.g. spaces for indentation).
+ */
+function addPrefixOnLineBreak(str, prefix) {
+  return str.split("\n").join("\n" + prefix);
 }
 
 /**
