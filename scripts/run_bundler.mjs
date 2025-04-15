@@ -16,6 +16,7 @@ import * as path from "path";
 import { pathToFileURL } from "url";
 import esbuild from "esbuild";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
+import PROJECT_ROOT_DIRECTORY from "./utils/project_root_directory.mjs";
 
 /**
  * Run bundler with the given options.
@@ -42,6 +43,11 @@ export default async function runBundler(inputFile, options) {
   const isDevMode = !options.production;
   const isSilent = options.silent;
   const outfile = options.outfile;
+  const relativeInFile = path.relative(PROJECT_ROOT_DIRECTORY, inputFile);
+  const relativeOutfile =
+    outfile === undefined
+      ? undefined
+      : path.relative(PROJECT_ROOT_DIRECTORY, options.outfile);
   const globalScope = !!options.globalScope;
 
   if (outfile === undefined) {
@@ -53,9 +59,9 @@ export default async function runBundler(inputFile, options) {
     setup(build) {
       build.onStart(() => {
         if (name != null) {
-          logWarning(`Bundling for "${name}" started. (${inputFile}).`);
+          logWarning(`Bundling for "${name}" started. (${relativeInFile}).`);
         } else {
-          logWarning(`Bundling of "${inputFile}" started.`);
+          logWarning(`Bundling of "${relativeInFile}" started.`);
         }
       });
       build.onEnd((result) => {
@@ -67,11 +73,11 @@ export default async function runBundler(inputFile, options) {
           );
           return;
         }
-        if (outfile !== undefined) {
+        if (relativeOutfile !== undefined) {
           if (name != null) {
-            logSuccess(`Bundling for "${name}" succeeded. (${outfile}).`);
+            logSuccess(`Bundling for "${name}" succeeded. (${relativeOutfile}).`);
           } else {
-            logSuccess(`Bundling of "${outfile}" succeeded.`);
+            logSuccess(`Bundling of "${relativeOutfile}" succeeded.`);
           }
         }
       });
