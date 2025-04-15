@@ -43,41 +43,60 @@ The resulting file will be the one commited.
 
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const options = process.argv.slice(2);
-
-  let version;
   let isDevRelease = false;
-  for (const option of options) {
-    if (option.startsWith("-")) {
-      if (option === "-d" || option === "-dev") {
-        isDevRelease = true;
-      } else if (option === "-h" || option === "--help") {
+  let hasFinishedParsingOptions = false;
+  let optionOffset = 0;
+
+  const options = process.argv.slice(2);
+  for (
+    optionOffset = 0;
+    optionOffset < options.length && !hasFinishedParsingOptions;
+    optionOffset++
+  ) {
+    const currentOption = options[optionOffset];
+    switch (currentOption) {
+      case "-h":
+      case "--help":
         displayHelp();
         process.exit(0);
-      } else {
-        console.error("ERROR: Unrecognized option:", option);
-        console.error(
-          "More details on usage by calling node update_changelog.mjs --help",
-        );
-        process.exit(1);
+        break;
+
+      case "-d":
+      case "--dev":
+        isDevRelease = true;
+        break;
+
+      case "--":
+        hasFinishedParsingOptions = true;
+        break;
+
+      default: {
+        if (currentOption.startsWith("-")) {
+          console.error('ERROR: unknown option: "' + currentOption + '"\n');
+          displayHelp();
+          process.exit(1);
+        } else {
+          hasFinishedParsingOptions = true;
+          optionOffset--;
+          break;
+        }
       }
-    } else if (version === undefined) {
-      version = option;
-    } else {
-      console.error("ERROR: Unrecognized option:", option);
-      console.error("More details on usage by calling node update_changelog.mjs --help");
-      process.exit(1);
     }
   }
 
-  if (version === undefined) {
+  if (optionOffset === options.length) {
     console.error("ERROR: Missing version argument.");
+    console.error("More details on usage by calling node update_changelog.mjs --help");
+    process.exit(1);
+  } else if (options.length - optionOffset > 1) {
+    console.error("ERROR: Too many arguments");
     console.error("More details on usage by calling node update_changelog.mjs --help");
     process.exit(1);
   }
 
+  const version = options[optionOffset];
+
   try {
-    const version = process.argv[2];
     updateChangelog({ version, isDevRelease }).catch((err) => {
       console.error("ERROR:", err);
       process.exit(1);
