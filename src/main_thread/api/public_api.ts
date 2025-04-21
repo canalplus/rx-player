@@ -493,7 +493,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // check if the user already attach worker before
       // terminate the previous worker to release the resources
       if (this._priv_worker !== null) {
-        if (this.__priv_isPlaying()) {
+        if (this.state !== "STOPPED") {
           log.warn(
             "API: Cannot attach a new worker while a content is playing, please stop the player first.",
           );
@@ -850,13 +850,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       );
     }
     return renderThumbnail(this._priv_contentInfos, options);
-  }
-
-  /**
-   * Get the player is currently playing
-   */
-  private __priv_isPlaying(): boolean {
-    return !["ENDED", "STOPPED"].includes(this.state);
   }
 
   /**
