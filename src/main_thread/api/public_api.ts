@@ -489,6 +489,25 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           new WorkerInitializationError("INCOMPATIBLE_ERROR", "Worker unavailable"),
         );
       }
+
+      // check if the user already attach worker before
+      // terminate the previous worker to release the resources
+      if (this._priv_worker !== null) {
+        if (this.state !== "STOPPED") {
+          log.warn(
+            "API: Cannot attach a new worker while a content is playing, please stop the player first.",
+          );
+          return rej(
+            new WorkerInitializationError(
+              "SETUP_ERROR",
+              "Cannot attach a new worker while a content is playing",
+            ),
+          );
+        } else {
+          this._priv_worker.terminate();
+        }
+      }
+
       if (typeof workerSettings.workerUrl === "string") {
         this._priv_worker = new Worker(workerSettings.workerUrl);
       } else {
