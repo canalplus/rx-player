@@ -1391,9 +1391,17 @@ describe("DRM: requestMediaKeySystemAcces use cases", function () {
         player = new RxPlayer({ videoElement: dummy });
 
         await loadVideoAndWaitForLoaded(player, someConfig);
-        expect(spy).toHaveBeenCalledOnce();
+        expect(spy).toHaveBeenCalledTimes(1);
         await loadVideoAndWaitForLoaded(player, someConfig);
-        expect(spy).toHaveBeenCalledOnce();
+        // On firefox PlayReady and edge playready we renew the MediaKeySystemAccess
+        if (
+          (__BROWSER_NAME__ === "edge" || __BROWSER_NAME__ === "firefox") &&
+          keySystem.indexOf("playready") !== -1
+        ) {
+          expect(spy).toHaveBeenCalledTimes(2);
+        } else {
+          expect(spy).toHaveBeenCalledTimes(1);
+        }
         spy.mockRestore();
         player.dispose();
         await sleep(10);
@@ -1428,7 +1436,7 @@ describe("DRM: requestMediaKeySystemAcces use cases", function () {
       await sleep(10);
     });
 
-    it("should NOT reuse a MediaKeySystemAccess if distinctiveIdentifier is different", async () => {
+    it("should NOT reuse a MediaKeySystemAccess if distinctiveIdentifier is different with PlayReady", async () => {
       dummy = new DummyMediaElement({
         drmOptions: {
           requestMediaKeySystemAccessConfig: {
@@ -1468,19 +1476,29 @@ describe("DRM: requestMediaKeySystemAcces use cases", function () {
           distinctiveIdentifier: "optional",
         },
       ]);
-      expect(spy).toHaveBeenCalledTimes(3);
+      // On firefox PlayReady and edge playready we renew the MediaKeySystemAccess
+      if (__BROWSER_NAME__ === "edge" || __BROWSER_NAME__ === "firefox") {
+        expect(spy).toHaveBeenCalledTimes(4);
+      } else {
+        expect(spy).toHaveBeenCalledTimes(3);
+      }
       await loadVideoAndWaitForLoaded(player, [
         {
           type: "playready",
         },
       ]);
-      expect(spy).toHaveBeenCalledTimes(3);
+      // On firefox PlayReady and edge playready we renew the MediaKeySystemAccess
+      if (__BROWSER_NAME__ === "edge" || __BROWSER_NAME__ === "firefox") {
+        expect(spy).toHaveBeenCalledTimes(5);
+      } else {
+        expect(spy).toHaveBeenCalledTimes(3);
+      }
       spy.mockRestore();
       player.dispose();
       await sleep(10);
     });
 
-    it("should NOT reuse a MediaKeySystemAccess if persistentState is different", async () => {
+    it("should NOT reuse a MediaKeySystemAccess if persistentState is different with PlayReady", async () => {
       dummy = new DummyMediaElement({
         drmOptions: {
           requestMediaKeySystemAccessConfig: {
@@ -1520,10 +1538,123 @@ describe("DRM: requestMediaKeySystemAcces use cases", function () {
           persistentState: "optional",
         },
       ]);
-      expect(spy).toHaveBeenCalledTimes(3);
+      // On firefox PlayReady and edge playready we renew the MediaKeySystemAccess
+      if (__BROWSER_NAME__ === "edge" || __BROWSER_NAME__ === "firefox") {
+        expect(spy).toHaveBeenCalledTimes(4);
+      } else {
+        expect(spy).toHaveBeenCalledTimes(3);
+      }
       await loadVideoAndWaitForLoaded(player, [
         {
           type: "playready",
+        },
+      ]);
+      // On firefox PlayReady and edge playready we renew the MediaKeySystemAccess
+      if (__BROWSER_NAME__ === "edge" || __BROWSER_NAME__ === "firefox") {
+        expect(spy).toHaveBeenCalledTimes(5);
+      } else {
+        expect(spy).toHaveBeenCalledTimes(3);
+      }
+      spy.mockRestore();
+      player.dispose();
+      await sleep(10);
+    });
+    it("should NOT reuse a MediaKeySystemAccess if distinctiveIdentifier is different with widevine", async () => {
+      dummy = new DummyMediaElement({
+        drmOptions: {
+          requestMediaKeySystemAccessConfig: {
+            isKeySystemSupported: () => true,
+          },
+        },
+      });
+      const spy = vi.spyOn(dummy.FORCED_EME_API, "requestMediaKeySystemAccess");
+      player = new RxPlayer({ videoElement: dummy });
+
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+          distinctiveIdentifier: "not-allowed",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledOnce();
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+          distinctiveIdentifier: "required",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(2);
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+          distinctiveIdentifier: "optional",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+
+      // Now just check that it's reused when they are the same
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+          distinctiveIdentifier: "optional",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+      spy.mockRestore();
+      player.dispose();
+      await sleep(10);
+    });
+
+    it("should NOT reuse a MediaKeySystemAccess if persistentState is different with Widevine", async () => {
+      dummy = new DummyMediaElement({
+        drmOptions: {
+          requestMediaKeySystemAccessConfig: {
+            isKeySystemSupported: () => true,
+          },
+        },
+      });
+      const spy = vi.spyOn(dummy.FORCED_EME_API, "requestMediaKeySystemAccess");
+      player = new RxPlayer({ videoElement: dummy });
+
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+          persistentState: "not-allowed",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledOnce();
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+          persistentState: "required",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(2);
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+          persistentState: "optional",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+
+      // Now just check that it's reused when they are the same
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
+          persistentState: "optional",
+        },
+      ]);
+      expect(spy).toHaveBeenCalledTimes(3);
+      await loadVideoAndWaitForLoaded(player, [
+        {
+          type: "widevine",
         },
       ]);
       expect(spy).toHaveBeenCalledTimes(3);
