@@ -14,12 +14,13 @@ import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import { objectValues } from "../utils/object_values";
-import type {
-  IAdaptationMetadata,
-  IManifestMetadata,
-  IPeriodMetadata,
-  IRepresentationMetadata,
-  IThumbnailTrackMetadata,
+import {
+  ManifestMetadataFormat,
+  type IAdaptationMetadata,
+  type IManifestMetadata,
+  type IPeriodMetadata,
+  type IRepresentationMetadata,
+  type IThumbnailTrackMetadata,
 } from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
@@ -448,7 +449,9 @@ export function updateDecipherabilityFromKeyIds(
   },
 ): IDecipherabilityStatusChangedElement[] {
   const { whitelistedKeyIds, blacklistedKeyIds, delistedKeyIds } = updates;
-  return updateRepresentationsDeciperability(manifest, (representation) => {
+  const isDecipherable = (
+    representation: IRepresentationMetadata,
+  ): boolean | undefined => {
     if (representation.contentProtections === undefined) {
       return representation.decipherable;
     }
@@ -473,7 +476,14 @@ export function updateDecipherabilityFromKeyIds(
       }
     }
     return representation.decipherable;
-  });
+  };
+
+  if (manifest.manifestFormat === ManifestMetadataFormat.Class) {
+    (manifest as IManifest).updateRepresentationsDeciperability(({ representation }) => {
+      return isDecipherable(representation);
+    });
+  }
+  return updateRepresentationsDeciperability(manifest, isDecipherable);
 }
 
 /**
@@ -486,7 +496,7 @@ export function updateDecipherabilityFromProtectionData(
   manifest: IManifestMetadata,
   initData: IProcessedProtectionData,
 ): IDecipherabilityStatusChangedElement[] {
-  return updateRepresentationsDeciperability(manifest, (representation) => {
+  const isDecipherable = (representation: IRepresentationMetadata) => {
     if (representation.decipherable === false) {
       return false;
     }
@@ -510,7 +520,13 @@ export function updateDecipherabilityFromProtectionData(
       }
     }
     return representation.decipherable;
-  });
+  };
+  if (manifest.manifestFormat === ManifestMetadataFormat.Class) {
+    (manifest as IManifest).updateRepresentationsDeciperability(({ representation }) => {
+      return isDecipherable(representation);
+    });
+  }
+  return updateRepresentationsDeciperability(manifest, isDecipherable);
 }
 
 /**
