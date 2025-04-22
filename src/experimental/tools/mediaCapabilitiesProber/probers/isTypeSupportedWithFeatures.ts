@@ -56,7 +56,6 @@ function isTypeSupportedWithFeaturesAPIAvailable(): boolean {
  * @param {Object} config
  * @returns {Promise}
  */
-/* eslint-disable-next-line @typescript-eslint/require-await */
 export default async function probeTypeWithFeatures(
   config: IMediaConfiguration,
 ): Promise<"Supported" | "NotSupported" | "Unknown"> {
