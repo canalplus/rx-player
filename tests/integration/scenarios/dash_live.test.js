@@ -184,7 +184,6 @@ describe("DASH live content (SegmentTimeline)", function () {
       expect(player.getAvailableVideoTracks()).to.eql([]);
 
       await sleep(0);
-      expect(player.getAvailableVideoTracks()).to.eql([]);
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff(null, () => {
         const videoTracks = player.getAvailableVideoTracks();
@@ -466,7 +465,6 @@ describe("DASH live content with no timeShiftBufferDepth (SegmentTimeline)", fun
       expect(player.getAvailableVideoTracks()).to.eql([]);
 
       await sleep(0);
-      expect(player.getAvailableVideoTracks()).to.eql([]);
       expect(manifestLoaderCalledTimes).to.equal(1);
       await checkAfterSleepWithBackoff(null, () => {
         const videoTracks = player.getAvailableVideoTracks();

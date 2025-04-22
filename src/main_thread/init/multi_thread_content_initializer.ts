@@ -527,7 +527,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
               mediaSourceId: msgData.mediaSourceId,
             };
           }
-
           const mediaSourceLink = msgData.value;
           mediaSourceStatus.onUpdate(
             (currStatus, stopListening) => {
@@ -1199,6 +1198,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
               this._currentContentInfo.mediaSourceInfo.type === "main"
                 ? this._currentContentInfo.mediaSourceInfo.mediaSource.id
                 : this._currentContentInfo.mediaSourceInfo.mediaSourceId;
+
             if (mediaSourceId !== msgData.mediaSourceId) {
               return;
             }
@@ -1366,12 +1366,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return createEmeDisabledReference("EME feature not activated.");
     }
 
-    const ContentDecryptor = features.decrypt;
     const emeApi = mediaElement.FORCED_EME_API ?? getEmeApiImplementation("auto");
     if (emeApi === null) {
       return createEmeDisabledReference("EME API not available on the current page.");
     }
+
     log.debug("Init", "Creating ContentDecryptor");
+
+    const ContentDecryptor = features.decrypt;
     const contentDecryptor = new ContentDecryptor(emeApi, mediaElement, keySystems);
     const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
       {
@@ -1933,7 +1935,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             }
             if (currStatus === MediaSourceInitializationStatus.AttachNow) {
               stopListening();
-              const mediaSource = new MainMediaSourceInterface(mediaSourceId);
+              const mediaSource = new MainMediaSourceInterface(
+                mediaSourceId,
+                "FORCED_MEDIA_SOURCE" in mediaElement
+                  ? mediaElement.FORCED_MEDIA_SOURCE
+                  : undefined,
+              );
               if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
                 this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
               }
@@ -2023,7 +2030,6 @@ export interface IMultiThreadContentInitializerContentInfos {
         mediaSourceId: string;
       }
     | null;
-
   /**
    * Current `RebufferingController` linked to the content, allowing to
    * detect and handle rebuffering situations.

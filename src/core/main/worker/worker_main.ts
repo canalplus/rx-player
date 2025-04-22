@@ -162,7 +162,7 @@ export default function initializeWorkerMain(
             }),
           );
         playbackObservationRef = currentContentObservationRef;
-        loadPreparedContent(
+        currentContentHandle = loadPreparedContent(
           sendMessage,
           msg.value,
           contentPreparer,

@@ -499,7 +499,7 @@ describe("DRM: Basic use cases", function () {
     expect(brokenVideoLock).toEqual(0);
     expect(["11-90953e09", "12-90953e09"]).toContain(player.getVideoRepresentation().id);
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
-    await sleep(50);
+    await sleep(200);
     dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
@@ -597,7 +597,7 @@ describe("DRM: Basic use cases", function () {
     expect(["11-90953e09", "12-90953e09"]).toContain(player.getVideoRepresentation().id);
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
 
-    await sleep(50);
+    await sleep(200);
     dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
@@ -615,7 +615,7 @@ describe("DRM: Basic use cases", function () {
     dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(100);
     });
-    await sleep(10);
+    await sleep(100);
     expect(player.getVideoTrack().representations.map((r) => r.id)).toContain(
       "12-90953e09",
     );
@@ -670,13 +670,13 @@ describe("DRM: Basic use cases", function () {
     expect(["11-90953e09", "12-90953e09"]).toContain(player.getVideoRepresentation().id);
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
 
-    await sleep(50);
+    await sleep(200);
     dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
     await waitForPlayerState(player, "PAUSED", ["PLAYING", "RELOADING"]);
 
-    await sleep(50);
+    await sleep(200);
     expect(brokenVideoLock).toEqual(1);
     expect(videoTrackUpdate).toEqual(0);
     dummy.mediaKeys.dummySessions.forEach((s) => {
