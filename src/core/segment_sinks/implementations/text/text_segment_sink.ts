@@ -195,17 +195,7 @@ function assertChunkIsTextTrackSegmentData(
   ) {
     throw new Error("Invalid format given to a TextSegmentSink");
   }
-  if (
-    typeof (chunk as ITextTracksBufferSegmentData).type !== "string" ||
-    ((chunk as ITextTracksBufferSegmentData).language !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).language !== "string") ||
-    ((chunk as ITextTracksBufferSegmentData).initTimescale !== null &&
-      typeof (chunk as ITextTracksBufferSegmentData).initTimescale !== "number") ||
-    ((chunk as ITextTracksBufferSegmentData).start !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).start !== "number") ||
-    ((chunk as ITextTracksBufferSegmentData).end !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).end !== "number")
-  ) {
+  if (!isTextTracksBufferSegmentData(chunk as ITextTracksBufferSegmentData)) {
     throw new Error("Invalid format given to a TextSegmentSink");
   }
   if (
@@ -215,6 +205,39 @@ function assertChunkIsTextTrackSegmentData(
   ) {
     throw new Error("Invalid format given to a TextSegmentSink");
   }
+}
+
+/**
+ * Get a value in argument that may or may not be
+ * `ITextT nor hangracksBufferSegmentData`.
+ *
+ * Returns `true` if it corresponds to that type definition, `false` otherwise.
+ *
+ * Basically it's a runtime type check.It was added here as we may be casting as
+ * `any` at some point to facilitate implementation.
+ * @param {*} chunk
+ * @returns {boolean}
+ */
+function isTextTracksBufferSegmentData(chunk: ITextTracksBufferSegmentData): boolean {
+  if (typeof chunk !== "object" || chunk === null) {
+    return false;
+  }
+  if (typeof chunk.type !== "string") {
+    return false;
+  }
+  if (chunk.language !== undefined && typeof chunk.language !== "string") {
+    return false;
+  }
+  if (chunk.initTimescale !== null && typeof chunk.initTimescale !== "number") {
+    return false;
+  }
+  if (chunk.start !== undefined && typeof chunk.start !== "number") {
+    return false;
+  }
+  if (chunk.end !== undefined && typeof chunk.end !== "number") {
+    return false;
+  }
+  return true;
 }
 
 /**
