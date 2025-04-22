@@ -189,52 +189,60 @@ describe("DRM: Basic use cases", function () {
     expect(player.getError()).toBeNull();
   });
 
-  it('should fallback from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
-    const policyLevels = { "90953e096cb249a3a2607a5fefead499": 200 };
-    const expectedKeyIds = [
-      "90953e096cb249a3a2607a5fefead499",
-      "585f233f307246f19fa46dc22c66a014",
-      "80399bf58a2140148053e27e748e98c1",
-    ];
-    const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
-      keySystems: [
-        {
-          type: "com.microsoft.playready",
-          onKeyOutputRestricted: "fallback",
-          getLicense: generateGetLicenseForFakeLicense({
-            expectedKeyIds,
-            askedKeyIds,
-            policyLevels,
-          }),
-        },
-      ],
-    });
-    let brokenVideoLock = 0;
-    player.addEventListener("newAvailablePeriods", (p) => {
-      player.lockVideoRepresentations({
-        periodId: p[0].id,
-        representations: ["11-90953e09", "12-90953e09"],
+  // FIXME: It appears that vitest has an issue with that test on edge only:
+  // It outputs somthing like
+  // ```
+  // ERROR webdriver: Could not connect to Bidi protocol of any candidate url in time
+  // ```
+  // And then just fail. Maybe this just needs a vitest update
+  if (__BROWSER_NAME__ !== "edge") {
+    it('should fallback from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
+      const policyLevels = { "90953e096cb249a3a2607a5fefead499": 200 };
+      const expectedKeyIds = [
+        "90953e096cb249a3a2607a5fefead499",
+        "585f233f307246f19fa46dc22c66a014",
+        "80399bf58a2140148053e27e748e98c1",
+      ];
+      const askedKeyIds = [];
+      player.loadVideo({
+        url,
+        transport,
+        autoPlay: false,
+        textTrackMode: "html",
+        textTrackElement: document.createElement("div"),
+        keySystems: [
+          {
+            type: "com.microsoft.playready",
+            onKeyOutputRestricted: "fallback",
+            getLicense: generateGetLicenseForFakeLicense({
+              expectedKeyIds,
+              askedKeyIds,
+              policyLevels,
+            }),
+          },
+        ],
       });
+      let brokenVideoLock = 0;
+      player.addEventListener("newAvailablePeriods", (p) => {
+        player.lockVideoRepresentations({
+          periodId: p[0].id,
+          representations: ["11-90953e09", "12-90953e09"],
+        });
+      });
+      player.addEventListener("brokenRepresentationsLock", (lock) => {
+        if (lock.trackType === "video") {
+          brokenVideoLock++;
+        }
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+      expect(brokenVideoLock).toEqual(1);
+      expect(["8-80399bf5", "9-80399bf5", "10-80399bf5"]).toContain(
+        player.getVideoRepresentation().id,
+      );
+      expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
+      expect(player.getError()).toBeNull();
     });
-    player.addEventListener("brokenRepresentationsLock", (lock) => {
-      if (lock.trackType === "video") {
-        brokenVideoLock++;
-      }
-    });
-    await waitForLoadedStateAfterLoadVideo(player);
-    expect(brokenVideoLock).toEqual(1);
-    expect(["8-80399bf5", "9-80399bf5", "10-80399bf5"]).toContain(
-      player.getVideoRepresentation().id,
-    );
-    expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
-    expect(player.getError()).toBeNull();
-  });
+  }
 
   it('should continue from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
     const policyLevels = { "90953e096cb249a3a2607a5fefead499": 200 };
