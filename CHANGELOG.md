@@ -13,7 +13,6 @@
   to work-around frequent DRM issues. [#1694]
 - DRM: On Firefox check extensively Playready DRMs support before using them to
   work-around recent firefox issue with PlayReady integration [#1691]
-- MULTI_THREAD: Communicate to `/init` whether we're relying on MSE-in-worker [#1669]
 
 ## v4.3.0
 
