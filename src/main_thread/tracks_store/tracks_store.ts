@@ -485,9 +485,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     const dispatcher = new TrackDispatcher(adaptationRef);
     periodObj[bufferType].dispatcher = dispatcher;
 
-    dispatcher.addEventListener("noPlayableRepresentation", () =>
-      this.onNoPlayableRepresentation(period, bufferType),
-    );
+    dispatcher.addEventListener("noPlayableRepresentation", () => {
+      this.onNoPlayableRepresentation(period, bufferType);
+    });
     dispatcher.addEventListener("noPlayableLockedRepresentation", () => {
       // TODO check that it doesn't already lead to segment loading or MediaSource
       // reloading
@@ -513,6 +513,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
           end: period.end,
         },
       ]);
+
+      for (const eventToEmit of periodObj.noPlayableTrackEventToDispatch) {
+        this.trigger("noPlayableTrack", eventToEmit);
+      }
+
       if (this._isDisposed) {
         return;
       }
@@ -542,7 +547,15 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * @param period - The period that has no playable representation
    * @param trackType - The media type that is not playable
    */
-  private onNoPlayableRepresentation(period: IPeriodMetadata, trackType: ITrackType) {
+  private onNoPlayableRepresentation(
+    period: IPeriodMetadata,
+    trackType: ITrackType,
+  ): Array<{
+    trackType: ITrackType;
+    period: IPeriod;
+  }> {
+    const noPlayableTrackToTrigger = [];
+
     const periodHasAdaptationForType =
       period.adaptations[trackType] !== undefined &&
       period.adaptations[trackType].length > 0;
@@ -550,7 +563,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       log.debug(
         `TS: The period does not have adaptation for ${trackType} there is no track to choose`,
       );
-      return;
+      return [];
     }
 
     const firstPlayableAdaptation = findFirstPlayableAdaptation(period, trackType);
@@ -561,14 +574,14 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       // audio or video is not playable, but let's continue the playback without audio
       // or without video because of the option was set to "continue".
       log.warn(`TS: No playable ${trackType}, continuing without ${trackType}`);
-      this.trigger("noPlayableTrack", {
+      noPlayableTrackToTrigger.push({
         trackType,
         period: { id: period.id, start: period.start, end: period.end },
       });
       // The previous event trigger could have had side-effects, so we
       // re-check if we're still mostly in the same state
       if (this._isDisposed) {
-        return; // Someone disposed the `TracksStore` on the previous side-effect
+        return []; // Someone disposed the `TracksStore` on the previous side-effect
       }
     } else if (firstPlayableAdaptation === undefined) {
       const noRepErr = new MediaError(
@@ -576,26 +589,22 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         `No ${trackType} Representation can be played`,
         { tracks: undefined },
       );
-      this.trigger("noPlayableTrack", {
+      noPlayableTrackToTrigger.push({
         trackType,
-        period: {
-          id: period.id,
-          start: period.start,
-          end: period.end,
-        },
+        period: { id: period.id, start: period.start, end: period.end },
       });
       // The previous event trigger could have had side-effects, so we
       // re-check if we're still mostly in the same state
       if (this._isDisposed) {
-        return; // Someone disposed the `TracksStore` on the previous side-effect
+        return []; // Someone disposed the `TracksStore` on the previous side-effect
       }
       this.trigger("error", noRepErr);
       this.dispose();
-      return;
+      return noPlayableTrackToTrigger;
     }
     let typeInfo = getPeriodItem(this._storedPeriodInfo, period.id)?.[trackType];
     if (isNullOrUndefined(typeInfo)) {
-      return;
+      return noPlayableTrackToTrigger;
     }
     const selectedAdaptation = getPeriodItem(this._storedPeriodInfo, period.id)?.[
       trackType
@@ -603,7 +612,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     if (selectedAdaptation === null) {
       // The track type has been explicitly disabled, there is no need to select
       // a new track as a fallback.
-      return;
+      return noPlayableTrackToTrigger;
     }
 
     const switchingMode =
@@ -629,13 +638,14 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     // The previous event trigger could have had side-effects, so we
     // re-check if we're still mostly in the same state
     if (this._isDisposed) {
-      return; // Someone disposed the `TracksStore` on the previous side-effect
+      return []; // Someone disposed the `TracksStore` on the previous side-effect
     }
     typeInfo = getPeriodItem(this._storedPeriodInfo, period.id)?.[trackType];
     if (isNullOrUndefined(typeInfo) || typeInfo.storedSettings !== storedSettings) {
-      return;
+      return noPlayableTrackToTrigger;
     }
     typeInfo.dispatcher?.updateTrack(storedSettings);
+    return noPlayableTrackToTrigger;
   }
 
   /**
@@ -1440,7 +1450,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       )[0];
       if (audioAdaptation === undefined) {
         trackStorePeriod.audio.storedSettings = null;
-        this.onNoPlayableRepresentation(period, "audio");
+        trackStorePeriod.noPlayableTrackEventToDispatch.push(
+          ...this.onNoPlayableRepresentation(period, "audio"),
+        );
       } else {
         trackStorePeriod.audio.storedSettings = {
           adaptation: audioAdaptation,
@@ -1453,7 +1465,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         getSupportedAdaptations(period, "video")[0];
       if (baseVideoAdaptation === undefined) {
         trackStorePeriod.video.storedSettings = null;
-        this.onNoPlayableRepresentation(period, "video");
+        trackStorePeriod.noPlayableTrackEventToDispatch.push(
+          ...this.onNoPlayableRepresentation(period, "video"),
+        );
       } else {
         const videoAdaptation = getRightVideoTrack(
           baseVideoAdaptation,
@@ -1515,6 +1529,14 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       if (!trackStorePeriod.isPeriodAdvertised) {
         continue;
       }
+
+      if (trackStorePeriod.noPlayableTrackEventToDispatch.length > 0) {
+        for (const noPlayableTrackEvent of trackStorePeriod.noPlayableTrackEventToDispatch) {
+          this.trigger("noPlayableTrack", noPlayableTrackEvent);
+        }
+        trackStorePeriod.noPlayableTrackEventToDispatch = [];
+      }
+
       const bufferTypes: ITrackType[] = ["audio", "video", "text"];
       for (const bufferType of bufferTypes) {
         const trackInfo = trackStorePeriod[bufferType];
@@ -1612,6 +1634,7 @@ function generatePeriodInfo(
     audio: { storedSettings: undefined, dispatcher: null },
     video: { storedSettings: undefined, dispatcher: null },
     text: { storedSettings: undefined, dispatcher: null },
+    noPlayableTrackEventToDispatch: [],
   };
 }
 
@@ -1677,6 +1700,16 @@ export interface ITSPeriodObject {
    * If `true`, this object was since cleaned-up.
    */
   isRemoved: boolean;
+
+  /**
+   * NoPlayableTrack events that should be emitted when the period has been advertised.
+   *
+   * This ensure the events relates to a period that was communicated via the public API.
+   */
+  noPlayableTrackEventToDispatch: Array<{
+    trackType: ITrackType;
+    period: IPeriod;
+  }>;
 }
 
 /**
