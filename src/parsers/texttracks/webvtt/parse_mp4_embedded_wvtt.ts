@@ -124,7 +124,6 @@ function parseVttC<T>(
 ): T | null {
   const payload = getPayl(data);
   const settings = getSttg(data);
-  // const iden = getIden(data);
   if (payload === null) {
     return null;
   }
@@ -164,15 +163,3 @@ function getPayl(buf: Uint8Array): Uint8Array | null {
 function getSttg(buf: Uint8Array): Uint8Array | null {
   return getBoxContent(buf, 0x73747467 /* "sttg" */);
 }
-
-// TODO: how to exploit that one in the current API?
-// /**
-//  * Returns the content of the first "iden" box encountered in the given ISOBMFF
-//  * data.
-//  * Returns null if not found.
-//  * @param {Uint8Array} buf
-//  * @returns {Uint8Array|null}
-//  */
-// function getIden(buf: Uint8Array): Uint8Array | null {
-//   return getBoxContent(buf, 0x6964656e /* "iden" */);
-// }
