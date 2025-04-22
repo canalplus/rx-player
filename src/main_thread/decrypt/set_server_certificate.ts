@@ -53,7 +53,8 @@ async function setServerCertificate(
     return res;
   } catch (error) {
     log.warn(
-      "DRM: mediaKeys.setServerCertificate returned an error",
+      "DRM",
+      "mediaKeys.setServerCertificate returned an error",
       error instanceof Error ? error : "",
     );
     const reason =
@@ -87,18 +88,19 @@ export default async function trySettingServerCertificate(
   | { type: "error"; value: IPlayerError }
 > {
   if (ServerCertificateStore.hasOne(mediaKeys) === true) {
-    log.info("DRM: The MediaKeys already has a server certificate, skipping...");
+    log.info("DRM", "The MediaKeys already has a server certificate, skipping...");
     return { type: "already-has-one" };
   }
   if (typeof mediaKeys.setServerCertificate !== "function") {
     log.warn(
-      "DRM: Could not set the server certificate." +
+      "DRM",
+      "Could not set the server certificate." +
         " mediaKeys.setServerCertificate is not a function",
     );
     return { type: "method-not-implemented" };
   }
 
-  log.info("DRM: Setting server certificate on the MediaKeys");
+  log.info("DRM", "Setting server certificate on the MediaKeys");
   // Because of browser errors, or a user action that can lead to interrupting
   // server certificate setting, we might be left in a status where we don't
   // know if we attached the server certificate or not.

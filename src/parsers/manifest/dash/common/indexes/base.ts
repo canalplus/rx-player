@@ -430,7 +430,7 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   addPredictedSegments(): void {
-    log.warn("Cannot add predicted segments to a `BaseRepresentationIndex`");
+    log.warn("dash", "Cannot add predicted segments to a `BaseRepresentationIndex`");
   }
 
   /**
@@ -469,6 +469,6 @@ export default class BaseRepresentationIndex implements IRepresentationIndex {
   }
 
   _update(): void {
-    log.error("Base RepresentationIndex: Cannot update a SegmentList");
+    log.error("dash", "Base RepresentationIndex: Cannot update a SegmentList");
   }
 }

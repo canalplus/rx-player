@@ -204,12 +204,13 @@ async function awaitMediaKeysAttachment(
   if (isNullOrUndefined(promise)) {
     return;
   }
-  log.info("DRM: Awaiting previous MediaKeys attachment operation");
+  log.info("DRM", "Awaiting previous MediaKeys attachment operation");
   try {
     await previousState.pendingTask;
   } catch (err) {
     log.info(
-      "DRM: previous MediaKeys attachment operation failed",
+      "DRM",
+      "previous MediaKeys attachment operation failed",
       err instanceof Error ? err : "Unknown error",
     );
   }
@@ -237,19 +238,19 @@ async function attachMediaKeys(
     await closeAllSessions;
 
     if (mediaElement.mediaKeys === mediaKeysInfo.mediaKeys) {
-      log.debug("DRM: Right MediaKeys already set");
+      log.debug("DRM", "Right MediaKeys already set");
       return;
     }
   }
 
-  log.info("DRM: Attaching MediaKeys to the media element");
+  log.info("DRM", "Attaching MediaKeys to the media element");
   try {
     await setMediaKeys(
       mediaKeysInfo.emeImplementation,
       mediaElement,
       mediaKeysInfo.mediaKeys,
     );
-    log.info("DRM: MediaKeys attached with success");
+    log.info("DRM", "MediaKeys attached with success");
   } catch (err) {
     const errMessage = err instanceof Error ? err.toString() : "Unknown Error";
     throw new EncryptedMediaError(
@@ -282,7 +283,7 @@ async function clearMediaKeys(
     return;
   }
 
-  log.info("DRM: Disposing of the current MediaKeys");
+  log.info("DRM", "Disposing of the current MediaKeys");
   const { loadedSessionsStore } = previousState.mediaKeysState;
   await loadedSessionsStore.closeAllSessions();
   return setMediaKeys(previousState.mediaKeysState.emeImplementation, mediaElement, null);

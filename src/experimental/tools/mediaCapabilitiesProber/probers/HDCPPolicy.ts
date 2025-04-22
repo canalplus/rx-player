@@ -63,7 +63,10 @@ export default async function probeHDCPPolicy(
 
   const mediaKeys = await mediaKeysSystemAccess.createMediaKeys();
   if (!("getStatusForPolicy" in mediaKeys)) {
-    log.error("MCP: `MediaKeys.prototype.getStatusForPolicy` API is not available");
+    log.error(
+      "MediaCapabilitiesProber",
+      "`MediaKeys.prototype.getStatusForPolicy` API is not available",
+    );
     throw new Error("MediaKeys.prototype.getStatusForPolicy` API is not available");
   }
   const result = await (

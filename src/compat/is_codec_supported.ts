@@ -42,7 +42,7 @@ const supportMap: Map<string, boolean> = new Map();
 export default function isCodecSupported(mimeType: string): boolean {
   if (isNullOrUndefined(MediaSource_)) {
     if (isWorker) {
-      log.error("Compat: Cannot request codec support in a worker without MSE.");
+      log.error("mse", "Cannot request codec support in a worker without MSE.");
     }
     return false;
   }

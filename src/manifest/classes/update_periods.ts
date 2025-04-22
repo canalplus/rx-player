@@ -82,7 +82,7 @@ export function replacePeriods(
   }
 
   if (firstUnhandledPeriodIdx > oldPeriods.length) {
-    log.error("Manifest: error when updating Periods");
+    log.error("manifest", "error when updating Periods");
     return res;
   }
   if (firstUnhandledPeriodIdx < oldPeriods.length) {
@@ -210,7 +210,7 @@ export function updatePeriods(
     } else {
       if (indexOfNewPeriod > prevIndexOfNewPeriod) {
         // Some old periods were not found: remove
-        log.warn("Manifest: old Periods not found in new when updating, removing");
+        log.warn("manifest", "old Periods not found in new when updating, removing");
         const removed = oldPeriods.splice(
           prevIndexOfNewPeriod,
           indexOfNewPeriod - prevIndexOfNewPeriod,
@@ -242,7 +242,7 @@ export function updatePeriods(
   }
 
   if (prevIndexOfNewPeriod < oldPeriods.length) {
-    log.warn("Manifest: Ending Periods not found in new when updating, removing");
+    log.warn("manifest", "Ending Periods not found in new when updating, removing");
     const removed = oldPeriods.splice(
       prevIndexOfNewPeriod,
       oldPeriods.length - prevIndexOfNewPeriod,

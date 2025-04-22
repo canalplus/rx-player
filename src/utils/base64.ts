@@ -185,7 +185,9 @@ export function base64ToBytes(str: string): Uint8Array {
   const paddingNeeded = str.length % 4;
   let paddedStr = str;
   if (paddingNeeded !== 0) {
-    log.warn("base64ToBytes: base64 given miss padding");
+    log.warn("utils", "base64ToBytes: base64 given miss padding", {
+      padding: paddingNeeded,
+    });
     // eslint-disable-next-line no-nested-ternary
     paddedStr += paddingNeeded === 3 ? "=" : paddingNeeded === 2 ? "==" : "==="; // invalid, but we will catch it
   }

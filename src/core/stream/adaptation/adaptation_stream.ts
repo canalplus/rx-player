@@ -121,7 +121,8 @@ export default function AdaptationStream(
       const observationCanStream = observation.canStream ?? true;
       if (isMediaSegmentQueueInterrupted.getValue() === observationCanStream) {
         log.debug(
-          "Stream: isMediaSegmentQueueInterrupted updated to",
+          "Stream",
+          "isMediaSegmentQueueInterrupted updated to",
           !observationCanStream,
         );
         isMediaSegmentQueueInterrupted.setValue(!observationCanStream);
@@ -156,7 +157,9 @@ export default function AdaptationStream(
         return;
       }
       previouslyEmittedBitrate = bitrate;
-      log.debug(`Stream: new ${adaptation.type} bitrate estimate`, bitrate);
+      log.debug("Stream", `new ${adaptation.type} bitrate estimate received from ABR`, {
+        bitrate,
+      });
       callbacks.bitrateEstimateChange({ type: adaptation.type, bitrate });
     },
     { emitCurrentValue: true, clearSignal: adapStreamCanceller.signal },
@@ -319,10 +322,20 @@ export default function AdaptationStream(
           return;
         }
         if (estimate.urgent) {
-          log.info("Stream: urgent Representation switch", adaptation.type);
+          log.info("Stream", "urgent Representation switch", {
+            bufferType: adaptation.type,
+            estimateBitrate: estimate.bitrate,
+            prevRepresentationBitrate: representation.bitrate,
+            newRepresentationBitrate: estimate.representation.bitrate,
+          });
           return terminateCurrentStream.setValue({ urgent: true });
         } else {
-          log.info("Stream: slow Representation switch", adaptation.type);
+          log.info("Stream", "slow Representation switch", {
+            bufferType: adaptation.type,
+            estimateBitrate: estimate.bitrate,
+            prevRepresentationBitrate: representation.bitrate,
+            newRepresentationBitrate: estimate.representation.bitrate,
+          });
           return terminateCurrentStream.setValue({ urgent: false });
         }
       },
@@ -413,12 +426,11 @@ export default function AdaptationStream(
 
     const maxBufferSize =
       adaptation.type === "video" ? maxVideoBufferSize : new SharedReference(Infinity);
-    log.info(
-      "Stream: changing representation",
-      adaptation.type,
-      representation.id,
-      representation.bitrate,
-    );
+    log.info("Stream", "changing representation", {
+      bufferType: adaptation.type,
+      representationId: representation.id,
+      representationBitrate: representation.bitrate,
+    });
     const updatedCallbacks = objectAssign({}, representationStreamCallbacks, {
       error(err: Error) {
         if (hasEncounteredError) {
@@ -428,7 +440,7 @@ export default function AdaptationStream(
           //
           // That could mean that we're hiding legitimate issues but handling
           // multiple of those errors at once is too hard a task for now.
-          log.warn("Stream: Ignoring RepresentationStream error", err);
+          log.warn("Stream", "Ignoring RepresentationStream error", err);
           return;
         }
         hasEncounteredError = true;
@@ -439,11 +451,11 @@ export default function AdaptationStream(
         if (formattedError.code !== "BUFFER_FULL_ERROR") {
           representationStreamCallbacks.error(err);
         } else {
-          log.warn(
-            "Stream: received BUFFER_FULL_ERROR",
-            adaptation.type,
-            representation.bitrate,
-          );
+          log.warn("Stream", "received BUFFER_FULL_ERROR", {
+            bufferType: adaptation.type,
+
+            representationBitrate: representation.bitrate,
+          });
           const wba = wantedBufferAhead.getValue();
           const lastBufferGoalRatio = bufferGoalRatioMap.get(representation.id) ?? 1;
           // 70%, 49%, 34.3%, 24%, 16.81%, 11.76%, 8.24% and 5.76%

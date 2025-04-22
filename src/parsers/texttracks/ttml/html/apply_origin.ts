@@ -40,7 +40,7 @@ export default function applyOrigin(element: HTMLElement, origin: string): void 
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-left", firstOrigin[1]);
     } else {
-      log.warn("TTML Parser: unhandled origin unit:", firstOrigin[2]);
+      log.warn("ttml", "unhandled origin unit", { unit: firstOrigin[2] });
     }
 
     if (secondOrigin[2] === "px" || secondOrigin[2] === "%" || secondOrigin[2] === "em") {
@@ -49,7 +49,7 @@ export default function applyOrigin(element: HTMLElement, origin: string): void 
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-top", secondOrigin[1]);
     } else {
-      log.warn("TTML Parser: unhandled origin unit:", secondOrigin[2]);
+      log.warn("ttml", "unhandled origin unit", { unit: secondOrigin[2] });
     }
   }
 }

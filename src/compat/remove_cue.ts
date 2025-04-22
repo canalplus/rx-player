@@ -58,7 +58,7 @@ export default function removeCue(
     try {
       track.removeCue(cue as TextTrackCue);
     } catch (_err) {
-      log.warn("Compat: Could not remove cue from text track.");
+      log.warn("text", "Could not remove cue from text track.");
     }
     track.mode = trackMode;
     return;
@@ -66,6 +66,6 @@ export default function removeCue(
   try {
     track.removeCue(cue as TextTrackCue);
   } catch (_err) {
-    log.warn("Compat: Could not remove cue from text track.");
+    log.warn("text", "Could not remove cue from text track.");
   }
 }

@@ -763,6 +763,7 @@ function updateDeciperability(
             adaptation.supportStatus.isDecipherable = undefined;
           }
           log.debug(
+            "manifest",
             `Decipherability changed for "${representation.id}"`,
             `(${representation.bitrate})`,
             String(representation.decipherable),

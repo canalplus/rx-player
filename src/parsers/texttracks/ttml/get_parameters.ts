@@ -48,12 +48,16 @@ export default function getParameters(tt: Element): ITTParameters {
   if (parsedCellResolution !== null) {
     const extractedData = CELL_RESOLUTION_REGEXP.exec(parsedCellResolution);
     if (extractedData === null || extractedData.length < 3) {
-      log.warn("TTML Parser: Invalid cellResolution");
+      log.warn("ttml", "Invalid cellResolution", {
+        cellResolution: parsedCellResolution,
+      });
     } else {
       const columns = parseInt(extractedData[1], 10);
       const rows = parseInt(extractedData[2], 10);
       if (isNaN(columns) || isNaN(rows)) {
-        log.warn("TTML Parser: Invalid cellResolution");
+        log.warn("ttml", "Invalid cellResolution", {
+          cellResolution: parsedCellResolution,
+        });
       } else {
         cellResolution = { columns, rows };
       }

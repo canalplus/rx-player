@@ -59,7 +59,7 @@ export default function createContentTimeBoundariesObserver(
     mediaSource.setDuration(evt.endingPosition, evt.isEnd);
   });
   contentTimeBoundariesObserver.addEventListener("endOfStream", () => {
-    log.debug("Init: end-of-stream order received.");
+    log.debug("mse", "Start applying end-of-stream order.");
     mediaSource.maintainEndOfStream();
   });
   contentTimeBoundariesObserver.addEventListener("resumeStream", () => {

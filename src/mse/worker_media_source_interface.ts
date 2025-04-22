@@ -236,7 +236,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   public onOperationSuccess(operationId: string, ranges: IRange[]): void {
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
-      log.warn("SBI: unknown SourceBuffer operation succeeded");
+      log.warn("mse", "unknown SourceBuffer operation succeeded");
     } else {
       this._pendingOperations.delete(operationId);
       mapElt.resolve(ranges);
@@ -254,7 +254,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
         : new SourceBufferError(error.errorName, error.message, error.isBufferFull);
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
-      log.info("SBI: unknown SourceBuffer operation failed", formattedErr);
+      log.info("mse", "unknown SourceBuffer operation failed", formattedErr);
     } else {
       this._pendingOperations.delete(operationId);
       mapElt.reject(formattedErr);

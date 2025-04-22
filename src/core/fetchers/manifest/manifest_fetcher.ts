@@ -378,7 +378,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      */
     function finish(manifest: Manifest): IManifestFetcherParsedResult {
       const parsingTime = getMonotonicTimeStamp() - parsingTimeStart;
-      log.info(`MF: Manifest parsed in ${parsingTime}ms`);
+      log.info("MF", `Manifest parsed in ${parsingTime}ms`);
 
       return { manifest, sendingTime, receivedTime, parsingTime };
     }
@@ -547,9 +547,9 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
           regularRefreshDelay * 6,
         );
         log.info(
-          "MUS: Manifest update rythm is too frequent. Postponing next request.",
-          regularRefreshDelay,
-          actualRefreshInterval,
+          "MF",
+          "Manifest update rythm is too frequent. Postponing next request.",
+          { regularRefreshDelay, newRefreshDelay: actualRefreshInterval },
         );
       } else if (totalUpdateTime >= (manifest.lifetime * 1000) / 10) {
         // If Manifest updating time is very long relative to its lifetime,
@@ -564,11 +564,10 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
           // performance seems to have been abysmal one time.
           regularRefreshDelay * 6,
         );
-        log.info(
-          "MUS: Manifest took too long to parse. Postponing next request",
-          actualRefreshInterval,
-          actualRefreshInterval,
-        );
+        log.info("MF", "Manifest took too long to parse. Postponing next request", {
+          regularRefreshDelay,
+          newRefreshDelay: actualRefreshInterval,
+        });
       } else {
         actualRefreshInterval = regularRefreshDelay;
       }
@@ -618,13 +617,15 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     if (unsafeMode) {
       this._consecutiveUnsafeMode += 1;
       log.info(
-        'Init: Refreshing the Manifest in "unsafeMode" for the ' +
+        "MF",
+        'Refreshing the Manifest in "unsafeMode" for the ' +
           String(this._consecutiveUnsafeMode) +
           " consecutive time.",
       );
     } else if (this._consecutiveUnsafeMode > 0) {
       log.info(
-        'Init: Not parsing the Manifest in "unsafeMode" anymore after ' +
+        "MF",
+        'Not parsing the Manifest in "unsafeMode" anymore after ' +
           String(this._consecutiveUnsafeMode) +
           " consecutive times.",
       );
@@ -656,7 +657,8 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
           } catch (e) {
             const message = e instanceof Error ? e.message : "unknown error";
             log.warn(
-              `MUS: Attempt to update Manifest failed: ${message}`,
+              "MF",
+              `Attempt to update Manifest failed: ${message}`,
               "Re-downloading the Manifest fully",
             );
             const { FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY } = config.getCurrent();

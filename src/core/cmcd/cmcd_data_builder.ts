@@ -444,7 +444,7 @@ export default class CmcdDataBuilder {
       if (headers.status[headers.status.length - 1] === ",") {
         headers.status = headers.status.substring(0, headers.status.length - 1);
       }
-      log.debug("CMCD: proposing headers payload");
+      log.debug("CMCD", "proposing headers payload");
       return {
         type: "headers",
         value: {
@@ -462,7 +462,9 @@ export default class CmcdDataBuilder {
       queryStringPayload = queryStringPayload.substring(0, queryStringPayload.length - 1);
     }
     queryStringPayload = encodeURIComponent(queryStringPayload);
-    log.debug("CMCD: proposing query string payload", queryStringPayload);
+    log.debug("CMCD", "proposing query string payload", {
+      queryString: queryStringPayload,
+    });
     return {
       type: "query",
       value: [["CMCD", queryStringPayload]],

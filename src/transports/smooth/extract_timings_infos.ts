@@ -84,7 +84,7 @@ export default function extractTimingsInfos(
       tfrfSegments = parseTfrf(traf);
       tfxdSegment = parseTfxd(traf);
     } else {
-      log.warn("smooth: could not find traf atom");
+      log.warn("smooth", "could not find traf atom");
     }
   }
 

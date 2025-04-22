@@ -87,7 +87,8 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(10);
     expect(logger.info).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      "ABR: Current Bitrate not found in the calculated levels",
+      "ABR",
+      "Current Bitrate not found in the calculated levels",
     );
   });
 

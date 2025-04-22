@@ -58,7 +58,14 @@ describe("Compat - makeVTTCue", () => {
     const result = makeCue(12, 10, "toto");
     expect(result).toBeNull();
     expect(mockLog.warn).toHaveBeenCalledTimes(1);
-    expect(mockLog.warn).toHaveBeenCalledWith("Compat: Invalid cue times: 12 - 10");
+    expect(mockLog.warn).toHaveBeenCalledWith(
+      "text",
+      "Invalid cue times: start after end.",
+      {
+        endTime: 10,
+        startTime: 12,
+      },
+    );
   });
 
   it("should create a new VTT Cue in other cases", async () => {

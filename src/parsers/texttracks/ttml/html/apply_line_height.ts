@@ -43,6 +43,6 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
     addClassName(element, "proportional-style");
     element.setAttribute("data-proportional-line-height", firstLineHeight[1]);
   } else {
-    log.warn("TTML Parser: unhandled lineHeight unit:", firstLineHeight[2]);
+    log.warn("ttml", "unhandled lineHeight unit", { unit: firstLineHeight[2] });
   }
 }

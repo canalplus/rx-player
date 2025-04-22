@@ -41,7 +41,7 @@ export default function applyExtent(element: HTMLElement, extent: string): void 
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-width", firstExtent[1]);
     } else {
-      log.warn("TTML Parser: unhandled extent unit:", firstExtent[2]);
+      log.warn("ttml", "unhandled extent unit", { unit: firstExtent[2] });
     }
 
     if (secondExtent[2] === "px" || secondExtent[2] === "%" || secondExtent[2] === "em") {
@@ -50,7 +50,7 @@ export default function applyExtent(element: HTMLElement, extent: string): void 
       addClassName(element, "proportional-style");
       element.setAttribute("data-proportional-height", secondExtent[1]);
     } else {
-      log.warn("TTML Parser: unhandled extent unit:", secondExtent[2]);
+      log.warn("ttml", "unhandled extent unit", { unit: secondExtent[2] });
     }
   }
 }

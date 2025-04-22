@@ -18,18 +18,20 @@ export function setMediaKeys(
   const prom = emeImplementation
     .setMediaKeys(mediaElement, mediaKeys)
     .then(() => {
-      log.info("Compat: MediaKeys updated with success");
+      log.info("DRM", "MediaKeys updated with success");
     })
     .catch((err) => {
       if (mediaKeys === null) {
         log.error(
-          "Compat: Could not reset MediaKeys",
+          "DRM",
+          "Could not reset MediaKeys",
           err instanceof Error ? err : "Unknown Error",
         );
         return;
       }
       log.error(
-        "Compat: Could not update MediaKeys",
+        "DRM",
+        "Could not update MediaKeys",
         err instanceof Error ? err : "Unknown Error",
       );
       throw err;

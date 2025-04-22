@@ -257,11 +257,15 @@ function getEBMLID(
 ): { length: number; value: number } | null {
   const length = getLength(buffer, offset);
   if (length === undefined) {
-    log.warn("webm: unrepresentable length");
+    log.warn("webm", "unrepresentable length");
     return null;
   }
   if (offset + length > buffer.length) {
-    log.warn("webm: impossible length");
+    log.warn("webm", "impossible length", {
+      offset,
+      length,
+      bufferLength: buffer.length,
+    });
     return null;
   }
 
@@ -278,11 +282,15 @@ function getEBMLValue(
 ): { length: number; value: number } | null {
   const length = getLength(buffer, offset);
   if (length === undefined) {
-    log.warn("webm: unrepresentable length");
+    log.warn("webm", "unrepresentable length");
     return null;
   }
   if (offset + length > buffer.length) {
-    log.warn("webm: impossible length");
+    log.warn("webm", "impossible length", {
+      offset,
+      length,
+      bufferLength: buffer.length,
+    });
     return null;
   }
 

@@ -176,9 +176,9 @@ export default function StreamOrchestrator(
         }
 
         log.info(
-          "Stream: Destroying all PeriodStreams due to out of bounds situation",
-          bufferType,
-          time,
+          "Stream",
+          "Destroying all PeriodStreams due to out of bounds situation",
+          { bufferType, time },
         );
         enableOutOfBoundsCheck = false;
         while (periodList.length() > 0) {
@@ -193,7 +193,7 @@ export default function StreamOrchestrator(
         const nextPeriod =
           manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
         if (nextPeriod === undefined) {
-          log.warn("Stream: The wanted position is not found in the Manifest.");
+          log.warn("Stream", "The wanted position is not found in the Manifest.");
           enableOutOfBoundsCheck = true;
           return;
         }
@@ -340,10 +340,9 @@ export default function StreamOrchestrator(
       // load and push segments.
       enableOutOfBoundsCheck = false;
 
-      log.info(
-        "Stream: Destroying all PeriodStreams for decipherability matters",
+      log.info("Stream", "Destroying all PeriodStreams for decipherability matters", {
         bufferType,
-      );
+      });
       while (periodList.length() > 0) {
         const period = periodList.get(periodList.length() - 1);
         periodList.removeElement(period);
@@ -443,7 +442,10 @@ export default function StreamOrchestrator(
     },
     cancelSignal: CancellationSignal,
   ): void {
-    log.info("Stream: Creating new Stream for", bufferType, basePeriod.start);
+    log.info("Stream", "Creating new PeriodStream", {
+      bufferType,
+      periodStart: basePeriod.start,
+    });
 
     /**
      * Contains properties linnked to the next chronological `PeriodStream` that
@@ -472,11 +474,14 @@ export default function StreamOrchestrator(
             return;
           }
           log.info(
-            "Stream: Destroying PeriodStream as the current playhead moved above it",
-            bufferType,
-            basePeriod.start,
-            position.getWanted(),
-            basePeriod.end,
+            "Stream",
+            "Destroying PeriodStream as the current playhead moved above it",
+            {
+              bufferType,
+              periodStart: basePeriod.start,
+              periodEnd: basePeriod.end,
+              position: position.getWanted(),
+            },
           );
           stopListeningObservations();
           consecutivePeriodStreamCb.periodStreamCleared({
@@ -514,9 +519,13 @@ export default function StreamOrchestrator(
         } else if (nextStreamInfo !== null) {
           // current Stream is active, destroy next Stream if created
           log.info(
-            "Stream: Destroying next PeriodStream due to current one being active",
-            bufferType,
-            nextStreamInfo.period.start,
+            "Stream",
+            "Destroying next PeriodStream due to current one being active",
+            {
+              bufferType,
+              periodStart: basePeriod.start,
+              nextPeriodStart: nextStreamInfo.period.start,
+            },
           );
           consecutivePeriodStreamCb.periodStreamCleared({
             type: bufferType,
@@ -551,10 +560,12 @@ export default function StreamOrchestrator(
           return;
         }
         log.warn(
-          "Stream: Creating next `PeriodStream` while one was already created.",
-          bufferType,
-          nextPeriod.id,
-          nextStreamInfo.period.id,
+          "Stream",
+          "Creating next `PeriodStream` while one was already created.",
+          {
+            bufferType,
+            nextPeriodStart: nextPeriod.start,
+          },
         );
         consecutivePeriodStreamCb.periodStreamCleared({
           type: bufferType,
@@ -623,9 +634,12 @@ export default function StreamOrchestrator(
                 nextStreamInfo.period.id !== newNextPeriod.id
               ) {
                 log.warn(
-                  "Stream: Destroying next PeriodStream due to new one being added",
-                  bufferType,
-                  nextStreamInfo.period.start,
+                  "Stream",
+                  "Destroying next PeriodStream due to new one being added",
+                  {
+                    bufferType,
+                    nextPeriodStart: nextStreamInfo.period.start,
+                  },
                 );
                 consecutivePeriodStreamCb.periodStreamCleared({
                   type: bufferType,

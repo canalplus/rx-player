@@ -235,7 +235,10 @@ export default class FreezeResolver {
     }
 
     const freezingTs = freezing?.timestamp ?? rebuffering?.timestamp ?? null;
-    log.info("FR: Freeze detected", freezingTs, now - (freezingTs ?? now));
+    log.info("Freeze", "Freeze detected", {
+      freezeStart: freezingTs,
+      timeFrozen: now - (freezingTs ?? now),
+    });
 
     /**
      * If `true`, we recently tried to "flush" to unstuck playback but playback
@@ -268,7 +271,7 @@ export default class FreezeResolver {
         timestamp: now,
         position: freezingPosition + UNFREEZING_DELTA_POSITION,
       };
-      log.debug("FR: trying to flush to un-freeze");
+      log.debug("Freeze", "Trying to flush to un-freeze");
 
       this._decipherabilityFreezeStartingTimestamp = null;
       this._ignoreFreezeUntil = now + MINIMUM_TIME_BETWEEN_FREEZE_HANDLING;
@@ -307,7 +310,7 @@ export default class FreezeResolver {
       this._segmentSinksStore,
     );
     if (hasUndecipherableData === true) {
-      log.warn("FR: we have undecipherable segments left in the buffer, reloading");
+      log.warn("Freeze", "we have undecipherable segments left in the buffer, reloading");
       this._decipherabilityFreezeStartingTimestamp = null;
       this._ignoreFreezeUntil = now + MINIMUM_TIME_BETWEEN_FREEZE_HANDLING;
       return { type: "reload", value: null };
@@ -324,7 +327,7 @@ export default class FreezeResolver {
     if (!hasDecipherabilityFreezePotential) {
       this._decipherabilityFreezeStartingTimestamp = null;
     } else if (this._decipherabilityFreezeStartingTimestamp === null) {
-      log.debug("FR: Start of a potential decipherability freeze detected");
+      log.debug("Freeze", "Start of a potential decipherability freeze detected");
       this._decipherabilityFreezeStartingTimestamp = now;
     }
 
@@ -339,7 +342,8 @@ export default class FreezeResolver {
       hasUndecipherableData === false
     ) {
       log.warn(
-        "FR: we are frozen despite only having decipherable " +
+        "Freeze",
+        "we are frozen despite only having decipherable " +
           "segments left in the buffer, reloading",
       );
       this._decipherabilityFreezeStartingTimestamp = null;
@@ -361,7 +365,8 @@ export default class FreezeResolver {
    */
   private _getStrategyIfFlushingFails(freezingPosition: number): IFreezeResolution {
     log.warn(
-      "FR: A recent flush seemed to have no effect on freeze, checking for transitions",
+      "Freeze",
+      "A recent flush seemed to have no effect on freeze, checking for transitions",
     );
 
     /** Contains Representation we might want to avoid after the following algorithm */
@@ -427,7 +432,8 @@ export default class FreezeResolver {
         previousRepresentationEntry.segment === null
       ) {
         log.debug(
-          "FR: Freeze when beginning to play a content, try avoiding this quality",
+          "Freeze",
+          "Freeze when beginning to play a content, try avoiding this quality",
         );
         toAvoid.push({
           adaptation: currentSegment.infos.adaptation,
@@ -438,16 +444,15 @@ export default class FreezeResolver {
         currentSegment.infos.period.id !==
         previousRepresentationEntry.segment.infos.period.id
       ) {
-        log.debug("FR: Freeze when switching Period, reloading");
+        log.debug("Freeze", "Freeze when switching Period, reloading");
         return { type: "reload", value: null };
       } else if (
         currentSegment.infos.representation.uniqueId !==
         previousRepresentationEntry.segment.infos.representation.uniqueId
       ) {
-        log.warn(
-          "FR: Freeze when switching Representation, avoiding",
-          currentSegment.infos.representation.bitrate,
-        );
+        log.warn("Freeze", "Freeze when switching Representation, avoiding", {
+          bitrate: currentSegment.infos.representation.bitrate,
+        });
         toAvoid.push({
           adaptation: currentSegment.infos.adaptation,
           period: currentSegment.infos.period,
@@ -459,7 +464,7 @@ export default class FreezeResolver {
     if (toAvoid.length > 0) {
       return { type: "avoid-representations", value: toAvoid };
     } else {
-      log.debug("FR: Reloading because flush doesn't work");
+      log.debug("Freeze", "Reloading because flush doesn't work");
       return { type: "reload", value: null };
     }
   }

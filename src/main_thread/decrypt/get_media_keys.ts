@@ -47,7 +47,7 @@ function createPersistentSessionsStorage(
     return null;
   }
 
-  log.debug("DRM: Set the given license storage");
+  log.debug("DRM", "Set the given license storage");
   return new PersistentSessionsStore(persistentLicenseConfig);
 }
 
@@ -110,7 +110,7 @@ export default async function getMediaKeysInfos(
     currentState !== null &&
     evt.type === "reuse-media-key-system-access"
   ) {
-    log.debug("DRM: Reusing already created MediaKeys");
+    log.debug("DRM", "Reusing already created MediaKeys");
     const { mediaKeys, loadedSessionsStore } = currentState;
 
     // We might just rely on the currently attached MediaKeys instance.
@@ -133,7 +133,7 @@ export default async function getMediaKeysInfos(
   }
 
   const mediaKeys = await createMediaKeys(mediaKeySystemAccess);
-  log.info("DRM: MediaKeys created with success");
+  log.info("DRM", "MediaKeys created with success");
   const loadedSessionsStore = new LoadedSessionsStore(mediaKeys);
   return {
     mediaKeys,
@@ -154,7 +154,7 @@ export default async function getMediaKeysInfos(
 async function createMediaKeys(
   mediaKeySystemAccess: IMediaKeySystemAccess,
 ): Promise<IMediaKeys> {
-  log.info("DRM: Calling createMediaKeys on the MediaKeySystemAccess");
+  log.info("DRM", "Calling createMediaKeys on the MediaKeySystemAccess");
   try {
     const mediaKeys = await mediaKeySystemAccess.createMediaKeys();
     return mediaKeys;

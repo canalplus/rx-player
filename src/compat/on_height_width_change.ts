@@ -90,7 +90,7 @@ export default function onHeightWidthChange(
   if (_ResizeObserver !== undefined) {
     const resizeObserver = new _ResizeObserver((entries) => {
       if (entries.length === 0) {
-        log.error("Compat: Resized but no observed element.");
+        log.error("utils", "Resized but no observed element.");
         return;
       }
 

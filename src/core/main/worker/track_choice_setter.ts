@@ -68,7 +68,7 @@ export default class TrackChoiceSetter {
       this._refs.set(periodId, obj);
     }
     if (obj[bufferType] !== undefined) {
-      log.warn("WP: Track for periodId already declared", periodId, bufferType);
+      log.warn("Track", "Track for periodId already declared", { periodId, bufferType });
       obj[bufferType]?.trackReference.finish();
       obj[bufferType]?.representations.finish();
     }
@@ -106,7 +106,10 @@ export default class TrackChoiceSetter {
   ): boolean {
     const ref = this._refs.get(periodId)?.[bufferType];
     if (ref === undefined) {
-      log.debug("WP: Setting track for inexistent periodId", periodId, bufferType);
+      log.debug("Track", "Setting track for inexistent periodId", {
+        periodId,
+        bufferType,
+      });
       return false;
     }
     if (isNullOrUndefined(choice)) {
@@ -136,12 +139,18 @@ export default class TrackChoiceSetter {
   ): boolean {
     const ref = this._refs.get(periodId)?.[bufferType];
     if (ref === undefined) {
-      log.debug("WP: Setting track for inexistent periodId", periodId, bufferType);
+      log.debug("Track", "Setting track for inexistent periodId", {
+        periodId,
+        bufferType,
+      });
       return false;
     }
     const val = ref.trackReference.getValue();
     if (isNullOrUndefined(val) || val.adaptationId !== adaptationId) {
-      log.debug("WP: Desynchronized Adaptation id", val?.adaptationId, adaptationId);
+      log.debug("Track", "Desynchronized Adaptation id", {
+        oldId: val?.adaptationId,
+        newId: adaptationId,
+      });
       return false;
     }
     ref.representations.setValue(choice);
@@ -152,11 +161,10 @@ export default class TrackChoiceSetter {
     const obj = this._refs.get(periodId);
     const ref = obj?.[bufferType];
     if (obj === undefined || ref === undefined) {
-      log.debug(
-        "WP: Removing track setter for inexistent periodId",
+      log.debug("Track", "Removing track setter for inexistent periodId", {
         periodId,
         bufferType,
-      );
+      });
       return false;
     }
     ref.trackReference.finish();

@@ -72,7 +72,8 @@ export default class PersistentSessionsStore {
       this._entries = entries;
     } catch (e) {
       log.warn(
-        "DRM-PSS: Could not get entries from license storage",
+        "DRM",
+        "Persistent store: Could not get entries from license storage",
         e instanceof Error ? e : "",
       );
       this.dispose();
@@ -138,7 +139,7 @@ export default class PersistentSessionsStore {
     session: IMediaKeySession,
   ): void {
     if (isNullOrUndefined(session) || !isNonEmptyString(session.sessionId)) {
-      log.warn("DRM-PSS: Invalid Persisten Session given.");
+      log.warn("DRM", "Persistent Store: Invalid Persisten Session given.");
       return;
     }
     const { sessionId } = session;
@@ -150,10 +151,10 @@ export default class PersistentSessionsStore {
       if (entryVersion >= currVersion && sessionId === currentEntry.sessionId) {
         return;
       }
-      log.info("DRM-PSS: Updating session info.", sessionId);
+      log.info("DRM", "Persistent Store: Updating session info.", { sessionId });
       this._entries.splice(currentIndex, 1);
     } else {
-      log.info("DRM-PSS: Add new session", sessionId);
+      log.info("DRM", "Persistent Store: Add new session", { sessionId });
     }
 
     const storedValues = prepareValuesForStore(initData.values.getFormattedValues());
@@ -190,17 +191,22 @@ export default class PersistentSessionsStore {
       }
     }
     if (index === -1) {
-      log.warn("DRM-PSS: initData to delete not found.");
+      log.warn(
+        "DRM",
+        "Persistent Store: initData to delete not found in persistent store.",
+      );
       return;
     }
     const entry = this._entries[index];
-    log.warn("DRM-PSS: Delete session from store", entry.sessionId);
+    log.warn("DRM", "Persistent Store: Delete session from persistent store", {
+      sessionId: entry.sessionId,
+    });
     this._entries.splice(index, 1);
     this._save();
   }
 
   public deleteOldSessions(sessionsToDelete: number): void {
-    log.info(`DRM-PSS: Deleting last ${sessionsToDelete} sessions.`);
+    log.info("DRM", "Persistent Store: Deleting last sessions.", { sessionsToDelete });
     if (sessionsToDelete <= 0) {
       return;
     }
@@ -208,7 +214,8 @@ export default class PersistentSessionsStore {
       this._entries.splice(0, sessionsToDelete);
     } else {
       log.warn(
-        "DRM-PSS: Asked to remove more information that it contains",
+        "DRM",
+        "Persistent Store: Asked to remove more information that it contains",
         sessionsToDelete,
         this._entries.length,
       );
@@ -262,20 +269,26 @@ export default class PersistentSessionsStore {
                   if (typeof entryKid === "string") {
                     if (keyIdB64 === entryKid) {
                       log.debug(
-                        "DRM: PSS: Found wanted kid stored on entry",
-                        `i=${i}`,
-                        `key-id=${keyIdB64}`,
-                        `session-id=${entry.sessionId}`,
+                        "DRM",
+                        "Persistent Store: Found wanted kid stored on entry",
+                        {
+                          index: i,
+                          keyId: keyIdB64,
+                          sessionId: entry.sessionId,
+                        },
                       );
                       return true;
                     }
                   } else if (areArraysOfNumbersEqual(entryKid.initData, keyId)) {
                     if (log.hasLevel("DEBUG")) {
                       log.debug(
-                        "DRM: PSS: Found wanted kid stored on entry",
-                        `i=${i}`,
-                        `key-id=${bytesToBase64(entryKid.initData)}`,
-                        `session-id=${entry.sessionId}`,
+                        "DRM",
+                        "Persistent Store: Found wanted kid stored on entry",
+                        {
+                          index: i,
+                          keyId: keyIdB64,
+                          sessionId: entry.sessionId,
+                        },
                       );
                     }
                     return true;
@@ -284,20 +297,22 @@ export default class PersistentSessionsStore {
                 return false;
               });
               if (foundCompatible) {
-                log.debug(
-                  "DRM: PSS: Found compatible entry of v4",
-                  `i=${i}`,
-                  `session-id=${entry.sessionId}`,
-                );
+                log.debug("DRM", "Persistent Store: Found compatible entry of v4", {
+                  index: i,
+                  sessionId: entry.sessionId,
+                });
                 return i;
               }
             } else {
               const formatted = initData.values.getFormattedValues();
               if (areInitializationValuesCompatible(formatted, entry.values)) {
                 log.debug(
-                  "DRM: PSS: Found compatible entry of v4 without init data",
-                  `i=${i}`,
-                  `session-id=${entry.sessionId}`,
+                  "DRM",
+                  "Persistent Store: Found compatible entry of v4 without init data",
+                  {
+                    index: i,
+                    sessionId: entry.sessionId,
+                  },
                 );
                 return i;
               }
@@ -308,9 +323,12 @@ export default class PersistentSessionsStore {
             const formatted = initData.values.getFormattedValues();
             if (areInitializationValuesCompatible(formatted, entry.values)) {
               log.debug(
-                "DRM: PSS: Found compatible entry of v3 - same values",
-                `i=${i}`,
-                `session-id=${entry.sessionId}`,
+                "DRM",
+                "Persistent Store: Found compatible entry of v3 - same values",
+                {
+                  index: i,
+                  sessionId: entry.sessionId,
+                },
               );
               return i;
             }
@@ -328,15 +346,19 @@ export default class PersistentSessionsStore {
                     : entry.initData.initData;
                 if (areArraysOfNumbersEqual(decodedInitData, concatInitData)) {
                   log.debug(
-                    "DRM: PSS: Found compatible entry of v2 - same concatenated init data",
-                    `i=${i}`,
-                    `session-id=${entry.sessionId}`,
+                    "DRM",
+                    "Persistent Store: Found compatible entry of v2 - same concatenated init data",
+                    {
+                      index: i,
+                      sessionId: entry.sessionId,
+                    },
                   );
                   return i;
                 }
               } catch (e) {
                 log.warn(
-                  "DRM-PSS: Could not decode initialization data.",
+                  "DRM",
+                  "Persistent Store: Could not decode initialization data.",
                   e instanceof Error ? e : "",
                 );
               }
@@ -354,18 +376,24 @@ export default class PersistentSessionsStore {
                 // ugly unreadable logic for a very very minor possibility.
                 // Just consider that it is a match based on the hash.
                 log.debug(
-                  "DRM: PSS: Found compatible entry of v1 - same hash only",
-                  `i=${i}`,
-                  `hash=${concatHash}`,
-                  `session-id=${entry.sessionId}`,
+                  "DRM",
+                  "Persistent Store: Found compatible entry of v1 - same hash only",
+                  {
+                    index: i,
+                    sessionId: entry.sessionId,
+                    hash: concatHash,
+                  },
                 );
                 return i;
               } else if (areArraysOfNumbersEqual(entry.initData, concatInitData)) {
                 log.debug(
-                  "DRM: PSS: Found compatible entry of v1 - same hash and initData",
-                  `i=${i}`,
-                  `hash=${concatHash}`,
-                  `session-id=${entry.sessionId}`,
+                  "DRM",
+                  "Persistent Store: Found compatible entry of v1 - same hash and initData",
+                  {
+                    index: i,
+                    sessionId: entry.sessionId,
+                    hash: concatHash,
+                  },
                 );
                 return i;
               }
@@ -377,10 +405,13 @@ export default class PersistentSessionsStore {
             const { initDataHash: concatHash } = getConcatenatedInitDataInfo();
             if (entry.initData === concatHash) {
               log.debug(
-                "DRM: PSS: Found compatible entry - same hash only",
-                `i=${i}`,
-                `hash=${concatHash}`,
-                `session-id=${entry.sessionId}`,
+                "DRM",
+                "Persistent Store: Found compatible entry - same hash only",
+                {
+                  index: i,
+                  sessionId: entry.sessionId,
+                  hash: concatHash,
+                },
               );
               return i;
             }
@@ -399,7 +430,11 @@ export default class PersistentSessionsStore {
       this._storage.save(this._entries);
     } catch (e) {
       const err = e instanceof Error ? e : undefined;
-      log.warn("DRM-PSS: Could not save MediaKeySession information", err);
+      log.warn(
+        "DRM",
+        "Persistent Store: Could not save MediaKeySession information",
+        err,
+      );
     }
   }
 }

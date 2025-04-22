@@ -33,6 +33,7 @@ describe("Compat - tryToChangeSourceBufferType", () => {
     expect(tryToChangeSourceBufferType(fakeSourceBuffer, "toto")).toBe(false);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(
+      "mse",
       "Could not call 'changeType' on the given SourceBuffer:",
       err,
     );

@@ -341,11 +341,11 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   initialize(): void {
-    log.error("A `ListRepresentationIndex` does not need to be initialized");
+    log.error("dash", "A `ListRepresentationIndex` does not need to be initialized");
   }
 
   addPredictedSegments(): void {
-    log.warn("Cannot add predicted segments to a `ListRepresentationIndex`");
+    log.warn("dash", "Cannot add predicted segments to a `ListRepresentationIndex`");
   }
 
   /**
@@ -375,6 +375,6 @@ export default class ListRepresentationIndex implements IRepresentationIndex {
   }
 
   _update(): void {
-    log.error("A `ListRepresentationIndex` cannot be updated");
+    log.error("dash", "A `ListRepresentationIndex` cannot be updated");
   }
 }

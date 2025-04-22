@@ -94,7 +94,7 @@ export default class MainMediaSourceInterface
       );
     }
 
-    log.info("Init: Creating MediaSource");
+    log.info("mse", "Creating MediaSource");
     const mediaSource =
       forcedMediaSource !== undefined ? new forcedMediaSource() : new MediaSource_();
     const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
@@ -169,7 +169,7 @@ export default class MainMediaSourceInterface
     if (this._endOfStreamCanceller === null) {
       this._endOfStreamCanceller = new TaskCanceller();
       this._endOfStreamCanceller.linkToSignal(this._canceller.signal);
-      log.debug("Init: end-of-stream order received.");
+      log.debug("mse", "end-of-stream order received.");
       maintainEndOfStream(this._mediaSource, this._endOfStreamCanceller.signal);
     }
   }
@@ -177,7 +177,7 @@ export default class MainMediaSourceInterface
   /** @see IMediaSourceInterface */
   public stopEndOfStream() {
     if (this._endOfStreamCanceller !== null) {
-      log.debug("Init: resume-stream order received.");
+      log.debug("mse", "resume-stream order received.");
       this._endOfStreamCanceller.cancel();
       this._endOfStreamCanceller = null;
     }
@@ -250,7 +250,9 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   public appendBuffer(
     ...args: Parameters<ISourceBufferInterface["appendBuffer"]>
   ): Promise<IRange[]> {
-    log.debug("SBI: receiving order to push data to the SourceBuffer", this.type);
+    log.debug("mse", "receiving order to push data to the SourceBuffer", {
+      type: this.type,
+    });
     return this._addToQueue({
       operationName: SbiOperationName.Push,
       params: args,
@@ -259,12 +261,11 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
   /** @see ISourceBufferInterface */
   public remove(start: number, end: number): Promise<IRange[]> {
-    log.debug(
-      "SBI: receiving order to remove data from the SourceBuffer",
-      this.type,
+    log.debug("mse", "receiving order to remove data from the SourceBuffer", {
+      type: this.type,
       start,
       end,
-    );
+    });
     return this._addToQueue({
       operationName: SbiOperationName.Remove,
       params: [start, end],
@@ -277,9 +278,12 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       return convertToRanges(this._sourceBuffer.buffered);
     } catch (err) {
       log.error(
+        "mse",
         "Failed to get buffered time range of SourceBuffer",
-        this.type,
-        err instanceof Error ? err : null,
+        {
+          type: this.type,
+        },
+        err instanceof Error ? err : "Unknown Error",
       );
       return [];
     }
@@ -290,7 +294,11 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     try {
       this._sourceBuffer.abort();
     } catch (err) {
-      log.debug("Init: Failed to abort SourceBuffer:", err instanceof Error ? err : null);
+      log.debug(
+        "mse",
+        "Failed to abort SourceBuffer:",
+        err instanceof Error ? err : "Unknown Error",
+      );
     }
     this._emptyCurrentQueue();
   }
@@ -317,7 +325,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     const currentOps = this._currentOperations;
     this._currentOperations = [];
     if (currentOps.length === 0) {
-      log.error("SBI: error for an unknown operation", error);
+      log.error("mse", "error for an unknown operation", error);
     } else {
       const rejected = new SourceBufferError(
         error.name,
@@ -465,10 +473,9 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
           }
         }
         if (toConcat.length > 1) {
-          log.info(
-            `MMSI: Merging ${toConcat.length} segments together for perf`,
-            this.type,
-          );
+          log.info("mse", `: Merging ${toConcat.length} segments together for perf`, {
+            type: this.type,
+          });
           segmentData = concat(...toConcat);
         }
       }
@@ -510,7 +517,11 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       // TODO merge contiguous removes?
       this._currentOperations = [nextElem];
       const [start, end] = nextElem.params;
-      log.debug("SBI: removing data from SourceBuffer", this.type, start, end);
+      log.debug("mse", "removing data from SourceBuffer", {
+        type: this.type,
+        start,
+        end,
+      });
       try {
         this._sourceBuffer.remove(start, end);
       } catch (err) {
@@ -541,12 +552,15 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     const sourceBuffer = this._sourceBuffer;
     const { codec, timestampOffset, appendWindow = [] } = params;
     if (codec !== undefined && codec !== this.codec) {
-      log.debug("SBI: updating codec", codec);
+      log.debug("mse", "updating codec", { prevCodec: this.codec, newCodec: codec });
       const hasUpdatedSourceBufferType = tryToChangeSourceBufferType(sourceBuffer, codec);
       if (hasUpdatedSourceBufferType) {
         this.codec = codec;
       } else {
-        log.debug("SBI: could not update codec", codec, this.codec);
+        log.debug("mse", "could not update codec", {
+          prevCodec: this.codec,
+          newCodec: codec,
+        });
       }
     }
 
@@ -555,40 +569,51 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       sourceBuffer.timestampOffset !== timestampOffset
     ) {
       const newTimestampOffset = timestampOffset;
-      log.debug(
-        "SBI: updating timestampOffset",
+      log.debug("mse", "updating timestampOffset", {
         codec,
-        sourceBuffer.timestampOffset,
+        prevTimestampOffset: sourceBuffer.timestampOffset,
         newTimestampOffset,
-      );
+      });
       sourceBuffer.timestampOffset = newTimestampOffset;
     }
 
     if (appendWindow[0] === undefined) {
       if (sourceBuffer.appendWindowStart > 0) {
-        log.debug("SBI: re-setting `appendWindowStart` to `0`");
+        log.debug("mse", "re-setting `appendWindowStart`", {
+          prevWindowStart: sourceBuffer.appendWindowStart,
+        });
         sourceBuffer.appendWindowStart = 0;
       }
     } else if (appendWindow[0] !== sourceBuffer.appendWindowStart) {
       if (appendWindow[0] >= sourceBuffer.appendWindowEnd) {
-        const newTmpEnd = appendWindow[0] + 1;
-        log.debug("SBI: pre-updating `appendWindowEnd`", newTmpEnd);
-        sourceBuffer.appendWindowEnd = newTmpEnd;
+        const newWindowEnd = appendWindow[0] + 1;
+        log.debug("mse", "pre-updating `appendWindowEnd`", {
+          prevWindowEnd: sourceBuffer.appendWindowEnd,
+          newWindowEnd,
+        });
+        sourceBuffer.appendWindowEnd = newWindowEnd;
       }
-      log.debug("SBI: setting `appendWindowStart`", appendWindow[0]);
+      log.debug("mse", "setting `appendWindowStart`", {
+        appendWindowStart: appendWindow[0],
+      });
       sourceBuffer.appendWindowStart = appendWindow[0];
     }
 
     if (appendWindow[1] === undefined) {
       if (sourceBuffer.appendWindowEnd !== Infinity) {
-        log.debug("SBI: re-setting `appendWindowEnd` to `Infinity`");
+        log.debug("mse", "re-setting `appendWindowEnd`", {
+          prevWindowStart: sourceBuffer.appendWindowStart,
+        });
         sourceBuffer.appendWindowEnd = Infinity;
       }
     } else if (appendWindow[1] !== sourceBuffer.appendWindowEnd) {
-      log.debug("SBI: setting `appendWindowEnd`", appendWindow[1]);
+      log.debug("mse", "setting `appendWindowEnd`", {
+        prevWindowEnd: sourceBuffer.appendWindowEnd,
+        newWindowEnd: appendWindow[1],
+      });
       sourceBuffer.appendWindowEnd = appendWindow[1];
     }
-    log.debug("SBI: pushing segment", this.type);
+    log.debug("mse", "pushing segment", { type: this.type });
     sourceBuffer.appendBuffer(data);
   }
 }
@@ -600,21 +625,21 @@ function resetMediaSource(mediaSource: IMediaSource): void {
       const sourceBuffer = sourceBuffers[i];
       try {
         if (readyState === "open") {
-          log.info("Init: Aborting SourceBuffer before removing");
+          log.info("mse", "Aborting SourceBuffer before removing");
           try {
             sourceBuffer.abort();
           } catch (_) {
             // We actually don't care at all when resetting
           }
         }
-        log.info("Init: Removing SourceBuffer from mediaSource");
+        log.info("mse", "Removing SourceBuffer from mediaSource");
         mediaSource.removeSourceBuffer(sourceBuffer);
       } catch (_) {
         // We actually don't care at all when resetting
       }
     }
     if (sourceBuffers.length > 0) {
-      log.info("Init: Not all SourceBuffers could have been removed.");
+      log.info("mse", "Not all SourceBuffers could have been removed.");
     }
   }
 }

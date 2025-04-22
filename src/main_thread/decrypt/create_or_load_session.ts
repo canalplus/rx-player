@@ -56,7 +56,9 @@ export default async function createOrLoadSession(
   if (entry !== null) {
     previousLoadedSession = entry.mediaKeySession;
     if (isSessionUsable(previousLoadedSession)) {
-      log.info("DRM: Reuse loaded session", previousLoadedSession.sessionId);
+      log.info("DRM", "Reuse loaded session", {
+        sessionId: previousLoadedSession.sessionId,
+      });
       return {
         type: MediaKeySessionLoadingType.LoadedOpenSession,
         value: {

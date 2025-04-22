@@ -195,11 +195,11 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
   }
 
   initialize(): void {
-    log.error("A `LocalRepresentationIndex` does not need to be initialized");
+    log.error("dash", "A `LocalRepresentationIndex` does not need to be initialized");
   }
 
   addPredictedSegments(): void {
-    log.warn("Cannot add predicted segments to a `LocalRepresentationIndex`");
+    log.warn("dash", "Cannot add predicted segments to a `LocalRepresentationIndex`");
   }
 
   /**
@@ -249,7 +249,8 @@ export default class LocalRepresentationIndex implements IRepresentationIndex {
         if (currSegment.time + currSegment.duration > newIndexStart) {
           // the new Manifest overlaps a previous segment (weird). Remove the latter.
           log.warn(
-            "Local RepresentationIndex: Manifest update removed" + " previous segments",
+            "dash",
+            "Local RepresentationIndex: Manifest update removed previous segments",
           );
           return insertNewIndexAtPosition(i);
         }

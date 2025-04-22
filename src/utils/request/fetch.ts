@@ -122,7 +122,7 @@ export default function fetchRequest(
     }
   }
 
-  log.debug("Fetch: Called with URL", options.url);
+  log.debug("utils", "Fetch", { url: options.url });
   let cancellation: CancellationError | null = null;
   let isTimedOut = false;
   let isConnectionTimedOut = false;
@@ -137,7 +137,7 @@ export default function fetchRequest(
    */
   function abortFetch(): void {
     if (isNullOrUndefined(abortController)) {
-      log.warn("Fetch: AbortController API not available.");
+      log.warn("utils", "Fetch: AbortController API not available.");
       return;
     }
     abortController.abort();
@@ -179,7 +179,7 @@ export default function fetchRequest(
   fetchOpts.signal = !isNullOrUndefined(abortController) ? abortController.signal : null;
 
   if (log.hasLevel("DEBUG")) {
-    let logLine = "FETCH: Sending GET " + options.url;
+    let logLine = "fetch GET " + options.url;
     if (options.timeout !== undefined) {
       logLine += " to=" + String(options.timeout / 1000);
     }
@@ -189,7 +189,7 @@ export default function fetchRequest(
     if (options.headers?.Range !== undefined) {
       logLine += " Range=" + options.headers?.Range;
     }
-    log.debug(logLine);
+    log.debug("utils", logLine);
   }
   return fetch(options.url, fetchOpts)
     .then((response: Response): Promise<IFetchedStreamComplete> => {
@@ -197,7 +197,10 @@ export default function fetchRequest(
         clearTimeout(connectionTimeoutId);
       }
       if (response.status >= 300) {
-        log.warn("Fetch: Request HTTP Error", response.status, response.url);
+        log.warn("utils", "Fetch: Request HTTP Error", {
+          status: response.status,
+          responseUrl: response.url,
+        });
         throw new RequestError(
           response.url,
           response.status,
@@ -266,15 +269,23 @@ export default function fetchRequest(
       }
       deregisterCancelLstnr();
       if (isTimedOut) {
-        log.warn("Fetch: Request timed out.");
+        log.warn("utils", "Fetch: Request timed out.", {
+          url: options.url,
+          timeout: options.timeout,
+        });
         throw new RequestError(options.url, 0, RequestErrorTypes.TIMEOUT);
       } else if (isConnectionTimedOut) {
-        log.warn("Fetch: Request connection timed out.");
+        log.warn("utils", "Fetch: Request connection timed out.", {
+          url: options.url,
+          connectionTimeout: options.connectionTimeout,
+        });
         throw new RequestError(options.url, 0, RequestErrorTypes.TIMEOUT);
       } else if (err instanceof RequestError) {
         throw err;
       }
-      log.warn("Fetch: Request Error", err instanceof Error ? err.toString() : "");
+      log.warn("utils", "Fetch: Request Error", {
+        error: err instanceof Error ? err.toString() : "Unkwown Error",
+      });
       throw new RequestError(options.url, 0, RequestErrorTypes.ERROR_EVENT);
     });
 }

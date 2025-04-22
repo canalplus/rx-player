@@ -162,10 +162,9 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
     this.isMediaSegmentQueueInterrupted.onUpdate(
       (val) => {
         if (!val) {
-          log.debug(
-            "SQ: Media segment can be loaded again, restarting queue.",
-            content.adaptation.type,
-          );
+          log.debug("SF", "Media segment can be loaded again, restarting queue.", {
+            type: content.adaptation.type,
+          });
           this._restartMediaSegmentDownloadingQueue(currentContentInfo);
         }
       },
@@ -193,40 +192,36 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
             // There's nothing to load but there's already no request pending.
             return;
           }
-          log.debug(
-            "SQ: no more media segment to request. Cancelling queue.",
-            content.adaptation.type,
-          );
+          log.debug("SF", "no more media segment to request. Cancelling queue.", {
+            type: content.adaptation.type,
+          });
           this._restartMediaSegmentDownloadingQueue(currentContentInfo);
           return;
         } else if (currentSegmentRequest === null) {
           // There's no request although there are needed segments: start requests
-          log.debug(
-            "SQ: Media segments now need to be requested. Starting queue.",
-            content.adaptation.type,
-            segmentQueue.length,
-          );
+          log.debug("SF", "Media segments now need to be requested. Starting queue.", {
+            type: content.adaptation.type,
+            queueLength: segmentQueue.length,
+          });
           this._restartMediaSegmentDownloadingQueue(currentContentInfo);
           return;
         } else {
           const nextItem = segmentQueue[0];
           if (currentSegmentRequest.segment.id !== nextItem.segment.id) {
             // The most important request if for another segment, request it
-            log.debug(
-              "SQ: Next media segment changed, cancelling previous",
-              content.adaptation.type,
-            );
+            log.debug("SF", "Next media segment changed, cancelling previous", {
+              type: content.adaptation.type,
+            });
             this._restartMediaSegmentDownloadingQueue(currentContentInfo);
             return;
           }
           if (currentSegmentRequest.priority !== nextItem.priority) {
             // The priority of the most important request has changed, update it
-            log.debug(
-              "SQ: Priority of next media segment changed, updating",
-              content.adaptation.type,
-              currentSegmentRequest.priority,
-              nextItem.priority,
-            );
+            log.debug("SF", "Priority of next media segment changed, updating", {
+              type: content.adaptation.type,
+              prevPriority: currentSegmentRequest.priority,
+              newPriority: nextItem.priority,
+            });
             this._segmentFetcher.updatePriority(
               currentSegmentRequest.request,
               nextItem.priority,
@@ -254,10 +249,9 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
           return;
         }
         if (next.initSegment === null) {
-          log.debug(
-            "SQ: no more init segment to request. Cancelling queue.",
-            content.adaptation.type,
-          );
+          log.debug("SF", "no more init segment to request. Cancelling queue.", {
+            type: content.adaptation.type,
+          });
         }
         this._restartInitSegmentDownloadingQueue(currentContentInfo, next.initSegment);
       },
@@ -291,7 +285,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
 
     const recursivelyRequestSegments = (): void => {
       if (this.isMediaSegmentQueueInterrupted.getValue()) {
-        log.debug("SQ: Segment fetching postponed because it cannot stream now.");
+        log.debug("SF", "Segment fetching postponed because it cannot stream now.");
         return;
       }
       const { segmentQueue } = downloadQueue.getValue();
@@ -378,11 +372,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
            * restarted later.
            */
           beforeInterrupted() {
-            log.info(
-              "SQ: segment request interrupted temporarly.",
-              segment.id,
-              segment.time,
-            );
+            log.info("SF", "segment request interrupted temporarly.", {
+              segmentId: segment.id,
+              segmentTime: segment.time,
+            });
           },
 
           /**
@@ -504,7 +497,9 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
           this.trigger("requestRetry", { segment, error: err });
         },
         beforeInterrupted: () => {
-          log.info("SQ: init segment request interrupted temporarly.", segment.id);
+          log.info("SF", "init segment request interrupted temporarly.", {
+            segmentId: segment.id,
+          });
         },
         beforeEnded: () => {
           unlinkCanceller();

@@ -419,7 +419,7 @@ export default function getMediaKeySystemAccess(
   keySystemsConfigs: IKeySystemOption[],
   cancelSignal: CancellationSignal,
 ): Promise<IFoundMediaKeySystemAccessEvent> {
-  log.info("DRM: Searching for compatible MediaKeySystemAccess");
+  log.info("DRM", "Searching for compatible MediaKeySystemAccess");
   /** Array of set keySystems for this content. */
   const keySystemsType: IKeySystemType[] = keySystemsConfigs.reduce(
     (arr: IKeySystemType[], keySystemOptions) => {
@@ -482,10 +482,11 @@ export default function getMediaKeySystemAccess(
 
     const keySystemConfigurations = buildKeySystemConfigurations(chosenType);
 
-    log.debug(
-      `DRM: Request keysystem access ${keyType},` +
-        `${index + 1} of ${keySystemsType.length}`,
-    );
+    log.debug(`DRM`, `Request keysystem access`, {
+      keyType,
+      index,
+      length: keySystemsType.length,
+    });
 
     let keySystemAccess;
     const currentState = await MediaKeysAttacher.getAttachedMediaKeysState(mediaElement);
@@ -504,7 +505,7 @@ export default function getMediaKeySystemAccess(
           currentState.askedConfiguration,
         )
       ) {
-        log.info("DRM: Found cached compatible keySystem");
+        log.info("DRM", "Found cached compatible keySystem");
         return Promise.resolve({
           type: "reuse-media-key-system-access" as const,
           value: {
@@ -521,7 +522,11 @@ export default function getMediaKeySystemAccess(
 
       try {
         keySystemAccess = await testKeySystem(eme, keyType, [keySystemConfiguration]);
-        log.info("DRM: Found compatible keysystem", keyType, index + 1);
+        log.info("DRM", "Found compatible keysystem", {
+          keyType,
+          index,
+          configIndex: configIdx,
+        });
         return {
           type: "create-media-key-system-access" as const,
           value: {
@@ -535,7 +540,11 @@ export default function getMediaKeySystemAccess(
           },
         };
       } catch (_) {
-        log.debug("DRM: Rejected access to keysystem", keyType, index + 1, configIdx);
+        log.debug("DRM", "Rejected access to keysystem", {
+          keyType,
+          index,
+          configIndex: configIdx,
+        });
         if (cancelSignal.cancellationError !== null) {
           throw cancelSignal.cancellationError;
         }
@@ -570,10 +579,10 @@ export async function testKeySystem(
       const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
       await session.generateRequest("cenc", initData);
       session.close().catch(() => {
-        log.warn("DRM: Failed to close the dummy session");
+        log.warn("DRM", "Failed to close the dummy session");
       });
     } catch (err) {
-      log.debug("DRM: KeySystemAccess was granted but it is not usable");
+      log.debug("DRM", "KeySystemAccess was granted but it is not usable");
       throw err;
     }
   }

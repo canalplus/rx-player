@@ -149,10 +149,12 @@ export default class DirectFileContentInitializer extends ContentInitializer {
         stopListeningToDrmUpdates();
 
         // Start everything! (Just put the URL in the element's src).
-        log.info("Setting URL to HTMLMediaElement", url);
+        log.info("Init", "Setting URL to HTMLMediaElement", { url });
         mediaElement.src = url;
         cancelSignal.register(() => {
-          log.info("Init: Removing directfile src from media element", mediaElement.src);
+          log.info("Init", "Removing directfile src from media element", {
+            src: mediaElement.src,
+          });
           clearElementSrc(mediaElement);
         });
 
@@ -214,9 +216,9 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     const cancelSignal = this._initCanceller.signal;
     const { autoPlay, startAt } = this._settings;
     const initialTime = () => {
-      log.debug("Init: Calculating initial time");
+      log.debug("Init", "Calculating initial time");
       const initTime = getDirectFileInitialTime(mediaElement, startAt);
-      log.debug("Init: Initial time calculated:", initTime);
+      log.debug("Init", "Initial time calculated", { initialTime: initTime });
       return initTime;
     };
     performInitialSeekAndPlay(
@@ -320,7 +322,8 @@ function getDirectFileInitialTime(
       }
     }
     log.warn(
-      "Init: startAt.fromLastPosition set but no known duration, " +
+      "Init",
+      "startAt.fromLastPosition set but no known duration, " +
         "it may be too soon to seek",
     );
     return undefined;
@@ -329,8 +332,8 @@ function getDirectFileInitialTime(
       mediaElement.seekable.length > 0 ? mediaElement.seekable.end(0) : duration;
     if (isNullOrUndefined(livePosition)) {
       log.warn(
-        "Init: startAt.fromLivePosition set but no known live position, " +
-          "beginning at 0.",
+        "Init",
+        "startAt.fromLivePosition set but no known live position, " + "beginning at 0.",
       );
       return 0;
     }
@@ -338,7 +341,8 @@ function getDirectFileInitialTime(
   } else if (!isNullOrUndefined(startAt.percentage)) {
     if (isNullOrUndefined(duration) || !isFinite(duration)) {
       log.warn(
-        "Init: startAt.percentage set but no known duration, " + "beginning at 0.",
+        "Init",
+        "startAt.percentage set but no known duration, " + "beginning at 0.",
       );
       return 0;
     }

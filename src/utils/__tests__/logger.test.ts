@@ -116,10 +116,10 @@ describe("utils - Logger", () => {
 
   it('should never call console.* functions if logger level is set to "NONE"', () => {
     const logger = new Logger();
-    logger.error("test");
-    logger.warn("test");
-    logger.info("test");
-    logger.debug("test");
+    logger.error("ABR", "test");
+    logger.warn("CMCD", "test");
+    logger.info("MF", "test");
+    logger.debug("SF", "test");
     expect(mockLog).not.toHaveBeenCalled();
     expect(mockError).not.toHaveBeenCalled();
     expect(mockWarn).not.toHaveBeenCalled();
@@ -135,10 +135,10 @@ describe("utils - Logger", () => {
   it('should only call console.error if logger level is set to "ERROR"', () => {
     const logger = new Logger();
     logger.setLevel("ERROR", "standard");
-    logger.error("test");
-    logger.warn("test");
-    logger.info("test");
-    logger.debug("test");
+    logger.error("ABR", "test");
+    logger.warn("CMCD", "test");
+    logger.info("MF", "test");
+    logger.debug("SF", "test");
     expect(mockLog).not.toHaveBeenCalled();
     expect(mockError).toHaveBeenCalled();
     expect(mockWarn).not.toHaveBeenCalled();
@@ -154,10 +154,10 @@ describe("utils - Logger", () => {
   it('should call console.{error,warn} if logger level is set to "WARNING"', () => {
     const logger = new Logger();
     logger.setLevel("WARNING", "standard");
-    logger.error("test");
-    logger.warn("test");
-    logger.info("test");
-    logger.debug("test");
+    logger.error("ABR", "test");
+    logger.warn("CMCD", "test");
+    logger.info("MF", "test");
+    logger.debug("SF", "test");
     expect(mockLog).not.toHaveBeenCalled();
     expect(mockError).toHaveBeenCalled();
     expect(mockWarn).toHaveBeenCalled();
@@ -173,10 +173,10 @@ describe("utils - Logger", () => {
   it('should call console.{error,warn,info} if logger level is set to "INFO"', () => {
     const logger = new Logger();
     logger.setLevel("INFO", "standard");
-    logger.error("test");
-    logger.warn("test");
-    logger.info("test");
-    logger.debug("test");
+    logger.error("ABR", "test");
+    logger.warn("CMCD", "test");
+    logger.info("MF", "test");
+    logger.debug("SF", "test");
     expect(mockLog).not.toHaveBeenCalled();
     expect(mockError).toHaveBeenCalled();
     expect(mockWarn).toHaveBeenCalled();
@@ -192,10 +192,10 @@ describe("utils - Logger", () => {
   it('should call console.{error,warn,info, log} if logger level is set to "DEBUG"', () => {
     const logger = new Logger();
     logger.setLevel("DEBUG", "standard");
-    logger.error("test");
-    logger.warn("test");
-    logger.info("test");
-    logger.debug("test");
+    logger.error("ABR", "test");
+    logger.warn("CMCD", "test");
+    logger.info("MF", "test");
+    logger.debug("SF", "test");
     expect(mockLog).toHaveBeenCalled();
     expect(mockError).toHaveBeenCalled();
     expect(mockWarn).toHaveBeenCalled();
@@ -291,43 +291,47 @@ describe("utils - Logger", () => {
     expect(mockInfo).not.toHaveBeenCalled();
     expect(mockDebug).not.toHaveBeenCalled();
 
-    logger.error("teste", "e r");
-    logger.warn("testw", "w a");
-    logger.info("testi", "i n");
-    logger.debug("testd", "d e");
+    logger.error("ABR", "teste");
+    logger.warn("CMCD", "testw");
+    logger.info("MF", "testi");
+    logger.debug("SF", "testd");
 
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(errorMsgs).toHaveLength(1);
     expect(errorMsgs[0]).toHaveLength(4);
     expect(errorMsgs[0][0]).toMatch(/\d+\.\d\d/);
-    expect(errorMsgs[0][1]).toMatch("[error]");
-    expect(errorMsgs[0][2]).toMatch("teste");
-    expect(errorMsgs[0][3]).toMatch("e r");
+    expect(errorMsgs[0][1]).toMatch(/^\[error\]$/);
+    expect(errorMsgs[0][2]).toMatch(/^ABR:$/);
+    expect(errorMsgs[0][3]).toMatch(/^teste$/);
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(warningMsgs).toHaveLength(1);
     expect(warningMsgs[0]).toHaveLength(4);
     expect(warningMsgs[0][0]).toMatch(/\d+\.\d\d/);
-    expect(warningMsgs[0][1]).toMatch("[warn]");
-    expect(warningMsgs[0][2]).toMatch("testw");
-    expect(warningMsgs[0][3]).toMatch("w a");
+    expect(warningMsgs[0][1]).toMatch(/^\[warn\]$/);
+    expect(warningMsgs[0][2]).toMatch(/^CMCD:$/);
+    expect(warningMsgs[0][3]).toMatch(/^testw$/);
 
     expect(mockInfo).toHaveBeenCalledTimes(1);
     expect(infoMsgs).toHaveLength(1);
     expect(infoMsgs[0]).toHaveLength(4);
     expect(infoMsgs[0][0]).toMatch(/\d+\.\d\d/);
-    expect(infoMsgs[0][1]).toMatch("[info]");
-    expect(infoMsgs[0][2]).toMatch("testi");
-    expect(infoMsgs[0][3]).toMatch("i n");
+    expect(infoMsgs[0][1]).toMatch(/^\[info\]$/);
+    expect(infoMsgs[0][2]).toMatch(/^MF:$/);
+    expect(infoMsgs[0][3]).toMatch(/^testi$/);
 
     expect(mockDebug).not.toHaveBeenCalled();
 
     expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(logMsgs[0]).toHaveLength(3);
+    expect(logMsgs[0][0]).toMatch(/\d+\.\d\d/);
+    expect(logMsgs[0][1]).toMatch(/^\[Init\]$/);
+    expect(logMsgs[0][2]).toMatch(/^Local-Date: \d+$/);
     expect(logMsgs[1]).toHaveLength(4);
     expect(logMsgs[1][0]).toMatch(/\d+\.\d\d/);
-    expect(logMsgs[1][1]).toMatch("[log]");
-    expect(logMsgs[1][2]).toMatch("testd");
-    expect(logMsgs[1][3]).toMatch("d e");
+    expect(logMsgs[1][1]).toMatch(/^\[log\]$/);
+    expect(logMsgs[1][2]).toMatch(/^SF:$/);
+    expect(logMsgs[1][3]).toMatch(/^testd$/);
 
     mockLog.mockRestore();
     mockError.mockRestore();

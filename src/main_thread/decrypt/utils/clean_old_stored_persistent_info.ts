@@ -41,10 +41,9 @@ export default function cleanOldStoredPersistentInfo(
   }
   const numberOfPersistentSessions = persistentSessionsStore.getLength();
   const toDelete = numberOfPersistentSessions - limit;
-  log.info(
-    "DRM: Too many stored persistent sessions, removing some.",
+  log.info("DRM", "Too many stored persistent sessions, removing some.", {
     numberOfPersistentSessions,
     toDelete,
-  );
+  });
   persistentSessionsStore.deleteOldSessions(toDelete);
 }

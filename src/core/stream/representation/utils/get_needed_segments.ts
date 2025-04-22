@@ -256,15 +256,18 @@ export default function getNeededSegments({
         beforeLastTimeItWasPushed.buffered === null
       ) {
         log.warn(
-          "Stream: Segment GCed multiple times in a row, ignoring it.",
+          "Stream",
+          "Segment GCed multiple times in a row, ignoring it.",
           "If this happens a lot and lead to unpleasant experience, please " +
             " check your device's available memory. If it's low when this message " +
             "is emitted, you might want to update the RxPlayer's settings (" +
             "`maxBufferAhead`, `maxVideoBufferSize` etc.) so less memory is used " +
-            "by regular media data buffering." +
-            adaptation.type,
-          representation.id,
-          segment.time,
+            "by regular media data buffering.",
+          {
+            bufferType: adaptation.type,
+            representationId: representation.id,
+            segmentTime: segment.time,
+          },
         );
         return false;
       }
@@ -451,11 +454,10 @@ function doesStartSeemGarbageCollected(
     maximumStartTime < currentSeg.bufferedStart &&
     currentSeg.bufferedStart - currentSeg.start > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT
   ) {
-    log.info(
-      "Stream: The start of the wanted segment has been garbage collected",
-      currentSeg.start,
-      currentSeg.bufferedStart,
-    );
+    log.info("Stream", "The start of the wanted segment has been garbage collected", {
+      segmentStart: currentSeg.start,
+      currentStartInBuffer: currentSeg.bufferedStart,
+    });
     return true;
   }
 
@@ -496,11 +498,10 @@ function doesEndSeemGarbageCollected(
     minimumEndTime > currentSeg.bufferedEnd &&
     currentSeg.end - currentSeg.bufferedEnd > MAX_TIME_MISSING_FROM_COMPLETE_SEGMENT
   ) {
-    log.info(
-      "Stream: The end of the wanted segment has been garbage collected",
-      currentSeg.end,
-      currentSeg.bufferedEnd,
-    );
+    log.info("Stream", "The end of the wanted segment has been garbage collected", {
+      segmentEnd: currentSeg.end,
+      currentEndInBuffer: currentSeg.bufferedEnd,
+    });
     return true;
   }
 
@@ -648,22 +649,20 @@ function filterOutGCedSegments(
       ) {
         return false;
       }
-      log.debug(
-        "Stream: skipping segment gc-ed at the start",
-        currentSeg.start,
-        currentSeg.bufferedStart,
-      );
+      log.debug("Stream", "skipping segment gc-ed at the start", {
+        segmentStart: currentSeg.start,
+        currentStartInBuffer: currentSeg.bufferedStart,
+      });
     }
     if (doesEndSeemGarbageCollected(currentSeg, nextSeg, neededRange.end)) {
       lazySegmentHistory = lazySegmentHistory ?? getBufferedHistory(currentSeg.infos);
       if (shouldReloadSegmentGCedAtTheEnd(lazySegmentHistory, currentSeg.bufferedEnd)) {
         return false;
       }
-      log.debug(
-        "Stream: skipping segment gc-ed at the end",
-        currentSeg.end,
-        currentSeg.bufferedEnd,
-      );
+      log.debug("Stream", "skipping segment gc-ed at the end", {
+        segmentEnd: currentSeg.end,
+        currentEndInBuffer: currentSeg.bufferedEnd,
+      });
     }
     return true;
   });

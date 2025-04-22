@@ -57,11 +57,10 @@ export default function flattenOverlappingPeriods(
       lastFlattenedPeriod.duration === undefined ||
       lastFlattenedPeriod.start + lastFlattenedPeriod.duration > parsedPeriod.start
     ) {
-      log.warn(
-        "DASH: Updating overlapping Periods.",
-        lastFlattenedPeriod?.start,
-        parsedPeriod.start,
-      );
+      log.warn("dash", "Updating overlapping Periods.", {
+        lastStart: lastFlattenedPeriod?.start,
+        newStart: parsedPeriod.start,
+      });
       lastFlattenedPeriod.duration = parsedPeriod.start - lastFlattenedPeriod.start;
       lastFlattenedPeriod.end = parsedPeriod.start;
       if (lastFlattenedPeriod.duration > 0) {

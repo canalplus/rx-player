@@ -31,7 +31,7 @@ export default function checkManifestIDs(manifest: IParsedManifest): void {
   manifest.periods.forEach((period) => {
     const periodID = period.id;
     if (arrayIncludes(periodIDS, periodID)) {
-      log.warn("Two periods with the same ID found. Updating.");
+      log.warn("utils", "Two periods with the same ID found. Updating.", { periodID });
       const newID = periodID + "-dup";
       period.id = newID;
       checkManifestIDs(manifest);
@@ -49,7 +49,9 @@ export default function checkManifestIDs(manifest: IParsedManifest): void {
       adaptationsForType.forEach((adaptation) => {
         const adaptationID = adaptation.id;
         if (arrayIncludes(adaptationIDs, adaptationID)) {
-          log.warn("Two adaptations with the same ID found. Updating.", adaptationID);
+          log.warn("utils", "Two adaptations with the same ID found. Updating.", {
+            adaptationID,
+          });
           const newID = adaptationID + "-dup";
           adaptation.id = newID;
           checkManifestIDs(manifest);
@@ -61,10 +63,9 @@ export default function checkManifestIDs(manifest: IParsedManifest): void {
         adaptation.representations.forEach((representation) => {
           const representationID = representation.id;
           if (arrayIncludes(representationIDs, representationID)) {
-            log.warn(
-              "Two representations with the same ID found. Updating.",
+            log.warn("utils", "Two representations with the same ID found. Updating.", {
               representationID,
-            );
+            });
             const newID = `${representationID}-dup`;
             representation.id = newID;
             checkManifestIDs(manifest);

@@ -90,7 +90,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
     mediaSource: IMediaSourceInterface,
   ) {
     super();
-    log.info("AVSB: calling `mediaSource.addSourceBuffer`", codec);
+    log.info("Stream", "calling `mediaSource.addSourceBuffer`", { codec });
     const sourceBuffer = mediaSource.addSourceBuffer(bufferType, codec);
 
     this.bufferType = bufferType;
@@ -139,11 +139,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
    */
   public async pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[]> {
     assertDataIsBufferSource(infos.data.chunk);
-    log.debug(
-      "AVSB: receiving order to push data to the SourceBuffer",
-      this.bufferType,
-      getLoggableSegmentId(infos.inventoryInfos),
-    );
+    log.debug("Stream", "queuing push order", getLoggableSegmentId(infos.inventoryInfos));
     const dataToPush = this._getActualDataToPush(
       infos.data as IPushedChunkData<BufferSource>,
     );
@@ -170,11 +166,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
     const promise = Promise.all(
       dataToPush.map((data) => {
         const { codec, timestampOffset, appendWindow } = infos.data;
-        log.debug(
-          "AVSB: pushing segment",
-          this.bufferType,
-          getLoggableSegmentId(infos.inventoryInfos),
-        );
+        log.debug("Stream", "now pushing", getLoggableSegmentId(infos.inventoryInfos));
         return this._sourceBuffer.appendBuffer(data, {
           codec,
           timestampOffset,
@@ -211,12 +203,11 @@ export default class AudioVideoSegmentSink extends SegmentSink {
 
   /** @see SegmentSink */
   public async removeBuffer(start: number, end: number): Promise<IRange[]> {
-    log.debug(
-      "AVSB: receiving order to remove data from the SourceBuffer",
-      this.bufferType,
+    log.debug("Stream", "queuing remove order", {
+      bufferType: this.bufferType,
       start,
       end,
-    );
+    });
     const promise = this._sourceBuffer.remove(start, end);
     this._addToOperationQueue(promise, {
       type: SegmentSinkOperation.Remove,
@@ -265,12 +256,13 @@ export default class AudioVideoSegmentSink extends SegmentSink {
   /** @see SegmentSink */
   public dispose(): void {
     try {
-      log.debug("AVSB: Calling `dispose` on the SourceBufferInterface");
+      log.debug("Stream", "Calling `dispose` on the SourceBufferInterface");
       this._sourceBuffer.dispose();
     } catch (e) {
       log.debug(
-        `AVSB: Failed to dispose a ${this.bufferType} SourceBufferInterface:`,
-        e instanceof Error ? e : "",
+        "Stream",
+        `Failed to dispose a ${this.bufferType} SourceBufferInterface:`,
+        e instanceof Error ? e : "Unknown Error",
       );
     }
   }

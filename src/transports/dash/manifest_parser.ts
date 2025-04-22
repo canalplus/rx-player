@@ -77,36 +77,36 @@ export default function generateManifestParser(
       parsers.wasm.status === "uninitialized" ||
       parsers.wasm.status === "failure"
     ) {
-      log.debug("DASH: WASM MPD Parser not initialized. Running JS one.");
+      log.debug("dash", "WASM MPD Parser not initialized. Running JS one.");
       return runDefaultJsParser();
     } else {
       const manifestAB = getManifestAsArrayBuffer(responseData);
       if (!doesXmlSeemsUtf8Encoded(manifestAB)) {
         log.info(
-          "DASH: MPD doesn't seem to be UTF-8-encoded. " +
-            "Running JS parser instead of the WASM one.",
+          "dash",
+          "MPD doesn't seem to be UTF-8-encoded. Running JS parser instead of the WASM one.",
         );
         return runDefaultJsParser();
       }
 
       if (parsers.wasm.status === "initialized") {
-        log.debug("DASH: Running WASM MPD Parser.");
+        log.debug("dash", "Running WASM MPD Parser.");
         const parsed = parsers.wasm.runWasmParser(manifestAB, dashParserOpts);
         return processMpdParserResponse(parsed);
       } else {
-        log.debug("DASH: Awaiting WASM initialization before parsing the MPD.");
+        log.debug("dash", "Awaiting WASM initialization before parsing the MPD.");
         const initProm = parsers.wasm.waitForInitialization().catch(() => {
           /* ignore errors, we will check the status later */
         });
         return initProm.then(() => {
           if (parsers.wasm === null || parsers.wasm.status !== "initialized") {
             log.warn(
-              "DASH: WASM MPD parser initialization failed. " +
-                "Running JS parser instead",
+              "dash",
+              "WASM MPD parser initialization failed. Running JS parser instead",
             );
             return runDefaultJsParser();
           }
-          log.debug("DASH: Running WASM MPD Parser.");
+          log.debug("dash", "Running WASM MPD Parser.");
           const parsed = parsers.wasm.runWasmParser(manifestAB, dashParserOpts);
           return processMpdParserResponse(parsed);
         });

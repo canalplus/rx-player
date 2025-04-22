@@ -53,7 +53,7 @@ export default function prepareSourceBuffer(
     const oldSrc = isNonEmptyString(videoElement.src) ? videoElement.src : null;
     resetMediaElement(videoElement, oldSrc);
 
-    log.info("Init: Creating MediaSource");
+    log.info("VideoThumbnailLoader", "Creating MediaSource");
     const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
     if (mediaSource.handle.type === "handle") {
       videoElement.srcObject = mediaSource.handle.value;
@@ -63,7 +63,11 @@ export default function prepareSourceBuffer(
     } else {
       const objectURL = URL.createObjectURL(mediaSource.handle.value);
 
-      log.info("Init: Attaching MediaSource URL to the media element", objectURL);
+      log.info(
+        "VideoThumbnailLoader",
+        "Attaching MediaSource URL to the media element",
+        objectURL,
+      );
       videoElement.src = objectURL;
       cleanUpSignal.register(() => {
         resetMediaElement(videoElement, objectURL);

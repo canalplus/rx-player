@@ -699,6 +699,7 @@ describe("API - parseLoadVideoOptions", () => {
     });
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     expect(logWarnMock).toHaveBeenCalledWith(
+      "API",
       "The `defaultAudioTrackSwitchingMode` loadVideo option must match one of " +
         `the following strategy name:
 - \`seamless\`
@@ -766,6 +767,7 @@ describe("API - parseLoadVideoOptions", () => {
     });
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     expect(logWarnMock).toHaveBeenCalledWith(
+      "API",
       "The `onCodecSwitch` loadVideo option must match one " +
         `of the following string:
 - \`continue\`
@@ -1071,7 +1073,8 @@ If badly set, continue will be used as default`,
 
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     expect(logWarnMock).toHaveBeenCalledWith(
-      "API: You have set a textTrackElement " +
+      "API",
+      "You have set a textTrackElement " +
         'without being in an "html" textTrackMode. It will be ignored.',
     );
   });

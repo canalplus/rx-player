@@ -112,7 +112,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
   public onPushedTrackSuccess(ranges: IRange[]): void {
     const element = this._queues.pushTextData.shift();
     if (element === undefined) {
-      log.error("WMS: pushTextData success for inexistant operation");
+      log.error("text", "pushTextData success for inexistant operation");
       return;
     }
     element.resolve(ranges);
@@ -124,7 +124,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
   public onPushedTrackError(err: Error): void {
     const element = this._queues.pushTextData.shift();
     if (element === undefined) {
-      log.error("WMS: pushTextData error for inexistant operation");
+      log.error("text", "pushTextData error for inexistant operation");
       return;
     }
     element.reject(err);
@@ -136,7 +136,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
   public onRemoveSuccess(ranges: IRange[]): void {
     const element = this._queues.remove.shift();
     if (element === undefined) {
-      log.error("WMS: remove success for inexistant operation");
+      log.error("text", "remove success for inexistant operation");
       return;
     }
     element.resolve(ranges);
@@ -148,7 +148,7 @@ export default class WorkerTextDisplayerInterface implements ITextDisplayerInter
   public onRemoveError(err: Error): void {
     const element = this._queues.pushTextData.shift();
     if (element === undefined) {
-      log.error("WMS: pushTextData error for inexistant operation");
+      log.error("text", "pushTextData error for inexistant operation");
       return;
     }
     element.reject(err);

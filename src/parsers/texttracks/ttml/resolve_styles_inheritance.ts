@@ -60,11 +60,11 @@ export default function resolveStylesInheritance(styles: IStyleObject[]): void {
     for (const extendedStyleID of styleElt.extendsStyles) {
       const extendedStyleIndex = arrayFindIndex(styles, (x) => x.id === extendedStyleID);
       if (extendedStyleIndex < 0) {
-        log.warn("TTML Parser: unknown style inheritance: " + extendedStyleID);
+        log.warn("ttml", "unknown style inheritance", { id: extendedStyleID });
       } else {
         const extendedStyle = styles[extendedStyleIndex];
         if (arrayIncludes(recursivelyBrowsedIndexes, extendedStyleIndex)) {
-          log.warn("TTML Parser: infinite style inheritance loop avoided");
+          log.warn("ttml", "infinite style inheritance loop avoided");
         } else {
           resolveStyleInheritance(extendedStyle, extendedStyleIndex);
         }

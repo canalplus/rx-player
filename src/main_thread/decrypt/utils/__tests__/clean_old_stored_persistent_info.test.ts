@@ -74,9 +74,12 @@ async function checkRemoved(
   expect(mockDeleteLast).toHaveBeenCalledWith(numberToRemove);
   expect(mockLogInfo).toHaveBeenCalledTimes(1);
   expect(mockLogInfo).toHaveBeenCalledWith(
-    "DRM: Too many stored persistent sessions," + " removing some.",
-    persistentSessionsStore.getLength(),
-    numberToRemove,
+    "DRM",
+    "Too many stored persistent sessions, removing some.",
+    {
+      numberOfPersistentSessions: persistentSessionsStore.getLength(),
+      toDelete: numberToRemove,
+    },
   );
   vi.resetModules();
 }

@@ -240,7 +240,7 @@ export default class ContentPreparer {
         "manifestReady",
         (man: IManifest) => {
           if (manifest !== null) {
-            log.warn("WP: Multiple `manifestReady` events, ignoring");
+            log.warn("Core", "Multiple `manifestReady` events, ignoring");
             return;
           }
           manifest = man;

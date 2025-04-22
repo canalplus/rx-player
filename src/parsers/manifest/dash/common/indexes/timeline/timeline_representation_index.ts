@@ -768,11 +768,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   initialize(): void {
-    log.error("A `TimelineRepresentationIndex` does not need to be initialized");
+    log.error("dash", "A `TimelineRepresentationIndex` does not need to be initialized");
   }
 
   addPredictedSegments(): void {
-    log.warn("Cannot add predicted segments to a `TimelineRepresentationIndex`");
+    log.warn("dash", "Cannot add predicted segments to a `TimelineRepresentationIndex`");
   }
 
   /**
@@ -868,7 +868,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       if (this._index.timeline !== null) {
         return this._index.timeline;
       }
-      log.error("DASH: Timeline already lazily parsed.");
+      log.error("dash", "Timeline already lazily parsed.");
       return [];
     }
 

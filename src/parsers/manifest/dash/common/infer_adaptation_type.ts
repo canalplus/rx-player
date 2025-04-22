@@ -75,7 +75,7 @@ export function getThumbnailAdaptationSetInfo(
     thumbnailProp.value === undefined ||
     !tilesRegex.test(thumbnailProp.value)
   ) {
-    log.warn("DASH: Invalid thumbnails Representation, no tile-related information");
+    log.warn("dash", "Invalid thumbnails Representation, no tile-related information");
     return null;
   }
   const match = thumbnailProp.value.match(tilesRegex) as RegExpMatchArray;

@@ -22,9 +22,96 @@ export type ILoggerLevel = "NONE" | "ERROR" | "WARNING" | "INFO" | "DEBUG";
 
 export type ILogFormat = "standard" | "full";
 
-type IAcceptedLogValue = boolean | string | number | Error | null | undefined;
+type IAcceptedLogValueBase = boolean | string | number | null | undefined;
+type IAcceptedLogValue =
+  | IAcceptedLogValueBase
+  | Error
+  | Partial<Record<string, IAcceptedLogValueBase>>;
 
-type IConsoleFn = (...args: IAcceptedLogValue[]) => void;
+/**
+ * Area of the code the log is linked to.
+ *
+ * Do not forget to update the corresponding API documentation page. When adding
+ * or removing namespaces.
+ */
+export type ILogNamespace =
+  /** Linked to adaptive bitrate quality selection */
+  | "ABR"
+  /** Linked to the RxPlayer public API. */
+  | "API"
+  /** Linked to the part of the RxPlayer handling audio/video/text track selection. */
+  | "Track"
+  /**
+   * Linked to the "Init" logic of the RxPlayer, which between other things set up a
+   * new content.
+   */
+  | "Init"
+  /**
+   * Global handling logic in the "Core" part of the player.
+   * The main orchestrator in the RxPlayer's worker-side.
+   */
+  | "Core"
+  /** Linked to logic implementing Manifest Fetching. */
+  | "MF"
+  /** Linked to logic implementing Segment Fetching. */
+  | "SF"
+  /** Linked to a generic utils function. */
+  | "utils"
+  /** Linked to CMCD logic. */
+  | "CMCD"
+  /** Heuristics involved in freeze-detection (when the media is stalled unexpectedly). */
+  | "Freeze"
+  /** Linked to the DASH protocol implementation and manifest parsing. */
+  | "dash"
+  /** Linked to the Smooth protocol implementation and manifest parsing. */
+  | "smooth"
+  /** Linked to the MetaPlaylist protocol implementation and manifest parsing. */
+  | "metaplaylist"
+  /** Linked to the exploitation of the `HTMLMediaElement` linked to the RxPlayer. */
+  | "media"
+  /** Linked to the code directly interacting with MSE API, e.g. to append media data. */
+  | "mse"
+  /** Linked to the code handling content decryption, including handling the EME API. */
+  | "DRM"
+  /** "Segment Inventory". Estimates the list of segment currently present in buffers, */
+  | "SI"
+  /** Core RxPlayer logic orchestrating segment fetching and pushing. */
+  | "Stream"
+  /** Linked to the code handling the "Manifest" structure, which describes a content. */
+  | "manifest"
+  /** Linked to the logic parsing ISOBMFF-compatible container files. */
+  | "isobmff"
+  /** Linked to the logic parsing MKV-compatible container files. */
+  | "webm"
+  /** Linked to the logic parsing TTML data, for text tracks. */
+  | "ttml"
+  /** Linked to the logic parsing VTT data, for text tracks. */
+  | "vtt"
+  /** Linked to the logic parsing SRT data, for text tracks. */
+  | "srt"
+  /** Linked to the logic parsing SAMI data, for text tracks. */
+  | "sami"
+  /** Linked to in-stream image thumbnails. */
+  | "Thumbnails"
+  /** Linked to subtitles / text management */
+  | "text"
+  /**
+   * Message sent from the RxPlayer's "main" part logic (e.g. the API) to the "Core"
+   * internal logic.
+   * Both may run in parallel (in "multithreading" mode).
+   */
+  | "M-->C"
+  /**
+   * Message sent from the RxPlayer's "Core" logic to the "main" logic.
+   * Both may run in parallel (in "multithreading" mode).
+   */
+  | "M<--C"
+  /** Log from the `MediaCapabilitiesProber` tool. */
+  | "MediaCapabilitiesProber"
+  /** Log from the `VideoThumbnailLoader` tool. */
+  | "VideoThumbnailLoader";
+
+type IConsoleFn = (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => void;
 
 const DEFAULT_LOG_LEVEL: ILoggerLevel = "NONE";
 
@@ -78,7 +165,8 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     format: string,
     logFn?: (
       levelStr: ILoggerLevel,
-      logs: Array<boolean | string | number | Error | null | undefined>,
+      namespace: string,
+      logs: IAcceptedLogValue[],
     ) => void,
   ): void {
     let level: number;
@@ -108,13 +196,43 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
 
     const generateLogFn =
       this._currentFormat === "full"
-        ? (namespace: string, consoleFn: IConsoleFn): IConsoleFn => {
-            return (...args: IAcceptedLogValue[]) => {
+        ? (logMethod: string, consoleFn: (...vals: unknown[]) => void): IConsoleFn => {
+            return (
+              namespace: ILogNamespace,
+              ...args: Array<
+                IAcceptedLogValue | Partial<Record<string, IAcceptedLogValue>>
+              >
+            ) => {
               const now = getMonotonicTimeStamp();
-              return consoleFn(String(now.toFixed(2)), `[${namespace}]`, ...args);
+              return consoleFn(
+                String(now.toFixed(2)),
+                `[${logMethod}]`,
+                namespace + ":",
+                ...args.map((a) =>
+                  typeof a === "object" && a !== null && !(a instanceof Error)
+                    ? formatContextObject(a)
+                    : a,
+                ),
+              );
             };
           }
-        : (_namespace: string, consoleFn: IConsoleFn): IConsoleFn => consoleFn;
+        : (_logMethod: string, consoleFn: (...vals: unknown[]) => void): IConsoleFn => {
+            return (
+              namespace: ILogNamespace,
+              ...args: Array<
+                IAcceptedLogValue | Partial<Record<string, IAcceptedLogValue>>
+              >
+            ) => {
+              return consoleFn(
+                namespace + ":",
+                ...args.map((a) =>
+                  typeof a === "object" && a !== null && !(a instanceof Error)
+                    ? formatContextObject(a)
+                    : a,
+                ),
+              );
+            };
+          };
 
     if (logFn === undefined) {
       /* eslint-disable no-console */
@@ -136,10 +254,10 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
           : noop;
       /* eslint-enable no-console */
     } else {
-      const produceLogFn = (logLevel: ILoggerLevel) => {
+      const produceLogFn = (logLevel: ILoggerLevel): IConsoleFn => {
         return level >= this._levels[logLevel]
-          ? (...args: IAcceptedLogValue[]) => {
-              return logFn(logLevel, args);
+          ? (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => {
+              return logFn(logLevel, namespace, args);
             }
           : noop;
       };
@@ -180,4 +298,22 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
   public hasLevel(logLevel: ILoggerLevel): boolean {
     return this._levels[logLevel] >= this._levels[this._currentLevel];
   }
+}
+
+function formatContextObject(obj: Partial<Record<string, IAcceptedLogValue>>) {
+  let ret = "";
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (ret.length > 0) {
+        ret += " ";
+      }
+      const val = obj[key];
+      if (val instanceof Error) {
+        ret += `${key}="${JSON.stringify(val?.toString())}"`;
+      } else {
+        ret += `${key}=${typeof val === "string" ? `${JSON.stringify(val)}` : String(val)}`;
+      }
+    }
+  }
+  return ret;
 }

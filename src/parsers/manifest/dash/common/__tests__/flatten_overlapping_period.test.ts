@@ -32,7 +32,10 @@ describe("flattenOverlappingPeriods", function () {
     expect(flattenPeriods[1].id).toBe("3");
 
     expect(mockLog).toHaveBeenCalledTimes(1);
-    expect(mockLog).toHaveBeenCalledWith("DASH: Updating overlapping Periods.", 60, 60);
+    expect(mockLog).toHaveBeenCalledWith("dash", "Updating overlapping Periods.", {
+      lastStart: 60,
+      newStart: 60,
+    });
     mockLog.mockRestore();
   });
 
@@ -60,7 +63,10 @@ describe("flattenOverlappingPeriods", function () {
     expect(flattenPeriods[2].id).toBe("3");
 
     expect(mockLog).toHaveBeenCalledTimes(1);
-    expect(mockLog).toHaveBeenCalledWith("DASH: Updating overlapping Periods.", 60, 90);
+    expect(mockLog).toHaveBeenCalledWith("dash", "Updating overlapping Periods.", {
+      lastStart: 60,
+      newStart: 90,
+    });
     mockLog.mockRestore();
   });
 
@@ -85,8 +91,14 @@ describe("flattenOverlappingPeriods", function () {
     expect(flattenPeriods[1].id).toBe("3");
 
     expect(mockLog).toHaveBeenCalledTimes(2);
-    expect(mockLog).toHaveBeenCalledWith("DASH: Updating overlapping Periods.", 60, 50);
-    expect(mockLog).toHaveBeenCalledWith("DASH: Updating overlapping Periods.", 0, 50);
+    expect(mockLog).toHaveBeenCalledWith("dash", "Updating overlapping Periods.", {
+      lastStart: 60,
+      newStart: 50,
+    });
+    expect(mockLog).toHaveBeenCalledWith("dash", "Updating overlapping Periods.", {
+      lastStart: 0,
+      newStart: 50,
+    });
     mockLog.mockRestore();
   });
 

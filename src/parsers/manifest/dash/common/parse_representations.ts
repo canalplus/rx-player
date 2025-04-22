@@ -185,7 +185,7 @@ export default function parseRepresentations(
     // Find bitrate
     let representationBitrate: number;
     if (representation.attributes.bitrate === undefined) {
-      log.warn("DASH: No usable bitrate found in the Representation.");
+      log.warn("dash", "No usable bitrate found in the Representation.");
       representationBitrate = 0;
     } else {
       representationBitrate = representation.attributes.bitrate;

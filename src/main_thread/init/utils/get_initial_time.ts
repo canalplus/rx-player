@@ -94,32 +94,58 @@ export default function getInitialTime(
     const min = getMinimumSafePosition(manifest);
     const max = getMaximumSafePosition(manifest);
     if (!isNullOrUndefined(startAt.position)) {
-      log.debug("Init: using startAt.minimumPosition");
+      log.debug("Init", "Initial Position: using startAt.position", {
+        position: startAt.position,
+        min,
+        max,
+      });
       return Math.max(Math.min(startAt.position, max), min);
     } else if (!isNullOrUndefined(startAt.wallClockTime)) {
-      log.debug("Init: using startAt.wallClockTime");
       const ast =
         manifest.availabilityStartTime === undefined ? 0 : manifest.availabilityStartTime;
       const position = startAt.wallClockTime - ast;
+      log.debug("Init", "Initial Position: using startAt.wallClockTime", {
+        wallClockTime: startAt.wallClockTime,
+        wallClockOffset: ast,
+        deOffseted: position,
+        min,
+        max,
+      });
       return Math.max(Math.min(position, max), min);
     } else if (!isNullOrUndefined(startAt.fromFirstPosition)) {
-      log.debug("Init: using startAt.fromFirstPosition");
       const { fromFirstPosition } = startAt;
+      log.debug("Init", "Initial Position: using startAt.fromFirstPosition", {
+        fromFirstPosition,
+        min,
+        max,
+      });
       return fromFirstPosition <= 0 ? min : Math.min(max, min + fromFirstPosition);
     } else if (!isNullOrUndefined(startAt.fromLastPosition)) {
-      log.debug("Init: using startAt.fromLastPosition");
       const { fromLastPosition } = startAt;
+      log.debug("Init", "Initial Position: using startAt.fromLastPosition", {
+        fromLastPosition,
+        min,
+        max,
+      });
       return fromLastPosition >= 0 ? max : Math.max(min, max + fromLastPosition);
     } else if (!isNullOrUndefined(startAt.fromLivePosition)) {
-      log.debug("Init: using startAt.fromLivePosition");
       const livePosition = getLivePosition(manifest) ?? max;
       const { fromLivePosition } = startAt;
+      log.debug("Init", "Initial Position: using startAt.fromLivePosition", {
+        fromLivePosition,
+        livePosition,
+        min,
+      });
       return fromLivePosition >= 0
         ? livePosition
         : Math.max(min, livePosition + fromLivePosition);
     } else if (!isNullOrUndefined(startAt.percentage)) {
-      log.debug("Init: using startAt.percentage");
       const { percentage } = startAt;
+      log.debug("Init", "Initial Position: using startAt.percentage", {
+        percentage,
+        min,
+        max,
+      });
       if (percentage > 100) {
         return max;
       } else if (percentage < 0) {
@@ -140,30 +166,41 @@ export default function getInitialTime(
 
     if (clockOffset === undefined) {
       log.info(
-        "Init: no clock offset found for a live content, " +
+        "Init",
+        "no clock offset found for a live content, " +
           "starting close to maximum available position",
+        { maximumPosition },
       );
       liveTime = maximumPosition;
     } else {
-      log.info(
-        "Init: clock offset found for a live content, " +
-          "checking if we can start close to it",
-      );
       const ast =
         manifest.availabilityStartTime === undefined ? 0 : manifest.availabilityStartTime;
       const clockRelativeLiveTime = (getMonotonicTimeStamp() + clockOffset) / 1000 - ast;
       liveTime = Math.min(maximumPosition, clockRelativeLiveTime);
+      log.info(
+        "Init",
+        "clock offset found for a live content, " +
+          "checking if we can start close to it",
+        {
+          wallClockOffset: ast,
+          clockRelativeLiveTime,
+          liveTime,
+        },
+      );
     }
     const diffFromLiveTime =
       suggestedPresentationDelay ??
       (lowLatencyMode ? DEFAULT_LIVE_GAP.LOW_LATENCY : DEFAULT_LIVE_GAP.DEFAULT);
-    log.debug(
-      `Init: ${liveTime} defined as the live time, applying a live gap` +
-        ` of ${diffFromLiveTime}`,
-    );
+    log.debug("Init", "Initial Position: Applying gap from live time", {
+      liveTime,
+      diffFromLiveTime,
+      minimumPosition,
+    });
     return Math.max(liveTime - diffFromLiveTime, minimumPosition);
   }
 
-  log.info("Init: starting at the minimum available position:", minimumPosition);
+  log.info("Init", "Initial Position: starting at the minimum available position", {
+    minimumPosition,
+  });
   return minimumPosition;
 }

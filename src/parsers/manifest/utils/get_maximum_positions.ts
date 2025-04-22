@@ -64,7 +64,8 @@ export default function getMaximumPosition(periods: IParsedPeriod[]): {
         (firstVideoAdaptationFromPeriod !== undefined && maximumVideoPosition === null)
       ) {
         log.info(
-          "Parser utils: found Period with no segment. ",
+          "utils",
+          "found Period with no segment. ",
           "Going to previous one to calculate last position",
         );
         return { safe: undefined, unsafe: undefined };

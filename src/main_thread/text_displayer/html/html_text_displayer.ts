@@ -25,7 +25,7 @@ function safelyRemoveChild(element: Element, child: Element) {
   try {
     element.removeChild(child);
   } catch (_error) {
-    log.warn("HTD: Can't remove text track: not in the element.");
+    log.warn("text", "Can't remove text track: not in the element.");
   }
 }
 
@@ -105,7 +105,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * @param {HTMLElement} textTrackElement
    */
   constructor(videoElement: IMediaElement, textTrackElement: HTMLElement) {
-    log.debug("HTD: Creating HTMLTextDisplayer");
+    log.debug("text", "Creating HTMLTextDisplayer");
     this._buffered = new ManualTimeRanges();
 
     this._videoElement = videoElement;
@@ -123,7 +123,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * @returns {Object}
    */
   public pushTextData(infos: ITextDisplayerData): IRange[] {
-    log.debug("HTD: Appending new html text tracks");
+    log.debug("text", "Appending new html text tracks");
     const { timestampOffset, appendWindow, chunk } = infos;
     if (chunk === null) {
       return convertToRanges(this._buffered);
@@ -183,10 +183,10 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       start = Math.max(appendWindowStart, startTime);
     } else {
       if (cues.length <= 0) {
-        log.warn("HTD: Current text tracks have no cues nor start time. Aborting");
+        log.warn("text", "Current text tracks have no cues nor start time. Aborting");
         return convertToRanges(this._buffered);
       }
-      log.warn("HTD: No start time given. Guessing from cues.");
+      log.warn("text", "No start time given. Guessing from cues.");
       start = cues[0].start;
     }
 
@@ -195,16 +195,17 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       end = Math.min(appendWindowEnd, endTime);
     } else {
       if (cues.length <= 0) {
-        log.warn("HTD: Current text tracks have no cues nor end time. Aborting");
+        log.warn("text", "Current text tracks have no cues nor end time. Aborting");
         return convertToRanges(this._buffered);
       }
-      log.warn("HTD: No end time given. Guessing from cues.");
+      log.warn("text", "No end time given. Guessing from cues.");
       end = cues[cues.length - 1].end;
     }
 
     if (end <= start) {
       log.warn(
-        "HTD: Invalid text track appended: ",
+        "text",
+        "Invalid text track appended: ",
         "the start time is inferior or equal to the end time.",
       );
       return convertToRanges(this._buffered);
@@ -224,7 +225,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
    * @returns {Object}
    */
   public removeBuffer(start: number, end: number): IRange[] {
-    log.debug("HTD: Removing html text track data", start, end);
+    log.debug("text", "Removing html text track data", { start, end });
     this._buffer.remove(start, end);
     this._buffered.remove(start, end);
     if (this._isAutoRefreshing && this._buffer.isEmpty()) {
@@ -245,7 +246,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
   }
 
   public reset(): void {
-    log.debug("HTD: Resetting HTMLTextDisplayer");
+    log.debug("text", "Resetting HTMLTextDisplayer");
     this.stop();
     this._subtitlesIntervalCanceller = new TaskCanceller();
   }
@@ -254,7 +255,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     if (this._subtitlesIntervalCanceller.isUsed()) {
       return;
     }
-    log.debug("HTD: Stopping HTMLTextDisplayer");
+    log.debug("text", "Stopping HTMLTextDisplayer");
     this._disableCurrentCues();
     this._buffer.remove(0, Infinity);
     this._buffered.remove(0, Infinity);

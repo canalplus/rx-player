@@ -57,7 +57,7 @@ export default function applyPadding(element: HTMLElement, padding: string): voi
       element.setAttribute("data-proportional-padding-top", firstPadding[1]);
     }
   } else {
-    log.warn("TTML Parser: unhandled padding unit:", firstPadding[2]);
+    log.warn("ttml", "unhandled padding unit", { unit: firstPadding[2] });
   }
 
   if (splittedPadding.length === 1) {
@@ -89,7 +89,7 @@ export default function applyPadding(element: HTMLElement, padding: string): voi
       element.setAttribute("data-proportional-padding-right", secondPadding[1]);
     }
   } else {
-    log.warn("TTML Parser: unhandled padding unit:", secondPadding[2]);
+    log.warn("ttml", "unhandled padding unit", { unit: secondPadding[2] });
   }
 
   if (splittedPadding.length === 2) {
@@ -107,7 +107,7 @@ export default function applyPadding(element: HTMLElement, padding: string): voi
     addClassName(element, "proportional-style");
     element.setAttribute("data-proportional-padding-bottom", thirdPadding[1]);
   } else {
-    log.warn("TTML Parser: unhandled padding unit:", thirdPadding[2]);
+    log.warn("ttml", "unhandled padding unit", { unit: thirdPadding[2] });
   }
 
   if (splittedPadding.length === 3) {
@@ -129,6 +129,6 @@ export default function applyPadding(element: HTMLElement, padding: string): voi
     addClassName(element, "proportional-style");
     element.setAttribute("data-proportional-padding-left", fourthPadding[1]);
   } else {
-    log.warn("TTML Parser: unhandled padding unit:", fourthPadding[2]);
+    log.warn("ttml", "unhandled padding unit", { unit: fourthPadding[2] });
   }
 }

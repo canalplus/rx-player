@@ -68,6 +68,6 @@ export default function convertElementsToIndexSegment(
       repeatCount: repeatCount === undefined ? 0 : repeatCount,
     };
   }
-  log.warn('DASH: A "S" Element could not have been parsed.');
+  log.warn("dash", 'A "S" Element could not have been parsed.');
   return null;
 }

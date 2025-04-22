@@ -26,14 +26,14 @@ export default function parseTextTrackToElements(
   },
   timestampOffset: number,
 ): IHTMLCue[] {
-  log.debug("HTSB: Finding parser for html text tracks:", type);
+  log.debug("text", "Finding parser for html text tracks:", { type });
   const parser = features.htmlTextTracksParsers[type];
 
   if (typeof parser !== "function") {
     throw new Error("no parser found for the given text track");
   }
-  log.debug("HTSB: Parser found, parsing...");
+  log.debug("text", "Parser found, parsing...", { type });
   const parsed = parser(data, context, timestampOffset);
-  log.debug("HTTB: Parsed successfully!", parsed.length);
+  log.debug("text", "Parsed successfully!", { length: parsed.length });
   return parsed;
 }

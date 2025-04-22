@@ -348,7 +348,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       return;
     }
 
-    log.warn(`TS: Chosen ${type} Adaptation not available anymore`);
+    log.warn(`Track`, `Chosen ${type} Adaptation not available anymore`);
 
     if (type === "video") {
       periodInfo.video.storedSettings = this.getDefaultStoredSettingsForAdaptation(
@@ -465,7 +465,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     period: IPeriodMetadata,
     adaptationRef: SharedReference<IAdaptationChoice | null | undefined>,
   ): void {
-    log.debug("TS: Adding Track Reference", bufferType, period.id);
+    log.debug("Track", "Adding Track Reference", { bufferType, periodId: period.id });
     let periodObj = getPeriodItem(this._storedPeriodInfo, period.id);
     if (periodObj === undefined) {
       // The Period has not yet been added.
@@ -483,9 +483,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     }
 
     if (periodObj[bufferType].dispatcher !== null) {
-      log.error(
-        `TS: Subject already added for ${bufferType} ` + `and Period ${period.start}`,
-      );
+      log.error(`Track`, `Subject already added for type and Period`, {
+        bufferType,
+        periodId: period.id,
+      });
       periodObj[bufferType].dispatcher.dispose();
     }
 
@@ -596,7 +597,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     const { fallbackTrack, noSourceMedia } = getFallbackTrack(period, trackType);
     const typeInfo = getPeriodItem(this._storedPeriodInfo, period.id)?.[trackType];
     if (typeInfo === undefined) {
-      log.warn(`TS: Could not find period periodId=${period.id}`);
+      log.warn("Track", "Could not find period", { periodId: period.id });
       return;
     }
     const initialStoredSettings = typeInfo.storedSettings;
@@ -658,7 +659,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         // If it has, we exit early because the API consumer likely adjusted the settings,
         // and throwing an error now would be out of sync with their changes.
       } else if (fallbackBehavior === "continue") {
-        log.warn(`TS: No playable ${trackType}, continuing without ${trackType}`);
+        log.warn("Track", `No playable ${trackType}, continuing without ${trackType}`);
         typeInfo.storedSettings = null;
         if (!isInitialSelection) {
           // "trackUpdate" events are not sent for the initial track.
@@ -687,7 +688,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       }
     } else if (fallbackTrack === null && noSourceMedia) {
       log.debug(
-        `TS: The period does not have adaptation for ${trackType} there is no track to choose`,
+        `Track`,
+        `The period does not have adaptation for ${trackType} there is no track to choose`,
       );
       typeInfo.storedSettings = null;
       if (!isInitialSelection) {
@@ -731,7 +733,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     bufferType: "audio" | "text" | "video",
     periodId: string,
   ): void {
-    log.debug("TS: Removing Track Reference", bufferType, periodId);
+    log.debug("Track", "Removing Track Reference", { bufferType, periodId });
     let periodIndex;
     for (let i = 0; i < this._storedPeriodInfo.length; i++) {
       const periodI = this._storedPeriodInfo[i];
@@ -741,17 +743,17 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       }
     }
     if (periodIndex === undefined) {
-      log.warn(`TS: ${bufferType} not found for period`, periodId);
+      log.warn(`Track`, `type not found for period`, { bufferType, periodId });
       return;
     }
 
     const periodObj = this._storedPeriodInfo[periodIndex];
     const choiceItem = periodObj[bufferType];
     if (choiceItem?.dispatcher === null) {
-      log.warn(
-        `TS: TrackDispatcher already removed for ${bufferType} ` +
-          `and Period ${periodId}`,
-      );
+      log.warn(`Track`, `TrackDispatcher already removed for type and Period`, {
+        bufferType,
+        periodId,
+      });
       return;
     }
 
@@ -830,7 +832,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * You might want to call this API when restarting playback.
    */
   public resetPeriodObjects(): void {
-    log.debug("TS: Resetting Period Objects");
+    log.debug("Track", "Resetting Period Objects");
     for (let i = this._storedPeriodInfo.length - 1; i >= 0; i--) {
       const storedObj = this._storedPeriodInfo[i];
       storedObj.audio.dispatcher?.dispose();
@@ -1471,7 +1473,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         return r.id === repId;
       });
       if (foundRep === undefined) {
-        log.warn("API: Wanted locked Representation not found.");
+        log.warn("Track", "Wanted locked Representation not found.");
       } else {
         acc.push(foundRep.id);
       }

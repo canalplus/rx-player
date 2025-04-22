@@ -50,7 +50,7 @@ export default function takePSSHOut(data: Uint8Array): IISOBMFFPSSHInfo[] {
       psshOffsets = getBoxOffsets(moov, 0x70737368 /* pssh */);
     } catch (e) {
       const err = e instanceof Error ? e : "";
-      log.warn("Error while removing PSSH from ISOBMFF", err);
+      log.warn("isobmff", "Error while removing PSSH from ISOBMFF", err);
       return psshBoxes;
     }
     if (psshOffsets === null) {
@@ -85,7 +85,7 @@ export function getPsshSystemID(
   initialDataOffset: number,
 ): string | undefined {
   if (buff[initialDataOffset] > 1) {
-    log.warn("ISOBMFF: un-handled PSSH version");
+    log.warn("isobmff", "un-handled PSSH version");
     return undefined;
   }
   const offset = initialDataOffset + 4; /* version + flags */

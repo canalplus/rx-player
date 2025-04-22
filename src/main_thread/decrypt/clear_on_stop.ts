@@ -27,9 +27,9 @@ import MediaKeysAttacher from "./utils/media_keys_attacher";
  * @returns {Promise}
  */
 export default async function clearOnStop(mediaElement: IMediaElement): Promise<unknown> {
-  log.info("DRM: Clearing-up DRM session.");
+  log.info("DRM", "Clearing-up DRM session.");
   if (shouldUnsetMediaKeys()) {
-    log.info("DRM: disposing current MediaKeys.");
+    log.info("DRM", "disposing current MediaKeys.");
     return disposeDecryptionResources(mediaElement);
   }
 
@@ -38,12 +38,11 @@ export default async function clearOnStop(mediaElement: IMediaElement): Promise<
     currentState !== null &&
     currentState.keySystemOptions.closeSessionsOnStop === true
   ) {
-    log.info("DRM: closing all current sessions.");
+    log.info("DRM", "closing all current sessions.");
     return currentState.loadedSessionsStore.closeAllSessions();
   }
-  log.info(
-    "DRM: Nothing to clear. Returning right away. No state =",
-    currentState === null,
-  );
+  log.info("DRM", "Nothing to clear. Returning right away.", {
+    noState: currentState === null,
+  });
   return Promise.resolve();
 }

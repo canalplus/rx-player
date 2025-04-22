@@ -160,7 +160,8 @@ function createCompatibleEventListener(
         });
       } else {
         log.warn(
-          `compat: element ${element.tagName}` +
+          "utils",
+          `element ${element.tagName}` +
             " does not support any of these events: " +
             prefixedEvents.join(", "),
         );

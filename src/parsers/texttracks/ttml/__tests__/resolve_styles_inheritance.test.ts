@@ -180,7 +180,8 @@ describe("resolve_styles_inheritance", () => {
 
     expect(logWarnMock).toHaveBeenNthCalledWith(
       1,
-      "TTML Parser: infinite style inheritance loop avoided",
+      "ttml",
+      "infinite style inheritance loop avoided",
     );
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     logWarnMock.mockReset();
@@ -215,11 +216,13 @@ describe("resolve_styles_inheritance", () => {
     ]);
     expect(logWarnMock).toHaveBeenNthCalledWith(
       1,
-      "TTML Parser: infinite style inheritance loop avoided",
+      "ttml",
+      "infinite style inheritance loop avoided",
     );
     expect(logWarnMock).toHaveBeenNthCalledWith(
       2,
-      "TTML Parser: infinite style inheritance loop avoided",
+      "ttml",
+      "infinite style inheritance loop avoided",
     );
     expect(logWarnMock).toHaveBeenCalledTimes(2);
   });
@@ -244,10 +247,9 @@ describe("resolve_styles_inheritance", () => {
       { id: "2", style: { titi: "tito", teta: "tutu" }, extendsStyles: [] },
       { id: "3", style: { tata: "toto", tota: "tutu" }, extendsStyles: [] },
     ]);
-    expect(logWarnMock).toHaveBeenNthCalledWith(
-      1,
-      "TTML Parser: unknown style inheritance: 6",
-    );
+    expect(logWarnMock).toHaveBeenNthCalledWith(1, "ttml", "unknown style inheritance", {
+      id: "6",
+    });
     expect(logWarnMock).toHaveBeenCalledTimes(1);
   });
 });

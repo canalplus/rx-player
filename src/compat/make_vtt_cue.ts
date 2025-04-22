@@ -36,7 +36,7 @@ export default function makeCue(
   if (startTime >= endTime) {
     // IE/Edge will throw in this case.
     // See issue #501
-    log.warn(`Compat: Invalid cue times: ${startTime} - ${endTime}`);
+    log.warn("text", `Invalid cue times: start after end.`, { startTime, endTime });
     return null;
   }
 

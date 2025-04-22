@@ -49,23 +49,24 @@ export function areSameContent(
  * @param {Object} content
  * @returns {string|null|undefined}
  */
-export function getLoggableSegmentId(
-  content: IBufferedChunkInfos | null | undefined,
-): string {
+export function getLoggableSegmentId(content: IBufferedChunkInfos | null | undefined): {
+  t: string;
+  p: string;
+  a: string;
+  r: string;
+  ss: number | null;
+  se: number | null;
+} | null {
   if (isNullOrUndefined(content)) {
-    return "";
+    return null;
   }
   const { period, adaptation, representation, segment } = content;
-  let segmentString;
-  if (segment.isInit) {
-    segmentString = "init";
-  } else if (segment.complete) {
-    segmentString = `${segment.time}-${segment.duration}`;
-  } else {
-    segmentString = `${segment.time}`;
-  }
-  return (
-    `${adaptation.type} P: ${period.id} A: ${adaptation.id} ` +
-    `R: ${representation.id} S: ${segmentString}`
-  );
+  return {
+    t: adaptation.type[0],
+    p: period.id,
+    a: adaptation.id,
+    r: representation.id,
+    ss: segment.isInit ? null : segment.time,
+    se: segment.isInit || !segment.complete ? null : segment.end,
+  };
 }

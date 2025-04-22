@@ -90,11 +90,13 @@ export default function RepresentationStream<TSegmentDataType>(
   callbacks: IRepresentationStreamCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
-  log.debug(
-    "Stream: Creating RepresentationStream",
-    content.adaptation.type,
-    content.representation.bitrate,
-  );
+  log.debug("Stream", "Creating RepresentationStream", {
+    periodStart: content.period.start,
+    bufferType: content.adaptation.type,
+    adaptationId: content.adaptation.id,
+    representationBitrate: content.representation.bitrate,
+    mimeType: content.representation.getMimeTypeString(),
+  });
   const { period, adaptation, representation } = content;
   const { bufferGoal, maxBufferSize, drmSystemId, fastSwitchThreshold } = options;
   const bufferType = adaptation.type;
@@ -243,11 +245,18 @@ export default function RepresentationStream<TSegmentDataType>(
     // Add initialization segment if required
     if (!representation.index.isInitialized()) {
       if (initSegmentState.segment === null) {
-        log.warn("Stream: Uninitialized index without an initialization segment");
+        log.warn("Stream", "Uninitialized index without an initialization segment", {
+          bufferType,
+          representationBitrate: content.representation.bitrate,
+        });
       } else if (initSegmentState.isLoaded) {
         log.warn(
-          "Stream: Uninitialized index with an already loaded " +
-            "initialization segment",
+          "Stream",
+          "Uninitialized index with an already loaded " + "initialization segment",
+          {
+            bufferType,
+            representationBitrate: content.representation.bitrate,
+          },
         );
       } else {
         const wantedStart = observation.position.getWanted();
@@ -275,7 +284,10 @@ export default function RepresentationStream<TSegmentDataType>(
         segmentQueue: neededSegments,
       });
     } else if (terminateVal.urgent) {
-      log.debug("Stream: Urgent switch, terminate now.", bufferType);
+      log.debug("Stream", "Urgent switch, terminate now.", {
+        bufferType,
+        representationBitrate: content.representation.bitrate,
+      });
       segmentsToLoadRef.setValue({ initSegment: null, segmentQueue: [] });
       segmentsToLoadRef.finish();
       canceller.cancel();
@@ -304,7 +316,10 @@ export default function RepresentationStream<TSegmentDataType>(
         segmentQueue: nextQueue,
       });
       if (nextQueue.length === 0 && nextInit === null) {
-        log.debug("Stream: No request left, terminate", bufferType);
+        log.debug("Stream", "No request left, terminate", {
+          bufferType,
+          representationBitrate: content.representation.bitrate,
+        });
         segmentsToLoadRef.finish();
         canceller.cancel();
         callbacks.terminating();
@@ -459,9 +474,12 @@ export default function RepresentationStream<TSegmentDataType>(
       return;
     }
     log.warn(
-      "Stream: Received fatal buffer error",
-      adaptation.type,
-      representation.bitrate,
+      "Stream",
+      "Received fatal buffer error",
+      {
+        bufferType,
+        representationBitrate: content.representation.bitrate,
+      },
       err instanceof Error ? err : null,
     );
     canceller.cancel();

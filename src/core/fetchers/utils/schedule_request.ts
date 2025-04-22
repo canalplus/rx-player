@@ -162,7 +162,7 @@ export async function scheduleRequestWithCdns<T>(
   const { baseDelay, maxDelay, maxRetry, onRetry } = options;
 
   if (cdns !== null && cdns.length === 0) {
-    log.warn("Fetchers: no CDN given to `scheduleRequestWithCdns`.");
+    log.warn("utils", "No CDN given to `scheduleRequestWithCdns`.");
   }
 
   const missedAttempts: Map<ICdnMetadata | null, ICdnAttemptMetadata> = new Map();

@@ -23,7 +23,6 @@ import type { IStyleElements } from "../parse_style_block";
  * the right styling on it.
  * @param {Node} baseNode
  * @param {Array.<Object>} styleElements
- * @param {Array.<string>} styleClasses
  * @returns {Node}
  */
 export default function createStyledElement(

@@ -30,7 +30,7 @@ export default function constructTimelineFromPreviousTimeline(
   // Find first index in both timeline where a common segment is found.
   const commonStartInfo = findFirstCommonStartTime(prevTimeline, newElements);
   if (commonStartInfo === null) {
-    log.warn('DASH: Cannot perform "based" update. Common segment not found.');
+    log.warn("dash", 'Cannot perform "based" update. Common segment not found.');
     return constructTimelineFromElements(newElements);
   }
   const {
@@ -44,7 +44,7 @@ export default function constructTimelineFromPreviousTimeline(
   const numberCommonEltGuess = prevTimeline.length - prevSegmentsIdx;
   const lastCommonEltNewEltsIdx = numberCommonEltGuess + newElementsIdx - 1;
   if (lastCommonEltNewEltsIdx >= newElements.length) {
-    log.info('DASH: Cannot perform "based" update. New timeline too short');
+    log.info("dash", 'Cannot perform "based" update. New timeline too short');
     return constructTimelineFromElements(newElements);
   }
 
@@ -59,7 +59,8 @@ export default function constructTimelineFromPreviousTimeline(
 
   if (repeatNumberInNewElements > 0 && newElementsIdx !== 0) {
     log.info(
-      'DASH: Cannot perform "based" update. ' + "The new timeline has a different form.",
+      "dash",
+      'Cannot perform "based" update. ' + "The new timeline has a different form.",
     );
     return constructTimelineFromElements(newElements);
   }
@@ -73,7 +74,8 @@ export default function constructTimelineFromPreviousTimeline(
     prevLastElement.repeatCount > newRepeatCountOffseted
   ) {
     log.info(
-      'DASH: Cannot perform "based" update. ' +
+      "dash",
+      'Cannot perform "based" update. ' +
         "The new timeline has a different form at the beginning.",
     );
     return constructTimelineFromElements(newElements);

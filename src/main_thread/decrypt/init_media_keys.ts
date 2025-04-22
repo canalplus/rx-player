@@ -51,7 +51,7 @@ export default async function initMediaKeys(
     mediaKeys !== mediaElement.mediaKeys;
 
   if (shouldDisableOldMediaKeys) {
-    log.debug("DRM: Disabling old MediaKeys");
+    log.debug("DRM", "Disabling old MediaKeys");
     await MediaKeysAttacher.clearMediaKeys(mediaElement);
   }
   return mediaKeysInfo;

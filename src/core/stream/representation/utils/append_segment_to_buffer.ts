@@ -69,7 +69,7 @@ export default async function appendSegmentToBuffer<T>(
     const { position } = playbackObserver.getReference().getValue();
     const currentPos = position.getWanted();
     try {
-      log.warn("Stream: Running garbage collector");
+      log.warn("Stream", "Running garbage collector");
       const start = Math.max(currentPos - 5, 0);
       const end = currentPos + bufferGoal.getValue() + 12;
       if (start > 0) {

@@ -33,7 +33,10 @@ export default async function cleanOldLoadedSessions(
   if (limit < 0 || limit >= loadedSessionsStore.getLength()) {
     return;
   }
-  log.info("DRM: LSS cache limit exceeded", limit, loadedSessionsStore.getLength());
+  log.info("DRM", "LSS cache limit exceeded", {
+    limit,
+    length: loadedSessionsStore.getLength(),
+  });
   const proms: Array<Promise<unknown>> = [];
   const entries = loadedSessionsStore.getAll().slice(); // clone
   const toDelete = entries.length - limit;

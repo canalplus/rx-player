@@ -57,9 +57,9 @@ export default function triggerEndOfStream(
   mediaSource: IMediaSource,
   cancelSignal: CancellationSignal,
 ): void {
-  log.debug("Init: Trying to call endOfStream");
+  log.debug("mse", "Trying to call endOfStream");
   if (mediaSource.readyState !== "open") {
-    log.debug("Init: MediaSource not open, cancel endOfStream");
+    log.debug("mse", "MediaSource not open, cancel endOfStream");
     return;
   }
 
@@ -67,11 +67,12 @@ export default function triggerEndOfStream(
   const updatingSourceBuffers = getUpdatingSourceBuffers(sourceBuffers);
 
   if (updatingSourceBuffers.length === 0) {
-    log.info("Init: Triggering end of stream");
+    log.info("mse", "Triggering end of stream");
     try {
       mediaSource.endOfStream();
     } catch (err) {
       log.error(
+        "mse",
         "Unable to call endOfStream",
         err instanceof Error ? err : new Error("Unknown error"),
       );
@@ -79,7 +80,7 @@ export default function triggerEndOfStream(
     return;
   }
 
-  log.debug("Init: Waiting SourceBuffers to be updated before calling endOfStream.");
+  log.debug("mse", "Waiting SourceBuffers to be updated before calling endOfStream.");
 
   const innerCanceller = new TaskCanceller();
   innerCanceller.linkToSignal(cancelSignal);
@@ -119,7 +120,7 @@ export function maintainEndOfStream(
   onSourceOpen(
     mediaSource,
     () => {
-      log.debug("Init: MediaSource re-opened while end-of-stream is active");
+      log.debug("mse", "MediaSource re-opened while end-of-stream is active");
       endOfStreamCanceller.cancel();
       endOfStreamCanceller = new TaskCanceller();
       endOfStreamCanceller.linkToSignal(cancelSignal);

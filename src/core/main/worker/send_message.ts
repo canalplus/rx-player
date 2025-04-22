@@ -6,7 +6,7 @@ export default function sendMessage(
   msg: IWorkerMessage,
   transferables?: Transferable[],
 ): void {
-  log.debug("<--- Sending to Main:", msg.type);
+  log.debug("M<--C", "Sending message", { name: msg.type });
   if (transferables === undefined) {
     postMessage(msg);
   } else {

@@ -544,7 +544,7 @@ export default class SmoothRepresentationIndex implements IRepresentationIndex {
   }
 
   initialize(): void {
-    log.error("A `SmoothRepresentationIndex` does not need to be initialized");
+    log.error("smooth", "A `SmoothRepresentationIndex` does not need to be initialized");
   }
 
   /**

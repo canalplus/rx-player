@@ -59,7 +59,8 @@ export default function getISOBMFFTimingInfos(
   if (isChunked || !segment.complete) {
     if (trunDuration === undefined) {
       log.warn(
-        "DASH: Chunked segments should indicate a duration through their" + " trun boxes",
+        "dash",
+        "Chunked segments should indicate a duration through their trun boxes",
       );
     }
     return {

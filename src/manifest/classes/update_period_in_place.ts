@@ -59,9 +59,8 @@ export default function updatePeriodInPlace(
 
     if (newThumbnailTrackIdx === -1) {
       log.warn(
-        'Manifest: ThumbnailTrack "' +
-          oldThumbnailTracks[j].id +
-          '" not found when merging.',
+        "manifest",
+        'ThumbnailTrack "' + oldThumbnailTracks[j].id + '" not found when merging.',
       );
       const [removed] = oldThumbnailTracks.splice(j, 1);
       j--;
@@ -100,8 +99,8 @@ export default function updatePeriodInPlace(
 
   if (newThumbnailTracks.length > 0) {
     log.warn(
-      `Manifest: ${newThumbnailTracks.length} new Thumbnail tracks ` +
-        "found when merging.",
+      "manifest",
+      `${newThumbnailTracks.length} new Thumbnail tracks ` + "found when merging.",
     );
     res.addedThumbnailTracks.push(
       ...newThumbnailTracks.map((t) => ({
@@ -131,7 +130,8 @@ export default function updatePeriodInPlace(
 
     if (newAdaptationIdx === -1) {
       log.warn(
-        'Manifest: Adaptation "' + oldAdaptations[j].id + '" not found when merging.',
+        "manifest",
+        'Adaptation "' + oldAdaptations[j].id + '" not found when merging.',
       );
       const [removed] = oldAdaptations.splice(j, 1);
       j--;
@@ -164,8 +164,8 @@ export default function updatePeriodInPlace(
 
         if (newRepresentationIdx === -1) {
           log.warn(
-            `Manifest: Representation "${oldRepresentations[k].id}" ` +
-              "not found when merging.",
+            "manifest",
+            `Representation "${oldRepresentations[k].id}" ` + "not found when merging.",
           );
           const [removed] = oldRepresentations.splice(k, 1);
           k--;
@@ -184,8 +184,8 @@ export default function updatePeriodInPlace(
 
       if (newRepresentations.length > 0) {
         log.warn(
-          `Manifest: ${newRepresentations.length} new Representations ` +
-            "found when merging.",
+          "manifest",
+          `${newRepresentations.length} new Representations ` + "found when merging.",
         );
         oldAdaptation.representations.push(...newRepresentations);
         addedRepresentations.push(
@@ -196,7 +196,8 @@ export default function updatePeriodInPlace(
   }
   if (newAdaptations.length > 0) {
     log.warn(
-      `Manifest: ${newAdaptations.length} new Adaptations ` + "found when merging.",
+      "manifest",
+      `${newAdaptations.length} new Adaptations ` + "found when merging.",
     );
     for (const adap of newAdaptations) {
       const prevAdaps = oldPeriod.adaptations[adap.type];

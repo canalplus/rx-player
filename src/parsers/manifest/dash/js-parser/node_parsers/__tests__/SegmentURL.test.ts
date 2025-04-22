@@ -56,14 +56,24 @@ describe("DASH Node Parsers - SegmentURL", () => {
     expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
 
     expect(mockLog).toHaveBeenCalledTimes(1);
-    expect(mockLog).toHaveBeenCalledWith(error1.message);
+    expect(mockLog).toHaveBeenCalledWith(
+      "dash",
+      "failed to parse DASH value:",
+      error1.message,
+      { dashName: "mediaRange" },
+    );
 
     const element2 = parseXml('<Foo mediaRange="" />')[0] as ITNode;
     const error2 = new MPDError('`mediaRange` property has an unrecognized format ""');
     expect(parseSegmentURL(element2)).toEqual([{}, [error2]]);
 
     expect(mockLog).toHaveBeenCalledTimes(2);
-    expect(mockLog).toHaveBeenCalledWith(error2.message);
+    expect(mockLog).toHaveBeenCalledWith(
+      "dash",
+      "failed to parse DASH value:",
+      error2.message,
+      { dashName: "mediaRange" },
+    );
 
     mockLog.mockRestore();
   });
@@ -100,14 +110,24 @@ describe("DASH Node Parsers - SegmentURL", () => {
     expect(parseSegmentURL(element1)).toEqual([{}, [error1]]);
 
     expect(mockLog).toHaveBeenCalledTimes(1);
-    expect(mockLog).toHaveBeenCalledWith(error1.message);
+    expect(mockLog).toHaveBeenCalledWith(
+      "dash",
+      "failed to parse DASH value:",
+      error1.message,
+      { dashName: "indexRange" },
+    );
 
     const element2 = parseXml('<Foo indexRange="" />')[0] as ITNode;
     const error2 = new MPDError('`indexRange` property has an unrecognized format ""');
     expect(parseSegmentURL(element2)).toEqual([{}, [error2]]);
 
     expect(mockLog).toHaveBeenCalledTimes(2);
-    expect(mockLog).toHaveBeenCalledWith(error2.message);
+    expect(mockLog).toHaveBeenCalledWith(
+      "dash",
+      "failed to parse DASH value:",
+      error2.message,
+      { dashName: "indexRange" },
+    );
 
     mockLog.mockRestore();
   });

@@ -69,7 +69,9 @@ export default function parseMp4EmbeddedWebVtt<T>(
           mdatOffset += payloadSize - 8;
         }
       } else {
-        log.error("webvtt: encountered unknown fragmented vtt box: ", currentBoxName);
+        log.error("vtt", "encountered unknown fragmented vtt box", {
+          box: currentBoxName,
+        });
         mdatOffset += Math.min(payloadSize - 8, 1);
       }
 
@@ -86,13 +88,16 @@ export default function parseMp4EmbeddedWebVtt<T>(
           }
         }
       } else {
-        log.error("webvtt: cue duration missing");
+        log.error("vtt", "cue duration missing");
       }
     }
   }
 
   if (mdatOffset !== mdat.length) {
-    log.error("WEBVTT: end offset is not equal to mdat length", mdatOffset, mdat.length);
+    log.error("vtt", "end offset is not equal to mdat length", {
+      mdataOffset: mdatOffset,
+      mdatLength: mdat.length,
+    });
   }
 
   return cuesArray;

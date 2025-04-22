@@ -71,7 +71,7 @@ export default function updateSegmentTimeline(
       if (currElt.start + currElt.duration > newIndexStart) {
         // The new Manifest overlaps a previous segment (weird)
         // In that improbable case, we'll just completely replace segments
-        log.warn("RepresentationIndex: Manifest update removed all previous segments");
+        log.warn("utils", "Manifest update removed all previous segments");
         oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
         return true;
       } else if (currElt.repeatCount === undefined || currElt.repeatCount <= 0) {
@@ -104,7 +104,7 @@ export default function updateSegmentTimeline(
         oldTimeline[i].repeatCount = newRepeatCount;
         return false;
       }
-      log.warn("RepresentationIndex: Manifest update removed previous segments");
+      log.warn("utils", "Manifest update removed previous segments");
       oldTimeline[i].repeatCount = Math.floor(newCurrRepeat);
 
       // put it after this one
@@ -120,11 +120,11 @@ export default function updateSegmentTimeline(
   const newLastElt = newTimeline[newTimeline.length - 1];
   if (prevLastElt.repeatCount !== undefined && prevLastElt.repeatCount < 0) {
     if (prevLastElt.start > newLastElt.start) {
-      log.warn("RepresentationIndex: The new index is older than the previous one");
+      log.warn("utils", "The new index is older than the previous one");
       return false;
     } else {
       // the new has more depth
-      log.warn('RepresentationIndex: The new index is "bigger" than the previous one');
+      log.warn("utils", 'The new index is "bigger" than the previous one');
       oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
       return true;
     }
@@ -134,12 +134,12 @@ export default function updateSegmentTimeline(
   const newLastTime =
     newLastElt.start + newLastElt.duration * (newLastElt.repeatCount + 1);
   if (prevLastTime >= newLastTime) {
-    log.warn("RepresentationIndex: The new index is older than the previous one");
+    log.warn("utils", "The new index is older than the previous one");
     return false;
   }
 
   // the new one has more depth. full update
-  log.warn('RepresentationIndex: The new index is "bigger" than the previous one');
+  log.warn("utils", 'The new index is "bigger" than the previous one');
   oldTimeline.splice(0, prevTimelineLength, ...newTimeline);
   return true;
 }
