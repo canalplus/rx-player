@@ -123,13 +123,9 @@ export default function generateManifestParser(
     function runDefaultJsParser():
       | IManifestParserResult
       | Promise<IManifestParserResult> {
-      if (parsers.fastJs !== null) {
+      if (parsers.js !== null) {
         const manifestStr = getManifestAsString(responseData);
-        const parsedManifest = parsers.fastJs(manifestStr, dashParserOpts);
-        return processMpdParserResponse(parsedManifest);
-      } else if (parsers.native !== null) {
-        const manifestDocument = getManifestAsDocument(responseData);
-        const parsedManifest = parsers.native(manifestDocument, dashParserOpts);
+        const parsedManifest = parsers.js(manifestStr, dashParserOpts);
         return processMpdParserResponse(parsedManifest);
       } else {
         throw new Error("No MPD parser is imported");
@@ -306,29 +302,6 @@ function getManifestAsString(manifestSrc: unknown): string {
     return manifestSrc;
   } else if (manifestSrc instanceof Document) {
     return manifestSrc.documentElement.outerHTML;
-  } else {
-    throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
-  }
-}
-
-/**
- * Try to convert a Manifest from an unknown format to a `Document` format.
- * Useful to exploit DOM-parsing APIs to quickly parse an XML Manifest.
- *
- * Throws if the format cannot be converted.
- * @param {*} manifestSrc
- * @returns {Document}
- */
-function getManifestAsDocument(manifestSrc: unknown): Document {
-  if (manifestSrc instanceof ArrayBuffer) {
-    return new DOMParser().parseFromString(
-      utf8ToStr(new Uint8Array(manifestSrc)),
-      "text/xml",
-    );
-  } else if (typeof manifestSrc === "string") {
-    return new DOMParser().parseFromString(manifestSrc, "text/xml");
-  } else if (manifestSrc instanceof Document) {
-    return manifestSrc;
   } else {
     throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
   }

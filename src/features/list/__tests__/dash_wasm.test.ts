@@ -21,12 +21,11 @@ describe("Features list - DASH WASM Parser", () => {
 
     const featureObject = {
       transports: {},
-      dashParsers: { native: null, fastJs: null, wasm: null },
+      dashParsers: { js: null, wasm: null },
     } as unknown as IFeaturesObject;
     DASH_WASM._addFeature(featureObject);
     expect(featureObject.transports).toEqual({ dash: DASHFeature });
-    expect(featureObject.dashParsers.native).toEqual(null);
-    expect(featureObject.dashParsers.fastJs).toEqual(null);
+    expect(featureObject.dashParsers.js).toEqual(null);
     expect(featureObject.dashParsers.wasm).toBeInstanceOf(DashWasmParser);
   });
 });
