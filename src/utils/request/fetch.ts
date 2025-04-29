@@ -286,6 +286,11 @@ export default function fetchRequest(
 export function fetchIsSupported(): boolean {
   return (
     typeof globalScope.fetch === "function" &&
+    // Detect if the fetch function has been rewritten.
+    // Polyfill can rewrite this function without a proper implementation
+    // leading to issues.
+    // In this case it's preferable to use XHR over fetch.
+    /native code/.test(globalScope.fetch.toString()) &&
     !isNullOrUndefined(_AbortController) &&
     !isNullOrUndefined(_Headers)
   );
