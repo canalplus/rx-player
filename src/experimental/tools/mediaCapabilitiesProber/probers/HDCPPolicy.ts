@@ -19,15 +19,6 @@ import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { IMediaConfiguration } from "../types";
 import { ProberStatus } from "../types";
 
-export type IMediaKeyStatus =
-  | "usable"
-  | "expired"
-  | "released"
-  | "output-restricted"
-  | "output-downscaled"
-  | "status-pending"
-  | "internal-error";
-
 /**
  * @param {Object} config
  * @returns {Promise}
@@ -47,6 +38,19 @@ export default function probeHDCPPolicy(
 
   const hdcp = "hdcp-" + config.hdcp;
   const policy = { minHdcpVersion: hdcp };
+
+  /**
+   * These are the EME key statuses for which the playback is authorized.
+   * @see https://w3c.github.io/encrypted-media/#dom-mediakeystatus
+   */
+  const playableStatuses: MediaKeyStatus[] = ["usable", "output-downscaled"];
+
+  /**
+   * These are the EME key statuses for which it is not possible to determine
+   * whether the playback is authorized or restricted.
+   * @see https://w3c.github.io/encrypted-media/#dom-mediakeystatus
+   */
+  const unkownStatuses: MediaKeyStatus[] = ["status-pending"];
 
   const keySystem = "org.w3.clearkey";
   const drmConfig = {
@@ -81,14 +85,16 @@ export default function probeHDCPPolicy(
             mediaKeys as {
               getStatusForPolicy: (policy: {
                 minHdcpVersion: string;
-              }) => Promise<IMediaKeyStatus>;
+              }) => Promise<MediaKeyStatus>;
             }
           )
             .getStatusForPolicy(policy)
-            .then((result: IMediaKeyStatus) => {
+            .then((result: MediaKeyStatus) => {
               let status: [ProberStatus];
-              if (result === "usable") {
+              if (playableStatuses.indexOf(result) !== -1) {
                 status = [ProberStatus.Supported];
+              } else if (unkownStatuses.indexOf(result) !== -1) {
+                status = [ProberStatus.Unknown];
               } else {
                 status = [ProberStatus.NotSupported];
               }
