@@ -1,10 +1,13 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import globalScope from "../../../../../utils/global_scope";
 import type IProbeMediaDisplayInfos from "../../probers/mediaDisplayInfos";
 
+const origMatchMedia = globalScope.matchMedia;
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
+  afterEach(() => {
+    globalScope.matchMedia = origMatchMedia;
+  });
   it("should throw if matchMedia is undefined", async () => {
-    const origMatchMedia = globalScope.matchMedia;
     (
       globalScope as { matchMedia: typeof globalScope.matchMedia | undefined }
     ).matchMedia = undefined;
@@ -13,11 +16,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
       await vi.importActual("../../probers/mediaDisplayInfos")
     ).default as typeof IProbeMediaDisplayInfos;
     expect(() => probeMediaDisplayInfos({})).toThrowError("matchMedia API not available");
-    globalScope.matchMedia = origMatchMedia;
   });
 
   it("should throw if no colorSpace in display configuration", async () => {
-    const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => true);
     globalScope.matchMedia = mockMatchMedia as unknown as typeof globalScope.matchMedia;
     const config = {
@@ -31,11 +32,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     expect(() => probeMediaDisplayInfos(config)).toThrowError(
       "Not enough arguments for calling matchMedia.",
     );
-    globalScope.matchMedia = origMatchMedia;
   });
 
   it("should throw if no display in configuration", async () => {
-    const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => true);
     globalScope.matchMedia = mockMatchMedia as unknown as typeof globalScope.matchMedia;
     const config = {};
@@ -47,11 +46,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     expect(() => probeMediaDisplayInfos(config)).toThrowError(
       "Not enough arguments for calling matchMedia.",
     );
-    globalScope.matchMedia = origMatchMedia;
   });
 
   it("should throw if mediaMatch called with bad arguments", async () => {
-    const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => ({
       media: "not all",
     }));
@@ -69,11 +66,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
     expect(() => probeMediaDisplayInfos(config)).toThrowError(
       "Bad arguments for calling matchMedia.",
     );
-    globalScope.matchMedia = origMatchMedia;
   });
 
   it("should return `Supported` if color space is supported", async () => {
-    const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => ({
       matches: true,
     }));
@@ -90,11 +85,9 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
 
     expect(probeMediaDisplayInfos(config)).toEqual("Supported");
     expect(mockMatchMedia).toHaveBeenCalledTimes(1);
-    globalScope.matchMedia = origMatchMedia;
   });
 
   it("should return `NotSupported` if color space is not supported", async () => {
-    const origMatchMedia = globalScope.matchMedia;
     const mockMatchMedia = vi.fn(() => ({
       matches: false,
     }));
@@ -111,6 +104,5 @@ describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
 
     expect(probeMediaDisplayInfos(config)).toEqual("NotSupported");
     expect(mockMatchMedia).toHaveBeenCalledTimes(1);
-    globalScope.matchMedia = origMatchMedia;
   });
 });

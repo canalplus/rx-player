@@ -142,7 +142,9 @@ const mediaCapabilitiesProber = {
    * @param {Object} mediaConfig
    * @returns {Promise.<string>}
    */
-  async getDecodingCapabilities(mediaConfig: IMediaConfiguration): Promise<string> {
+  async getDecodingCapabilities(
+    mediaConfig: IMediaConfiguration,
+  ): Promise<"Supported" | "Unknown" | "NotSupported"> {
     const config = {
       type: mediaConfig.type,
       video: mediaConfig.video,

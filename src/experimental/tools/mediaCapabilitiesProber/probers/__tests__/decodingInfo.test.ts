@@ -3,7 +3,6 @@ import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
 import probeDecodingInfos from "../../probers/decodingInfo";
 import type { IMediaConfiguration } from "../../types";
 
-const origDecodingInfo = navigator.mediaCapabilities;
 const origMediaCapabilities = navigator.mediaCapabilities;
 
 /**
@@ -32,15 +31,6 @@ function stubDecodingInfo(isSupported: boolean, mustReject?: boolean) {
   return decodingInfoStub;
 }
 
-/**
- * Reset decodingInfo to native implementation.
- */
-function resetDecodingInfos(): void {
-  // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
-  // now, we're going through JSDom through so that's OK.
-  navigator.mediaCapabilities = origDecodingInfo;
-}
-
 describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -60,13 +50,11 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     let thrownException = false;
     try {
       await probeDecodingInfos(configuration);
-      resetDecodingInfos();
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
-      resetDecodingInfos();
     }
     expect(thrownException).toEqual(true);
   });
@@ -83,13 +71,11 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     let thrownException = false;
     try {
       await probeDecodingInfos(configuration);
-      resetDecodingInfos();
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
-      resetDecodingInfos();
     }
     expect(thrownException).toEqual(true);
   });
@@ -106,13 +92,11 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     let thrownException = false;
     try {
       await probeDecodingInfos(configuration);
-      resetDecodingInfos();
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
-      resetDecodingInfos();
     }
     expect(thrownException).toEqual(true);
   });
@@ -127,13 +111,11 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     let thrownException = false;
     try {
       await probeDecodingInfos(configuration);
-      resetDecodingInfos();
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
-      resetDecodingInfos();
     }
     expect(thrownException).toEqual(true);
   });
@@ -145,13 +127,11 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     let thrownException = false;
     try {
       await probeDecodingInfos(configuration);
-      resetDecodingInfos();
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       thrownException = true;
       expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
       expect(decodingInfoStub).not.toHaveBeenCalled();
-      resetDecodingInfos();
     }
     expect(thrownException).toEqual(true);
   });
@@ -212,7 +192,6 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     const res = await probeDecodingInfos(configuration);
     expect(res).toBe("Supported");
     expect(decodingInfoStub).toHaveBeenCalledTimes(1);
-    resetDecodingInfos();
   });
 
   it("should resolve with `Supported` if decodingInfo supports (audio only)", async () => {
@@ -230,7 +209,6 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     const res = await probeDecodingInfos(configuration);
     expect(res).toBe("Supported");
     expect(decodingInfoStub).toHaveBeenCalledTimes(1);
-    resetDecodingInfos();
   });
 
   it("should resolve with `Supported` if decodingInfo supports video + audio", async () => {
@@ -255,7 +233,6 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     const res = await probeDecodingInfos(configuration);
     expect(res).toBe("Supported");
     expect(decodingInfoStub).toHaveBeenCalledTimes(1);
-    resetDecodingInfos();
   });
 
   it("should return `NotSupported` if no decodingInfo support (video only)", async () => {
@@ -274,7 +251,6 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     const res = await probeDecodingInfos(configuration);
     expect(res).toBe("NotSupported");
     expect(decodingInfoStub).toHaveBeenCalledTimes(1);
-    resetDecodingInfos();
   });
 
   it("should return `NotSupported` if no decodingInfo support (audio only)", async () => {
@@ -292,7 +268,6 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     const res = await probeDecodingInfos(configuration);
     expect(res).toBe("NotSupported");
     expect(decodingInfoStub).toHaveBeenCalledTimes(1);
-    resetDecodingInfos();
   });
 
   it("should return `NotSupported` if no decodingInfo support", async () => {
@@ -317,7 +292,6 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     const res = await probeDecodingInfos(configuration);
     expect(res).toBe("NotSupported");
     expect(decodingInfoStub).toHaveBeenCalledTimes(1);
-    resetDecodingInfos();
   });
 
   it("should resolve with `NotSupported` if decodingInfo throws", async () => {
@@ -342,6 +316,5 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
     const res = await probeDecodingInfos(configuration);
     expect(res).toBe("NotSupported");
     expect(decodingInfoStub).toHaveBeenCalledTimes(1);
-    resetDecodingInfos();
   });
 });

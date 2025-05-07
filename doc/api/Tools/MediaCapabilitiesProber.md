@@ -128,9 +128,8 @@ mediaCapabilitiesProber.checkDrmConfiguration(
   ).then(
   // On success:
   (config) => {
-    console.log("This device is compatible with the given configuration!");
-    console.log("Wanted configuration:", configuration);
-    console.log("Compatible configuration:", compatibleConfiguration);
+    console.log("This device is compatible with the given configuration:", config);
+    console.log("Source configuration:", mksConfiguration);
   },
 
   // On failure
@@ -138,39 +137,6 @@ mediaCapabilitiesProber.checkDrmConfiguration(
     console.log("This device is not compatible with the given configuration!", err);
   },
 });
-
-// Example output (please note that in this example, one of the widevine
-// robustness is not supported):
-//
-// Wanted configuration:
-// {
-//   "initDataTypes":["cenc"],
-//   "videoCapabilities": [
-//     {
-//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
-//       "robustness": "HW_SECURE_CRYPTO"
-//     },
-//     {
-//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
-//       "robustness": "SW_SECURE_DECODE"
-//     }
-//   ]
-// }
-// Compatible configuration:
-// {
-//   "audioCapabilities": [],
-//   "distinctiveIdentifier": "not-allowed",
-//   "initDataTypes": ["cenc"],
-//   "label": "",
-//   "persistentState": "not-allowed",
-//   "sessionTypes": ["temporary"],
-//   "videoCapabilities": [
-//     {
-//       "contentType": "video/mp4;codecs=\"avc1.4d401e\"",
-//       "robustness":"SW_SECURE_DECODE"
-//     }
-//   ]
-// }
 ```
 
 ### getStatusForHDCP
