@@ -73,10 +73,12 @@
       "com.microsoft.playready.recommendation",
       "com.microsoft.playready.recommendation.2000",
       "com.microsoft.playready.recommendation.3000",
+      "com.microsoft.playready.recommendation.3000.clearlead",
       "com.microsoft.playready.recommendation.esvm",
       "com.widevine.alpha",
       "com.apple.fps",
       "com.apple.fps.1_0",
+      "org.w3.clearkey",
     ];
     const minimalMediaConfiguration = [
       {
@@ -216,6 +218,8 @@
     function i2hex(i) {
       return ("0" + i.toString(16)).slice(-2);
     }
+
+    const initDataClearKey = (new TextEncoder()).encode('{"kids":["LwVHf8JLtPrv2GUXFW2v_A"]}');
     // const r = Array.from(initDataPlayReady).map(i2hex).join("");
 
     async function waitForMessageEvent(session) {
@@ -344,10 +348,17 @@
       checkTime = performance.now()
       let generateRequest;
       let initData;
+      let initDataType;
       if (keySystemIdentifier.includes("widevine")) {
         initData = initDataWidevine;
+        initDataType = 'cenc'
       } else if (keySystemIdentifier.includes("playready")) {
         initData = initDataPlayReady;
+        initDataType = 'cenc'
+      }
+      else if (keySystemIdentifier.includes("clearkey")) {
+        initData = initDataClearKey;
+        initDataType = 'keyids'
       }
       if (initData === undefined) {
         // this page does not handle initData for the particular keySystem,
@@ -365,7 +376,7 @@
         const [messageEvent, generateRequestResult] =
           await Promise.all([
             waitForMessageEvent(session),
-            session.generateRequest("cenc", initData),
+            session.generateRequest(initDataType, initData),
           ]);
         checkStatus.generateRequest = { support: true, time: performance.now() - checkTime };
       } catch (err) {
