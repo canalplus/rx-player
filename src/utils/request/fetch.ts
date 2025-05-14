@@ -286,12 +286,16 @@ export default function fetchRequest(
 export function fetchIsSupported(): boolean {
   return (
     typeof globalScope.fetch === "function" &&
-    // Detect if the fetch function has been rewritten.
-    // Polyfill can rewrite this function without a proper implementation
-    // leading to issues.
-    // In this case it's preferable to use XHR over fetch.
+    /**
+     * Detect if the fetch or AbortController function has been rewritten.
+     * Polyfills can rewrite those function without a proper implementation
+     * leading to issues.
+     * In this case it's preferable to use XHR over fetch.
+     * @see https://github.com/TanStack/query/discussions/9049
+     */
     /native code/.test(globalScope.fetch.toString()) &&
     !isNullOrUndefined(_AbortController) &&
+    /native code/.test(_AbortController.toString()) &&
     !isNullOrUndefined(_Headers)
   );
 }
