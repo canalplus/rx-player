@@ -284,6 +284,8 @@ export default function fetchRequest(
  * @return {boolean}
  */
 export function fetchIsSupported(): boolean {
+  // Match [native code] and variants with different white space.
+  const nativeCodeRegex = /\[\s*native\s+code\s*\]/;
   return (
     typeof globalScope.fetch === "function" &&
     /**
@@ -293,9 +295,9 @@ export function fetchIsSupported(): boolean {
      * In this case it's preferable to use XHR over fetch.
      * @see https://github.com/TanStack/query/discussions/9049
      */
-    /native code/.test(globalScope.fetch.toString()) &&
+    nativeCodeRegex.test(globalScope.fetch.toString()) &&
     !isNullOrUndefined(_AbortController) &&
-    /native code/.test(_AbortController.toString()) &&
+    nativeCodeRegex.test(_AbortController.toString()) &&
     !isNullOrUndefined(_Headers)
   );
 }
