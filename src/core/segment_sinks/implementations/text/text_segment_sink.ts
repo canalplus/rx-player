@@ -163,30 +163,27 @@ export interface ITextTracksBufferSegmentData {
  * Throw if the given input is not in the expected format.
  * Allows to enforce runtime type-checking as compile-time type-checking here is
  * difficult to enforce.
- * @param {Object} chunk
+ * @param {Object} _chunk
  */
 function assertChunkIsTextTrackSegmentData(
-  chunk: unknown,
-): asserts chunk is ITextTracksBufferSegmentData {
+  _chunk: unknown,
+): asserts _chunk is ITextTracksBufferSegmentData {
+  // ## START CODE BLOCK: DEBUG-BUILD-ONLY
   if (
-    (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
-  ) {
-    return;
-  }
-  if (
-    typeof chunk !== "object" ||
-    chunk === null ||
-    typeof (chunk as ITextTracksBufferSegmentData).data !== "string" ||
-    typeof (chunk as ITextTracksBufferSegmentData).type !== "string" ||
-    ((chunk as ITextTracksBufferSegmentData).language !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).language !== "string") ||
-    ((chunk as ITextTracksBufferSegmentData).start !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).start !== "number") ||
-    ((chunk as ITextTracksBufferSegmentData).end !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).end !== "number")
+    typeof _chunk !== "object" ||
+    _chunk === null ||
+    typeof (_chunk as ITextTracksBufferSegmentData).data !== "string" ||
+    typeof (_chunk as ITextTracksBufferSegmentData).type !== "string" ||
+    ((_chunk as ITextTracksBufferSegmentData).language !== undefined &&
+      typeof (_chunk as ITextTracksBufferSegmentData).language !== "string") ||
+    ((_chunk as ITextTracksBufferSegmentData).start !== undefined &&
+      typeof (_chunk as ITextTracksBufferSegmentData).start !== "number") ||
+    ((_chunk as ITextTracksBufferSegmentData).end !== undefined &&
+      typeof (_chunk as ITextTracksBufferSegmentData).end !== "number")
   ) {
     throw new Error("Invalid format given to a TextSegmentSink");
   }
+  // ## END CODE BLOCK: DEBUG-BUILD-ONLY
 }
 
 /**
@@ -227,12 +224,10 @@ export interface ITextDisplayerInterface {
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
-if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  // @ts-expect-error: unused function for type checking
-  function _checkType(input: ITextTrackSegmentData): void {
-    function checkEqual(_arg: ITextTracksBufferSegmentData): void {
-      /* nothing */
-    }
-    checkEqual(input);
+// @ts-expect-error: unused function for type checking
+function _checkType(input: ITextTrackSegmentData): void {
+  function checkEqual(_arg: ITextTracksBufferSegmentData): void {
+    /* nothing */
   }
+  checkEqual(input);
 }

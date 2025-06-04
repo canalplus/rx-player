@@ -81,14 +81,6 @@ export default defineConfig({
       URL: "127.0.0.1",
       PORT: 3000,
     },
-    __ENVIRONMENT__: {
-      PRODUCTION: 0,
-      DEV: 1,
-      CURRENT_ENV: 1,
-    },
-    __LOGGER_LEVEL__: {
-      CURRENT_LEVEL: '"NONE"',
-    },
     __BROWSER_NAME__: JSON.stringify(process.env.BROWSER_CONFIG),
   },
   test: {

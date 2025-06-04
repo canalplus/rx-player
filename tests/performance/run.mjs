@@ -977,8 +977,6 @@ function getSamplePerScenarios(samplesObj) {
  * @param {Object} options
  * @param {Object} options.output - The output file
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
- * @param {boolean} [options.production] - If `false`, the code will be compiled
- * in "development" mode, which has supplementary assertions.
  * @returns {Promise}
  */
 async function createBundle(options) {

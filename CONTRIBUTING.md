@@ -51,6 +51,56 @@ interaction with the DOM is needed, it will have to go through an asynchronous
 Whether the code needs to be runnable or not in a WebWorker is generally documented in the
 `README.md` of concerned directories.
 
+### Build-specific code blocks
+
+To include code only in some contexts (e.g. only for development builds), we introduced
+the notion of what we call "build-specific code blocks".
+
+There is today two cases where you might want this:
+
+1. Code intended to only be included in our development builds (code which might be less
+   performant or less resilient but which performs more assertions).
+
+   To start a code block only for development builds, you have to add a line containing a
+   specific comment before and after your code:
+
+   ```js
+   // ## START CODE BLOCK: DEBUG-BUILD-ONLY
+   ... your development build-only code
+   // ## END CODE BLOCK: DEBUG-BUILD-ONLY
+   ```
+
+   You may have any amount of space before the `// ##...` comments (e.g. due to the
+   corresponding code being indented), but else those comments have to be repeated exactly
+   like in that example.
+
+   Example:
+
+   ```js
+   function seekToPosition(mediaElement, position) {
+     // ## START CODE BLOCK: DEBUG-BUILD-ONLY
+     if (position < 0) {
+       throw new Error("Excuse me, what are you doing?");
+     }
+     // ## END CODE BLOCK: DEBUG-BUILD-ONLY
+
+     mediaElement.currentTime = position;
+   }
+   ```
+
+2. Code intended to only be included in our "bundle" (our single-JS file) and not in our
+   other multi-file builds.
+
+   Here, the same rules than for (1) apply but the comments this time are:
+
+   ```js
+   // ## START BLOCK: BUNDLE-ONLY
+   ... your bundle-only code
+   // ## END BLOCK: BUNDLE-ONLY
+   ```
+
+That code will be kept or removed at build-time, before typescript compilation.
+
 ## Code style
 
 ### Linting

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { failInDebugMode } from "./assert";
 import isNullOrUndefined from "./is_null_or_undefined";
 import type { CancellationSignal } from "./task_canceller";
 
@@ -142,9 +143,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
       try {
         listener(arg);
       } catch (e) {
-        if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-          throw e instanceof Error ? e : new Error("EventEmitter: listener error");
-        }
+        failInDebugMode(e instanceof Error ? e.message : "EventEmitter: listener error");
         // Cannot use our logger here sadly because our logger is an `EventEmitter`
         // itself.
         // eslint-disable-next-line no-console

@@ -15,6 +15,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { pathToFileURL } from "url";
 import esbuild from "esbuild";
+import stripCodeBlocks from "./strip_code_blocks.mjs";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 import PROJECT_ROOT_DIRECTORY from "./utils/project_root_directory.mjs";
 
@@ -26,7 +27,7 @@ import PROJECT_ROOT_DIRECTORY from "./utils/project_root_directory.mjs";
  * be used in logs if `options.silent` is set to `false`.
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.globalScope] - If `true`, enable global scope mode
- * (the `__GLOBAL_SCOPE__` global symbol will be set to `true` in the bundle).
+ * (the `RxPlayer` will be exposoed to the global scope).
  * @param {boolean} [options.production] - If `false`, the code will be compiled
  * in "development" mode, which has supplementary assertions.
  * @param {boolean} [options.watch] - If `true`, the RxPlayer's files involve
@@ -88,6 +89,22 @@ export default async function runBundler(inputFile, options) {
     },
   };
 
+  const stripBlocksOnLoadPlugin = {
+    name: "strip-blocks-on-load",
+    setup(build) {
+      build.onLoad({ filter: /\.(c|m)?(t|j)s$/ }, async (args) => {
+        const text = await fs.promises.readFile(args.path, "utf8");
+        return {
+          contents: stripCodeBlocks(text, {
+            stripDebugBlocks: !isDevMode,
+            stripBundleBlocks: !globalScope,
+          }),
+          loader: "ts",
+        };
+      });
+    },
+  };
+
   const meth = watch ? "context" : "build";
 
   // Create a context for incremental builds
@@ -99,16 +116,9 @@ export default async function runBundler(inputFile, options) {
       minify,
       write: outfile !== undefined,
       outfile,
-      plugins: [esbuildStepsPlugin],
+      plugins: [esbuildStepsPlugin, stripBlocksOnLoadPlugin],
       define: {
         "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-        __ENVIRONMENT__: JSON.stringify({
-          PRODUCTION: 0,
-          DEV: 1,
-          CURRENT_ENV: isDevMode ? 1 : 0,
-        }),
-        __LOGGER_LEVEL__: JSON.stringify({ CURRENT_LEVEL: isDevMode ? "INFO" : "NONE" }),
-        __GLOBAL_SCOPE__: JSON.stringify(globalScope),
         ...globals,
       },
     });

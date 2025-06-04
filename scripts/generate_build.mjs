@@ -18,6 +18,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import generateEmbeds from "./generate_embeds.mjs";
+import generateTypeScriptBuilds from "./generate_typescript_builds.mjs";
 import runBundler from "./run_bundler.mjs";
 import removeDir from "./utils/remove_dir.mjs";
 
@@ -84,7 +85,7 @@ export default async function generateBuild(options = {}) {
     await generateEmbeds({ noWasm });
 
     console.log(" ⚙️ Compiling project with TypeScript...");
-    await compile({ devMode, noCheck });
+    await generateTypeScriptBuilds({ devMode, noCheck });
   } catch (err) {
     console.error("Fatal error:", err instanceof Error ? err.message : err);
     process.exit(1);
@@ -104,41 +105,6 @@ async function removePreviousBuildArtefacts() {
       return removeDir(relativePath);
     }),
   );
-}
-
-/**
- * Compile the project by spawning a separate procress running TypeScript.
- * @param {Object} opts
- * @param {boolean} opts.devMode
- * @param {boolean} opts.noCheck
- * @returns {Promise}
- */
-async function compile(opts) {
-  // Sadly TypeScript compiler API seems to be sub-par.
-  // I did not find for example how to exclude some files (our unit tests)
-  // easily by running typescript directly from NodeJS.
-  // So we just spawn a separate process running tsc:
-  await Promise.all([
-    spawnProm(
-      "npx tsc -p",
-      [
-        path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json"),
-        opts.noCheck ? "--noCheck" : "",
-      ],
-      (code) => new Error(`CommonJS compilation process exited with code ${code}`),
-    ),
-    spawnProm(
-      "npx tsc -p",
-      [
-        path.join(
-          ROOT_DIR,
-          opts.devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
-        ),
-        opts.noCheck ? "--noCheck" : "",
-      ],
-      (code) => new Error(`es2018 compilation process exited with code ${code}`),
-    ),
-  ]);
 }
 
 /**

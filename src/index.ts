@@ -37,7 +37,9 @@ import {
 } from "./features/list";
 import logger from "./log";
 import Player from "./main_thread/api";
+// ## START CODE BLOCK: BUNDLE-ONLY
 import globalScope from "./utils/global_scope";
+// ## END CODE BLOCK: BUNDLE-ONLY
 
 patchWebkitSourceBuffer();
 
@@ -55,13 +57,20 @@ Player.addFeatures([
   HTML_VTT_PARSER,
   HTML_SRT_PARSER,
 ]);
+
+// ## START CODE BLOCK: DEBUG-BUILD-ONLY
+logger.setLevel("INFO", "full");
+logger.warn(
+  "You have started a debug build of the RxPlayer. " +
+    "If this is not wanted, please strip the corresponding code blocks.",
+);
+// ## END CODE BLOCK: DEBUG-BUILD-ONLY
+
 if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG", "full");
-} else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL, "standard");
 }
 export default Player;
 
-if (typeof __GLOBAL_SCOPE__ === "boolean" && __GLOBAL_SCOPE__) {
-  (globalScope as typeof globalScope & { RxPlayer?: typeof Player }).RxPlayer = Player;
-}
+// ## START CODE BLOCK: BUNDLE-ONLY
+(globalScope as typeof globalScope & { RxPlayer?: typeof Player }).RxPlayer = Player;
+// ## END CODE BLOCK: BUNDLE-ONLY

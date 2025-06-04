@@ -16,7 +16,7 @@
 
 import { CustomLoaderError } from "../../errors";
 import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
-import assert from "../../utils/assert";
+import { failInDebugMode } from "../../utils/assert";
 import request from "../../utils/request";
 import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
 import type {
@@ -168,12 +168,8 @@ const generateSegmentLoader =
           break;
         }
         default:
-          if (
-            (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)
-          ) {
-            assert(false, "responseData should have been set");
-          }
           responseData = new Uint8Array(0);
+          failInDebugMode("responseData should have been set");
       }
 
       return Promise.resolve({

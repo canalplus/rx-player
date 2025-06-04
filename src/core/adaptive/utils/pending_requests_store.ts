@@ -22,6 +22,7 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../manifest";
+import { failInDebugMode } from "../../../utils/assert";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import objectValues from "../../../utils/object_values";
 
@@ -54,9 +55,7 @@ export default class PendingRequestsStore {
   public addProgress(progress: IPendingRequestStoreProgress): void {
     const request = this._currentRequests[progress.id];
     if (isNullOrUndefined(request)) {
-      if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-        throw new Error("ABR: progress for a request not added");
-      }
+      failInDebugMode("ABR: progress for a request not added");
       log.warn("ABR: progress for a request not added");
       return;
     }
@@ -69,9 +68,7 @@ export default class PendingRequestsStore {
    */
   public remove(id: string): void {
     if (isNullOrUndefined(this._currentRequests[id])) {
-      if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-        throw new Error("ABR: can't remove unknown request");
-      }
+      failInDebugMode("ABR: progress for a request not added");
       log.warn("ABR: can't remove unknown request");
     }
     delete this._currentRequests[id];

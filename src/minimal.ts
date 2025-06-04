@@ -28,10 +28,16 @@ import Player from "./main_thread/api";
 
 patchWebkitSourceBuffer();
 
+// ## START CODE BLOCK: DEBUG-BUILD-ONLY
+logger.setLevel("INFO", "full");
+logger.warn(
+  "You have started a debug build of the RxPlayer. " +
+    "If this is not wanted, please strip the corresponding code blocks.",
+);
+// ## END CODE BLOCK: DEBUG-BUILD-ONLY
+
 if (isDebugModeEnabled()) {
   logger.setLevel("DEBUG", "full");
-} else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL, "standard");
 }
 
 /**

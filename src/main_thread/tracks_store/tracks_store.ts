@@ -147,13 +147,13 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     const { DEFAULT_VIDEO_TRACK_SWITCHING_MODE } = config.getCurrent();
     const { periods } = manifest;
 
+    // ## START CODE BLOCK: DEBUG-BUILD-ONLY
     // We assume that they are always sorted chronologically
     // In dev mode, perform a runtime check that this is the case
-    if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-      for (let i = 1; i < periods.length; i++) {
-        assert(periods[i - 1].start <= periods[i].start);
-      }
+    for (let i = 1; i < periods.length; i++) {
+      assert(periods[i - 1].start <= periods[i].start);
     }
+    // ## END CODE BLOCK: DEBUG-BUILD-ONLY
 
     /** Periods which have just been added. */
     const addedPeriods: ITSPeriodObject[] = [];

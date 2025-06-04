@@ -237,18 +237,14 @@ export default function generateManifestParser(
  * Allows to enforce runtime type-checking as compile-time type-checking here is
  * difficult to enforce.
  *
- * @param loadedResource
+ * @param _loadedResources
  * @returns
  */
 function assertLoadedResourcesFormatString(
-  loadedResources: Array<ILoadedResource<string | ArrayBuffer>>,
-): asserts loadedResources is Array<ILoadedResource<string>> {
-  if (
-    (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
-  ) {
-    return;
-  }
-  loadedResources.forEach((loadedResource) => {
+  _loadedResources: Array<ILoadedResource<string | ArrayBuffer>>,
+): asserts _loadedResources is Array<ILoadedResource<string>> {
+  // ## START CODE BLOCK: DEBUG-BUILD-ONLY
+  _loadedResources.forEach((loadedResource) => {
     const { responseData } = loadedResource;
     if (responseData.success && typeof responseData.data === "string") {
       return;
@@ -257,6 +253,7 @@ function assertLoadedResourcesFormatString(
     }
     throw new Error("Invalid data given to the LoadedRessource");
   });
+  // ## END CODE BLOCK: DEBUG-BUILD-ONLY
 }
 
 /**
@@ -264,19 +261,14 @@ function assertLoadedResourcesFormatString(
  * Allows to enforce runtime type-checking as compile-time type-checking here is
  * difficult to enforce.
  *
- * @param loadedResource
+ * @param _loadedResources
  * @returns
  */
 function assertLoadedResourcesFormatArrayBuffer(
-  loadedResources: Array<ILoadedResource<string | ArrayBuffer>>,
-): asserts loadedResources is Array<ILoadedResource<ArrayBuffer>> {
-  if (
-    (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
-  ) {
-    return;
-  }
-
-  loadedResources.forEach((loadedResource) => {
+  _loadedResources: Array<ILoadedResource<string | ArrayBuffer>>,
+): asserts _loadedResources is Array<ILoadedResource<ArrayBuffer>> {
+  // ## START CODE BLOCK: DEBUG-BUILD-ONLY
+  _loadedResources.forEach((loadedResource) => {
     const { responseData } = loadedResource;
     if (responseData.success && responseData.data instanceof ArrayBuffer) {
       return;
@@ -285,6 +277,7 @@ function assertLoadedResourcesFormatArrayBuffer(
     }
     throw new Error("Invalid data given to the LoadedRessource");
   });
+  // ## END CODE BLOCK: DEBUG-BUILD-ONLY
 }
 
 /**

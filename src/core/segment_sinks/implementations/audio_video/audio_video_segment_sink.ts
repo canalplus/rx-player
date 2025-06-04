@@ -353,20 +353,17 @@ export default class AudioVideoSegmentSink extends SegmentSink {
  * Throw if the given input is not in the expected format.
  * Allows to enforce runtime type-checking as compile-time type-checking here is
  * difficult to enforce.
- * @param {Object} data
+ * @param {Object} _data
  */
-function assertDataIsBufferSource(data: unknown): asserts data is BufferSource {
+function assertDataIsBufferSource(_data: unknown): asserts _data is BufferSource {
+  // ## START CODE BLOCK: DEBUG-BUILD-ONLY
   if (
-    (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
-  ) {
-    return;
-  }
-  if (
-    typeof data !== "object" ||
-    (data !== null &&
-      !(data instanceof ArrayBuffer) &&
-      !((data as ArrayBufferView).buffer instanceof ArrayBuffer))
+    typeof _data !== "object" ||
+    (_data !== null &&
+      !(_data instanceof ArrayBuffer) &&
+      !((_data as ArrayBufferView).buffer instanceof ArrayBuffer))
   ) {
     throw new Error("Invalid data given to the AudioVideoSegmentSink");
   }
+  // ## END CODE BLOCK: DEBUG-BUILD-ONLY
 }

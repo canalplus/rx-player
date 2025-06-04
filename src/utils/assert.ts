@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+// ## START CODE BLOCK: DEBUG-BUILD-ONLY
 import isNullOrUndefined from "./is_null_or_undefined";
+// ## END CODE BLOCK: DEBUG-BUILD-ONLY
 
 /**
  * Error due to an abnormal assertion fails.
@@ -40,45 +42,60 @@ export class AssertionError extends Error {
 }
 
 /**
+ * Throw an `AssertionError` immediately with the given message only when we're
+ * in a debug build. Else, do nothing.
+ * @param {string} _message - The message that would be thrown.
+ */
+export function failInDebugMode(_message: string): void {
+  // ## START CODE BLOCK: DEBUG-BUILD-ONLY
+  throw new AssertionError(_message);
+  // ## END CODE BLOCK: DEBUG-BUILD-ONLY
+}
+
+/**
  * Throw an AssertionError if the given assertion is false.
- * @param {boolean} assertion
- * @param {string} [message] - Optional message property for the AssertionError.
+ * @param {boolean} _assertion
+ * @param {string} [_message] - Optional message property for the AssertionError.
  * @throws AssertionError - Throws if the assertion given is false
  */
-export default function assert(assertion: boolean, message?: string): asserts assertion {
-  if (
-    (__ENVIRONMENT__.DEV as number) === (__ENVIRONMENT__.CURRENT_ENV as number) &&
-    !assertion
-  ) {
-    throw new AssertionError(message === undefined ? "invalid assertion" : message);
+export default function assert(
+  _assertion: boolean,
+  _message?: string,
+): asserts _assertion {
+  // ## START CODE BLOCK: DEBUG-BUILD-ONLY
+  if (!_assertion) {
+    throw new AssertionError(_message === undefined ? "invalid assertion" : _message);
   }
+  // ## END CODE BLOCK: DEBUG-BUILD-ONLY
 }
 
 type IObjectInterface<T> = Partial<Record<keyof T, string>>;
 
 /**
  * Throws if the given Object does not respect the interface.
- * @param {Object} o
- * @param {Object} iface - Contains the checked keynames of o and link them
+ * @param {Object} _o
+ * @param {Object} _iface - Contains the checked keynames of _o and link them
  * to their types (obtained through the typeof operator).
- * @param {string} [name="object"] - name of the _interface_
- * @throws AssertionError - The argument o given is not an object
+ * @param {string} [_name="object"] - name of the _interface_
+ * @throws AssertionError - The argument _o given is not an object
  * @throws AssertionError - The _interface_ is not respected.
  */
 export function assertInterface<T>(
-  o: T,
-  iface: IObjectInterface<T>,
-  name: string = "object",
+  _o: T,
+  _iface: IObjectInterface<T>,
+  _name: string = "object",
 ): void {
-  assert(!isNullOrUndefined(o), `${name} should be an object`);
-  for (const k in iface) {
-    if (Object.prototype.hasOwnProperty.call(iface, k)) {
+  // ## START CODE BLOCK: DEBUG-BUILD-ONLY
+  assert(!isNullOrUndefined(_o), `${_name} should be an object`);
+  for (const k in _iface) {
+    if (Object.prototype.hasOwnProperty.call(_iface, k)) {
       assert(
-        typeof o[k] === iface[k],
-        `${name} should have property ${k} as a ${iface[k]}`,
+        typeof _o[k] === _iface[k],
+        `${_name} should have property ${k} as a ${_iface[k]}`,
       );
     }
   }
+  // ## END CODE BLOCK: DEBUG-BUILD-ONLY
 }
 
 /**
