@@ -90,15 +90,15 @@ function be4toi(bytes: Uint8Array, offset: number): number {
  * @returns {Number}
  */
 function be4toiSigned(bytes: Uint8Array, offset: number): number {
-  // Didn't bother overthinking that one though it may be fun
-  return new Int32Array(
-    new Uint8Array([
-      bytes[offset + 0],
-      bytes[offset + 1],
-      bytes[offset + 2],
-      bytes[offset + 3],
-    ]).buffer,
-  )[0];
+  const value =
+    (bytes[offset] << 24) |
+    (bytes[offset + 1] << 16) |
+    (bytes[offset + 2] << 8) |
+    bytes[offset + 3];
+
+  // Convert to signed 32-bit integer using JavaScript's bitwise OR
+  // This handles the two's complement conversion properly
+  return value | 0;
 }
 
 /**
