@@ -91,7 +91,10 @@ const mediaCapabilitiesProber = {
       } catch (err) {
         log.debug("DRM: KeySystemAccess was granted but it is not usable");
         return Promise.reject(
-          new Error("Failed to call generateRequest on this keySystem"),
+          new Error(
+            "Failed to generare a license-request with this keySystem: " +
+              (err instanceof Error ? err.toString() : "Unknown Error"),
+          ),
         );
       }
     } else {
@@ -117,7 +120,7 @@ const mediaCapabilitiesProber = {
    */
   async getStatusForHDCP(hdcpVersion: string): Promise<string> {
     if (hdcpVersion === undefined || hdcpVersion.length === 0) {
-      throw new Error("Bad Arguments: " + "No HDCP Policy specified.");
+      throw new Error("Bad Arguments: No HDCP Policy specified.");
     }
     try {
       const res = await probeTypeWithFeatures({ hdcp: hdcpVersion });
@@ -129,7 +132,7 @@ const mediaCapabilitiesProber = {
           // continue
           break;
       }
-    } catch (err) {
+    } catch {
       // We do not care about this call erroring
     }
     return probeHDCPPolicy(hdcpVersion);
@@ -169,14 +172,14 @@ const mediaCapabilitiesProber = {
       if (res === "NotSupported") {
         return "NotSupported";
       }
-    } catch (err) {
+    } catch {
       // We do not care here
     }
 
     try {
       const res = await probeDecodingInfos(config);
       return res;
-    } catch (err) {
+    } catch {
       return isCodecSupported ? "Supported" : "Unknown";
     }
   },
@@ -198,7 +201,7 @@ const mediaCapabilitiesProber = {
       } else {
         return "NotSupported";
       }
-    } catch (err) {
+    } catch {
       // We do not care here
     }
 
@@ -207,7 +210,7 @@ const mediaCapabilitiesProber = {
       if (res === "NotSupported") {
         return "NotSupported";
       }
-    } catch (err) {
+    } catch {
       // We do not care here
     }
     return matchMediaSupported === true ? "Supported" : "Unknown";
