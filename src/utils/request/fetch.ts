@@ -284,9 +284,20 @@ export default function fetchRequest(
  * @return {boolean}
  */
 export function fetchIsSupported(): boolean {
+  // Match [native code] and variants with different white space.
+  const nativeCodeRegex = /\[\s*native\s+code\s*\]/;
   return (
     typeof globalScope.fetch === "function" &&
+    /**
+     * Detect if AbortController function has been rewritten.
+     * Polyfills can rewrite those function without a proper implementation
+     * leading to issues.
+     * In this case it's preferable to use XHR over fetch, because fetch uses
+     * AbortSignal to cancel requests.
+     * @see https://github.com/TanStack/query/discussions/9049
+     */
     !isNullOrUndefined(_AbortController) &&
+    nativeCodeRegex.test(_AbortController.toString()) &&
     !isNullOrUndefined(_Headers)
   );
 }
