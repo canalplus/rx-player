@@ -89,10 +89,49 @@ function generateGetLicense(
 ): (rawChallenge: BufferSource) => Promise<BufferSource | null> {
   const isPlayready = drmType.indexOf("playready") !== -1;
   return (rawChallenge: BufferSource): Promise<BufferSource | null> => {
-    const challenge = isPlayready ? formatPlayreadyChallenge(rawChallenge) : rawChallenge;
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", licenseServerUrl, true);
     return new Promise<BufferSource | null>((resolve, reject) => {
+      if (drmType.indexOf("clearkey") >= 0) {
+        try {
+          const decodedChallenge = JSON.parse(
+            utf8ToStr(bufferSourceToUint8Array(rawChallenge)),
+          );
+          const kids = decodedChallenge.kids;
+          if (!Array.isArray(kids) || kids.length === 0) {
+            throw new Error("Unknown key id");
+          }
+          // Consider the first kid. I'm not sure multiple-kids for a single
+          // init data is ever encountered in our case / in the wild?
+          const kid = kids[0];
+          let key;
+          switch (kid) {
+            // Some hardcoded kid defined somewhere by Canal+
+            case "ASNFZ4mrze8BI0VniavN7w":
+              // The corresponding decryption key
+              key = "_ty6mHZUMhD-3LqYdlQyEA";
+              break;
+            default:
+              throw new Error("Unknown key id");
+          }
+          const license = {
+            keys: [
+              {
+                kty: "oct",
+                kid,
+                k: key,
+              },
+            ],
+          };
+          resolve(strToUtf8(JSON.stringify(license)));
+        } catch (err) {
+          reject(err);
+        }
+        return;
+      }
+      const challenge = isPlayready
+        ? formatPlayreadyChallenge(rawChallenge)
+        : rawChallenge;
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", licenseServerUrl, true);
       xhr.onerror = () => {
         const error = new Error("getLicense's request failed on an error");
         (error as unknown as Record<string, unknown>).fallbackOnLastTry =
@@ -127,4 +166,17 @@ function generateGetLicense(
       isPlayready && typeof license === "string" ? strToUtf8(license) : license,
     );
   };
+}
+
+function bufferSourceToUint8Array(bufferSource: BufferSource) {
+  if (bufferSource instanceof ArrayBuffer) {
+    return new Uint8Array(bufferSource);
+  }
+  if (ArrayBuffer.isView(bufferSource)) {
+    if (bufferSource.constructor === Uint8Array) {
+      return bufferSource;
+    }
+    return new Uint8Array(bufferSource.buffer);
+  }
+  throw new TypeError("Input is not a valid BufferSource");
 }
