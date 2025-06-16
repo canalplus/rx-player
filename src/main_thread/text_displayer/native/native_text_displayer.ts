@@ -48,10 +48,22 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       return convertToRanges(this._buffered);
     }
     const { timestampOffset, appendWindow, chunk } = infos;
-    const { start: startTime, end: endTime, data: dataString, type, language } = chunk;
+    const {
+      start: startTime,
+      end: endTime,
+      data: dataString,
+      type,
+      language,
+      initTimescale,
+    } = chunk;
     const appendWindowStart = appendWindow[0] ?? 0;
     const appendWindowEnd = appendWindow[1] ?? Infinity;
-    const cues = parseTextTrackToCues(type, dataString, timestampOffset, language);
+    const cues = parseTextTrackToCues(
+      type,
+      dataString,
+      { initTimescale, language },
+      timestampOffset,
+    );
 
     if (appendWindowStart !== 0 && appendWindowEnd !== Infinity) {
       // Removing before window start
@@ -222,7 +234,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
 /** Data of chunks that should be pushed to the NativeTextDisplayer. */
 export interface INativeTextTracksBufferSegmentData {
   /** The text track data, in the format indicated in `type`. */
-  data: string;
+  data: string | BufferSource;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
   type: string;
   /**

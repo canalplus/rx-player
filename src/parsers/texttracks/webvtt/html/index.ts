@@ -19,7 +19,12 @@
  * It always should be imported through the `features` object.
  */
 
-import parseWebVTTToDiv from "./parse_webvtt_to_div";
-export type { IVTTHTMLCue } from "./to_html";
+import parseWebVTTMp4 from "../../webvtt/html/parse_webvtt_mp4";
+import parseWebVTTPlainText from "../../webvtt/html/parse_webvtt_plain_text";
 
-export default parseWebVTTToDiv;
+/**
+ * /!\ This file is feature-switchable.
+ * It always should be imported through the `features` object.
+ */
+export { parseWebVTTPlainText, parseWebVTTMp4 };
+export type { IVTTHTMLCue } from "./to_html";

@@ -202,4 +202,18 @@ describe("utils - byte parsing", () => {
       expect(byteUtils.itole4(values[3])).toEqual(new Uint8Array([1, 0, 0, 0]));
     });
   });
+
+  describe("be4toiSigned", () => {
+    it("should return 32-bit two's complement signed integer", () => {
+      expect(byteUtils.be4toiSigned(new Uint8Array([255, 255, 255, 255]), 0)).toEqual(-1);
+      expect(
+        byteUtils.be4toiSigned(new Uint8Array([0, 0, 255, 255, 255, 255]), 2),
+      ).toEqual(-1);
+      expect(byteUtils.be4toiSigned(new Uint8Array([0, 0, 0, 0, 0, 0]), 2)).toEqual(0);
+      expect(byteUtils.be4toiSigned(new Uint8Array([0, 0, 0, 0, 1, 0]), 2)).toEqual(256);
+      expect(byteUtils.be4toiSigned(new Uint8Array([0, 0, 255, 255, 255, 0]), 2)).toEqual(
+        -256,
+      );
+    });
+  });
 });

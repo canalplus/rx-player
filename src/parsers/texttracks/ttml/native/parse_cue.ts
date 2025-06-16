@@ -45,13 +45,7 @@ const TEXT_ALIGN_TO_POSITION_ALIGN: Partial<Record<string, string>> = {
 /**
  * Parses an Element into a TextTrackCue or VTTCue.
  * /!\ Mutates the given cueElement Element
- * @param {Element} paragraph
- * @param {Number} offset
- * @param {Array.<Object>} styles
- * @param {Array.<Object>} regions
- * @param {Object} paragraphStyle
- * @param {Object} ttParams
- * @param {Boolean} shouldTrimWhiteSpace
+ * @param {Object} parsedCue
  * @returns {TextTrackCue|null}
  */
 export default function parseCue(

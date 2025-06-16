@@ -24,6 +24,8 @@
 // Done for fun. Understand <b>, <i>, <u> and <font color="#ff0000" /> type
 // of tags.
 
+import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8";
+import { utf8ToStr } from "../../../utils/string_parsing";
 import getCueBlocks from "./get_cue_blocks";
 import parseCueBlock from "./parse_cue";
 
@@ -34,14 +36,24 @@ export interface ISRTHTMLCue {
 }
 
 /**
- * @param {string} srtStr
+ * @param {string|BufferSource} input
+ * @param {Object} _context
  * @param {Number} timeOffset
  * @returns {Array.<Object>}
  */
 export default function parseSRTStringToHTML(
-  srtStr: string,
+  input: string | BufferSource,
+  _context: unknown,
   timeOffset: number,
 ): ISRTHTMLCue[] {
+  let srtStr: string;
+  if (typeof input !== "string") {
+    // Assume UTF-8
+    // TODO: detection?
+    srtStr = utf8ToStr(bufferSourceToUint8(input));
+  } else {
+    srtStr = input;
+  }
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   const lines = srtStr.split(/\r\n|\n|\r/);

@@ -15,17 +15,30 @@
  */
 
 import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
+import { utf8ToStr } from "../../../../utils/string_parsing";
 import parseTtml from "../parse_ttml";
 import parseCue from "./parse_cue";
 
 /**
- * @param str
- * @param timeOffset
+ * @param {string|BufferSource} input
+ * @param {Object} _context
+ * @param {number} timeOffset
+ * @returns {Array.<VTTCue|TextTrackCue>}
  */
 export default function parseTtmlToNative(
-  str: string,
+  input: string | BufferSource,
+  _context: unknown,
   timeOffset: number,
 ): Array<TextTrackCue | ICompatVTTCue> {
+  let str: string;
+  if (typeof input !== "string") {
+    // Assume UTF-8
+    // TODO: detection?
+    str = utf8ToStr(bufferSourceToUint8(input));
+  } else {
+    str = input;
+  }
   const parsedCues = parseTtml(str, timeOffset);
   const cues: Array<TextTrackCue | ICompatVTTCue> = [];
   for (const parsedCue of parsedCues) {

@@ -78,6 +78,7 @@ function parseISOBMFFEmbeddedTextTrack(
   const chunkData = getISOBMFFEmbeddedTextTrackData(
     context,
     chunkBytes,
+    initTimescale,
     chunkInfos,
     isChunked,
   );
@@ -96,6 +97,7 @@ function parseISOBMFFEmbeddedTextTrack(
 /**
  * Parse TextTrack data when it is in plain text form.
  * @param {ArrayBuffer|Uint8Array|string} data - The segment data.
+ * @param {number|undefined} initTimescale
  * @param {boolean} isChunked - If `true`, the `data` may contain only a
  * decodable subpart of the full data in the linked segment.
  * @param {Object} context - Object describing the context of the given
@@ -105,6 +107,7 @@ function parseISOBMFFEmbeddedTextTrack(
  */
 function parsePlainTextTrack(
   data: string | Uint8Array | ArrayBuffer,
+  initTimescale: number | undefined,
   isChunked: boolean,
   context: ISegmentContext,
 ):
@@ -130,7 +133,12 @@ function parsePlainTextTrack(
   } else {
     textTrackData = data;
   }
-  const chunkData = getPlainTextTrackData(context, textTrackData, isChunked);
+  const chunkData = getPlainTextTrackData(
+    context,
+    textTrackData,
+    initTimescale,
+    isChunked,
+  );
   const chunkOffset = segment.timestampOffset ?? 0;
   return {
     segmentType: "media",
@@ -192,6 +200,6 @@ export default function textTrackParser(
   } else if (containerType === "mp4") {
     return parseISOBMFFEmbeddedTextTrack(data, isChunked, context, initTimescale);
   } else {
-    return parsePlainTextTrack(data, isChunked, context);
+    return parsePlainTextTrack(data, initTimescale, isChunked, context);
   }
 }

@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
+import { utf8ToStr } from "../../../../utils/string_parsing";
 import getCueBlocks from "../get_cue_blocks";
 import getStyleBlocks from "../get_style_blocks";
 import parseCueBlock from "../parse_cue_block";
+import parseStyleBlocks from "../parse_style_block";
 import { getFirstLineAfterHeader } from "../utils";
-import parseStyleBlocks from "./parse_style_block";
 import type { IVTTHTMLCue } from "./to_html";
 import toHTML from "./to_html";
 
@@ -32,13 +34,25 @@ import toHTML from "./to_html";
  * Specific style is parsed and applied to class element.
  *
  * @throws Error - Throws if the given WebVTT string is invalid.
- * @param {string} text - The whole webvtt subtitles to parse
+ * @param {string|BufferSource} text - The whole webvtt subtitles to parse
+ * @param {Object} _context
  * @param {Number} timeOffset - Offset to add to start and end times, in seconds
  * @return {Array.<Object>}
  */
-export default function parseWebVTT(text: string, timeOffset: number): IVTTHTMLCue[] {
+export default function parseWebVTTPlainText(
+  text: string | BufferSource,
+  _context: unknown,
+  timeOffset: number,
+): IVTTHTMLCue[] {
+  let textStr: string;
+  if (typeof text === "string") {
+    textStr = text;
+  } else {
+    // Assume UTF-8
+    textStr = utf8ToStr(bufferSourceToUint8(text));
+  }
   const newLineChar = /\r\n|\n|\r/g; // CRLF|LF|CR
-  const linified = text.split(newLineChar);
+  const linified = textStr.split(newLineChar);
 
   const cuesArray: IVTTHTMLCue[] = [];
   if (/^WEBVTT( |\t|\n|\r|$)/.exec(linified[0]) === null) {

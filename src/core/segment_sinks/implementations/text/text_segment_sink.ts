@@ -1,6 +1,10 @@
 import log from "../../../../log";
 import type { ITextDisplayer } from "../../../../main_thread/types";
-import type { ITextTrackSegmentData } from "../../../../transports";
+import type {
+  ISupportedTextTrackFormat,
+  ITextTrackSegmentData,
+} from "../../../../transports";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
 import type { IRange } from "../../../../utils/ranges";
 import type { ICompleteSegmentInfo, IPushChunkInfos, ISBOperation } from "../types";
@@ -142,17 +146,28 @@ export default class TextSegmentSink extends SegmentSink {
 }
 
 /** Data of chunks that should be pushed to the HTMLTextSegmentSink. */
-export interface ITextTracksBufferSegmentData {
+export interface ITextTracksBufferSegmentData<
+  T extends string | BufferSource = string | BufferSource,
+> {
   /** The text track data, in the format indicated in `type`. */
-  data: string;
+  data: T;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type: string;
+  type: ISupportedTextTrackFormat;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
   language?: string | undefined;
+  /**
+   * If set, there has been a "timescale" that has been parsed from an
+   * initialization segment linked to that text track, which contained a
+   * timescale value, potentially allowing to convert time information
+   * into seconds.
+   *
+   * This is needed by very few text track formats.
+   */
+  initTimescale: number | null;
   /** start time from which the segment apply, in seconds. */
   start?: number | undefined;
   /** end time until which the segment apply, in seconds. */
@@ -176,17 +191,53 @@ function assertChunkIsTextTrackSegmentData(
   if (
     typeof chunk !== "object" ||
     chunk === null ||
-    typeof (chunk as ITextTracksBufferSegmentData).data !== "string" ||
-    typeof (chunk as ITextTracksBufferSegmentData).type !== "string" ||
-    ((chunk as ITextTracksBufferSegmentData).language !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).language !== "string") ||
-    ((chunk as ITextTracksBufferSegmentData).start !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).start !== "number") ||
-    ((chunk as ITextTracksBufferSegmentData).end !== undefined &&
-      typeof (chunk as ITextTracksBufferSegmentData).end !== "number")
+    isNullOrUndefined((chunk as ITextTracksBufferSegmentData).data)
   ) {
     throw new Error("Invalid format given to a TextSegmentSink");
   }
+  if (!isTextTracksBufferSegmentData(chunk as ITextTracksBufferSegmentData)) {
+    throw new Error("Invalid format given to a TextSegmentSink");
+  }
+  if (
+    typeof (chunk as ITextTracksBufferSegmentData<string>).data !== "string" &&
+    typeof (chunk as ITextTracksBufferSegmentData<BufferSource>).data.byteLength !==
+      "number"
+  ) {
+    throw new Error("Invalid format given to a TextSegmentSink");
+  }
+}
+
+/**
+ * Get a value in argument that may or may not be
+ * `ITextT nor hangracksBufferSegmentData`.
+ *
+ * Returns `true` if it corresponds to that type definition, `false` otherwise.
+ *
+ * Basically it's a runtime type check.It was added here as we may be casting as
+ * `any` at some point to facilitate implementation.
+ * @param {*} chunk
+ * @returns {boolean}
+ */
+function isTextTracksBufferSegmentData(chunk: ITextTracksBufferSegmentData): boolean {
+  if (typeof chunk !== "object" || chunk === null) {
+    return false;
+  }
+  if (typeof chunk.type !== "string") {
+    return false;
+  }
+  if (chunk.language !== undefined && typeof chunk.language !== "string") {
+    return false;
+  }
+  if (chunk.initTimescale !== null && typeof chunk.initTimescale !== "number") {
+    return false;
+  }
+  if (chunk.start !== undefined && typeof chunk.start !== "number") {
+    return false;
+  }
+  if (chunk.end !== undefined && typeof chunk.end !== "number") {
+    return false;
+  }
+  return true;
 }
 
 /**

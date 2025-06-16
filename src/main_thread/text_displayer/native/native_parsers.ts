@@ -1,21 +1,25 @@
 import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
 import features from "../../../features";
 import log from "../../../log";
+import type { ISupportedTextTrackFormat } from "../../../transports";
 
 /**
  * Convert text track data into timed VTT Cues.
  * @param {string} type - Text track format wanted
- * @param {string} data - Text track data
+ * @param {string|BufferSource} data - Text track data
+ * @param {Object} context
  * @param {Number} timestampOffset - offset to apply to every timed text
- * @param {string} [language] - language of the text tracks
  * @returns {Array.<VTTCue>}
  * @throws Error - Throw if no parser is found for the given type
  */
 export default function parseTextTrackToCues(
-  type: string,
-  data: string,
+  type: ISupportedTextTrackFormat,
+  data: string | BufferSource,
+  context: {
+    initTimescale: number | null;
+    language: string | undefined;
+  },
   timestampOffset: number,
-  language?: string,
 ): Array<ICompatVTTCue | TextTrackCue> {
   log.debug("NTSB: Finding parser for native text tracks:", type);
   const parser = features.nativeTextTracksParsers[type];
@@ -25,7 +29,7 @@ export default function parseTextTrackToCues(
   }
 
   log.debug("NTSB: Parser found, parsing...");
-  const parsed = parser(data, timestampOffset, language);
+  const parsed = parser(data, context, timestampOffset);
   log.debug("NTSB: Parsed successfully!", parsed.length);
   return parsed;
 }

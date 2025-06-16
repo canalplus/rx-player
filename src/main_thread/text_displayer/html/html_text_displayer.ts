@@ -3,7 +3,10 @@ import { onEnded, onSeeked, onSeeking } from "../../../compat/event_listeners";
 import onHeightWidthChange from "../../../compat/on_height_width_change";
 import config from "../../../config";
 import log from "../../../log";
-import type { ITextTrackSegmentData } from "../../../transports";
+import type {
+  ISupportedTextTrackFormat,
+  ITextTrackSegmentData,
+} from "../../../transports";
 import type { IRange } from "../../../utils/ranges";
 import { convertToRanges } from "../../../utils/ranges";
 import type { CancellationSignal } from "../../../utils/task_canceller";
@@ -126,12 +129,24 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       return convertToRanges(this._buffered);
     }
 
-    const { start: startTime, end: endTime, data: dataString, type, language } = chunk;
+    const {
+      start: startTime,
+      end: endTime,
+      data: dataRaw,
+      type,
+      language,
+      initTimescale,
+    } = chunk;
 
     const appendWindowStart = appendWindow[0] ?? 0;
     const appendWindowEnd = appendWindow[1] ?? Infinity;
 
-    const cues = parseTextTrackToElements(type, dataString, timestampOffset, language);
+    const cues = parseTextTrackToElements(
+      type,
+      dataRaw,
+      { initTimescale, language },
+      timestampOffset,
+    );
 
     if (appendWindowStart !== 0 && appendWindowEnd !== Infinity) {
       // Removing before window start
@@ -396,11 +411,13 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 }
 
 /** Data of chunks that should be pushed to the `HTMLTextDisplayer`. */
-export interface ITextTracksBufferSegmentData {
+export interface ITextTracksBufferSegmentData<
+  TDataFormatName extends ISupportedTextTrackFormat = ISupportedTextTrackFormat,
+> {
   /** The text track data, in the format indicated in `type`. */
-  data: string;
+  data: TDataFormatName extends "mp4vtt" ? BufferSource : string;
   /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type: string;
+  type: TDataFormatName;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should

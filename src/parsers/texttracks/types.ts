@@ -23,16 +23,64 @@ export interface IHTMLCue {
   element: HTMLElement;
 }
 
-// Function to parse texttracks into native VTT cues
+/** Function to parse texttracks into native VTT cues */
 export type INativeTextTracksParserFn = (
-  texttrack: string,
+  /**
+   * The text track data itself, either as plain text (for textual formats) or
+   * as a BufferSource (for binary format such as MP4-embedded VTT).
+   */
+  texttrack: string | BufferSource,
+  /** Optional context information on that text track */
+  context: {
+    /**
+     * If set, there has been a "timescale" that has been parsed from an
+     * initialization segment linked to that text track, which contained a
+     * timescale value, potentially allowing to convert time information
+     * into seconds.
+     *
+     * This is needed by very few text track formats.
+     */
+    initTimescale: number | null;
+    /**
+     * If set, and if there are multiple languages available in the given text
+     * track format, then the language selected should be the one corresponding
+     * to that string.
+     *
+     * This is needed by very few text track formats.
+     */
+    language: string | undefined;
+  },
+  /** Offset in seconds to add to all subtitles found in `texttrack`. */
   timeOffset: number,
-  language?: string,
 ) => Array<ICompatVTTCue | TextTrackCue>;
 
-// Function to parse texttracks into HTML cues
+/** Function to parse texttracks into HTML cues */
 export type IHTMLTextTracksParserFn = (
-  texttrack: string,
+  /**
+   * The text track data itself, either as plain text (for textual formats) or
+   * as a BufferSource (for binary format such as MP4-embedded VTT).
+   */
+  texttrack: string | BufferSource,
+  /** Optional context information on that text track */
+  context: {
+    /**
+     * If set, there has been a "timescale" that has been parsed from an
+     * initialization segment linked to that text track, which contained a
+     * timescale value, potentially allowing to convert time information
+     * into seconds.
+     *
+     * This is needed by very few text track formats.
+     */
+    initTimescale: number | null;
+    /**
+     * If set, and if there are multiple languages available in the given text
+     * track format, then the language selected should be the one corresponding
+     * to that string.
+     *
+     * This is needed by very few text track formats.
+     */
+    language: string | undefined;
+  },
+  /** Offset in seconds to add to all subtitles found in `texttrack`. */
   timeOffset: number,
-  language?: string,
 ) => IHTMLCue[];

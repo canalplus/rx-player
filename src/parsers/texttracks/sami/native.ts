@@ -21,8 +21,10 @@
 
 import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
 import makeVTTCue from "../../../compat/make_vtt_cue";
+import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8";
 import isNonEmptyString from "../../../utils/is_non_empty_string";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import { utf8ToStr } from "../../../utils/string_parsing";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;
@@ -104,16 +106,28 @@ function decodeEntities(text: string): string {
  * The specification being quite clunky, this parser
  * may not work for every sami input.
  *
- * @param {string} smi
+ * @param {string|BufferSource} input
+ * @param {Object} context
  * @param {Number} timeOffset
- * @param {string} lang
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
 function parseSami(
-  smi: string,
+  input: string | BufferSource,
+  {
+    language: lang,
+  }: {
+    language: string | undefined;
+  },
   timeOffset: number,
-  lang?: string,
 ): Array<TextTrackCue | ICompatVTTCue> {
+  let smi: string;
+  if (typeof input !== "string") {
+    // Assume UTF-8
+    // TODO: detection?
+    smi = utf8ToStr(bufferSourceToUint8(input));
+  } else {
+    smi = input;
+  }
   const syncOpen = /<sync[ >]/gi;
   const syncClose = /<sync[ >]|<\/body>/gi;
 

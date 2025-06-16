@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type { IStyleElements } from "../parse_style_block";
+import type { IStyleElements } from "../../parse_style_block";
 import type IToHtml from "../to_html";
 
 describe("parsers - webvtt - toHTML", () => {

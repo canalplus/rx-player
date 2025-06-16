@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
+import { utf8ToStr } from "../../../../utils/string_parsing";
 import parseTtml from "../parse_ttml";
 import {
   applyDefaultTTMLStyle,
@@ -36,10 +38,23 @@ import parseCue from "./parse_cue";
  * TODO TTML parsing is still pretty heavy on the CPU.
  * Optimizations have been done, principally to avoid using too much XML APIs,
  * but we can still do better.
- * @param {string} str
+ * @param {string|BufferSource} input
+ * @param {Object} _context
  * @param {number} timeOffset
  */
-export default function parseTTMLToDiv(str: string, timeOffset: number): ITTMLHTMLCue[] {
+export default function parseTTMLToDiv(
+  input: string | BufferSource,
+  _context: unknown,
+  timeOffset: number,
+): ITTMLHTMLCue[] {
+  let str: string;
+  if (typeof input !== "string") {
+    // Assume UTF-8
+    // TODO: detection?
+    str = utf8ToStr(bufferSourceToUint8(input));
+  } else {
+    str = input;
+  }
   const parsedCues = parseTtml(str, timeOffset);
   const cues: ITTMLHTMLCue[] = [];
   for (const parsedCue of parsedCues) {

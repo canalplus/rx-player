@@ -21,7 +21,7 @@ import parseTimestamp from "./parse_timestamp";
  * @param {string} settingsString
  * @returns {Object}
  */
-function parseSettings(settingsString: string): Partial<Record<string, string>> {
+export function parseSettings(settingsString: string): Partial<Record<string, string>> {
   const splittedSettings = settingsString.split(/ |\t/);
   return splittedSettings.reduce<Partial<Record<string, string>>>(
     (acc, setting: string) => {

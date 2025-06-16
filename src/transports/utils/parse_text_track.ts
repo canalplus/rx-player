@@ -17,18 +17,9 @@
 import log from "../../log";
 import type { ISegment } from "../../manifest";
 import { getMDAT } from "../../parsers/containers/isobmff";
+import startsWith from "../../utils/starts_with";
 import { utf8ToStr } from "../../utils/string_parsing";
 import type { IChunkTimeInfo, ISegmentContext, ITextTrackSegmentData } from "../types";
-
-/**
- * Return plain text text track from the given ISOBMFF.
- * @param {Uint8Array} chunkBytes
- * @returns {string}
- */
-export function extractTextTrackFromISOBMFF(chunkBytes: Uint8Array): string {
-  const mdat = getMDAT(chunkBytes);
-  return mdat === null ? "" : utf8ToStr(mdat);
-}
 
 /**
  * Returns the a string expliciting the format of a text track when that text
@@ -55,7 +46,8 @@ export function getISOBMFFTextTrackFormat(codecs: string | undefined): "ttml" | 
 
 /**
  * Returns the a string expliciting the format of a text track in plain text.
- * @param {Object} representation
+ * @param {string|undefined} codecs
+ * @param {string|undefined} mimeType
  * @returns {string}
  */
 export function getPlainTextTrackFormat(
@@ -83,7 +75,8 @@ export function getPlainTextTrackFormat(
 
 /**
  * @param {Object} content
- * @param {ArrayBuffer|UInt8Array|null} chunkData
+ * @param {ArrayBuffer|UInt8Array|null} chunkBytes
+ * @param {number|undefined} initTimescale
  * @param {Object|null} chunkInfos
  * @param {boolean} isChunked
  * @returns {Object|null}
@@ -99,6 +92,7 @@ export function getISOBMFFEmbeddedTextTrackData(
     language?: string | undefined;
   },
   chunkBytes: Uint8Array,
+  initTimescale: number | undefined,
   chunkInfos: IChunkTimeInfo | null,
   isChunked: boolean,
 ): ITextTrackSegmentData | null {
@@ -123,21 +117,46 @@ export function getISOBMFFEmbeddedTextTrackData(
     }
   }
 
-  const type = getISOBMFFTextTrackFormat(codecs);
-  const textData = extractTextTrackFromISOBMFF(chunkBytes);
-  return { data: textData, type, language, start: startTime, end: endTime };
+  const type: "ttml" | "vtt" = getISOBMFFTextTrackFormat(codecs);
+  const mdat = getMDAT(chunkBytes);
+  const mdatStr = mdat !== null ? utf8ToStr(mdat) : "";
+  if (
+    codecs === "wvtt" &&
+    !startsWith(mdatStr, "WEBVTT") &&
+    !startsWith(mdatStr, "\xfe\xffWEBVTT")
+  ) {
+    // From how I understand it, we're here in a special WebVTT format  embedded
+    // in an MP4 where the whole chunk contains information, now just the MDAT
+    return {
+      data: chunkBytes,
+      type: "mp4vtt",
+      language,
+      start: startTime,
+      end: endTime,
+      initTimescale: initTimescale ?? null,
+    };
+  }
+  return {
+    data: mdatStr,
+    type,
+    language,
+    start: startTime,
+    end: endTime,
+    initTimescale: initTimescale ?? null,
+  };
 }
 
 /**
- * @param {Object} content
- * @param {ArrayBuffer|UInt8Array|null} chunkData
- * @param {Object|null} chunkInfos
+ * @param {Object} context
+ * @param {ArrayBuffer|UInt8Array|null} textTrackData
+ * @param {number|undefined} initTimescale
  * @param {boolean} isChunked
  * @returns {Object|null}
  */
 export function getPlainTextTrackData(
   context: ISegmentContext,
   textTrackData: string,
+  initTimescale: number | undefined,
   isChunked: boolean,
 ): ITextTrackSegmentData | null {
   const { segment } = context;
@@ -157,5 +176,12 @@ export function getPlainTextTrackData(
   }
 
   const type = getPlainTextTrackFormat(context.codecs, context.mimeType);
-  return { data: textTrackData, type, language: context.language, start, end };
+  return {
+    data: textTrackData,
+    type,
+    language: context.language,
+    start,
+    end,
+    initTimescale: initTimescale ?? null,
+  };
 }

@@ -79,7 +79,7 @@ const testingText = `<?xml version="1.0" encoding="UTF-8"?>
 </tt>`;
 
 describe("Global TTML HTML parsing tests", () => {
-  const res = parseTTMLToDiv(testingText, 0);
+  const res = parseTTMLToDiv(testingText, 1, 0);
   it("should parse the right amount of cues at the right time", () => {
     expect(res).toHaveLength(11);
     expect(res[0].start).toEqual(0.76);

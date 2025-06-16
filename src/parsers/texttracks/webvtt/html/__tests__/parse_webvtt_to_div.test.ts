@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IParseWebVTT from "../parse_webvtt_to_div";
+import type IParseWebVTTPlainText from "../parse_webvtt_plain_text";
 
 describe("parsers - webvtt - parseWebVTT", () => {
   beforeEach(() => {
@@ -7,15 +7,15 @@ describe("parsers - webvtt - parseWebVTT", () => {
   });
 
   it("should throw if text is empty", async () => {
-    const parseWebVTT = (await vi.importActual("../parse_webvtt_to_div"))
-      .default as typeof IParseWebVTT;
-    expect(() => parseWebVTT("", 0)).toThrowError("Can't parse WebVTT: Invalid File.");
+    const parseWebVTT = (await vi.importActual("../parse_webvtt_plain_text.ts"))
+      .default as typeof IParseWebVTTPlainText;
+    expect(() => parseWebVTT("", 1, 0)).toThrowError("Can't parse WebVTT: Invalid File.");
   });
 
   it("should throw if file seems to be invalid", async () => {
-    const parseWebVTT = (await vi.importActual("../parse_webvtt_to_div"))
-      .default as typeof IParseWebVTT;
-    expect(() => parseWebVTT("WEBWTT\n", 0)).toThrowError(
+    const parseWebVTT = (await vi.importActual("../parse_webvtt_plain_text.ts"))
+      .default as typeof IParseWebVTTPlainText;
+    expect(() => parseWebVTT("WEBWTT\n", 1, 0)).toThrowError(
       "Can't parse WebVTT: Invalid File.",
     );
   });
@@ -53,7 +53,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
         styleContent: "color:blue;",
       },
     }));
-    vi.doMock("../parse_style_block", () => ({
+    vi.doMock("../../parse_style_block", () => ({
       default: spyParseStyleBlock,
     }));
 
@@ -71,9 +71,9 @@ describe("parsers - webvtt - parseWebVTT", () => {
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
-    const parseWebVTT = (await vi.importActual("../parse_webvtt_to_div"))
-      .default as typeof IParseWebVTT;
-    expect(parseWebVTT("WEBVTT\n", 0)).toEqual([
+    const parseWebVTT = (await vi.importActual("../parse_webvtt_plain_text.ts"))
+      .default as typeof IParseWebVTTPlainText;
+    expect(parseWebVTT("WEBVTT\n", 1, 0)).toEqual([
       {
         element: document.createElement("div"),
         end: 100,
@@ -120,7 +120,7 @@ describe("parsers - webvtt - parseWebVTT", () => {
         styleContent: "color:blue;",
       },
     }));
-    vi.doMock("../parse_style_block", () => ({
+    vi.doMock("../../parse_style_block", () => ({
       default: spyParseStyleBlock,
     }));
 
@@ -138,9 +138,9 @@ describe("parsers - webvtt - parseWebVTT", () => {
       getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
     }));
 
-    const parseWebVTT = (await vi.importActual("../parse_webvtt_to_div"))
-      .default as typeof IParseWebVTT;
-    expect(parseWebVTT("WEBVTT\n", 0)).toEqual([]);
+    const parseWebVTT = (await vi.importActual("../parse_webvtt_plain_text.ts"))
+      .default as typeof IParseWebVTTPlainText;
+    expect(parseWebVTT("WEBVTT\n", 1, 0)).toEqual([]);
     expect(spyGetFirstLineAfterHeader).toHaveBeenCalledTimes(1);
     expect(spyGetStyleBlock).toHaveBeenCalledTimes(1);
     expect(spyGetCueBlock).toHaveBeenCalledTimes(1);

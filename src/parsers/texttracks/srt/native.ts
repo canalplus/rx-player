@@ -24,20 +24,32 @@
 
 import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
 import makeVTTCue from "../../../compat/make_vtt_cue";
+import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8";
+import { utf8ToStr } from "../../../utils/string_parsing";
 import getCueBlocks from "./get_cue_blocks";
 import parseCueBlock from "./parse_cue";
 
 /**
  * Parse whole srt file into an array of cues, to be inserted in a video's
  * TrackElement.
- * @param {string} srtStr
+ * @param {string|bufferSource} input
+ * @param {Object} _context
  * @param {Number} timeOffset
  * @returns {Array.<VTTCue|TextTrackCue>}
  */
 export default function parseSRTStringToVTTCues(
-  srtStr: string,
+  input: string | BufferSource,
+  _context: unknown,
   timeOffset: number,
 ): Array<ICompatVTTCue | TextTrackCue> {
+  let srtStr: string;
+  if (typeof input !== "string") {
+    // Assume UTF-8
+    // TODO: detection?
+    srtStr = utf8ToStr(bufferSourceToUint8(input));
+  } else {
+    srtStr = input;
+  }
   // Even if srt only authorize CRLF, we will also take LF or CR as line
   // terminators for resilience
   const lines = srtStr.split(/\r\n|\n|\r/);
@@ -58,7 +70,7 @@ export default function parseSRTStringToVTTCues(
 }
 
 /**
- * @param {Object} cue Object
+ * @param {Object} cueObj
  * @returns {TextTrackCue|VTTCue|null}
  */
 function toNativeCue(cueObj: {

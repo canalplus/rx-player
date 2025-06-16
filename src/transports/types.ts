@@ -461,18 +461,44 @@ export interface IChunkTimeInfo {
   time: number;
 }
 
+/**
+ * The format in which text track data may be communicated:
+ *   - `"ttml"`: Plain text TTML. The data should be in preference in a string
+ *     format or at worse as UTF-8.
+ *   - `"ttml"`: Plain text WebVTT. The data should be in preference in a string
+ *     format or at worse as UTF-8.
+ *   - `"srt"`: Plain text SRT. The data should be in preference in a string
+ *     format or at worse as UTF-8.
+ *   - `"sami"`: Plain text SAMI. The data should be in preference in a string
+ *     format or at worse as UTF-8.
+ *   - `"mp4vtt"`: The WebVTT format when embedded in an ISOBMFF file. The data
+ *     should represent the whole mp4 segment as a BufferSource.
+ */
+export type ISupportedTextTrackFormat = "ttml" | "vtt" | "mp4vtt" | "srt" | "sami";
+
 /** Text track segment data, once parsed. */
-export interface ITextTrackSegmentData {
+export interface ITextTrackSegmentData<
+  TDataFormatName extends ISupportedTextTrackFormat = ISupportedTextTrackFormat,
+> {
   /** The text track data, in the format indicated in `type`. */
-  data: string;
-  /** The format of `data` (examples: "ttml", "srt" or "vtt") */
-  type: string;
+  data: TDataFormatName extends "mp4vtt" ? BufferSource : string;
+  /** The format of `data`. */
+  type: TDataFormatName;
   /**
    * Language in which the text track is, as a language code.
    * This is mostly needed for "sami" subtitles, to know which cues can / should
    * be parsed.
    */
   language?: string | undefined;
+  /**
+   * If set, there has been a "timescale" that has been parsed from an
+   * initialization segment linked to that text track, which contained a
+   * timescale value, potentially allowing to convert time information
+   * into seconds.
+   *
+   * This is needed by very few text track formats.
+   */
+  initTimescale: number | null;
   /** start time from which the segment apply, in seconds. */
   start?: number | undefined;
   /** end time until which the segment apply, in seconds. */

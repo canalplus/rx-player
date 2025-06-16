@@ -15,7 +15,10 @@
  */
 
 import NativeTextDisplayer from "../../main_thread/text_displayer/native";
-import vttParser from "../../parsers/texttracks/webvtt/native";
+import {
+  parseMp4EmbeddedWebVttToVTTCues,
+  parseWebVTTPlainTextToVTTCues,
+} from "../../parsers/texttracks/webvtt/native";
 import type { IFeaturesObject } from "../types";
 
 /**
@@ -23,7 +26,8 @@ import type { IFeaturesObject } from "../types";
  * @param {Object} features
  */
 function addNativeVTTFeature(features: IFeaturesObject): void {
-  features.nativeTextTracksParsers.vtt = vttParser;
+  features.nativeTextTracksParsers.vtt = parseWebVTTPlainTextToVTTCues;
+  features.nativeTextTracksParsers.mp4vtt = parseMp4EmbeddedWebVttToVTTCues;
   features.nativeTextDisplayer = NativeTextDisplayer;
 }
 

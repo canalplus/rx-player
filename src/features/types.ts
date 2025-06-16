@@ -33,7 +33,7 @@ import type {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
 } from "../parsers/texttracks";
-import type { ITransportFunction } from "../transports";
+import type { ISupportedTextTrackFormat, ITransportFunction } from "../transports";
 import type { CancellationSignal } from "../utils/task_canceller";
 
 /**
@@ -107,7 +107,9 @@ export interface IFeaturesObject {
    * RxPlayer.
    * Those parsers are specifically destined to be displayed in DOM elements.
    */
-  htmlTextTracksParsers: Partial<Record<string, IHTMLTextTracksParserFn>>;
+  htmlTextTracksParsers: Partial<
+    Record<ISupportedTextTrackFormat, IHTMLTextTracksParserFn>
+  >;
   /**
    * Feature allowing to load contents through MediaSource API through the
    * main thread.
@@ -147,7 +149,9 @@ export interface IFeaturesObject {
    * Those parsers are specifically destined to be displayed in `<track>` HTML
    * elements.
    */
-  nativeTextTracksParsers: Partial<Record<string, INativeTextTracksParserFn>>;
+  nativeTextTracksParsers: Partial<
+    Record<ISupportedTextTrackFormat, INativeTextTracksParserFn>
+  >;
 }
 
 /**

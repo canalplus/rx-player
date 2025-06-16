@@ -17,13 +17,19 @@
 import type { IFeature } from "../../features";
 import { addFeatures } from "../../features";
 import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
+import type { ISupportedTextTrackFormat } from "../../transports";
 
 /** Argument for the `setTextTrack` method. */
 export interface ISetTextTrackArguments {
   /** The text track content. Should be a string in the format indicated by `type`. */
   data: string;
   /** The format the text track is in (e.g. "ttml" or "vtt") */
-  type: string;
+  type: ISupportedTextTrackFormat;
+  /**
+   * Optional timescale data context that is used to convert timing information
+   * into seconds.
+   */
+  initTimescale: number | null;
   /** Offset, in seconds, that will be added to each subtitle's start and end time. */
   timeOffset?: number;
   /**
@@ -81,6 +87,7 @@ export default class TextTrackRenderer {
       chunk: {
         start: 0,
         end: Number.MAX_VALUE,
+        initTimescale: args.initTimescale,
         data: args.data,
         language: args.language,
         type: args.type,
