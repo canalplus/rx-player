@@ -246,13 +246,13 @@ export function fetchIsSupported(): boolean {
   return (
     typeof window.fetch === "function" &&
     /**
-     * Detect if the fetch or AbortController function has been rewritten.
+     * Detect if AbortController function has been rewritten.
      * Polyfills can rewrite those function without a proper implementation
      * leading to issues.
-     * In this case it's preferable to use XHR over fetch.
+     * In this case it's preferable to use XHR over fetch, because fetch uses
+     * AbortSignal to cancel requests.
      * @see https://github.com/TanStack/query/discussions/9049
      */
-    nativeCodeRegex.test(window.fetch.toString()) &&
     !isNullOrUndefined(_AbortController) &&
     nativeCodeRegex.test(_AbortController.toString()) &&
     !isNullOrUndefined(_Headers)
