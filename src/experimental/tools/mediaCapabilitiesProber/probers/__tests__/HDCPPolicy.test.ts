@@ -50,7 +50,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     );
   });
 
-  it("should resolve with `Unknown` if no getStatusForPolicy API", async () => {
+  it("should reject if no getStatusForPolicy API", async () => {
     const mockCreateMediaKeys = vi.fn(() => {
       return Promise.resolve({});
     });
@@ -68,11 +68,16 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
     const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
       .default as typeof IProbeHDCPPolicy;
 
-    await probeHDCPPolicy("1.1").then((res: string) => {
-      expect(res).toEqual("Unknown");
-      expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
-      expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
-    });
+    await probeHDCPPolicy("1.1").then(
+      () => {
+        throw new Error("Should not have succeeded");
+      },
+      (err: unknown) => {
+        expect(err).toBeInstanceOf(Error);
+        expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
+        expect(mockRequestMediaKeySystemAcces).toHaveBeenCalledTimes(1);
+      },
+    );
   });
 
   it("should resolve with `Supported` if policy is supported", async () => {

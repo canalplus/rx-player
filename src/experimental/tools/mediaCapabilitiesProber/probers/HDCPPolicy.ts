@@ -33,7 +33,7 @@ type IMediaKeyStatus =
  */
 export default async function probeHDCPPolicy(
   hdcpVersion: string,
-): Promise<"Unknown" | "Supported" | "NotSupported"> {
+): Promise<"Supported" | "NotSupported"> {
   if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
     return Promise.reject(new Error("EME API not available"));
   }
@@ -62,8 +62,8 @@ export default async function probeHDCPPolicy(
 
   const mediaKeys = await mediaKeysSystemAccess.createMediaKeys();
   if (!("getStatusForPolicy" in mediaKeys)) {
-    log.error("MCP: `MediaKeys.prototype.getStatusForPolicy` API not available");
-    return "Unknown";
+    log.error("MCP: `MediaKeys.prototype.getStatusForPolicy` API is not available");
+    throw new Error("MediaKeys.prototype.getStatusForPolicy` API is not available");
   }
   const result = await (
     mediaKeys as {
