@@ -155,9 +155,6 @@ The returned string of this function is either:
 
 - `"NotSupported"`: The HDCP configuration is not supported.
 
-- `"Unknown"`: The API is not available or it is but could not check if the HDCP type is
-  supported.
-
 Note that depending on the device, this API might be not reliable. Please test for your
 use cases before relying on this method.
 
@@ -174,10 +171,6 @@ mediaCapabilitiesProber.getStatusForHDCP("1.1").then((hdcpStatus) => {
 
     case "NotSupported":
       console.log("This HDCP version is not supported");
-      break;
-
-    case "Unknown":
-      console.log("We could'nt tell if this HDCP version is supported.");
       break;
   }
 });
