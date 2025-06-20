@@ -7,7 +7,7 @@ log() {
   printf 'rx-player > install_rust_toolchain: %s\n' "$1"
 }
 
-# Log a line to sterr, prefixing it with the name of this script
+# Log a line to stderr, prefixing it with the name of this script
 err() {
   log "ERROR: $1" >&2
   echo ""

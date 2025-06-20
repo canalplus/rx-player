@@ -33,7 +33,7 @@ emphasized_log() {
   sleep 3.8
 }
 
-# Log a line to sterr and exit with error code 1
+# Log a line to stderr and exit with error code 1
 err() {
   echo "ERROR: $1" >&2
   exit 1
