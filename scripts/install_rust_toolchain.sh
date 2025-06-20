@@ -2,6 +2,25 @@
 
 # TODO Documentation
 
+NO_CONFIRM=false
+
+set -e
+
+# Will be called if given options are not in a valid format
+usage() {
+  cat <<EOF
+Usage: $0 <OPTIONS>
+
+Options:
+
+  --no-confirmation                     If set, this script will never ask for confirmation and
+                                        just validate all prompts.
+                                        Intended for automated scripts.
+
+EOF
+  exit 1
+}
+
 # Log a line to stdout, prefixing it with the name of this script
 log() {
   printf 'rx-player > install_rust_toolchain: %s\n' "$1"
@@ -18,7 +37,7 @@ err() {
 # Checks that the command in argument exists, exits after printing the issue to
 # stderr if that's not the case
 requires_cmd() {
-  if ! command -v "$1" > /dev/null 2>&1; then
+  if ! command -v "$1" >/dev/null 2>&1; then
     err "Need '$1' (command not found)"
   fi
 }
@@ -35,8 +54,38 @@ ensure() {
 log "This script will install Rust dependencies locally in the following directory: $(pwd)/tmp"
 log "A lot of logs may be produced by this installation, they can mostly be ignored."
 
+# Parse command line options
+while [[ $# -gt 0 ]]; do
+  case $1 in
+  --no-confirmation)
+    NO_CONFIRM=true
+    ;;
+  *)
+    usage
+    ;;
+  esac
+  shift
+done
+
 requires_cmd curl
 requires_cmd tar
+
+echo ""
+echo "We will load rustup from the following URL and execute it:"
+echo "https://sh.rustup.rs"
+if [ "$NO_CONFIRM" = false ]; then
+  echo -n "Do you want to continue? (y/N): "
+  if read -r response; then
+    if [[ ! "$response" =~ ^[Yy][Ee][Ss]$ && ! "$response" =~ ^[Yy]$ ]]; then
+      echo "Cancelled."
+      exit 1
+    fi
+  else
+    echo ""
+    echo "Cancelled."
+    exit 1
+  fi
+fi
 
 ensure mkdir -p tmp
 
@@ -72,27 +121,26 @@ if [ "$ostype" = Darwin ] && [ "$cpuarch" = i386 ]; then
 fi
 
 case "$ostype" in
-  Linux)
-    ;;
-  Darwin)
-    ;;
-  MINGW* | MSYS* | CYGWIN* | Windows_NT)
-    ostype=Windows
-    ;;
-  *)
-    err "Unhandled OS type ($ostype), please install binaryen manually"
-    ;;
+Linux) ;;
+Darwin) ;;
+MINGW* | MSYS* | CYGWIN* | Windows_NT)
+  ostype=Windows
+  ;;
+*)
+  err "Unhandled OS type ($ostype), please install binaryen manually"
+  ;;
 esac
 
 case "$cpuarch" in
-  aarch64 | arm64)
-    cpuarch=aarch64
-    ;;
-  x86_64 | x86-64 | x64 | amd64)
-    cpuarch=x86_64
-    ;;
-  *)
-    err "Unhandled CPU type ($cpuarch), please install binaryen manually"
+aarch64 | arm64)
+  cpuarch=aarch64
+  ;;
+x86_64 | x86-64 | x64 | amd64)
+  cpuarch=x86_64
+  ;;
+*)
+  err "Unhandled CPU type ($cpuarch), please install binaryen manually"
+  ;;
 esac
 
 # TODO automatically download last binaryen?
@@ -120,12 +168,28 @@ elif [ "${ostype}" = Windows ]; then
   binaryen_url=https://github.com/WebAssembly/binaryen/releases/download/version_116/binaryen-version_116-x86_64-windows.tar.gz
 fi
 
+echo ""
+echo "We will load binaryen from the following URL and add executable permission to it:"
+echo "$binaryen_url"
+if [ "$NO_CONFIRM" = false ]; then
+  echo -n "Do you want to continue? (y/N): "
+  if read -r response; then
+    if [[ ! "$response" =~ ^[Yy][Ee][Ss]$ && ! "$response" =~ ^[Yy]$ ]]; then
+      echo "Cancelled."
+      exit 1
+    fi
+  else
+    echo ""
+    echo "Cancelled."
+    exit 1
+  fi
+fi
+
 log "Fetching binaryen 116..."
-curl -L $binaryen_url > tmp/binaryen.tar.gz
+curl -L "$binaryen_url" >tmp/binaryen.tar.gz
 if ! [ $? -eq 0 ]; then
   err "Failed to fetch binaryen"
 fi
-
 
 cd tmp
 ensure tar xzf binaryen.tar.gz

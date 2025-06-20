@@ -32,7 +32,7 @@ elif ! cargo_loc="$(type -p "cargo")" || [[ -z $cargo_loc ]]; then
   echo "WARNING: cargo command not found."
   print_toolchain_installation_notice
   sleep 1
-  ./scripts/install_rust_toolchain.sh
+  ./scripts/install_rust_toolchain.sh --no-confirmation
   has_local_cargo=true
   has_installed=true
 fi
@@ -48,7 +48,7 @@ elif ! wasmopt_loc="$(type -p "wasm-opt")" || [[ -z $wasmopt_loc ]]; then
   echo "WARNING: wasm-opt command not found."
   print_toolchain_installation_notice
   sleep 1
-  ./scripts/install_rust_toolchain.sh
+  ./scripts/install_rust_toolchain.sh --no-confirmation
   has_local_wasmopt=true
   has_installed=true
 fi
