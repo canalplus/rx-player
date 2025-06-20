@@ -196,11 +196,6 @@ ensure tar xzf binaryen.tar.gz
 
 ensure mv binaryen-version_116 binaryen
 
-# TODO I don't know my windows, does that still work as an executable or is it just dumb?
-if [ "${ostype}" = Windows ]; then
-  ensure cp binaryen/bin/wasm-opt.exe binaryen/bin/wasm-opt
-fi
-
 rm binaryen.tar.gz
 cd ..
 
