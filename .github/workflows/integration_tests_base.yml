@@ -28,7 +28,14 @@ jobs:
         if: contains(inputs.os, 'ubuntu')
         run: |
           sudo add-apt-repository multiverse -y
-          sudo apt update && sudo apt install -y ubuntu-restricted-extras
+          sudo apt update && sudo apt install -y ubuntu-restricted-extras ffmpeg
+
+      - name: Windows ffmpeg installation
+        if: contains(inputs.os, 'windows')
+        shell: bash
+        run: |
+          choco install ffmpeg -y
+          echo "C:\\ProgramData\\chocolatey\\lib\\ffmpeg\\tools\\ffmpeg\\bin" >> $GITHUB_PATH
 
       - name: Run integration tests for ${{ inputs.browser }} on ${{ inputs.os }}
         shell: bash
