@@ -3,8 +3,10 @@ import type {
   IMediaKeySystemAccess,
   IMediaKeys,
 } from "../../../compat/browser_compatibility_types";
+import EnvDetector from "../../../compat/env_detector";
 import { getBoxOffsets } from "../../../parsers/containers/isobmff";
 import arrayIncludes from "../../../utils/array_includes";
+import assert from "../../../utils/assert";
 import { base64ToBytes, bytesToBase64 } from "../../../utils/base64";
 import { be4toi, le2toi } from "../../../utils/byte_parsing";
 import createUuid from "../../../utils/create_uuid";
@@ -317,7 +319,7 @@ export class DummyMediaKeySession
     this._currentPolicyLevel = 100;
 
     this.expiration = NaN;
-    this.keyStatuses = new DummyMediaKeyStatusMap();
+    this.keyStatuses = new DummyMediaKeyStatusMap(keySystem);
     this.sessionId = "";
 
     this._serverCertificateRef = serverCertificateRef;
@@ -690,6 +692,11 @@ interface IDummyMediaKeySessionCallbacks {
  * @class DummyMediaKeyStatusMap
  */
 export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
+  /**
+   * Inner Map corresponding to what's that fake `MediaKeyStatusMap` maintains.
+   * Key id are actually stored as strings as hex representation of the
+   * underlying bytes.
+   */
   private _innerMap: Map<
     string,
     {
@@ -699,14 +706,25 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
   >;
 
   /**
+   * KeySystem maintaining this Map.
+   * Needed to perform some work-around on "special" platforms.
+   */
+  private _keySystem: string;
+
+  /**
    * @returns {number} - the number of elements in the `DummyMediaKeyStatusMap`.
    */
   get size(): number {
     return this._innerMap.size;
   }
 
-  constructor() {
+  /**
+   * @param {string} keySystem - KeySystem linked to this Map.
+   * Needed to perform some work-around on "special" platforms.
+   */
+  constructor(keySystem: string) {
     this._innerMap = new Map();
+    this._keySystem = keySystem;
   }
 
   /**
@@ -731,7 +749,11 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
     ) => void,
   ): void {
     return this._innerMap.forEach((value, key) => {
-      callbackfn(value.status, hexToBytes(key).buffer, this);
+      const toLocalFormat = kidToPlatformKid(
+        this._keySystem,
+        bufferSourceToUint8Array(hexToBytes(key)),
+      );
+      callbackfn(value.status, toLocalFormat.buffer, this);
     });
   }
 
@@ -759,8 +781,11 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
    * returned.
    */
   public get(key: BufferSource): MediaKeyStatus | undefined {
-    const keyU8 = bufferSourceToUint8Array(key);
-    const keyStr = bytesToHex(keyU8);
+    const toLocalFormat = kidToPlatformKid(
+      this._keySystem,
+      bufferSourceToUint8Array(key),
+    );
+    const keyStr = bytesToHex(toLocalFormat);
     return this._innerMap.get(keyStr)?.status;
   }
 
@@ -769,11 +794,17 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
    * exists or not.
    */
   public has(key: BufferSource): boolean {
-    const keyU8 = bufferSourceToUint8Array(key);
-    const keyStr = bytesToHex(keyU8);
+    const toLocalFormat = kidToPlatformKid(
+      this._keySystem,
+      bufferSourceToUint8Array(key),
+    );
+    const keyStr = bytesToHex(toLocalFormat);
     return this._innerMap.has(keyStr);
   }
 
+  /**
+   * Remove all stored key ids from this Map.
+   */
   public clear(): void {
     return this._innerMap.clear();
   }
@@ -984,4 +1015,65 @@ function splitPsshBoxes(data: Uint8Array): Uint8Array[] {
     i = psshOffsets[2];
   }
   return psshBoxes;
+}
+
+/**
+ * On EDGE, Microsoft Playready KID are presented into little-endian GUID, this
+ * function ensures that everything is in the expected format for the platfrm.
+ * @param {String} keySystem
+ * @param {Uint8Array} baseKeyId
+ * @returns {Uint8Array}
+ */
+export default function kidToPlatformKid(
+  keySystem: string,
+  baseKeyId: Uint8Array,
+): Uint8Array {
+  if (
+    keySystem.indexOf("playready") !== -1 &&
+    (EnvDetector.browser === EnvDetector.BROWSERS.EdgeChromium ||
+      EnvDetector.browser === EnvDetector.BROWSERS.OtherIeOrEdgePreEdgeChromium ||
+      EnvDetector.browser === EnvDetector.BROWSERS.Ie11)
+  ) {
+    return uuidToGuid(baseKeyId);
+  }
+  return baseKeyId;
+}
+/**
+ * Convert big-endian UUID into little-endian GUID.
+ * @param {Uint8Array} uuid
+ * @returns {Uint8Array} - guid
+ * @throws AssertionError - The uuid length is not 16
+ */
+function uuidToGuid(uuid: Uint8Array): Uint8Array {
+  assert(uuid.length === 16, "UUID length should be 16");
+
+  const p1A = uuid[0];
+  const p1B = uuid[1];
+  const p1C = uuid[2];
+  const p1D = uuid[3];
+
+  const p2A = uuid[4];
+  const p2B = uuid[5];
+
+  const p3A = uuid[6];
+  const p3B = uuid[7];
+
+  const guid = new Uint8Array(16);
+  // swapping byte endian on 4 bytes
+  // [4, 3, 2, 1] => [1, 2, 3, 4]
+  guid[0] = p1D;
+  guid[1] = p1C;
+  guid[2] = p1B;
+  guid[3] = p1A;
+  // swapping byte endian on 2 bytes
+  // [6, 5] => [5, 6]
+  guid[4] = p2B;
+  guid[5] = p2A;
+  // swapping byte endian on 2 bytes
+  // [8, 7] => [7, 8]
+  guid[6] = p3B;
+  guid[7] = p3A;
+  guid.set(uuid.subarray(8, 16), 8);
+
+  return guid;
 }
