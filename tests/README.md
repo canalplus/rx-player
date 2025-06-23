@@ -21,7 +21,8 @@ For now, they are of three natures:
 
 The `contents` directory exports mock contents useful for the `integration` and `memory`
 tests. The syntax of those mocks is specific, please refer to those already present before
-creating a new one.
+creating a new one. This directory also contains a `server.mjs` file allowing to serve
+those contents while tests are running.
 
 The `utils` directory exports helper functions useful for the `integration` and `memory`
 tests.
