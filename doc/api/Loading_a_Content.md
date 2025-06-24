@@ -720,8 +720,9 @@ Those are the possible values for that option:
 
 - `"continue"`: The player will proceed to play the content without audio.
 
-- `"error"`: The player will throw an error to indicate that the audio tracks could not be
-  played.
+- `"error"`: The player will throw an error `MediaError` with the code
+  `MANIFEST_INCOMPATIBLE_CODECS_ERROR`, `NO_AUDIO_VIDEO_TRACKS` or
+  `NO_PLAYABLE_REPRESENTATION` to indicate that the audio tracks could not be played.
 
 <div class="note">
 
@@ -748,8 +749,9 @@ Those are the possible values for that option:
 - `"continue"`: The player will proceed to play the content without video. (i.e.,
   audio-only playback).
 
-- `"error"`: The player will throw an error to indicate that the video tracks could not be
-  played.
+- `"error"`: The player will throw an error `MediaError` with the code
+  `MANIFEST_INCOMPATIBLE_CODECS_ERROR`, `NO_AUDIO_VIDEO_TRACKS` or
+  `NO_PLAYABLE_REPRESENTATION` to indicate that the video tracks could not be played.
 
 <div class="note">
 
