@@ -572,9 +572,9 @@ continuing playback with available tracks (e.g., playing video-only if no audio 
 available).
 
 The `loadVideo()` options
-[`onAudioTracksNotPlayable`](../api/Loading_a_Content.html#onaudiotracksnotplayable) and
-[`onVideoTracksNotPlayable`](../api/Loading_a_Content.html#onvideotracksnotplayable)
-defines the player behavior when a track is not playable.
+[`onAudioTracksNotPlayable`](./Loading_a_Content.md#onaudiotracksnotplayable) and
+[`onVideoTracksNotPlayable`](./Loading_a_Content.md#onvideotracksnotplayable) defines the
+player behavior when a track is not playable.
 
 </div>
 

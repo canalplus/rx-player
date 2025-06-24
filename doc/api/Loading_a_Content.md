@@ -725,8 +725,8 @@ Those are the possible values for that option:
 
 <div class="note">
 
-- An event [`noPlayableTrack`](../api/Loading_a_Content) will be emitted if no audio
-  tracks are playable.
+- An event [`noPlayableTrack`](./Player_Events.md) will be emitted if no audio tracks are
+  playable.
 
 - If neither the audio nor video tracks are playable, a `"NO_AUDIO_VIDEO_TRACKS"` error
   will be thrown regardless of this setting.
@@ -753,8 +753,8 @@ Those are the possible values for that option:
 
 <div class="note">
 
-- An event [`noPlayableTrack`](../api/Loading_a_Content) will be emitted if no video
-  tracks are playable.
+- An event [`noPlayableTrack`](./Player_Events.md#noplayabletrack) will be emitted if no
+  video tracks are playable.
 
 - If neither the audio nor video tracks are playable, a `"NO_AUDIO_VIDEO_TRACKS"` error
   will be thrown regardless of this setting.
