@@ -26,8 +26,8 @@ jobs:
     # This action only runs on forks because it pushes a new release.
     # It is not wanted on the main repository as it would spam the releases.
     if:
-      ${{github.repository != 'canalplus/rx-player' && (github.event.action == 'opened' ||
-      github.event.action == 'synchronize' || github.event.action == 'reopened') &&
+      ${{github.repository != 'canalplus/rx-player' && ( github.event.action ==
+      'synchronize' || github.event.action == 'reopened') &&
       contains(github.event.pull_request.labels.*.name, 'deploy') || github.event.action
       == 'labeled' && github.event.label.name == 'deploy'}}
 
