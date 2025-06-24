@@ -16,7 +16,9 @@
 
 import arrayFind from "../../../utils/array_find";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type { ICapabilities, IMediaConfiguration } from "./types";
+import type { IMediaConfiguration } from "./types";
+
+export type ICapabilities = Array<string | { [key: string]: ICapabilities }>;
 
 /**
  * Extends a capabilities array with others.
