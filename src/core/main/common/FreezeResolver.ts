@@ -220,12 +220,12 @@ export default class FreezeResolver {
     /** If set to `true`, we consider playback "frozen" */
     const isFrozen =
       freezing !== null ||
-      // When rebuffering, `freezing` might be not set as we're actively pausing
-      // playback. Yet, rebuffering occurences can also be abnormal, such as
-      // when enough buffer is constructed but with a low readyState (those are
-      // generally decryption issues).
-      (rebuffering !== null &&
-        readyState === 1 &&
+      // When rebuffering or loading the content, `freezing` might be not
+      // set as we're actively pausing playback.
+      // Yet, rebuffering occurences can also be abnormal, such as when enough
+      // buffer is constructed but with a low readyState (those are generally
+      // decryption issues).
+      (readyState === 1 &&
         (bufferGap >= MINIMUM_BUFFER_GAP_AT_READY_STATE_1_BEFORE_FREEZING ||
           fullyLoaded));
 
@@ -302,6 +302,17 @@ export default class FreezeResolver {
     const bufferGap = normalizeBufferGap(observation.bufferGap);
     const rebufferingForTooLong =
       rebuffering !== null && now - rebuffering.timestamp > FREEZING_FOR_TOO_LONG_DELAY;
+
+    const hasUndecipherableSegments = haveBuffersUndecipherableData(
+      this._segmentSinksStore,
+    );
+    if (hasUndecipherableSegments === true) {
+      log.warn("FR: we have undecipherable segments left in the buffer, reloading");
+      this._decipherabilityFreezeStartingTimestamp = null;
+      this._ignoreFreezeUntil = now + MINIMUM_TIME_BETWEEN_FREEZE_HANDLING;
+      return { type: "reload", value: null };
+    }
+
     const frozenForTooLong =
       freezing !== null && now - freezing.timestamp > FREEZING_FOR_TOO_LONG_DELAY;
 
@@ -322,29 +333,7 @@ export default class FreezeResolver {
       getMonotonicTimeStamp() - this._decipherabilityFreezeStartingTimestamp >
         FREEZING_FOR_TOO_LONG_DELAY;
 
-    let hasOnlyDecipherableSegments = true;
-    let isClear = true;
-    for (const ttype of ["audio", "video"] as const) {
-      const status = this._segmentSinksStore.getStatus(ttype);
-      if (status.type === "initialized") {
-        for (const segment of status.value.getLastKnownInventory()) {
-          const { representation } = segment.infos;
-          if (representation.decipherable === false) {
-            log.warn("FR: we have undecipherable segments left in the buffer, reloading");
-            this._decipherabilityFreezeStartingTimestamp = null;
-            this._ignoreFreezeUntil = now + MINIMUM_TIME_BETWEEN_FREEZE_HANDLING;
-            return { type: "reload", value: null };
-          } else if (representation.contentProtections !== undefined) {
-            isClear = false;
-            if (representation.decipherable !== true) {
-              hasOnlyDecipherableSegments = false;
-            }
-          }
-        }
-      }
-    }
-
-    if (shouldHandleDecipherabilityFreeze && !isClear && hasOnlyDecipherableSegments) {
+    if (shouldHandleDecipherabilityFreeze && hasUndecipherableSegments === false) {
       log.warn(
         "FR: we are frozen despite only having decipherable " +
           "segments left in the buffer, reloading",
@@ -522,6 +511,39 @@ export default class FreezeResolver {
       }
     }
   }
+}
+
+/**
+ * Check the audio and video buffers for decipherability information.
+ * @param {SegmentSinksStore} segmentSinksStore - Interface to obtain the
+ * current segment sinks.
+ * @returns {boolean|undefined} - Returns check result:
+ * -  If `true`, the buffer contains data known to be undecipherable.
+ * - If `false`, the buffer is either [thought to be] unencrypted or all data in
+ *   it are known to be decipherable.
+ * - If `undefined`, we don't know yet the decryption status of some of the data
+ *   containes in the buffer.
+ */
+function haveBuffersUndecipherableData(
+  segmentSinksStore: SegmentSinksStore,
+): boolean | undefined {
+  let hasOnlyDecipherableSegments = true;
+  for (const ttype of ["audio", "video"] as const) {
+    const status = segmentSinksStore.getStatus(ttype);
+    if (status.type === "initialized") {
+      for (const segment of status.value.getLastKnownInventory()) {
+        const { representation } = segment.infos;
+        if (representation.decipherable === false) {
+          return true;
+        } else if (representation.contentProtections !== undefined) {
+          if (representation.decipherable !== true) {
+            hasOnlyDecipherableSegments = false;
+          }
+        }
+      }
+    }
+  }
+  return hasOnlyDecipherableSegments ? false : undefined;
 }
 
 /**

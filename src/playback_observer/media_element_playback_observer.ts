@@ -696,11 +696,7 @@ function getRebufferingStatus({
     position: prevTime,
   } = previousObservation;
 
-  const canSwitchToRebuffering =
-    readyState >= 1 &&
-    observationEvent !== "loadedmetadata" &&
-    prevRebuffering === null &&
-    !(fullyLoaded || ended);
+  const canSwitchToRebuffering = prevRebuffering === null && !(fullyLoaded || ended);
 
   let rebufferEndPosition: number | null | undefined = null;
   let shouldRebuffer: boolean | undefined;
