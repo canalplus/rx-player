@@ -15,6 +15,7 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import { isSafariDesktop, isSafariMobile } from "../../compat/browser_detection";
 import config from "../../config";
 import type {
   IPlaybackObservation,
@@ -239,6 +240,17 @@ export function getLoadedContentState(
     }
     if (stalledStatus === "freezing") {
       return PLAYER_STATES.FREEZING;
+    }
+
+    if (
+      (stalledStatus === "not-ready" || stalledStatus === "internal-seek") &&
+      (isSafariMobile || isSafariDesktop)
+    ) {
+      /*
+       * On Safari, the readyState may remain at 1 with seeking: true until play() is called.
+       * Therefore, using the LOADED state is more appropriate in this case.
+       */
+      return PLAYER_STATES.LOADED;
     }
     return PLAYER_STATES.BUFFERING;
   }
