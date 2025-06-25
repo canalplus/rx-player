@@ -303,10 +303,10 @@ export default class FreezeResolver {
     const rebufferingForTooLong =
       rebuffering !== null && now - rebuffering.timestamp > FREEZING_FOR_TOO_LONG_DELAY;
 
-    const hasUndecipherableSegments = haveBuffersUndecipherableData(
+    const { hasUndecipherableData, hasEncryptedData } = haveBuffersUndecipherableData(
       this._segmentSinksStore,
     );
-    if (hasUndecipherableSegments === true) {
+    if (hasUndecipherableData === true) {
       log.warn("FR: we have undecipherable segments left in the buffer, reloading");
       this._decipherabilityFreezeStartingTimestamp = null;
       this._ignoreFreezeUntil = now + MINIMUM_TIME_BETWEEN_FREEZE_HANDLING;
@@ -333,7 +333,11 @@ export default class FreezeResolver {
       getMonotonicTimeStamp() - this._decipherabilityFreezeStartingTimestamp >
         FREEZING_FOR_TOO_LONG_DELAY;
 
-    if (shouldHandleDecipherabilityFreeze && hasUndecipherableSegments === false) {
+    if (
+      shouldHandleDecipherabilityFreeze &&
+      hasEncryptedData &&
+      hasUndecipherableData === false
+    ) {
       log.warn(
         "FR: we are frozen despite only having decipherable " +
           "segments left in the buffer, reloading",
@@ -517,25 +521,33 @@ export default class FreezeResolver {
  * Check the audio and video buffers for decipherability information.
  * @param {SegmentSinksStore} segmentSinksStore - Interface to obtain the
  * current segment sinks.
- * @returns {boolean|undefined} - Returns check result:
- * -  If `true`, the buffer contains data known to be undecipherable.
- * - If `false`, the buffer is either [thought to be] unencrypted or all data in
- *   it are known to be decipherable.
- * - If `undefined`, we don't know yet the decryption status of some of the data
- *   containes in the buffer.
+ * @returns {Object} - Returns check result. See type information for more
+ * details.
  */
-function haveBuffersUndecipherableData(
-  segmentSinksStore: SegmentSinksStore,
-): boolean | undefined {
+function haveBuffersUndecipherableData(segmentSinksStore: SegmentSinksStore): {
+  /**
+   *
+   * - If `true`, the buffer contains data known to be undecipherable.
+   * - If `false`, the buffer is either [thought to be] unencrypted or all data in
+   *   it are known to be decipherable.
+   * - If `undefined`, we don't know yet the decryption status of some of the data
+   *   contained in the buffer.
+   */
+  hasUndecipherableData: boolean | undefined;
+  /** If `false`, the content is considered completely unencrypted, else `true`. */
+  hasEncryptedData: boolean;
+} {
   let hasOnlyDecipherableSegments = true;
+  let isClear = true;
   for (const ttype of ["audio", "video"] as const) {
     const status = segmentSinksStore.getStatus(ttype);
     if (status.type === "initialized") {
       for (const segment of status.value.getLastKnownInventory()) {
         const { representation } = segment.infos;
         if (representation.decipherable === false) {
-          return true;
+          return { hasUndecipherableData: true, hasEncryptedData: true };
         } else if (representation.contentProtections !== undefined) {
+          isClear = false;
           if (representation.decipherable !== true) {
             hasOnlyDecipherableSegments = false;
           }
@@ -543,7 +555,10 @@ function haveBuffersUndecipherableData(
       }
     }
   }
-  return hasOnlyDecipherableSegments ? false : undefined;
+  return {
+    hasEncryptedData: !isClear,
+    hasUndecipherableData: hasOnlyDecipherableSegments ? false : undefined,
+  };
 }
 
 /**
