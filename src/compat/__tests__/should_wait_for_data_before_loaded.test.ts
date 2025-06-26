@@ -10,6 +10,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     vi.doMock("../browser_detection", () => {
       return {
         isSafariMobile: false,
+        isSafariDesktop: false,
       };
     });
     const shouldWaitForDataBeforeLoaded = (
@@ -22,6 +23,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     vi.doMock("../browser_detection", () => {
       return {
         isSafariMobile: false,
+        isSafariDesktop: false,
       };
     });
     const shouldWaitForDataBeforeLoaded = (
@@ -34,6 +36,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     vi.doMock("../browser_detection", () => {
       return {
         isSafariMobile: true,
+        isSafariDesktop: false,
       };
     });
     const shouldWaitForDataBeforeLoaded = (
@@ -46,6 +49,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
     vi.doMock("../browser_detection", () => {
       return {
         isSafariMobile: true,
+        isSafariDesktop: false,
       };
     });
     const shouldWaitForDataBeforeLoaded = (

@@ -15,7 +15,7 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import treatNotReadyAsLoaded from "../../compat/tread_not_ready_as_loaded";
+import canPreloadBeforePlay from "../../compat/can_preload_before_play";
 import config from "../../config";
 import type {
   IPlaybackObservation,
@@ -244,13 +244,11 @@ export function getLoadedContentState(
       return PLAYER_STATES.FREEZING;
     }
 
-    if (
-      (stalledStatus === "not-ready" || stalledStatus === "internal-seek") &&
-      treatNotReadyAsLoaded(isDirectFile)
-    ) {
+    if (stalledStatus === "not-ready" && !canPreloadBeforePlay(isDirectFile)) {
       /**
        * On some devices, `readyState` remains low until `play()` is called,
-       * even though the media is effectively ready. Treat it as loaded in this case.
+       * meaning that no media data can be pre-loaded.
+       * Treat it as loaded in this case.
        */
       return PLAYER_STATES.LOADED;
     }
