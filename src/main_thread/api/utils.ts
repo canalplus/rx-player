@@ -129,13 +129,25 @@ export function constructPlayerStateReference(
       if (playerStateRef.getValue() === PLAYER_STATES.LOADING) {
         playerStateRef.setValue(PLAYER_STATES.LOADED);
         if (!cancelSignal.isCancelled()) {
-          const newState = getLoadedContentState(mediaElement, null, isDirectFile);
+          const newState = getLoadedContentState(
+            mediaElement,
+            null,
+            isDirectFile,
+            playerStateRef.getValue(),
+          );
           if (newState !== PLAYER_STATES.PAUSED) {
             playerStateRef.setValue(newState);
           }
         }
       } else if (playerStateRef.getValue() === PLAYER_STATES.RELOADING) {
-        playerStateRef.setValue(getLoadedContentState(mediaElement, null, isDirectFile));
+        playerStateRef.setValue(
+          getLoadedContentState(
+            mediaElement,
+            null,
+            isDirectFile,
+            playerStateRef.getValue(),
+          ),
+        );
       } else {
         updateStateIfLoaded(null);
       }
@@ -193,7 +205,12 @@ export function constructPlayerStateReference(
     if (!isLoadedState(playerStateRef.getValue())) {
       return;
     }
-    const newState = getLoadedContentState(mediaElement, stallRes, isDirectFile);
+    const newState = getLoadedContentState(
+      mediaElement,
+      stallRes,
+      isDirectFile,
+      playerStateRef.getValue(),
+    );
     const prevState = playerStateRef.getValue();
 
     // Some safety checks to avoid having nonsense state switches
@@ -216,6 +233,7 @@ export function getLoadedContentState(
   mediaElement: IMediaElement,
   stalledStatus: IStallingSituation | null,
   isDirectFile: boolean,
+  previousState: IPlayerState,
 ): IPlayerState {
   const { FORCED_ENDED_THRESHOLD } = config.getCurrent();
   if (mediaElement.ended) {
@@ -244,11 +262,12 @@ export function getLoadedContentState(
       return PLAYER_STATES.FREEZING;
     }
 
-    if (stalledStatus === "not-ready" && !canPreloadBeforePlay(isDirectFile)) {
+    if (previousState === PLAYER_STATES.LOADED && !canPreloadBeforePlay(isDirectFile)) {
       /**
-       * On some devices, `readyState` remains low until `play()` is called,
-       * meaning that no media data can be pre-loaded.
-       * Treat it as loaded in this case.
+       * On devices that do not support preloading, a data buffer cannot be constructed.
+       * Normally, this situation would trigger the BUFFERING state. However, since these devices
+       * are unable to buffer data, having low or no data is expected while waiting for a play() call.
+       * Therefore, in this case, we remain in the LOADED state instead of transitioning to BUFFERING.
        */
       return PLAYER_STATES.LOADED;
     }
