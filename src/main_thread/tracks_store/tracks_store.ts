@@ -198,6 +198,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         if (this._isDisposed) {
           return; // Someone disposed the `TracksStore` on the previous side-effect
         }
+        this.dispose();
+        return;
       } else if (this.onTracksNotPlayableForType[ttype] === "continue") {
         // audio or video is not playable, but let's continue the playback without audio
         // or without video because of the option was set to "continue".
@@ -238,6 +240,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       ["audio" as const, "video" as const].forEach((ttype) => {
         this.checkPeriodHasSupportedTrack(period, ttype);
       });
+      if (this._isDisposed) {
+        return;
+      }
     }
 
     let newPListIdx = 0;
@@ -600,7 +605,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       }
       this.trigger("error", noRepErr);
       this.dispose();
-      return noPlayableTrackToTrigger;
+      return [];
     }
     let typeInfo = getPeriodItem(this._storedPeriodInfo, period.id)?.[trackType];
     if (isNullOrUndefined(typeInfo)) {
@@ -644,6 +649,26 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     if (isNullOrUndefined(typeInfo) || typeInfo.storedSettings !== storedSettings) {
       return noPlayableTrackToTrigger;
     }
+
+    // Check that we're not both disabling audio and video here
+    if (storedSettings === null) {
+      const periodItem = getPeriodItem(this._storedPeriodInfo, period.id);
+      if (periodItem !== undefined) {
+        const hasNoTrackAtAll = ["audio" as const, "video" as const].every(
+          (ttype) => periodItem[ttype].storedSettings === null,
+        );
+        if (hasNoTrackAtAll) {
+          const err = new MediaError(
+            "NO_AUDIO_VIDEO_TRACKS",
+            "No audio and no video tracks are set.",
+          );
+          this.trigger("error", err);
+          this.dispose();
+          return [];
+        }
+      }
+    }
+
     typeInfo.dispatcher?.updateTrack(storedSettings);
     return noPlayableTrackToTrigger;
   }
@@ -1067,6 +1092,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
           "No audio and no video tracks are set.",
         );
         this.trigger("error", err);
+        this.dispose();
+        return;
       }
     }
   }
@@ -1453,6 +1480,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         trackStorePeriod.noPlayableTrackEventToDispatch.push(
           ...this.onNoPlayableRepresentation(period, "audio"),
         );
+        if (this._isDisposed) {
+          return;
+        }
       } else {
         trackStorePeriod.audio.storedSettings = {
           adaptation: audioAdaptation,
@@ -1468,6 +1498,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         trackStorePeriod.noPlayableTrackEventToDispatch.push(
           ...this.onNoPlayableRepresentation(period, "video"),
         );
+        if (this._isDisposed) {
+          return;
+        }
       } else {
         const videoAdaptation = getRightVideoTrack(
           baseVideoAdaptation,
