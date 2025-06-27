@@ -6,64 +6,53 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+env:
+  NODE_VERSION: "22.x"
+
 jobs:
   format_check:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - uses: actions-rs/toolchain@v1
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - name: Install dependencies
+        run: |
+          npm ci
+          rustup target add wasm32-unknown-unknown
+      - name: Check formatting
+        run: |
+          npm run fmt:prettier:check
+          npm run fmt:rust:check
 
-      - run: npm ci
-      - run: rustup target add wasm32-unknown-unknown
-      - run: npm run fmt:prettier:check
-      - run: npm run fmt:rust:check
-
-  typechecking_and_linting:
+  lint_and_typecheck:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci
       - run: npm run check
 
   unit_tests:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci
       - run: npm run test:unit
 
