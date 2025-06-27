@@ -295,14 +295,13 @@ async function handleStartPackager(res) {
       }
       packagingProcessInfo.process.kill("SIGINT");
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      if (!childProcess.killed) {
-        childProcess.kill("SIGKILL");
-      }
+      // Use a negative PID to target the process group
+      process.kill(-packagingProcessInfo.process.pid);
       packagingProcessInfo = null;
     }
 
     const scriptPath = path.join(__dirname, "../../scripts/package_live_content.sh");
-    const process = spawn(
+    const proc = spawn(
       "bash",
       [
         scriptPath,
@@ -323,7 +322,7 @@ async function handleStartPackager(res) {
     );
 
     packagingProcessInfo = {
-      process,
+      process: proc,
       timeShiftBufferDepth: 40,
       segmentDuration: 2,
       mpdPath: "/live/manifest.mpd",
@@ -394,7 +393,7 @@ async function handleStartPackager(res) {
  * Handle the /stop_packager endpoint
  * @param {Response} res
  */
-function handleStopPackager(res) {
+async function handleStopPackager(res) {
   try {
     if (packagingProcessInfo && !packagingProcessInfo.process.killed) {
       if (ACTIVATE_PACKAGER_LOGS) {
@@ -404,6 +403,12 @@ function handleStopPackager(res) {
         );
       }
       packagingProcessInfo.process.kill("SIGINT");
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      // Use a negative PID to target the process group
+      if (packagingProcessInfo) {
+        process.kill(-packagingProcessInfo.process.pid);
+        packagingProcessInfo = null;
+      }
 
       res.setHeader("Content-Type", "application/json");
       answerWithCORS(
