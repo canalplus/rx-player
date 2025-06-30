@@ -97,7 +97,7 @@ if npm view rx-player@$canal_version >/dev/null 2>&1; then
 fi
 
 # Make dev Changelog
-npm run releases:changelog -- $dev_version -d
+npm run releases:changelog -- -d $dev_version
 
 $EDITOR CHANGELOG.md
 echo "Running prettier on CHANGELOG.md..."
