@@ -881,6 +881,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       __priv_manifestUpdateUrl,
       __priv_patchLastSegmentInSidx,
       url,
+      reloadMediaSourceForFirstIncompatiblePeriodSwitch,
     } = options;
 
     // Perform multiple checks on the given options
@@ -973,7 +974,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             };
 
       const bufferOptions = objectAssign(
-        { enableFastSwitching, onCodecSwitch },
+        {
+          enableFastSwitching,
+          onCodecSwitch,
+          reloadMediaSourceForFirstIncompatiblePeriodSwitch,
+        },
         this._priv_bufferOptions,
       );
 

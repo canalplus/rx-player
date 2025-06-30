@@ -96,8 +96,29 @@ export default function StreamOrchestrator(
   orchestratorCancelSignal: CancellationSignal,
 ): void {
   const { manifest, initialPeriod } = content;
-  const { maxBufferAhead, maxBufferBehind, wantedBufferAhead, maxVideoBufferSize } =
-    options;
+
+  const {
+    maxBufferAhead,
+    maxBufferBehind,
+    wantedBufferAhead,
+    maxVideoBufferSize,
+    reloadMediaSourceForFirstIncompatiblePeriodSwitch,
+  } = options;
+
+  function isPeriodEncrypted(period: IPeriod): boolean {
+    const adaptations = period.adaptations.video;
+
+    return (
+      adaptations !== undefined &&
+      adaptations.some((adaptation) =>
+        adaptation.representations.some(
+          (representation) => representation.contentProtections !== undefined,
+        ),
+      )
+    );
+  }
+
+  const isInitialPeriodEncrypted = isPeriodEncrypted(initialPeriod);
 
   const {
     MINIMUM_MAX_BUFFER_AHEAD,
@@ -471,6 +492,22 @@ export default function StreamOrchestrator(
           if (basePeriod.containsTime(position.getWanted(), nextPeriod)) {
             return;
           }
+
+          const isNextPeriodEncrypted =
+            nextPeriod !== null && isPeriodEncrypted(nextPeriod);
+
+          if (
+            !isInitialPeriodEncrypted &&
+            isNextPeriodEncrypted &&
+            reloadMediaSourceForFirstIncompatiblePeriodSwitch
+          ) {
+            callbacks.needsMediaSourceReload({
+              timeOffset: 0.1,
+              minimumPosition: undefined,
+              maximumPosition: undefined,
+            });
+          }
+
           log.info(
             "Stream: Destroying PeriodStream as the current playhead moved above it",
             bufferType,
@@ -652,6 +689,7 @@ export type IStreamOrchestratorOptions = IPeriodStreamOptions & {
   maxVideoBufferSize: IReadOnlySharedReference<number>;
   maxBufferAhead: IReadOnlySharedReference<number>;
   maxBufferBehind: IReadOnlySharedReference<number>;
+  reloadMediaSourceForFirstIncompatiblePeriodSwitch: boolean;
 };
 
 /** Callbacks called by the `StreamOrchestrator` on various events. */

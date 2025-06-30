@@ -240,7 +240,8 @@ export interface IStartPreparedContentMessageValue {
   enableFastSwitching: boolean;
   /** Behavior when a new video and/or audio codec is encountered. */
   onCodecSwitch: "continue" | "reload";
-
+  /** Whether to reload the media source for the first incompatible period switch. */
+  reloadMediaSourceForFirstIncompatiblePeriodSwitch: boolean;
   // TODO prepare chosen Adaptations here?
   // In which case the Period's `id` should probably be given instead of the
   // `initialTime`

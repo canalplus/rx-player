@@ -57,7 +57,6 @@ export interface IConstructorOptions {
   maxVideoBufferSize?: number;
   videoResolutionLimit?: "videoElement" | "screen" | "none";
   throttleVideoBitrateWhenHidden?: boolean;
-
   // eslint-disable-next-line @typescript-eslint/no-restricted-types
   videoElement?: HTMLMediaElement;
   baseBandwidth?: number;
@@ -138,6 +137,20 @@ export interface ILoadVideoOptions {
    * This value might depend on the device's capabilities.
    */
   onCodecSwitch?: "continue" | "reload";
+
+  /**
+   * Behavior when period switch from non-drm content to drm content for first time.
+   *
+   * This value might depend on the device's capabilities.
+   *
+   * @remarks
+   * In some of legacy CDM implementations (e.g. Tizen 3.0), they try to decrypt the segment with first loaded init segment
+   * When the assets starts with non-drm protected content and switch to drm protected segment
+   * CDM trying to use the unencrypted init segment to decrypt the encrypted segment user will see the content with green artifacts or black screen
+   *
+   * To fix this issue, we need to reload the media source to make sure the CDM is using the correct init segment
+   */
+  reloadMediaSourceForFirstIncompatiblePeriodSwitch?: boolean;
 
   /**
    * Whether we should check that an obtain segment is truncated and retry the

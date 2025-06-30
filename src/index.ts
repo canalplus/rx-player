@@ -21,6 +21,7 @@
 
 import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer";
+import { MULTI_THREAD } from "./experimental/features";
 import {
   DASH,
   DIRECTFILE,
