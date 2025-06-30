@@ -1,11 +1,17 @@
 # Changelog
 
-## Current dev build: v4.4.0-dev.2025041400
+## Current dev build: v4.4.0-dev.2025063000
 
 ### Features
 
+- Add `onAudioTracksNotPlayable` and `onVideoTracksNotPlayable` `loadVideo` options to
+  control whether to continue playback is one of those components is not compatible to the
+  current device [#1624]
 - DRM: Add `keySystem` and `keySystemConfiguration` to most `EncryptedMediaError` so an
   application can determine which key system caused an issue [#1690]
+- Update API of the experimental `mediaCapabilitiesProber` API so it's more flexible to
+  use [#1472]
+- Implement inband WebVTT (vtte/vttc) [#1639]
 
 ### Bug fixes
 
@@ -13,6 +19,13 @@
   to work-around frequent DRM issues. [#1694]
 - DRM: On Firefox check extensively Playready DRMs support before using them to
   work-around recent firefox issue with PlayReady integration [#1691]
+- fix(safari): wait for canplay event to seek on safari [#1707]
+
+### Other improvements
+
+- Improve on freeze resolution, especially for encrypted contents [#1705]
+- Detect that `fetch` / `AbortController` is native to provide a better experience for
+  application relying on (broken) polyfills instead [#1698]
 
 ## v4.3.0
 
