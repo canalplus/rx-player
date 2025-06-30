@@ -121,31 +121,19 @@ async function compile(opts) {
   // easily by running typescript directly from NodeJS.
   // So we just spawn a separate process running tsc:
 
-  // Note that we're using `spawnProm` here, not `spawnShellProm`, to profit
-  // from args escaping.
-  // We can just spawn without going through a shell because Node.js has `tsc`
-  // in its own PATH.
-  const es6Build = spawnProm(
-    "npx",
-    [
-      "tsc",
-      "-p",
-      path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json"),
-      opts.noCheck ? es6Args.push("--noCheck") : undefined,
-    ].filter((a) => a !== undefined),
+  const es6Build = spawnShellProm(
+    "npx tsc -p " +
+      path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json") +
+      (opts.noCheck ? "--noCheck" : ""),
     (code) => new Error(`es2017 compilation process exited with code ${code}`),
   );
-  const commonJsBuild = spawnProm(
-    "npx",
-    [
-      "tsc",
-      "-p",
+  const commonJsBuild = spawnShellProm(
+    "npx tsc -p " +
       path.join(
         ROOT_DIR,
         opts.devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
-      ),
-      opts.noCheck ? es6Args.push("--noCheck") : undefined,
-    ].filter((a) => a !== undefined),
+      ) +
+      (opts.noCheck ? "--noCheck" : ""),
     (code) => new Error(`CommonJS compilation process exited with code ${code}`),
   );
 
@@ -166,29 +154,6 @@ async function compile(opts) {
 function spawnShellProm(command, errorOnCode) {
   return new Promise((res, rej) => {
     const childProcess = spawn(command, { shell: true, stdio: "inherit" });
-    childProcess.on("close", (code) => {
-      if (code !== 0) {
-        rej(errorOnCode(code));
-      } else {
-        res();
-      }
-    });
-  });
-}
-
-/**
- * Spawn the command given in argument, alongside that command's arguments.
- * Return a Promise that resolves if the command exited with the exit code `0`
- * or rejects if the exit code is not zero.
- * @param {string} command
- * @param {Array.<string>} args
- * @param {Function} errorOnCode - Callback which will be called if the command
- * has an exit code different than `0`, with the exit code in argument. The
- * value returned by that callback will be the value rejected by the Promise.
- */
-function spawnProm(command, args, errorOnCode) {
-  return new Promise((res, rej) => {
-    const childProcess = spawn(command, args, { stdio: "inherit" });
     childProcess.on("close", (code) => {
       if (code !== 0) {
         rej(errorOnCode(code));
