@@ -37,6 +37,5 @@ player.setMaxBufferAhead(bufferSize);
 ```
 
 - **arguments**:
-
   1. _bufferSize_ `number`: Maximum amount of buffer ahead of the current position, in
      seconds.

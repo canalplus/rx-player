@@ -39,7 +39,6 @@ object with the following properties:
 - `representations` (`Array.<Object>`):
   [Representations](../../Getting_Started/Glossary.md#representation) of this audio track,
   with attributes:
-
   - `id` (`string`): The id used to identify this Representation. No other Representation
     from this track will have the same `id`.
 
@@ -78,7 +77,6 @@ object with the following properties:
     `undefined` the Representation is either unencrypted or we don't know if it is.
 
     When set to an object, it may contain the following properties:
-
     - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
       Representation.
 
@@ -154,7 +152,6 @@ const audioTrack = player.getAudioTrack({
 ```
 
 - **arguments**:
-
   1.  _arg_ `Object|string|undefined`: If set to a `string`, this is the `id` of the
       Period for which you want to get information about its current audio track.
 

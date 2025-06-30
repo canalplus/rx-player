@@ -14,7 +14,6 @@ player.setVolume(volume);
 ```
 
 - **arguments**:
-
   1.  _volume_ `number`: Volume from 0 to 1.
 
 ## Example

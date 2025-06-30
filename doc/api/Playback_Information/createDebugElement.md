@@ -21,7 +21,6 @@ const debugInfo = player.createDebugElement(myElement);
 ```
 
 - **arguments**:
-
   1. _element_ `HTMLElement`: HTML element in which the debugging information should be
      displayed.
 

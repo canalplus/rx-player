@@ -21,7 +21,6 @@ Each of the objects in the returned array have the following properties:
 - `representations` (`Array.<Object>`):
   [Representations](../../Getting_Started/Glossary.md#representation) of this video track,
   with attributes:
-
   - `id` (`string`): The id used to identify this Representation.
 
   - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits per
@@ -65,7 +64,6 @@ Each of the objects in the returned array have the following properties:
     `undefined` the Representation is either unencrypted or we don't know if it is.
 
     When set to an object, it may contain the following properties:
-
     - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
       Representation.
 
@@ -155,7 +153,6 @@ const videoTracks = player.getAvailableVideoTracks({
 ```
 
 - **arguments**:
-
   1.  _arg_ `Object|string|undefined`: If set to a `string`, this is the `id` of the
       Period for which you want to get information about the list of available video
       tracks.

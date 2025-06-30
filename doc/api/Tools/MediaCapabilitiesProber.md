@@ -197,12 +197,10 @@ properties are optional, here are what you can set.
 - _type_ (`string`): The media is either buffered in MediaSource, or directly as a file.
   As such, you can specify which one you want to probe through one of the following
   strings:
-
   - "media-source"
   - "file".
 
 - _video_ (`Object`): The video capabilities you want to probe.
-
   - _contentType_ (`string`): Media codec in mimeType format.
   - _width_ (`number`): Video width.
   - _height_ (`number`): Video Height.

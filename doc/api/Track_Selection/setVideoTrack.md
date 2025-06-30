@@ -102,7 +102,6 @@ The available "switching modes" are:
   are unavailable.
 
   This mode might be preferable to the `"direct"` mode for several reasons:
-
   - the `"direct"` mode might trigger some rebuffering time during which the last video
     frame from the previous video track is still shown.
 
@@ -217,7 +216,6 @@ player.setVideoTrack(videoTrackId);
 ```
 
 - **arguments**:
-
   1.  _videoTrackId_ `string`: The `id` of the track you want to set
 
 ```js
@@ -238,11 +236,9 @@ player.setVideoTrack({
 ```
 
 - **arguments**:
-
   1.  _arg_ `string|Object`: Either the video track's `id` property of the track you want
       to set for current Period, or an object with the following properties (only
       `trackId` is required):
-
       - `trackId` (`string`): The `id` property of the track you want to lock.
 
       - `periodId` (`string|undefined`): If defined, the id of the concerned Period. If

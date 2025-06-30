@@ -36,7 +36,6 @@ Can be either:
   If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md),
   you will need to add at least either one of the following features to be able to play
   DASH contents:
-
   - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
 
   - the `DASH_WASM` feature (backed by a WebAssembly parser, more efficient when handling
@@ -177,7 +176,6 @@ either:
 
 - **fromFirstPosition** (`Number`): relative position from the minimum possible one, in
   seconds. That is:
-
   - for dynamic (live) contents, from the beginning of the buffer depth (as defined by the
     Manifest).
   - for non-dynamic (vod) contents, from the position `0` (this option should be
@@ -185,7 +183,6 @@ either:
 
 - **fromLastPosition** (`Number`): relative position from the maximum possible one, in
   seconds. Should be a negative number:
-
   - for dynamic (e.g. live) contents, it is the difference between the starting position
     and the currently last possible position, as defined by the manifest.
   - for VoD contents, it is the difference between the starting position and the end
@@ -288,7 +285,6 @@ requests. This object can take the following properties (all are optional):
 
 - `segment` (`object|undefined`): If set, segment-specific request configuration. That
   object can contain any of the following properties:
-
   - `maxRetry` (`number|undefined`): Maximum number of times a segment request will be
     retried when an error happen - only on some condition [1].
 
@@ -319,7 +315,6 @@ requests. This object can take the following properties (all are optional):
 
 - `manifest` (`object|undefined`): If set, manifest-specific request configuration. That
   object can contain any of the following properties:
-
   - `maxRetry` (`number|undefined`): Maximum number of times a Manifest request will be
     retried when a request error happen - only on some condition [1]. Defaults to `4`.
 

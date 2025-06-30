@@ -21,5 +21,4 @@ player.setWantedBufferAhead(bufferGoal);
 ```
 
 - **arguments**:
-
   1. _bufferGoal_ `number`: Ideal amount of buffer that should be pre-loaded, in seconds.

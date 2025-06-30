@@ -36,7 +36,6 @@ method will return an object with the following properties:
   `undefined` the Representation is either unencrypted or we don't know if it is.
 
   When set to an object, it may contain the following properties:
-
   - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
     Representation.
 
@@ -68,7 +67,6 @@ const audioRepresentation = player.getAudioRepresentation(periodId);
 ```
 
 - **arguments**:
-
   1.  _periodId_ `string|undefined`: The `id` of the Period for which you want to get
       information about its currently loaded audio Representation. If not defined, the
       information associated to the currently-playing Period will be returned.

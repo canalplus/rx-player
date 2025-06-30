@@ -14,7 +14,6 @@ Which features you will need to import will depend on what RxPlayer's build you 
   `import RxPlayer from "rx-player` import), you will obtain an RxPlayer with most
   features, which should be sufficient for most use-cases. It already includes the
   following features (description of each available in the next chapter):
-
   - `SMOOTH`
   - `DASH`
   - `DIRECTFILE`

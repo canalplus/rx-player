@@ -175,10 +175,8 @@ player.renderThumbnail({
 ```
 
 - **arguments**:
-
   1.  _thumbnailInfo_ `Object`: Information on the thumbnail you wan to load. This object
       can contain the following properties:
-
       - _container_ `HTMLElement`: Mandatory. HTMLElement inside which the thumbnail
         should be displayed.
 

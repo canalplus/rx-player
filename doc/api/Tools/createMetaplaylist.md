@@ -31,7 +31,6 @@ You can then begin to use it right away.
   they should have in the metaplaylist.
 
   The list is an array of objects with this attributes :
-
   - url (`string`): The URL of the source content
   - transport (`string`): The transport type of the content (`dash`, `smooth` or even
     `metaplaylist`)

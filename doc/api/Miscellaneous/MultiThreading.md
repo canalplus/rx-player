@@ -169,7 +169,6 @@ following conditions are respected:
   `loadVideo` call).
 
 - You're not using any of those unsupported `loadVideo` options:
-
   - `manifestLoader`
 
   - `segmentLoader`

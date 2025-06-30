@@ -332,7 +332,6 @@ Let's now describes precizely every properties encountered here.
 The following properties are found in an adaptation object:
 
 - type (`string`): The "type" of the current adaptation. Can be one of three strings:
-
   1. audio
   2. video
   3. text The two first ones are straightforward to understand, the third one designates
@@ -423,7 +422,6 @@ attribute, which allows the RxPlayer to fetch the media segments.
 
 - mimeType (`string`): As its name suggests, this is the appropriate mime-type for the
   media. Generally, it is either:
-
   - `"video/mp4"` or `"video/webm"` for a video content (depending on the container)
   - `"audio/mp4"` or `"audio/webm"` for an audio content (depending on the container)
   - `"application/mp4"` or `"text/plain"` for a text content (depending on the container /
@@ -559,7 +557,6 @@ being returned by `loadSegment`.
 This callback is very similar to `loadInitSegment` with two differences:
 
 - it receives two arguments:
-
   1. The first being the segment object (from the `segments` array) of the segment we want
      to recuperate. You can generally discriminate which segment we want from the `time`
      property of the given segment, which should be unique for that representation.

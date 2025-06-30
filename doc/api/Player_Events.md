@@ -80,7 +80,6 @@ The object emitted as the following properties:
 
 - `maximumPosition` (`Number|undefined`): The maximum time until which the buffer can
   currently be filled. That is:
-
   - for static contents (like VoD), the duration.
 
   - for dynamic contents (like live contents), the current maximum available position
@@ -173,7 +172,6 @@ The array emitted contains object describing each available audio track:
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track,
   with attributes:
-
   - `id` (`string`): The id used to identify this Representation. No other Representation
     from this track will have the same `id`.
 
@@ -208,7 +206,6 @@ The array emitted contains object describing each available audio track:
     `undefined` the Representation is either unencrypted or we don't know if it is.
 
     When set to an object, it may contain the following properties:
-
     - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
       Representation.
 
@@ -240,7 +237,6 @@ The array emitted contains object describing each available video track:
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track,
   with attributes:
-
   - `id` (`string`): The id used to identify this Representation.
 
   - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits per
@@ -281,7 +277,6 @@ The array emitted contains object describing each available video track:
     `undefined` the Representation is either unencrypted or we don't know if it is.
 
     When set to an object, it may contain the following properties:
-
     - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
       Representation.
 
@@ -360,7 +355,6 @@ The payload is an object describing the new track, with the following properties
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track,
   with attributes:
-
   - `id` (`string`): The id used to identify this Representation. No other Representation
     from this track will have the same `id`.
 
@@ -395,7 +389,6 @@ The payload is an object describing the new track, with the following properties
     `undefined` the Representation is either unencrypted or we don't know if it is.
 
     When set to an object, it may contain the following properties:
-
     - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
       Representation.
 
@@ -459,7 +452,6 @@ The payload is an object describing the new track, with the following properties
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track,
   with attributes:
-
   - `id` (`string`): The id used to identify this Representation.
 
   - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits per
@@ -500,7 +492,6 @@ The payload is an object describing the new track, with the following properties
     `undefined` the Representation is either unencrypted or we don't know if it is.
 
     When set to an object, it may contain the following properties:
-
     - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
       Representation.
 
@@ -549,7 +540,6 @@ The payload is an object with the following properties:
 
 - `period`: (`Object`): The period in which the track is not playable. This object has the
   following properties:
-
   - `id`: (`"string"`): The ID of the period.
 
   - `start`: (`"number"`): The start time of the period.
@@ -631,7 +621,6 @@ properties:
   `undefined` the Representation is either unencrypted or we don't know if it is.
 
   When set to an object, it may contain the following properties:
-
   - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
     Representation.
 
@@ -683,7 +672,6 @@ The payload is an object describing the new Representation, with the following p
   `undefined` the Representation is either unencrypted or we don't know if it is.
 
   When set to an object, it may contain the following properties:
-
   - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
     Representation.
 
@@ -793,7 +781,6 @@ The payload for this event is an object with the following properties:
 
 - `period` (`Object`): Information about the concerned
   [Period](../Getting_Started/Glossary.md#period). This object contains as properties:
-
   - `start` (`number`): The starting position at which the Period starts, in seconds.
 
   - `end` (`number|undefined`): The position at which the Period ends, in seconds.
@@ -806,7 +793,6 @@ The payload for this event is an object with the following properties:
     even when the Period changes.
 
 - `reason` (`string`): The reason for the track update. For now, it can be set to:
-
   - `"manual"`: the track was updated because the application called a method to directly
     update it.
 
@@ -865,7 +851,6 @@ The payload for this event is an object with the following properties:
 
 - `period` (`Object`): Information about the concerned
   [Period](../Getting_Started/Glossary.md#period). This object contains as properties:
-
   - `start` (`number`): The starting position at which the Period starts, in seconds.
 
   - `end` (`number|undefined`): The position at which the Period ends, in seconds.
@@ -878,7 +863,6 @@ The payload for this event is an object with the following properties:
     even when the Period changes.
 
 - `reason` (`string`): The reason for the update. For now, it can be set to:
-
   - `"decipherability-update"`: The list of available `Representation`s is being updated
     either because at least one of that track's `Representation` became undecipherable or
     because it became decipherable again.
@@ -908,7 +892,6 @@ The payload for this event is an object with the following properties:
 
 - `period` (`Object`): Information about the concerned
   [Period](../Getting_Started/Glossary.md#period). This object contains as properties:
-
   - `start` (`number`): The starting position at which the Period starts, in seconds.
 
   - `end` (`number|undefined`): The position at which the Period ends, in seconds.
@@ -946,7 +929,6 @@ The supported inband event types are :
 - "emsg" : The emsg (Event message box) provides inband signaling for generic or MPEG-DASH
   specific events. One ISOBMFF media segment may contain one or several boxes. The parsed
   event contains :
-
   - schemeIdUri (`String`)
   - value (`String`)
   - timescale (`Number`)

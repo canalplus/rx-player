@@ -175,7 +175,6 @@ As it turns out it's a lot simpler once you make two isolated groups:
 - the `manifest` group, which uses the non-offseted `mediaTime`.
 
   In this group you have:
-
   - the mediaTime (duh)
   - the manifestTime
   - the requestSegmentTime
@@ -183,7 +182,6 @@ As it turns out it's a lot simpler once you make two isolated groups:
 - the `real time` group, which uses the offseted `presentationTime`.
 
   In this group you have:
-
   - the presentationTime
   - the playerTime
   - the bufferedTime

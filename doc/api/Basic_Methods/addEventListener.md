@@ -19,7 +19,6 @@ player.addEventListener(event, callback);
 ```
 
 - **arguments**:
-
   1. _event_ `string`: The wanted event's name.
 
   2. _callback_ `Function`: The callback for the event. The same callback may be used

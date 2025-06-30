@@ -97,7 +97,6 @@ As you can see, this function takes two arguments:
 
 1. **segmentInfo** (`object`): An Object giving information about the wanted segments.
    This object contains the following properties:
-
    - **url** (`string|undefined`): The URL the segment request should normally be
      performed at.
 
@@ -158,11 +157,9 @@ As you can see, this function takes two arguments:
    communicate various events to the RxPlayer.
 
    This Object contains the following functions:
-
    - **resolve**: To call after the segment is loaded, to communicate it to the RxPlayer.
 
      When called, it should be given an object with the following properties:
-
      - _data_ (`ArrayBuffer`|`Uint8Array`) - the segment data.
 
      - _duration_ (`Number|undefined`) - the duration the request took, in milliseconds.
@@ -179,7 +176,6 @@ As you can see, this function takes two arguments:
      stalling.
 
      When called, it should be given an object with the following properties:
-
      - _duration_ (`Number`) - The duration since the beginning of the request, in
        milliseconds.
 
@@ -193,7 +189,6 @@ As you can see, this function takes two arguments:
 
      It is recommended (but not enforced) to give it an Object or error instance with the
      following properties:
-
      - _canRetry_ (`boolean|undefined`): If set to `true`, the RxPlayer may retry the
        request (depending on the configuration set by the application).
 
@@ -293,7 +288,6 @@ As you can see, this function takes three arguments:
 
 1. **manifestInfo** (`object`): An Object giving information about the wanted Manifest.
    This object contains the following properties:
-
    - **url** (`string|undefined`): The URL the Manifest request should normally be
      performed at.
 
@@ -328,11 +322,9 @@ As you can see, this function takes three arguments:
    to communicate the loaded Manifest or an encountered error to the RxPlayer.
 
    This Object contains the following functions:
-
    - **resolve**: To call after the Manifest is loaded, to communicate it to the RxPlayer.
 
      When called, it should be given an object with the following properties:
-
      - _data_ - the Manifest data. Many formats are accepted depending on what makes sense
        in the current transport: string, Document, ArrayBuffer, Uint8Array, object.
 
@@ -354,7 +346,6 @@ As you can see, this function takes three arguments:
 
      It is recommended (but not enforced) to give it an Object or error instance with the
      following properties:
-
      - _canRetry_ (`boolean|undefined`): If set to `true`, the RxPlayer may retry the
        request (depending on the configuration set by the application).
 
@@ -385,7 +376,6 @@ The representationFilter will be called each time we load a
 - representation `{Object}`: An object describing the `Representation`.
 
   This object contains the following properties:
-
   - `id` (`string`): The id used to identify this Representation.
 
   - `bitrate` (`Number|undefined`): The bitrate of this Representation, in bits per
@@ -409,7 +399,6 @@ The representationFilter will be called each time we load a
     However in some very rare scenarios, this value might be set to an array with multiple
     codecs, itself being a list of its candidate codecs from the most wanted to the most
     compatible. The conditions for this more complex format are very specific:
-
     - It can only happen if the `representationFilter` callback is called in an
       environment where it hasn't yet been possible for the RxPlayer to check for codec
       support (mainly when running through the RxPlayer's `MULTI_THREAD` feature in a
@@ -421,7 +410,6 @@ The representationFilter will be called each time we load a
       The main example being Dolby Vision Representations which are retro-compatible to
       HDR10 HEVC codecs. In that very specific case, we could have an array with two
       elements:
-
       1.  The Dolby Vision codec
       2.  The base HDR10 codec
 
@@ -440,13 +428,11 @@ The representationFilter will be called each time we load a
     `undefined` the Representation is either unencrypted or we don't know if it is.
 
     When set to an object, it may contain the following properties:
-
     - `keyIds` (`Array.<Uint8Array>|undefined`): Known key ids linked to that
       Representation.
 
 - context `{Object}`: Basic context about this `Representation`. Contains the following
   keys:
-
   - trackType `{string}`: The concerned type of track. Can be `"video"`, `"audio"`,
     `"text"` (for subtitles)
 
