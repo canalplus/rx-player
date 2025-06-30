@@ -1,107 +1,62 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import globalScope from "../../utils/global_scope";
-import type IShouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
+import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
+
+const mocks = vi.hoisted(() => {
+  return {
+    getWebKitMediaKeysConstructor: vi.fn(),
+  };
+});
+vi.mock("../eme/custom_media_keys/", () => ({
+  getWebKitMediaKeysConstructor: mocks.getWebKitMediaKeysConstructor,
+}));
 
 describe("compat - shouldFavourSafariMediaKeys", () => {
-  const gs = globalScope as unknown as typeof globalThis & {
-    WebKitMediaKeys?: unknown;
-    HTMLMediaElement: typeof HTMLMediaElement;
-  };
-
-  const originalWebKitMediaKeys = gs.WebKitMediaKeys;
-
   beforeEach(() => {
     vi.resetModules();
   });
 
   afterEach(() => {
-    gs.WebKitMediaKeys = originalWebKitMediaKeys;
+    mocks.getWebKitMediaKeysConstructor.mockReset();
+    resetEnvironment();
   });
 
-  it("should return false if we are not on Safari", async () => {
-    vi.doMock("../browser_detection", () => {
-      return {
-        isSafariDesktop: false,
-        isSafariMobile: false,
-      };
-    });
-    const shouldFavourCustomSafariEME = (
-      await vi.importActual("../should_favour_custom_safari_EME")
-    ).default as typeof IShouldFavourCustomSafariEME;
+  it("should return false if we are not on Safari", () => {
+    mockEnvironment(EnvDetector.BROWSERS.Firefox, EnvDetector.DEVICES.Other);
     expect(shouldFavourCustomSafariEME()).toBe(false);
   });
 
-  it("should return false if we are on Safari Desktop but WekitMediaKeys is not available", async () => {
-    gs.WebKitMediaKeys = undefined;
-    vi.doMock("../browser_detection", () => {
-      return {
-        isSafariDesktop: true,
-        isSafariMobile: false,
-      };
-    });
-    const shouldFavourCustomSafariEME = (
-      await vi.importActual("../should_favour_custom_safari_EME")
-    ).default as typeof IShouldFavourCustomSafariEME;
+  it("should return false if we are on Safari Desktop but WekitMediaKeys is not available", () => {
+    mocks.getWebKitMediaKeysConstructor.mockImplementation(() => undefined);
+    mockEnvironment(EnvDetector.BROWSERS.SafariDesktop, EnvDetector.DEVICES.Other);
     expect(shouldFavourCustomSafariEME()).toBe(false);
   });
 
-  it("should return false if we are on Safari Mobile but WekitMediaKeys is not available", async () => {
-    gs.WebKitMediaKeys = undefined;
-    vi.doMock("../browser_detection", () => {
-      return {
-        isSafariDesktop: false,
-        isSafariMobile: true,
-      };
-    });
-    const shouldFavourCustomSafariEME = (
-      await vi.importActual("../should_favour_custom_safari_EME")
-    ).default as typeof IShouldFavourCustomSafariEME;
+  it("should return false if we are on Safari Mobile but WekitMediaKeys is not available", () => {
+    mocks.getWebKitMediaKeysConstructor.mockImplementation(() => undefined);
+    mockEnvironment(EnvDetector.BROWSERS.SafariMobile, EnvDetector.DEVICES.Other);
     expect(shouldFavourCustomSafariEME()).toBe(false);
   });
 
-  it("should return true if we are on Safari Desktop and a WebKitMediaKeys implementation is available", async () => {
-    gs.WebKitMediaKeys = {
+  it("should return true if we are on Safari Desktop and a WebKitMediaKeys implementation is available", () => {
+    mocks.getWebKitMediaKeysConstructor.mockImplementation(() => ({
       isTypeSupported: () => ({}),
       prototype: {
         createSession: () => ({}),
       },
-    };
-    const proto = gs.HTMLMediaElement.prototype as unknown as {
-      webkitSetMediaKeys: () => Record<string, never>;
-    };
-    proto.webkitSetMediaKeys = () => ({});
-    vi.doMock("../browser_detection", () => {
-      return {
-        isSafariDesktop: true,
-        isSafariMobile: false,
-      };
-    });
-    const shouldFavourCustomSafariEME = (
-      await vi.importActual("../should_favour_custom_safari_EME")
-    ).default as typeof IShouldFavourCustomSafariEME;
+    }));
+    mockEnvironment(EnvDetector.BROWSERS.SafariDesktop, EnvDetector.DEVICES.Other);
     expect(shouldFavourCustomSafariEME()).toBe(true);
   });
 
-  it("should return true if we are on Safari Mobile and a WebKitMediaKeys implementation is available", async () => {
-    gs.WebKitMediaKeys = {
+  it("should return true if we are on Safari Mobile and a WebKitMediaKeys implementation is available", () => {
+    mocks.getWebKitMediaKeysConstructor.mockImplementation(() => ({
       isTypeSupported: () => ({}),
       prototype: {
         createSession: () => ({}),
       },
-    };
-    const proto = gs.HTMLMediaElement.prototype as unknown as {
-      webkitSetMediaKeys: () => Record<string, never>;
-    };
-    proto.webkitSetMediaKeys = () => ({});
-    vi.doMock("../browser_detection", () => {
-      return {
-        isSafariDesktop: false,
-        isSafariMobile: true,
-      };
-    });
-    const shouldFavourCustomSafariEME = (
-      await vi.importActual("../should_favour_custom_safari_EME")
-    ).default as typeof IShouldFavourCustomSafariEME;
+    }));
+    mockEnvironment(EnvDetector.BROWSERS.SafariMobile, EnvDetector.DEVICES.Other);
     expect(shouldFavourCustomSafariEME()).toBe(true);
   });
 });

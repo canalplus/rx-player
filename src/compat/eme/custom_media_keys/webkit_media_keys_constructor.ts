@@ -24,21 +24,23 @@ interface IWebKitMediaKeysConstructor {
   isTypeSupported: (keyType: string) => boolean;
 }
 
-let WebKitMediaKeysConstructor: undefined | IWebKitMediaKeysConstructor;
+export default function getWebKitMediaKeysConstructor():
+  | undefined
+  | IWebKitMediaKeysConstructor {
+  const { WebKitMediaKeys } = globalScope as typeof globalThis & {
+    WebKitMediaKeys?: IWebKitMediaKeysConstructor;
+  };
 
-const { WebKitMediaKeys } = globalScope as typeof globalThis & {
-  WebKitMediaKeys?: IWebKitMediaKeysConstructor;
-};
-
-if (
-  WebKitMediaKeys !== undefined &&
-  typeof WebKitMediaKeys.isTypeSupported === "function" &&
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  typeof WebKitMediaKeys.prototype.createSession === "function" &&
-  typeof (HTMLMediaElement.prototype as IMediaElement).webkitSetMediaKeys === "function"
-) {
-  WebKitMediaKeysConstructor = WebKitMediaKeys;
+  if (
+    WebKitMediaKeys !== undefined &&
+    typeof WebKitMediaKeys.isTypeSupported === "function" &&
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    typeof WebKitMediaKeys.prototype.createSession === "function" &&
+    typeof (HTMLMediaElement.prototype as IMediaElement).webkitSetMediaKeys === "function"
+  ) {
+    return WebKitMediaKeys;
+  }
+  return undefined;
 }
 
 export type { IWebKitMediaKeys };
-export { WebKitMediaKeysConstructor };

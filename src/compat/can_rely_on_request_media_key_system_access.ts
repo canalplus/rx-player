@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isEdgeChromium, isFirefox } from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * This functions tells if the RxPlayer can trust the browser when it has
@@ -41,7 +41,11 @@ import { isEdgeChromium, isFirefox } from "./browser_detection";
  * @returns {boolean}
  */
 export function canRelyOnRequestMediaKeySystemAccess(keySystem: string): boolean {
-  if ((isEdgeChromium || isFirefox) && keySystem.indexOf("playready") !== -1) {
+  if (
+    (EnvDetector.browser === EnvDetector.BROWSERS.EdgeChromium ||
+      EnvDetector.browser === EnvDetector.BROWSERS.Firefox) &&
+    keySystem.indexOf("playready") !== -1
+  ) {
     return false;
   }
   return true;

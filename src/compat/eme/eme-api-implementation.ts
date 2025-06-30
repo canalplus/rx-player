@@ -11,7 +11,7 @@ import type {
   IMediaKeySystemAccess,
   IMediaKeys,
 } from "../browser_compatibility_types";
-import { isIE11 } from "../browser_detection";
+import EnvDetector from "../env_detector";
 import type { IEventTargetLike } from "../event_listeners";
 import { createCompatibleEventListener } from "../event_listeners";
 import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
@@ -26,7 +26,7 @@ import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
 } from "./custom_media_keys/old_webkit_media_keys";
 import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
-import { WebKitMediaKeysConstructor } from "./custom_media_keys/webkit_media_keys_constructor";
+import getWebKitMediaKeysConstructor from "./custom_media_keys/webkit_media_keys_constructor";
 
 /**
  * Automatically detect and set which EME implementation should be used in the
@@ -147,7 +147,7 @@ function getEmeApiImplementation(
     let isTypeSupported: (keyType: string) => boolean;
     let createCustomMediaKeys: (keyType: string) => IMediaKeys;
 
-    if (preferredApiType === "webkit" && WebKitMediaKeysConstructor !== undefined) {
+    if (preferredApiType === "webkit" && getWebKitMediaKeysConstructor() !== undefined) {
       const callbacks = getWebKitMediaKeysCallbacks();
       onEncrypted = createOnEncryptedForWebkit();
       isTypeSupported = callbacks.isTypeSupported;
@@ -164,14 +164,17 @@ function getEmeApiImplementation(
         setMediaKeys = callbacks.setMediaKeys;
         implementation = "older-webkit";
         // This is for WebKit with prefixed EME api
-      } else if (WebKitMediaKeysConstructor !== undefined) {
+      } else if (getWebKitMediaKeysConstructor() !== undefined) {
         onEncrypted = createOnEncryptedForWebkit();
         const callbacks = getWebKitMediaKeysCallbacks();
         isTypeSupported = callbacks.isTypeSupported;
         createCustomMediaKeys = callbacks.createCustomMediaKeys;
         setMediaKeys = callbacks.setMediaKeys;
         implementation = "webkit";
-      } else if (isIE11 && MSMediaKeysConstructor !== undefined) {
+      } else if (
+        EnvDetector.browser === EnvDetector.BROWSERS.Ie11 &&
+        MSMediaKeysConstructor !== undefined
+      ) {
         onEncrypted = createCompatibleEventListener(["encrypted", "needkey"]);
         const callbacks = getIE11MediaKeysCallbacks();
         isTypeSupported = callbacks.isTypeSupported;

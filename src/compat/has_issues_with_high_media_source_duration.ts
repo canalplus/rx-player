@@ -1,4 +1,4 @@
-import { isPlayStation5 } from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Some platforms have issues when the `MediaSource`'s `duration` property
@@ -23,5 +23,5 @@ import { isPlayStation5 } from "./browser_detection";
 export default function hasIssuesWithHighMediaSourceDuration(): boolean {
   // For now only seen on the Webkit present in the PlayStation 5, for which the
   // alternative is known to work.
-  return isPlayStation5;
+  return EnvDetector.device === EnvDetector.DEVICES.PlayStation5;
 }

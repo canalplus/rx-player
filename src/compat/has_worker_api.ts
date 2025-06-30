@@ -1,4 +1,4 @@
-import { isPlayStation4 } from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Return `true` if the current device is compatible with the Worker API.
@@ -9,7 +9,7 @@ import { isPlayStation4 } from "./browser_detection";
  * @returns {boolean}
  */
 export default function hasWorkerApi(): boolean {
-  return isPlayStation4
+  return EnvDetector.device === EnvDetector.DEVICES.PlayStation4
     ? typeof Worker === "object" || typeof Worker === "function"
     : typeof Worker === "function";
 }

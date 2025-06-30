@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { isIE11, isEdgeChromium, isFirefox } from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * Returns true if the current target require the MediaKeySystemAccess to be
@@ -22,5 +22,10 @@ import { isIE11, isEdgeChromium, isFirefox } from "./browser_detection";
  * @returns {Boolean}
  */
 export default function shouldRenewMediaKeySystemAccess(keySystem: string): boolean {
-  return keySystem.indexOf("playready") !== -1 && (isIE11 || isEdgeChromium || isFirefox);
+  return (
+    keySystem.indexOf("playready") !== -1 &&
+    (EnvDetector.browser === EnvDetector.BROWSERS.Ie11 ||
+      EnvDetector.browser === EnvDetector.BROWSERS.EdgeChromium ||
+      EnvDetector.browser === EnvDetector.BROWSERS.Firefox)
+  );
 }

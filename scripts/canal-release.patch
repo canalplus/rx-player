@@ -1,14 +1,8 @@
 diff --git a/src/compat/should_renew_media_key_system_access.ts b/src/compat/should_renew_media_key_system_access.ts
-index daacea5fb..ed235e6ed 100644
+index be6fe3054..da04facf5 100644
 --- a/src/compat/should_renew_media_key_system_access.ts
 +++ b/src/compat/should_renew_media_key_system_access.ts
-@@ -14,13 +14,28 @@
-  * limitations under the License.
-  */
- 
--import { isIE11, isEdgeChromium, isFirefox } from "./browser_detection";
-+import { isIE11, isEdgeChromium, isFirefox, isPlayStation5 } from "./browser_detection";
- 
+@@ -19,6 +19,18 @@ import EnvDetector from "./env_detector";
  /**
   * Returns true if the current target require the MediaKeySystemAccess to be
   * renewed on each content.
@@ -27,11 +21,14 @@ index daacea5fb..ed235e6ed 100644
   * @returns {Boolean}
   */
  export default function shouldRenewMediaKeySystemAccess(keySystem: string): boolean {
--  return keySystem.indexOf("playready") !== -1 && (isIE11 || isEdgeChromium || isFirefox);
-+  return (
-+    (keySystem.indexOf("playready") !== -1 && (isIE11 || isEdgeChromium || isFirefox)) ||
-+    isPlayStation5
-+  );
+@@ -26,6 +38,7 @@ export default function shouldRenewMediaKeySystemAccess(keySystem: string): bool
+     keySystem.indexOf("playready") !== -1 &&
+     (EnvDetector.browser === EnvDetector.BROWSERS.Ie11 ||
+       EnvDetector.browser === EnvDetector.BROWSERS.EdgeChromium ||
+-      EnvDetector.browser === EnvDetector.BROWSERS.Firefox)
++      EnvDetector.browser === EnvDetector.BROWSERS.Firefox ||
++      EnvDetector.device === EnvDetector.DEVICES.PlayStation5)
+   );
  }
 diff --git a/src/parsers/texttracks/ttml/html/apply_extent.ts b/src/parsers/texttracks/ttml/html/apply_extent.ts
 index aa173eee7..bba6ad77c 100644

@@ -1,4 +1,4 @@
-import { isPlayStation5 } from "./browser_detection";
+import EnvDetector from "./env_detector";
 
 /**
  * An `HTMLMediaElement`'s readyState allows the browser to communicate whether
@@ -13,5 +13,5 @@ import { isPlayStation5 } from "./browser_detection";
  * @returns {boolean}
  */
 export default function shouldWaitForHaveEnoughData(): boolean {
-  return isPlayStation5;
+  return EnvDetector.device === EnvDetector.DEVICES.PlayStation5;
 }

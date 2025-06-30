@@ -1,5 +1,6 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-import type { getFirefoxVersion as IGetFirefoxVersion } from "../browser_version";
+import { getFirefoxVersion } from "../browser_version";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
 
 describe("Compat - Browser version", () => {
   const origUserAgent = navigator.userAgent;
@@ -26,46 +27,31 @@ describe("Compat - Browser version", () => {
   afterEach(() => {
     nav.userAgent = origUserAgent;
     vi.resetModules();
+    resetEnvironment();
   });
 
-  it("Should return correct Firefox version (60)", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isFirefox: true };
-    });
-    const getFirefoxVersion = (await vi.importActual("../browser_version"))
-      .getFirefoxVersion as typeof IGetFirefoxVersion;
+  it("Should return correct Firefox version (60)", () => {
+    mockEnvironment(EnvDetector.BROWSERS.Firefox, EnvDetector.DEVICES.Other);
     nav.userAgent = "Firefox/60.0";
     const version = getFirefoxVersion();
     expect(version).toBe(60);
   });
 
-  it("Should return correct Firefox version (80)", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isFirefox: true };
-    });
-    const getFirefoxVersion = (await vi.importActual("../browser_version"))
-      .getFirefoxVersion as typeof IGetFirefoxVersion;
+  it("Should return correct Firefox version (80)", () => {
+    mockEnvironment(EnvDetector.BROWSERS.Firefox, EnvDetector.DEVICES.Other);
     nav.userAgent = "Firefox/80.0";
     const version = getFirefoxVersion();
     expect(version).toBe(80);
   });
 
-  it("Should return null when not on Firefox", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isFirefox: false };
-    });
-    const getFirefoxVersion = (await vi.importActual("../browser_version"))
-      .getFirefoxVersion as typeof IGetFirefoxVersion;
+  it("Should return null when not on Firefox", () => {
+    mockEnvironment(EnvDetector.BROWSERS.Ie11, EnvDetector.DEVICES.Other);
     const version = getFirefoxVersion();
     expect(version).toBe(null);
   });
 
-  it("Should return null when obscure Firefox user agent", async () => {
-    vi.doMock("../browser_detection", () => {
-      return { isFirefox: true };
-    });
-    const getFirefoxVersion = (await vi.importActual("../browser_version"))
-      .getFirefoxVersion as typeof IGetFirefoxVersion;
+  it("Should return null when obscure Firefox user agent", () => {
+    mockEnvironment(EnvDetector.BROWSERS.Firefox, EnvDetector.DEVICES.Other);
     nav.userAgent = "FireFennec/80.0";
     const version = getFirefoxVersion();
     expect(version).toBe(-1);
