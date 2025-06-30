@@ -434,7 +434,6 @@ root of `loadVideo` options) now only received two arguments:
 
 - The first argument - which was previously just the Manifest's URL - is now an object
   with two properties:
-
   - **url** (`string|undefined`): The same URL that was previously communicated directly.
 
   - _timeout_ (`number|undefined`): Timeout in milliseconds after which a request should

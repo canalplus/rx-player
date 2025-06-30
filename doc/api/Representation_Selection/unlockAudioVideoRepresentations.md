@@ -35,7 +35,6 @@ player.unlockAudioRepresentations(periodId);
 ```
 
 - **arguments**:
-
   1.  _periodId_ `string|undefined`: The `id` of the Period for which you want to get its
       video or audio Representations unlock. If not defined, it will apply to the
       currently-playing Period.

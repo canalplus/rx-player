@@ -30,7 +30,6 @@ player.disableTextTrack(periodId);
 ```
 
 - **arguments**:
-
   1.  _periodId_ `string|undefined`: The `id` of the Period for which you want to disable
       the text track. If not defined, the text track of the currently-playing Period will
       be disabled.

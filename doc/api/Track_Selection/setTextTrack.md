@@ -120,7 +120,6 @@ player.setTextTrack(textTrackId);
 ```
 
 - **arguments**:
-
   1.  _textTrackId_ `string`: The `id` of the track you want to set
 
 ```js
@@ -138,11 +137,9 @@ player.setTextTrack({
 ```
 
 - **arguments**:
-
   1.  _arg_ `string|Object`: Either the text track's `id` property of the track you want
       to set for current Period, or an object with the following properties (only
       `trackId` is required):
-
       - `trackId` (`string`): The `id` property of the track you want to lock.
 
       - `periodId` (`string|undefined`): If defined, the id of the concerned Period. If

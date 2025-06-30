@@ -35,7 +35,6 @@ player.seekTo(position);
 ```
 
 - **arguments**:
-
   1.  _position_ `Object|number`: The position you want to seek to.
 
 ## Examples

@@ -27,14 +27,12 @@ player.updateContentUrls(urls, params);
 ```
 
 - **arguments**:
-
   1.  _urls_ `Array.<string>|under`: URLs to reach that content / Manifest from the most
       prioritized URL to the least prioritized URL.
 
   2.  _params_ `Object|undefined`: Optional parameters linked to this URL change.
 
   Can contain the following properties:
-
   - _refresh_ `boolean`: If `true` the resource in question (e.g. DASH's MPD) will be
     refreshed immediately.
 

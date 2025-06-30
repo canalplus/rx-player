@@ -149,7 +149,6 @@ Currently, the DASH-WASM parser parses in one go the XML.
 5. The WebAssembly then iterates through each of that element's attribute.
 
    When it recognizes one for a given element (e.g. Period@start):
-
    - it converts it to the right format (integer, float, UTF-8 string).
    - it assigns a number to this attribute (like for elements, but with a different enum).
    - it calls a JavaScript callback signaling that that attribute has been encountered

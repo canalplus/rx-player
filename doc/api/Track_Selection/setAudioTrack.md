@@ -211,7 +211,6 @@ player.setAudioTrack(audioTrackId);
 ```
 
 - **arguments**:
-
   1.  _audioTrackId_ `string`: The `id` of the track you want to set
 
 ```js
@@ -232,11 +231,9 @@ player.setAudioTrack({
 ```
 
 - **arguments**:
-
   1.  _arg_ `string|Object`: Either the audio track's `id` property of the track you want
       to set for current Period, or an object with the following properties (only
       `trackId` is required):
-
       - `trackId` (`string`): The `id` property of the track you want to lock.
 
       - `periodId` (`string|undefined`): If defined, the id of the concerned Period. If

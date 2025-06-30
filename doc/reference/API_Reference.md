@@ -50,7 +50,6 @@ events and so on.
 
 - [`keySystems`](../api/Decryption_Options.md#loadvideo-keysystems-options): DRM
   configuration for the content.
-
   - [`keySystems[].type`](../api/Decryption_Options.md#type): Name of the DRM technology
     wanted.
 
@@ -121,7 +120,6 @@ events and so on.
 
 - [`requestConfig`](../api/Loading_a_Content.md#requestconfig): Configuration linked to
   the Manifest and segment requests.
-
   - [`requestConfig.segment.maxRetry`](../api/Loading_a_Content.md#requestconfig): Maximum
     number of retries when a segment request fails.
 

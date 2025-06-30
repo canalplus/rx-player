@@ -77,7 +77,6 @@ Among its properties, you have:
 - `errorType` (`string`): Further precision about what went wrong.
 
   This string can either be:
-
   - `"TIMEOUT"`: The request timed out.
   - `"ERROR_EVENT"`: The XMLHttpRequest has sent an error event
   - `"PARSE_ERROR"`: No data could have been extracted from this request
@@ -249,7 +248,6 @@ the following properties:
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track,
   with attributes:
-
   - `id` (`string`): The id used to identify this Representation. No other Representation
     from this track will have the same `id`.
 
@@ -326,7 +324,6 @@ contains the following properties:
 - `representations` (`Array.<Object>`):
   [Representations](../Getting_Started/Glossary.md#representation) of this video track,
   with attributes:
-
   - `id` (`string`): The id used to identify this Representation. No other Representation
     from this track will have the same `id`.
 
@@ -441,7 +438,6 @@ An error of `type` `ENCRYPTED_MEDIA_ERROR` can have the following codes (`code` 
   `EncryptedMediaError` having the `KEY_STATUS_CHANGE_ERROR` code will also have a
   `keyStatuses` property, which is an array of objects - each describing a problematic key
   status with the following properties:
-
   - `keyId` (`ArrayBuffer`): The key id concerned by the status change indicated by
     `keyStatus`
   - `keyStatus`

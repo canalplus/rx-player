@@ -283,11 +283,9 @@ player.lockAudioRepresentations({
 ```
 
 - **arguments**:
-
   1.  _arg_ `Array.<string>|Object`: Either a list of the Representations' id to lock for
       the current Period, or an object with the following properties (only
       `representations` is required):
-
       - `representations` (`Array.<string>`): The list of Representations'id to lock.
 
       - `periodId` (`string|undefined`): If defined, the id of the concerned Period. If

@@ -62,7 +62,6 @@ Media buffers relying on native SourceBuffers have several differences with the 
 
 - They are managed by the browser where custom ones are implemented in JS. As such, they
   must obey to various browser rules, among which:
-
   1. They cannot be lazily created as the content plays. We have to initialize all of them
      beforehand.
 

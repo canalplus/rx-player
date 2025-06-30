@@ -54,12 +54,10 @@ const thumbnailTracks = player.getAvailableThumbnailTracks({ periodId });
 ```
 
 - **arguments**:
-
   1.  _arg_ `Object|undefined`: If not defined, the information associated to the
       currently-playing Period will be returned.
 
       If set to an Object, the following properties can be set (all optional):
-
       - `time` (`number|undefined`): The time for which the list of thumbnail tracks is
         wanted. If set, it is unnecessary to set the `periodId` property.
 

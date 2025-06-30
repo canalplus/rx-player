@@ -71,7 +71,6 @@ regular interval, every seconds or so. As such, information might not always ref
 exactly what's going on at a particular point in time.
 
 - General information:
-
   - **ct**: _Current time_. The current position on the media element.
   - **bg**: _Buffer gap_. The difference between the last buffered second of the current
     buffered range and the current second.

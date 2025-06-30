@@ -125,7 +125,6 @@ are mandatory) to configure the behavior of the RxPlayer relative to that failur
   `getLicense` for this particular message.
 
   This will result in:
-
   - if the `fallbackOnLastTry` boolean has been set to `true`, it will trigger a fallback
     to another Representations (and a `KEY_LOAD_ERROR` warning being sent) if possible
     (and throw a `NO_PLAYABLE_REPRESENTATION` error code if there's no Representation left
@@ -315,7 +314,6 @@ Can be set to the following values:
   [Periods](../Getting_Started/Glossary.md#period).
 
   That is, the RxPlayer will assume that any license fetched:
-
   - will contain all the compatible keys for the Period of the Representation for which
     the license request was done.
 
@@ -337,7 +335,6 @@ Can be set to the following values:
   This option allows to avoid doing too much license requests (compared to the default
   "init-data" mode) for contents encrypted with multiple keys, but also may be preferable
   to the "content" mode in any of the following situations:
-
   - You don't know all upcoming keys in advance.
 
     Here you can just communicate them by groups of Periods

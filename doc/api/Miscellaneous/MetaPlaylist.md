@@ -185,7 +185,6 @@ properties:
 
 - url (`string`): the URL to the original DASH's MPD or Smooth's Manifest. For now, only a
   subset of such contents is supported, mainly:
-
   - DASH contents that have their MPD@type set to `"static"`
   - Smooth content that have their `isLive` attribute not set to `true` (Simply put, only
     on-demand contents are supported for the moment).
