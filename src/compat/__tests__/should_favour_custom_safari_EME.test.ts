@@ -56,7 +56,7 @@ describe("compat - shouldFavourSafariMediaKeys", () => {
         createSession: () => ({}),
       },
     }));
-    mockEnvironment(EnvDetector.BROWSERS.SafariDesktop, EnvDetector.DEVICES.Other);
+    mockEnvironment(EnvDetector.BROWSERS.SafariMobile, EnvDetector.DEVICES.Other);
     expect(shouldFavourCustomSafariEME()).toBe(true);
   });
 });
