@@ -19,7 +19,6 @@ import Manifest from "../../manifest/classes";
 import { getMDAT } from "../../parsers/containers/isobmff";
 import type { ICdnMetadata } from "../../parsers/manifest";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
-import type { IPlayerError } from "../../public_types";
 import request from "../../utils/request";
 import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -77,15 +76,10 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
 
       const parserResult = smoothManifestParser(documentData, url, manifestReceivedTime);
 
-      const warnings: IPlayerError[] = [];
-      const manifest = new Manifest(
-        parserResult,
-        {
-          representationFilter: transportOptions.representationFilter,
-        },
-        warnings,
-      );
-      return { manifest, url, warnings };
+      const manifest = new Manifest(parserResult, {
+        representationFilter: transportOptions.representationFilter,
+      });
+      return { manifest, url };
     },
   };
 

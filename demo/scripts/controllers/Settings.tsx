@@ -69,6 +69,8 @@ function Settings({
     checkManifestIntegrity,
     requestConfig,
     onCodecSwitch,
+    onAudioTracksNotPlayable,
+    onVideoTracksNotPlayable,
   } = loadVideoOptions;
   const cmcdCommunicationMethod = cmcd?.communicationType ?? "disabled";
   const { manifest: manifestRequestConfig, segment: segmentRequestConfig } =
@@ -301,6 +303,30 @@ function Settings({
     [updateLoadVideoOptions],
   );
 
+  const onAudioTracksNotPlayableChange = useCallback(
+    (value: string) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (value === prevOptions.onAudioTracksNotPlayable) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { onAudioTracksNotPlayable: value });
+      });
+    },
+    [updateLoadVideoOptions],
+  );
+
+  const onVideoTracksNotPlayableChange = useCallback(
+    (value: string) => {
+      updateLoadVideoOptions((prevOptions) => {
+        if (value === prevOptions.onVideoTracksNotPlayable) {
+          return prevOptions;
+        }
+        return Object.assign({}, prevOptions, { onVideoTracksNotPlayable: value });
+      });
+    },
+    [updateLoadVideoOptions],
+  );
+
   const onWantedBufferAheadChange = useCallback(
     (wantedBufferAhead: number) => {
       updatePlayerOptions((prevOptions) => {
@@ -424,6 +450,10 @@ function Settings({
             }
             onEnableFastSwitchingChange={onEnableFastSwitchingChange}
             onCodecSwitchChange={onCodecSwitchChange}
+            onAudioTracksNotPlayable={onAudioTracksNotPlayable}
+            onAudioTracksNotPlayableChange={onAudioTracksNotPlayableChange}
+            onVideoTracksNotPlayable={onVideoTracksNotPlayable}
+            onVideoTracksNotPlayableChange={onVideoTracksNotPlayableChange}
           />
         </Option>
         <Option title="Buffer Options">

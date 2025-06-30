@@ -191,6 +191,9 @@ An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
   For those errors, you may be able to know the characteristics of the corresponding
   track(s) by inspecting the error's `tracksInfo` property, described below.
 
+- `"NO_AUDIO_VIDEO_TRACKS"`: No audio and video tracks were selected. This can happen if
+  the application has disabled both audio and video.
+
 - `"MANIFEST_UPDATE_ERROR"`: This error should never be emitted as it is handled
   internally by the RxPlayer. Please open an issue if you encounter it.
 

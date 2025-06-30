@@ -25,7 +25,6 @@ import type {
   IRepresentationFilter,
   ISegmentLoader as ICustomSegmentLoader,
   IServerSyncInfos,
-  IPlayerError,
   ICmcdPayload,
 } from "../public_types";
 import type { CancellationSignal } from "../utils/task_canceller";
@@ -416,11 +415,6 @@ export type IManifestParserRequestScheduler = (
 export interface IManifestParserResult {
   /** The parsed Manifest Object itself. */
   manifest: IManifest;
-  /**
-   * Minor issues seen while constructing the Manifest object.
-   * Empty if no issue was seen.
-   */
-  warnings: IPlayerError[];
   /**
    * "Real" URL (post-redirection) at which the Manifest can be refreshed.
    *

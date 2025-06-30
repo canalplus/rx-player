@@ -536,6 +536,48 @@ video track when in directfile mode to avoid that case (this is documented
 in the corresponding APIs).
 </div>
 
+### noPlayableTrack
+
+_payload type_: `Object`
+
+Emitted when no tracks of a given type can be selected for a given period.
+
+The payload is an object with the following properties:
+
+- `trackType` (`"audio" | "video" | "text"`): The type of the track that appears to have
+  no playable options available.
+
+- `period`: (`Object`): The period in which the track is not playable. This object has the
+  following properties:
+
+  - `id`: (`"string"`): The ID of the period.
+
+  - `start`: (`"number"`): The start time of the period.
+
+  - `end`: (`"number" | undefined`): The end time of the period. This value may be
+    `undefined` either if not known or if the Period has no end yet (e.g. for live
+    contents, the end might not be known for now)
+
+<div class="note">
+
+The `noPlayableTrack` event is emitted when none of the tracks for a specific type (audio,
+video, or subtitles) are playable for a given period.
+
+For example, this might occur if a content only has audio codecs that the device does not
+support, or if a media cannot be decrypted due to an insufficient security level.
+
+By listening for this event, the application can respond appropriately, such as notifying
+the user that the given track type is not playable, or taking corrective actions such as
+continuing playback with available tracks (e.g., playing video-only if no audio track is
+available).
+
+The `loadVideo()` options
+[`onAudioTracksNotPlayable`](./Loading_a_Content.md#onaudiotracksnotplayable) and
+[`onVideoTracksNotPlayable`](./Loading_a_Content.md#onvideotracksnotplayable) defines the
+player behavior when a track is not playable.
+
+</div>
+
 ## Representation selection events
 
 This chapter describes events linked to the current audio, video or Representation /

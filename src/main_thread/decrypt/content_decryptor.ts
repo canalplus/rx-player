@@ -677,7 +677,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           sessionInfo.blacklistedSessionError = err;
 
           if (initializationData.content !== undefined) {
-            log.info("DRM: blacklisting Representations based on " + "protection data.");
+            log.info("DRM: blacklisting Representations based on protection data.");
             this.trigger("blackListProtectionData", initializationData);
           }
 

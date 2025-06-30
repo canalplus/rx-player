@@ -706,6 +706,73 @@ Those are the possible values for that option:
   More information about the `"RELOADING"` state can be found in
   [the player states documentation](./Player_States.md).
 
+### onAudioTracksNotPlayable
+
+_type_: `string|undefined`
+
+_defaults_: `"error"`
+
+Specifies the behavior when all audio tracks are not playable - This can occur if the
+device does not support the required audio codecs, or if the content cannot be decrypted,
+for example, due to an insufficient security level.
+
+Those are the possible values for that option:
+
+- `"continue"`: The player will proceed to play the content without audio.
+
+- `"error"`: The player will throw an error `MediaError` with one of the following codes:
+  - `"MANIFEST_INCOMPATIBLE_CODECS_ERROR"`: For this media type (audio or video), all
+    available codecs are unsupported.
+  - `"NO_AUDIO_VIDEO_TRACKS"`: There are no selected or playable audio and video tracks.
+    Therefore, there is nothing to play.
+  - `"NO_PLAYABLE_REPRESENTATION"`: At least one track has a supported codec, but none of
+    the available representations are playable. This may be due to DRM restrictions or
+    other playback constraints.
+
+<div class="note">
+
+- An event [`noPlayableTrack`](./Player_Events.md) will be emitted if no audio tracks are
+  playable.
+
+- If neither the audio nor video tracks are playable, a `"NO_AUDIO_VIDEO_TRACKS"` error
+  will be thrown regardless of this setting.
+
+</div>
+
+### onVideoTracksNotPlayable
+
+_type_: `string|undefined`
+
+_defaults_: `"error"`
+
+Specifies the behavior when all video tracks are not playable - This can occur if the
+device does not support the required video codecs, or if the content cannot be decrypted,
+for example, due to an insufficient security level.
+
+Those are the possible values for that option:
+
+- `"continue"`: The player will proceed to play the content without video. (i.e.,
+  audio-only playback).
+
+- `"error"`: The player will throw an error `MediaError` with one of the following codes:
+  - `"MANIFEST_INCOMPATIBLE_CODECS_ERROR"`: For this media type (audio or video), all
+    available codecs are unsupported.
+  - `"NO_AUDIO_VIDEO_TRACKS"`: There are no selected or playable audio and video tracks.
+    Therefore, there is nothing to play.
+  - `"NO_PLAYABLE_REPRESENTATION"`: At least one track has a supported codec, but none of
+    the available representations are playable. This may be due to DRM restrictions or
+    other playback constraints.
+
+<div class="note">
+
+- An event [`noPlayableTrack`](./Player_Events.md#noplayabletrack) will be emitted if no
+  video tracks are playable.
+
+- If neither the audio nor video tracks are playable, a `"NO_AUDIO_VIDEO_TRACKS"` error
+  will be thrown regardless of this setting.
+
+</div>
+
 ### lowLatencyMode
 
 _type_: `Boolean|undefined`
@@ -927,7 +994,7 @@ The `serverSyncInfos` object contains two keys:
   <div class="note">
   The `performance.now()` API is used here because it is the main API to
   obtain a monotically increasing clock on the client-side.
-  </div</div>
+  </div>
 
 Example:
 

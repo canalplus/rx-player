@@ -1,5 +1,7 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IPeriod from "../period";
+import type { IManifestStreamEvent } from "../../../parsers/manifest";
+import type { IPeriod, IPeriodMetadata } from "../../index";
+import type { IManifestAdaptations, IThumbnailTrack } from "../period";
 import type {
   replacePeriods as IReplacePeriods,
   updatePeriods as IUpatePeriods,
@@ -16,6 +18,73 @@ const fakeUpdatePeriodInPlaceRes = {
   addedAdaptations: [],
 };
 
+class FakePeriod implements IPeriodMetadata {
+  public readonly id: string;
+  public adaptations: IManifestAdaptations;
+  public start: number;
+  public duration: number | undefined;
+  public end: number | undefined;
+  public streamEvents: IManifestStreamEvent[];
+  public thumbnailTracks: IThumbnailTrack[];
+
+  constructor({
+    id,
+    start,
+    end,
+  }: {
+    id: string;
+    start?: number | undefined;
+    end?: number | undefined;
+  }) {
+    this.id = id ?? String(start);
+    this.start = start ?? 0;
+    this.end = end;
+    this.duration = end === undefined ? undefined : end - (start ?? 0);
+    this.streamEvents = [];
+    this.adaptations = {};
+    this.thumbnailTracks = [];
+  }
+  createAdaptationsObject() {
+    return {};
+  }
+  getMediaSupport() {
+    return {
+      video: true,
+      audio: true,
+      text: true,
+    };
+  }
+
+  refreshCodecSupport() {
+    // noop
+  }
+  getAdaptations() {
+    return [];
+  }
+  getAdaptationsForType() {
+    return [];
+  }
+  getAdaptation(): undefined {
+    return undefined;
+  }
+  getSupportedAdaptations() {
+    return [];
+  }
+  containsTime() {
+    return false;
+  }
+  getMetadataSnapshot() {
+    return {
+      start: this.start ?? 0,
+      end: this.end,
+      id: this.id ?? String(this.start),
+      streamEvents: [],
+      adaptations: {},
+      thumbnailTracks: [],
+    };
+  }
+}
+
 function generateFakePeriod({
   id,
   start,
@@ -25,43 +94,7 @@ function generateFakePeriod({
   start?: number | undefined;
   end?: number | undefined;
 }): IPeriod {
-  return {
-    id: id ?? String(start),
-    start: start ?? 0,
-    end,
-    duration: end === undefined ? undefined : end - (start ?? 0),
-    streamEvents: [],
-    adaptations: {},
-    thumbnailTracks: [],
-    refreshCodecSupport() {
-      // noop
-    },
-    getAdaptations() {
-      return [];
-    },
-    getAdaptationsForType() {
-      return [];
-    },
-    getAdaptation(): undefined {
-      return undefined;
-    },
-    getSupportedAdaptations() {
-      return [];
-    },
-    containsTime() {
-      return false;
-    },
-    getMetadataSnapshot() {
-      return {
-        start: start ?? 0,
-        end,
-        id: id ?? String(start),
-        streamEvents: [],
-        adaptations: {},
-        thumbnailTracks: [],
-      };
-    },
-  };
+  return new FakePeriod({ id, start, end }) as IPeriod;
 }
 
 describe("Manifest - replacePeriods", () => {
