@@ -126,8 +126,9 @@ async function compile(opts) {
   // We can just spawn without going through a shell because Node.js has `tsc`
   // in its own PATH.
   const es6Build = spawnProm(
-    "tsc",
+    "npx",
     [
+      "tsc",
       "-p",
       path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json"),
       opts.noCheck ? es6Args.push("--noCheck") : undefined,
@@ -135,8 +136,9 @@ async function compile(opts) {
     (code) => new Error(`es2017 compilation process exited with code ${code}`),
   );
   const commonJsBuild = spawnProm(
-    "tsc",
+    "npx",
     [
+      "tsc",
       "-p",
       path.join(
         ROOT_DIR,
