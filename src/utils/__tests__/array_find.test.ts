@@ -70,7 +70,6 @@ describe("utils - arrayFind", () => {
     arrayFind(
       arr,
       function (this: unknown) {
-        // eslint-disable-next-line no-invalid-this
         expect(this).toBe(context);
         return false;
       },
@@ -95,7 +94,6 @@ describe("utils - arrayFind", () => {
         index: number,
         cArr: unknown[],
       ): boolean {
-        // eslint-disable-next-line no-invalid-this
         expect(this).toBe(context);
         expect(index).toBe(currentIndex++);
         expect(cArr).toBe(arr);
