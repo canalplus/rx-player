@@ -720,9 +720,14 @@ Those are the possible values for that option:
 
 - `"continue"`: The player will proceed to play the content without audio.
 
-- `"error"`: The player will throw an error `MediaError` with the code
-  `MANIFEST_INCOMPATIBLE_CODECS_ERROR`, `NO_AUDIO_VIDEO_TRACKS` or
-  `NO_PLAYABLE_REPRESENTATION` to indicate that the audio tracks could not be played.
+- `"error"`: The player will throw an error `MediaError` with one of the following codes:
+  - `"MANIFEST_INCOMPATIBLE_CODECS_ERROR"`: For this media type (audio or video), all
+    available codecs are unsupported.
+  - `"NO_AUDIO_VIDEO_TRACKS"`: There are no selected or playable audio and video tracks.
+    Therefore, there is nothing to play.
+  - `"NO_PLAYABLE_REPRESENTATION"`: At least one track has a supported codec, but none of
+    the available representations are playable. This may be due to DRM restrictions or
+    other playback constraints.
 
 <div class="note">
 
@@ -749,9 +754,14 @@ Those are the possible values for that option:
 - `"continue"`: The player will proceed to play the content without video. (i.e.,
   audio-only playback).
 
-- `"error"`: The player will throw an error `MediaError` with the code
-  `MANIFEST_INCOMPATIBLE_CODECS_ERROR`, `NO_AUDIO_VIDEO_TRACKS` or
-  `NO_PLAYABLE_REPRESENTATION` to indicate that the video tracks could not be played.
+- `"error"`: The player will throw an error `MediaError` with one of the following codes:
+  - `"MANIFEST_INCOMPATIBLE_CODECS_ERROR"`: For this media type (audio or video), all
+    available codecs are unsupported.
+  - `"NO_AUDIO_VIDEO_TRACKS"`: There are no selected or playable audio and video tracks.
+    Therefore, there is nothing to play.
+  - `"NO_PLAYABLE_REPRESENTATION"`: At least one track has a supported codec, but none of
+    the available representations are playable. This may be due to DRM restrictions or
+    other playback constraints.
 
 <div class="note">
 
