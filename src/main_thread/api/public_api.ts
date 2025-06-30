@@ -409,7 +409,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
 
-    this.version = /* PLAYER_VERSION */ "4.3.0";
+    this.version = /* PLAYER_VERSION */ "4.4.0-dev.2025063000";
     this.log = log;
     this.state = "STOPPED";
     this.videoElement = videoElement;
@@ -3448,7 +3448,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
   }
 }
-Player.version = /* PLAYER_VERSION */ "4.3.0";
+Player.version = /* PLAYER_VERSION */ "4.4.0-dev.2025063000";
 
 /** Every events sent by the RxPlayer's public API. */
 interface IPublicAPIEvent {
