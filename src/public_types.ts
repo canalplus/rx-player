@@ -1467,6 +1467,11 @@ export interface IThumbnailTrackInfo {
    *    (The first thumbnail in that segment for 22-25, the second for 25-26)
    */
   thumbnailDuration: number | undefined;
+  /**
+   * The time the current last thumbnail avaiable for that track applies to,
+   * in seconds.
+   */
+  lastThumbnailTime: number | undefined;
 }
 
 /**
