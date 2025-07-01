@@ -239,7 +239,9 @@ export default class HTMLTextSegmentBuffer extends SegmentBuffer {
       while (i >= 0 && cues[i].start >= appendWindowEnd) {
         i--;
       }
-      cues.splice(i, cues.length);
+
+      const deleteCount = cues.length - 1 - i;
+      cues.splice(i, deleteCount);
 
       i = cues.length - 1;
       while (i >= 0 && cues[i].end > appendWindowEnd) {
