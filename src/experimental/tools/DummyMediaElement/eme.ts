@@ -310,7 +310,7 @@ export class DummyMediaKeySession
         this.removeEventListener();
         try {
           this._callbacks.onClosed();
-        } catch (e) {
+        } catch {
           // we don't care
         }
         resolve("closed-by-application");
@@ -357,12 +357,12 @@ export class DummyMediaKeySession
       setTimeout(() => {
         try {
           this._callbacks.onKeysUpdate();
-        } catch (e) {
+        } catch {
           // We don't care
         }
         try {
           this.trigger("keystatuseschange", new Event("keystatuseschange"));
-        } catch (e) {
+        } catch {
           // We don't care
         }
 
@@ -468,7 +468,7 @@ export class DummyMediaKeySession
               break;
           }
         }
-      } catch (e) {
+      } catch {
         /* noop */
       }
     }
@@ -566,7 +566,7 @@ export class DummyMediaKeySession
     if (this.keyStatuses.size > 0) {
       try {
         this._callbacks.onKeysUpdate();
-      } catch (e) {
+      } catch {
         // We don't care
       }
       setTimeout(() => {
@@ -633,7 +633,7 @@ export class DummyMediaKeySession
       setTimeout(() => {
         try {
           this._callbacks.onKeysUpdate();
-        } catch (e) {
+        } catch {
           // We don't care
         }
         this.trigger("keystatuseschange", new Event("keystatuseschange"));
@@ -663,7 +663,7 @@ export class DummyMediaKeySession
           hasUpdatedKeys = true;
         }
       });
-    } catch (e) {
+    } catch {
       // we don't care
     }
 
@@ -671,7 +671,7 @@ export class DummyMediaKeySession
       setTimeout(() => {
         try {
           this._callbacks.onKeysUpdate();
-        } catch (e) {
+        } catch {
           // We don't care
         }
         this.trigger("keystatuseschange", new Event("keystatuseschange"));
@@ -1004,7 +1004,7 @@ function splitPsshBoxes(data: Uint8Array): Uint8Array[] {
     let psshOffsets;
     try {
       psshOffsets = getBoxOffsets(data, 0x70737368 /* pssh */);
-    } catch (e) {
+    } catch {
       return psshBoxes;
     }
     if (psshOffsets === null) {
