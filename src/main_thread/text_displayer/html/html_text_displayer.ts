@@ -168,7 +168,8 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       while (i >= 0 && cues[i].start >= appendWindowEnd) {
         i--;
       }
-      cues.splice(i, cues.length);
+      // cues[i] is the last cue we want to keep, remove from i + 1
+      cues.splice(i + 1, cues.length);
 
       i = cues.length - 1;
       while (i >= 0 && cues[i].end > appendWindowEnd) {
