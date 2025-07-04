@@ -124,7 +124,7 @@ async function compile(opts) {
   const es6Build = spawnShellProm(
     "npx tsc -p " +
       path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json") +
-      (opts.noCheck ? "--noCheck" : ""),
+      (opts.noCheck ? " --noCheck" : ""),
     (code) => new Error(`es2017 compilation process exited with code ${code}`),
   );
   const commonJsBuild = spawnShellProm(
@@ -133,7 +133,7 @@ async function compile(opts) {
         ROOT_DIR,
         opts.devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
       ) +
-      (opts.noCheck ? "--noCheck" : ""),
+      (opts.noCheck ? " --noCheck" : ""),
     (code) => new Error(`CommonJS compilation process exited with code ${code}`),
   );
 
