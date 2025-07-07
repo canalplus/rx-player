@@ -75,7 +75,7 @@ describe("DRM: Basic use cases", function () {
 
     player.stop();
     await sleep(10);
-    expect(dummy.mediaKeys.sessions).toHaveLength(2);
+    expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
   });
 
   it("should close sessions after stop if `closeSessionsOnStop` is set", async function () {
@@ -107,11 +107,11 @@ describe("DRM: Basic use cases", function () {
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
     expect(player.getError()).toBeNull();
     expect(askedKeyIds.length).toEqual(expectedKeyIds.length);
-    expect(dummy.mediaKeys.sessions).toHaveLength(2);
+    expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
 
     player.stop();
     await sleep(10);
-    expect(dummy.mediaKeys.sessions).toHaveLength(0);
+    expect(dummy.mediaKeys.dummySessions).toHaveLength(0);
   });
 
   it("should trigger specific error if the license request fails", async function () {
@@ -377,7 +377,7 @@ describe("DRM: Basic use cases", function () {
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
 
     await sleep(50);
-    dummy.mediaKeys.sessions.forEach((s) => {
+    dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
     await waitForPlayerState(player, "PAUSED", ["PLAYING", "RELOADING"]);
@@ -435,7 +435,7 @@ describe("DRM: Basic use cases", function () {
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
 
     await sleep(50);
-    dummy.mediaKeys.sessions.forEach((s) => {
+    dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
     await waitForPlayerState(player, "STOPPED", ["LOADING"]);
@@ -492,7 +492,7 @@ describe("DRM: Basic use cases", function () {
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
 
     await sleep(50);
-    dummy.mediaKeys.sessions.forEach((s) => {
+    dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
     await waitForPlayerState(player, "PAUSED", ["PLAYING", "RELOADING"]);
@@ -506,7 +506,7 @@ describe("DRM: Basic use cases", function () {
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
     expect(player.getError()).toBeNull();
 
-    dummy.mediaKeys.sessions.forEach((s) => {
+    dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(100);
     });
     await sleep(10);
@@ -574,7 +574,7 @@ describe("DRM: Basic use cases", function () {
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
 
     await sleep(50);
-    dummy.mediaKeys.sessions.forEach((s) => {
+    dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
     await waitForPlayerState(player, "PAUSED", ["PLAYING", "RELOADING"]);
@@ -582,7 +582,7 @@ describe("DRM: Basic use cases", function () {
     await sleep(50);
     expect(brokenVideoLock).toEqual(1);
     expect(videoTrackUpdate).toEqual(0);
-    dummy.mediaKeys.sessions.forEach((s) => {
+    dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
     await waitForPlayerState(player, "PAUSED", ["PLAYING", "RELOADING"]);

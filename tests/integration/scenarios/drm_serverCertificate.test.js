@@ -72,7 +72,7 @@ describe("DRM: server certificate", function () {
       } else {
         expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
     }
   });
 
@@ -109,7 +109,7 @@ describe("DRM: server certificate", function () {
       } else {
         expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
     }
   });
 
@@ -150,7 +150,7 @@ describe("DRM: server certificate", function () {
       } else {
         expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
     }
   });
 
@@ -277,7 +277,7 @@ describe("DRM: server certificate", function () {
         expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
         expect(createMediaKeysSpy).toHaveBeenCalledTimes(1);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
     }
   });
 
@@ -342,7 +342,7 @@ describe("DRM: server certificate", function () {
         expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
         expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
     }
   });
 
@@ -395,7 +395,7 @@ describe("DRM: server certificate", function () {
     } else {
       expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
     }
-    expect(dummy.mediaKeys.sessions).toHaveLength(2);
+    expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
   });
 
   it("should re-call `setServerCertificate` if a key MediaKeySystemAccess state has changed", async function () {
@@ -455,7 +455,7 @@ describe("DRM: server certificate", function () {
       } else {
         expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
     }
   });
 
@@ -515,7 +515,7 @@ describe("DRM: server certificate", function () {
         expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
         expect(serverCertificateSpy).toHaveBeenCalledTimes(1);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
     }
   });
 
@@ -575,7 +575,7 @@ describe("DRM: server certificate", function () {
         expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
         expect(requestMediaKeySystemAccessSpy).toHaveBeenCalledTimes(1);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
 
       player.loadVideo({
         url,
@@ -605,7 +605,7 @@ describe("DRM: server certificate", function () {
       } else {
         expect(createMediaKeysSpy).toHaveBeenCalledTimes(2);
       }
-      expect(dummy.mediaKeys.sessions).toHaveLength(2);
+      expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
     }
   });
 });

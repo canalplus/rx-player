@@ -176,15 +176,15 @@ export class DummyMediaKeys implements IMediaKeys {
   private _sessionTypes: MediaKeySessionType[];
   private _serverCertificateRef: SharedReference<Uint8Array | null>;
 
-  public sessions: DummyMediaKeySession[];
-  public onSessionKeyUpdates: (() => void) | null;
+  public dummySessions: DummyMediaKeySession[];
+  public onDummySessionKeyUpdates: (() => void) | null;
 
   constructor(keySystem: string, sessionTypes: MediaKeySessionType[]) {
     this._keySystem = keySystem;
     this._sessionTypes = sessionTypes;
     this._serverCertificateRef = new SharedReference<Uint8Array | null>(null);
-    this.sessions = [];
-    this.onSessionKeyUpdates = null;
+    this.dummySessions = [];
+    this.onDummySessionKeyUpdates = null;
   }
 
   /**
@@ -210,17 +210,17 @@ export class DummyMediaKeys implements IMediaKeys {
       serverCertificateRef: this._serverCertificateRef,
       callbacks: {
         onClosed() {
-          const index = self.sessions.indexOf(newSession);
+          const index = self.dummySessions.indexOf(newSession);
           if (index >= 0) {
-            self.sessions.splice(index, 1);
+            self.dummySessions.splice(index, 1);
           }
         },
         onKeysUpdate() {
-          self.onSessionKeyUpdates?.();
+          self.onDummySessionKeyUpdates?.();
         },
       },
     });
-    this.sessions.push(newSession);
+    this.dummySessions.push(newSession);
     return newSession;
   }
 

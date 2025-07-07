@@ -303,7 +303,7 @@ export class DummyMediaElement
       return new Promise((resolve) => {
         mediaElement.mediaKeys = mediaKeys;
         if (mediaElement === this && mediaKeys instanceof DummyMediaKeys) {
-          mediaKeys.onSessionKeyUpdates = () => {
+          mediaKeys.onDummySessionKeyUpdates = () => {
             this._tick();
           };
         }
@@ -1126,9 +1126,9 @@ export class DummyMediaElement
       if (this.mediaKeys === null) {
         return true;
       }
-      const { sessions } = this.mediaKeys;
+      const { dummySessions } = this.mediaKeys;
       return metadata.keyIds.some((k) => {
-        return !sessions.some((s) => {
+        return !dummySessions.some((s) => {
           const keyMap = s.keyStatuses.getInnerMap();
           for (const key of keyMap.keys()) {
             if (key === k) {
