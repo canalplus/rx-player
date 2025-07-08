@@ -31,6 +31,8 @@ function Settings({
   updateDefaultVideoRepresentationsSwitchingMode,
   tryRelyOnWorker,
   updateTryRelyOnWorker,
+  useDummyMediaElement,
+  updateUseDummyMediaElement,
 }: {
   playerOptions: IConstructorSettings;
   updatePlayerOptions: (
@@ -50,6 +52,8 @@ function Settings({
   ) => void;
   tryRelyOnWorker: boolean;
   updateTryRelyOnWorker: (tryRelyOnWorker: boolean) => void;
+  useDummyMediaElement: boolean;
+  updateUseDummyMediaElement: (useDummyMediaElement: boolean) => void;
   showOptions: boolean;
 }): React.JSX.Element | null {
   const {
@@ -123,6 +127,13 @@ function Settings({
       });
     },
     [updateLoadVideoOptions],
+  );
+
+  const onUseDummyMediaElementChange = useCallback(
+    (useDummyMediaElement: boolean) => {
+      updateUseDummyMediaElement(useDummyMediaElement);
+    },
+    [updateUseDummyMediaElement],
   );
 
   const onVideoResolutionLimitChange = useCallback(
@@ -392,6 +403,8 @@ function Settings({
             onAutoPlayChange={onAutoPlayChange}
             tryRelyOnWorker={tryRelyOnWorker}
             onTryRelyOnWorkerChange={onTryRelyOnWorkerChange}
+            useDummyMediaElement={useDummyMediaElement}
+            onUseDummyMediaElementChange={onUseDummyMediaElementChange}
           />
         </Option>
         <Option title="Video adaptive settings">

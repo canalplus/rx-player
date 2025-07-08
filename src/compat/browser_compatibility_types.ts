@@ -16,6 +16,7 @@
 
 import type { IListener } from "../utils/event_emitter";
 import globalScope from "../utils/global_scope";
+import type { IEmeApiImplementation } from "./eme";
 
 /**
  * Browser implementation of a VTTCue constructor.
@@ -229,6 +230,14 @@ export interface IMediaElementEventMap {
  *     implement it.
  */
 export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
+  /**
+   * Optional property allowing to force a specific MSE Implementation when
+   * relying on a given `IMediaElement`.
+   */
+  FORCED_MEDIA_SOURCE?: new () => IMediaSource;
+
+  FORCED_EME_API?: IEmeApiImplementation;
+
   /* From `HTMLMediaElement`: */
   autoplay: boolean;
   buffered: TimeRanges;
@@ -256,11 +265,10 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
 
   addTextTrack: (kind: TextTrackKind) => TextTrack;
   appendChild<T extends Node>(x: T): void;
-  hasAttribute(attr: string): boolean;
   hasChildNodes(): boolean;
   pause(): void;
   play(): Promise<void>;
-  removeAttribute(attr: string): void;
+  removeAttribute(attr: "src"): void;
   removeChild(x: unknown): void;
   setMediaKeys(x: IMediaKeys | null): Promise<void>;
 

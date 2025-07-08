@@ -72,3 +72,24 @@ export default function extractCompleteChunks(
   }
   return [chunks, currentBuffer];
 }
+
+/**
+ * @param {Uint8Array} buffer
+ * @returns {Array}
+ */
+export function extractInitSegment(
+  buffer: Uint8Array,
+): [Uint8Array | null, Uint8Array | null] {
+  const moovIndex = findCompleteBox(buffer, 0x6d6f6f76 /* moov */);
+  if (moovIndex < 0) {
+    // no moov, not an init segment.
+    return [null, buffer];
+  }
+  const moovLen = be4toi(buffer, moovIndex);
+  const moovEnd = moovIndex + moovLen;
+  if (moovEnd > buffer.length) {
+    // not a complete moov segment
+    return [null, buffer];
+  }
+  return [buffer.subarray(0, moovEnd), buffer.subarray(moovEnd, Infinity)];
+}

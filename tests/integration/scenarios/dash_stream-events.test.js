@@ -659,51 +659,48 @@ describe("DASH Stream events", function () {
     );
   }, 15000);
 
-  it(
-    "should receive an event when skipping one",
-    async function () {
-      const streamEventsReceived = [];
-      const streamEventSkipReceived = [];
+  it("should receive an event when skipping one", { timeout: 5000 }, async function () {
+    const streamEventsReceived = [];
+    const streamEventSkipReceived = [];
 
-      let hasExitedSomething = false;
-      function onStreamEvent(evt) {
-        streamEventsReceived.push(evt);
-        evt.onExit = function () {
-          hasExitedSomething = true;
-        };
-      }
-      function onStreamEventSkip(evt) {
-        streamEventSkipReceived.push(evt);
-        evt.onExit = function () {
-          hasExitedSomething = true;
-        };
-      }
-      player.addEventListener("streamEvent", onStreamEvent);
-      player.addEventListener("streamEventSkip", onStreamEventSkip);
+    let hasExitedSomething = false;
+    function onStreamEvent(evt) {
+      streamEventsReceived.push(evt);
+      evt.onExit = function () {
+        hasExitedSomething = true;
+      };
+    }
+    function onStreamEventSkip(evt) {
+      streamEventSkipReceived.push(evt);
+      evt.onExit = function () {
+        hasExitedSomething = true;
+      };
+    }
+    player.addEventListener("streamEvent", onStreamEvent);
+    player.addEventListener("streamEventSkip", onStreamEventSkip);
 
-      const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
-      await loadContent(0);
-      await sleep(1000);
+    const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
+    await loadContent(0);
+    await sleep(1000);
 
-      player.seekTo(9);
+    player.seekTo(9);
 
-      await checkAfterSleepWithBackoff(
-        { minTimeMs: 600, maxTimeMs: 3000, stepMs: 100 },
-        () => {
-          expect(streamEventSkipReceived).to.have.lengthOf(1);
-          expect(streamEventsReceived).to.have.lengthOf(0);
-          expect(hasExitedSomething).to.equal(false);
+    await checkAfterSleepWithBackoff(
+      { minTimeMs: 600, maxTimeMs: 3000, stepMs: 100 },
+      () => {
+        expect(streamEventSkipReceived).to.have.lengthOf(1);
+        expect(streamEventsReceived).to.have.lengthOf(0);
+        expect(hasExitedSomething).to.equal(false);
 
-          const eventReceived = streamEventSkipReceived[0];
-          checkEvent(eventReceived, wantedEvent);
-        },
-      );
-    },
-    { timeout: 5000 },
-  );
+        const eventReceived = streamEventSkipReceived[0];
+        checkEvent(eventReceived, wantedEvent);
+      },
+    );
+  });
 
   it(
     "should receive multiple events when skipping multiple ones",
+    { timeout: 7000 },
     async function () {
       const streamEventsReceived = [];
       const streamEventSkipReceived = [];
@@ -754,7 +751,6 @@ describe("DASH Stream events", function () {
         },
       );
     },
-    { timeout: 7000 },
   );
 
   it("should not exit events without a duration", async function () {

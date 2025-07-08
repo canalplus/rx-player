@@ -15,12 +15,11 @@
  */
 
 import { canRelyOnRequestMediaKeySystemAccess } from "../../../compat/can_rely_on_request_media_key_system_access";
-import eme from "../../../compat/eme";
+import getEmeApiImplementation from "../../../compat/eme";
 import {
   DUMMY_PLAY_READY_HEADER,
   generatePlayReadyInitData,
 } from "../../../compat/generate_init_data";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import log from "./log";
 import probeDecodingInfos from "./probers/decodingInfo";
 import probeHDCPPolicy from "./probers/HDCPPolicy";
@@ -68,7 +67,9 @@ const mediaCapabilitiesProber = {
     keySystemType: string,
     keySystemConfiguration: IMediaKeySystemConfiguration[],
   ): Promise<MediaKeySystemConfiguration> {
-    if (isNullOrUndefined(eme.requestMediaKeySystemAccess)) {
+    const eme = getEmeApiImplementation("auto");
+
+    if (eme === null) {
       const error = new Error("EME not supported in current environment");
       throw error;
     }

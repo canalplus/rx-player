@@ -9,6 +9,7 @@ import type {
 import { ManifestMetadataFormat } from "../../../../manifest";
 
 import type { IContentProtections } from "../../../../parsers/manifest";
+import assert from "../../../../utils/assert";
 import sleep from "../../../../utils/sleep";
 import ContentDecryptor from "../../../decrypt";
 import { updateManifestCodecSupport } from "../update_manifest_codec_support";
@@ -73,7 +74,6 @@ function generateFakeManifestWithRepresentations(
 
   return manifest;
 }
-
 beforeAll(() => {
   // Mock MediaSource APIs
   vi.mock("../../../../compat/browser_compatibility_types", () => ({
@@ -88,7 +88,7 @@ beforeAll(() => {
 
   // Mock EME APIs
   vi.mock("../../../../compat/eme/eme-api-implementation", () => ({
-    default: {
+    default: () => ({
       requestMediaKeySystemAccess(
         keyType: string,
         config: MediaKeySystemConfiguration[],
@@ -130,11 +130,11 @@ beforeAll(() => {
       ): Promise<unknown> => {
         return Promise.resolve();
       },
-    },
+    }),
   }));
 });
 describe("init - utils - updateManifestCodecSupport", () => {
-  it("should return the codecs with result true/false if it's supported by the device", () => {
+  it("should return the codecs with result true/false if it's supported by the device", async () => {
     const representationAVC: IRepresentationMetadata = {
       bitrate: 1000,
       id: "representation1",
@@ -192,7 +192,10 @@ describe("init - utils - updateManifestCodecSupport", () => {
         return new Uint8Array([]);
       },
     };
-    const contentDecryptor = new ContentDecryptor(video, [keySystem1]);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
+    const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
     updateManifestCodecSupport(manifest, contentDecryptor, true);
     expect(representationAVC.isSupported).toBe(true);
     expect(representationHEVC.isSupported).toBe(true);
@@ -271,7 +274,10 @@ describe("init - utils - updateManifestCodecSupport", () => {
       },
     };
     const video = document.createElement("video");
-    const contentDecryptor = new ContentDecryptor(video, [keySystem1]);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
+    const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
     await sleep(100);
     contentDecryptor.attach();
     updateManifestCodecSupport(manifest, contentDecryptor, true);
@@ -282,7 +288,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
     expect(encryptedRepresentationEC3.isSupported).toBe(false); // Not supported by EME
   });
 
-  it("should update to false if the codec is not usable with MSE in worker", () => {
+  it("should update to false if the codec is not usable with MSE in worker", async () => {
     const representationAVC: IRepresentationMetadata = {
       bitrate: 1000,
       id: "representation1",
@@ -317,7 +323,10 @@ describe("init - utils - updateManifestCodecSupport", () => {
     );
 
     const video = document.createElement("video");
-    const contentDecryptor = new ContentDecryptor(video, []);
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
+    const contentDecryptor = new ContentDecryptor(emeImplem, video, []);
     updateManifestCodecSupport(manifest, contentDecryptor, true);
     expect(representationAVC.isSupported).toBe(true);
     expect(representationHEVC.isSupported).toBe(false); // not supported with MSE in worker

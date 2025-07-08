@@ -1,6 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import type { IMediaKeySystemAccess } from "../../../../compat/browser_compatibility_types";
 import type { IKeySystemOption } from "../../../../public_types";
+import assert from "../../../../utils/assert";
 import type IContentDecryptor from "../../content_decryptor";
 import {
   defaultKSConfig,
@@ -62,8 +63,12 @@ async function checkIncompatibleKeySystemsErrorMessage(
   const mediaElement = document.createElement("video");
   const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
     .default as typeof IContentDecryptor;
+  const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
 
+  const eme = getEmeApiImplementation("auto");
+  assert(eme !== null, "Expected to have an EME implementation");
   const error = await testContentDecryptorError(
+    eme,
     ContentDecryptor,
     mediaElement,
     keySystemsConfigs,
@@ -1199,11 +1204,14 @@ describe("decrypt - global tests - media key system access", () => {
     });
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const config = [{ type: "com.widevine.alpha", getLicense: neverCalledFn }];
 
       const mediaElement = document.createElement("video");
-      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, mediaElement, config);
       contentDecryptor.addEventListener("error", (error) => {
         rej(error);
       });
@@ -1232,6 +1240,7 @@ describe("decrypt - global tests - media key system access", () => {
     });
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const config = [
         { type: "com.widevine.alpha", getLicense: neverCalledFn },
@@ -1239,7 +1248,9 @@ describe("decrypt - global tests - media key system access", () => {
       ];
 
       const mediaElement = document.createElement("video");
-      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, mediaElement, config);
       contentDecryptor.addEventListener("error", (error) => {
         rej(error);
       });
@@ -1280,6 +1291,7 @@ describe("decrypt - global tests - media key system access", () => {
     });
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 
@@ -1288,7 +1300,9 @@ describe("decrypt - global tests - media key system access", () => {
         { type: "bar", getLicense: neverCalledFn },
         { type: "baz", getLicense: neverCalledFn },
       ];
-      contentDecryptor = new ContentDecryptor(mediaElement, config);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      contentDecryptor = new ContentDecryptor(eme, mediaElement, config);
       contentDecryptor.addEventListener("error", (error) => {
         rej(error);
       });
@@ -1316,11 +1330,14 @@ describe("decrypt - global tests - media key system access", () => {
     });
     const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
       .default as typeof IContentDecryptor;
+    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 
       const config = [{ type: "foo", getLicense: neverCalledFn }];
-      const contentDecryptor = new ContentDecryptor(mediaElement, config);
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, mediaElement, config);
       contentDecryptor.addEventListener("error", () => {
         expect(rmksHasBeenCalled).toEqual(true);
         res();
