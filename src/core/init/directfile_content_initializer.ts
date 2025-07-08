@@ -89,6 +89,10 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
     clearElementSrc(mediaElement);
 
+    // Set the autoplay attribute on the mediaElement.
+    // On Apple devices, the native HLS player needs autoplay to be set
+    // in order to start buffering,which is required for our API's autoplay to work.
+    mediaElement.autoplay = this._settings.autoPlay;
     /**
      * Create dummy encryption data emitter, as those are not sent from the
      * RxPlayer for directfile contents.
