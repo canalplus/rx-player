@@ -27,6 +27,7 @@ import assert from "../../utils/assert";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
+import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 import type { PlaybackObserver } from "../api";
 import { ContentInitializer } from "./types";
@@ -89,16 +90,17 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
     clearElementSrc(mediaElement);
 
-    // Set the autoplay attribute on the mediaElement.
-    // On Apple devices, the native HLS player needs autoplay to be set
-    // in order to start buffering,which is required for our API's autoplay to work.
-    mediaElement.autoplay = this._settings.autoPlay;
     /**
      * Create dummy encryption data emitter, as those are not sent from the
      * RxPlayer for directfile contents.
      */
     const decryptionRef = new SharedReference(null);
     decryptionRef.finish();
+
+    // Set the autoplay attribute on the mediaElement.
+    // On Apple devices, the native HLS player needs autoplay to be set
+    // in order to start buffering,which is required for our API's autoplay to work.
+    setAutoplay(mediaElement, this._settings.autoPlay, cancelSignal);
 
     const drmInitRef = initializeContentDecryption(
       mediaElement,
@@ -245,6 +247,31 @@ export default class DirectFileContentInitializer extends ContentInitializer {
         }
       });
   }
+}
+
+/**
+ * Set autoplay value on the mediaElement.
+ *
+ * @param {HTMLElement} mediaElement - The media element whose `autoplay`
+ * attribute will be modified.
+ * @param {CancellationSignal} cancellationSignal - The signal that, when triggered,
+ * restores the `autoplay` attribute to its original value.
+ */
+export function setAutoplay(
+  mediaElement: HTMLMediaElement,
+  autoplay: boolean,
+  cancellationSignal: CancellationSignal,
+) {
+  const autoplayPreviousValue = mediaElement.autoplay;
+  cancellationSignal.register(() => {
+    /**
+     * Restore the `autoplay` attribute to its previous value.
+     * This ensures that the media element's state is the same as it was before
+     * calling `RxPlayer.loadVideo` in the application.
+     */
+    mediaElement.autoplay = autoplayPreviousValue;
+  });
+  mediaElement.disableRemotePlayback = autoplay;
 }
 
 /**
