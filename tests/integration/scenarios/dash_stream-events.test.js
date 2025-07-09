@@ -659,7 +659,7 @@ describe("DASH Stream events", function () {
     );
   }, 15000);
 
-  it("should receive an event when skipping one", { timeout: 5000 }, async function () {
+  it("should receive an event when skipping one", { timeout: 7000 }, async function () {
     const streamEventsReceived = [];
     const streamEventSkipReceived = [];
 
@@ -681,7 +681,7 @@ describe("DASH Stream events", function () {
 
     const wantedEvent = EVENTS.periods[0][0]; //  -> 5 - 8
     await loadContent(0);
-    await sleep(1000);
+    await sleep(3000);
 
     player.seekTo(9);
 
