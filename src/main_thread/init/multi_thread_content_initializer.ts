@@ -179,7 +179,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       contentId,
       contentDecryptor: null,
       manifest: null,
-      mainThreadMediaSource: null,
+      mediaSourceInfo: null,
       rebufferingController: null,
       streamEventsEmitter: null,
       initialTime: undefined,
@@ -382,7 +382,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         mediaElement,
         lastContentProtection,
         mediaSourceStatus,
-        () => reloadMediaSource(0, undefined, undefined),
+        () => triggerMediaSourceReload(0, undefined, undefined),
         this._initCanceller.signal,
       );
     const contentInfo = this._currentContentInfo;
@@ -415,6 +415,44 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       },
       { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
     );
+
+    /**
+     * Callback allowing to signal the core that it should reload the `MediaSource` now.
+     * @param {number} deltaPosition - Position you want to seek to after
+     * reloading, as a delta in seconds from the last polled playing position.
+     * @param {number|undefined} minimumPosition - If set, minimum time bound
+     * in seconds after `deltaPosition` has been applied.
+     * @param {number|undefined} maximumPosition - If set, minimum time bound
+     * in seconds after `deltaPosition` has been applied.
+     */
+    const triggerMediaSourceReload = (
+      deltaPosition: number,
+      minimumPosition: number | undefined,
+      maximumPosition: number | undefined,
+    ): void => {
+      const reloadingContentInfo = this._currentContentInfo;
+      if (reloadingContentInfo === null) {
+        log.warn("MTCI: Asked to reload when no content is loaded.");
+        return;
+      }
+      if (
+        reloadingContentInfo === null ||
+        reloadingContentInfo.mediaSourceInfo === null
+      ) {
+        log.warn("MTCI: Asked to reload when no MediaSource is active.");
+        return;
+      }
+
+      const mediaSourceId =
+        reloadingContentInfo.mediaSourceInfo.type === "main"
+          ? reloadingContentInfo.mediaSourceInfo.mediaSource.id
+          : reloadingContentInfo.mediaSourceInfo.mediaSourceId;
+      sendMessage(this._settings.worker, {
+        type: MainThreadMessageType.TriggerMediaSourceReload,
+        mediaSourceId,
+        value: { minimumPosition, maximumPosition, timeOffset: deltaPosition },
+      });
+    };
 
     /**
      * Callback allowing to reload the current content.
@@ -467,6 +505,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
+          if (this._currentContentInfo !== null) {
+            if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
+              this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
+            }
+            this._currentContentInfo.mediaSourceInfo = {
+              type: "core",
+              mediaSourceId: msgData.mediaSourceId,
+            };
+          }
+
           const mediaSourceLink = msgData.value;
           mediaSourceStatus.onUpdate(
             (currStatus, stopListening) => {
@@ -522,12 +570,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         case WorkerMessageType.AddSourceBuffer:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            const mediaSource = this._currentContentInfo.mainThreadMediaSource;
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
             mediaSource.addSourceBuffer(
               msgData.value.sourceBufferType,
               msgData.value.codec,
@@ -538,12 +587,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         case WorkerMessageType.SourceBufferAppend:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            const mediaSource = this._currentContentInfo.mainThreadMediaSource;
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
             const sourceBuffer = arrayFind(
               mediaSource.sourceBuffers,
               (s) => s.type === msgData.sourceBufferType,
@@ -580,12 +630,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         case WorkerMessageType.SourceBufferRemove:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            const mediaSource = this._currentContentInfo.mainThreadMediaSource;
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
             const sourceBuffer = arrayFind(
               mediaSource.sourceBuffers,
               (s) => s.type === msgData.sourceBufferType,
@@ -622,12 +673,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         case WorkerMessageType.AbortSourceBuffer:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            const mediaSource = this._currentContentInfo.mainThreadMediaSource;
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
             const sourceBuffer = arrayFind(
               mediaSource.sourceBuffers,
               (s) => s.type === msgData.sourceBufferType,
@@ -642,12 +694,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         case WorkerMessageType.UpdateMediaSourceDuration:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            const mediaSource = this._currentContentInfo.mainThreadMediaSource;
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
             if (mediaSource?.id !== msgData.mediaSourceId) {
               return;
             }
@@ -658,12 +711,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         case WorkerMessageType.InterruptMediaSourceDurationUpdate:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            const mediaSource = this._currentContentInfo.mainThreadMediaSource;
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
             if (mediaSource?.id !== msgData.mediaSourceId) {
               return;
             }
@@ -674,36 +728,42 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         case WorkerMessageType.EndOfStream:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            this._currentContentInfo.mainThreadMediaSource.maintainEndOfStream();
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
+            mediaSource.maintainEndOfStream();
           }
           break;
 
         case WorkerMessageType.InterruptEndOfStream:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            this._currentContentInfo.mainThreadMediaSource.stopEndOfStream();
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
+            mediaSource.stopEndOfStream();
           }
           break;
 
         case WorkerMessageType.DisposeMediaSource:
           {
             if (
-              this._currentContentInfo?.mainThreadMediaSource?.id !==
-              msgData.mediaSourceId
+              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+                msgData.mediaSourceId
             ) {
               return;
             }
-            this._currentContentInfo.mainThreadMediaSource.dispose();
+            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
+            mediaSource.dispose();
           }
           break;
 
@@ -1131,7 +1191,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
             const keySystem = getKeySystemConfiguration(mediaElement);
             if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
-              reloadMediaSource(0, undefined, undefined);
+              triggerMediaSourceReload(0, undefined, undefined);
             } else {
               const lastObservation = playbackObserver.getReference().getValue();
 
@@ -1213,7 +1273,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   public dispose(): void {
     this._initCanceller.cancel();
     if (this._currentContentInfo !== null) {
-      this._currentContentInfo.mainThreadMediaSource?.dispose();
+      if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
+        this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
+      }
       this._currentContentInfo = null;
     }
   }
@@ -1541,7 +1603,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return null;
     }
 
-    const { manifest, mainThreadMediaSource: mediaSource } = this._currentContentInfo;
+    const { manifest, mediaSourceInfo } = this._currentContentInfo;
     const { speed } = this._settings;
     const { initialTime, autoPlay, mediaElement, textDisplayer, playbackObserver } =
       parameters;
@@ -1566,7 +1628,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         autoPlay,
         initialPlayPerformed,
         manifest,
-        mediaSource,
+        mediaSource:
+          mediaSourceInfo?.type === "main" ? mediaSourceInfo.mediaSource : null,
         speed,
         textDisplayer,
       },
@@ -1842,7 +1905,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             if (currStatus === MediaSourceInitializationStatus.AttachNow) {
               stopListening();
               const mediaSource = new MainMediaSourceInterface(mediaSourceId);
-              this._currentContentInfo.mainThreadMediaSource = mediaSource;
+              if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
+                this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
+              }
+              this._currentContentInfo.mediaSourceInfo = {
+                type: "main",
+                mediaSource,
+              };
               mediaSource.addEventListener("mediaSourceOpen", () => {
                 sendMessage(worker, {
                   type: MainThreadMessageType.MediaSourceReadyStateChange,
@@ -1915,7 +1984,17 @@ export interface IMultiThreadContentInitializerContentInfos {
    *
    * `null` if no MediaSource is currently created for the content.
    */
-  mainThreadMediaSource: MainMediaSourceInterface | null;
+  mediaSourceInfo:
+    | {
+        type: "main";
+        mediaSource: MainMediaSourceInterface;
+      }
+    | {
+        type: "core";
+        mediaSourceId: string;
+      }
+    | null;
+
   /**
    * Current `RebufferingController` linked to the content, allowing to
    * detect and handle rebuffering situations.

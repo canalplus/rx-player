@@ -439,6 +439,17 @@ export interface ISerializedPlaybackObservation {
   fullyLoaded: boolean;
 }
 
+export interface ITriggerMediaSourceReloadMainMessage {
+  type: MainThreadMessageType.TriggerMediaSourceReload;
+  /** Identify the MediaSource concerned by this message. */
+  mediaSourceId: string;
+  value: {
+    timeOffset: number;
+    minimumPosition?: number | undefined;
+    maximumPosition?: number | undefined;
+  };
+}
+
 /**
  * Sent when the SourceBuffer linked to the given `mediaSourceId` and
  * `SourceBufferType`, running on the main thread, succeeded to perform the last
@@ -589,6 +600,7 @@ export const enum MainThreadMessageType {
   PrepareContent = "prepare",
   ReferenceUpdate = "ref-update",
   RepresentationUpdate = "rep-update",
+  TriggerMediaSourceReload = "trig-ms-reload",
   SourceBufferError = "sb-error",
   SourceBufferSuccess = "sb-success",
   StartPreparedContent = "start",
@@ -610,6 +622,7 @@ export type IMainThreadMessage =
   | IPlaybackObservationMessage
   | IDecipherabilityStatusChangedMessage
   | IUpdateContentUrlsMessage
+  | ITriggerMediaSourceReloadMainMessage
   | ISourceBufferErrorMainMessage
   | ISourceBufferOperationSuccessMainMessage
   | ITrackUpdateMessage
@@ -691,7 +704,7 @@ export interface IWarningWorkerMessage {
 export interface IAttachMediaSourceWorkerMessage {
   type: WorkerMessageType.AttachMediaSource;
   contentId: string | undefined;
-  mediaSourceId: string | undefined;
+  mediaSourceId: string;
   value: IAttachMediaSourceWorkerMessagePayload;
 }
 

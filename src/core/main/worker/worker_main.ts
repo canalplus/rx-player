@@ -70,6 +70,8 @@ export default function initializeWorkerMain() {
    */
   let currentLoadedContentTaskCanceller: TaskCanceller | null = null;
 
+  let currentContentHandle: IContentHandle | null = null;
+
   // Initialize Manually a `DashWasmParser` and add the feature.
   // TODO allow worker-side feature-switching? Not sure how
   const dashWasmParser = new DashWasmParser();
@@ -136,6 +138,7 @@ export default function initializeWorkerMain() {
           currentLoadedContentTaskCanceller = null;
         }
 
+        // XXX TODO: Move inside loadOrReloadPreparedContent
         const currentCanceller = new TaskCanceller();
         const currentContentObservationRef =
           new SharedReference<IWorkerPlaybackObservation>(
@@ -149,7 +152,7 @@ export default function initializeWorkerMain() {
           currentContentObservationRef.finish();
         });
         log.debug("WP: Loading new pepared content.");
-        loadOrReloadPreparedContent(
+        currentContentHandle = loadOrReloadPreparedContent(
           msg.value,
           contentPreparer,
           currentContentObservationRef,
@@ -195,6 +198,16 @@ export default function initializeWorkerMain() {
         if (currentLoadedContentTaskCanceller !== null) {
           currentLoadedContentTaskCanceller.cancel();
           currentLoadedContentTaskCanceller = null;
+        }
+        break;
+
+      case MainThreadMessageType.TriggerMediaSourceReload:
+        {
+          const preparedContent = contentPreparer.getCurrentContent();
+          if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+            return;
+          }
+          currentContentHandle?.reload(msg.value);
         }
         break;
 
@@ -485,12 +498,16 @@ interface IBufferingInitializationInformation {
   onCodecSwitch: "continue" | "reload";
 }
 
+interface IContentHandle {
+  reload: (payload: INeedsMediaSourceReloadPayload) => void;
+}
+
 function loadOrReloadPreparedContent(
   val: IBufferingInitializationInformation,
   contentPreparer: ContentPreparer,
   playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
   parentCancelSignal: CancellationSignal,
-) {
+): IContentHandle {
   log.debug("WP: Loading prepared content");
   const currentLoadCanceller = new TaskCanceller();
   currentLoadCanceller.linkToSignal(parentCancelSignal);
@@ -516,7 +533,7 @@ function loadOrReloadPreparedContent(
       contentId: undefined,
       value: formatErrorForSender(error),
     });
-    return;
+    throw error;
   }
   const {
     contentId,
@@ -559,7 +576,7 @@ function loadOrReloadPreparedContent(
       contentId,
       value: formatErrorForSender(error),
     });
-    return;
+    throw error;
   }
 
   const playbackObserver = new WorkerPlaybackObserver(
@@ -614,6 +631,12 @@ function loadOrReloadPreparedContent(
     handleStreamOrchestratorCallbacks(),
     currentLoadCanceller.signal,
   );
+
+  return {
+    reload: (payload: INeedsMediaSourceReloadPayload): void => {
+      return handleMediaSourceReload(payload);
+    },
+  };
 
   /**
    * Returns Object handling the callbacks from a `StreamOrchestrator`, which
