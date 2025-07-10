@@ -138,7 +138,7 @@ export interface IWarningCoreMessage {
 export interface IAttachMediaSourceCoreMessage {
   type: CoreMessageType.AttachMediaSource;
   contentId: string | undefined;
-  mediaSourceId: string | undefined;
+  mediaSourceId: string;
   value: IAttachMediaSourceCoreMessagePayload;
 }
 

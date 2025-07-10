@@ -99,6 +99,8 @@ export default function initializeCoreEntry(
    */
   let currentLoadedContentTaskCanceller: TaskCanceller | null = null;
 
+  let currentContentHandle: IContentHandle | null = null;
+
   /**
    * When set, emit playback observation made on the main thread.
    */
@@ -161,6 +163,7 @@ export default function initializeCoreEntry(
           currentLoadedContentTaskCanceller = null;
         }
 
+        // XXX TODO: Move inside loadOrReloadPreparedContent
         const currentCanceller = new TaskCanceller();
         const currentContentObservationRef =
           new SharedReference<ICorePlaybackObservation>(
@@ -174,7 +177,7 @@ export default function initializeCoreEntry(
           currentContentObservationRef.finish();
         });
         log.debug("WP: Loading new pepared content.");
-        loadOrReloadPreparedContent(
+        currentContentHandle = loadOrReloadPreparedContent(
           sendMessage,
           msg.value,
           contentPreparer,
@@ -222,6 +225,16 @@ export default function initializeCoreEntry(
         if (currentLoadedContentTaskCanceller !== null) {
           currentLoadedContentTaskCanceller.cancel();
           currentLoadedContentTaskCanceller = null;
+        }
+        break;
+
+      case MainThreadMessageType.TriggerMediaSourceReload:
+        {
+          const preparedContent = contentPreparer.getCurrentContent();
+          if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+            return;
+          }
+          currentContentHandle?.reload(msg.value);
         }
         break;
 
@@ -534,6 +547,10 @@ interface IBufferingInitializationInformation {
   onCodecSwitch: "continue" | "reload";
 }
 
+interface IContentHandle {
+  reload: (payload: INeedsMediaSourceReloadPayload) => void;
+}
+
 function loadOrReloadPreparedContent(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   val: IBufferingInitializationInformation,
@@ -541,7 +558,7 @@ function loadOrReloadPreparedContent(
   playbackObservationRef: IReadOnlySharedReference<ICorePlaybackObservation>,
   refs: ICoreReferences,
   parentCancelSignal: CancellationSignal,
-) {
+): IContentHandle {
   log.debug("WP: Loading prepared content");
   const currentLoadCanceller = new TaskCanceller();
   currentLoadCanceller.linkToSignal(parentCancelSignal);
@@ -567,7 +584,7 @@ function loadOrReloadPreparedContent(
       contentId: undefined,
       value: formatErrorForSender(error),
     });
-    return;
+    throw error;
   }
   const {
     contentId,
@@ -610,7 +627,7 @@ function loadOrReloadPreparedContent(
       contentId,
       value: formatErrorForSender(error),
     });
-    return;
+    throw error;
   }
 
   const playbackObserver = new CorePlaybackObserver(
@@ -665,6 +682,12 @@ function loadOrReloadPreparedContent(
     handleStreamOrchestratorCallbacks(),
     currentLoadCanceller.signal,
   );
+
+  return {
+    reload: (payload: INeedsMediaSourceReloadPayload): void => {
+      return handleMediaSourceReload(payload);
+    },
+  };
 
   /**
    * Returns Object handling the callbacks from a `StreamOrchestrator`, which
