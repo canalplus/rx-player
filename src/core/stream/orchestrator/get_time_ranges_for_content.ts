@@ -20,8 +20,8 @@ import type {
   IPeriodMetadata,
   IRepresentationMetadata,
 } from "../../../manifest";
-import type { IRange } from "../../../utils/ranges";
-import type { SegmentSink } from "../../segment_sinks";
+import { insertInto, type IRange } from "../../../utils/ranges";
+import { SegmentSinkOperation, type SegmentSink } from "../../segment_sinks";
 
 /**
  * Returns the buffered ranges which hold the given content.
@@ -41,8 +41,10 @@ export default function getTimeRangesForContent(
   if (contents.length === 0) {
     return [];
   }
-  const accumulator: IRange[] = [];
+  const ranges: IRange[] = [];
   const inventory = segmentSink.getLastKnownInventory();
+
+  const pendingOperations = segmentSink.getPendingOperations();
 
   for (const chunk of inventory) {
     const hasContent = contents.some((content) => {
@@ -59,16 +61,36 @@ export default function getTimeRangesForContent(
         return [{ start: 0, end: Number.MAX_VALUE }];
       }
 
-      const previousLastElement = accumulator[accumulator.length - 1];
+      const previousLastElement = ranges[ranges.length - 1];
       if (
         previousLastElement !== undefined &&
         previousLastElement.end === bufferedStart
       ) {
         previousLastElement.end = bufferedEnd;
       } else {
-        accumulator.push({ start: bufferedStart, end: bufferedEnd });
+        ranges.push({ start: bufferedStart, end: bufferedEnd });
       }
     }
   }
-  return accumulator;
+
+  for (const operation of pendingOperations) {
+    if (operation.type !== SegmentSinkOperation.Push) {
+      continue;
+    }
+    const pushInfo = operation.value;
+    const hasContent = contents.some((content) => {
+      return (
+        pushInfo.inventoryInfos.period.id === content.period.id &&
+        pushInfo.inventoryInfos.adaptation.id === content.adaptation.id &&
+        pushInfo.inventoryInfos.representation.id === content.representation.id
+      );
+    });
+    if (hasContent) {
+      insertInto(ranges, {
+        start: pushInfo.inventoryInfos.start,
+        end: pushInfo.inventoryInfos.end,
+      });
+    }
+  }
+  return ranges;
 }
