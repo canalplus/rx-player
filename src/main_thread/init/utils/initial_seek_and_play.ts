@@ -151,7 +151,7 @@ export default function performInitialSeekAndPlay(
               waitForSeekable();
             }
           },
-          { includeLastObservation: true, clearSignal: cancelSignal },
+          { includeLastObservation: false, clearSignal: cancelSignal },
         );
       }
 
@@ -197,7 +197,7 @@ export default function performInitialSeekAndPlay(
             }
             waitForPlayable();
           },
-          { includeLastObservation: true, clearSignal: cancelSignal },
+          { includeLastObservation: false, clearSignal: cancelSignal },
         );
       }
 
