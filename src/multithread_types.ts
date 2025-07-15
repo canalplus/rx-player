@@ -439,15 +439,16 @@ export interface ISerializedPlaybackObservation {
   fullyLoaded: boolean;
 }
 
+/**
+ * Sent when the main thread had to "reload" the media source.
+ * The worker should understand that this MediaSource won't be used anymore.
+ */
 export interface ITriggerMediaSourceReloadMainMessage {
-  type: MainThreadMessageType.TriggerMediaSourceReload;
+  type: MainThreadMessageType.MediaSourceReload;
   /** Identify the MediaSource concerned by this message. */
   mediaSourceId: string;
-  value: {
-    timeOffset: number;
-    minimumPosition?: number | undefined;
-    maximumPosition?: number | undefined;
-  };
+  /** No message is necessary. */
+  value: null;
 }
 
 /**
@@ -600,7 +601,7 @@ export const enum MainThreadMessageType {
   PrepareContent = "prepare",
   ReferenceUpdate = "ref-update",
   RepresentationUpdate = "rep-update",
-  TriggerMediaSourceReload = "trig-ms-reload",
+  MediaSourceReload = "ms-reload",
   SourceBufferError = "sb-error",
   SourceBufferSuccess = "sb-success",
   StartPreparedContent = "start",
@@ -853,7 +854,8 @@ export interface IUpdatePlaybackRateWorkerMessage {
 
 export interface IReloadingMediaSourceWorkerMessage {
   type: WorkerMessageType.ReloadingMediaSource;
-  contentId: string;
+  /** Identify the MediaSource concerned by this message. */
+  mediaSourceId: string;
   value: {
     timeOffset: number;
     minimumPosition?: number | undefined;

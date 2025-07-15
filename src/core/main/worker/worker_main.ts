@@ -190,13 +190,13 @@ export default function initializeWorkerMain() {
         playbackObservationRef = null;
         break;
 
-      case MainThreadMessageType.TriggerMediaSourceReload:
+      case MainThreadMessageType.MediaSourceReload:
         {
           const preparedContent = contentPreparer.getCurrentContent();
           if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
             return;
           }
-          currentContentHandle?.reload(msg.value);
+          currentContentHandle?.signalMediaSourceReload();
         }
         break;
 
@@ -488,7 +488,12 @@ interface ILoadingContentParameters {
 }
 
 interface IContentHandle {
-  reload: (payload: INeedsMediaSourceReloadPayload) => void;
+  /**
+   * Callback to call if a "MediaSource reload" was triggered by an external
+   * component (e.g. main thread).
+   */
+  signalMediaSourceReload: () => void;
+  /** Callback to call to stop the content and free all its related resources. */
   stop: () => void;
 }
 
@@ -505,8 +510,8 @@ function loadPreparedContent(
 
   startLoadingAt(val.initialTime);
   return {
-    reload: (payload: INeedsMediaSourceReloadPayload): void => {
-      return handleMediaSourceReload(payload);
+    signalMediaSourceReload: (): void => {
+      return onMediaSourceReload();
     },
     stop: () => {
       contentCanceller.cancel();
@@ -562,7 +567,7 @@ function loadPreparedContent(
           handleFreezeResolution(freezeResolution, {
             contentId,
             manifest,
-            handleMediaSourceReload,
+            handleMediaSourceReload: performMediaSourceReload,
             enableRepresentationAvoidance,
           });
         }
@@ -826,7 +831,7 @@ function loadPreparedContent(
         },
 
         needsMediaSourceReload(payload: INeedsMediaSourceReloadPayload) {
-          handleMediaSourceReload(payload);
+          performMediaSourceReload(payload);
         },
 
         needsDecipherabilityFlush() {
@@ -914,13 +919,15 @@ function loadPreparedContent(
     }
   }
 
-  function handleMediaSourceReload(payload: INeedsMediaSourceReloadPayload) {
-    // TODO more precize one day?
-    const lastObservation = playbackObservationRef.getValue();
-    const newInitialTime = lastObservation.position.getWanted();
+  function performMediaSourceReload(payload: INeedsMediaSourceReloadPayload): void {
     if (currentLoadCanceller !== null) {
       currentLoadCanceller.cancel();
       currentLoadCanceller = null;
+    }
+    const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource.id;
+    if (mediaSourceId === undefined) {
+      log.warn("WP: Cannot reload MediaSource: no MediaSource currently.");
+      return;
     }
     log.debug(
       "WP: Reloading MediaSource",
@@ -928,8 +935,29 @@ function loadPreparedContent(
       payload.minimumPosition,
       payload.maximumPosition,
     );
+
+    sendMessage(
+      {
+        type: WorkerMessageType.ReloadingMediaSource,
+        mediaSourceId,
+        value: payload,
+      },
+      [],
+    );
+    onMediaSourceReload();
+  }
+
+  function onMediaSourceReload(): void {
+    // TODO more precize one day?
+    const lastObservation = playbackObservationRef.getValue();
+    const newInitialTime = lastObservation.position.getWanted();
+    if (currentLoadCanceller !== null) {
+      currentLoadCanceller.cancel();
+      currentLoadCanceller = null;
+    }
+    log.debug("WP: Reloading MediaSource");
     const contentId = contentPreparer.getCurrentContent()?.contentId;
-    contentPreparer.reloadMediaSource(payload).then(
+    contentPreparer.reloadMediaSource().then(
       () => {
         log.info("WP: MediaSource Reloaded, loading content again", newInitialTime);
         startLoadingAt(newInitialTime);

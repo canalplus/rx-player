@@ -382,7 +382,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         mediaElement,
         lastContentProtection,
         mediaSourceStatus,
-        () => triggerMediaSourceReload(0, undefined, undefined),
+        () => notifyAndStartMediaSourceReload(0, undefined, undefined),
         this._initCanceller.signal,
       );
     const contentInfo = this._currentContentInfo;
@@ -417,7 +417,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     );
 
     /**
-     * Callback allowing to signal the core that it should reload the `MediaSource` now.
+     * Reset directly (synchronously) the current `MediaSource` and signal to
+     * the core that we did so.
      * @param {number} deltaPosition - Position you want to seek to after
      * reloading, as a delta in seconds from the last polled playing position.
      * @param {number|undefined} minimumPosition - If set, minimum time bound
@@ -425,7 +426,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
      * @param {number|undefined} maximumPosition - If set, minimum time bound
      * in seconds after `deltaPosition` has been applied.
      */
-    const triggerMediaSourceReload = (
+    const notifyAndStartMediaSourceReload = (
       deltaPosition: number,
       minimumPosition: number | undefined,
       maximumPosition: number | undefined,
@@ -448,14 +449,18 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           ? reloadingContentInfo.mediaSourceInfo.mediaSource.id
           : reloadingContentInfo.mediaSourceInfo.mediaSourceId;
       sendMessage(this._settings.worker, {
-        type: MainThreadMessageType.TriggerMediaSourceReload,
+        type: MainThreadMessageType.MediaSourceReload,
         mediaSourceId,
-        value: { minimumPosition, maximumPosition, timeOffset: deltaPosition },
+        value: null,
       });
+      reloadMediaSource(deltaPosition, minimumPosition, maximumPosition);
     };
 
     /**
-     * Callback allowing to reload the current content.
+     * Reset directly (synchronously) the current `MediaSource`.
+     *
+     * It is assumed that `core` already knows about this action. If not, call
+     * `notifyAndStartMediaSourceReload` instead.
      * @param {number} deltaPosition - Position you want to seek to after
      * reloading, as a delta in seconds from the last polled playing position.
      * @param {number|undefined} minimumPosition - If set, minimum time bound
@@ -1171,10 +1176,19 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
         case WorkerMessageType.ReloadingMediaSource:
           {
-            if (this._currentContentInfo?.contentId !== msgData.contentId) {
+            if (
+              this._currentContentInfo === null ||
+              this._currentContentInfo.mediaSourceInfo === null
+            ) {
               return;
             }
-
+            const mediaSourceId =
+              this._currentContentInfo.mediaSourceInfo.type === "main"
+                ? this._currentContentInfo.mediaSourceInfo.mediaSource.id
+                : this._currentContentInfo.mediaSourceInfo.mediaSourceId;
+            if (mediaSourceId !== msgData.mediaSourceId) {
+              return;
+            }
             reloadMediaSource(
               msgData.value.timeOffset,
               msgData.value.minimumPosition,
@@ -1191,7 +1205,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
 
             const keySystem = getKeySystemConfiguration(mediaElement);
             if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
-              triggerMediaSourceReload(0, undefined, undefined);
+              notifyAndStartMediaSourceReload(0, undefined, undefined);
             } else {
               const lastObservation = playbackObserver.getReference().getValue();
 

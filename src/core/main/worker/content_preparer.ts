@@ -31,7 +31,6 @@ import CdnPrioritizer from "../../fetchers/cdn_prioritizer";
 import createThumbnailFetcher from "../../fetchers/thumbnails/thumbnail_fetcher";
 import type { IThumbnailFetcher } from "../../fetchers/thumbnails/thumbnail_fetcher";
 import SegmentSinksStore from "../../segment_sinks";
-import type { INeedsMediaSourceReloadPayload } from "../../stream";
 import FreezeResolver from "../common/FreezeResolver";
 import { limitVideoResolution, throttleVideoBitrate } from "./globals";
 import sendMessage, { formatErrorForSender } from "./send_message";
@@ -325,30 +324,18 @@ export default class ContentPreparer {
   }
 
   /**
-   * If there is a prepared content right now, performs the destructive
-   * "reloading" strategy: dispose of its `MediaSource` (and of its
-   * `SourceBuffer`) and recreate one.
+   * Signal the ContentPreparer that the MediaSource is "reloading".
    *
    * The returned Promise resolves when it restarts being ready.
-   * @param {Object} reloadInfo
    * @returns {Promise}
    */
-  public reloadMediaSource(reloadInfo: INeedsMediaSourceReloadPayload): Promise<void> {
+  public reloadMediaSource(): Promise<void> {
     this._currentMediaSourceCanceller.cancel();
     if (this._currentContent === null) {
       return Promise.reject(new Error("CP: No content anymore"));
     }
     this._currentContent.trackChoiceSetter.reset();
     this._currentMediaSourceCanceller = new TaskCanceller();
-
-    sendMessage(
-      {
-        type: WorkerMessageType.ReloadingMediaSource,
-        contentId: this._currentContent.contentId,
-        value: reloadInfo,
-      },
-      [],
-    );
 
     const [mediaSourceInterface, segmentSinksStore, workerTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
