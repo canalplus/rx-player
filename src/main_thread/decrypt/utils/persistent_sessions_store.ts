@@ -250,6 +250,12 @@ export default class PersistentSessionsStore {
       return lazyConcatenatedData;
     }
 
+    log.warn("DRM: !!!!! ENTRIES INFO", this._entries.length);
+    let en = 0;
+    for (const entry of this._entries) {
+      log.warn("DRM: !!!! entry info", en, JSON.stringify(entry));
+      en++;
+    }
     for (let i = 0; i < this._entries.length; i++) {
       const entry = this._entries[i];
       if (entry.initDataType === initData.type) {
