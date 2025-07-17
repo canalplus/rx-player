@@ -261,20 +261,44 @@ export default class PersistentSessionsStore {
                 for (const entryKid of entry.keyIds) {
                   if (typeof entryKid === "string") {
                     if (keyIdB64 === entryKid) {
+                      log.debug(
+                        "DRM: PSS: Found wanted kid stored on entry",
+                        `i=${i}`,
+                        `key-id=${keyIdB64}`,
+                        `session-id=${entry.sessionId}`,
+                      );
                       return true;
                     }
                   } else if (areArraysOfNumbersEqual(entryKid.initData, keyId)) {
+                    if (log.hasLevel("DEBUG")) {
+                      log.debug(
+                        "DRM: PSS: Found wanted kid stored on entry",
+                        `i=${i}`,
+                        `key-id=${bytesToBase64(entryKid.initData)}`,
+                        `session-id=${entry.sessionId}`,
+                      );
+                    }
                     return true;
                   }
                 }
                 return false;
               });
               if (foundCompatible) {
+                log.debug(
+                  "DRM: PSS: Found compatible entry of v4",
+                  `i=${i}`,
+                  `session-id=${entry.sessionId}`,
+                );
                 return i;
               }
             } else {
               const formatted = initData.values.getFormattedValues();
               if (areInitializationValuesCompatible(formatted, entry.values)) {
+                log.debug(
+                  "DRM: PSS: Found compatible entry of v4 without init data",
+                  `i=${i}`,
+                  `session-id=${entry.sessionId}`,
+                );
                 return i;
               }
             }
@@ -283,6 +307,11 @@ export default class PersistentSessionsStore {
           case 3: {
             const formatted = initData.values.getFormattedValues();
             if (areInitializationValuesCompatible(formatted, entry.values)) {
+              log.debug(
+                "DRM: PSS: Found compatible entry of v3 - same values",
+                `i=${i}`,
+                `session-id=${entry.sessionId}`,
+              );
               return i;
             }
             break;
@@ -298,6 +327,11 @@ export default class PersistentSessionsStore {
                     ? SerializableBytes.decode(entry.initData)
                     : entry.initData.initData;
                 if (areArraysOfNumbersEqual(decodedInitData, concatInitData)) {
+                  log.debug(
+                    "DRM: PSS: Found compatible entry of v2 - same concatenated init data",
+                    `i=${i}`,
+                    `session-id=${entry.sessionId}`,
+                  );
                   return i;
                 }
               } catch (e) {
@@ -319,8 +353,20 @@ export default class PersistentSessionsStore {
                 // convert it back to an Uint8Array but this would necessitate some
                 // ugly unreadable logic for a very very minor possibility.
                 // Just consider that it is a match based on the hash.
+                log.debug(
+                  "DRM: PSS: Found compatible entry of v1 - same hash only",
+                  `i=${i}`,
+                  `hash=${concatHash}`,
+                  `session-id=${entry.sessionId}`,
+                );
                 return i;
               } else if (areArraysOfNumbersEqual(entry.initData, concatInitData)) {
+                log.debug(
+                  "DRM: PSS: Found compatible entry of v1 - same hash and initData",
+                  `i=${i}`,
+                  `hash=${concatHash}`,
+                  `session-id=${entry.sessionId}`,
+                );
                 return i;
               }
             }
@@ -330,6 +376,12 @@ export default class PersistentSessionsStore {
           default: {
             const { initDataHash: concatHash } = getConcatenatedInitDataInfo();
             if (entry.initData === concatHash) {
+              log.debug(
+                "DRM: PSS: Found compatible entry - same hash only",
+                `i=${i}`,
+                `hash=${concatHash}`,
+                `session-id=${entry.sessionId}`,
+              );
               return i;
             }
           }
