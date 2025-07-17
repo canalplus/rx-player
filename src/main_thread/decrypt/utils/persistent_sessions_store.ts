@@ -174,6 +174,12 @@ export default class PersistentSessionsStore {
       });
     }
     this._save();
+    log.warn("DRM: !!!!! ADD ENTRIES INFO", this._entries.length);
+    let en = 0;
+    for (const entry of this._entries) {
+      log.warn("DRM: !!!! entry info", en, JSON.stringify(entry));
+      en++;
+    }
   }
 
   /**
@@ -262,6 +268,10 @@ export default class PersistentSessionsStore {
         switch (entry.version) {
           case 4:
             if (initData.keyIds !== undefined) {
+              log.warn(
+                "DRM: !!!! EST-CE QUE CE SERAIT TY PAS CA :O",
+                initData.keyIds.length,
+              );
               const foundCompatible = initData.keyIds.every((keyId) => {
                 const keyIdB64 = bytesToBase64(keyId);
                 for (const entryKid of entry.keyIds) {
