@@ -140,6 +140,11 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     expect(currentVideoTrack).to.equal(null);
   }
 
+  function checkNoAudioTrack() {
+    const currentAudioTrack = player.getAudioTrack();
+    expect(currentAudioTrack).to.equal(null);
+  }
+
   function checkVideoTrack(codecRules, isSignInterpreted) {
     const currentVideoTrack = player.getVideoTrack();
 
@@ -225,18 +230,23 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       const videoTrackPreference = videoTrackPreferences[i];
 
       if (audioTrackPreference !== undefined) {
-        const availableAudioTracks = player.getAvailableAudioTracks(period.id);
-        expect(availableAudioTracks).not.to.be.empty;
-        const wantedAudioTrack = chooseWantedAudioTrack(
-          availableAudioTracks,
-          audioTrackPreference,
-        );
-        if (wantedAudioTrack !== undefined) {
-          player.setAudioTrack({
-            trackId: wantedAudioTrack.id,
-            periodId: period.id,
-          });
-          expect(player.getAudioTrack(period.id).id).to.equal(wantedAudioTrack.id);
+        if (audioTrackPreference === null) {
+          player.disableAudioTrack(period.id);
+          expect(player.getAudioTrack(period.id)).to.equal(null);
+        } else {
+          const availableAudioTracks = player.getAvailableAudioTracks(period.id);
+          expect(availableAudioTracks).not.to.be.empty;
+          const wantedAudioTrack = chooseWantedAudioTrack(
+            availableAudioTracks,
+            audioTrackPreference,
+          );
+          if (wantedAudioTrack !== undefined) {
+            player.setAudioTrack({
+              trackId: wantedAudioTrack.id,
+              periodId: period.id,
+            });
+            expect(player.getAudioTrack(period.id).id).to.equal(wantedAudioTrack.id);
+          }
         }
       }
 
@@ -399,6 +409,22 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkAudioTrack("fr", "fra", true);
     checkNoTextTrack();
     checkNoVideoTrack();
+  });
+
+  it("should allow the initial disabling of the audio tracks", async () => {
+    player.addEventListener("newAvailablePeriods", () => {
+      updateTracks([null, null], [], []);
+    });
+    await loadContent();
+    checkNoAudioTrack();
+    checkNoTextTrack();
+    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+
+    await goToSecondPeriod();
+    checkNoAudioTrack();
+    checkNoTextTrack();
+    checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
+    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
   });
 
   it("setting the current track should not be persisted between Periods", async () => {

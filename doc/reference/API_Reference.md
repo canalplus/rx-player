@@ -288,6 +288,9 @@ events and so on.
 - [`disableVideoTrack`](../api/Track_Selection/disableVideoTrack.md): Disable the current
   video track.
 
+- [`disableAudioTrack`](../api/Track_Selection/disableAudioTrack.md): Disable the current
+  audio track.
+
 - [`getVideoRepresentation`](../api/Representation_Selection/getVideoRepresentation.md):
   Returns the currently-loading video Representation.
 

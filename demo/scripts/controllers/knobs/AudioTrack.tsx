@@ -34,27 +34,33 @@ function AudioTrackKnob({
       return [["Not available"], 0];
     }
     return [
-      availableAudioTracks.map((audioTrack) => {
-        return (
-          translateAudioTrackCode(audioTrack.normalized) +
-          (audioTrack.audioDescription ? " " + AUDIO_DESCRIPTION_ICON : "")
-        );
-      }),
+      ["no audio track"].concat(
+        availableAudioTracks.map((audioTrack) => {
+          return (
+            translateAudioTrackCode(audioTrack.normalized) +
+            (audioTrack.audioDescription ? " " + AUDIO_DESCRIPTION_ICON : "")
+          );
+        }),
+      ),
 
       currentAudioTrack
-        ? Math.max(findAudioTrackIndex(currentAudioTrack, availableAudioTracks), 0)
+        ? 1 + Math.max(findAudioTrackIndex(currentAudioTrack, availableAudioTracks), 0)
         : 0,
     ];
   }, [availableAudioTracks, currentAudioTrack]);
 
   const onAudioTrackChange = React.useCallback(
     ({ index }: { index: number }) => {
-      const track = availableAudioTracks[index];
-      if (track !== undefined) {
-        player.actions.setAudioTrack(track);
+      if (index > 0) {
+        const track = availableAudioTracks[index - 1];
+        if (track !== undefined) {
+          player.actions.setAudioTrack(track);
+        } else {
+          // eslint-disable-next-line no-console
+          console.error("Error: audio track not found");
+        }
       } else {
-        // eslint-disable-next-line no-console
-        console.error("Error: audio track not found");
+        player.actions.disableAudioTrack();
       }
     },
     [availableAudioTracks, player],
@@ -62,10 +68,10 @@ function AudioTrackKnob({
 
   return (
     <Knob
-      name="Audio AudioTrack"
+      name="Audio Track"
       ariaLabel="Update the audio track"
       className={className}
-      disabled={availableAudioTracks.length < 2}
+      disabled={availableAudioTracks.length < 1}
       onChange={onAudioTrackChange}
       options={options}
       selected={{ index: selectedIndex, value: undefined }}
