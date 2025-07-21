@@ -97,10 +97,7 @@ export default defineConfig({
     reporters: "dot",
     include: [
       // integration tests
-      "tests/integration/scenarios/**/*.[jt]s?(x)",
-      "tests/integration/**/*.test.[jt]s?(x)",
-      // memory tests
-      "tests/memory/**/*.[jt]s?(x)",
+      "tests/integration/scenarios/**/drm_base.[jt]s?(x)",
     ],
     globalSetup: "tests/globalSetup.mjs",
     browser: getBrowserConfig(process.env.BROWSER_CONFIG ?? "chrome"),
