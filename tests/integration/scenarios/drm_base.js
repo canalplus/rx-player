@@ -2,17 +2,36 @@ import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import { manifestInfos } from "../../contents/DASH_DRM_static_SegmentTemplate";
 import DummyMediaElement from "../../../dist/es2017/experimental/tools/DummyMediaElement";
 import RxPlayer from "../../../dist/es2017";
-import waitForPlayerState, {
-  waitForLoadedStateAfterLoadVideo,
-} from "../../utils/waitForPlayerState";
+import waitForPlayerState from "../../utils/waitForPlayerState";
 import { lockLowestBitrates } from "../../utils/bitrates";
 import sleep from "../../utils/sleep";
 import { generateGetLicenseForFakeLicense } from "../utils/drm_utils";
+import expectPlayerError from "../utils/expect_player_error";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 
 describe("DRM: Basic use cases", function () {
   const { url, transport } = manifestInfos;
   let player;
   const oldMediaSourceSupported = MediaSource.isTypeSupported;
+
+  async function loadEncryptedContent(args) {
+    const { error, ...opts } = args;
+    player.loadVideo({
+      url,
+      transport,
+      autoPlay: false,
+      textTrackMode: "html",
+      textTrackElement: document.createElement("div"),
+      ...opts,
+    });
+    if (isNullOrUndefined(error)) {
+      await waitForPlayerState(player, "LOADED", ["LOADING"]);
+      expect(player.getError()).toBeNull();
+    } else {
+      await waitForPlayerState(player, "STOPPED", ["LOADING"]);
+      expectPlayerError(player, error);
+    }
+  }
 
   let dummy;
   beforeEach(() => {
@@ -29,19 +48,13 @@ describe("DRM: Basic use cases", function () {
 
   it("should trigger error if no key system option is provided", async function () {
     lockLowestBitrates(player);
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
+    await loadEncryptedContent({
+      keySystems: undefined,
+      error: {
+        code: "MEDIA_IS_ENCRYPTED_ERROR",
+        type: "ENCRYPTED_MEDIA_ERROR",
+      },
     });
-    await waitForPlayerState(player, "STOPPED", ["LOADING"]);
-    const error = player.getError();
-    expect(error).not.toBeNull();
-    expect(error.code).to.equal("MEDIA_IS_ENCRYPTED_ERROR");
-    expect(error.name).to.equal("EncryptedMediaError");
-    expect(error.type).to.equal("ENCRYPTED_MEDIA_ERROR");
   });
 
   it("should load the content if licenses are returned", async function () {
@@ -51,12 +64,7 @@ describe("DRM: Basic use cases", function () {
       "585f233f307246f19fa46dc22c66a014",
     ];
     const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
+    await loadEncryptedContent({
       keySystems: [
         {
           type: "com.microsoft.playready",
@@ -67,10 +75,8 @@ describe("DRM: Basic use cases", function () {
         },
       ],
     });
-    await waitForLoadedStateAfterLoadVideo(player);
     expect(player.getVideoRepresentation().id).toEqual("8-80399bf5");
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
-    expect(player.getError()).toBeNull();
     expect(askedKeyIds.length).toEqual(expectedKeyIds.length);
 
     player.stop();
@@ -85,12 +91,7 @@ describe("DRM: Basic use cases", function () {
       "585f233f307246f19fa46dc22c66a014",
     ];
     const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
+    await loadEncryptedContent({
       keySystems: [
         {
           type: "com.microsoft.playready",
@@ -102,13 +103,10 @@ describe("DRM: Basic use cases", function () {
         },
       ],
     });
-    await waitForLoadedStateAfterLoadVideo(player);
     expect(player.getVideoRepresentation().id).toEqual("8-80399bf5");
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
-    expect(player.getError()).toBeNull();
     expect(askedKeyIds.length).toEqual(expectedKeyIds.length);
     expect(dummy.mediaKeys.dummySessions).toHaveLength(2);
-
     player.stop();
     await sleep(10);
     expect(dummy.mediaKeys.dummySessions).toHaveLength(0);
@@ -116,12 +114,7 @@ describe("DRM: Basic use cases", function () {
 
   it("should trigger specific error if the license request fails", async function () {
     lockLowestBitrates(player);
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
+    await loadEncryptedContent({
       keySystems: [
         {
           type: "com.microsoft.playready",
@@ -130,13 +123,11 @@ describe("DRM: Basic use cases", function () {
           },
         },
       ],
+      error: {
+        code: "KEY_LOAD_ERROR",
+        type: "ENCRYPTED_MEDIA_ERROR",
+      },
     });
-    await waitForPlayerState(player, "STOPPED", ["LOADING"]);
-    const error = player.getError();
-    expect(error).not.toBeNull();
-    expect(error.code).to.equal("KEY_LOAD_ERROR");
-    expect(error.name).to.equal("EncryptedMediaError");
-    expect(error.type).to.equal("ENCRYPTED_MEDIA_ERROR");
   });
 
   it("should fallback from license request error with a `fallbackOnLastTry` toggle on", async function () {
@@ -151,12 +142,19 @@ describe("DRM: Basic use cases", function () {
       "80399bf58a2140148053e27e748e98c1",
     ];
     const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
+    let brokenVideoLock = 0;
+    player.addEventListener("newAvailablePeriods", (p) => {
+      player.lockVideoRepresentations({
+        periodId: p[0].id,
+        representations: ["11-90953e09", "12-90953e09"],
+      });
+    });
+    player.addEventListener("brokenRepresentationsLock", (lock) => {
+      if (lock.trackType === "video") {
+        brokenVideoLock++;
+      }
+    });
+    await loadEncryptedContent({
       keySystems: [
         {
           type: "com.microsoft.playready",
@@ -168,53 +166,176 @@ describe("DRM: Basic use cases", function () {
         },
       ],
     });
-    let brokenVideoLock = 0;
-    player.addEventListener("newAvailablePeriods", (p) => {
-      player.lockVideoRepresentations({
-        periodId: p[0].id,
-        representations: ["11-90953e09", "12-90953e09"],
-      });
-    });
-    player.addEventListener("brokenRepresentationsLock", (lock) => {
-      if (lock.trackType === "video") {
-        brokenVideoLock++;
-      }
-    });
-    await waitForLoadedStateAfterLoadVideo(player);
     expect(brokenVideoLock).toEqual(1);
     expect(["8-80399bf5", "9-80399bf5", "10-80399bf5"]).toContain(
       player.getVideoRepresentation().id,
     );
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
-    expect(player.getError()).toBeNull();
   });
 
-  it('should fallback from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
-    const policyLevels = { "90953e096cb249a3a2607a5fefead499": 200 };
-    const expectedKeyIds = [
-      "90953e096cb249a3a2607a5fefead499",
-      "585f233f307246f19fa46dc22c66a014",
-      "80399bf58a2140148053e27e748e98c1",
-    ];
-    const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
+  it("should fail LOADING if all video keys are fallbacked with `fallbackOnLastTry`", async function () {
+    lockLowestBitrates(player);
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          getLicense: generateGetLicenseForFakeLicense({
+            failingKeyIds: {
+              "90953e096cb249a3a2607a5fefead499": {
+                fallbackOnLastTry: true,
+              },
+              "80399bf58a2140148053e27e748e98c1": {
+                fallbackOnLastTry: true,
+              },
+              "80399bf58a2140148053e27e748e98c0": {
+                fallbackOnLastTry: true,
+              },
+            },
+          }),
+        },
+      ],
+      error: {
+        code: "NO_PLAYABLE_REPRESENTATION",
+        type: "MEDIA_ERROR",
+      },
+    });
+  });
+
+  it("should fail LOADING if first video keys are fallbacked with `fallbackOnLastTry` and last with bad keystatuses", async function () {
+    lockLowestBitrates(player);
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          getLicense: generateGetLicenseForFakeLicense({
+            failingKeyIds: {
+              "80399bf58a2140148053e27e748e98c1": {
+                fallbackOnLastTry: true,
+              },
+            },
+            policyLevels: {
+              "90953e096cb249a3a2607a5fefead499": 200,
+              "80399bf58a2140148053e27e748e98c0": 200,
+            },
+          }),
+        },
+      ],
+      error: {
+        code: "KEY_STATUS_CHANGE_ERROR",
+        type: "ENCRYPTED_MEDIA_ERROR",
+      },
+    });
+  });
+
+  it("should fail LOADING if first video keys are fallbacked with `fallbackOnLastTry` and last with fallbacked bad keystatuses", async function () {
+    lockLowestBitrates(player);
+    await loadEncryptedContent({
       keySystems: [
         {
           type: "com.microsoft.playready",
           onKeyOutputRestricted: "fallback",
           getLicense: generateGetLicenseForFakeLicense({
-            expectedKeyIds,
-            askedKeyIds,
-            policyLevels,
+            failingKeyIds: {
+              "80399bf58a2140148053e27e748e98c1": {
+                fallbackOnLastTry: true,
+              },
+            },
+            policyLevels: {
+              "90953e096cb249a3a2607a5fefead499": 200,
+              "80399bf58a2140148053e27e748e98c0": 200,
+            },
+          }),
+        },
+      ],
+      error: {
+        code: "NO_PLAYABLE_REPRESENTATION",
+        type: "MEDIA_ERROR",
+      },
+    });
+  });
+
+  it("should fail LOADING if last video keys are fallbacked with `fallbackOnLastTry` and first with bad keystatuses", async function () {
+    lockLowestBitrates(player);
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          getLicense: generateGetLicenseForFakeLicense({
+            failingKeyIds: {
+              "90953e096cb249a3a2607a5fefead499": {
+                fallbackOnLastTry: true,
+              },
+              "80399bf58a2140148053e27e748e98c0": {
+                fallbackOnLastTry: true,
+              },
+            },
+            policyLevels: { "80399bf58a2140148053e27e748e98c1": 200 },
+          }),
+        },
+      ],
+      error: {
+        code: "KEY_STATUS_CHANGE_ERROR",
+        type: "ENCRYPTED_MEDIA_ERROR",
+      },
+    });
+  });
+
+  it("should fail LOADING if last video keys are fallbacked with `fallbackOnLastTry` and first with fallbacked bad keystatuses", async function () {
+    lockLowestBitrates(player);
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "fallback",
+          getLicense: generateGetLicenseForFakeLicense({
+            failingKeyIds: {
+              "90953e096cb249a3a2607a5fefead499": {
+                fallbackOnLastTry: true,
+              },
+              "80399bf58a2140148053e27e748e98c0": {
+                fallbackOnLastTry: true,
+              },
+            },
+            policyLevels: { "80399bf58a2140148053e27e748e98c1": 200 },
+          }),
+        },
+      ],
+      error: {
+        code: "NO_PLAYABLE_REPRESENTATION",
+        type: "MEDIA_ERROR",
+      },
+    });
+  });
+
+  it("should continue LOADING if all video are fallbacked but onVideoTracksNotPlayable is set to continue", async function () {
+    lockLowestBitrates(player);
+    await loadEncryptedContent({
+      onVideoTracksNotPlayable: "continue",
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "fallback",
+          getLicense: generateGetLicenseForFakeLicense({
+            failingKeyIds: {
+              "90953e096cb249a3a2607a5fefead499": {
+                fallbackOnLastTry: true,
+              },
+              "80399bf58a2140148053e27e748e98c0": {
+                fallbackOnLastTry: true,
+              },
+              "80399bf58a2140148053e27e748e98c1": {
+                fallbackOnLastTry: true,
+              },
+            },
           }),
         },
       ],
     });
+    expect(player.getVideoTrack()).toEqual(null);
+    expect(player.getAvailableVideoTracks()).toEqual([]);
+  });
+
+  it('should fallback from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
     let brokenVideoLock = 0;
     player.addEventListener("newAvailablePeriods", (p) => {
       player.lockVideoRepresentations({
@@ -227,13 +348,29 @@ describe("DRM: Basic use cases", function () {
         brokenVideoLock++;
       }
     });
-    await waitForLoadedStateAfterLoadVideo(player);
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "fallback",
+          getLicense: generateGetLicenseForFakeLicense({
+            expectedKeyIds: [
+              "90953e096cb249a3a2607a5fefead499",
+              "585f233f307246f19fa46dc22c66a014",
+              "80399bf58a2140148053e27e748e98c1",
+            ],
+            policyLevels: {
+              "90953e096cb249a3a2607a5fefead499": 200,
+            },
+          }),
+        },
+      ],
+    });
     expect(brokenVideoLock).toEqual(1);
     expect(["8-80399bf5", "9-80399bf5", "10-80399bf5"]).toContain(
       player.getVideoRepresentation().id,
     );
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
-    expect(player.getError()).toBeNull();
   });
 
   it('should continue from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
@@ -286,31 +423,11 @@ describe("DRM: Basic use cases", function () {
 
   it('should fail from an `"output-restricted"` MediaKeyStatus under the corresponding option', async function () {
     player.setWantedBufferAhead(10);
-    const policyLevels = { "90953e096cb249a3a2607a5fefead499": 200 };
     const expectedKeyIds = [
       "90953e096cb249a3a2607a5fefead499",
       "585f233f307246f19fa46dc22c66a014",
       "80399bf58a2140148053e27e748e98c1",
     ];
-    const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
-      keySystems: [
-        {
-          type: "com.microsoft.playready",
-          onKeyOutputRestricted: "error",
-          getLicense: generateGetLicenseForFakeLicense({
-            expectedKeyIds,
-            askedKeyIds,
-            policyLevels,
-          }),
-        },
-      ],
-    });
     let brokenVideoLock = 0;
     player.addEventListener("newAvailablePeriods", (p) => {
       player.lockVideoRepresentations({
@@ -323,12 +440,24 @@ describe("DRM: Basic use cases", function () {
         brokenVideoLock++;
       }
     });
-    await waitForPlayerState(player, "STOPPED", ["LOADING"]);
-    const error = player.getError();
-    expect(error).not.toBeNull();
-    expect(error.code).to.equal("KEY_STATUS_CHANGE_ERROR");
-    expect(error.name).to.equal("EncryptedMediaError");
-    expect(error.type).to.equal("ENCRYPTED_MEDIA_ERROR");
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "error",
+          getLicense: generateGetLicenseForFakeLicense({
+            policyLevels: {
+              "90953e096cb249a3a2607a5fefead499": 200,
+            },
+            expectedKeyIds,
+          }),
+        },
+      ],
+      error: {
+        code: "KEY_STATUS_CHANGE_ERROR",
+        type: "ENCRYPTED_MEDIA_ERROR",
+      },
+    });
     expect(brokenVideoLock).toEqual(0);
   });
 
@@ -339,25 +468,6 @@ describe("DRM: Basic use cases", function () {
       "585f233f307246f19fa46dc22c66a014",
       "80399bf58a2140148053e27e748e98c1",
     ];
-    const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
-      keySystems: [
-        {
-          type: "com.microsoft.playready",
-          onKeyOutputRestricted: "fallback",
-          getLicense: generateGetLicenseForFakeLicense({
-            expectedKeyIds,
-            askedKeyIds,
-            policyLevels,
-          }),
-        },
-      ],
-    });
     let brokenVideoLock = 0;
     player.addEventListener("newAvailablePeriods", (p) => {
       player.lockVideoRepresentations({
@@ -370,12 +480,21 @@ describe("DRM: Basic use cases", function () {
         brokenVideoLock++;
       }
     });
-
-    await waitForLoadedStateAfterLoadVideo(player);
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "fallback",
+          getLicense: generateGetLicenseForFakeLicense({
+            expectedKeyIds,
+            policyLevels,
+          }),
+        },
+      ],
+    });
     expect(brokenVideoLock).toEqual(0);
     expect(["11-90953e09", "12-90953e09"]).toContain(player.getVideoRepresentation().id);
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
-
     await sleep(50);
     dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
@@ -397,25 +516,6 @@ describe("DRM: Basic use cases", function () {
       "585f233f307246f19fa46dc22c66a014",
       "80399bf58a2140148053e27e748e98c1",
     ];
-    const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
-      keySystems: [
-        {
-          type: "com.microsoft.playready",
-          onKeyOutputRestricted: "error",
-          getLicense: generateGetLicenseForFakeLicense({
-            expectedKeyIds,
-            askedKeyIds,
-            policyLevels,
-          }),
-        },
-      ],
-    });
     let brokenVideoLock = 0;
     player.addEventListener("newAvailablePeriods", (p) => {
       player.lockVideoRepresentations({
@@ -428,8 +528,19 @@ describe("DRM: Basic use cases", function () {
         brokenVideoLock++;
       }
     });
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "error",
+          getLicense: generateGetLicenseForFakeLicense({
+            expectedKeyIds,
+            policyLevels,
+          }),
+        },
+      ],
+    });
 
-    await waitForLoadedStateAfterLoadVideo(player);
     expect(brokenVideoLock).toEqual(0);
     expect(["11-90953e09", "12-90953e09"]).toContain(player.getVideoRepresentation().id);
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
@@ -448,31 +559,6 @@ describe("DRM: Basic use cases", function () {
   });
 
   it("should re-allow a Representation re-becoming decipherable", async function () {
-    const policyLevels = { "90953e096cb249a3a2607a5fefead499": 50 };
-    const expectedKeyIds = [
-      "90953e096cb249a3a2607a5fefead499",
-      "585f233f307246f19fa46dc22c66a014",
-      "80399bf58a2140148053e27e748e98c1",
-    ];
-    const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
-      keySystems: [
-        {
-          type: "com.microsoft.playready",
-          onKeyOutputRestricted: "fallback",
-          getLicense: generateGetLicenseForFakeLicense({
-            expectedKeyIds,
-            askedKeyIds,
-            policyLevels,
-          }),
-        },
-      ],
-    });
     let brokenVideoLock = 0;
     player.addEventListener("newAvailablePeriods", (p) => {
       player.lockVideoRepresentations({
@@ -485,8 +571,24 @@ describe("DRM: Basic use cases", function () {
         brokenVideoLock++;
       }
     });
-
-    await waitForLoadedStateAfterLoadVideo(player);
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "fallback",
+          getLicense: generateGetLicenseForFakeLicense({
+            expectedKeyIds: [
+              "90953e096cb249a3a2607a5fefead499",
+              "585f233f307246f19fa46dc22c66a014",
+              "80399bf58a2140148053e27e748e98c1",
+            ],
+            policyLevels: {
+              "90953e096cb249a3a2607a5fefead499": 50,
+            },
+          }),
+        },
+      ],
+    });
     expect(brokenVideoLock).toEqual(0);
     expect(["11-90953e09", "12-90953e09"]).toContain(player.getVideoRepresentation().id);
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
@@ -528,25 +630,6 @@ describe("DRM: Basic use cases", function () {
       "80399bf58a2140148053e27e748e98c1",
       "80399bf58a2140148053e27e748e98c0",
     ];
-    const askedKeyIds = [];
-    player.loadVideo({
-      url,
-      transport,
-      autoPlay: false,
-      textTrackMode: "html",
-      textTrackElement: document.createElement("div"),
-      keySystems: [
-        {
-          type: "com.microsoft.playready",
-          onKeyOutputRestricted: "fallback",
-          getLicense: generateGetLicenseForFakeLicense({
-            expectedKeyIds,
-            askedKeyIds,
-            policyLevels,
-          }),
-        },
-      ],
-    });
     let brokenVideoLock = 0;
     let videoTrackUpdate = 0;
     player.addEventListener("newAvailablePeriods", (p) => {
@@ -567,8 +650,18 @@ describe("DRM: Basic use cases", function () {
         brokenVideoLock++;
       }
     });
-
-    await waitForLoadedStateAfterLoadVideo(player);
+    await loadEncryptedContent({
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "fallback",
+          getLicense: generateGetLicenseForFakeLicense({
+            expectedKeyIds,
+            policyLevels,
+          }),
+        },
+      ],
+    });
     expect(brokenVideoLock).toEqual(0);
     expect(["11-90953e09", "12-90953e09"]).toContain(player.getVideoRepresentation().id);
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
