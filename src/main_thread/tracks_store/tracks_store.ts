@@ -491,7 +491,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj[bufferType].dispatcher = dispatcher;
 
     dispatcher.addEventListener("noPlayableRepresentation", () => {
-      this.onNoPlayableRepresentation(period, bufferType);
+      const events = this.onNoPlayableRepresentation(period, bufferType);
+      for (const event of events) {
+        this.trigger("noPlayableTrack", event);
+      }
     });
     dispatcher.addEventListener("noPlayableLockedRepresentation", () => {
       // TODO check that it doesn't already lead to segment loading or MediaSource
@@ -651,23 +654,27 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     }
 
     // Check that we're not both disabling audio and video here
-    if (storedSettings === null) {
-      const periodItem = getPeriodItem(this._storedPeriodInfo, period.id);
-      if (periodItem !== undefined) {
-        const hasNoTrackAtAll = ["audio" as const, "video" as const].every(
-          (ttype) => periodItem[ttype].storedSettings === null,
-        );
-        if (hasNoTrackAtAll) {
-          const err = new MediaError(
-            "NO_AUDIO_VIDEO_TRACKS",
-            "No audio and no video tracks are set.",
+    // Use a setTimeout(..., 0) to let a time window for an audio/video track switch when
+    // receiving a "noPlayableTrack" event
+    setTimeout(() => {
+      if (storedSettings === null) {
+        const periodItem = getPeriodItem(this._storedPeriodInfo, period.id);
+        if (periodItem !== undefined) {
+          const hasNoTrackAtAll = ["audio" as const, "video" as const].every(
+            (ttype) => periodItem[ttype].storedSettings === null,
           );
-          this.trigger("error", err);
-          this.dispose();
-          return [];
+          if (hasNoTrackAtAll) {
+            const err = new MediaError(
+              "NO_AUDIO_VIDEO_TRACKS",
+              "No audio and no video tracks are set.",
+            );
+            this.trigger("error", err);
+            this.dispose();
+            return [];
+          }
         }
       }
-    }
+    }, 0);
 
     typeInfo.dispatcher?.updateTrack(storedSettings);
     return noPlayableTrackToTrigger;

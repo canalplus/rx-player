@@ -693,7 +693,7 @@ describe("DRM: Basic use cases", function () {
     expect(player.getError()).toBeNull();
   });
 
-  it.only("should let a time window for an audio track reset if no license for video can be fetched while audio is disabled", async function () {
+  it("should let a time window for an audio track reset if no license for video can be fetched while audio is disabled", async function () {
     lockLowestBitrates(player);
     const noPlayableTracksReceived = [];
     player.addEventListener("newAvailablePeriods", (periods) => {
@@ -708,7 +708,7 @@ describe("DRM: Basic use cases", function () {
         trackId: player.getAvailableAudioTracks(period.id)[0].id,
       });
     });
-    RxPlayer.LogLevel = "DEBUG";
+    // RxPlayer.LogLevel = "DEBUG";
     await loadEncryptedContent({
       onVideoTracksNotPlayable: "continue",
       keySystems: [
@@ -732,7 +732,7 @@ describe("DRM: Basic use cases", function () {
       ],
     });
     expect(player.getAvailableVideoTracks()).toEqual([]);
-    expect(noPlayableTracksReceived).toEqual(1);
+    expect(noPlayableTracksReceived.length).toEqual(1);
     expect(noPlayableTracksReceived[0].trackType).toEqual("video");
     expect(noPlayableTracksReceived[0].period.id).toEqual(
       player.getAvailablePeriods()[0].id,
