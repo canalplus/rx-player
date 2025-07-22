@@ -440,6 +440,18 @@ export interface ISerializedPlaybackObservation {
 }
 
 /**
+ * Sent when the main thread had to "reload" the media source.
+ * The worker should understand that this MediaSource won't be used anymore.
+ */
+export interface ITriggerMediaSourceReloadMainMessage {
+  type: MainThreadMessageType.MediaSourceReload;
+  /** Identify the MediaSource concerned by this message. */
+  mediaSourceId: string;
+  /** No message is necessary. */
+  value: null;
+}
+
+/**
  * Sent when the SourceBuffer linked to the given `mediaSourceId` and
  * `SourceBufferType`, running on the main thread, succeeded to perform the last
  * operation given to it (either through an `AppendBufferWorkerMessage` or a
@@ -589,6 +601,7 @@ export const enum MainThreadMessageType {
   PrepareContent = "prepare",
   ReferenceUpdate = "ref-update",
   RepresentationUpdate = "rep-update",
+  MediaSourceReload = "ms-reload",
   SourceBufferError = "sb-error",
   SourceBufferSuccess = "sb-success",
   StartPreparedContent = "start",
@@ -610,6 +623,7 @@ export type IMainThreadMessage =
   | IPlaybackObservationMessage
   | IDecipherabilityStatusChangedMessage
   | IUpdateContentUrlsMessage
+  | ITriggerMediaSourceReloadMainMessage
   | ISourceBufferErrorMainMessage
   | ISourceBufferOperationSuccessMainMessage
   | ITrackUpdateMessage
@@ -691,7 +705,7 @@ export interface IWarningWorkerMessage {
 export interface IAttachMediaSourceWorkerMessage {
   type: WorkerMessageType.AttachMediaSource;
   contentId: string | undefined;
-  mediaSourceId: string | undefined;
+  mediaSourceId: string;
   value: IAttachMediaSourceWorkerMessagePayload;
 }
 
@@ -840,7 +854,8 @@ export interface IUpdatePlaybackRateWorkerMessage {
 
 export interface IReloadingMediaSourceWorkerMessage {
   type: WorkerMessageType.ReloadingMediaSource;
-  contentId: string;
+  /** Identify the MediaSource concerned by this message. */
+  mediaSourceId: string;
   value: {
     timeOffset: number;
     minimumPosition?: number | undefined;

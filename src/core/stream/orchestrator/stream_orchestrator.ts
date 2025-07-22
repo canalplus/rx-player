@@ -739,13 +739,13 @@ export interface INeedsMediaSourceReloadPayload {
    * `timeOffset` is before `minimumPosition`, then we will reload at
    * `minimumPosition`  instead.
    */
-  minimumPosition: number | undefined;
+  minimumPosition?: number | undefined;
   /**
    * If defined and if the new position obtained after relying on
    * `timeOffset` is after `maximumPosition`, then we will reload at
    * `maximumPosition`  instead.
    */
-  maximumPosition: number | undefined;
+  maximumPosition?: number | undefined;
 }
 
 /** Payload for the `lockedStream` callback. */

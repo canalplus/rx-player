@@ -26,7 +26,6 @@ import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
-import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
 import type {
   INeedsMediaSourceReloadPayload,
@@ -57,18 +56,17 @@ export default function initializeWorkerMain() {
    */
   let isInitialized = false;
   /**
-   * Abstraction allowing to load contents (fetching its manifest as
-   * well as creating and reloading its MediaSource).
+   * Abstraction allowing to prepare contents (fetching its manifest as
+   * well as creating and reloading its MediaSource) for playback.
    *
    * Creating a default one which may change on initialization.
    */
   let contentPreparer = new ContentPreparer({ hasVideo: true });
-
   /**
-   * Abort all operations relative to the currently loaded content.
-   * `null` when there's no loaded content currently or when it is reloaidng.
+   * Object allowing to control the lifecycle of the current content (stop/reload etc.).
+   * `null` if there's no content loaded currently.
    */
-  let currentLoadedContentTaskCanceller: TaskCanceller | null = null;
+  let currentContentHandle: IContentHandle | null = null;
 
   // Initialize Manually a `DashWasmParser` and add the feature.
   // TODO allow worker-side feature-switching? Not sure how
@@ -131,12 +129,10 @@ export default function initializeWorkerMain() {
         if (msg.contentId !== preparedContent?.contentId) {
           return;
         }
-        if (currentLoadedContentTaskCanceller !== null) {
-          currentLoadedContentTaskCanceller.cancel();
-          currentLoadedContentTaskCanceller = null;
-        }
 
-        const currentCanceller = new TaskCanceller();
+        currentContentHandle?.stop();
+        playbackObservationRef?.finish();
+
         const currentContentObservationRef =
           new SharedReference<IWorkerPlaybackObservation>(
             objectAssign(msg.value.initialObservation, {
@@ -144,16 +140,10 @@ export default function initializeWorkerMain() {
             }),
           );
         playbackObservationRef = currentContentObservationRef;
-        currentLoadedContentTaskCanceller = currentCanceller;
-        currentLoadedContentTaskCanceller.signal.register(() => {
-          currentContentObservationRef.finish();
-        });
-        log.debug("WP: Loading new pepared content.");
-        loadOrReloadPreparedContent(
+        currentContentHandle = loadPreparedContent(
           msg.value,
           contentPreparer,
           currentContentObservationRef,
-          currentCanceller.signal,
         );
         break;
       }
@@ -192,9 +182,21 @@ export default function initializeWorkerMain() {
           return;
         }
         contentPreparer.disposeCurrentContent();
-        if (currentLoadedContentTaskCanceller !== null) {
-          currentLoadedContentTaskCanceller.cancel();
-          currentLoadedContentTaskCanceller = null;
+
+        currentContentHandle?.stop();
+        currentContentHandle = null;
+
+        playbackObservationRef?.finish();
+        playbackObservationRef = null;
+        break;
+
+      case MainThreadMessageType.MediaSourceReload:
+        {
+          const preparedContent = contentPreparer.getCurrentContent();
+          if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
+            return;
+          }
+          currentContentHandle?.signalMediaSourceReload();
         }
         break;
 
@@ -467,7 +469,7 @@ function updateGlobalReference(msg: IReferenceUpdateMessage): void {
   }
 }
 
-interface IBufferingInitializationInformation {
+interface ILoadingContentParameters {
   /** The start time at which we should play, in seconds. */
   initialTime: number;
   /**
@@ -485,404 +487,447 @@ interface IBufferingInitializationInformation {
   onCodecSwitch: "continue" | "reload";
 }
 
-function loadOrReloadPreparedContent(
-  val: IBufferingInitializationInformation,
+interface IContentHandle {
+  /**
+   * Callback to call if a "MediaSource reload" was triggered by an external
+   * component (e.g. main thread).
+   */
+  signalMediaSourceReload: () => void;
+  /** Callback to call to stop the content and free all its related resources. */
+  stop: () => void;
+}
+
+function loadPreparedContent(
+  val: ILoadingContentParameters,
   contentPreparer: ContentPreparer,
   playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
-  parentCancelSignal: CancellationSignal,
-) {
+): IContentHandle {
   log.debug("WP: Loading prepared content");
-  const currentLoadCanceller = new TaskCanceller();
-  currentLoadCanceller.linkToSignal(parentCancelSignal);
 
-  /**
-   * Stores last discontinuity update sent to the worker for each Period and type
-   * combinations, at least until the corresponding `PeriodStreamCleared`
-   * message.
-   *
-   * This is an optimization to avoid sending too much discontinuity messages to
-   * the main thread when it is not needed because nothing changed.
-   */
-  const lastSentDiscontinuitiesStore: Map<
-    Period,
-    Map<ITrackType, IDiscontinuityUpdateWorkerMessagePayload>
-  > = new Map();
+  const contentCanceller = new TaskCanceller();
 
-  const preparedContent = contentPreparer.getCurrentContent();
-  if (preparedContent === null || preparedContent.manifest === null) {
-    const error = new OtherError("NONE", "Loading content when none is prepared");
-    sendMessage({
-      type: WorkerMessageType.Error,
-      contentId: undefined,
-      value: formatErrorForSender(error),
-    });
-    return;
-  }
-  const {
-    contentId,
-    cmcdDataBuilder,
-    enableRepresentationAvoidance,
-    manifest,
-    mediaSource,
-    representationEstimator,
-    segmentSinksStore,
-    segmentQueueCreator,
-  } = preparedContent;
-  const { drmSystemId, enableFastSwitching, initialTime, onCodecSwitch } = val;
+  let currentLoadCanceller: TaskCanceller | null = null;
 
-  playbackObservationRef.onUpdate(
-    (observation) => {
-      synchronizeSegmentSinksOnObservation(observation, segmentSinksStore);
-      const freezeResolution =
-        preparedContent.freezeResolver.onNewObservation(observation);
-      if (freezeResolution !== null) {
-        handleFreezeResolution(freezeResolution, {
-          contentId,
-          manifest,
-          handleMediaSourceReload,
-          enableRepresentationAvoidance,
-        });
-      }
+  startLoadingAt(val.initialTime);
+  return {
+    signalMediaSourceReload: (): void => {
+      return onMediaSourceReload();
     },
-    { clearSignal: currentLoadCanceller.signal },
-  );
+    stop: () => {
+      contentCanceller.cancel();
+    },
+  };
 
-  const initialPeriod =
-    manifest.getPeriodForTime(initialTime) ?? manifest.getNextPeriod(initialTime);
-  if (initialPeriod === undefined) {
-    const error = new MediaError(
-      "MEDIA_STARTING_TIME_NOT_FOUND",
-      "Wanted starting time not found in the Manifest.",
-    );
-    sendMessage({
-      type: WorkerMessageType.Error,
+  function startLoadingAt(startTime: number): void {
+    currentLoadCanceller?.cancel();
+    currentLoadCanceller = new TaskCanceller();
+    currentLoadCanceller.linkToSignal(contentCanceller.signal);
+
+    /**
+     * Stores last discontinuity update sent to the worker for each Period and type
+     * combinations, at least until the corresponding `PeriodStreamCleared`
+     * message.
+     *
+     * This is an optimization to avoid sending too much discontinuity messages to
+     * the main thread when it is not needed because nothing changed.
+     */
+    const lastSentDiscontinuitiesStore: Map<
+      Period,
+      Map<ITrackType, IDiscontinuityUpdateWorkerMessagePayload>
+    > = new Map();
+
+    const preparedContent = contentPreparer.getCurrentContent();
+    if (preparedContent === null || preparedContent.manifest === null) {
+      const error = new OtherError("NONE", "Loading content when none is prepared");
+      sendMessage({
+        type: WorkerMessageType.Error,
+        contentId: undefined,
+        value: formatErrorForSender(error),
+      });
+      throw error;
+    }
+    const {
       contentId,
-      value: formatErrorForSender(error),
-    });
-    return;
-  }
+      cmcdDataBuilder,
+      enableRepresentationAvoidance,
+      manifest,
+      mediaSource,
+      representationEstimator,
+      segmentSinksStore,
+      segmentQueueCreator,
+    } = preparedContent;
+    const { drmSystemId, enableFastSwitching, onCodecSwitch } = val;
 
-  const playbackObserver = new WorkerPlaybackObserver(
-    playbackObservationRef,
-    contentId,
-    sendMessage,
-    currentLoadCanceller.signal,
-  );
-  cmcdDataBuilder?.startMonitoringPlayback(playbackObserver);
-  currentLoadCanceller.signal.register(() => {
-    cmcdDataBuilder?.stopMonitoringPlayback();
-  });
-
-  const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
-    manifest,
-    mediaSource,
-    playbackObserver,
-    segmentSinksStore,
-    {
-      onWarning: (err: IPlayerError) =>
-        sendMessage({
-          type: WorkerMessageType.Warning,
-          contentId,
-          value: formatErrorForSender(err),
-        }),
-      onPeriodChanged: (period: Period) => {
-        sendMessage({
-          type: WorkerMessageType.ActivePeriodChanged,
-          contentId,
-          value: { periodId: period.id },
-        });
-      },
-    },
-    currentLoadCanceller.signal,
-  );
-
-  StreamOrchestrator(
-    { initialPeriod, manifest },
-    playbackObserver,
-    representationEstimator,
-    segmentSinksStore,
-    segmentQueueCreator,
-    {
-      wantedBufferAhead,
-      maxVideoBufferSize,
-      maxBufferAhead,
-      maxBufferBehind,
-      drmSystemId,
-      enableFastSwitching,
-      onCodecSwitch,
-    },
-    handleStreamOrchestratorCallbacks(),
-    currentLoadCanceller.signal,
-  );
-
-  /**
-   * Returns Object handling the callbacks from a `StreamOrchestrator`, which
-   * are basically how it communicates about events.
-   * @returns {Object}
-   */
-  function handleStreamOrchestratorCallbacks(): IStreamOrchestratorCallbacks {
-    return {
-      needsBufferFlush(payload) {
-        sendMessage({
-          type: WorkerMessageType.NeedsBufferFlush,
-          contentId,
-          value: payload,
-        });
-      },
-
-      streamStatusUpdate(value) {
-        sendDiscontinuityUpdateIfNeeded(value);
-
-        // If the status for the last Period indicates that segments are all loaded
-        // or on the contrary that the loading resumed, announce it to the
-        // ContentTimeBoundariesObserver.
-        if (
-          manifest.isLastPeriodKnown &&
-          value.period.id === manifest.periods[manifest.periods.length - 1].id
-        ) {
-          const hasFinishedLoadingLastPeriod =
-            value.hasFinishedLoading || value.isEmptyStream;
-          if (hasFinishedLoadingLastPeriod) {
-            contentTimeBoundariesObserver.onLastSegmentFinishedLoading(value.bufferType);
-          } else {
-            contentTimeBoundariesObserver.onLastSegmentLoadingResume(value.bufferType);
-          }
-        }
-      },
-
-      needsManifestRefresh() {
-        contentPreparer.scheduleManifestRefresh({
-          enablePartialRefresh: true,
-          canUseUnsafeMode: true,
-        });
-      },
-
-      manifestMightBeOufOfSync() {
-        const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config.getCurrent();
-        contentPreparer.scheduleManifestRefresh({
-          enablePartialRefresh: false,
-          canUseUnsafeMode: false,
-          delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
-        });
-      },
-
-      lockedStream(payload) {
-        sendMessage({
-          type: WorkerMessageType.LockedStream,
-          contentId,
-          value: {
-            periodId: payload.period.id,
-            bufferType: payload.bufferType,
-          },
-        });
-      },
-
-      adaptationChange(value) {
-        contentTimeBoundariesObserver.onAdaptationChange(
-          value.type,
-          value.period,
-          value.adaptation,
-        );
-        if (currentLoadCanceller.signal.isCancelled()) {
-          return;
-        }
-        sendMessage({
-          type: WorkerMessageType.AdaptationChanged,
-          contentId,
-          value: {
-            adaptationId: value.adaptation?.id ?? null,
-            periodId: value.period.id,
-            type: value.type,
-          },
-        });
-      },
-
-      representationChange(value) {
-        contentTimeBoundariesObserver.onRepresentationChange(value.type, value.period);
-        if (currentLoadCanceller.signal.isCancelled()) {
-          return;
-        }
-        sendMessage({
-          type: WorkerMessageType.RepresentationChanged,
-          contentId,
-          value: {
-            adaptationId: value.adaptation.id,
-            representationId: value.representation?.id ?? null,
-            periodId: value.period.id,
-            type: value.type,
-          },
-        });
-      },
-
-      inbandEvent(value) {
-        sendMessage({
-          type: WorkerMessageType.InbandEvent,
-          contentId,
-          value,
-        });
-      },
-
-      warning(value) {
-        sendMessage({
-          type: WorkerMessageType.Warning,
-          contentId,
-          value: formatErrorForSender(value),
-        });
-      },
-
-      periodStreamReady(value) {
-        if (preparedContent === null) {
-          return;
-        }
-        preparedContent.trackChoiceSetter.addTrackSetter(
-          value.period.id,
-          value.type,
-          value.adaptationRef,
-        );
-        sendMessage({
-          type: WorkerMessageType.PeriodStreamReady,
-          contentId,
-          value: { periodId: value.period.id, bufferType: value.type },
-        });
-      },
-
-      periodStreamCleared(value) {
-        if (preparedContent === null) {
-          return;
-        }
-
-        const periodDiscontinuitiesStore = lastSentDiscontinuitiesStore.get(value.period);
-        if (periodDiscontinuitiesStore !== undefined) {
-          periodDiscontinuitiesStore.delete(value.type);
-          if (periodDiscontinuitiesStore.size === 0) {
-            lastSentDiscontinuitiesStore.delete(value.period);
-          }
-        }
-
-        contentTimeBoundariesObserver.onPeriodCleared(value.type, value.period);
-        preparedContent.trackChoiceSetter.removeTrackSetter(value.period.id, value.type);
-        sendMessage({
-          type: WorkerMessageType.PeriodStreamCleared,
-          contentId,
-          value: { periodId: value.period.id, bufferType: value.type },
-        });
-      },
-
-      bitrateEstimateChange(payload) {
-        if (preparedContent !== null) {
-          preparedContent.cmcdDataBuilder?.updateThroughput(
-            payload.type,
-            payload.bitrate,
-          );
-        }
-
-        // TODO for low-latency contents it is __VERY__ frequent.
-        // Considering this is only for an unimportant undocumented API, we may
-        // throttle such messages. (e.g. max one per 2 seconds for each type?).
-        sendMessage({
-          type: WorkerMessageType.BitrateEstimateChange,
-          contentId,
-          value: {
-            bitrate: payload.bitrate,
-            bufferType: payload.type,
-          },
-        });
-      },
-
-      needsMediaSourceReload(payload: INeedsMediaSourceReloadPayload) {
-        handleMediaSourceReload(payload);
-      },
-
-      needsDecipherabilityFlush() {
-        sendMessage({
-          type: WorkerMessageType.NeedsDecipherabilityFlush,
-          contentId,
-          value: null,
-        });
-      },
-
-      encryptionDataEncountered(values) {
-        for (const value of values) {
-          const originalContent = value.content;
-          const content = { ...originalContent };
-          if (content.manifest instanceof Manifest) {
-            content.manifest = content.manifest.getMetadataSnapshot();
-          }
-          if (content.period instanceof Period) {
-            content.period = content.period.getMetadataSnapshot();
-          }
-          if (content.adaptation instanceof Adaptation) {
-            content.adaptation = content.adaptation.getMetadataSnapshot();
-          }
-          if (content.representation instanceof Representation) {
-            content.representation = content.representation.getMetadataSnapshot();
-          }
-          sendMessage({
-            type: WorkerMessageType.EncryptionDataEncountered,
+    playbackObservationRef.onUpdate(
+      (observation) => {
+        synchronizeSegmentSinksOnObservation(observation, segmentSinksStore);
+        const freezeResolution =
+          preparedContent.freezeResolver.onNewObservation(observation);
+        if (freezeResolution !== null) {
+          handleFreezeResolution(freezeResolution, {
             contentId,
-            value: {
-              keyIds: value.keyIds,
-              values: value.values,
-              content,
-              type: value.type,
-            },
+            manifest,
+            handleMediaSourceReload: performMediaSourceReload,
+            enableRepresentationAvoidance,
           });
         }
       },
+      { clearSignal: currentLoadCanceller.signal },
+    );
 
-      error(error: unknown) {
-        sendMessage({
-          type: WorkerMessageType.Error,
-          contentId,
-          value: formatErrorForSender(error),
-        });
+    const initialPeriod =
+      manifest.getPeriodForTime(startTime) ?? manifest.getNextPeriod(startTime);
+    if (initialPeriod === undefined) {
+      const error = new MediaError(
+        "MEDIA_STARTING_TIME_NOT_FOUND",
+        "Wanted starting time not found in the Manifest.",
+      );
+      sendMessage({
+        type: WorkerMessageType.Error,
+        contentId,
+        value: formatErrorForSender(error),
+      });
+      throw error;
+    }
+
+    const playbackObserver = new WorkerPlaybackObserver(
+      playbackObservationRef,
+      contentId,
+      sendMessage,
+      currentLoadCanceller.signal,
+    );
+    cmcdDataBuilder?.startMonitoringPlayback(playbackObserver);
+    currentLoadCanceller.signal.register(() => {
+      cmcdDataBuilder?.stopMonitoringPlayback();
+    });
+
+    const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
+      manifest,
+      mediaSource,
+      playbackObserver,
+      segmentSinksStore,
+      {
+        onWarning: (err: IPlayerError) =>
+          sendMessage({
+            type: WorkerMessageType.Warning,
+            contentId,
+            value: formatErrorForSender(err),
+          }),
+        onPeriodChanged: (period: Period) => {
+          sendMessage({
+            type: WorkerMessageType.ActivePeriodChanged,
+            contentId,
+            value: { periodId: period.id },
+          });
+        },
       },
-    };
-  }
+      currentLoadCanceller.signal,
+    );
 
-  function sendDiscontinuityUpdateIfNeeded(value: IStreamStatusPayload): void {
-    const { imminentDiscontinuity } = value;
-    let periodMap = lastSentDiscontinuitiesStore.get(value.period);
-    const sentObjInfo = periodMap?.get(value.bufferType);
-    if (sentObjInfo !== undefined) {
-      if (sentObjInfo.discontinuity === null) {
-        if (imminentDiscontinuity === null) {
+    StreamOrchestrator(
+      { initialPeriod, manifest },
+      playbackObserver,
+      representationEstimator,
+      segmentSinksStore,
+      segmentQueueCreator,
+      {
+        wantedBufferAhead,
+        maxVideoBufferSize,
+        maxBufferAhead,
+        maxBufferBehind,
+        drmSystemId,
+        enableFastSwitching,
+        onCodecSwitch,
+      },
+      handleStreamOrchestratorCallbacks(),
+      currentLoadCanceller.signal,
+    );
+
+    /**
+     * Returns Object handling the callbacks from a `StreamOrchestrator`, which
+     * are basically how it communicates about events.
+     * @returns {Object}
+     */
+    function handleStreamOrchestratorCallbacks(): IStreamOrchestratorCallbacks {
+      return {
+        needsBufferFlush(payload) {
+          sendMessage({
+            type: WorkerMessageType.NeedsBufferFlush,
+            contentId,
+            value: payload,
+          });
+        },
+
+        streamStatusUpdate(value) {
+          sendDiscontinuityUpdateIfNeeded(value);
+
+          // If the status for the last Period indicates that segments are all loaded
+          // or on the contrary that the loading resumed, announce it to the
+          // ContentTimeBoundariesObserver.
+          if (
+            manifest.isLastPeriodKnown &&
+            value.period.id === manifest.periods[manifest.periods.length - 1].id
+          ) {
+            const hasFinishedLoadingLastPeriod =
+              value.hasFinishedLoading || value.isEmptyStream;
+            if (hasFinishedLoadingLastPeriod) {
+              contentTimeBoundariesObserver.onLastSegmentFinishedLoading(
+                value.bufferType,
+              );
+            } else {
+              contentTimeBoundariesObserver.onLastSegmentLoadingResume(value.bufferType);
+            }
+          }
+        },
+
+        needsManifestRefresh() {
+          contentPreparer.scheduleManifestRefresh({
+            enablePartialRefresh: true,
+            canUseUnsafeMode: true,
+          });
+        },
+
+        manifestMightBeOufOfSync() {
+          const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config.getCurrent();
+          contentPreparer.scheduleManifestRefresh({
+            enablePartialRefresh: false,
+            canUseUnsafeMode: false,
+            delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
+          });
+        },
+
+        lockedStream(payload) {
+          sendMessage({
+            type: WorkerMessageType.LockedStream,
+            contentId,
+            value: {
+              periodId: payload.period.id,
+              bufferType: payload.bufferType,
+            },
+          });
+        },
+
+        adaptationChange(value) {
+          contentTimeBoundariesObserver.onAdaptationChange(
+            value.type,
+            value.period,
+            value.adaptation,
+          );
+          if (
+            currentLoadCanceller === null ||
+            currentLoadCanceller.signal.isCancelled()
+          ) {
+            return;
+          }
+          sendMessage({
+            type: WorkerMessageType.AdaptationChanged,
+            contentId,
+            value: {
+              adaptationId: value.adaptation?.id ?? null,
+              periodId: value.period.id,
+              type: value.type,
+            },
+          });
+        },
+
+        representationChange(value) {
+          contentTimeBoundariesObserver.onRepresentationChange(value.type, value.period);
+          if (
+            currentLoadCanceller === null ||
+            currentLoadCanceller.signal.isCancelled()
+          ) {
+            return;
+          }
+          sendMessage({
+            type: WorkerMessageType.RepresentationChanged,
+            contentId,
+            value: {
+              adaptationId: value.adaptation.id,
+              representationId: value.representation?.id ?? null,
+              periodId: value.period.id,
+              type: value.type,
+            },
+          });
+        },
+
+        inbandEvent(value) {
+          sendMessage({
+            type: WorkerMessageType.InbandEvent,
+            contentId,
+            value,
+          });
+        },
+
+        warning(value) {
+          sendMessage({
+            type: WorkerMessageType.Warning,
+            contentId,
+            value: formatErrorForSender(value),
+          });
+        },
+
+        periodStreamReady(value) {
+          if (preparedContent === null) {
+            return;
+          }
+          preparedContent.trackChoiceSetter.addTrackSetter(
+            value.period.id,
+            value.type,
+            value.adaptationRef,
+          );
+          sendMessage({
+            type: WorkerMessageType.PeriodStreamReady,
+            contentId,
+            value: { periodId: value.period.id, bufferType: value.type },
+          });
+        },
+
+        periodStreamCleared(value) {
+          if (preparedContent === null) {
+            return;
+          }
+
+          const periodDiscontinuitiesStore = lastSentDiscontinuitiesStore.get(
+            value.period,
+          );
+          if (periodDiscontinuitiesStore !== undefined) {
+            periodDiscontinuitiesStore.delete(value.type);
+            if (periodDiscontinuitiesStore.size === 0) {
+              lastSentDiscontinuitiesStore.delete(value.period);
+            }
+          }
+
+          contentTimeBoundariesObserver.onPeriodCleared(value.type, value.period);
+          preparedContent.trackChoiceSetter.removeTrackSetter(
+            value.period.id,
+            value.type,
+          );
+          sendMessage({
+            type: WorkerMessageType.PeriodStreamCleared,
+            contentId,
+            value: { periodId: value.period.id, bufferType: value.type },
+          });
+        },
+
+        bitrateEstimateChange(payload) {
+          if (preparedContent !== null) {
+            preparedContent.cmcdDataBuilder?.updateThroughput(
+              payload.type,
+              payload.bitrate,
+            );
+          }
+
+          // TODO for low-latency contents it is __VERY__ frequent.
+          // Considering this is only for an unimportant undocumented API, we may
+          // throttle such messages. (e.g. max one per 2 seconds for each type?).
+          sendMessage({
+            type: WorkerMessageType.BitrateEstimateChange,
+            contentId,
+            value: {
+              bitrate: payload.bitrate,
+              bufferType: payload.type,
+            },
+          });
+        },
+
+        needsMediaSourceReload(payload: INeedsMediaSourceReloadPayload) {
+          performMediaSourceReload(payload);
+        },
+
+        needsDecipherabilityFlush() {
+          sendMessage({
+            type: WorkerMessageType.NeedsDecipherabilityFlush,
+            contentId,
+            value: null,
+          });
+        },
+
+        encryptionDataEncountered(values) {
+          for (const value of values) {
+            const originalContent = value.content;
+            const content = { ...originalContent };
+            if (content.manifest instanceof Manifest) {
+              content.manifest = content.manifest.getMetadataSnapshot();
+            }
+            if (content.period instanceof Period) {
+              content.period = content.period.getMetadataSnapshot();
+            }
+            if (content.adaptation instanceof Adaptation) {
+              content.adaptation = content.adaptation.getMetadataSnapshot();
+            }
+            if (content.representation instanceof Representation) {
+              content.representation = content.representation.getMetadataSnapshot();
+            }
+            sendMessage({
+              type: WorkerMessageType.EncryptionDataEncountered,
+              contentId,
+              value: {
+                keyIds: value.keyIds,
+                values: value.values,
+                content,
+                type: value.type,
+              },
+            });
+          }
+        },
+
+        error(error: unknown) {
+          sendMessage({
+            type: WorkerMessageType.Error,
+            contentId,
+            value: formatErrorForSender(error),
+          });
+        },
+      };
+    }
+
+    function sendDiscontinuityUpdateIfNeeded(value: IStreamStatusPayload): void {
+      const { imminentDiscontinuity } = value;
+      let periodMap = lastSentDiscontinuitiesStore.get(value.period);
+      const sentObjInfo = periodMap?.get(value.bufferType);
+      if (sentObjInfo !== undefined) {
+        if (sentObjInfo.discontinuity === null) {
+          if (imminentDiscontinuity === null) {
+            return;
+          }
+        } else if (
+          imminentDiscontinuity !== null &&
+          sentObjInfo.discontinuity.start === imminentDiscontinuity.start &&
+          sentObjInfo.discontinuity.end === imminentDiscontinuity.end
+        ) {
           return;
         }
-      } else if (
-        imminentDiscontinuity !== null &&
-        sentObjInfo.discontinuity.start === imminentDiscontinuity.start &&
-        sentObjInfo.discontinuity.end === imminentDiscontinuity.end
-      ) {
-        return;
       }
-    }
 
-    if (periodMap === undefined) {
-      periodMap = new Map();
-      lastSentDiscontinuitiesStore.set(value.period, periodMap);
-    }
+      if (periodMap === undefined) {
+        periodMap = new Map();
+        lastSentDiscontinuitiesStore.set(value.period, periodMap);
+      }
 
-    const msgObj = {
-      periodId: value.period.id,
-      bufferType: value.bufferType,
-      discontinuity: value.imminentDiscontinuity,
-      position: value.position,
-    };
-    periodMap.set(value.bufferType, msgObj);
-    sendMessage({
-      type: WorkerMessageType.DiscontinuityUpdate,
-      contentId,
-      value: msgObj,
-    });
+      const msgObj = {
+        periodId: value.period.id,
+        bufferType: value.bufferType,
+        discontinuity: value.imminentDiscontinuity,
+        position: value.position,
+      };
+      periodMap.set(value.bufferType, msgObj);
+      sendMessage({
+        type: WorkerMessageType.DiscontinuityUpdate,
+        contentId,
+        value: msgObj,
+      });
+    }
   }
 
-  function handleMediaSourceReload(payload: INeedsMediaSourceReloadPayload) {
-    // TODO more precize one day?
-    const lastObservation = playbackObservationRef.getValue();
-    const newInitialTime = lastObservation.position.getWanted();
+  function performMediaSourceReload(payload: INeedsMediaSourceReloadPayload): void {
     if (currentLoadCanceller !== null) {
       currentLoadCanceller.cancel();
+      currentLoadCanceller = null;
+    }
+    const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource.id;
+    if (mediaSourceId === undefined) {
+      log.warn("WP: Cannot reload MediaSource: no MediaSource currently.");
+      return;
     }
     log.debug(
       "WP: Reloading MediaSource",
@@ -890,20 +935,32 @@ function loadOrReloadPreparedContent(
       payload.minimumPosition,
       payload.maximumPosition,
     );
-    contentPreparer.reloadMediaSource(payload).then(
+
+    sendMessage(
+      {
+        type: WorkerMessageType.ReloadingMediaSource,
+        mediaSourceId,
+        value: payload,
+      },
+      [],
+    );
+    onMediaSourceReload();
+  }
+
+  function onMediaSourceReload(): void {
+    // TODO more precize one day?
+    const lastObservation = playbackObservationRef.getValue();
+    const newInitialTime = lastObservation.position.getWanted();
+    if (currentLoadCanceller !== null) {
+      currentLoadCanceller.cancel();
+      currentLoadCanceller = null;
+    }
+    log.debug("WP: Reloading MediaSource");
+    const contentId = contentPreparer.getCurrentContent()?.contentId;
+    contentPreparer.reloadMediaSource().then(
       () => {
-        log.info("WP: MediaSource Reloaded, loading content again");
-        loadOrReloadPreparedContent(
-          {
-            initialTime: newInitialTime,
-            drmSystemId: val.drmSystemId,
-            enableFastSwitching: val.enableFastSwitching,
-            onCodecSwitch: val.onCodecSwitch,
-          },
-          contentPreparer,
-          playbackObservationRef,
-          parentCancelSignal,
-        );
+        log.info("WP: MediaSource Reloaded, loading content again", newInitialTime);
+        startLoadingAt(newInitialTime);
       },
       (err: unknown) => {
         if (TaskCanceller.isCancellationError(err)) {
