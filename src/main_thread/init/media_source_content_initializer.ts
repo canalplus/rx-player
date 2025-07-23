@@ -753,6 +753,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         getLoadedReference(playbackObserver, false, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
+              const fetchThumbnails = createThumbnailFetcher(
+                transport.thumbnails,
+                cdnPrioritizer,
+              );
               stopListening();
               this.trigger("loaded", {
                 getSegmentSinkMetrics: async () => {
@@ -765,10 +769,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                   thumbnailTrackId: string,
                   time: number,
                 ): Promise<IThumbnailResponse> => {
-                  const fetchThumbnails = createThumbnailFetcher(
-                    transport.thumbnails,
-                    cdnPrioritizer,
-                  );
                   return getThumbnailData(
                     fetchThumbnails,
                     manifest,

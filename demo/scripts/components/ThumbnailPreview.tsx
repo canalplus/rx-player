@@ -73,24 +73,24 @@ export default function ThumbnailPreview({
 
     startSpinnerTimeoutIfNotAlreadyStarted();
 
-    // load thumbnail after a  timer to avoid doing too many requests when the
-    // user quickly moves its pointer or whatever is calling this
-    loadThumbnailTimeout = window.setTimeout(() => {
-      loadThumbnailTimeout = null;
+    // There's two available ways of displaying thumbnails
+    //
+    // 1.   Through what's called a "trickmode track", which is a video track
+    //      only containing intra-frames. Such thumbnails are shown through a
+    //      video tag thanks the the `VideoThumbnailLoader` tool
+    //
+    // 2.   Through an especially-purposed "thumbnail track" in a Manifest
+    //      which usually is based on tiles of jpg/png images. Those are loaded
+    //      through specific RxPlayer method.
+    if (showVideoThumbnail) {
+      if (videoThumbnailLoader === null) {
+        return;
+      }
+      // load thumbnail after a  timer to avoid doing too many requests when the
+      // user quickly moves the pointer or whatever is calling this
+      loadThumbnailTimeout = window.setTimeout(() => {
+        loadThumbnailTimeout = null;
 
-      // There's two available ways of displaying thumbnails
-      //
-      // 1.   Through what's called a "trickmode track", which is a video track
-      //      only containing intra-frames. Such thumbnails are shown through a
-      //      video tag thanks the the `VideoThumbnailLoader` tool
-      //
-      // 2.   Through an especially-purposed "thumbnail track" in a Manifest
-      //      which usually is based on tiles of jpg/png images. Those are loadd
-      //      through specific RxPlayer method.
-      if (showVideoThumbnail) {
-        if (videoThumbnailLoader === null) {
-          return;
-        }
         videoThumbnailLoader
           .setTime(ceiledTime)
           .then(hideSpinner)
@@ -108,43 +108,43 @@ export default function ThumbnailPreview({
               console.error("Error while loading thumbnails:", err);
             }
           });
-      } else {
-        const metadata = player.actions.getAvailableThumbnailTracks(ceiledTime);
-        const thumbnailTrack = metadata.reduce((acc: IThumbnailTrackInfo | null, t) => {
-          if (acc === null || acc.height === undefined) {
-            return t;
-          }
-          if (t.height === undefined) {
-            return acc;
-          }
-          if (acc.height > t.height) {
-            return t.height > 100 ? t : acc;
-          } else {
-            return acc.height > 100 ? acc : t;
-          }
-        }, null);
-        if (thumbnailTrack === null || imageThumbnailRef.current === null) {
-          hideSpinner();
-          return;
+      }, 30);
+    } else {
+      const metadata = player.actions.getAvailableThumbnailTracks(ceiledTime);
+      const thumbnailTrack = metadata.reduce((acc: IThumbnailTrackInfo | null, t) => {
+        if (acc === null || acc.height === undefined) {
+          return t;
         }
-        player.actions
-          .renderThumbnail(imageThumbnailRef.current, ceiledTime, thumbnailTrack.id)
-          .then(hideSpinner)
-          .catch((err) => {
-            if (
-              typeof err === "object" &&
-              err !== null &&
-              (err as Partial<Record<string, unknown>>).code === "ABORTED"
-            ) {
-              return;
-            } else {
-              hideSpinner();
-              // eslint-disable-next-line no-console
-              console.warn("Error while loading thumbnails:", err);
-            }
-          });
+        if (t.height === undefined) {
+          return acc;
+        }
+        if (acc.height > t.height) {
+          return t.height > 100 ? t : acc;
+        } else {
+          return acc.height > 100 ? acc : t;
+        }
+      }, null);
+      if (thumbnailTrack === null || imageThumbnailRef.current === null) {
+        hideSpinner();
+        return;
       }
-    }, 30);
+      player.actions
+        .renderThumbnail(imageThumbnailRef.current, ceiledTime, thumbnailTrack.id)
+        .then(hideSpinner)
+        .catch((err) => {
+          if (
+            typeof err === "object" &&
+            err !== null &&
+            (err as Partial<Record<string, unknown>>).code === "ABORTED"
+          ) {
+            return;
+          } else {
+            hideSpinner();
+            // eslint-disable-next-line no-console
+            console.warn("Error while loading thumbnails:", err);
+          }
+        });
+    }
 
     return () => {
       if (loadThumbnailTimeout !== null) {

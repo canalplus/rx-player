@@ -23,7 +23,7 @@ import type {
 import ManifestFetcher from "./manifest";
 import type { SegmentQueue, ISegmentQueueCreatorBackoffOptions } from "./segment";
 import SegmentQueueCreator from "./segment";
-import createThumbnailFetcher, { getThumbnailFetcherRequestOptions } from "./thumbnails";
+import createThumbnailFetcher from "./thumbnails";
 import type { IThumbnailFetcher } from "./thumbnails";
 
 export type {
@@ -34,10 +34,4 @@ export type {
   SegmentQueue,
   IThumbnailFetcher,
 };
-export {
-  CdnPrioritizer,
-  ManifestFetcher,
-  SegmentQueueCreator,
-  createThumbnailFetcher,
-  getThumbnailFetcherRequestOptions,
-};
+export { CdnPrioritizer, ManifestFetcher, SegmentQueueCreator, createThumbnailFetcher };

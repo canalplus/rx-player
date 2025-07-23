@@ -2,7 +2,6 @@ import type { IManifest } from "../../../manifest";
 import type { IThumbnailResponse } from "../../../transports";
 import arrayFind from "../../../utils/array_find";
 import TaskCanceller from "../../../utils/task_canceller";
-import { getThumbnailFetcherRequestOptions } from "../../fetchers";
 import type { IThumbnailFetcher } from "../../fetchers";
 
 /**
@@ -35,9 +34,7 @@ export default async function getThumbnailData(
     throw new Error("No thumbnail for the given timestamp");
   }
   return fetchThumbnails(
-    wantedThumbnail,
-    thumbnailTrack,
-    getThumbnailFetcherRequestOptions({}),
+    { segment: wantedThumbnail, track: thumbnailTrack, period },
     new TaskCanceller().signal,
   );
 }
