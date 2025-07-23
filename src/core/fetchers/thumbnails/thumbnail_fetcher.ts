@@ -3,6 +3,7 @@ import { formatError } from "../../../errors";
 import log from "../../../log";
 import type { ISegment, IThumbnailTrack } from "../../../manifest";
 import type { ICdnMetadata } from "../../../parsers/manifest";
+import type { IPeriod } from "../../../public_types";
 import type {
   IThumbnailLoader,
   IThumbnailLoaderOptions,
@@ -42,22 +43,51 @@ export default function createThumbnailFetcher(
 ): IThumbnailFetcher {
   const { loadThumbnail } = pipeline;
 
-  // TODO short-lived cache?
+  // We store information on the pending request if one, as often the same
+  // thumbnail is requested many times in a row (due to e.g. the mouse cursor
+  // rapidly moving on the seek bar).
+  // So `pendingRequestInfo` contains metadata on the pending thumbnail request
+  // if one or else `null`.
+  let pendingRequestInfo: {
+    promise: Promise<IThumbnailResponse>;
+    thumbnailContext: {
+      segment: ISegment;
+      track: IThumbnailTrack;
+      period: IPeriod;
+    };
+  } | null = null;
 
   /**
-   * Fetch a specific segment.
-   * @param {Object} thumbnail
-   * @param {Object} thumbnailTrack
+   * Fetch a specific thumbnail.
+   * @param {Object} thumbnailContext
    * @param {Object} requestOptions
    * @param {Object} cancellationSignal
    * @returns {Promise}
    */
   return async function fetchThumbnail(
-    thumbnail: ISegment,
-    thumbnailTrack: IThumbnailTrack,
+    thumbnailContext: {
+      segment: ISegment;
+      track: IThumbnailTrack;
+      period: IPeriod;
+    },
     requestOptions: IThumbnailFetcherOptions,
     cancellationSignal: CancellationSignal,
   ): Promise<IThumbnailResponse> {
+    // First check if we're not requesting again the last thumbnail
+    if (pendingRequestInfo !== null) {
+      const pCtxt = pendingRequestInfo.thumbnailContext;
+      if (
+        pCtxt.period.id === thumbnailContext.period.id &&
+        pCtxt.track.id === thumbnailContext.track.id &&
+        pCtxt.segment.id === thumbnailContext.segment.id
+      ) {
+        log.debug("TF: Requesting same thumbnail than the pending one");
+        // Same thumbnail than the pending one, return it.
+        return pendingRequestInfo.promise;
+      }
+    }
+
+    const { segment: thumbnail, track: thumbnailTrack } = thumbnailContext;
     let connectionTimeout;
     if (
       requestOptions.connectionTimeout === undefined ||
@@ -74,46 +104,55 @@ export default function createThumbnailFetcher(
       cmcdPayload: undefined,
     };
 
-    log.debug("TF: Beginning thumbnail request", thumbnail.time);
-    cancellationSignal.register(onCancellation);
-    let res;
-    try {
-      res = await scheduleRequestWithCdns(
-        thumbnailTrack.cdnMetadata,
-        cdnPrioritizer,
-        callLoaderWithUrl,
-        objectAssign({ onRetry }, requestOptions),
-        cancellationSignal,
-      );
+    const fetchPromise = doFetch();
+    pendingRequestInfo = { thumbnailContext, promise: fetchPromise };
+    const fetchResult = await fetchPromise;
+    pendingRequestInfo = null;
+    return fetchResult;
 
-      if (cancellationSignal.isCancelled()) {
-        return Promise.reject(cancellationSignal.cancellationError);
+    async function doFetch() {
+      log.debug("TF: Beginning thumbnail request", thumbnail.time);
+      cancellationSignal.register(onCancellation);
+      let res;
+      try {
+        res = await scheduleRequestWithCdns(
+          thumbnailTrack.cdnMetadata,
+          cdnPrioritizer,
+          callLoaderWithUrl,
+          objectAssign({ onRetry }, requestOptions),
+          cancellationSignal,
+        );
+
+        if (cancellationSignal.isCancelled()) {
+          return Promise.reject(cancellationSignal.cancellationError);
+        }
+
+        log.debug("TF: Thumbnail request ended with success", thumbnail.time);
+        cancellationSignal.deregister(onCancellation);
+      } catch (err) {
+        cancellationSignal.deregister(onCancellation);
+        if (err instanceof CancellationError) {
+          log.debug("TF: Thumbnail request aborted", thumbnail.time);
+          throw err;
+        }
+        log.debug("TF: Thumbnail request failed", thumbnail.time);
+        throw errorSelector(err);
       }
 
-      log.debug("TF: Thumbnail request ended with success", thumbnail.time);
-      cancellationSignal.deregister(onCancellation);
-    } catch (err) {
-      cancellationSignal.deregister(onCancellation);
-      if (err instanceof CancellationError) {
-        log.debug("TF: Thumbnail request aborted", thumbnail.time);
-        throw err;
+      try {
+        const parsed = pipeline.parseThumbnail(res.responseData, {
+          thumbnail,
+          thumbnailTrack,
+        });
+        return parsed;
+      } catch (error) {
+        throw formatError(error, {
+          defaultCode: "PIPELINE_PARSE_ERROR",
+          defaultReason: "Unknown parsing error",
+        });
       }
-      log.debug("TF: Thumbnail request failed", thumbnail.time);
-      throw errorSelector(err);
     }
 
-    try {
-      const parsed = pipeline.parseThumbnail(res.responseData, {
-        thumbnail,
-        thumbnailTrack,
-      });
-      return parsed;
-    } catch (error) {
-      throw formatError(error, {
-        defaultCode: "PIPELINE_PARSE_ERROR",
-        defaultReason: "Unknown parsing error",
-      });
-    }
     function onCancellation() {
       log.debug("TF: Thumbnail request cancelled", thumbnail.time);
     }
@@ -155,10 +194,15 @@ export default function createThumbnailFetcher(
  * success or on error.
  */
 export type IThumbnailFetcher = (
-  /** Actual thumbnail you want to load */
-  thumbnail: ISegment,
-  /** Metadata on the linked thumbnails track. */
-  thumbnailTrack: IThumbnailTrack,
+  /** Context on the thumbnail you want to load */
+  thumbnailContext: {
+    /** Thumbnail "segment". */
+    segment: ISegment;
+    /** Metadata on the linked thumbnails track. */
+    track: IThumbnailTrack;
+    /** Metadata on the `Period` this thumbnail track is a part of. */
+    period: IPeriod;
+  },
   /**
    * Various tweaking requestOptions allowing to configure the behavior of the returned
    * `IThumbnailFetcher` regarding segment requests.

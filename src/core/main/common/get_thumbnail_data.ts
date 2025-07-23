@@ -35,8 +35,7 @@ export default async function getThumbnailData(
     throw new Error("No thumbnail for the given timestamp");
   }
   return fetchThumbnails(
-    wantedThumbnail,
-    thumbnailTrack,
+    { segment: wantedThumbnail, track: thumbnailTrack, period },
     getThumbnailFetcherRequestOptions({}),
     new TaskCanceller().signal,
   );
