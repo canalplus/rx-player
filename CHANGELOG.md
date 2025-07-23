@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.4.0-dev.2025063000
+## Current dev build: v4.4.0-dev.2025072300
 
 ### Features
 
@@ -15,14 +15,19 @@
 
 ### Bug fixes
 
+- Subtitles: Fix some subtitle missing on multiple period assets [#1708]
 - DRM: renew the mediaKeySystemAccess on Edge and Firefox when using a Playready keySystem
   to work-around frequent DRM issues. [#1694]
 - DRM: On Firefox check extensively Playready DRMs support before using them to
   work-around recent firefox issue with PlayReady integration [#1691]
+- DRM: Fix persistent session loading when content has no key id [#1713]
 - fix(safari): wait for canplay event to seek on safari [#1707]
 
 ### Other improvements
 
+- Add hidden experimental API "Dummy media API" to facilitate tests and debugging of the
+  RxPlayer behavior without having to support the content in the current environment
+  [#1478]
 - Improve on freeze resolution, especially for encrypted contents [#1705]
 - Detect that `fetch` / `AbortController` is native to provide a better experience for
   application relying on (broken) polyfills instead [#1698]
