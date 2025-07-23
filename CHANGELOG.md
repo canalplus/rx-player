@@ -28,6 +28,7 @@
 - Add hidden experimental API "Dummy media API" to facilitate tests and debugging of the
   RxPlayer behavior without having to support the content in the current environment
   [#1478]
+- Prevent unnecessary resources usage by inactive worker [#1696]
 - Improve on freeze resolution, especially for encrypted contents [#1705]
 - Detect that `fetch` / `AbortController` is native to provide a better experience for
   application relying on (broken) polyfills instead [#1698]
