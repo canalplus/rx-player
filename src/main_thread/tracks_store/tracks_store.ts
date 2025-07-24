@@ -624,6 +624,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
           reason: "no-playable-representation",
         });
       }
+      // The previous event trigger could have had side-effects, so we
+      // re-check if we're still mostly in the same state
+      if (this._isDisposed) {
+        return; // Someone disposed the `TracksStore` on the previous side-effect
+      }
       typeInfo.dispatcher?.updateTrack(storedSettings);
     } else if (fallbackTrack === null && !noSourceMedia) {
       this.trigger("noPlayableTrack", {
@@ -637,8 +642,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       }
       const fallbackBehavior = this.onTracksNotPlayableForType[trackType];
       if (hasStoredSettingsChanged()) {
-        // The previous "noPlayableTrack" event trigger could have had side-effects, so we
-        // re-check if we're still mostly in the same state
+        // The previous "noPlayableTrack" event might have caused changes,
+        // so we re-check to see if the selected track has been updated.
+        // If it has, we exit early because the API consumer likely adjusted the settings,
+        // and throwing an error now would be out of sync with their changes.
       } else if (fallbackBehavior === "continue") {
         log.warn(`TS: No playable ${trackType}, continuing without ${trackType}`);
         typeInfo.storedSettings = null;
@@ -650,6 +657,14 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
             trackType,
             reason: "no-playable-representation",
           });
+        }
+        if (typeInfo.storedSettings !== null || this._isDisposed) {
+          // The previous "trackUpdate" event might have caused changes,
+          // so we re-check to see if the selected track has been updated.
+          // If it has, we exit early because the API consumer likely adjusted the settings,
+          // and throwing an error now would be out of sync with their changes.
+        } else {
+          typeInfo.dispatcher?.updateTrack(null);
         }
       } else if (fallbackBehavior === "error") {
         const noRepErr = new MediaError(
@@ -663,8 +678,24 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       log.debug(
         `TS: The period does not have adaptation for ${trackType} there is no track to choose`,
       );
-      // No source media was found for this track type in the period (e.g., no audio at all).
-      // This is expected, so continue playback without this type.
+      typeInfo.storedSettings = null;
+      if (!isInitialSelection) {
+        // "trackUpdate" events are not sent for the initial track.
+        // See documentation: #Player_Events.md, section ###trackUpdate
+        this.trigger("trackUpdate", {
+          period: toExposedPeriod(period),
+          trackType,
+          reason: "no-playable-representation",
+        });
+      }
+      if (typeInfo.storedSettings !== null || this._isDisposed) {
+        // The previous "trackUpdate" event might have caused changes,
+        // so we re-check to see if the selected track has been updated.
+        // If it has, we exit early because the API consumer likely adjusted the settings,
+        // and throwing an error now would be out of sync with their changes.
+      } else {
+        typeInfo.dispatcher?.updateTrack(null);
+      }
     }
 
     // The previous event trigger could have had side-effects, so we
