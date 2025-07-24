@@ -491,10 +491,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj[bufferType].dispatcher = dispatcher;
 
     dispatcher.addEventListener("noPlayableRepresentation", () => {
-      const events = this.onNoPlayableRepresentation(period, bufferType);
-      for (const event of events) {
-        this.trigger("noPlayableTrack", event);
-      }
+      this.onNoPlayableRepresentation(period, bufferType);
     });
     dispatcher.addEventListener("noPlayableLockedRepresentation", () => {
       // TODO check that it doesn't already lead to segment loading or MediaSource
@@ -522,10 +519,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         },
       ]);
 
-      for (const eventToEmit of periodObj.noPlayableTrackEventToDispatch) {
-        this.trigger("noPlayableTrack", eventToEmit);
-      }
-
       if (this._isDisposed) {
         return;
       }
@@ -550,134 +543,126 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   /**
-   * Handle the noPlayableRepresentation event, trigger an error if no fallback is possible.
-   * and can trigger event "noPlayableTrack"
-   * @param period - The period that has no playable representation
-   * @param trackType - The media type that is not playable
+   * Throws an error if neither audio nor video tracks are selected for the given period.
+   *
+   * This indicates that the application or user has not selected any tracks for playback,
+   * which is considered an invalid state.
+   *
+   * @param {object} period - The period to check for selected tracks.
+   * @returns {void}
+   * @throws {erorr} If no audio or video tracks are set for the period.
+   */
+  private throwIfTracksAreNotSetForPeriod(period: IPeriodMetadata): void {
+    const periodItem = getPeriodItem(this._storedPeriodInfo, period.id);
+    if (periodItem !== undefined) {
+      const hasNoTrackAtAll = ["audio" as const, "video" as const].every(
+        (ttype) => periodItem[ttype].storedSettings === null,
+      );
+      if (hasNoTrackAtAll) {
+        const err = new MediaError(
+          "NO_AUDIO_VIDEO_TRACKS",
+          "No audio and no video tracks are set.",
+        );
+        this.trigger("error", err);
+        this.dispose();
+      }
+    }
+  }
+
+  /**
+   * Handles the case when no playable representations are available for a given media adaptation.
+   *
+   * This event handler is triggered when all representations in an adaptation (e.g., a video or audio track)
+   * are determined to be unplayable. It attempts to fall back to another available track.
+   *
+   * If no fallback tracks are available, the function may either:
+   * - Throw an error
+   * - Continue playback by disabling the affected media type (audio/video)
+   *
+   * The behavior depends on how the `onVideoTracksNotPlayable` and `onAudioTracksNotPlayable` options are configured.
+   *
+   * @param {Object} period - The period object containing the adaptations.
+   * @param {string} trackType - The type of media track (e.g., `'video'` or `'audio'`) that became unplayable.
+   * @returns {void}
    */
   private onNoPlayableRepresentation(
     period: IPeriodMetadata,
     trackType: ITrackType,
-  ): Array<{
-    trackType: ITrackType;
-    period: IPeriod;
-  }> {
-    const noPlayableTrackToTrigger = [];
+  ): void {
+    const { fallbackTrack, noSourceMedia } = getFallbackTrack(period, trackType);
+    const typeInfo = getPeriodItem(this._storedPeriodInfo, period.id)?.[trackType];
+    if (typeInfo === undefined) {
+      log.warn(`TS: Could not find period periodId=${period.id}`);
+      return;
+    }
+    if (trackType === "text") {
+      // we don't care for text fallback
+      return;
+    }
+    const initialStoredSettings = typeInfo.storedSettings;
+    const hasStoredSettingsChanged = (): boolean => {
+      return typeInfo.storedSettings !== initialStoredSettings;
+    };
 
-    const periodHasAdaptationForType =
-      period.adaptations[trackType] !== undefined &&
-      period.adaptations[trackType].length > 0;
-    if (!periodHasAdaptationForType) {
+    if (fallbackTrack !== null) {
+      const storedSettings = {
+        adaptation: fallbackTrack,
+        switchingMode:
+          trackType === "audio" ? this._defaultAudioTrackSwitchingMode : "reload",
+        lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
+      };
+      typeInfo.storedSettings = storedSettings;
+
+      this.trigger("trackUpdate", {
+        period: toExposedPeriod(period),
+        trackType,
+        reason: "no-playable-representation",
+      });
+      typeInfo.dispatcher?.updateTrack(storedSettings);
+    } else if (fallbackTrack === null && !noSourceMedia) {
+      this.trigger("noPlayableTrack", {
+        trackType,
+        period: { id: period.id, start: period.start, end: period.end },
+      });
+      // The previous event trigger could have had side-effects, so we
+      // re-check if we're still mostly in the same state
+      if (this._isDisposed) {
+        return; // Someone disposed the `TracksStore` on the previous side-effect
+      }
+      const fallbackBehavior = this.onTracksNotPlayableForType[trackType];
+      if (hasStoredSettingsChanged()) {
+        // The previous "noPlayableTrack" event trigger could have had side-effects, so we
+        // re-check if we're still mostly in the same state
+      } else if (fallbackBehavior === "continue") {
+        log.warn(`TS: No playable ${trackType}, continuing without ${trackType}`);
+        typeInfo.storedSettings = null;
+        this.trigger("trackUpdate", {
+          period: toExposedPeriod(period),
+          trackType,
+          reason: "no-playable-representation",
+        });
+      } else if (fallbackBehavior === "error") {
+        const noRepErr = new MediaError(
+          "NO_PLAYABLE_REPRESENTATION",
+          `No ${trackType} Representation can be played`,
+          { tracks: undefined },
+        );
+        this.trigger("error", noRepErr);
+      }
+    } else if (fallbackTrack === null && noSourceMedia) {
       log.debug(
         `TS: The period does not have adaptation for ${trackType} there is no track to choose`,
       );
-      return [];
+      // No source media was found for this track type in the period (e.g., no audio at all).
+      // This is expected, so continue playback without this type.
     }
-
-    const firstPlayableAdaptation = findFirstPlayableAdaptation(period, trackType);
-    if (
-      firstPlayableAdaptation === undefined &&
-      (trackType === "text" || this.onTracksNotPlayableForType[trackType] === "continue")
-    ) {
-      // audio or video is not playable, but let's continue the playback without audio
-      // or without video because of the option was set to "continue".
-      log.warn(`TS: No playable ${trackType}, continuing without ${trackType}`);
-      noPlayableTrackToTrigger.push({
-        trackType,
-        period: { id: period.id, start: period.start, end: period.end },
-      });
-      // The previous event trigger could have had side-effects, so we
-      // re-check if we're still mostly in the same state
-      if (this._isDisposed) {
-        return []; // Someone disposed the `TracksStore` on the previous side-effect
-      }
-    } else if (firstPlayableAdaptation === undefined) {
-      const noRepErr = new MediaError(
-        "NO_PLAYABLE_REPRESENTATION",
-        `No ${trackType} Representation can be played`,
-        { tracks: undefined },
-      );
-      noPlayableTrackToTrigger.push({
-        trackType,
-        period: { id: period.id, start: period.start, end: period.end },
-      });
-      // The previous event trigger could have had side-effects, so we
-      // re-check if we're still mostly in the same state
-      if (this._isDisposed) {
-        return []; // Someone disposed the `TracksStore` on the previous side-effect
-      }
-      this.trigger("error", noRepErr);
-      this.dispose();
-      return [];
-    }
-    let typeInfo = getPeriodItem(this._storedPeriodInfo, period.id)?.[trackType];
-    if (isNullOrUndefined(typeInfo)) {
-      return noPlayableTrackToTrigger;
-    }
-    const selectedAdaptation = getPeriodItem(this._storedPeriodInfo, period.id)?.[
-      trackType
-    ]?.storedSettings;
-    if (selectedAdaptation === null) {
-      // The track type has been explicitly disabled, there is no need to select
-      // a new track as a fallback.
-      return noPlayableTrackToTrigger;
-    }
-
-    const switchingMode =
-      trackType === "audio" ? this._defaultAudioTrackSwitchingMode : "reload";
-    const storedSettings =
-      firstPlayableAdaptation !== undefined
-        ? {
-            adaptation: firstPlayableAdaptation,
-            switchingMode,
-            lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(
-              null,
-            ),
-          }
-        : null;
-    typeInfo.storedSettings = storedSettings;
-
-    this.trigger("trackUpdate", {
-      period: toExposedPeriod(period),
-      trackType,
-      reason: "no-playable-representation",
-    });
 
     // The previous event trigger could have had side-effects, so we
     // re-check if we're still mostly in the same state
     if (this._isDisposed) {
-      return []; // Someone disposed the `TracksStore` on the previous side-effect
+      return; // Someone disposed the `TracksStore` on the previous side-effect
     }
-    typeInfo = getPeriodItem(this._storedPeriodInfo, period.id)?.[trackType];
-    if (isNullOrUndefined(typeInfo) || typeInfo.storedSettings !== storedSettings) {
-      return noPlayableTrackToTrigger;
-    }
-
-    // Check that we're not both disabling audio and video here
-    // Use a setTimeout(..., 0) to let a time window for an audio/video track switch when
-    // receiving a "noPlayableTrack" event
-    setTimeout(() => {
-      if (storedSettings === null) {
-        const periodItem = getPeriodItem(this._storedPeriodInfo, period.id);
-        if (periodItem !== undefined) {
-          const hasNoTrackAtAll = ["audio" as const, "video" as const].every(
-            (ttype) => periodItem[ttype].storedSettings === null,
-          );
-          if (hasNoTrackAtAll) {
-            const err = new MediaError(
-              "NO_AUDIO_VIDEO_TRACKS",
-              "No audio and no video tracks are set.",
-            );
-            this.trigger("error", err);
-            this.dispose();
-            return [];
-          }
-        }
-      }
-    }, 0);
-
-    typeInfo.dispatcher?.updateTrack(storedSettings);
-    return noPlayableTrackToTrigger;
+    this.throwIfTracksAreNotSetForPeriod(period);
   }
 
   /**
@@ -1484,9 +1469,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       )[0];
       if (audioAdaptation === undefined) {
         trackStorePeriod.audio.storedSettings = null;
-        trackStorePeriod.noPlayableTrackEventToDispatch.push(
-          ...this.onNoPlayableRepresentation(period, "audio"),
-        );
+        this.onNoPlayableRepresentation(period, "audio");
         if (this._isDisposed) {
           return;
         }
@@ -1502,9 +1485,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         getSupportedAdaptations(period, "video")[0];
       if (baseVideoAdaptation === undefined) {
         trackStorePeriod.video.storedSettings = null;
-        trackStorePeriod.noPlayableTrackEventToDispatch.push(
-          ...this.onNoPlayableRepresentation(period, "video"),
-        );
+        this.onNoPlayableRepresentation(period, "video");
         if (this._isDisposed) {
           return;
         }
@@ -1568,13 +1549,6 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     for (const trackStorePeriod of toDispatchTrack) {
       if (!trackStorePeriod.isPeriodAdvertised) {
         continue;
-      }
-
-      if (trackStorePeriod.noPlayableTrackEventToDispatch.length > 0) {
-        for (const noPlayableTrackEvent of trackStorePeriod.noPlayableTrackEventToDispatch) {
-          this.trigger("noPlayableTrack", noPlayableTrackEvent);
-        }
-        trackStorePeriod.noPlayableTrackEventToDispatch = [];
       }
 
       const bufferTypes: ITrackType[] = ["audio", "video", "text"];
@@ -1674,12 +1648,44 @@ function generatePeriodInfo(
     audio: { storedSettings: undefined, dispatcher: null },
     video: { storedSettings: undefined, dispatcher: null },
     text: { storedSettings: undefined, dispatcher: null },
-    noPlayableTrackEventToDispatch: [],
   };
 }
 
 function toExposedPeriod(p: IPeriodMetadata): IPeriod {
   return { start: p.start, end: p.end, id: p.id };
+}
+
+/**
+ * Retrieves a fallback track for the given period and track type.
+ *
+ * This function is used when the current track becomes unavailable,
+ * and a fallback track must be selected based on the period and media type.
+ *
+ * @param {Object} period - The period object that contains information about the available tracks.
+ * @param {string} trackType - The type of media track to fallback to (e.g., "audio", "video", "text").
+ * @returns {object|null} A fallback track matching the type, or `null` if none is available.
+ */
+function getFallbackTrack(
+  period: IPeriodMetadata,
+  trackType: ITrackType,
+): {
+  fallbackTrack: IAdaptationMetadata | null;
+  noSourceMedia: boolean;
+} {
+  const periodHasAdaptationForType =
+    period.adaptations[trackType] !== undefined &&
+    period.adaptations[trackType].length > 0;
+  if (!periodHasAdaptationForType) {
+    return {
+      fallbackTrack: null,
+      noSourceMedia: true,
+    };
+  }
+  const firstPlayableAdaptation = findFirstPlayableAdaptation(period, trackType);
+  return {
+    fallbackTrack: firstPlayableAdaptation ?? null,
+    noSourceMedia: false,
+  };
 }
 
 function findFirstPlayableAdaptation(
@@ -1740,16 +1746,6 @@ export interface ITSPeriodObject {
    * If `true`, this object was since cleaned-up.
    */
   isRemoved: boolean;
-
-  /**
-   * NoPlayableTrack events that should be emitted when the period has been advertised.
-   *
-   * This ensure the events relates to a period that was communicated via the public API.
-   */
-  noPlayableTrackEventToDispatch: Array<{
-    trackType: ITrackType;
-    period: IPeriod;
-  }>;
 }
 
 /**
