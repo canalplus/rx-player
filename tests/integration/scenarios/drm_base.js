@@ -694,7 +694,6 @@ describe("DRM: Basic use cases", function () {
   });
 
   it("should let a time window for an audio track reset if no license for video can be fetched while audio is disabled", async function () {
-    lockLowestBitrates(player);
     const noPlayableTracksReceived = [];
     player.addEventListener("newAvailablePeriods", (periods) => {
       expect(player.getVideoTrack(periods[0].id)).not.toBeNull();
@@ -708,7 +707,6 @@ describe("DRM: Basic use cases", function () {
         trackId: player.getAvailableAudioTracks(period.id)[0].id,
       });
     });
-    // RxPlayer.LogLevel = "DEBUG";
     await loadEncryptedContent({
       onVideoTracksNotPlayable: "continue",
       keySystems: [
