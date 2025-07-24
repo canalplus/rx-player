@@ -491,7 +491,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     periodObj[bufferType].dispatcher = dispatcher;
 
     dispatcher.addEventListener("noPlayableRepresentation", () => {
-      this.onNoPlayableRepresentation(period, bufferType);
+      this.handleMissingOrUnplayableTrack(period, bufferType, false);
     });
     dispatcher.addEventListener("noPlayableLockedRepresentation", () => {
       // TODO check that it doesn't already lead to segment loading or MediaSource
@@ -570,10 +570,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   }
 
   /**
-   * Handles the case when no playable representations are available for a given media adaptation.
+   * Handles the case when no playable representations are available, or when no initial track has been set,
+   * for a given period and track type (e.g., `'video'` or `'audio'`).
    *
-   * This event handler is triggered when all representations in an adaptation (e.g., a video or audio track)
-   * are determined to be unplayable. It attempts to fall back to another available track.
+   * It attempts to fall back to another available track.
    *
    * If no fallback tracks are available, the function may either:
    * - Throw an error
@@ -583,11 +583,13 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    *
    * @param {Object} period - The period object containing the adaptations.
    * @param {string} trackType - The type of media track (e.g., `'video'` or `'audio'`) that became unplayable.
+   *@param {boolean} isInitialSelection - Indicates if this occurs during initial track selection.
    * @returns {void}
    */
-  private onNoPlayableRepresentation(
+  private handleMissingOrUnplayableTrack(
     period: IPeriodMetadata,
     trackType: ITrackType,
+    isInitialSelection: boolean,
   ): void {
     const { fallbackTrack, noSourceMedia } = getFallbackTrack(period, trackType);
     const typeInfo = getPeriodItem(this._storedPeriodInfo, period.id)?.[trackType];
@@ -613,11 +615,15 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       };
       typeInfo.storedSettings = storedSettings;
 
-      this.trigger("trackUpdate", {
-        period: toExposedPeriod(period),
-        trackType,
-        reason: "no-playable-representation",
-      });
+      if (!isInitialSelection) {
+        // "trackUpdate" events are not sent for the initial track.
+        // See documentation: #Player_Events.md, section ###trackUpdate
+        this.trigger("trackUpdate", {
+          period: toExposedPeriod(period),
+          trackType,
+          reason: "no-playable-representation",
+        });
+      }
       typeInfo.dispatcher?.updateTrack(storedSettings);
     } else if (fallbackTrack === null && !noSourceMedia) {
       this.trigger("noPlayableTrack", {
@@ -636,11 +642,15 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       } else if (fallbackBehavior === "continue") {
         log.warn(`TS: No playable ${trackType}, continuing without ${trackType}`);
         typeInfo.storedSettings = null;
-        this.trigger("trackUpdate", {
-          period: toExposedPeriod(period),
-          trackType,
-          reason: "no-playable-representation",
-        });
+        if (!isInitialSelection) {
+          // "trackUpdate" events are not sent for the initial track.
+          // See documentation: #Player_Events.md, section ###trackUpdate
+          this.trigger("trackUpdate", {
+            period: toExposedPeriod(period),
+            trackType,
+            reason: "no-playable-representation",
+          });
+        }
       } else if (fallbackBehavior === "error") {
         const noRepErr = new MediaError(
           "NO_PLAYABLE_REPRESENTATION",
@@ -1469,7 +1479,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       )[0];
       if (audioAdaptation === undefined) {
         trackStorePeriod.audio.storedSettings = null;
-        this.onNoPlayableRepresentation(period, "audio");
+        this.handleMissingOrUnplayableTrack(period, "audio", true);
         if (this._isDisposed) {
           return;
         }
@@ -1485,7 +1495,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         getSupportedAdaptations(period, "video")[0];
       if (baseVideoAdaptation === undefined) {
         trackStorePeriod.video.storedSettings = null;
-        this.onNoPlayableRepresentation(period, "video");
+        this.handleMissingOrUnplayableTrack(period, "video", true);
         if (this._isDisposed) {
           return;
         }
