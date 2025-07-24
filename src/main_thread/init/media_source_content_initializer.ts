@@ -768,6 +768,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                   periodId: string,
                   thumbnailTrackId: string,
                   time: number,
+                  cancelSignal: CancellationSignal,
                 ): Promise<IThumbnailResponse> => {
                   return getThumbnailData(
                     fetchThumbnails,
@@ -775,6 +776,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                     periodId,
                     thumbnailTrackId,
                     time,
+                    cancelSignal,
                   );
                 },
               });

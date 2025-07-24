@@ -120,6 +120,7 @@ export default async function renderThumbnail(
         period.id,
         thumbnailTrack.id,
         time,
+        canceller.signal,
       );
       thumbnailRequestsInfo.lastResponse = {
         response: res,

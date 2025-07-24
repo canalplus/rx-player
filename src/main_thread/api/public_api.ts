@@ -3561,6 +3561,7 @@ export interface IPublicApiContentInfos {
         periodId: string,
         thumbnailTrackId: string,
         time: number,
+        cancelSignal: CancellationSignal,
       ) => Promise<IThumbnailResponse>);
   /** Metadata related to thumbnail rendering for the current content. */
   thumbnailRequestsInfo: {

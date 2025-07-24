@@ -550,12 +550,49 @@ export interface IRemoveTextDataErrorMessage {
 /** Message sent from main thread when it wants to fetch thumbnail data. */
 export interface IThumbnailDataRequestMainMessage {
   type: MainThreadMessageType.ThumbnailDataRequest;
+  /**
+   * Identifier for the current content being loaded.
+   * Allows to protect against race conditions where core and main would not
+   * be referencing the same content.
+   */
   contentId: string;
   value: {
+    /**
+     * A unique value associated to this thumbnail request.
+     * It has to be unique for pending thumbnail data requests.
+     */
     requestId: number;
+    /**
+     * The `id` property of the `Period` from which the wanted thumbnail is.
+     */
     periodId: string;
+    /**
+     * The `id` property of the thumbnail track from which the wanted thumbnail
+     * is.
+     */
     thumbnailTrackId: string;
+    /**
+     * The media time in seconds which the wanted thumbnail refers to.
+     */
     time: number;
+  };
+}
+
+/**
+ * Message sent from main thread when it wants to cancel a thumbnail request it
+ * previously started through a `IThumbnailDataRequestMainMessage`.
+ */
+export interface IThumbnailDataCancellationMainMessage {
+  type: MainThreadMessageType.ThumbnailDataCancellation;
+  /**
+   * Identifier for the current content being loaded.
+   * Allows to protect against race conditions where core and main would not
+   * be referencing the same content.
+   */
+  contentId: string;
+  value: {
+    /** The `requestId` that was communicated when requesting that thumbnail. */
+    requestId: number;
   };
 }
 
@@ -609,6 +646,7 @@ export const enum MainThreadMessageType {
   TrackUpdate = "track-update",
   PullSegmentSinkStoreInfos = "pull-segment-sink-store-infos",
   ThumbnailDataRequest = "thumbnail-request",
+  ThumbnailDataCancellation = "thumbnail-cancel",
 }
 
 export type IMainThreadMessage =

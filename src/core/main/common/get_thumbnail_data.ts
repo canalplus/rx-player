@@ -1,7 +1,7 @@
 import type { IManifest } from "../../../manifest";
 import type { IThumbnailResponse } from "../../../transports";
 import arrayFind from "../../../utils/array_find";
-import TaskCanceller from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 import { getThumbnailFetcherRequestOptions } from "../../fetchers";
 import type { IThumbnailFetcher } from "../../fetchers";
 
@@ -11,6 +11,7 @@ import type { IThumbnailFetcher } from "../../fetchers";
  * @param {string} periodId
  * @param {string} thumbnailTrackId
  * @param {number} time
+ * @param {CancellationSignal} cancelSignal
  * @returns {Promise.<Object>}
  */
 export default async function getThumbnailData(
@@ -19,6 +20,7 @@ export default async function getThumbnailData(
   periodId: string,
   thumbnailTrackId: string,
   time: number,
+  cancelSignal: CancellationSignal,
 ): Promise<IThumbnailResponse> {
   const period = manifest.getPeriod(periodId);
   if (period === undefined) {
@@ -37,6 +39,6 @@ export default async function getThumbnailData(
   return fetchThumbnails(
     { segment: wantedThumbnail, track: thumbnailTrack, period },
     getThumbnailFetcherRequestOptions({}),
-    new TaskCanceller().signal,
+    cancelSignal,
   );
 }

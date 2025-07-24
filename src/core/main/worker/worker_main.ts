@@ -27,6 +27,7 @@ import objectAssign from "../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
+import type { CancellationSignal } from "../../../utils/task_canceller";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
@@ -67,6 +68,8 @@ export default function initializeWorkerMain() {
    * `null` if there's no content loaded currently.
    */
   let currentContentHandle: IContentHandle | null = null;
+
+  const pendingThumbnailRequest = new Map();
 
   // Initialize Manually a `DashWasmParser` and add the feature.
   // TODO allow worker-side feature-switching? Not sure how
@@ -1099,11 +1102,14 @@ function handleFreezeResolution(
 /**
  * Handles thumbnail requests and send back the result to the main thread.
  * @param {ContentPreparer} contentPreparer
+ * @param {ObservationPosition} msg
+ * @param {CancellationSignal} cancelSignal
  * @returns {void}
  */
 function sendThumbnailData(
   contentPreparer: ContentPreparer,
   msg: IThumbnailDataRequestMainMessage,
+  cancelSignal: CancellationSignal,
 ): void {
   const preparedContent = contentPreparer.getCurrentContent();
   const respondWithError = (err: unknown) => {
@@ -1132,8 +1138,12 @@ function sendThumbnailData(
     msg.value.periodId,
     msg.value.thumbnailTrackId,
     msg.value.time,
+    cancelSignal,
   ).then(
     (result) => {
+      if (cancelSignal.isCancelled()) {
+        return;
+      }
       sendMessage(
         {
           type: WorkerMessageType.ThumbnailDataResponse,
@@ -1148,6 +1158,9 @@ function sendThumbnailData(
       );
     },
     (err) => {
+      if (cancelSignal.isCancelled()) {
+        return;
+      }
       return respondWithError(err);
     },
   );
