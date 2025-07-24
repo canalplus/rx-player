@@ -155,6 +155,7 @@ export default function createThumbnailFetcher(
 
     function onCancellation() {
       log.debug("TF: Thumbnail request cancelled", thumbnail.time);
+      pendingRequestInfo = null;
     }
 
     /**
