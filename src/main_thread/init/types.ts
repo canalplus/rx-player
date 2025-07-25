@@ -30,6 +30,7 @@ import type { IPlayerError } from "../../public_types";
 import type { IThumbnailResponse } from "../../transports";
 import EventEmitter from "../../utils/event_emitter";
 import type SharedReference from "../../utils/reference";
+import type { CancellationSignal } from "../../utils/task_canceller";
 import type {
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
@@ -151,12 +152,22 @@ export interface IContentInitializerEvents {
      * Fetch the thumbnail data of the given Period for the corresponding time.
      * If there's no thumbnail for that Period or if the request fails, reject
      * the Promise with a given reason.
-     * @param {number} time
+     * @param {string} periodId - The `id` property of the `Period` from which
+     * the wanted thumbnail is.
+     * @param {string} thumbnailTrackId - The `id` property of the thumbnail
+     * track from which the wanted thumbnail is.
+     * @param {number} time - The media time in seconds which the wanted
+     * thumbnail refers to.
+     * @param {CancellationSignal} cancelSignal - Allows to abort a thumbnail-
+     * fetching operation if still pending.
+     * @returns {Promise.<Object>} - If the request succeeds, resolves with that
+     * thumbnail's data and metadata.
      */
     getThumbnailData: (
       periodId: string,
       thumbnailTrackId: string,
       time: number,
+      cancelSignal: CancellationSignal,
     ) => Promise<IThumbnailResponse>;
   };
   /** Event emitted when a stream event is encountered. */

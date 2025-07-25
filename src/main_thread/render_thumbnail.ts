@@ -5,6 +5,7 @@ import type { IThumbnailRenderingOptions } from "../public_types";
 import type { IThumbnailResponse } from "../transports";
 import arrayFind from "../utils/array_find";
 import arrayFindIndex from "../utils/array_find_index";
+import queue_microtask from "../utils/queue_microtask";
 import TaskCanceller from "../utils/task_canceller";
 import type { IPublicApiContentInfos } from "./api/public_api";
 
@@ -56,7 +57,10 @@ export default async function renderThumbnail(
   let imageUrl: string | undefined;
 
   const olderTaskSameContainer = thumbnailRequestsInfo.pendingRequests.get(container);
-  olderTaskSameContainer?.cancel();
+  setTimeout(() => {
+    console.log("A");
+    olderTaskSameContainer?.cancel();
+  }, 50);
 
   thumbnailRequestsInfo.pendingRequests.set(container, canceller);
 

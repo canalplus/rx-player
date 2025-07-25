@@ -8,7 +8,6 @@ import type {
   IDiscontinuityUpdateWorkerMessagePayload,
   IMainThreadMessage,
   IReferenceUpdateMessage,
-  IThumbnailDataRequestMainMessage,
 } from "../../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_types";
 import DashJsParser from "../../../parsers/manifest/dash/js-parser";
@@ -27,7 +26,6 @@ import objectAssign from "../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
-import type { CancellationSignal } from "../../../utils/task_canceller";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
@@ -69,7 +67,10 @@ export default function initializeWorkerMain() {
    */
   let currentContentHandle: IContentHandle | null = null;
 
-  const pendingThumbnailRequest = new Map();
+  const pendingThumbnailRequests = new Map<
+    number /* thumbnail request id */,
+    TaskCanceller
+  >();
 
   // Initialize Manually a `DashWasmParser` and add the feature.
   // TODO allow worker-side feature-switching? Not sure how
@@ -410,7 +411,72 @@ export default function initializeWorkerMain() {
       }
 
       case MainThreadMessageType.ThumbnailDataRequest: {
-        sendThumbnailData(contentPreparer, msg);
+        const respondWithError = (err: unknown): void => {
+          sendMessage({
+            type: WorkerMessageType.ThumbnailDataResponse,
+            contentId: msg.contentId,
+            value: {
+              status: "error",
+              requestId: msg.value.requestId,
+              error: formatErrorForSender(err),
+            },
+          });
+        };
+
+        const preparedContent = contentPreparer.getCurrentContent();
+        if (
+          preparedContent === null ||
+          preparedContent.contentId !== msg.contentId ||
+          preparedContent.manifest === null
+        ) {
+          return respondWithError(new Error("Content changed"));
+        }
+        const canceller = new TaskCanceller();
+        pendingThumbnailRequests.set(msg.value.requestId, canceller);
+        getThumbnailData(
+          preparedContent.fetchThumbnailData,
+          preparedContent.manifest,
+          msg.value.periodId,
+          msg.value.thumbnailTrackId,
+          msg.value.time,
+          canceller.signal,
+        ).then(
+          (result) => {
+            pendingThumbnailRequests.delete(msg.value.requestId);
+            if (canceller.isUsed()) {
+              return;
+            }
+            sendMessage(
+              {
+                type: WorkerMessageType.ThumbnailDataResponse,
+                contentId: msg.contentId,
+                value: {
+                  status: "success",
+                  requestId: msg.value.requestId,
+                  data: result,
+                },
+              },
+              [result.data],
+            );
+          },
+          (err) => {
+            pendingThumbnailRequests.delete(msg.value.requestId);
+            if (canceller.isUsed()) {
+              return;
+            }
+            respondWithError(err);
+          },
+        );
+        break;
+      }
+
+      case MainThreadMessageType.ThumbnailDataCancellation: {
+        const preparedContent = contentPreparer.getCurrentContent();
+        if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
+          return;
+        }
+        const canceller = pendingThumbnailRequests.get(msg.value.requestId);
+        canceller?.cancel();
         break;
       }
 
@@ -1097,71 +1163,4 @@ function handleFreezeResolution(
     default:
       assertUnreachable(freezeResolution);
   }
-}
-
-/**
- * Handles thumbnail requests and send back the result to the main thread.
- * @param {ContentPreparer} contentPreparer
- * @param {ObservationPosition} msg
- * @param {CancellationSignal} cancelSignal
- * @returns {void}
- */
-function sendThumbnailData(
-  contentPreparer: ContentPreparer,
-  msg: IThumbnailDataRequestMainMessage,
-  cancelSignal: CancellationSignal,
-): void {
-  const preparedContent = contentPreparer.getCurrentContent();
-  const respondWithError = (err: unknown) => {
-    sendMessage({
-      type: WorkerMessageType.ThumbnailDataResponse,
-      contentId: msg.contentId,
-      value: {
-        status: "error",
-        requestId: msg.value.requestId,
-        error: formatErrorForSender(err),
-      },
-    });
-  };
-
-  if (
-    preparedContent === null ||
-    preparedContent.manifest === null ||
-    preparedContent.contentId !== msg.contentId
-  ) {
-    return respondWithError(new Error("Content changed"));
-  }
-
-  getThumbnailData(
-    preparedContent.fetchThumbnailData,
-    preparedContent.manifest,
-    msg.value.periodId,
-    msg.value.thumbnailTrackId,
-    msg.value.time,
-    cancelSignal,
-  ).then(
-    (result) => {
-      if (cancelSignal.isCancelled()) {
-        return;
-      }
-      sendMessage(
-        {
-          type: WorkerMessageType.ThumbnailDataResponse,
-          contentId: msg.contentId,
-          value: {
-            status: "success",
-            requestId: msg.value.requestId,
-            data: result,
-          },
-        },
-        [result.data],
-      );
-    },
-    (err) => {
-      if (cancelSignal.isCancelled()) {
-        return;
-      }
-      return respondWithError(err);
-    },
-  );
 }

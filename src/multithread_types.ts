@@ -672,7 +672,8 @@ export type IMainThreadMessage =
   | IRemoveTextDataErrorMessage
   | IMediaSourceReadyStateChangeMainMessage
   | IPullSegmentSinkStoreInfos
-  | IThumbnailDataRequestMainMessage;
+  | IThumbnailDataRequestMainMessage
+  | IThumbnailDataCancellationMainMessage;
 
 export type ISentError =
   | ISerializedNetworkError
