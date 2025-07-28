@@ -107,6 +107,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   private onTracksNotPlayableForType: {
     audio: "error" | "continue";
     video: "error" | "continue";
+    text: "error" | "continue";
   };
 
   constructor(args: {
@@ -115,6 +116,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     onTracksNotPlayableForType: {
       audio: "error" | "continue";
       video: "error" | "continue";
+      text: "error" | "continue";
     };
   }) {
     super();
@@ -597,20 +599,24 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       log.warn(`TS: Could not find period periodId=${period.id}`);
       return;
     }
-    if (trackType === "text") {
-      // we don't care for text fallback
-      return;
-    }
     const initialStoredSettings = typeInfo.storedSettings;
     const hasStoredSettingsChanged = (): boolean => {
       return typeInfo.storedSettings !== initialStoredSettings;
     };
 
     if (fallbackTrack !== null) {
+      let switchingMode: "direct" | "seamless" | "reload";
+      if (trackType === "audio") {
+        switchingMode = this._defaultAudioTrackSwitchingMode;
+      } else if (trackType === "text") {
+        switchingMode = "direct";
+      } else {
+        switchingMode = "reload";
+      }
+
       const storedSettings = {
         adaptation: fallbackTrack,
-        switchingMode:
-          trackType === "audio" ? this._defaultAudioTrackSwitchingMode : "reload",
+        switchingMode,
         lockedRepresentations: new SharedReference<IRepresentationsChoice | null>(null),
       };
       typeInfo.storedSettings = storedSettings;
@@ -629,7 +635,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       if (this._isDisposed) {
         return; // Someone disposed the `TracksStore` on the previous side-effect
       }
-      typeInfo.dispatcher?.updateTrack(storedSettings);
+
+      // Check again that no track change occurred in the meantime
+      if (typeInfo.storedSettings === storedSettings) {
+        typeInfo.dispatcher?.updateTrack(storedSettings);
+      }
     } else if (fallbackTrack === null && !noSourceMedia) {
       this.trigger("noPlayableTrack", {
         trackType,
@@ -640,6 +650,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       if (this._isDisposed) {
         return; // Someone disposed the `TracksStore` on the previous side-effect
       }
+
       const fallbackBehavior = this.onTracksNotPlayableForType[trackType];
       if (hasStoredSettingsChanged()) {
         // The previous "noPlayableTrack" event might have caused changes,
@@ -703,7 +714,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     if (this._isDisposed) {
       return; // Someone disposed the `TracksStore` on the previous side-effect
     }
-    this.throwIfTracksAreNotSetForPeriod(period);
+
+    if (trackType !== "text") {
+      // Allow missing text tracks; only enforce for audio/video
+      this.throwIfTracksAreNotSetForPeriod(period);
+    }
   }
 
   /**

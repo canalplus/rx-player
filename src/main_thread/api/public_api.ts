@@ -2708,6 +2708,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       onTracksNotPlayableForType: {
         audio: contentInfos.onAudioTracksNotPlayable,
         video: contentInfos.onVideoTracksNotPlayable,
+        text: "continue",
       },
     });
     contentInfos.tracksStore = tracksStore;
