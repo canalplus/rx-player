@@ -96,6 +96,7 @@ export default defineConfig({
     globals: false,
     reporters: "dot",
     include: [
+      // integration tests
       "tests/integration/scenarios/**/*.[jt]s?(x)",
       "tests/integration/**/*.test.[jt]s?(x)",
       // memory tests
