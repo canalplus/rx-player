@@ -2403,6 +2403,23 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     );
   }
 
+  /**
+   * Disable audio track for the current content.
+   * @param {string|undefined} [periodId]
+   */
+  disableAudioTrack(periodId?: string | undefined): void {
+    if (this._priv_contentInfos === null) {
+      return;
+    }
+    const { isDirectFile, mediaElementTracksStore } = this._priv_contentInfos;
+    if (isDirectFile && mediaElementTracksStore !== null) {
+      return mediaElementTracksStore.disableAudioTrack();
+    }
+    return this._priv_callTracksStoreGetterSetter(periodId, undefined, (tcm, periodRef) =>
+      tcm.disableTrack(periodRef, "audio"),
+    );
+  }
+
   lockAudioRepresentations(arg: string[] | ILockedAudioRepresentationsSettings): void {
     if (this._priv_contentInfos === null) {
       throw new Error("No content loaded");
@@ -2691,6 +2708,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       onTracksNotPlayableForType: {
         audio: contentInfos.onAudioTracksNotPlayable,
         video: contentInfos.onVideoTracksNotPlayable,
+        text: "continue",
       },
     });
     contentInfos.tracksStore = tracksStore;

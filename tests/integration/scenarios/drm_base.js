@@ -25,7 +25,11 @@ describe("DRM: Basic use cases", function () {
       ...opts,
     });
     if (isNullOrUndefined(error)) {
-      await waitForPlayerState(player, "LOADED", ["LOADING"]);
+      try {
+        await waitForPlayerState(player, "LOADED", ["LOADING"]);
+      } catch (err) {
+        throw player.getError() ?? err;
+      }
       expect(player.getError()).toBeNull();
     } else {
       await waitForPlayerState(player, "STOPPED", ["LOADING"]);
@@ -687,5 +691,49 @@ describe("DRM: Basic use cases", function () {
     );
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
     expect(player.getError()).toBeNull();
+  });
+
+  it("should let a time window for an audio track reset if no license for video can be fetched while audio is disabled", async function () {
+    const noPlayableTracksReceived = [];
+    player.addEventListener("newAvailablePeriods", (periods) => {
+      expect(player.getVideoTrack(periods[0].id)).not.toBeNull();
+      player.disableAudioTrack(periods[0].id);
+    });
+    player.addEventListener("noPlayableTrack", (npt) => {
+      noPlayableTracksReceived.push(npt);
+      const period = player.getAvailablePeriods()[0];
+      player.setAudioTrack({
+        periodId: period.id,
+        trackId: player.getAvailableAudioTracks(period.id)[0].id,
+      });
+    });
+    await loadEncryptedContent({
+      onVideoTracksNotPlayable: "continue",
+      keySystems: [
+        {
+          type: "com.microsoft.playready",
+          onKeyOutputRestricted: "fallback",
+          getLicense: generateGetLicenseForFakeLicense({
+            failingKeyIds: {
+              "90953e096cb249a3a2607a5fefead499": {
+                fallbackOnLastTry: true,
+              },
+              "80399bf58a2140148053e27e748e98c0": {
+                fallbackOnLastTry: true,
+              },
+              "80399bf58a2140148053e27e748e98c1": {
+                fallbackOnLastTry: true,
+              },
+            },
+          }),
+        },
+      ],
+    });
+    expect(player.getAvailableVideoTracks()).toEqual([]);
+    expect(noPlayableTracksReceived.length).toEqual(1);
+    expect(noPlayableTracksReceived[0].trackType).toEqual("video");
+    expect(noPlayableTracksReceived[0].period.id).toEqual(
+      player.getAvailablePeriods()[0].id,
+    );
   });
 });

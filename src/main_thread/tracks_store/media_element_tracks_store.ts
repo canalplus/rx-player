@@ -212,9 +212,10 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
    * MediaElementTracksStore's API(s).
    * Allows to "lock on" a track, to be sure that choice will be kept even
    * through audio track list updates, as long as it is still available.
+   * `null` if the audio track was disabled.
    * `undefined` if the audio track was not manually set.
    */
-  private _audioTrackLockedOn: ICompatAudioTrack | undefined;
+  private _audioTrackLockedOn: ICompatAudioTrack | undefined | null;
 
   /**
    * Last text track manually set active through the corresponding
@@ -320,6 +321,14 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
   public disableVideoTrack(): void {
     disableVideoTracks(this._videoTracks);
     this._videoTrackLockedOn = null;
+  }
+
+  /**
+   * Disable the currently-active audio track, if one.
+   */
+  public disableAudioTrack(): void {
+    disableAudioTracks(this._audioTracks);
+    this._audioTrackLockedOn = null;
   }
 
   /**
@@ -807,5 +816,17 @@ function disableVideoTracks(videoTracks: Array<{ nativeTrack: ICompatVideoTrack 
   for (let i = 0; i < videoTracks.length; i++) {
     const { nativeTrack } = videoTracks[i];
     nativeTrack.selected = false;
+  }
+}
+
+/**
+ * Disable all audio track elements in the given array from showing.
+ * Note that browser need to support that use case, which they often do not.
+ * @param {Array.<Object>} audioTracks
+ */
+function disableAudioTracks(audioTracks: Array<{ nativeTrack: ICompatAudioTrack }>) {
+  for (let i = 0; i < audioTracks.length; i++) {
+    const { nativeTrack } = audioTracks[i];
+    nativeTrack.enabled = false;
   }
 }

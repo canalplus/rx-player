@@ -419,6 +419,10 @@ const PlayerModule = declareModule(
         player.disableVideoTrack();
       },
 
+      disableAudioTrack() {
+        player.disableAudioTrack();
+      },
+
       setTextTrack(track: ITextTrack) {
         player.setTextTrack(track.id as string);
       },

@@ -797,8 +797,8 @@ The payload for this event is an object with the following properties:
     update it.
 
     This event is the direct consequence of calling `setAudioTrack`, `setTextTrack`,
-    `setVideoTrack`, `disableTextTrack` or `disableVideoTrack`, so it corresponds to track
-    updates you should already be aware of.
+    `setVideoTrack`, `disableTextTrack`, `disableVideoTrack` or `disableAudioTrack`, so it
+    corresponds to track updates you should already be aware of.
 
   - `"trickmode-enabled"`: The track is being updated because the application wanted to
     enable video trickmode tracks (usually by setting the `preferTrickModeTracks` option

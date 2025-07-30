@@ -180,6 +180,49 @@ describe("Content with video or audio not supported", function () {
     );
   });
 
+  it("should trigger an error if the video is not supported and the audio is disabled", async function () {
+    player.setWantedBufferAhead(15);
+    const { url, transport } = manifestVideoNotSupportedInfos;
+    let playerError;
+    let noPlayableTrackEvent;
+    player.addEventListener("error", (err) => {
+      playerError = err;
+    });
+    player.addEventListener("noPlayableTrack", (event) => {
+      noPlayableTrackEvent = event;
+    });
+    player.loadVideo({
+      url,
+      transport,
+      autoPlay: true,
+      onVideoTracksNotPlayable: "continue",
+    });
+    await waitForState(player, "PLAYING", [
+      "LOADING",
+      "LOADED",
+      "BUFFERING",
+      "SEEKING",
+      "RELOADING",
+    ]);
+    expect(noPlayableTrackEvent).not.toBe(undefined);
+    expect(noPlayableTrackEvent.trackType).toBe("video");
+
+    const waitStopped = waitForState(player, "STOPPED", [
+      "LOADING",
+      "LOADED",
+      "BUFFERING",
+      "SEEKING",
+      "RELOADING",
+      "PLAYING",
+    ]);
+    player.disableAudioTrack();
+    await waitStopped;
+    expect(playerError).not.toBe(undefined);
+    expect(playerError.message).toBe(
+      "NO_AUDIO_VIDEO_TRACKS: No audio and no video tracks are set.",
+    );
+  });
+
   it("should trigger an error if audio only content is not supported", async function () {
     player.setWantedBufferAhead(15);
     const { url, transport } = manifestAudioOnlyInfos;

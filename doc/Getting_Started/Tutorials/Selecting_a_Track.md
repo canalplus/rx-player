@@ -437,11 +437,12 @@ subtitles or closed captions appearing on the screen.
 You could also want to disable the video track, which is a trick often used to reduce the
 network bandwidth used by a content.
 
-You can disable respectively the current text track and the current video track by calling
-those methods:
+You can disable respectively the current text track, the current video track and the
+current audio track by calling those methods:
 
 - [`disableTextTrack`](../../api/Track_Selection/disableTextTrack.md)
 - [`disableVideoTrack`](../../api/Track_Selection/disableVideoTrack.md)
+- [`disableAudioTrack`](../../api/Track_Selection/disableAudioTrack.md)
 
 However, like for selecting a track, this only concerns the current content being played.
 When playing a new content or even when just switching to another part of the content with

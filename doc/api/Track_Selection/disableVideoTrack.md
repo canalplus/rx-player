@@ -18,6 +18,9 @@ for (const period of periods) {
 }
 ```
 
+Note that disabling the video track if there's no audio track currently selected currently
+will lead to a [`NO_AUDIO_VIDEO_TRACKS` player error](../Player_Errors.md).
+
 <div class="warning">
 This option may have no effect in <i>DirectFile</i> mode (see <a
 href="../Loading_a_Content.md#transport">loadVideo options</a>).
