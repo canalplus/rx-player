@@ -274,6 +274,7 @@ export function setAutoplay(
     return;
   }
   const autoplayPreviousValue = mediaElement.autoplay;
+  mediaElement.autoplay = autoplay;
   cancellationSignal.register(() => {
     /**
      * Restore the `autoplay` attribute to its previous value.
@@ -282,7 +283,6 @@ export function setAutoplay(
      */
     mediaElement.autoplay = autoplayPreviousValue;
   });
-  mediaElement.autoplay = autoplay;
 }
 
 /**
