@@ -51,7 +51,7 @@ export default async function renderThumbnail(
 
   const { thumbnailRequestsInfo, currentContentCanceller } = contentInfos;
   const canceller = new TaskCanceller();
-  canceller.linkToSignal(currentContentCanceller.signal);
+  const unlinkCanceller = canceller.linkToSignal(currentContentCanceller.signal);
 
   let imageUrl: string | undefined;
 
@@ -61,6 +61,7 @@ export default async function renderThumbnail(
   thumbnailRequestsInfo.pendingRequests.set(container, canceller);
 
   const onFinished = () => {
+    unlinkCanceller();
     canceller.cancel();
     thumbnailRequestsInfo.pendingRequests.delete(container);
 
@@ -153,6 +154,11 @@ export default async function renderThumbnail(
     canvas.width = res.thumbnails[foundIdx].width;
     return new Promise((resolve, reject) => {
       image.onload = () => {
+        if (canceller.signal.cancellationError !== null) {
+          reject(canceller.signal.cancellationError);
+          onFinished();
+          return;
+        }
         try {
           context.drawImage(
             image,
@@ -184,6 +190,11 @@ export default async function renderThumbnail(
       };
 
       image.onerror = () => {
+        if (canceller.signal.cancellationError !== null) {
+          reject(canceller.signal.cancellationError);
+          onFinished();
+          return;
+        }
         if (options.keepPreviousThumbnailOnError !== true) {
           clearPreviousThumbnails();
         }

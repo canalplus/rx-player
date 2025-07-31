@@ -3,15 +3,17 @@ import { formatError } from "../../../errors";
 import log from "../../../log";
 import type { ISegment, IThumbnailTrack } from "../../../manifest";
 import type { ICdnMetadata } from "../../../parsers/manifest";
+import type { IPeriod } from "../../../public_types";
 import type {
   IThumbnailLoader,
   IThumbnailLoaderOptions,
   IThumbnailPipeline,
   IThumbnailResponse,
 } from "../../../transports";
+import arrayFind from "../../../utils/array_find";
 import objectAssign from "../../../utils/object_assign";
 import type { CancellationSignal } from "../../../utils/task_canceller";
-import { CancellationError } from "../../../utils/task_canceller";
+import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
 import type CdnPrioritizer from "../cdn_prioritizer";
 import errorSelector from "../utils/error_selector";
 import { scheduleRequestWithCdns } from "../utils/schedule_request";
@@ -42,22 +44,82 @@ export default function createThumbnailFetcher(
 ): IThumbnailFetcher {
   const { loadThumbnail } = pipeline;
 
-  // TODO short-lived cache?
+  interface IPendingThumbnailRequestInfo {
+    /** Promise behind the thumbnail request. */
+    promise: Promise<IThumbnailResponse>;
+    /**
+     * Multiple caller might share the same request promise.
+     * This reference counter keeps track of the number of caller that are
+     * currently waiting for that promise to be fulfilled.
+     * If reaching `0` before the promise resolves or rejects, we know we can
+     * cancel the request.
+     */
+    referenceCount: number;
+    /** Information linked to that thumbnail segment. */
+    thumbnailContext: {
+      segment: ISegment;
+      track: IThumbnailTrack;
+      period: IPeriod;
+    };
+  }
+
+  // We store information on pending requests, as often the same thumbnail is
+  // requested many times in a row (due to e.g. the mouse cursor rapidly moving
+  // on the seek bar).
+  // So `pendingRequestsInfo` contains metadata on the pending thumbnail request
+  // if one or else `null`.
+  const pendingRequestsInfo: IPendingThumbnailRequestInfo[] = [];
 
   /**
-   * Fetch a specific segment.
-   * @param {Object} thumbnail
-   * @param {Object} thumbnailTrack
-   * @param {Object} requestOptions
+   * Fetch a specific thumbnail.
+   * @param {Object} thumbnailContext
    * @param {Object} cancellationSignal
    * @returns {Promise}
    */
   return async function fetchThumbnail(
-    thumbnail: ISegment,
-    thumbnailTrack: IThumbnailTrack,
-    requestOptions: IThumbnailFetcherOptions,
+    thumbnailContext: {
+      segment: ISegment;
+      track: IThumbnailTrack;
+      period: IPeriod;
+    },
     cancellationSignal: CancellationSignal,
   ): Promise<IThumbnailResponse> {
+    cancellationSignal.register(onCancellation);
+
+    let currRequestInfo: IPendingThumbnailRequestInfo;
+
+    // First check if we're not requesting again the last thumbnail
+    const pendingInfo = arrayFind(pendingRequestsInfo, ({ thumbnailContext: pCtxt }) => {
+      return (
+        pCtxt.period.id === thumbnailContext.period.id &&
+        pCtxt.track.id === thumbnailContext.track.id &&
+        pCtxt.segment.id === thumbnailContext.segment.id
+      );
+    });
+
+    if (pendingInfo !== undefined) {
+      log.debug("TF: Requesting same thumbnail than the pending one");
+      currRequestInfo = pendingInfo;
+      currRequestInfo.referenceCount++;
+
+      // Same thumbnail than the pending one, return it.
+      let response;
+      try {
+        response = await currRequestInfo.promise;
+      } catch (err) {
+        cancellationSignal.deregister(onCancellation);
+        throw err;
+      }
+      cancellationSignal.deregister(onCancellation);
+      return response;
+    }
+
+    const { segment: thumbnail, track: thumbnailTrack } = thumbnailContext;
+
+    // NOTE: For now, as multiple `fetchThumbnail` calls might rely on the
+    // same request, it is difficult to let different request options
+    // per call. So this is not enabled yet.
+    const requestOptions = getThumbnailFetcherRequestOptions({});
     let connectionTimeout;
     if (
       requestOptions.connectionTimeout === undefined ||
@@ -74,48 +136,87 @@ export default function createThumbnailFetcher(
       cmcdPayload: undefined,
     };
 
-    log.debug("TF: Beginning thumbnail request", thumbnail.time);
-    cancellationSignal.register(onCancellation);
-    let res;
-    try {
-      res = await scheduleRequestWithCdns(
-        thumbnailTrack.cdnMetadata,
-        cdnPrioritizer,
-        callLoaderWithUrl,
-        objectAssign({ onRetry }, requestOptions),
-        cancellationSignal,
-      );
-
-      if (cancellationSignal.isCancelled()) {
-        return Promise.reject(cancellationSignal.cancellationError);
+    /**
+     * `TaskCanceller` linked to the thumbnail request.
+     * This is different than `cancellationSignal` which is linked to this call,
+     * as several calls might share the same request.
+     */
+    const requestCanceller = new TaskCanceller();
+    const fetchPromise = doFetch();
+    currRequestInfo = {
+      thumbnailContext,
+      promise: fetchPromise,
+      referenceCount: 1,
+    };
+    pendingRequestsInfo.push(currRequestInfo);
+    const clearRequestInfo = (): void => {
+      const currRequestIdx = pendingRequestsInfo.indexOf(currRequestInfo);
+      if (currRequestIdx >= 0) {
+        pendingRequestsInfo.splice(currRequestIdx, 1);
       }
-
-      log.debug("TF: Thumbnail request ended with success", thumbnail.time);
-      cancellationSignal.deregister(onCancellation);
+    };
+    try {
+      const fetchResult = await fetchPromise;
+      clearRequestInfo();
+      return fetchResult;
     } catch (err) {
-      cancellationSignal.deregister(onCancellation);
-      if (err instanceof CancellationError) {
-        log.debug("TF: Thumbnail request aborted", thumbnail.time);
-        throw err;
-      }
-      log.debug("TF: Thumbnail request failed", thumbnail.time);
-      throw errorSelector(err);
+      clearRequestInfo();
+      throw err;
     }
 
-    try {
-      const parsed = pipeline.parseThumbnail(res.responseData, {
-        thumbnail,
-        thumbnailTrack,
-      });
-      return parsed;
-    } catch (error) {
-      throw formatError(error, {
-        defaultCode: "PIPELINE_PARSE_ERROR",
-        defaultReason: "Unknown parsing error",
-      });
+    async function doFetch() {
+      log.debug("TF: Beginning thumbnail request", thumbnail.time);
+      let res;
+      try {
+        res = await scheduleRequestWithCdns(
+          thumbnailTrack.cdnMetadata,
+          cdnPrioritizer,
+          callLoaderWithUrl,
+          objectAssign({ onRetry }, requestOptions),
+          requestCanceller.signal,
+        );
+
+        if (cancellationSignal.isCancelled()) {
+          return Promise.reject(cancellationSignal.cancellationError);
+        }
+
+        log.debug("TF: Thumbnail request ended with success", thumbnail.time);
+        cancellationSignal.deregister(onCancellation);
+      } catch (err) {
+        cancellationSignal.deregister(onCancellation);
+        if (err instanceof CancellationError) {
+          log.debug("TF: Thumbnail request aborted", thumbnail.time);
+          throw err;
+        }
+        log.debug("TF: Thumbnail request failed", thumbnail.time);
+        throw errorSelector(err);
+      }
+
+      try {
+        const parsed = pipeline.parseThumbnail(res.responseData, {
+          thumbnail,
+          thumbnailTrack,
+        });
+        return parsed;
+      } catch (error) {
+        throw formatError(error, {
+          defaultCode: "PIPELINE_PARSE_ERROR",
+          defaultReason: "Unknown parsing error",
+        });
+      }
     }
+
     function onCancellation() {
       log.debug("TF: Thumbnail request cancelled", thumbnail.time);
+      const requestIdx = pendingRequestsInfo.indexOf(currRequestInfo);
+      if (requestIdx < 0) {
+        return;
+      }
+      pendingRequestsInfo[requestIdx].referenceCount--;
+      if (pendingRequestsInfo[requestIdx].referenceCount <= 0) {
+        requestCanceller.cancel();
+        pendingRequestsInfo.splice(requestIdx, 1);
+      }
     }
 
     /**
@@ -155,15 +256,15 @@ export default function createThumbnailFetcher(
  * success or on error.
  */
 export type IThumbnailFetcher = (
-  /** Actual thumbnail you want to load */
-  thumbnail: ISegment,
-  /** Metadata on the linked thumbnails track. */
-  thumbnailTrack: IThumbnailTrack,
-  /**
-   * Various tweaking requestOptions allowing to configure the behavior of the returned
-   * `IThumbnailFetcher` regarding segment requests.
-   */
-  requestOptions: IThumbnailFetcherOptions,
+  /** Context on the thumbnail you want to load */
+  thumbnailContext: {
+    /** Thumbnail "segment". */
+    segment: ISegment;
+    /** Metadata on the linked thumbnails track. */
+    track: IThumbnailTrack;
+    /** Metadata on the `Period` this thumbnail track is a part of. */
+    period: IPeriod;
+  },
   /** CancellationSignal allowing to cancel the request. */
   cancellationSignal: CancellationSignal,
 ) => Promise<IThumbnailResponse>;
@@ -203,7 +304,7 @@ export interface IThumbnailFetcherOptions {
  * @param {Object} baseOptions
  * @returns {Object}
  */
-export function getThumbnailFetcherRequestOptions({
+function getThumbnailFetcherRequestOptions({
   maxRetry,
   requestTimeout,
   connectionTimeout,
