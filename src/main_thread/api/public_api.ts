@@ -63,6 +63,8 @@ import {
   ManifestMetadataFormat,
   createRepresentationFilterFromFnString,
   getPeriodForTime,
+  toVideoRepresentation,
+  toAudioRepresentation,
 } from "../../manifest";
 import type { IWorkerMessage } from "../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../multithread_types";
@@ -1721,7 +1723,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (representations === null) {
       return undefined;
     }
-    return representations.video;
+    return isNullOrUndefined(representations.video)
+      ? representations.video
+      : toVideoRepresentation(representations.video);
   }
 
   /**
@@ -1738,7 +1742,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (representations === null) {
       return undefined;
     }
-    return representations.audio;
+    return isNullOrUndefined(representations.audio)
+      ? representations.video
+      : toAudioRepresentation(representations.audio);
   }
 
   /**
@@ -2932,13 +2938,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const audioRepresentation = this.__priv_getCurrentRepresentations()?.audio ?? null;
     this._priv_triggerEventIfNotStopped(
       "audioRepresentationChange",
-      audioRepresentation,
+      isNullOrUndefined(audioRepresentation)
+        ? audioRepresentation
+        : toVideoRepresentation(audioRepresentation),
       cancelSignal,
     );
     const videoRepresentation = this.__priv_getCurrentRepresentations()?.video ?? null;
     this._priv_triggerEventIfNotStopped(
       "videoRepresentationChange",
-      videoRepresentation,
+      isNullOrUndefined(videoRepresentation)
+        ? videoRepresentation
+        : toVideoRepresentation(videoRepresentation),
       cancelSignal,
     );
   }
@@ -3153,13 +3163,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (type === "video") {
         this._priv_triggerEventIfNotStopped(
           "videoRepresentationChange",
-          representation,
+          isNullOrUndefined(representation)
+            ? representation
+            : toVideoRepresentation(representation),
           cancelSignal,
         );
       } else if (type === "audio") {
         this._priv_triggerEventIfNotStopped(
           "audioRepresentationChange",
-          representation,
+          isNullOrUndefined(representation)
+            ? representation
+            : toAudioRepresentation(representation),
           cancelSignal,
         );
       }

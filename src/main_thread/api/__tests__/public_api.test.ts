@@ -1,5 +1,10 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
+import type { IBufferType } from "../../../core/types";
+import type { IRepresentationMetadata } from "../../../manifest";
+import type { IAudioRepresentation, IVideoRepresentation } from "../../../public_types";
+import TaskCanceller from "../../../utils/task_canceller";
 import type IPublicAPI from "../public_api";
+import type { IPublicApiContentInfos } from "../public_api";
 
 describe("API - Public API", () => {
   beforeEach(() => {
@@ -122,20 +127,74 @@ describe("API - Public API", () => {
     });
 
     describe("getVideoRepresentation", () => {
-      it("should return undefined in getVideoRepresentation by default", async () => {
+      let player: IPublicAPI;
+      beforeEach(async () => {
         const PublicAPI = (await vi.importActual("../public_api"))
           .default as typeof IPublicAPI;
-        const player = new PublicAPI();
+        player = new PublicAPI();
+      });
+
+      it("should return undefined in getVideoRepresentation by default", async () => {
         expect(player.getVideoRepresentation()).toBe(undefined);
+      });
+
+      it("should return the video representation if available", () => {
+        const mockGetCurrentRepresentation: Partial<
+          Record<IBufferType, IRepresentationMetadata | null>
+        > = {
+          video: {
+            id: "1",
+            bitrate: 1000,
+            codecs: ["avc1"],
+            uniqueId: "unique1",
+            isSupported: true,
+          },
+        };
+        vi.spyOn(player, "__priv_getCurrentRepresentations").mockReturnValue(
+          mockGetCurrentRepresentation,
+        );
+        expect(player.getVideoRepresentation()).toEqual({
+          id: "1",
+          bitrate: 1000,
+          codec: "avc1",
+          isCodecSupported: true,
+        } satisfies IVideoRepresentation);
       });
     });
 
     describe("getAudioRepresentation", () => {
-      it("should return undefined in getAudioRepresentation by default", async () => {
+      let player: IPublicAPI;
+
+      beforeEach(async () => {
         const PublicAPI = (await vi.importActual("../public_api"))
           .default as typeof IPublicAPI;
-        const player = new PublicAPI();
+        player = new PublicAPI();
+      });
+
+      it("should return undefined in getAudioRepresentation by default", async () => {
         expect(player.getAudioRepresentation()).toBe(undefined);
+      });
+      it("should return the audio representation if available", () => {
+        const mockGetCurrentRepresentation: Partial<
+          Record<IBufferType, IRepresentationMetadata | null>
+        > = {
+          audio: {
+            id: "2",
+            bitrate: 1000,
+            codecs: ["mp4a"],
+            uniqueId: "unique2",
+            isSupported: true,
+          },
+        };
+        vi.spyOn(player, "__priv_getCurrentRepresentations").mockReturnValue(
+          mockGetCurrentRepresentation,
+        );
+        expect(player.getAudioRepresentation()).toEqual({
+          id: "2",
+          bitrate: 1000,
+          codec: "mp4a",
+          isCodecSupported: true,
+        } satisfies IAudioRepresentation);
       });
     });
 
@@ -510,6 +569,116 @@ describe("API - Public API", () => {
          *
          */
         warn.mockClear();
+      });
+    });
+  });
+
+  describe("event emitters", () => {
+    describe("videoRepresentationChange", () => {
+      let player: IPublicAPI;
+      beforeEach(async () => {
+        const PublicAPI = (await vi.importActual("../public_api"))
+          .default as typeof IPublicAPI;
+        player = new PublicAPI();
+      });
+
+      it("should trigger videoRepresentationChange on representation change", async () => {
+        const taskCanceller = new TaskCanceller();
+        const contentInfos: Partial<IPublicApiContentInfos> = {
+          contentId: "123",
+          originalUrl: undefined,
+          isDirectFile: false,
+          defaultAudioTrackSwitchingMode: "direct",
+          currentPeriod: {
+            id: "p1",
+            start: 0,
+            adaptations: { video: [] },
+            streamEvents: [],
+            thumbnailTracks: [],
+          },
+          currentContentCanceller: taskCanceller,
+          activeRepresentations: null,
+        };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        (player as any)._priv_contentInfos = contentInfos;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const spy = vi.spyOn(player as any, "_priv_triggerEventIfNotStopped");
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        (player as any)._priv_onRepresentationChange(contentInfos, {
+          type: "video",
+          period: { id: "p1" },
+          representation: {
+            id: "1",
+            bitrate: 1000,
+            codecs: ["avc1"],
+            uniqueId: "unique1",
+            isSupported: true,
+          } satisfies IRepresentationMetadata,
+        });
+        expect(spy).toHaveBeenCalledWith(
+          "videoRepresentationChange",
+          {
+            id: "1",
+            bitrate: 1000,
+            codec: "avc1",
+            isCodecSupported: true,
+          } satisfies IVideoRepresentation,
+          taskCanceller.signal,
+        );
+      });
+    });
+
+    describe("audioRepresentationChange", () => {
+      let player: IPublicAPI;
+      beforeEach(async () => {
+        const PublicAPI = (await vi.importActual("../public_api"))
+          .default as typeof IPublicAPI;
+        player = new PublicAPI();
+      });
+
+      it("should trigger audioRepresentationChange on representation change", async () => {
+        const taskCanceller = new TaskCanceller();
+        const contentInfos: Partial<IPublicApiContentInfos> = {
+          contentId: "123",
+          originalUrl: undefined,
+          isDirectFile: false,
+          defaultAudioTrackSwitchingMode: "direct",
+          currentPeriod: {
+            id: "p1",
+            start: 0,
+            adaptations: { audio: [] },
+            streamEvents: [],
+            thumbnailTracks: [],
+          },
+          currentContentCanceller: taskCanceller,
+          activeRepresentations: null,
+        };
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        (player as any)._priv_contentInfos = contentInfos;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const spy = vi.spyOn(player as any, "_priv_triggerEventIfNotStopped");
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        (player as any)._priv_onRepresentationChange(contentInfos, {
+          type: "audio",
+          period: { id: "p1" },
+          representation: {
+            id: "2",
+            bitrate: 1000,
+            codecs: ["mp4a"],
+            uniqueId: "unique2",
+            isSupported: true,
+          } satisfies IRepresentationMetadata,
+        });
+        expect(spy).toHaveBeenCalledWith(
+          "audioRepresentationChange",
+          {
+            id: "2",
+            bitrate: 1000,
+            codec: "mp4a",
+            isCodecSupported: true,
+          } satisfies IAudioRepresentation,
+          taskCanceller.signal,
+        );
       });
     });
   });

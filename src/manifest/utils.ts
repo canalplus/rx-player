@@ -322,7 +322,7 @@ export function toVideoTrack(
  * Format Representation as an `IAudioRepresentation`.
  * @returns {Object}
  */
-function toAudioRepresentation(
+export function toAudioRepresentation(
   representation: IRepresentationMetadata,
 ): IAudioRepresentation {
   const { id, bitrate, codecs, isSpatialAudio, isSupported, decipherable } =
@@ -341,7 +341,7 @@ function toAudioRepresentation(
  * Format Representation as an `IVideoRepresentation`.
  * @returns {Object}
  */
-function toVideoRepresentation(
+export function toVideoRepresentation(
   representation: IRepresentationMetadata,
 ): IVideoRepresentation {
   const {
