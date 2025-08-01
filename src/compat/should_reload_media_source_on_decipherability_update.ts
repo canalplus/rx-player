@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import config from "../config";
+
 /**
  * Returns true if we have to reload the MediaSource due to an update in the
  * decipherability status of some segments based on the current key sytem.
@@ -27,5 +29,11 @@
 export default function shouldReloadMediaSourceOnDecipherabilityUpdate(
   currentKeySystem: string | undefined,
 ): boolean {
-  return currentKeySystem === undefined || currentKeySystem.indexOf("widevine") < 0;
+  const { FORCE_SHOULD_RELOAD_MEDIA_SOURCE_ON_DECIPHERABILITY_UPDATE } =
+    config.getCurrent();
+  return (
+    FORCE_SHOULD_RELOAD_MEDIA_SOURCE_ON_DECIPHERABILITY_UPDATE ||
+    currentKeySystem === undefined ||
+    currentKeySystem.indexOf("widevine") < 0
+  );
 }

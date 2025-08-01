@@ -1,3 +1,4 @@
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -8,7 +9,9 @@ import EnvDetector from "./env_detector";
  * @returns {boolean}
  */
 export default function shouldWaitCanPlayEventForSeeking(): boolean {
+  const { FORCE_WAIT_CAN_PLAY_FOR_SEEKING } = config.getCurrent();
   return (
+    FORCE_WAIT_CAN_PLAY_FOR_SEEKING ||
     EnvDetector.browser === EnvDetector.BROWSERS.SafariMobile ||
     EnvDetector.browser === EnvDetector.BROWSERS.SafariDesktop
   );

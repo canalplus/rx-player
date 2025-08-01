@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import EnvDetector from "./env_detector";
 
 /**
@@ -29,5 +30,6 @@ import EnvDetector from "./env_detector";
  * @returns {boolean}
  */
 export default function isSeekingApproximate(): boolean {
-  return EnvDetector.device === EnvDetector.DEVICES.Tizen;
+  const { FORCE_IS_SEEKING_APPROXIMATE } = config.getCurrent();
+  return FORCE_IS_SEEKING_APPROXIMATE || EnvDetector.device === EnvDetector.DEVICES.Tizen;
 }

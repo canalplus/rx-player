@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import config from "../config";
 import { getWebKitMediaKeysConstructor } from "./eme/custom_media_keys";
 import EnvDetector from "./env_detector";
 
@@ -25,6 +26,10 @@ import EnvDetector from "./env_detector";
  * @returns {boolean}
  */
 export default function shouldFavourCustomSafariEME(): boolean {
+  const { FORCE_SHOULD_FAVOUR_CUSTOM_SAFARI_EME } = config.getCurrent();
+  if (FORCE_SHOULD_FAVOUR_CUSTOM_SAFARI_EME) {
+    return true;
+  }
   return (
     (EnvDetector.browser === EnvDetector.BROWSERS.SafariDesktop ||
       EnvDetector.browser === EnvDetector.BROWSERS.SafariMobile) &&
