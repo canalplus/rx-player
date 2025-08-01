@@ -19,7 +19,6 @@
  * This is the class used from a regular build.
  */
 
-import isDebugModeEnabled from "./compat/is_debug_mode_enabled";
 import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer";
 import {
   DASH,
@@ -35,7 +34,6 @@ import {
   NATIVE_VTT_PARSER,
   SMOOTH,
 } from "./features/list";
-import logger from "./log";
 import Player from "./main_thread/api";
 import globalScope from "./utils/global_scope";
 
@@ -55,11 +53,6 @@ Player.addFeatures([
   HTML_VTT_PARSER,
   HTML_SRT_PARSER,
 ]);
-if (isDebugModeEnabled()) {
-  logger.setLevel("DEBUG", "full");
-} else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
-  logger.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL, "standard");
-}
 export default Player;
 
 if (typeof __GLOBAL_SCOPE__ === "boolean" && __GLOBAL_SCOPE__) {

@@ -31,7 +31,6 @@ import {
 import getStartDate from "../../compat/get_start_date";
 import hasMseInWorker from "../../compat/has_mse_in_worker";
 import hasWorkerApi from "../../compat/has_worker_api";
-import isDebugModeEnabled from "../../compat/is_debug_mode_enabled";
 import config from "../../config";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type {
@@ -114,6 +113,7 @@ import arrayIncludes from "../../utils/array_includes";
 import assert, { assertUnreachable } from "../../utils/assert";
 import type { IEventPayload, IListener } from "../../utils/event_emitter";
 import EventEmitter from "../../utils/event_emitter";
+import globalScope from "../../utils/global_scope";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type Logger from "../../utils/logger";
@@ -148,6 +148,40 @@ import {
 } from "./utils";
 
 /* eslint-disable @typescript-eslint/naming-convention */
+
+// Enable debug mode as soon as `RX_PLAYER_DEBUG_MODE__` is set to `true`:
+
+const globals: typeof globalScope & {
+  __RX_PLAYER_DEBUG_MODE__?: boolean;
+} = globalScope;
+
+let isDebugModeEnabled: boolean =
+  typeof globals.__RX_PLAYER_DEBUG_MODE__ === "boolean" &&
+  globals.__RX_PLAYER_DEBUG_MODE__;
+
+try {
+  Object.defineProperty(globals, "__RX_PLAYER_DEBUG_MODE__", {
+    get(): boolean {
+      return isDebugModeEnabled;
+    },
+    set(val: boolean) {
+      isDebugModeEnabled = val;
+      if (val) {
+        Player.LogLevel = "DEBUG";
+        Player.LogFormat = "full";
+      }
+    },
+  });
+} catch (_err) {
+  // Ignore, maybe we're in some jsdom thing, maybe the current target does not
+  // authorize setting globals that way etc.
+}
+
+if (isDebugModeEnabled) {
+  log.setLevel("DEBUG", "full");
+} else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
+  log.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL, "standard");
+}
 
 const generateContentId = idGenerator();
 
@@ -567,7 +601,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           dashWasmUrl: workerSettings.dashWasmUrl,
           logLevel: log.getLevel(),
           logFormat: log.getFormat(),
-          sendBackLogs: isDebugModeEnabled(),
+          sendBackLogs: isDebugModeEnabled,
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
           hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
@@ -585,7 +619,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             value: {
               logLevel: logInfo.level,
               logFormat: logInfo.format,
-              sendBackLogs: isDebugModeEnabled(),
+              sendBackLogs: isDebugModeEnabled,
             },
           });
         },
