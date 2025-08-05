@@ -227,6 +227,9 @@ events and so on.
 - [`getWallClockTime`](../api/Basic_Methods/getWallClockTime.md): Get the current playback
   condition offseted to be relative to the the current date.
 
+- [`getWallClockOffset`](../api/Basic_Methods/getWallClockOffset.md): Get the offset to
+  add to a media time to obtain a date-adjusted "wall-clock time".
+
 - [`seekTo`](../api/Basic_Methods/seekTo.md): Seek in the current content.
 
 - [`getMinimumPosition`](../api/Basic_Methods/getMinimumPosition.md): Get the minimum
