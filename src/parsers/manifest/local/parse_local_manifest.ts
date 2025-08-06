@@ -127,6 +127,7 @@ function parseAdaptation(
     type: adaptation.type,
     audioDescription: adaptation.audioDescription,
     closedCaption: adaptation.closedCaption,
+    forcedSubtitles: adaptation.forcedSubtitles,
     language: adaptation.language,
     representations: adaptation.representations.map((representation) =>
       parseRepresentation(representation, { representationIdGenerator }),

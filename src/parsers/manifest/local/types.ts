@@ -210,6 +210,8 @@ export interface ILocalAdaptation {
   audioDescription?: boolean;
   /** If `true`, this track contains closed captions. */
   closedCaption?: boolean;
+  /** If `true`, this track contains "forced subtitles". */
+  forcedSubtitles?: boolean;
   /** The ISO 639-3, ISO 639-2 or ISO 639-1 language code for that track. */
   language?: string;
   /** The different qualities this track is available in. */
