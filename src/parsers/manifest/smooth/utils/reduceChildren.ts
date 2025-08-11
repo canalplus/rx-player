@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
+import type { ITNode } from "../../../../utils/xml-parser";
+
 /**
  * Reduce implementation for the children of the given element.
- * @param {Element} root
+ * @param {Object} root
  * @param {Function} fn
  * @param {*} init
  * @returns {*}
  */
 export default function reduceChildren<T>(
-  root: Element,
-  fn: (accu: T, nodeName: string, nodeElt: Element) => T,
+  root: ITNode,
+  fn: (accu: T, nodeName: string, nodeElt: ITNode) => T,
   init: T,
 ): T {
-  let node = root.firstElementChild;
   let accumulator = init;
-  while (node !== null) {
-    accumulator = fn(accumulator, node.nodeName, node);
-    node = node.nextElementSibling;
+  for (const elt of root.children) {
+    if (typeof elt === "string") {
+      continue;
+    }
+    accumulator = fn(accumulator, elt.tagName, elt);
   }
   return accumulator;
 }

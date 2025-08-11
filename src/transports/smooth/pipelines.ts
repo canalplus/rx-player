@@ -19,6 +19,8 @@ import Manifest from "../../manifest/classes";
 import { getMDAT } from "../../parsers/containers/isobmff";
 import type { ICdnMetadata } from "../../parsers/manifest";
 import createSmoothManifestParser from "../../parsers/manifest/smooth";
+import globalScope from "../../utils/global_scope";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import request from "../../utils/request";
 import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
 import type { CancellationSignal } from "../../utils/task_canceller";
@@ -69,11 +71,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
       const url = manifestData.url ?? parserOptions.originalUrl;
       const { receivedTime: manifestReceivedTime, responseData } = manifestData;
 
-      const documentData =
-        typeof responseData === "string"
-          ? new DOMParser().parseFromString(responseData, "text/xml")
-          : (responseData as Document); // TODO find a way to check if Document?
-
+      const documentData = getManifestAsString(responseData);
       const parserResult = smoothManifestParser(documentData, url, manifestReceivedTime);
 
       const manifest = new Manifest(parserResult, {
@@ -433,4 +431,26 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
       },
     },
   };
+}
+
+/**
+ * Try to convert a Manifest from an unknown format to a JS string format.
+ *
+ * Throws if the format cannot be converted.
+ * @param {*} manifestSrc
+ * @returns {Array.<Object | string>}
+ */
+function getManifestAsString(manifestSrc: unknown): string {
+  if (manifestSrc instanceof ArrayBuffer) {
+    return utf8ToStr(new Uint8Array(manifestSrc));
+  } else if (typeof manifestSrc === "string") {
+    return manifestSrc;
+  } else if (
+    !isNullOrUndefined(globalScope.Document) &&
+    manifestSrc instanceof globalScope.Document
+  ) {
+    return manifestSrc.documentElement.outerHTML;
+  } else {
+    throw new Error("Smooth Manifest Parser: Unrecognized Manifest format");
+  }
 }
