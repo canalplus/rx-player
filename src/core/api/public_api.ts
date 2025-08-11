@@ -1032,6 +1032,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       initializer,
       videoElement,
       playbackObserver,
+      isDirectFile,
       currentContentCanceller.signal,
     );
     currentContentCanceller.signal.register(() => {

@@ -31,6 +31,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       return {
         __esModule: true as const,
         isSafariMobile: false,
+        isSafariDesktop: false,
       };
     });
     const shouldWaitForDataBeforeLoaded = jest.requireActual(
@@ -44,6 +45,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       return {
         __esModule: true as const,
         isSafariMobile: false,
+        isSafariDesktop: false,
       };
     });
     const shouldWaitForDataBeforeLoaded = jest.requireActual(
@@ -59,6 +61,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       return {
         __esModule: true as const,
         isSafariMobile: true,
+        isSafariDesktop: false,
       };
     });
     const shouldWaitForDataBeforeLoaded = jest.requireActual(
@@ -73,6 +76,7 @@ describe("compat - shouldWaitForDataBeforeLoaded", () => {
       return {
         __esModule: true as const,
         isSafariMobile: true,
+        isSafariDesktop: false,
       };
     });
     const shouldWaitForDataBeforeLoaded = jest.requireActual(

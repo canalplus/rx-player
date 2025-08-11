@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import canPreloadBeforePlay from "../../compat/can_preload_before_play";
 import config from "../../config";
 import type { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
@@ -112,6 +113,7 @@ export function constructPlayerStateReference(
   initializer: ContentInitializer,
   mediaElement: HTMLMediaElement,
   playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
+  isDirectFile: boolean,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<IPlayerState> {
   const playerStateRef = new SharedReference<IPlayerState>(
@@ -124,13 +126,25 @@ export function constructPlayerStateReference(
       if (playerStateRef.getValue() === PLAYER_STATES.LOADING) {
         playerStateRef.setValue(PLAYER_STATES.LOADED);
         if (!cancelSignal.isCancelled()) {
-          const newState = getLoadedContentState(mediaElement, null);
+          const newState = getLoadedContentState(
+            mediaElement,
+            null,
+            isDirectFile,
+            playerStateRef.getValue(),
+          );
           if (newState !== PLAYER_STATES.PAUSED) {
             playerStateRef.setValue(newState);
           }
         }
       } else {
-        playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
+        playerStateRef.setValueIfChanged(
+          getLoadedContentState(
+            mediaElement,
+            null,
+            isDirectFile,
+            playerStateRef.getValue(),
+          ),
+        );
       }
     },
     cancelSignal,
@@ -156,7 +170,14 @@ export function constructPlayerStateReference(
     (s) => {
       if (s !== prevStallReason) {
         if (isLoadedState(playerStateRef.getValue())) {
-          playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, s));
+          playerStateRef.setValueIfChanged(
+            getLoadedContentState(
+              mediaElement,
+              s,
+              isDirectFile,
+              playerStateRef.getValue(),
+            ),
+          );
         }
         prevStallReason = s;
       }
@@ -168,7 +189,14 @@ export function constructPlayerStateReference(
     () => {
       if (prevStallReason !== null) {
         if (isLoadedState(playerStateRef.getValue())) {
-          playerStateRef.setValueIfChanged(getLoadedContentState(mediaElement, null));
+          playerStateRef.setValueIfChanged(
+            getLoadedContentState(
+              mediaElement,
+              null,
+              isDirectFile,
+              playerStateRef.getValue(),
+            ),
+          );
         }
         prevStallReason = null;
       }
@@ -183,7 +211,12 @@ export function constructPlayerStateReference(
         arrayIncludes(["seeking", "ended", "play", "pause"], observation.event)
       ) {
         playerStateRef.setValueIfChanged(
-          getLoadedContentState(mediaElement, prevStallReason),
+          getLoadedContentState(
+            mediaElement,
+            prevStallReason,
+            isDirectFile,
+            playerStateRef.getValue(),
+          ),
         );
       }
     },
@@ -198,11 +231,14 @@ export function constructPlayerStateReference(
  * @param {Object} stalledStatus - Current stalled state:
  *   - null when not stalled
  *   - a description of the situation if stalled.
+ * @param {boolean} isDirectFile
  * @returns {string}
  */
 export function getLoadedContentState(
   mediaElement: HTMLMediaElement,
   stalledStatus: IStallingSituation | null,
+  isDirectFile: boolean,
+  previousState: IPlayerState,
 ): IPlayerState {
   const { FORCED_ENDED_THRESHOLD } = config.getCurrent();
   if (mediaElement.ended) {
@@ -224,7 +260,21 @@ export function getLoadedContentState(
       return PLAYER_STATES.ENDED;
     }
 
-    return stalledStatus === "seeking" ? PLAYER_STATES.SEEKING : PLAYER_STATES.BUFFERING;
+    if (stalledStatus === "seeking") {
+      return PLAYER_STATES.SEEKING;
+    }
+
+    if (previousState === PLAYER_STATES.LOADED && !canPreloadBeforePlay(isDirectFile)) {
+      /**
+       * On devices that do not support preloading, a data buffer cannot be constructed.
+       * Normally, this situation would trigger the BUFFERING state. However, since these devices
+       * are unable to buffer data, having low or no data is expected while waiting for a play() call.
+       * Therefore, in this case, we remain in the LOADED state instead of transitioning to BUFFERING.
+       */
+      return PLAYER_STATES.LOADED;
+    }
+
+    return PLAYER_STATES.BUFFERING;
   }
   return mediaElement.paused ? PLAYER_STATES.PAUSED : PLAYER_STATES.PLAYING;
 }
