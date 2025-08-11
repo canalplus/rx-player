@@ -45,6 +45,10 @@
       "displayName": "disableVideoTrack"
     },
     {
+      "path": "./disableAudioTrack.md",
+      "displayName": "disableAudioTrack"
+    },
+    {
       "path": "./isTrickModeEnabled.md",
       "displayName": "isTrickModeEnabled"
     }

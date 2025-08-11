@@ -180,7 +180,7 @@ following conditions are respected:
 - You did not force the `"main"` mode through the
   [`mode` loadVideo option](../Loading_a_Content.md#mode).
 
-- You did not dispose the RxPlayer
+- You did not call the `dispose` API on this RxPlayer instance.
 
 If any of those conditions may not be respected by your application, you might also want
 to be able to rely on the usual "main" mode (which runs everything on main thread).
