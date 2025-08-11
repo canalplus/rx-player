@@ -23,6 +23,8 @@ import type {
   IDashParserResponse,
   ILoadedResource,
 } from "../../parsers/manifest/dash/parsers_types";
+import globalScope from "../../utils/global_scope";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import objectAssign from "../../utils/object_assign";
 import request from "../../utils/request";
 import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
@@ -298,7 +300,10 @@ function getManifestAsString(manifestSrc: unknown): string {
     return utf8ToStr(new Uint8Array(manifestSrc));
   } else if (typeof manifestSrc === "string") {
     return manifestSrc;
-  } else if (manifestSrc instanceof Document) {
+  } else if (
+    !isNullOrUndefined(globalScope.Document) &&
+    manifestSrc instanceof globalScope.Document
+  ) {
     return manifestSrc.documentElement.outerHTML;
   } else {
     throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
@@ -316,7 +321,10 @@ function getManifestAsArrayBuffer(manifestSrc: unknown): ArrayBuffer {
     return manifestSrc;
   } else if (typeof manifestSrc === "string") {
     return strToUtf8(manifestSrc).buffer;
-  } else if (manifestSrc instanceof Document) {
+  } else if (
+    !isNullOrUndefined(globalScope.Document) &&
+    manifestSrc instanceof globalScope.Document
+  ) {
     return strToUtf8(manifestSrc.documentElement.innerHTML).buffer;
   } else {
     throw new Error("DASH Manifest Parser: Unrecognized Manifest format");
