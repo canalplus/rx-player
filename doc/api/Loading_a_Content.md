@@ -67,16 +67,16 @@ Can be either:
 - `"metaplaylist"` for [MetaPlaylist](./Miscellaneous/MetaPlaylist.md) streams, which are
   a concatenation of multiple smooth and DASH contents
 
-  If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md),
-  you will need to add at least the `METAPLAYLIST` experimental feature to be able to play
-  those contents.
+  You will need to add at least the
+  [`METAPLAYLIST` experimental feature](./RxPlayer_Features.md) to be able to play those
+  contents.
 
 - `"local"` for [local manifests](./Miscellaneous/Local_Contents.md), which allows to play
   downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
 
-  If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md),
-  you will need to add at least the `LOCAL_MANIFEST` experimental feature to be able to
-  play those contents.
+  You will need to add at least the
+  [`LOCAL_MANIFEST` experimental feature](./RxPlayer_Features.md) to be able to play those
+  contents.
 
 Example:
 
