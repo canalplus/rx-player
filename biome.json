@@ -1,0 +1,282 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
+	"vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
+	"files": { "ignoreUnknown": false },
+	"formatter": { "enabled": true, "indentStyle": "tab" },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": false,
+			"complexity": {
+				"noAdjacentSpacesInRegex": "error",
+				"noCommaOperator": "error",
+				"noExtraBooleanCast": "error",
+				"noStaticOnlyClass": "error",
+				"noUselessCatch": "error",
+				"noUselessEscapeInRegex": "error",
+				"noUselessThisAlias": "error",
+				"noUselessTypeConstraint": "error",
+				"noUselessUndefinedInitialization": "error",
+				"noVoid": "error",
+				"useLiteralKeys": "error"
+			},
+			"correctness": {
+				"noConstAssign": "error",
+				"noConstantCondition": "error",
+				"noEmptyCharacterClassInRegex": "error",
+				"noEmptyPattern": "error",
+				"noGlobalObjectCalls": "error",
+				"noInvalidBuiltinInstantiation": "error",
+				"noInvalidConstructorSuper": "error",
+				"noInvalidUseBeforeDeclaration": "off",
+				"noNonoctalDecimalEscape": "error",
+				"noPrecisionLoss": "error",
+				"noSelfAssign": "error",
+				"noSetterReturn": "error",
+				"noSwitchDeclarations": "error",
+				"noUndeclaredDependencies": "error",
+				"noUndeclaredVariables": "error",
+				"noUnreachable": "error",
+				"noUnreachableSuper": "error",
+				"noUnsafeFinally": "error",
+				"noUnsafeOptionalChaining": "error",
+				"noUnusedLabels": "error",
+				"noUnusedPrivateClassMembers": "error",
+				"noUnusedVariables": "error",
+				"useIsNan": "error",
+				"useValidForDirection": "error",
+				"useValidTypeof": "error",
+				"useYield": "error"
+			},
+			"nursery": {
+				"noBitwiseOperators": "off",
+				"noConstantBinaryExpression": "error",
+				"noFloatingPromises": "error",
+				"noNonNullAssertedOptionalChain": "error",
+				"noShadow": "off",
+				"noTsIgnore": "error",
+				"noUselessBackrefInRegex": "error",
+				"useConsistentObjectDefinition": "error",
+				"useConsistentTypeDefinitions": "error",
+				"useObjectSpread": "error",
+				"useParseIntRadix": "error",
+				"useReadonlyClassProperties": "off",
+				"useUnifiedTypeSignature": "error"
+			},
+			"security": { "noGlobalEval": "error" },
+			"style": {
+				"noCommonJs": "error",
+				"noDefaultExport": "off",
+				"noInferrableTypes": "off",
+				"noNamespace": "error",
+				"noNestedTernary": "error",
+				"noNonNullAssertion": "error",
+				"noParameterAssign": "error",
+				"noRestrictedTypes": "error",
+				"noYodaExpression": "error",
+				"useArrayLiterals": "error",
+				"useAsConstAssertion": "error",
+				"useBlockStatements": "error",
+				"useConsistentArrayType": {
+					"level": "error",
+					"options": { "syntax": "shorthand" }
+				},
+				"useConsistentBuiltinInstantiation": "error",
+				"useConsistentMemberAccessibility": {
+					"level": "off",
+					"options": { "accessibility": "explicit" }
+				},
+				"useConst": "error",
+				"useDefaultSwitchClause": "off",
+				"useExportType": "error",
+				"useForOf": "off",
+				"useImportType": "error",
+				"useNamingConvention": {
+					"level": "error",
+					"options": {
+						"strictCase": false,
+						"requireAscii": false,
+						"conventions": [
+							{
+								"selector": { "kind": "enum" },
+								"match": "_?([^_]*)",
+								"formats": ["PascalCase", "CONSTANT_CASE"]
+							},
+							{
+								"selector": { "kind": "variable" },
+								"match": "_?([^_]*)_?",
+								"formats": ["camelCase", "PascalCase", "CONSTANT_CASE"]
+							},
+							{
+								"selector": { "kind": "classMethod" },
+								"match": "_?([^_]*)_?",
+								"formats": ["camelCase"]
+							},
+							{
+								"selector": { "kind": "objectLiteralMethod" },
+								"match": "_?([^_]*)_?",
+								"formats": ["camelCase"]
+							},
+							{
+								"selector": { "kind": "typeMethod" },
+								"match": "_?([^_]*)_?",
+								"formats": ["camelCase"]
+							},
+							{
+								"selector": { "kind": "typeLike" },
+								"match": "_?([^_]*)",
+								"formats": ["PascalCase"]
+							},
+							{
+								"selector": { "kind": "classMember", "modifiers": ["private"] },
+								"match": "_([^_]*)",
+								"formats": ["camelCase"]
+							}
+						]
+					}
+				},
+				"useShorthandFunctionType": "error",
+				"useSingleVarDeclarator": "error",
+				"useTemplate": "off",
+				"useThrowOnlyError": "error"
+			},
+			"suspicious": {
+				"noAssignInExpressions": "error",
+				"noAsyncPromiseExecutor": "error",
+				"noCatchAssign": "error",
+				"noClassAssign": "error",
+				"noCompareNegZero": "error",
+				"noConsole": "error",
+				"noControlCharactersInRegex": "error",
+				"noDebugger": "error",
+				"noDoubleEquals": "error",
+				"noDuplicateCase": "error",
+				"noDuplicateClassMembers": "error",
+				"noDuplicateElseIf": "error",
+				"noDuplicateObjectKeys": "error",
+				"noDuplicateParameters": "error",
+				"noEmptyBlockStatements": "error",
+				"noEmptyInterface": "error",
+				"noExplicitAny": "error",
+				"noExtraNonNullAssertion": "error",
+				"noFallthroughSwitchClause": "error",
+				"noFunctionAssign": "error",
+				"noGlobalAssign": "error",
+				"noImportAssign": "error",
+				"noIrregularWhitespace": "error",
+				"noMisleadingCharacterClass": "error",
+				"noMisleadingInstantiator": "error",
+				"noPrototypeBuiltins": "error",
+				"noRedeclare": "error",
+				"noShadowRestrictedNames": "error",
+				"noSparseArray": "error",
+				"noTemplateCurlyInString": "error",
+				"noUnsafeDeclarationMerging": "error",
+				"noUnsafeNegation": "error",
+				"noVar": "error",
+				"noWith": "error",
+				"useAdjacentOverloadSignatures": "error",
+				"useGetterReturn": "error",
+				"useGuardForIn": "warn",
+				"useNamespaceKeyword": "error"
+			}
+		},
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/*.log",
+			"!**/*.keys",
+			"!demo/bundle.js",
+			"!demo/lib.js",
+			"!tools/tests/coverage/",
+			"!dist/*",
+			"dist/rx-player.js",
+			"dist/rx-player.min.js",
+			"!**/test-output.xml",
+			"!src/__GENERATED_CODE",
+			"**",
+			"!**/node_modules",
+			"!**/*.log",
+			"!**/*.keys",
+			"!demo/bundle.js",
+			"!demo/lib.js",
+			"!tools/tests/coverage/",
+			"!dist/*",
+			"dist/rx-player.js",
+			"dist/rx-player.min.js",
+			"!**/test-output.xml",
+			"!src/__GENERATED_CODE"
+		]
+	},
+	"javascript": { "formatter": { "quoteStyle": "double" }, "globals": [] },
+	"overrides": [
+		{
+			"includes": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+			"linter": {
+				"rules": {
+					"complexity": { "noArguments": "error" },
+					"correctness": {
+						"noConstAssign": "off",
+						"noGlobalObjectCalls": "off",
+						"noInvalidBuiltinInstantiation": "off",
+						"noInvalidConstructorSuper": "off",
+						"noSetterReturn": "off",
+						"noUndeclaredVariables": "off",
+						"noUnreachable": "off",
+						"noUnreachableSuper": "off"
+					},
+					"style": { "useConst": "error" },
+					"suspicious": {
+						"noClassAssign": "off",
+						"noDuplicateClassMembers": "off",
+						"noDuplicateObjectKeys": "off",
+						"noDuplicateParameters": "off",
+						"noFunctionAssign": "off",
+						"noImportAssign": "off",
+						"noRedeclare": "off",
+						"noUnsafeNegation": "off",
+						"noVar": "error",
+						"noWith": "off",
+						"useGetterReturn": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+			"linter": {
+				"rules": {
+					"complexity": { "noArguments": "error" },
+					"correctness": {
+						"noConstAssign": "off",
+						"noGlobalObjectCalls": "off",
+						"noInvalidBuiltinInstantiation": "off",
+						"noInvalidConstructorSuper": "off",
+						"noSetterReturn": "off",
+						"noUndeclaredVariables": "off",
+						"noUnreachable": "off",
+						"noUnreachableSuper": "off"
+					},
+					"style": { "useConst": "error" },
+					"suspicious": {
+						"noClassAssign": "off",
+						"noDuplicateClassMembers": "off",
+						"noDuplicateObjectKeys": "off",
+						"noDuplicateParameters": "off",
+						"noFunctionAssign": "off",
+						"noImportAssign": "off",
+						"noRedeclare": "off",
+						"noUnsafeNegation": "off",
+						"noVar": "error",
+						"noWith": "off",
+						"useGetterReturn": "off"
+					}
+				}
+			}
+		}
+	],
+	"assist": {
+		"enabled": true,
+		"actions": { "source": { "organizeImports": "on" } }
+	}
+}
