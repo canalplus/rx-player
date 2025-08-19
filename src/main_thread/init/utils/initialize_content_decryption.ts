@@ -83,7 +83,7 @@ export default function initializeContentDecryption(
     return createEmeDisabledReference("EME API not available on the current page.");
   }
 
-  log.debug("Init: Creating ContentDecryptor");
+  log.debug("Init", "Creating ContentDecryptor");
   const contentDecryptor = new ContentDecryptor(emeApi, mediaElement, keySystems);
 
   const onStateChange = (state: ContentDecryptorState) => {

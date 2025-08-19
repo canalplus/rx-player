@@ -33,15 +33,16 @@ describe("DASH Parser - getClockOffset", () => {
 
     expect(getClockOffset("2018/412/13")).toEqual(undefined);
     expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn).toHaveBeenCalledWith(
-      "DASH Parser: Invalid clock received: ",
-      "2018/412/13",
-    );
+    expect(mockWarn).toHaveBeenCalledWith("dash", "Invalid clock received", {
+      clock: "2018/412/13",
+    });
     mockWarn.mockReset();
 
     expect(getClockOffset("foo")).toEqual(undefined);
     expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn).toHaveBeenCalledWith("DASH Parser: Invalid clock received: ", "foo");
+    expect(mockWarn).toHaveBeenCalledWith("dash", "Invalid clock received", {
+      clock: "foo",
+    });
     mockWarn.mockReset();
   });
 });

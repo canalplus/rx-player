@@ -61,7 +61,7 @@ export default class LoadedSessionsStore {
     sessionType: MediaKeySessionType,
   ): IStoredSessionEntry {
     const keySessionRecord = new KeySessionRecord(initData);
-    log.debug("DRM-LSS: calling `createSession`", sessionType);
+    log.debug("DRM", "calling `createSession`", { sessionType });
     const mediaKeySession = this._mediaKeys.createSession(sessionType);
     const entry = {
       mediaKeySession,
@@ -74,10 +74,9 @@ export default class LoadedSessionsStore {
     if (!isNullOrUndefined(mediaKeySession.closed)) {
       mediaKeySession.closed
         .then(() => {
-          log.info(
-            "DRM-LSS: session was closed, removing it.",
-            mediaKeySession.sessionId,
-          );
+          log.info("DRM", "session was closed, removing it.", {
+            sessionId: mediaKeySession.sessionId,
+          });
           const index = this.getIndex(keySessionRecord);
           if (index >= 0 && this._storage[index].mediaKeySession === mediaKeySession) {
             this._storage.splice(index, 1);
@@ -85,12 +84,15 @@ export default class LoadedSessionsStore {
         })
         .catch((e: unknown) => {
           // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          log.warn(`DRM-LSS: MediaKeySession.closed rejected: ${e}`);
+          log.warn("DRM", `MediaKeySession.closed rejected: ${e}`);
         });
     }
 
     this._storage.push({ ...entry });
-    log.debug("DRM-LSS: MediaKeySession added", entry.sessionType, this._storage.length);
+    log.debug("DRM", "MediaKeySession added", {
+      sessionType: entry.sessionType,
+      currentlyLoaded: this._storage.length,
+    });
     return entry;
   }
 
@@ -112,11 +114,10 @@ export default class LoadedSessionsStore {
       if (stored.keySessionRecord.isCompatibleWith(initializationData)) {
         this._storage.splice(i, 1);
         this._storage.push(stored);
-        log.debug(
-          "DRM-LSS: Reusing session:",
-          stored.mediaKeySession.sessionId,
-          stored.sessionType,
-        );
+        log.debug("DRM", "Reusing session:", {
+          sessionId: stored.mediaKeySession.sessionId,
+          sessionType: stored.sessionType,
+        });
         return { ...stored };
       }
     }
@@ -167,7 +168,8 @@ export default class LoadedSessionsStore {
     }
     if (entry === undefined) {
       log.error(
-        "DRM-LSS: generateRequest error. No MediaKeySession found with " +
+        "DRM",
+        "generateRequest error. No MediaKeySession found with " +
           "the given initData and initDataType",
       );
       return generateKeyRequest(
@@ -227,7 +229,8 @@ export default class LoadedSessionsStore {
     }
     if (entry === undefined) {
       log.error(
-        "DRM-LSS: loadPersistentSession error. No MediaKeySession found with " +
+        "DRM",
+        "loadPersistentSession error. No MediaKeySession found with " +
           "the given initData and initDataType",
       );
       return loadSession(mediaKeySession, sessionId);
@@ -279,7 +282,8 @@ export default class LoadedSessionsStore {
     }
     if (entry === undefined) {
       log.warn(
-        "DRM-LSS: No MediaKeySession found with " + "the given initData and initDataType",
+        "DRM",
+        "No MediaKeySession found with " + "the given initData and initDataType",
       );
       return Promise.resolve(false);
     }
@@ -310,7 +314,9 @@ export default class LoadedSessionsStore {
    */
   public async closeAllSessions(): Promise<void> {
     const allEntries = this._storage;
-    log.debug("DRM-LSS: Closing all current MediaKeySessions", allEntries.length);
+    log.debug("DRM", "Closing all current MediaKeySessions", {
+      numberOfEntries: allEntries.length,
+    });
 
     // re-initialize the storage, so that new interactions with the
     // `LoadedSessionsStore` do not rely on MediaKeySessions we're in the
@@ -342,10 +348,9 @@ export default class LoadedSessionsStore {
     for (let i = this._storage.length - 1; i >= 0; i--) {
       const stored = this._storage[i];
       if (stored.mediaKeySession === mediaKeySession) {
-        log.debug(
-          "DRM-LSS: Removing session without closing it",
-          mediaKeySession.sessionId,
-        );
+        log.debug("DRM", "Removing session without closing it", {
+          sessionId: mediaKeySession.sessionId,
+        });
         this._storage.splice(i, 1);
         return true;
       }
@@ -495,15 +500,22 @@ export interface IStoredSessionEntry {
 async function safelyCloseMediaKeySession(
   mediaKeySession: IMediaKeySession,
 ): Promise<void> {
-  log.debug("DRM: Trying to close a MediaKeySession", mediaKeySession.sessionId);
+  const sessionId = mediaKeySession.sessionId;
+  log.debug("DRM", "Trying to close a MediaKeySession", {
+    sessionId,
+  });
   try {
     await closeSession(mediaKeySession);
-    log.debug("DRM: Succeeded to close MediaKeySession");
+    log.debug("DRM", "Succeeded to close MediaKeySession", {
+      sessionId,
+    });
     return;
   } catch (err: unknown) {
     log.error(
-      "DRM: Could not close MediaKeySession: " +
+      "DRM",
+      "Could not close MediaKeySession: " +
         (err instanceof Error ? err.toString() : "Unknown error"),
+      { sessionId },
     );
     return;
   }

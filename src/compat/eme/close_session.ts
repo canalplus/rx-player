@@ -69,7 +69,7 @@ export default function closeSession(session: IMediaKeySession): Promise<void> {
         err instanceof Error
           ? err.message
           : "Unknown error made it impossible to close the session";
-      log.error(`DRM: ${message}`);
+      log.error(`DRM`, "Error made it impossible to close the session", `${message}`);
     }
   }
 

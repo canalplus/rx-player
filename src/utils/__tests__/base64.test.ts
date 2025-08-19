@@ -140,15 +140,19 @@ describe("base64ToBytes", () => {
     expect(logWarn).toHaveBeenCalledTimes(1);
     expect(logWarn).toHaveBeenNthCalledWith(
       1,
+      "utils",
       "base64ToBytes: base64 given miss padding",
+      { padding: 2 },
     );
     expect(base64ToBytes("dG90b/CfjIM")).toEqual(
       new Uint8Array([116, 111, 116, 111, 240, 159, 140, 131]),
     );
     expect(logWarn).toHaveBeenCalledTimes(2);
     expect(logWarn).toHaveBeenNthCalledWith(
-      1,
+      2,
+      "utils",
       "base64ToBytes: base64 given miss padding",
+      { padding: 3 },
     );
   });
 

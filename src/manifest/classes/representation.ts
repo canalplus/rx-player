@@ -24,6 +24,7 @@ import type {
 import type { ITrackType, IHDRInformation } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../../utils/id_generator";
+import { bytesToHex } from "../../utils/string_parsing";
 import type codecSupportCache from "./codec_support_cache";
 import type { IRepresentationIndex } from "./representation_index";
 
@@ -401,7 +402,9 @@ class Representation implements IRepresentationMetadata {
           }
         }
         if (!foundKeyId) {
-          log.warn("Manifest: found unanounced key id.");
+          log.warn("manifest", "found unanounced key id.", {
+            keyId: bytesToHex(keyId),
+          });
           keyIds.push(keyId);
         }
       }
@@ -422,7 +425,9 @@ class Representation implements IRepresentationMetadata {
                 // go to next dataToAdd
                 break;
               } else {
-                log.warn("Manifest: different init data for the same system ID");
+                log.warn("manifest", "different init data for the same system ID", {
+                  systemId: dataToAdd.systemId,
+                });
               }
             }
           }

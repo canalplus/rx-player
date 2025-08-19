@@ -56,14 +56,24 @@ describe("DASH Node Parsers - Initialization", () => {
     expect(parseInitialization(element1)).toEqual([{}, [error1]]);
 
     expect(mockLog).toHaveBeenCalledTimes(1);
-    expect(mockLog).toHaveBeenCalledWith(error1.message);
+    expect(mockLog).toHaveBeenCalledWith(
+      "dash",
+      "failed to parse DASH value:",
+      error1.message,
+      { dashName: "range" },
+    );
 
     const element2 = parseXml('<Foo range="" />')[0] as ITNode;
     const error2 = new MPDError('`range` property has an unrecognized format ""');
     expect(parseInitialization(element2)).toEqual([{}, [error2]]);
 
     expect(mockLog).toHaveBeenCalledTimes(2);
-    expect(mockLog).toHaveBeenCalledWith(error2.message);
+    expect(mockLog).toHaveBeenCalledWith(
+      "dash",
+      "failed to parse DASH value:",
+      error2.message,
+      { dashName: "range" },
+    );
 
     mockLog.mockRestore();
   });

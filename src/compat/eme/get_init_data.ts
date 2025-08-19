@@ -76,13 +76,13 @@ function getInitializationDataValues(
       initData.length < offset + 8 ||
       be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
     ) {
-      log.warn("Compat: Unrecognized initialization data. Use as is.");
+      log.warn("DRM", "Unrecognized initialization data. Use as is.");
       return [{ systemId: undefined, data: initData }];
     }
 
     const len = be4toi(new Uint8Array(initData), offset);
     if (offset + len > initData.length) {
-      log.warn("Compat: Unrecognized initialization data. Use as is.");
+      log.warn("DRM", "Unrecognized initialization data. Use as is.");
       return [{ systemId: undefined, data: initData }];
     }
     const currentPSSH = initData.subarray(offset, offset + len);
@@ -94,7 +94,7 @@ function getInitializationDataValues(
       // event (but not when the corresponding segment has been pushed to the
       // SourceBuffer).
       // We prefer filtering them out, to avoid further issues.
-      log.warn("Compat: Duplicated PSSH found in initialization data, removing it.");
+      log.warn("DRM", "Duplicated PSSH found in initialization data, removing it.");
     } else {
       result.push(currentItem);
     }
@@ -102,7 +102,7 @@ function getInitializationDataValues(
   }
 
   if (offset !== initData.length) {
-    log.warn("Compat: Unrecognized initialization data. Use as is.");
+    log.warn("DRM", "Unrecognized initialization data. Use as is.");
     return [{ systemId: undefined, data: initData }];
   }
   return result;
@@ -151,7 +151,7 @@ export default function getInitData(
 ): IEncryptedEventData | null {
   const { initData, initDataType, forceSessionRecreation } = encryptedEvent;
   if (isNullOrUndefined(initData)) {
-    log.warn("Compat: No init data found on media encrypted event.");
+    log.warn("DRM", "No init data found on media encrypted event.");
     return null;
   }
 

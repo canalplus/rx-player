@@ -132,17 +132,27 @@ export default function PeriodStream(
 
         if (choice === null) {
           // Current type is disabled for that Period
-          log.info(`Stream: Set no ${bufferType} Adaptation. P:`, period.start);
+          log.info(`Stream`, `Set no Adaptation`, {
+            periodStart: period.start,
+            bufferType,
+          });
           const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
 
           if (segmentSinkStatus.type === "initialized") {
-            log.info(`Stream: Clearing previous ${bufferType} SegmentSink`);
+            log.info(`Stream`, `Clearing previous SegmentSink`, {
+              periodStart: period.start,
+              bufferType,
+            });
             if (SegmentSinksStore.isNative(bufferType)) {
               return askForMediaSourceReload(0, true, streamCanceller.signal);
             } else {
               const periodEnd = period.end ?? Infinity;
               if (period.start > periodEnd) {
-                log.warn("Stream: Can't free buffer: period's start is after its end");
+                log.warn("Stream", "Can't free buffer: period's start is after its end", {
+                  periodStart: period.start,
+                  periodEnd,
+                  bufferType,
+                });
               } else {
                 await segmentSinkStatus.value.removeBuffer(period.start, periodEnd);
                 if (streamCanceller.isUsed()) {
@@ -183,7 +193,9 @@ export default function PeriodStream(
         );
         if (adaptation === undefined) {
           currentStreamCanceller.cancel();
-          log.warn("Stream: Unfound chosen Adaptation choice", choice.adaptationId);
+          log.warn("Stream", "Unfound chosen Adaptation choice", {
+            adaptationId: choice.adaptationId,
+          });
           return;
         }
 
@@ -253,11 +265,11 @@ export default function PeriodStream(
         );
 
         const { representations } = choice;
-        log.info(
-          `Stream: Updating ${bufferType} adaptation`,
-          `A: ${adaptation.id}`,
-          `P: ${period.start}`,
-        );
+        log.info(`Stream`, `Updating adaptation`, {
+          bufferType: adaptation.type,
+          periodStart: period.start,
+          adaptationId: adaptation.id,
+        });
 
         callbacks.adaptationChange({ type: bufferType, adaptation, period });
         if (streamCanceller.isUsed()) {
@@ -365,7 +377,8 @@ export default function PeriodStream(
       // to continue playing without any subtitles
       if (!SegmentSinksStore.isNative(bufferType)) {
         log.error(
-          `Stream: ${bufferType} Stream crashed. Aborting it.`,
+          `Stream`,
+          `${bufferType} Stream crashed. Aborting it.`,
           error instanceof Error ? error : "",
         );
         segmentSinksStore.disposeSegmentSink(bufferType);
@@ -389,7 +402,8 @@ export default function PeriodStream(
         );
       }
       log.error(
-        `Stream: ${bufferType} Stream crashed. Stopping playback.`,
+        `Stream`,
+        `${bufferType} Stream crashed. Stopping playback.`,
         error instanceof Error ? error : "",
       );
       callbacks.error(error);
@@ -456,7 +470,7 @@ function createOrReuseSegmentSink(
 ): SegmentSink {
   const segmentSinkStatus = segmentSinksStore.getStatus(bufferType);
   if (segmentSinkStatus.type === "initialized") {
-    log.info("Stream: Reusing a previous SegmentSink for the type", bufferType);
+    log.info("Stream", "Reusing a previous SegmentSink for the type", { bufferType });
     return segmentSinkStatus.value;
   }
   const codec = getFirstDeclaredMimeType(adaptation);
@@ -564,7 +578,12 @@ function createEmptyAdaptationStream(
     const wba = wantedBufferAhead.getValue();
     const position = observation.position.getWanted();
     if (period.end !== undefined && position + wba >= period.end) {
-      log.debug('Stream: full "empty" AdaptationStream', bufferType);
+      log.debug("Stream", 'full "empty" AdaptationStream', {
+        bufferType,
+        periodEnd: period.end,
+        position,
+        wantedBufferAhead: wba,
+      });
       hasFinishedLoading = true;
     }
     callbacks.streamStatusUpdate({

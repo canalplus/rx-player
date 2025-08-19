@@ -725,7 +725,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockLog).toHaveBeenCalled();
     expect(mockLog).toHaveBeenNthCalledWith(
       1,
-      "Manifest: 1 new Adaptations found when merging.",
+      "manifest",
+      "1 new Adaptations found when merging.",
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
     mockLog.mockRestore();
@@ -822,7 +823,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockLog).toHaveBeenCalled();
     expect(mockLog).toHaveBeenNthCalledWith(
       1,
-      "Manifest: 1 new Adaptations found when merging.",
+      "manifest",
+      "1 new Adaptations found when merging.",
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
     mockLog.mockRestore();
@@ -924,7 +926,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockLog).toHaveBeenCalled();
     expect(mockLog).toHaveBeenNthCalledWith(
       1,
-      'Manifest: Adaptation "ada-video-2" not found when merging.',
+      "manifest",
+      'Adaptation "ada-video-2" not found when merging.',
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
     mockLog.mockRestore();
@@ -1026,7 +1029,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockLog).toHaveBeenCalled();
     expect(mockLog).toHaveBeenNthCalledWith(
       1,
-      'Manifest: Adaptation "ada-video-2" not found when merging.',
+      "manifest",
+      'Adaptation "ada-video-2" not found when merging.',
     );
     expect(oldPeriod.adaptations.video).toHaveLength(2);
     mockLog.mockRestore();
@@ -1115,7 +1119,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     });
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith(
-      "Manifest: 1 new Representations found when merging.",
+      "manifest",
+      "1 new Representations found when merging.",
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(2);
     mockLog.mockRestore();
@@ -1204,7 +1209,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     });
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith(
-      "Manifest: 1 new Representations found when merging.",
+      "manifest",
+      "1 new Representations found when merging.",
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(2);
     mockLog.mockRestore();
@@ -1292,7 +1298,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     });
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith(
-      'Manifest: Representation "rep-video-2" not found when merging.',
+      "manifest",
+      'Representation "rep-video-2" not found when merging.',
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
     mockLog.mockRestore();
@@ -1380,7 +1387,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     });
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog).toHaveBeenCalledWith(
-      'Manifest: Representation "rep-video-2" not found when merging.',
+      "manifest",
+      'Representation "rep-video-2" not found when merging.',
     );
     expect(oldVideoAdaptation1.representations).toHaveLength(1);
     mockLog.mockRestore();
@@ -1463,7 +1471,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockLog).toHaveBeenCalled();
     expect(mockLog).toHaveBeenNthCalledWith(
       1,
-      "Manifest: 1 new Thumbnail tracks found when merging.",
+      "manifest",
+      "1 new Thumbnail tracks found when merging.",
     );
     expect(oldPeriod.thumbnailTracks).toHaveLength(2);
     mockLog.mockRestore();
@@ -1546,7 +1555,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockLog).toHaveBeenCalled();
     expect(mockLog).toHaveBeenNthCalledWith(
       1,
-      "Manifest: 1 new Thumbnail tracks found when merging.",
+      "manifest",
+      "1 new Thumbnail tracks found when merging.",
     );
     expect(oldPeriod.thumbnailTracks).toHaveLength(2);
     mockLog.mockRestore();
@@ -1621,7 +1631,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockLog).toHaveBeenCalled();
     expect(mockLog).toHaveBeenNthCalledWith(
       1,
-      'Manifest: ThumbnailTrack "thumb-2" not found when merging.',
+      "manifest",
+      'ThumbnailTrack "thumb-2" not found when merging.',
     );
     expect(oldPeriod.thumbnailTracks).toHaveLength(1);
     mockLog.mockRestore();
@@ -1696,7 +1707,8 @@ describe("Manifest - updatePeriodInPlace", () => {
     expect(mockLog).toHaveBeenCalled();
     expect(mockLog).toHaveBeenNthCalledWith(
       1,
-      'Manifest: ThumbnailTrack "thumb-2" not found when merging.',
+      "manifest",
+      'ThumbnailTrack "thumb-2" not found when merging.',
     );
     expect(oldPeriod.thumbnailTracks).toHaveLength(1);
     mockLog.mockRestore();

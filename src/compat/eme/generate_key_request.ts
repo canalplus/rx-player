@@ -47,7 +47,7 @@ import { PSSH_TO_INTEGER } from "./constants";
  * @returns {Uint8Array} - Initialization data, patched
  */
 export function patchInitData(initData: Uint8Array): Uint8Array {
-  log.info("Compat: Trying to move CENC PSSH from init data at the end of it.");
+  log.info("DRM", "Trying to move CENC PSSH from init data at the end of it.");
   let foundCencV1 = false;
   let concatenatedCencs = new Uint8Array();
   let resInitData = new Uint8Array();
@@ -58,13 +58,13 @@ export function patchInitData(initData: Uint8Array): Uint8Array {
       initData.length < offset + 8 ||
       be4toi(initData, offset + 4) !== PSSH_TO_INTEGER
     ) {
-      log.warn("Compat: unrecognized initialization data. Cannot patch it.");
+      log.warn("DRM", "unrecognized initialization data. Cannot patch it.");
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
 
     const len = be4toi(new Uint8Array(initData), offset);
     if (offset + len > initData.length) {
-      log.warn("Compat: unrecognized initialization data. Cannot patch it.");
+      log.warn("DRM", "unrecognized initialization data. Cannot patch it.");
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
 
@@ -90,20 +90,21 @@ export function patchInitData(initData: Uint8Array): Uint8Array {
     ) {
       const cencOffsets = getNextBoxOffsets(currentPSSH);
       const version = cencOffsets === null ? undefined : currentPSSH[cencOffsets[1]];
-      log.info("Compat: CENC PSSH found with version", version);
+      log.info("DRM", "CENC PSSH found with version", version);
       if (version === undefined) {
-        log.warn("Compat: could not read version of CENC PSSH");
+        log.warn("DRM", "could not read version of CENC PSSH");
       } else if (foundCencV1 === (version === 1)) {
         // Either `concatenatedCencs` only contains v1 or does not contain any
         concatenatedCencs = concat(concatenatedCencs, currentPSSH);
       } else if (version === 1) {
         log.warn(
-          "Compat: cenc version 1 encountered, " + "removing every other cenc pssh box.",
+          "DRM",
+          "cenc version 1 encountered, " + "removing every other cenc pssh box.",
         );
         concatenatedCencs = currentPSSH;
         foundCencV1 = true;
       } else {
-        log.warn("Compat: filtering out cenc pssh box with wrong version", version);
+        log.warn("DRM", "filtering out cenc pssh box with wrong version", version);
       }
     } else {
       resInitData = concat(resInitData, currentPSSH);
@@ -112,7 +113,7 @@ export function patchInitData(initData: Uint8Array): Uint8Array {
   }
 
   if (offset !== initData.length) {
-    log.warn("Compat: unrecognized initialization data. Cannot patch it.");
+    log.warn("DRM", "unrecognized initialization data. Cannot patch it.");
     throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
   }
   return concat(resInitData, concatenatedCencs);
@@ -133,7 +134,7 @@ export default function generateKeyRequest(
   initializationDataType: string | undefined,
   initializationData: Uint8Array,
 ): Promise<unknown> {
-  log.debug("Compat: Calling generateRequest on the MediaKeySession");
+  log.debug("DRM", "Calling generateRequest on the MediaKeySession");
   let patchedInit: Uint8Array;
   try {
     patchedInit = patchInitData(initializationData);
@@ -152,7 +153,8 @@ export default function generateKeyRequest(
     // Retry with a default "cenc" value for initialization data type if
     // we're in that condition.
     log.warn(
-      "Compat: error while calling `generateRequest` with an empty " +
+      "DRM",
+      "error while calling `generateRequest` with an empty " +
         'initialization data type. Retrying with a default "cenc" value.',
       error,
     );

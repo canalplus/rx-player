@@ -26,7 +26,10 @@ import EnvDetector from "./env_detector";
  */
 function getFirefoxVersion(): number | null {
   if (EnvDetector.browser !== EnvDetector.BROWSERS.Firefox) {
-    log.warn("Compat: Can't access Firefox version on no firefox browser.");
+    log.warn(
+      "utils",
+      "getFirefoxVersion: Can't access Firefox version. Not a firefox browser.",
+    );
     return null;
   }
   const userAgent = navigator.userAgent;

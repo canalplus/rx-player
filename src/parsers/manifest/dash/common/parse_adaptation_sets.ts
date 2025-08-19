@@ -472,7 +472,7 @@ export default function parseAdaptationSets(
             mergedInto[0].closedCaption === parsedAdaptationSet.closedCaption &&
             mergedInto[0].language === parsedAdaptationSet.language
           ) {
-            log.info('DASH Parser: merging "switchable" AdaptationSets', originalID, id);
+            log.info("dash", 'merging "switchable" AdaptationSets', { originalID, id });
             mergedInto[0].representations.push(...parsedAdaptationSet.representations);
             mergedInto[1] = {
               priority: Math.max(priority, mergedInto[1].priority),
@@ -556,7 +556,7 @@ function createThumbnailTracks(
     const representation = representations[i];
     if (representation !== undefined) {
       if (representation.mimeType === undefined) {
-        log.warn("DASH: Invalid thumbnails Representation, no mime-type");
+        log.warn("dash", "Invalid thumbnails Representation, no mime-type");
         continue;
       }
       const tileInfo = getThumbnailAdaptationSetInfo(
@@ -567,11 +567,11 @@ function createThumbnailTracks(
         continue;
       }
       if (representation.height === undefined) {
-        log.warn("DASH: Invalid thumbnails Representation, no height information");
+        log.warn("dash", "Invalid thumbnails Representation, no height information");
         continue;
       }
       if (representation.width === undefined) {
-        log.warn("DASH: Invalid thumbnails Representation, no width information");
+        log.warn("dash", "Invalid thumbnails Representation, no width information");
         continue;
       }
 
@@ -583,7 +583,7 @@ function createThumbnailTracks(
       if (targetDuration !== undefined && targetDuration.isPrecize) {
         segmentDuration = targetDuration.duration;
       } else {
-        log.warn("DASH: Cannot produce duration estimate for thumbnail track");
+        log.warn("dash", "Cannot produce duration estimate for thumbnail track");
       }
 
       tracks.push({

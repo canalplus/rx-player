@@ -182,11 +182,14 @@ function setMediaSourceDuration(
     // Keep the duration that was set at that time as a security.
     if (maxBufferedEnd < mediaSource.duration) {
       try {
-        log.info("Init: Updating duration to what is currently buffered", maxBufferedEnd);
+        log.info("mse", "Updating duration to what is currently buffered", {
+          maxBufferedEnd,
+        });
         mediaSource.duration = maxBufferedEnd;
       } catch (err) {
         log.warn(
-          "Duration Updater: Can't update duration on the MediaSource.",
+          "mse",
+          "Can't update duration on the MediaSource.",
           err instanceof Error ? err : "",
         );
         return MediaSourceDurationUpdateStatus.Failed;
@@ -196,16 +199,17 @@ function setMediaSourceDuration(
   } else {
     const oldDuration = mediaSource.duration;
     try {
-      log.info("Init: Updating duration", newDuration);
+      log.info("mse", "Updating duration", { newDuration });
       mediaSource.duration = newDuration;
       if (mediaSource.readyState === "open" && !isFinite(newDuration)) {
         const maxSeekable = getMaximumLiveSeekablePosition(duration);
-        log.info("Init: calling `mediaSource.setLiveSeekableRange`", maxSeekable);
+        log.info("mse", "calling `mediaSource.setLiveSeekableRange`", { maxSeekable });
         mediaSource.setLiveSeekableRange(0, maxSeekable);
       }
     } catch (err) {
       log.warn(
-        "Duration Updater: Can't update duration on the MediaSource.",
+        "mse",
+        "Can't update duration on the MediaSource.",
         err instanceof Error ? err : "",
       );
       return MediaSourceDurationUpdateStatus.Failed;
@@ -303,7 +307,7 @@ function createMediaSourceOpenReference(
   onSourceOpen(
     mediaSource,
     () => {
-      log.debug("Init: Reacting to MediaSource open in duration updater");
+      log.debug("mse", "Reacting to MediaSource open in duration updater");
       isMediaSourceOpen.setValueIfChanged(true);
     },
     cancelSignal,
@@ -311,7 +315,7 @@ function createMediaSourceOpenReference(
   onSourceEnded(
     mediaSource,
     () => {
-      log.debug("Init: Reacting to MediaSource ended in duration updater");
+      log.debug("mse", "Reacting to MediaSource ended in duration updater");
       isMediaSourceOpen.setValueIfChanged(false);
     },
     cancelSignal,
@@ -319,7 +323,7 @@ function createMediaSourceOpenReference(
   onSourceClose(
     mediaSource,
     () => {
-      log.debug("Init: Reacting to MediaSource close in duration updater");
+      log.debug("mse", "Reacting to MediaSource close in duration updater");
       isMediaSourceOpen.setValueIfChanged(false);
     },
     cancelSignal,

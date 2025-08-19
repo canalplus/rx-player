@@ -85,7 +85,7 @@ export default function BufferGarbageCollector(
         return;
       }
       const errMsg = e instanceof Error ? e.message : "Unknown error";
-      log.error("Could not run BufferGarbageCollector:", errMsg);
+      log.error("Stream", "Could not run BufferGarbageCollector:", errMsg);
     });
   }
   maxBufferBehind.onUpdate(clean, { clearSignal: cancellationSignal });
@@ -191,7 +191,10 @@ async function clearBuffer(
 
   for (const range of cleanedupRanges) {
     if (range.start < range.end) {
-      log.debug("GC: cleaning range from SegmentSink", range.start, range.end);
+      log.debug("Stream", "cleaning range from SegmentSink", {
+        start: range.start,
+        end: range.end,
+      });
       if (cancellationSignal.cancellationError !== null) {
         throw cancellationSignal.cancellationError;
       }

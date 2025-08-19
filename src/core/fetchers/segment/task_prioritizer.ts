@@ -37,7 +37,7 @@ export default class TaskPrioritizer<T> {
 
     if (this._prioritySteps.high >= this._prioritySteps.low) {
       throw new Error(
-        "TP: the max high level priority should be given a lower" +
+        "The max high level priority should be given a lower" +
           "priority number than the min low priority.",
       );
     }
@@ -227,7 +227,7 @@ export default class TaskPrioritizer<T> {
     }
     const pendingTasksIndex = _findTaskIndex(promise, this._pendingTasks);
     if (pendingTasksIndex < 0) {
-      log.warn("TP: request to update the priority of a non-existent task");
+      log.warn("SF", "request to update the priority of a non-existent task");
       return;
     }
 
@@ -315,7 +315,7 @@ export default class TaskPrioritizer<T> {
    */
   private _findAndRunWaitingQueueTask(index: number): boolean {
     if (index >= this._waitingQueue.length || index < 0) {
-      log.warn("TP : Tried to start a non existing task");
+      log.warn("SF", "Tried to start a non existing task");
       return false;
     }
     const task = this._waitingQueue.splice(index, 1)[0];
@@ -330,7 +330,7 @@ export default class TaskPrioritizer<T> {
   private _interruptPendingTask(task: IPrioritizerTask<T>): void {
     const pendingTasksIndex = _findTaskIndex(task.taskFn, this._pendingTasks);
     if (pendingTasksIndex < 0) {
-      log.warn("TP: Interrupting a non-existent pending task. Aborting...");
+      log.warn("SF", "Interrupting a non-existent pending task. Aborting...");
       return;
     }
 

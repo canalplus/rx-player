@@ -136,7 +136,12 @@ export default class GuessBasedChooser {
     // If we reached here, we're currently already in guessing mode
 
     if (this._isLastGuessValidated(lastChosenRep, incomingBestBitrate, scoreData)) {
-      log.debug("ABR: Guessed Representation validated", lastChosenRep.bitrate);
+      log.debug("ABR", "Guessed Representation validated", {
+        chosenBitrate: lastChosenRep.bitrate,
+        otherAbrAlgosBitrate: incomingBestBitrate,
+        scoreData: scoreData?.score,
+        scoreConfidence: scoreData?.confidenceLevel,
+      });
       this._lastMaintanableBitrate = lastChosenRep.bitrate;
       this._consecutiveWrongGuesses = 0;
     }
@@ -282,7 +287,7 @@ function getNextRepresentation(
     ({ id }) => id === currentRepresentation.id,
   );
   if (index < 0) {
-    log.error("ABR: Current Representation not found.");
+    log.error("ABR", "Current Representation not found.");
     return null;
   }
 
@@ -311,7 +316,7 @@ function getPreviousRepresentation(
     ({ id }) => id === currentRepresentation.id,
   );
   if (index < 0) {
-    log.error("ABR: Current Representation not found.");
+    log.error("ABR", "Current Representation not found.");
     return null;
   }
 

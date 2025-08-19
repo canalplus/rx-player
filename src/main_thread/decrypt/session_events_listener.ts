@@ -50,7 +50,7 @@ export default function SessionEventsListener(
   callbacks: ISessionEventListenerCallbacks,
   cancelSignal: CancellationSignal,
 ): void {
-  log.info("DRM: Binding session events", session.sessionId);
+  log.info("DRM", "Binding session events", { sessionId: session.sessionId });
   const { getLicenseConfig = {} } = keySystemOptions;
 
   /** Allows to manually cancel everything the `SessionEventsListener` is doing. */
@@ -88,7 +88,9 @@ export default function SessionEventsListener(
   onKeyStatusesChange(
     session,
     () => {
-      log.info("DRM: keystatuseschange event received", session.sessionId);
+      log.info("DRM", "keystatuseschange event received", {
+        sessionId: session.sessionId,
+      });
       try {
         checkAndHandleCurrentKeyStatuses();
       } catch (error) {
@@ -114,7 +116,10 @@ export default function SessionEventsListener(
         ? messageEvent.messageType
         : "license-request";
 
-      log.info(`DRM: Received message event, type ${messageType}`, session.sessionId);
+      log.info(`DRM`, `Received message event`, {
+        messageType,
+        sessionId: session.sessionId,
+      });
 
       const backoffOptions = getLicenseBackoffOptions(getLicenseConfig.retry);
       retryPromiseWithBackoff(
@@ -127,7 +132,7 @@ export default function SessionEventsListener(
             return;
           }
           if (isNullOrUndefined(licenseObject)) {
-            log.info("DRM: No license given, skipping session.update");
+            log.info("DRM", "No license given, skipping session.update");
           } else {
             try {
               await updateSessionWithMessage(
@@ -154,7 +159,8 @@ export default function SessionEventsListener(
             };
             if (fallbackOnLastTry === true) {
               log.warn(
-                "DRM: Last `getLicense` attempt failed. " +
+                "DRM",
+                "Last `getLicense` attempt failed. " +
                   "Blacklisting the current session.",
               );
               callbacks.onError(new BlacklistedSessionError(formattedError));
@@ -168,7 +174,7 @@ export default function SessionEventsListener(
     manualCanceller.signal,
   );
 
-  log.info("DRM: transmitting current keystatuses", session.sessionId);
+  log.info("DRM", "transmitting current keystatuses", { sessionId: session.sessionId });
   checkAndHandleCurrentKeyStatuses();
   return;
   /**
@@ -202,7 +208,7 @@ export default function SessionEventsListener(
     let timeoutId: number | undefined;
     return new Promise<BufferSource | null>((res, rej) => {
       try {
-        log.debug("DRM: Calling `getLicense`", messageType);
+        log.debug("DRM", "Calling `getLicense`", { messageType });
         const getLicense = keySystemOptions.getLicense(message, messageType);
         const getLicenseTimeout = isNullOrUndefined(getLicenseConfig.timeout)
           ? 10 * 1000
@@ -325,7 +331,7 @@ async function updateSessionWithMessage(
   message: BufferSource,
   mediaKeySystemAccess: IMediaKeySystemAccess,
 ): Promise<void> {
-  log.info("DRM: Updating MediaKeySession with message");
+  log.info("DRM", "Updating MediaKeySession with message");
   try {
     await session.update(message);
   } catch (error) {
@@ -336,7 +342,7 @@ async function updateSessionWithMessage(
       keySystem: mediaKeySystemAccess.keySystem,
     });
   }
-  log.info("DRM: MediaKeySession update succeeded.");
+  log.info("DRM", "MediaKeySession update succeeded.");
 }
 
 /** Information on key ids linked to a MediaKeySession. */

@@ -149,8 +149,8 @@ export default class SharedSmoothSegmentTimeline {
         const rangeDuration = newEnd - oldTimelineRange.start;
         if (rangeDuration === 0) {
           log.warn(
-            "Smooth Parser: a discontinuity detected in the previous manifest" +
-              " has been resolved.",
+            "smooth",
+            "a discontinuity detected in the previous manifest" + " has been resolved.",
           );
           this.timeline = this.timeline.concat(oldTimeline.slice(i));
           return;
@@ -187,15 +187,15 @@ export default class SharedSmoothSegmentTimeline {
    * Add segments to a `SharedSmoothSegmentTimeline` that were predicted to come
    * after `currentSegment`.
    * @param {Array.<Object>} nextSegments - The segment information parsed.
-   * @param {Object} segment - Information on the segment which contained that
-   * new segment information.
+   * @param {Object} currentSegment - Information on the segment which contained
+   * that new segment information.
    */
   public addPredictedSegments(
     nextSegments: Array<{ duration: number; time: number; timescale: number }>,
     currentSegment: ISegment,
   ): void {
     if (currentSegment.privateInfos?.smoothMediaSegment === undefined) {
-      log.warn("Smooth Parser: should only encounter SmoothRepresentationIndex");
+      log.warn("smooth", "should only encounter SmoothRepresentationIndex");
       return;
     }
 

@@ -121,7 +121,8 @@ export default class BufferBasedChooser {
     this._lastUnsuitableQualityTimestamp = undefined;
     this._blockRaiseDelay = MINIMUM_BLOCK_RAISE_DELAY;
     log.debug(
-      "ABR: Steps for buffer based chooser.",
+      "ABR",
+      "Steps for buffer based chooser.",
       this._levelsMap
         .map((l, i) => `bufferLevel: ${l}, bitrate: ${bitrates[i]}`)
         .join(" ,"),
@@ -155,7 +156,7 @@ export default class BufferBasedChooser {
     }
 
     if (currentBitrateIndex < 0 || bitrates.length !== bufferLevels.length) {
-      log.info("ABR: Current Bitrate not found in the calculated levels");
+      log.info("ABR", "Current Bitrate not found in the calculated levels");
       this._currentEstimate = bitrates[0];
       return;
     }
@@ -181,16 +182,20 @@ export default class BufferBasedChooser {
           : now - this._lastUnsuitableQualityTimestamp;
       if (timeSincePrev < this._blockRaiseDelay + STABILITY_CHECK_DELAY) {
         const newDelay = this._blockRaiseDelay + RAISE_BLOCKING_DELAY_INCREMENT;
-        this._blockRaiseDelay = Math.min(newDelay, MAXIMUM_BLOCK_RAISE_DELAY);
         log.debug(
-          "ABR: Incrementing blocking raise in BufferBasedChooser due " +
+          "ABR",
+          "Incrementing blocking raise in BufferBasedChooser due " +
             "to unstable quality",
-          this._blockRaiseDelay,
+          { prevDelay: this._blockRaiseDelay, newDelay },
         );
+        this._blockRaiseDelay = Math.min(newDelay, MAXIMUM_BLOCK_RAISE_DELAY);
       } else {
         const newDelay = this._blockRaiseDelay - RAISE_BLOCKING_DELAY_DECREMENT;
+        log.debug("ABR", "Lowering quality in BufferBasedChooser", {
+          prevDelay: this._blockRaiseDelay,
+          newDelay,
+        });
         this._blockRaiseDelay = Math.max(MINIMUM_BLOCK_RAISE_DELAY, newDelay);
-        log.debug("ABR: Lowering quality in BufferBasedChooser", this._blockRaiseDelay);
       }
       this._lastUnsuitableQualityTimestamp = now;
       // Security if multiple bitrates are equal, we now take the first one
@@ -227,7 +232,9 @@ export default class BufferBasedChooser {
     if (nextIndex !== undefined) {
       const nextBufferLevel = bufferLevels[nextIndex];
       if (bufferGap >= nextBufferLevel) {
-        log.debug("ABR: Raising quality in BufferBasedChooser", bitrates[nextIndex]);
+        log.debug("ABR", "Raising quality in BufferBasedChooser", {
+          bitrate: bitrates[nextIndex],
+        });
         this._currentEstimate = bitrates[nextIndex];
         return;
       }

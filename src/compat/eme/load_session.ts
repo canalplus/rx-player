@@ -36,7 +36,7 @@ export default async function loadSession(
   session: IMediaKeySession,
   sessionId: string,
 ): Promise<boolean> {
-  log.info("DRM: Load persisted session", sessionId);
+  log.info("DRM", "Load persisted session", { sessionId });
   const isLoaded = await session.load(sessionId);
 
   if (!isLoaded || session.keyStatuses.size > 0) {

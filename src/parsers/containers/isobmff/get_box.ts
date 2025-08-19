@@ -221,8 +221,7 @@ function getUuidContent(
  *
  * `null` if no box is found.
  * @param {Uint8Array} buf - the isobmff data
- * @param {Number} boxName - the 4-letter 'name' of the box as a 4 byte integer
- * generated from encoding the corresponding ASCII in big endian.
+ * @returns {Array.<number>|null}
  */
 function getNextBoxOffsets(
   buf: Uint8Array,
@@ -235,7 +234,7 @@ function getNextBoxOffsets(
   | null {
   const len = buf.length;
   if (len < 8) {
-    log.warn("ISOBMFF: box inferior to 8 bytes, cannot find offsets");
+    log.warn("isobmff", "box inferior to 8 bytes, cannot find offsets");
     return null;
   }
   let lastOffset = 0;
@@ -249,7 +248,7 @@ function getNextBoxOffsets(
     boxSize = len;
   } else if (boxSize === 1) {
     if (lastOffset + 8 > len) {
-      log.warn("ISOBMFF: box too short, cannot find offsets");
+      log.warn("isobmff", "box too short, cannot find offsets");
       return null;
     }
     boxSize = be8toi(buf, lastOffset);

@@ -232,11 +232,12 @@ export default function performInitialSeekAndPlay(
        * Might also send warnings if minor issues arise.
        */
       function onPlayable() {
-        log.info("Init: Can begin to play content");
+        log.info("Init", "Can begin to play content");
         if (!mustAutoPlay) {
           if (mediaElement.autoplay) {
             log.warn(
-              "Init: autoplay is enabled on HTML media element. " +
+              "Init",
+              "autoplay is enabled on HTML media element. " +
                 "Media will play as soon as possible.",
             );
           }
@@ -249,7 +250,8 @@ export default function performInitialSeekAndPlay(
           // restart the video from the start, which is not wanted in most cases.
           // returning "skipped" prevents the call to play() and fix the issue
           log.warn(
-            "Init: autoplay is enabled but the video is ended. " +
+            "Init",
+            "autoplay is enabled but the video is ended. " +
               "Skipping autoplay to prevent video to start again",
           );
           initialPlayPerformed.setValue(true);
@@ -283,7 +285,8 @@ export default function performInitialSeekAndPlay(
             if (playError instanceof Error && playError.name === "NotAllowedError") {
               // auto-play was probably prevented.
               log.warn(
-                "Init: Media element can't play." +
+                "Init",
+                "Media element can't play." +
                   " It may be due to browser auto-play policies.",
               );
 

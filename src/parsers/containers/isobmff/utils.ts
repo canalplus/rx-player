@@ -556,7 +556,7 @@ function parseEmsgBoxes(buffer: Uint8Array): IEMSG[] | undefined {
 
     const version = emsg[0];
     if (version !== 0) {
-      log.warn("ISOBMFF: EMSG version " + version.toString() + " not supported.");
+      log.warn("isobmff", "EMSG version " + version.toString() + " not supported.");
     } else {
       let position = 4; // skip version + flags
 

@@ -204,12 +204,12 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
     // Retrieve from cache if it exists
     const cached = cache !== undefined ? cache.get(content) : null;
     if (cached !== null) {
-      log.debug("SF: Found wanted segment in cache", segmentIdString);
+      log.debug("SF", "Found wanted segment in cache", segmentIdString);
       fetcherCallbacks.onChunk(generateParserFunction(cached, false));
       return Promise.resolve();
     }
 
-    log.debug("SF: Beginning request", segmentIdString);
+    log.debug("SF", "Beginning request", segmentIdString);
     eventListeners.onRequestBegin?.({
       requestTimestamp: getTimestamp(),
       id: requestId,
@@ -237,7 +237,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
         fetcherCallbacks.onChunk(generateParserFunction(res.resultData, false));
       }
 
-      log.debug("SF: Segment request ended with success", segmentIdString);
+      log.debug("SF", "Segment request ended with success", segmentIdString);
       fetcherCallbacks.onAllChunksReceived();
 
       if (res.resultType !== "segment-created") {
@@ -258,10 +258,10 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
       cancellationSignal.deregister(onCancellation);
       requestInfo = null;
       if (err instanceof CancellationError) {
-        log.debug("SF: Segment request aborted", segmentIdString);
+        log.debug("SF", "Segment request aborted", segmentIdString);
         throw err;
       }
-      log.debug("SF: Segment request failed", segmentIdString);
+      log.debug("SF", "Segment request failed", segmentIdString);
       eventListeners.onRequestEnd?.({ id: requestId });
       throw errorSelector(err);
     }
@@ -270,7 +270,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
       if (requestInfo !== undefined) {
         return; // Request already terminated
       }
-      log.debug("SF: Segment request cancelled", segmentIdString);
+      log.debug("SF", "Segment request cancelled", segmentIdString);
       requestInfo = null;
       eventListeners.onRequestEnd?.({ id: requestId });
     }

@@ -41,17 +41,18 @@ export function resetMediaElement(
   mediaSourceURL: string | null,
 ): void {
   if (mediaSourceURL !== null && mediaElement.src === mediaSourceURL) {
-    log.info("Init: Clearing HTMLMediaElement's src");
+    log.info("media", "Clearing HTMLMediaElement's src");
     clearElementSrc(mediaElement);
   }
 
   if (mediaSourceURL !== null) {
     try {
-      log.debug("Init: Revoking previous URL");
+      log.debug("media", "Revoking previous URL");
       URL.revokeObjectURL(mediaSourceURL);
     } catch (e) {
       log.warn(
-        "Init: Error while revoking the media source URL",
+        "media",
+        "Error while revoking the media source URL",
         e instanceof Error ? e : "",
       );
     }
@@ -144,12 +145,14 @@ export default function openMediaSource(
     mediaSource.addEventListener(
       "mediaSourceOpen",
       () => {
-        log.info("Init: MediaSource opened");
+        log.info("mse", "MediaSource opened");
         resolve(mediaSource);
       },
       unlinkSignal,
     );
-    log.info("MTCI: Attaching MediaSource URL to the media element");
+    log.info("media", "Attaching MediaSource URL to the media element", {
+      handleType: mediaSource.handle.type,
+    });
     if (mediaSource.handle.type === "handle") {
       mediaElement.srcObject = mediaSource.handle.value;
       unlinkSignal.register(() => {

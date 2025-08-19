@@ -52,7 +52,8 @@ export default function createSession(
     return createTemporarySession(loadedSessionsStore, initData);
   } else if (persistentSessionsStore === null) {
     log.warn(
-      "DRM: Cannot create persistent MediaKeySession, " +
+      "DRM",
+      "Cannot create persistent MediaKeySession, " +
         "PersistentSessionsStore not created.",
     );
     return createTemporarySession(loadedSessionsStore, initData);
@@ -76,7 +77,7 @@ function createTemporarySession(
   loadedSessionsStore: LoadedSessionsStore,
   initData: IProcessedProtectionData,
 ): Promise<INewSessionCreatedEvent> {
-  log.info("DRM: Creating a new temporary session");
+  log.info("DRM", "Creating a new temporary session");
   const entry = loadedSessionsStore.createSession(initData, "temporary");
   return Promise.resolve({
     type: MediaKeySessionLoadingType.Created,
@@ -102,7 +103,7 @@ async function createAndTryToRetrievePersistentSession(
   if (cancelSignal.cancellationError !== null) {
     throw cancelSignal.cancellationError;
   }
-  log.info("DRM: Creating persistent MediaKeySession");
+  log.info("DRM", "Creating persistent MediaKeySession");
 
   const entry = loadedSessionsStore.createSession(initData, "persistent-license");
   const storedEntry = persistentSessionsStore.getAndReuse(initData);
@@ -116,7 +117,9 @@ async function createAndTryToRetrievePersistentSession(
       storedEntry.sessionId,
     );
     if (!hasLoadedSession) {
-      log.warn("DRM: No data stored for the loaded session");
+      log.warn("DRM", "No data stored for the loaded session", {
+        sessionId: storedEntry.sessionId,
+      });
       persistentSessionsStore.delete(storedEntry.sessionId);
 
       // The EME specification is kind of implicit about it but it seems from my
@@ -132,7 +135,7 @@ async function createAndTryToRetrievePersistentSession(
 
     if (hasLoadedSession && isSessionUsable(entry.mediaKeySession)) {
       persistentSessionsStore.add(initData, initData.keyIds, entry.mediaKeySession);
-      log.info("DRM: Succeeded to load persistent session.");
+      log.info("DRM", "Succeeded to load persistent session.");
       return {
         type: MediaKeySessionLoadingType.LoadedPersistentSession,
         value: entry,
@@ -140,11 +143,12 @@ async function createAndTryToRetrievePersistentSession(
     }
 
     // Unusable persistent session: recreate a new session from scratch.
-    log.warn("DRM: Previous persistent session not usable anymore.");
+    log.warn("DRM", "Previous persistent session not usable anymore.");
     return recreatePersistentSession();
   } catch (err) {
     log.warn(
-      "DRM: Unable to load persistent session: " +
+      "DRM",
+      "Unable to load persistent session: " +
         (err instanceof Error ? err.toString() : "Unknown Error"),
     );
     return recreatePersistentSession();
@@ -159,7 +163,7 @@ async function createAndTryToRetrievePersistentSession(
     if (cancelSignal.cancellationError !== null) {
       throw cancelSignal.cancellationError;
     }
-    log.info("DRM: Removing previous persistent session.");
+    log.info("DRM", "Removing previous persistent session.");
     const persistentEntry = persistentSessionsStore.get(initData);
     if (persistentEntry !== null) {
       persistentSessionsStore.delete(persistentEntry.sessionId);

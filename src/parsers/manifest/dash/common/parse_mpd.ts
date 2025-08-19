@@ -168,7 +168,8 @@ export default function parseMpdIr(
               if (!responseDataClock.success) {
                 warnings.push(responseDataClock.error);
                 log.warn(
-                  "DASH Parser: Error on fetching the clock ressource",
+                  "dash",
+                  "Error on fetching the clock ressource",
                   responseDataClock.error,
                 );
                 return parseMpdIr(mpdIR, args, warnings, true);
@@ -349,7 +350,7 @@ function parseCompleteIntermediateRepresentation(
       finalMaximumSafePosition = maximumSafePosition;
     } else {
       if (externalClockOffset === undefined) {
-        log.warn("DASH Parser: use system clock to define maximum position");
+        log.warn("dash", "use system clock to define maximum position");
         finalMaximumSafePosition = Date.now() / 1000 - availabilityStartTime;
       } else {
         const serverTime = getMonotonicTimeStamp() + externalClockOffset;

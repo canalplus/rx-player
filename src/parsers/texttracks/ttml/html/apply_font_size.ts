@@ -44,9 +44,8 @@ export default function applyFontSize(element: HTMLElement, fontSize: string): v
     const toNum = Number(firstFontSize[1]);
     if (isNaN(toNum)) {
       log.warn(
-        'TTML Parser: could not parse fontSize value "' +
-          firstFontSize[1] +
-          '" into a number',
+        "ttml",
+        'could not parse fontSize value "' + firstFontSize[1] + '" into a number',
       );
     } else {
       element.style.position = "relative";
@@ -54,6 +53,6 @@ export default function applyFontSize(element: HTMLElement, fontSize: string): v
       element.setAttribute("data-proportional-font-size", String(toNum / 100));
     }
   } else {
-    log.warn("TTML Parser: unhandled fontSize unit:", firstFontSize[2]);
+    log.warn("ttml", "unhandled fontSize unit", { unit: firstFontSize[2] });
   }
 }

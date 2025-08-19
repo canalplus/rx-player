@@ -500,11 +500,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   initialize(): void {
-    log.error("A `TemplateRepresentationIndex` does not need to be initialized");
+    log.error("dash", "A `TemplateRepresentationIndex` does not need to be initialized");
   }
 
   addPredictedSegments(): void {
-    log.warn("Cannot add predicted segments to a `TemplateRepresentationIndex`");
+    log.warn("dash", "Cannot add predicted segments to a `TemplateRepresentationIndex`");
   }
 
   /**

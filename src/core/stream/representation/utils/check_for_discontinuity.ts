@@ -116,11 +116,11 @@ export default function checkForDiscontinuity(
     ) {
       return null;
     }
-    log.debug(
-      "RS: current discontinuity encountered",
-      adaptation.type,
-      nextBufferedSegment.bufferedStart,
-    );
+    log.debug("Stream", "current discontinuity encountered", {
+      bufferType: adaptation.type,
+      nextSegmentTime: nextBufferedSegment.bufferedStart,
+      checkStartTime: checkedRange.start,
+    });
     return { start: undefined, end: discontinuityEnd };
   }
 
@@ -152,7 +152,11 @@ export default function checkForDiscontinuity(
       }
       const start = segmentInfoBeforeHole.bufferedEnd as number;
       const end = segmentInfoAfterHole.bufferedStart as number;
-      log.debug("RS: future discontinuity encountered", adaptation.type, start, end);
+      log.debug("Stream", "future discontinuity encountered", {
+        bufferType: adaptation.type,
+        discontinuityStart: start,
+        discontinuityEnd: end,
+      });
       return { start, end };
     }
   }
@@ -181,10 +185,13 @@ export default function checkForDiscontinuity(
           lastSegment.bufferedEnd < period.end
         ) {
           log.debug(
-            "RS: discontinuity encountered at the end of the current period",
-            adaptation.type,
-            lastSegment.bufferedEnd,
-            period.end,
+            "Stream",
+            "discontinuity encountered at the end of the current period",
+            {
+              bufferType: adaptation.type,
+              segmentsEndTimeFromPeriod: lastSegment.bufferedEnd,
+              periodEnd: period.end,
+            },
           );
           return { start: lastSegment.bufferedEnd, end: null };
         }
@@ -274,7 +281,7 @@ function getIndexOfFirstDiscontinuityBetweenChunks(
   startFromIndex: number,
 ): number | null {
   if (startFromIndex <= 0) {
-    log.error("RS: Asked to check a discontinuity before the first chunk.");
+    log.error("Stream", "Asked to check a discontinuity before the first chunk.");
     return null;
   }
   for (let bufIdx = startFromIndex; bufIdx < bufferedChunks.length; bufIdx++) {

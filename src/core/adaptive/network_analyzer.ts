@@ -344,17 +344,25 @@ export default class NetworkAnalyzer {
       realBufferGap + position.getWanted() < duration - ABR_STARVATION_DURATION_DELTA
     ) {
       if (!this._inStarvationMode && realBufferGap <= localConf.starvationGap) {
-        log.info("ABR: enter starvation mode.");
+        log.info("ABR", "enter starvation mode.", {
+          buffergap: realBufferGap,
+          enterStarvation: localConf.starvationGap,
+        });
         this._inStarvationMode = true;
       } else if (
         this._inStarvationMode &&
         realBufferGap >= localConf.outOfStarvationGap
       ) {
-        log.info("ABR: exit starvation mode.");
+        log.info("ABR", "exit starvation mode.", {
+          bufferGap: realBufferGap,
+          outOfStarvation: localConf.starvationGap,
+        });
         this._inStarvationMode = false;
       }
     } else if (this._inStarvationMode) {
-      log.info("ABR: exit starvation mode.");
+      log.info("ABR", "exit starvation mode.", {
+        bufferGap: realBufferGap,
+      });
       this._inStarvationMode = false;
     }
 
@@ -371,7 +379,9 @@ export default class NetworkAnalyzer {
       );
 
       if (bandwidthEstimate !== undefined) {
-        log.info("ABR: starvation mode emergency estimate:", bandwidthEstimate);
+        log.info("ABR", "starvation mode emergency estimate:", {
+          bandwidth: bandwidthEstimate,
+        });
         bandwidthEstimator.reset();
         newBitrateCeil = isNullOrUndefined(currentRepresentation)
           ? bandwidthEstimate

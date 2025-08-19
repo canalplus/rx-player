@@ -144,7 +144,7 @@ export default class ContentProtectionParser {
     if (referenced === undefined) {
       // Referenced ContentProtection not found, exit
       if (force) {
-        log.warn("DASH: forcing the parsing of a referencing ContentProtection");
+        log.warn("dash", "forcing the parsing of a referencing ContentProtection");
         parseContentProtection(representation, contentProt);
       }
       return false;

@@ -171,7 +171,8 @@ describe("compat - removeCue", () => {
     expect(fakeTrack.mode).toBe("showing");
     expect(mocks.logWarn).toHaveBeenCalledTimes(1);
     expect(mocks.logWarn).toHaveBeenCalledWith(
-      "Compat: Could not remove cue from text track.",
+      "text",
+      "Could not remove cue from text track.",
     );
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockRemoveCue).toHaveBeenLastCalledWith(fakeCue);
@@ -196,7 +197,8 @@ describe("compat - removeCue", () => {
     expect(fakeTrack.mode).toBe("showing");
     expect(mocks.logWarn).toHaveBeenCalledTimes(1);
     expect(mocks.logWarn).toHaveBeenCalledWith(
-      "Compat: Could not remove cue from text track.",
+      "text",
+      "Could not remove cue from text track.",
     );
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockRemoveCue).toHaveBeenLastCalledWith({ id: "1" });

@@ -27,18 +27,30 @@ function testNumberAttribute(attributeName: string, variableName?: string): void
     const element1 = parseXml(`<S ${attributeName}="toto" />`)[0] as ITNode;
     expect(parseSElementNode(element1)).toEqual({});
     expect(spyLog).toHaveBeenCalledTimes(1);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("toto")`);
+    expect(spyLog).toHaveBeenCalledWith(
+      "dash",
+      `invalid ${attributeName} value for <S> element`,
+      { val: "toto" },
+    );
 
     const element2 = parseXml(`<S ${attributeName}="PT5M" />`)[0] as ITNode;
     expect(parseSElementNode(element2)).toEqual({});
     expect(spyLog).toHaveBeenCalledTimes(2);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("PT5M")`);
+    expect(spyLog).toHaveBeenCalledWith(
+      "dash",
+      `invalid ${attributeName} value for <S> element`,
+      { val: "PT5M" },
+    );
 
     const element3 = parseXml(`<S ${attributeName}="" />`)[0] as ITNode;
 
     expect(parseSElementNode(element3)).toEqual({});
     expect(spyLog).toHaveBeenCalledTimes(3);
-    expect(spyLog).toHaveBeenCalledWith(`DASH: invalid ${attributeName} ("")`);
+    expect(spyLog).toHaveBeenCalledWith(
+      "dash",
+      `invalid ${attributeName} value for <S> element`,
+      { val: "" },
+    );
     spyLog.mockRestore();
   });
 }

@@ -29,7 +29,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
    * @param {HTMLMediaElement} videoElement
    */
   constructor(videoElement: IMediaElement) {
-    log.debug("NTD: Creating NativeTextDisplayer");
+    log.debug("text", "Creating NativeTextDisplayer");
     const { track, trackElement } = addTextTrack(videoElement);
     this._buffered = new ManualTimeRanges();
     this._videoElement = videoElement;
@@ -43,7 +43,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
    * @returns {Object}
    */
   public pushTextData(infos: ITextDisplayerData): IRange[] {
-    log.debug("NTD: Appending new native text tracks");
+    log.debug("text", "Appending new native text tracks");
     if (infos.chunk === null) {
       return convertToRanges(this._buffered);
     }
@@ -99,10 +99,10 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       start = Math.max(appendWindowStart, startTime);
     } else {
       if (cues.length <= 0) {
-        log.warn("NTD: Current text tracks have no cues nor start time. Aborting");
+        log.warn("text", "Current text tracks have no cues nor start time. Aborting");
         return convertToRanges(this._buffered);
       }
-      log.warn("NTD: No start time given. Guessing from cues.");
+      log.warn("text", "No start time given. Guessing from cues.");
       start = cues[0].startTime;
     }
 
@@ -111,16 +111,17 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       end = Math.min(appendWindowEnd, endTime);
     } else {
       if (cues.length <= 0) {
-        log.warn("NTD: Current text tracks have no cues nor end time. Aborting");
+        log.warn("text", "Current text tracks have no cues nor end time. Aborting");
         return convertToRanges(this._buffered);
       }
-      log.warn("NTD: No end time given. Guessing from cues.");
+      log.warn("text", "No end time given. Guessing from cues.");
       end = cues[cues.length - 1].endTime;
     }
 
     if (end <= start) {
       log.warn(
-        "NTD: Invalid text track appended: ",
+        "text",
+        "Invalid text track appended: ",
         "the start time is inferior or equal to the end time.",
       );
       return convertToRanges(this._buffered);
@@ -168,13 +169,13 @@ export default class NativeTextDisplayer implements ITextDisplayer {
   }
 
   public reset(): void {
-    log.debug("NTD: Aborting NativeTextDisplayer");
+    log.debug("text", "Aborting NativeTextDisplayer");
     this._removeData(0, Infinity);
     this._clearTrackElement();
   }
 
   public stop(): void {
-    log.debug("NTD: Aborting NativeTextDisplayer");
+    log.debug("text", "Aborting NativeTextDisplayer");
     this._removeData(0, Infinity);
     const { _trackElement, _videoElement } = this;
 
@@ -182,7 +183,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       try {
         _videoElement.removeChild(_trackElement);
       } catch (_e) {
-        log.warn("NTD: Can't remove track element from the video");
+        log.warn("text", "Can't remove track element from the video");
       }
     }
 
@@ -194,7 +195,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
   }
 
   private _removeData(start: number, end: number): void {
-    log.debug("NTD: Removing native text track data", start, end);
+    log.debug("text", "Removing native text track data", { start, end });
     const track = this._track;
     const cues = track.cues;
     if (cues !== null) {
@@ -216,7 +217,7 @@ export default class NativeTextDisplayer implements ITextDisplayer {
       try {
         _videoElement.removeChild(_trackElement);
       } catch (_e) {
-        log.warn("NTD: Can't remove track element from the video");
+        log.warn("text", "Can't remove track element from the video");
       }
     }
 

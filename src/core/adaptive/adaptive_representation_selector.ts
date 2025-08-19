@@ -129,7 +129,7 @@ export default function createAdaptiveRepresentationSelector(
   function _getBandwidthEstimator(bufferType: IBufferType): BandwidthEstimator {
     const originalBandwidthEstimator = bandwidthEstimators[bufferType];
     if (isNullOrUndefined(originalBandwidthEstimator)) {
-      log.debug("ABR: Creating new BandwidthEstimator for ", bufferType);
+      log.debug("ABR", "Creating new BandwidthEstimator", { bufferType });
       const bandwidthEstimator = new BandwidthEstimator();
       bandwidthEstimators[bufferType] = bandwidthEstimator;
       return bandwidthEstimator;
@@ -426,11 +426,10 @@ function getEstimateReference(
         chosenRepFromGuessMode !== null &&
         chosenRepFromGuessMode.bitrate > currentBestBitrate
       ) {
-        log.debug(
-          "ABR: Choosing representation with guess-based estimation.",
-          chosenRepFromGuessMode.bitrate,
-          chosenRepFromGuessMode.id,
-        );
+        log.debug("ABR", "new guess-based estimate", {
+          bitrate: chosenRepFromGuessMode.bitrate,
+          representation: chosenRepFromGuessMode.id,
+        });
         prevEstimate.update(
           chosenRepFromGuessMode,
           bandwidthEstimate,
@@ -445,11 +444,10 @@ function getEstimateReference(
           knownStableBitrate,
         };
       } else if (chosenRepFromBufferSize !== null) {
-        log.debug(
-          "ABR: Choosing representation with buffer-based estimation.",
-          chosenRepFromBufferSize.bitrate,
-          chosenRepFromBufferSize.id,
-        );
+        log.debug("ABR", "new buffer-based estimate", {
+          bitrate: chosenRepFromBufferSize.bitrate,
+          representation: chosenRepFromBufferSize.id,
+        });
         prevEstimate.update(
           chosenRepFromBufferSize,
           bandwidthEstimate,
@@ -467,11 +465,10 @@ function getEstimateReference(
           knownStableBitrate,
         };
       } else {
-        log.debug(
-          "ABR: Choosing representation with bandwidth estimation.",
-          chosenRepFromBandwidth.bitrate,
-          chosenRepFromBandwidth.id,
-        );
+        log.debug("ABR", "new bandwidth estimate", {
+          bitrate: chosenRepFromBandwidth.bitrate,
+          representation: chosenRepFromBandwidth.id,
+        });
         prevEstimate.update(
           chosenRepFromBandwidth,
           bandwidthEstimate,

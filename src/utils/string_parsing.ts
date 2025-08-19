@@ -70,9 +70,10 @@ function utf16LEToStr(bytes: Uint8Array): string {
       const decoder = new TextDecoder("utf-16le");
       return decoder.decode(bytes);
     } catch (e) {
-      const err = e instanceof Error ? e : "";
+      const err = e instanceof Error ? e : "Unknown Error";
       log.warn(
-        "Utils: could not use TextDecoder to parse UTF-16LE, " +
+        "utils",
+        "could not use TextDecoder to parse UTF-16LE, " +
           "fallbacking to another implementation",
         err,
       );
@@ -98,9 +99,10 @@ function beUtf16ToStr(bytes: Uint8Array): string {
       const decoder = new TextDecoder("utf-16be");
       return decoder.decode(bytes);
     } catch (e) {
-      const err = e instanceof Error ? e : "";
+      const err = e instanceof Error ? e : "Unknown Error";
       log.warn(
-        "Utils: could not use TextDecoder to parse UTF-16BE, " +
+        "utils",
+        "Could not use TextDecoder to parse UTF-16BE, " +
           "fallbacking to another implementation",
         err,
       );
@@ -126,9 +128,10 @@ function strToUtf8(str: string): Uint8Array {
       const encoder = new TextEncoder();
       return encoder.encode(str);
     } catch (e) {
-      const err = e instanceof Error ? e : "";
+      const err = e instanceof Error ? e : "Unknown Error";
       log.warn(
-        "Utils: could not use TextEncoder to encode string into UTF-8, " +
+        "utils",
+        "Could not use TextEncoder to encode string into UTF-8, " +
           "fallbacking to another implementation",
         err,
       );
@@ -260,7 +263,7 @@ function intToHex(num: number, size: number): string {
 
 /**
  * Creates a string from the given Uint8Array containing utf-8 code units.
- * @param {Uint8Array} bytes
+ * @param {Uint8Array} data
  * @returns {string}
  */
 function utf8ToStr(data: Uint8Array): string {
@@ -270,9 +273,10 @@ function utf8ToStr(data: Uint8Array): string {
       const decoder = new TextDecoder();
       return decoder.decode(data);
     } catch (e) {
-      const err = e instanceof Error ? e : "";
+      const err = e instanceof Error ? e : "Unknown Error";
       log.warn(
-        "Utils: could not use TextDecoder to parse UTF-8, " +
+        "utils",
+        "could not use TextDecoder to parse UTF-8, " +
           "fallbacking to another implementation",
         err,
       );

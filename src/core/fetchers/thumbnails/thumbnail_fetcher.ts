@@ -98,7 +98,9 @@ export default function createThumbnailFetcher(
     });
 
     if (pendingInfo !== undefined) {
-      log.debug("TF: Requesting same thumbnail than the pending one");
+      log.debug("Thumbnails", "Requesting same thumbnail than the pending one", {
+        time: thumbnailContext.segment.time,
+      });
       currRequestInfo = pendingInfo;
       currRequestInfo.referenceCount++;
 
@@ -165,7 +167,7 @@ export default function createThumbnailFetcher(
     }
 
     async function doFetch() {
-      log.debug("TF: Beginning thumbnail request", thumbnail.time);
+      log.debug("Thumbnails", "Beginning thumbnail request", { time: thumbnail.time });
       let res;
       try {
         res = await scheduleRequestWithCdns(
@@ -180,15 +182,17 @@ export default function createThumbnailFetcher(
           return Promise.reject(cancellationSignal.cancellationError);
         }
 
-        log.debug("TF: Thumbnail request ended with success", thumbnail.time);
+        log.debug("Thumbnails", "Thumbnail request ended with success", {
+          time: thumbnail.time,
+        });
         cancellationSignal.deregister(onCancellation);
       } catch (err) {
         cancellationSignal.deregister(onCancellation);
         if (err instanceof CancellationError) {
-          log.debug("TF: Thumbnail request aborted", thumbnail.time);
+          log.debug("Thumbnails", "Thumbnail request aborted", { time: thumbnail.time });
           throw err;
         }
-        log.debug("TF: Thumbnail request failed", thumbnail.time);
+        log.debug("Thumbnails", "Thumbnail request failed", { time: thumbnail.time });
         throw errorSelector(err);
       }
 
@@ -207,7 +211,7 @@ export default function createThumbnailFetcher(
     }
 
     function onCancellation() {
-      log.debug("TF: Thumbnail request cancelled", thumbnail.time);
+      log.debug("Thumbnails", "Thumbnail request cancelled", { time: thumbnail.time });
       const requestIdx = pendingRequestsInfo.indexOf(currRequestInfo);
       if (requestIdx < 0) {
         return;
@@ -241,7 +245,14 @@ export default function createThumbnailFetcher(
      */
     function onRetry(err: unknown): void {
       const formattedErr = errorSelector(err);
-      log.warn("TF: Thumbnail request retry ", thumbnail.time, formattedErr);
+      log.warn(
+        "Thumbnails",
+        "Thumbnail request retry ",
+        {
+          time: thumbnail.time,
+        },
+        formattedErr,
+      );
     }
   };
 }

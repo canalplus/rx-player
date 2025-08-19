@@ -227,7 +227,8 @@ function createManifest(
               if (currentRepresentation.codecs.length > 1) {
                 if (currentRepresentation.codecs.length > 2) {
                   log.warn(
-                    "MP: MetaPlaylist relying on more than 2 groups of " +
+                    "metaplaylist",
+                    "MetaPlaylist relying on more than 2 groups of " +
                       "codecs with retro-compatibility",
                   );
                 }

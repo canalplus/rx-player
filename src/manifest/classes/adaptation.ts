@@ -213,6 +213,7 @@ export default class Adaptation implements IAdaptationMetadata {
         }
       } else {
         log.debug(
+          "manifest",
           "Filtering Representation due to representationFilter",
           this.type,
           `Adaptation: ${this.id}`,

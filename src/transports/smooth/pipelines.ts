@@ -328,7 +328,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
         chunkInfos = timingInfos?.chunkInfos ?? null;
         if (chunkInfos === null) {
           if (isChunked) {
-            log.warn("Smooth: Unavailable time data for current text track.");
+            log.warn("smooth", "Unavailable time data for current text track.");
           } else {
             segmentStart = segment.time;
             segmentEnd = segment.end;

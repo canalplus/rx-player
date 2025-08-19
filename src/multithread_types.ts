@@ -31,7 +31,7 @@ import type {
 import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
 import type { ICmcdOptions, ITrackType } from "./public_types";
 import type { IThumbnailResponse, ITransportOptions } from "./transports";
-import type { ILogFormat, ILoggerLevel } from "./utils/logger";
+import type { ILogFormat, ILoggerLevel, ILogNamespace } from "./utils/logger";
 import type { IRange } from "./utils/ranges";
 
 /**
@@ -947,6 +947,7 @@ export interface IResetTextDisplayerWorkerMessage {
 export interface ILogMessageWorkerMessage {
   type: WorkerMessageType.LogMessage;
   value: {
+    namespace: ILogNamespace;
     logLevel: ILoggerLevel;
     logs: Array<boolean | string | number | ISentError | null | undefined>;
   };

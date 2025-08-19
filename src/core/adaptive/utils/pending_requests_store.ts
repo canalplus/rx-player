@@ -57,7 +57,7 @@ export default class PendingRequestsStore {
       if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
         throw new Error("ABR: progress for a request not added");
       }
-      log.warn("ABR: progress for a request not added");
+      log.warn("ABR", "progress for a request not added", { requestId: progress.id });
       return;
     }
     request.progress.push(progress);
@@ -72,7 +72,7 @@ export default class PendingRequestsStore {
       if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
         throw new Error("ABR: can't remove unknown request");
       }
-      log.warn("ABR: can't remove unknown request");
+      log.warn("ABR", "can't remove unknown request", { requestId: id });
     }
     delete this._currentRequests[id];
   }

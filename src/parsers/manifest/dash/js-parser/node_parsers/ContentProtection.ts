@@ -41,7 +41,7 @@ function parseContentProtectionChildren(
       if (content !== null && content.length > 0) {
         const [toUint8Array, error] = parseBase64(content, "cenc:pssh");
         if (error !== null) {
-          log.warn(error.message);
+          log.warn("dash", "Content protection parsing failure", error.message);
           warnings.push(error);
         }
         if (toUint8Array !== null) {

@@ -86,11 +86,14 @@ const mediaCapabilitiesProber = {
         const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
         await session.generateRequest("cenc", initData);
         session.close().catch(() => {
-          log.warn("DRM: Failed to close the dummy session");
+          log.warn("MediaCapabilitiesProber", "Failed to close the dummy session");
         });
         return mksa.getConfiguration();
       } catch (err) {
-        log.debug("DRM: KeySystemAccess was granted but it is not usable");
+        log.debug(
+          "MediaCapabilitiesProber",
+          "KeySystemAccess was granted but it is not usable",
+        );
         return Promise.reject(
           new Error(
             "Failed to generare a license-request with this keySystem: " +
@@ -165,7 +168,7 @@ const mediaCapabilitiesProber = {
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Unknown error");
-      log.error("MCP: probeContentType failed", error);
+      log.error("MediaCapabilitiesProber", "probeContentType failed", error);
     }
 
     try {

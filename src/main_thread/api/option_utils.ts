@@ -383,6 +383,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     !arrayIncludes(["seamless", "direct", "reload"], defaultAudioTrackSwitchingMode)
   ) {
     log.warn(
+      "API",
       "The `defaultAudioTrackSwitchingMode` loadVideo option must match one of " +
         "the following strategy name:\n" +
         "- `seamless`\n" +
@@ -397,6 +398,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     : options.onCodecSwitch;
   if (!arrayIncludes(["continue", "reload"], onCodecSwitch)) {
     log.warn(
+      "API",
       "The `onCodecSwitch` loadVideo option must match one of " +
         "the following string:\n" +
         "- `continue`\n" +
@@ -415,6 +417,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     : options.onAudioTracksNotPlayable;
   if (!arrayIncludes(["continue", "error"], onAudioTracksNotPlayable)) {
     log.warn(
+      "API",
       "The `onAudioTracksNotPlayable` loadVideo option must match one of " +
         "the following string:\n" +
         "- `continue`\n" +
@@ -433,6 +436,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     : options.onVideoTracksNotPlayable;
   if (!arrayIncludes(["continue", "error"], onVideoTracksNotPlayable)) {
     log.warn(
+      "API",
       "The `onVideoTracksNotPlayable` loadVideo option must match one of " +
         "the following string:\n" +
         "- `continue`\n" +
@@ -466,7 +470,8 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     }
   } else if (!isNullOrUndefined(options.textTrackElement)) {
     log.warn(
-      "API: You have set a textTrackElement without being in " +
+      "API",
+      "You have set a textTrackElement without being in " +
         'an "html" textTrackMode. It will be ignored.',
     );
   }

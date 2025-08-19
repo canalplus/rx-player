@@ -21,15 +21,15 @@ export default function parseTextTrackToCues(
   },
   timestampOffset: number,
 ): Array<ICompatVTTCue | TextTrackCue> {
-  log.debug("NTSB: Finding parser for native text tracks:", type);
+  log.debug("text", "Finding parser for native text tracks:", { type });
   const parser = features.nativeTextTracksParsers[type];
 
   if (typeof parser !== "function") {
     throw new Error("no parser found for the given text track");
   }
 
-  log.debug("NTSB: Parser found, parsing...");
+  log.debug("text", "Parser found, parsing...", { type });
   const parsed = parser(data, context, timestampOffset);
-  log.debug("NTSB: Parsed successfully!", parsed.length);
+  log.debug("text", "Parsed successfully!", { length: parsed.length });
   return parsed;
 }

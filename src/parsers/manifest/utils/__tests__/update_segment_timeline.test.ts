@@ -330,7 +330,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ]);
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: Manifest update removed previous segments",
+      "utils",
+      "Manifest update removed previous segments",
     );
     mockLogWarn?.mockClear();
 
@@ -355,7 +356,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ]);
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: Manifest update removed previous segments",
+      "utils",
+      "Manifest update removed previous segments",
     );
     mockLogWarn?.mockClear();
 
@@ -372,7 +374,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ]);
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: Manifest update removed previous segments",
+      "utils",
+      "Manifest update removed previous segments",
     );
   });
 
@@ -399,7 +402,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ]);
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: Manifest update removed previous segments",
+      "utils",
+      "Manifest update removed previous segments",
     );
     mockLogWarn?.mockClear();
 
@@ -424,7 +428,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ]);
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: Manifest update removed previous segments",
+      "utils",
+      "Manifest update removed previous segments",
     );
     mockLogWarn?.mockClear();
 
@@ -437,7 +442,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ]);
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: Manifest update removed previous segments",
+      "utils",
+      "Manifest update removed previous segments",
     );
   });
 
@@ -465,7 +471,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
     ]);
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: Manifest update removed all previous segments",
+      "utils",
+      "Manifest update removed all previous segments",
     );
   });
 
@@ -523,7 +530,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      'RepresentationIndex: The new index is "bigger" than the previous one',
+      "utils",
+      'The new index is "bigger" than the previous one',
     );
 
     mockLogWarn?.mockClear();
@@ -550,7 +558,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      'RepresentationIndex: The new index is "bigger" than the previous one',
+      "utils",
+      'The new index is "bigger" than the previous one',
     );
   });
 
@@ -575,7 +584,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: The new index is older than the previous one",
+      "utils",
+      "The new index is older than the previous one",
     );
 
     mockLogWarn?.mockClear();
@@ -600,7 +610,8 @@ describe("Manifest Parsers utils - updateSegmentTimeline", () => {
 
     expect(mockLogWarn).toHaveBeenCalledTimes(1);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "RepresentationIndex: The new index is older than the previous one",
+      "utils",
+      "The new index is older than the previous one",
     );
 
     mockLogWarn?.mockClear();

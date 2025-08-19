@@ -57,7 +57,10 @@ export default function getTimeRangesForContent(
     if (hasContent) {
       const { bufferedStart, bufferedEnd } = chunk;
       if (bufferedStart === undefined || bufferedEnd === undefined) {
-        log.warn("SO: No buffered start or end found from a segment.");
+        log.warn("Stream", "No buffered start or end found from a segment.", {
+          bufferType: chunk.infos.adaptation.type,
+          segmentStart: chunk.infos.segment.time,
+        });
         return [{ start: 0, end: Number.MAX_VALUE }];
       }
 

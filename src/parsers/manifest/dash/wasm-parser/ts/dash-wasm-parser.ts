@@ -186,6 +186,7 @@ export default class DashWasmParser {
           objectUrl = null;
         }
         log.warn(
+          "dash",
           "Unable to call `instantiateStreaming` on WASM",
           e instanceof Error ? e : "",
         );
@@ -210,7 +211,7 @@ export default class DashWasmParser {
       })
       .catch((err: Error) => {
         const message = err instanceof Error ? err.toString() : "Unknown error";
-        log.warn("DW: Could not create DASH-WASM parser:", message);
+        log.warn("dash", "Could not create DASH-WASM parser:", message);
         this.status = "failure";
         throw err;
       });
@@ -268,11 +269,11 @@ export default class DashWasmParser {
       const arr = new Uint8Array(linearMemory.buffer, ptr, len);
       if (evt === CustomEventType.Error) {
         const decoded = textDecoder.decode(arr);
-        log.warn("WASM Error Event:", decoded);
+        log.warn("dash", "WASM Error Event:", decoded);
         self._warnings.push(new Error(decoded));
       } else if (evt === CustomEventType.Log) {
         const decoded = textDecoder.decode(arr);
-        log.warn("WASM Log Event:", decoded);
+        log.warn("dash", "WASM Log Event:", decoded);
       }
     }
 

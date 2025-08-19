@@ -103,7 +103,7 @@ export function getISOBMFFEmbeddedTextTrackData(
   let endTime: number | undefined;
   if (chunkInfos === null) {
     if (!isChunked) {
-      log.warn("Transport: Unavailable time data for current text track.");
+      log.warn("utils", "Unavailable time data for current text track.");
     } else {
       startTime = segment.time;
       endTime = segment.end;
@@ -167,7 +167,7 @@ export function getPlainTextTrackData(
   let start;
   let end;
   if (isChunked) {
-    log.warn("Transport: Unavailable time data for current text track.");
+    log.warn("utils", "Unavailable time data for current text track.");
   } else {
     start = segment.time;
     if (segment.complete) {

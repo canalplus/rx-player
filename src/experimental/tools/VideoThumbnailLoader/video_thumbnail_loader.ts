@@ -150,13 +150,14 @@ export default class VideoThumbnailLoader {
 
     if (neededSegments.length === 0) {
       this._videoElement.currentTime = time;
-      log.debug("VTL: Thumbnails already loaded.", time);
+      log.debug("VideoThumbnailLoader", "Thumbnails already loaded.", time);
       return Promise.resolve(time);
     }
 
     if (log.hasLevel("DEBUG")) {
       log.debug(
-        "VTL: Found thumbnail for time",
+        "VideoThumbnailLoader",
+        "Found thumbnail for time",
         time,
         neededSegments.map((s) => `start: ${s.time} - end: ${s.end}`).join(", "),
       );
@@ -250,7 +251,7 @@ export default class VideoThumbnailLoader {
       .then(async (sourceBufferInterface) => {
         abortUnlistedSegmentRequests(lastRepInfo.pendingRequests, neededSegments);
 
-        log.debug("VTL: Removing buffer around time.", time);
+        log.debug("VideoThumbnailLoader", "Removing buffer around time.", time);
         await removeBufferAroundTime(
           this._videoElement,
           sourceBufferInterface,

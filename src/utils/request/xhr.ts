@@ -212,7 +212,7 @@ export default function request<T>(
     };
 
     if (log.hasLevel("DEBUG")) {
-      let logLine = "XHR: Sending GET " + url;
+      let logLine = "XHR GET " + url;
       if (options.responseType !== undefined) {
         logLine += " type=" + options.responseType;
       }
@@ -225,7 +225,7 @@ export default function request<T>(
       if (headers?.Range !== undefined) {
         logLine += " Range=" + headers?.Range;
       }
-      log.debug(logLine);
+      log.debug("utils", logLine);
     }
     xhr.send();
 

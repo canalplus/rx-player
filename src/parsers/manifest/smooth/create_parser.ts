@@ -189,7 +189,9 @@ function createSmoothStreamingParser(
           (fourCC !== undefined && MIME_TYPES[fourCC] === undefined) ||
           codecPrivateData === undefined
         ) {
-          log.warn("Smooth parser: Unsupported audio codec. Ignoring quality level.");
+          log.warn("smooth", "Unsupported audio codec. Ignoring quality level.", {
+            fourCC,
+          });
           return null;
         }
 
@@ -225,7 +227,9 @@ function createSmoothStreamingParser(
           (fourCC !== undefined && MIME_TYPES[fourCC] === undefined) ||
           codecPrivateData === undefined
         ) {
-          log.warn("Smooth parser: Unsupported video codec. Ignoring quality level.");
+          log.warn("smooth", "Unsupported video codec. Ignoring quality level.", {
+            fourCC,
+          });
           return null;
         }
 
@@ -259,7 +263,7 @@ function createSmoothStreamingParser(
       }
 
       default:
-        log.error("Smooth Parser: Unrecognized StreamIndex type: " + streamType);
+        log.error("smooth", "Unrecognized StreamIndex type: " + streamType);
         return null;
     }
   }
@@ -293,7 +297,7 @@ function createSmoothStreamingParser(
       throw new Error("StreamIndex without type.");
     }
     if (!arrayIncludes(SUPPORTED_ADAPTATIONS_TYPE, typeAttribute)) {
-      log.warn("Smooth Parser: Unrecognized adaptation type:", typeAttribute);
+      log.warn("smooth", "Unrecognized adaptation type:", typeAttribute);
     }
     const adaptationType = typeAttribute as IAdaptationType;
 

@@ -58,6 +58,7 @@ export default function tryToChangeSourceBufferType(
       sourceBuffer.changeType(codec);
     } catch (e) {
       log.warn(
+        "mse",
         "Could not call 'changeType' on the given SourceBuffer:",
         e instanceof Error ? e : "",
       );

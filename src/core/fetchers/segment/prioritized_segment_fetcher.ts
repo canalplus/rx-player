@@ -78,7 +78,7 @@ export default function applyPrioritizerToSegmentFetcher<TSegmentDataType>(
     updatePriority(task: Promise<void>, priority: number): void {
       const correspondingTask = taskHandlers.get(task);
       if (correspondingTask === undefined) {
-        log.warn("Fetchers: Cannot update the priority of a request: task not found.");
+        log.warn("SF", "Cannot update the priority of a request: task not found.");
         return;
       }
       prioritizer.updatePriority(correspondingTask, priority);

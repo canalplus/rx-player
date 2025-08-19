@@ -304,7 +304,7 @@ export default class PlaybackObserver {
   }
 
   private _actuallySetCurrentTime(time: number): void {
-    log.info("API: Seeking internally", time);
+    log.info("media", "Seeking internally.", { time });
     this._internalSeeksIncoming.push(time);
     this._mediaElement.currentTime = time;
   }
@@ -512,31 +512,19 @@ export default class PlaybackObserver {
       fullyLoaded,
     });
     if (log.hasLevel("DEBUG")) {
-      log.debug(
-        "API: current media element state tick",
-        "event",
-        timings.event,
-        "position",
-        timings.position.getPolled(),
-        "seeking",
-        timings.seeking,
-        "internalSeek",
-        isInternalSeeking,
-        "rebuffering",
-        timings.rebuffering !== null,
-        "freezing",
-        timings.freezing !== null,
-        "ended",
-        timings.ended,
-        "paused",
-        timings.paused,
-        "playbackRate",
-        timings.playbackRate,
-        "readyState",
-        timings.readyState,
-        "pendingPosition",
+      log.debug("media", "Current media element state tick.", {
+        evt: timings.event,
+        position: timings.position.getPolled(),
+        seeking: timings.seeking,
+        internalSeek: isInternalSeeking,
+        rebuffering: timings.rebuffering !== null,
+        freezing: timings.freezing !== null,
+        ended: timings.ended,
+        paused: timings.paused,
+        playbackRate: timings.playbackRate,
+        readyState: timings.readyState,
         pendingPosition,
-      );
+      });
     }
     return timings;
   }
@@ -545,7 +533,8 @@ export default class PlaybackObserver {
     const newObservation = this._getCurrentObservation(event);
     if (log.hasLevel("DEBUG")) {
       log.debug(
-        "API: current playback timeline:\n" +
+        "media",
+        "current playback timeline:\n" +
           prettyPrintBuffered(
             newObservation.buffered,
             newObservation.position.getPolled(),

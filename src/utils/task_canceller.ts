@@ -257,8 +257,9 @@ export class CancellationSignal {
           listener?.(cancellationError);
         } catch (err) {
           log.error(
+            "utils",
             "Error while calling clean up listener",
-            err instanceof Error ? err.toString() : "Unknown error",
+            err instanceof Error ? err : "Unknown Error",
           );
         }
       }

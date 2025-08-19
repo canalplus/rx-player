@@ -46,7 +46,13 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
       [error1],
     ]);
     expect(spyLog).toHaveBeenCalledTimes(1);
-    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      1,
+      "dash",
+      "failed to parse DASH value:",
+      error1.message,
+      { dashName: attributeName },
+    );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error2 = new MPDError(
@@ -60,7 +66,13 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
       [error2],
     ]);
     expect(spyLog).toHaveBeenCalledTimes(2);
-    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      2,
+      "dash",
+      "failed to parse DASH value:",
+      error2.message,
+      { dashName: attributeName },
+    );
     spyLog.mockRestore();
   });
 }
@@ -138,7 +150,13 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(1);
-    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      1,
+      "dash",
+      "failed to parse DASH value:",
+      error1.message,
+      { dashName: attributeName },
+    );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(`\`${attributeName}\` property is invalid: "PT5M"`);
@@ -148,7 +166,13 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(2);
-    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      2,
+      "dash",
+      "failed to parse DASH value:",
+      error2.message,
+      { dashName: attributeName },
+    );
 
     const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(`\`${attributeName}\` property is invalid: ""`);
@@ -159,7 +183,13 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(3);
-    expect(spyLog).toHaveBeenNthCalledWith(3, error3.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      3,
+      "dash",
+      "failed to parse DASH value:",
+      error3.message,
+      { dashName: attributeName },
+    );
     spyLog.mockRestore();
   });
 }
@@ -210,7 +240,13 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(1);
-    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      1,
+      "dash",
+      "failed to parse DASH value:",
+      error1.message,
+      { dashName: attributeName },
+    );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(`\`${attributeName}\` property is invalid: "PT5M"`);
@@ -220,7 +256,13 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(2);
-    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      2,
+      "dash",
+      "failed to parse DASH value:",
+      error2.message,
+      { dashName: attributeName },
+    );
 
     const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(`\`${attributeName}\` property is invalid: ""`);
@@ -231,7 +273,13 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(3);
-    expect(spyLog).toHaveBeenNthCalledWith(3, error3.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      3,
+      "dash",
+      "failed to parse DASH value:",
+      error3.message,
+      { dashName: attributeName },
+    );
     spyLog.mockRestore();
   });
 }
@@ -284,7 +332,13 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(1);
-    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      1,
+      "dash",
+      "failed to parse DASH value:",
+      error1.message,
+      { dashName: attributeName },
+    );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(
@@ -296,7 +350,13 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(2);
-    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      2,
+      "dash",
+      "failed to parse DASH value:",
+      error2.message,
+      { dashName: attributeName },
+    );
 
     const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(
@@ -309,7 +369,13 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(3);
-    expect(spyLog).toHaveBeenNthCalledWith(3, error3.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      3,
+      "dash",
+      "failed to parse DASH value:",
+      error3.message,
+      { dashName: attributeName },
+    );
     spyLog.mockRestore();
   });
 }
@@ -365,7 +431,13 @@ function testNumberOrBooleanAttribute(
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(1);
-    expect(spyLog).toHaveBeenNthCalledWith(1, error1.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      1,
+      "dash",
+      "failed to parse DASH value:",
+      error1.message,
+      { dashName: attributeName },
+    );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(
@@ -377,7 +449,13 @@ function testNumberOrBooleanAttribute(
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(2);
-    expect(spyLog).toHaveBeenNthCalledWith(2, error2.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      2,
+      "dash",
+      "failed to parse DASH value:",
+      error2.message,
+      { dashName: attributeName },
+    );
 
     const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(
@@ -390,7 +468,14 @@ function testNumberOrBooleanAttribute(
     ]);
 
     expect(spyLog).toHaveBeenCalledTimes(3);
-    expect(spyLog).toHaveBeenNthCalledWith(3, error3.message);
+    expect(spyLog).toHaveBeenNthCalledWith(
+      3,
+      "dash",
+      "failed to parse DASH value:",
+      error3.message,
+      { dashName: attributeName },
+    );
+
     spyLog.mockRestore();
   });
 

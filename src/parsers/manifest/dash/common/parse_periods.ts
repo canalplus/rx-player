@@ -88,8 +88,10 @@ export default function parsePeriods(
 
     let periodID: string;
     if (isNullOrUndefined(periodIR.attributes.id)) {
-      log.warn("DASH: No usable id found in the Period. Generating one.");
       periodID = "gen-dash-period-" + generatePeriodID();
+      log.warn("dash", "No usable id found in the Period. Generating one.", {
+        periodId: periodID,
+      });
     } else {
       periodID = periodIR.attributes.id;
     }
@@ -231,8 +233,8 @@ function guessLastPositionFromClock(
     const now = Date.now() / 1000;
     if (now >= minimumTime) {
       log.warn(
-        "DASH Parser: no clock synchronization mechanism found." +
-          " Using the system clock instead.",
+        "dash",
+        "no clock synchronization mechanism found. Using the system clock instead.",
       );
       const lastPosition = now - context.availabilityStartTime;
       const positionTime = getMonotonicTimeStamp() / 1000;
@@ -326,7 +328,8 @@ function generateStreamEvents(
           };
         } catch (err) {
           log.error(
-            "DASH: Error while parsing event-stream:",
+            "dash",
+            "Error while parsing event-stream:",
             err instanceof Error ? err.message : "Unknown error",
           );
         }

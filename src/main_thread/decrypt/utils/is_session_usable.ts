@@ -37,29 +37,30 @@ export default function isSessionUsable(loadedSession: IMediaKeySession): boolea
   });
 
   if (keyStatuses.length <= 0) {
-    log.debug(
-      "DRM: isSessionUsable: MediaKeySession given has an empty keyStatuses",
-      loadedSession.sessionId,
-    );
+    log.debug("DRM", "isSessionUsable: MediaKeySession given has an empty keyStatuses", {
+      sessionId: loadedSession.sessionId,
+    });
     return false;
   }
 
   if (arrayIncludes(keyStatuses, "expired")) {
-    log.debug(
-      "DRM: isSessionUsable: MediaKeySession given has an expired key",
-      loadedSession.sessionId,
-    );
+    log.debug("DRM", "isSessionUsable: MediaKeySession given has an expired key", {
+      sessionId: loadedSession.sessionId,
+    });
     return false;
   }
 
   if (arrayIncludes(keyStatuses, "internal-error")) {
     log.debug(
-      "DRM: isSessionUsable: MediaKeySession given has a key with an " + "internal-error",
-      loadedSession.sessionId,
+      "DRM",
+      "isSessionUsable: MediaKeySession given has a key with an " + "internal-error",
+      { sessionId: loadedSession.sessionId },
     );
     return false;
   }
 
-  log.debug("DRM: isSessionUsable: MediaKeySession is usable", loadedSession.sessionId);
+  log.debug("DRM", "isSessionUsable: MediaKeySession is usable", {
+    sessionId: loadedSession.sessionId,
+  });
   return true;
 }

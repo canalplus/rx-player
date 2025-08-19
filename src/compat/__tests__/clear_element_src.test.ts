@@ -120,7 +120,8 @@ describe("Compat - clearElementSrc", () => {
     expect(spyRemoveChild).toHaveBeenCalledTimes(2);
     expect(mockLogWarn).toHaveBeenCalledTimes(2);
     expect(mockLogWarn).toHaveBeenCalledWith(
-      "Compat: Could not remove text track child from element.",
+      "media",
+      "Could not remove text track child from element.",
     );
   });
 

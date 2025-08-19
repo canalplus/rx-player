@@ -440,9 +440,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       initCanceller.signal,
     );
 
-    log.debug("Init: Calculating initial time");
+    log.debug("Init", "Calculating initial time");
     const initialTime = getInitialTime(manifest, lowLatencyMode, startAt);
-    log.debug("Init: Initial time calculated:", initialTime);
+    log.debug("Init", "Initial time calculated", { initialTime });
 
     /** Choose the right "Representation" for a given "Adaptation". */
     const representationEstimator = AdaptiveRepresentationSelector(adaptiveOptions);
@@ -992,7 +992,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           } else if (self._decryptionCapabilities.status === "uninitialized") {
             // Should never happen
             log.error(
-              "Init: received encryption data without known decryption capabilities",
+              "Init",
+              "received encryption data without known decryption capabilities",
             );
             return;
           }
@@ -1432,12 +1433,12 @@ function handleFreezeResolution(
 ): void {
   switch (freezeResolution.type) {
     case "reload": {
-      log.info("Init: Planning reload due to freeze");
+      log.info("Init", "Planning reload due to freeze");
       triggerReload();
       break;
     }
     case "flush": {
-      log.info("Init: Flushing buffer due to freeze");
+      log.info("Init", "Flushing buffer due to freeze");
       const observation = playbackObserver.getReference().getValue();
       const currentTime = observation.position.isAwaitingFuturePosition()
         ? observation.position.getWanted()

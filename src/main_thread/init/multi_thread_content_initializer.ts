@@ -217,7 +217,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return;
     }
     this._queuedWorkerMessages = [];
-    log.debug("MTCI: addEventListener prepare buffering worker messages");
+    log.debug("Init", "addEventListener prepare buffering worker messages");
     const onmessage = (evt: MessageEvent): void => {
       const msgData = evt.data as unknown as IWorkerMessage;
       const type = msgData.type;
@@ -243,16 +243,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             case "NONE":
               break;
             case "ERROR":
-              log.error(...formatted);
+              log.error(msgData.value.namespace, ...formatted);
               break;
             case "WARNING":
-              log.warn(...formatted);
+              log.warn(msgData.value.namespace, ...formatted);
               break;
             case "INFO":
-              log.info(...formatted);
+              log.info(msgData.value.namespace, ...formatted);
               break;
             case "DEBUG":
-              log.debug(...formatted);
+              log.debug(msgData.value.namespace, ...formatted);
               break;
             default:
               assertUnreachable(msgData.value.logLevel);
@@ -268,11 +268,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     };
     this._settings.worker.addEventListener("message", onmessage);
     const onmessageerror = (_msg: MessageEvent) => {
-      log.error("MTCI: Error when receiving message from worker.");
+      log.error("Init", "Error when receiving message from worker.");
     };
     this._settings.worker.addEventListener("messageerror", onmessageerror);
     this._initCanceller.signal.register(() => {
-      log.debug("MTCI: removeEventListener prepare for worker message");
+      log.debug("Init", "removeEventListener prepare for worker message");
       this._settings.worker.removeEventListener("message", onmessage);
       this._settings.worker.removeEventListener("messageerror", onmessageerror);
     });
@@ -433,14 +433,14 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     ): void => {
       const reloadingContentInfo = this._currentContentInfo;
       if (reloadingContentInfo === null) {
-        log.warn("MTCI: Asked to reload when no content is loaded.");
+        log.warn("Init", "Asked to reload when no content is loaded.");
         return;
       }
       if (
         reloadingContentInfo === null ||
         reloadingContentInfo.mediaSourceInfo === null
       ) {
-        log.warn("MTCI: Asked to reload when no MediaSource is active.");
+        log.warn("Init", "Asked to reload when no MediaSource is active.");
         return;
       }
 
@@ -475,7 +475,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     ): void => {
       const reloadingContentInfo = this._currentContentInfo;
       if (reloadingContentInfo === null) {
-        log.warn("MTCI: Asked to reload when no content is loaded.");
+        log.warn("Init", "Asked to reload when no content is loaded.");
         return;
       }
       const lastObservation = playbackObserver.getReference().getValue();
@@ -525,7 +525,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             (currStatus, stopListening) => {
               if (currStatus === MediaSourceInitializationStatus.AttachNow) {
                 stopListening();
-                log.info("MTCI: Attaching MediaSource URL to the media element");
+                log.info("media", "Attaching MediaSource URL to the media element");
                 if (mediaSourceLink.type === "handle") {
                   mediaElement.srcObject = mediaSourceLink.value;
                   this._currentMediaSourceCanceller.signal.register(() => {
@@ -919,7 +919,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           const manifest = this._currentContentInfo?.manifest;
           if (isNullOrUndefined(manifest)) {
-            log.error("MTCI: Manifest update but no Manifest loaded");
+            log.error("Init", "Manifest update but no Manifest loaded");
             return;
           }
 
@@ -1077,7 +1077,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             (p) => p.id === msgData.value.periodId,
           );
           if (period === undefined) {
-            log.warn("MTCI: Discontinuity's Period not found", msgData.value.periodId);
+            log.warn("Init", "Discontinuity's Period not found", {
+              periodId: msgData.value.periodId,
+            });
             return;
           }
           this._currentContentInfo.rebufferingController?.updateDiscontinuityInfo({
@@ -1094,7 +1096,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             return;
           }
           if (textDisplayer === null) {
-            log.warn("Init: Received AddTextData message but no text displayer exists");
+            log.warn("text", "Received AddTextData message but no text displayer exists");
           } else {
             try {
               const ranges = textDisplayer.pushTextData(msgData.value);
@@ -1121,7 +1123,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           if (textDisplayer === null) {
             log.warn(
-              "Init: Received RemoveTextData message but no text displayer exists",
+              "text",
+              "Received RemoveTextData message but no text displayer exists",
             );
           } else {
             try {
@@ -1152,7 +1155,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           if (textDisplayer === null) {
             log.warn(
-              "Init: Received ResetTextDisplayer message but no text displayer exists",
+              "text",
+              "Received ResetTextDisplayer message but no text displayer exists",
             );
           } else {
             textDisplayer.reset();
@@ -1166,7 +1170,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           if (textDisplayer === null) {
             log.warn(
-              "Init: Received StopTextDisplayer message but no text displayer exists",
+              "text",
+              "Received StopTextDisplayer message but no text displayer exists",
             );
           } else {
             textDisplayer.stop();
@@ -1232,7 +1237,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (sinkObj !== undefined) {
             sinkObj.resolve(msgData.value.segmentSinkMetrics);
           } else {
-            log.error("MTCI: Failed to send segment sink store update");
+            log.error("Init", "Failed to send segment sink store update");
           }
           break;
         }
@@ -1259,7 +1264,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
               tObj.resolve(msgData.value.data);
             }
           } else {
-            log.error("MTCI: Failed to send segment sink store update");
+            log.error("Init", "Failed to send segment sink store update");
           }
           break;
         }
@@ -1268,10 +1273,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       }
     };
 
-    log.debug("MTCI: addEventListener for worker message");
+    log.debug("Init", "addEventListener for worker message");
     if (this._queuedWorkerMessages !== null) {
       const bufferedMessages = this._queuedWorkerMessages.slice();
-      log.debug("MTCI: Processing buffered messages", bufferedMessages.length);
+      log.debug("Init", "Processing buffered messages", {
+        ammount: bufferedMessages.length,
+      });
       for (const message of bufferedMessages) {
         onmessage(message);
       }
@@ -1279,7 +1286,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
     this._settings.worker.addEventListener("message", onmessage);
     this._initCanceller.signal.register(() => {
-      log.debug("MTCI: removeEventListener for worker message");
+      log.debug("Init", "removeEventListener for worker message");
       this._settings.worker.removeEventListener("message", onmessage);
     });
   }
@@ -1356,7 +1363,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     if (emeApi === null) {
       return createEmeDisabledReference("EME API not available on the current page.");
     }
-    log.debug("MTCI: Creating ContentDecryptor");
+    log.debug("Init", "Creating ContentDecryptor");
     const contentDecryptor = new ContentDecryptor(emeApi, mediaElement, keySystems);
     const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
       {
@@ -1609,11 +1616,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       return null;
     }
     if (this._currentContentInfo === null) {
-      log.error("MTCI: Setting up modules without a contentId");
+      log.error("Init", "Setting up modules without a contentId");
       return null;
     }
     if (this._currentContentInfo.manifest === null) {
-      log.error("MTCI: Setting up modules without a loaded Manifest");
+      log.error("Init", "Setting up modules without a loaded Manifest");
       return null;
     }
 
@@ -1836,13 +1843,13 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
 
     const { contentId, manifest } = this._currentContentInfo;
-    log.debug("MTCI: Calculating initial time");
+    log.debug("Init", "Calculating initial time");
     const initialTime = getInitialTime(
       manifest,
       this._settings.lowLatencyMode,
       this._settings.startAt,
     );
-    log.debug("MTCI: Initial time calculated:", initialTime);
+    log.debug("Init", "Initial time calculated", { initialTime });
     const { enableFastSwitching, onCodecSwitch } = this._settings.bufferOptions;
     const corePlaybackObserver = this._setUpModulesOnNewMediaSource(
       {
@@ -1906,7 +1913,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     worker: Worker,
   ): void {
     if (this._currentContentInfo?.contentId !== msg.contentId) {
-      log.info("MTCI: Ignoring MediaSource attachment due to wrong `contentId`");
+      log.info("Init", "Ignoring MediaSource attachment due to wrong `contentId`");
     } else {
       const { mediaSourceId } = msg;
       try {

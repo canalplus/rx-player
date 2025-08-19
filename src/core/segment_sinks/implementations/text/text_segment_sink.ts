@@ -28,7 +28,7 @@ export default class TextSegmentSink extends SegmentSink {
    * @param {Object} textDisplayerSender
    */
   constructor(textDisplayerSender: ITextDisplayerInterface) {
-    log.debug("HTSB: Creating TextSegmentSink");
+    log.debug("Stream", "Creating TextSegmentSink");
     super();
     this.bufferType = "text";
     this._sender = textDisplayerSender;
@@ -40,14 +40,18 @@ export default class TextSegmentSink extends SegmentSink {
    * @param {string} uniqueId
    */
   public declareInitSegment(uniqueId: string): void {
-    log.warn("HTSB: Declaring initialization segment for  Text SegmentSink", uniqueId);
+    log.warn("Stream", "Declaring initialization segment for  Text SegmentSink", {
+      uniqueId,
+    });
   }
 
   /**
    * @param {string} uniqueId
    */
   public freeInitSegment(uniqueId: string): void {
-    log.warn("HTSB: Freeing initialization segment for  Text SegmentSink", uniqueId);
+    log.warn("Stream", "Freeing initialization segment for  Text SegmentSink", {
+      uniqueId,
+    });
   }
 
   /**
@@ -125,7 +129,7 @@ export default class TextSegmentSink extends SegmentSink {
   }
 
   public dispose(): void {
-    log.debug("HTSB: Disposing TextSegmentSink");
+    log.debug("Stream", "Disposing TextSegmentSink");
     this._sender.reset();
   }
 

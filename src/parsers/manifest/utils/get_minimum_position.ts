@@ -61,7 +61,8 @@ export default function getMinimumPosition(periods: IParsedPeriod[]): number | u
         (firstVideoAdaptationFromPeriod !== undefined && minimumVideoPosition === null)
       ) {
         log.info(
-          "Parser utils: found Period with no segment. ",
+          "utils",
+          "found Period with no segment. ",
           "Going to next one to calculate first position",
         );
         return undefined;

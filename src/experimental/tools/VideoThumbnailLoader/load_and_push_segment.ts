@@ -67,7 +67,7 @@ export default function loadAndPushSegment(
         return;
       },
       onRetry(error) {
-        log.warn("Retrying segment request", error);
+        log.warn("VideoThumbnailLoader", "Retrying segment request", error);
       },
     },
     cancelSignal,

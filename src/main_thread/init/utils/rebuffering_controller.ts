@@ -148,7 +148,14 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
 
         if (position.isAwaitingFuturePosition()) {
           playbackRateUpdater.stopRebuffering();
-          log.debug("Init: let rebuffering happen as we're awaiting a future position");
+          log.debug(
+            "Init",
+            "let rebuffering happen as we're awaiting a future position",
+            {
+              wantedPosition: position.getWanted(),
+              lastPolledPosition: position.getPolled(),
+            },
+          );
         } else {
           playbackRateUpdater.startRebuffering();
         }
@@ -191,17 +198,15 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
           if (skippableDiscontinuity !== null) {
             const realSeekTime = skippableDiscontinuity + 0.001;
             if (realSeekTime <= targetTime) {
-              log.info(
-                "Init: position to seek already reached, no seeking",
+              log.info("Init", "position to seek already reached, no seeking", {
                 targetTime,
                 realSeekTime,
-              );
+              });
             } else {
-              log.warn(
-                "SA: skippable discontinuity found in the stream",
-                position.getPolled(),
+              log.warn("Init", "skippable discontinuity found in the stream", {
+                lastPolledPosition: position.getPolled(),
                 realSeekTime,
-              );
+              });
               this._playbackObserver.setCurrentTime(realSeekTime);
               this.trigger(
                 "warning",
@@ -233,12 +238,11 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
         ) {
           const seekTo = positionBlockedAt + nextBufferRangeGap + EPSILON;
           if (targetTime < seekTo) {
-            log.warn(
-              "Init: discontinuity encountered inferior to the threshold",
+            log.warn("Init", "discontinuity encountered inferior to the threshold", {
               positionBlockedAt,
               seekTo,
               BUFFER_DISCONTINUITY_THRESHOLD,
-            );
+            });
             this._playbackObserver.setCurrentTime(seekTo);
             this.trigger(
               "warning",
@@ -318,7 +322,8 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
       Math.abs(rebufferingPos - lockedPeriodStart) < 1
     ) {
       log.warn(
-        "Init: rebuffering because of a future locked stream.\n" +
+        "Init",
+        "rebuffering because of a future locked stream.\n" +
           "Trying to unlock by seeking to the next Period",
       );
       this._playbackObserver.setCurrentTime(lockedPeriodStart + 0.001);
@@ -367,14 +372,16 @@ function findSeekableDiscontinuity(
           if (nextPeriod !== null) {
             discontinuityEnd = nextPeriod.start + EPSILON;
           } else {
-            log.warn("Init: discontinuity at Period's end but no next Period");
+            log.warn("Init", "discontinuity at Period's end but no next Period", {
+              periodId: period.id,
+            });
           }
         } else if (stalledPosition < end + EPSILON) {
           discontinuityEnd = end + EPSILON;
         }
       }
       if (discontinuityEnd !== undefined) {
-        log.info("Init: discontinuity found", stalledPosition, discontinuityEnd);
+        log.info("Init", "discontinuity found", { stalledPosition, discontinuityEnd });
         maxDiscontinuityEnd =
           maxDiscontinuityEnd !== null && maxDiscontinuityEnd > discontinuityEnd
             ? maxDiscontinuityEnd
@@ -519,7 +526,7 @@ class PlaybackRateUpdater {
     }
     this._isRebuffering = true;
     this._speedUpdateCanceller.cancel();
-    log.info("Init: Pause playback to build buffer");
+    log.info("Init", "Pause playback to build buffer");
     this._playbackObserver.setPlaybackRate(0);
   }
 
@@ -553,7 +560,7 @@ class PlaybackRateUpdater {
   private _updateSpeed() {
     this._speed.onUpdate(
       (lastSpeed) => {
-        log.info("Init: Resume playback speed", lastSpeed);
+        log.info("Init", "Resume playback speed", { newSpeed: lastSpeed });
         this._playbackObserver.setPlaybackRate(lastSpeed);
       },
       {

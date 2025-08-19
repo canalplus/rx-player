@@ -35,7 +35,8 @@ function getFirstLineAfterHeader(linified: string[]): number {
 
 /**
  * Returns true if the given line looks like the beginning of a Style block.
- * @param {string} text
+ * @param {Array.<string>} lines
+ * @param {number} index
  * @returns {Boolean}
  */
 function isStartOfStyleBlock(lines: string[], index: number): boolean {

@@ -81,10 +81,10 @@ export default function initializeWorkerMain() {
   let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
 
   globalScope.onmessageerror = (_msg: MessageEvent) => {
-    log.error("MTCI: Error when receiving message from main thread.");
+    log.error("Core", "Error when receiving message from main thread.");
   };
   onmessage = function (e: MessageEvent<IMainThreadMessage>) {
-    log.debug("Worker: received message", e.data.type);
+    log.debug("Core", "received message", { name: e.data.type });
 
     const msg = e.data;
     switch (msg.type) {
@@ -100,7 +100,7 @@ export default function initializeWorkerMain() {
         if (msg.value.dashWasmUrl !== undefined && dashWasmParser.isCompatible()) {
           dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
             const error = err instanceof Error ? err.toString() : "Unknown Error";
-            log.error("Worker: Could not initialize DASH_WASM parser", error);
+            log.error("Core", "Could not initialize DASH_WASM parser", error);
           });
         }
 
@@ -211,13 +211,16 @@ export default function initializeWorkerMain() {
           (s) => s.type === msg.sourceBufferType,
         );
         if (sourceBuffer === undefined) {
-          log.info("WP: Success for an unknown SourceBuffer", msg.sourceBufferType);
+          log.info("Core", "Success for an unknown SourceBuffer", {
+            sourceBufferType: msg.sourceBufferType,
+          });
           return;
         }
         if (sourceBuffer.onOperationSuccess === undefined) {
           log.warn(
-            "WP: A SourceBufferInterface with MSE performed a cross-thread operation",
-            msg.sourceBufferType,
+            "Core",
+            "A SourceBufferInterface with MSE performed a cross-thread operation",
+            { sourceBufferType: msg.sourceBufferType },
           );
           return;
         }
@@ -236,13 +239,18 @@ export default function initializeWorkerMain() {
           (s) => s.type === msg.sourceBufferType,
         );
         if (sourceBuffer === undefined) {
-          log.info("WP: Error for an unknown SourceBuffer", msg.sourceBufferType);
+          log.info("Core", "Error for an unknown SourceBuffer", {
+            sourceBufferType: msg.sourceBufferType,
+          });
           return;
         }
         if (sourceBuffer.onOperationFailure === undefined) {
           log.warn(
-            "WP: A SourceBufferInterface with MSE performed a cross-thread operation",
-            msg.sourceBufferType,
+            "Core",
+            "A SourceBufferInterface with MSE performed a cross-thread operation",
+            {
+              sourceBufferType: msg.sourceBufferType,
+            },
           );
           return;
         }
@@ -257,7 +265,8 @@ export default function initializeWorkerMain() {
         }
         if (preparedContent.mediaSource.onMediaSourceReadyStateChanged === undefined) {
           log.warn(
-            "WP: A MediaSourceInterface with MSE performed a cross-thread operation",
+            "Core",
+            "A MediaSourceInterface with MSE performed a cross-thread operation",
           );
           return;
         }
@@ -355,7 +364,7 @@ export default function initializeWorkerMain() {
           return;
         }
         if (preparedContent.workerTextSender === null) {
-          log.error("WP: Added text track but text track aren't enabled");
+          log.error("Core", "Added text track but text track aren't enabled");
           return;
         }
         preparedContent.workerTextSender.onPushedTrackSuccess(msg.value.ranges);
@@ -368,7 +377,7 @@ export default function initializeWorkerMain() {
           return;
         }
         if (preparedContent.workerTextSender === null) {
-          log.error("WP: Added text track but text track aren't enabled");
+          log.error("Core", "Added text track but text track aren't enabled");
           return;
         }
         preparedContent.workerTextSender.onPushedTrackError(new Error(msg.value.message));
@@ -381,7 +390,7 @@ export default function initializeWorkerMain() {
           return;
         }
         if (preparedContent.workerTextSender === null) {
-          log.error("WP: Removed text track but text track aren't enabled");
+          log.error("Core", "Removed text track but text track aren't enabled");
           return;
         }
         preparedContent.workerTextSender.onRemoveSuccess(msg.value.ranges);
@@ -394,7 +403,7 @@ export default function initializeWorkerMain() {
           return;
         }
         if (preparedContent.workerTextSender === null) {
-          log.error("WP: Removed text track but text track aren't enabled");
+          log.error("Core", "Removed text track but text track aren't enabled");
           return;
         }
         preparedContent.workerTextSender.onRemoveError(new Error(msg.value.message));
@@ -502,8 +511,7 @@ function loadPreparedContent(
   contentPreparer: ContentPreparer,
   playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
 ): IContentHandle {
-  log.debug("WP: Loading prepared content");
-
+  log.debug("Core", "Loading pepared content.");
   const contentCanceller = new TaskCanceller();
 
   let currentLoadCanceller: TaskCanceller | null = null;
@@ -926,15 +934,14 @@ function loadPreparedContent(
     }
     const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource.id;
     if (mediaSourceId === undefined) {
-      log.warn("WP: Cannot reload MediaSource: no MediaSource currently.");
+      log.warn("Core", "Cannot reload MediaSource: no MediaSource currently.");
       return;
     }
-    log.debug(
-      "WP: Reloading MediaSource",
-      payload.timeOffset,
-      payload.minimumPosition,
-      payload.maximumPosition,
-    );
+    log.debug("Core", "Reloading MediaSource", {
+      timeOffset: payload.timeOffset,
+      minimumPosition: payload.minimumPosition,
+      maximumPosition: payload.maximumPosition,
+    });
 
     sendMessage(
       {
@@ -955,16 +962,17 @@ function loadPreparedContent(
       currentLoadCanceller.cancel();
       currentLoadCanceller = null;
     }
-    log.debug("WP: Reloading MediaSource");
     const contentId = contentPreparer.getCurrentContent()?.contentId;
     contentPreparer.reloadMediaSource().then(
       () => {
-        log.info("WP: MediaSource Reloaded, loading content again", newInitialTime);
+        log.info("Core", "MediaSource Reloaded, loading content again", {
+          newInitialTime,
+        });
         startLoadingAt(newInitialTime);
       },
       (err: unknown) => {
         if (TaskCanceller.isCancellationError(err)) {
-          log.info("WP: A reloading operation was cancelled");
+          log.info("Core", "A reloading operation was cancelled");
           return;
         }
         sendMessage({
@@ -987,7 +995,7 @@ function updateLoggerLevel(
   } else {
     // Here we force the log format to "standard" as the full formatting will be
     // performed on main thread.
-    log.setLevel(logLevel, "standard", (levelStr, logs) => {
+    log.setLevel(logLevel, "standard", (levelStr, namespace, logs) => {
       const sentLogs = logs.map((e) => {
         if (e instanceof Error) {
           return formatErrorForSender(e);
@@ -998,6 +1006,7 @@ function updateLoggerLevel(
       postMessage({
         type: WorkerMessageType.LogMessage,
         value: {
+          namespace,
           logLevel: levelStr,
           logs: sentLogs,
         },
@@ -1058,7 +1067,7 @@ function handleFreezeResolution(
 ): void {
   switch (freezeResolution.type) {
     case "reload": {
-      log.info("WP: Planning reload due to freeze");
+      log.info("Core", "Planning reload due to freeze");
       handleMediaSourceReload({
         timeOffset: 0,
         minimumPosition: 0,
@@ -1067,7 +1076,7 @@ function handleFreezeResolution(
       break;
     }
     case "flush": {
-      log.info("WP: Flushing buffer due to freeze");
+      log.info("Core", "Flushing buffer due to freeze");
       sendMessage({
         type: WorkerMessageType.NeedsBufferFlush,
         contentId,
@@ -1079,7 +1088,7 @@ function handleFreezeResolution(
       break;
     }
     case "avoid-representations": {
-      log.info("WP: Planning Representation avoidance due to freeze");
+      log.info("Core", "Planning Representation avoidance due to freeze");
       const content = freezeResolution.value;
       if (enableRepresentationAvoidance) {
         manifest.addRepresentationsToAvoid(content);

@@ -249,7 +249,7 @@ export default class SegmentSinksStore {
   public disableSegmentSink(bufferType: IBufferType): void {
     const currentValue = this._initializedSegmentSinks[bufferType];
     if (currentValue === null) {
-      log.warn(`SBS: The ${bufferType} SegmentSink was already disabled.`);
+      log.warn("Stream", `The ${bufferType} SegmentSink was already disabled.`);
       return;
     }
     if (currentValue !== undefined) {
@@ -283,17 +283,18 @@ export default class SegmentSinksStore {
           memorizedSegmentSink.codec !== codec
         ) {
           log.warn(
-            "SB: Reusing native SegmentSink with codec",
+            "Stream",
+            "Reusing native SegmentSink with codec",
             memorizedSegmentSink.codec,
             "for codec",
             codec,
           );
         } else {
-          log.info("SB: Reusing native SegmentSink with codec", codec);
+          log.info("Stream", "Reusing native SegmentSink with codec", codec);
         }
         return memorizedSegmentSink;
       }
-      log.info("SB: Adding native SegmentSink with codec", codec);
+      log.info("Stream", "Adding native SegmentSink with codec", codec);
       const sourceBufferType =
         bufferType === "audio" ? SourceBufferType.Audio : SourceBufferType.Video;
       const nativeSegmentSink = new AudioVideoSegmentSink(
@@ -308,13 +309,13 @@ export default class SegmentSinksStore {
     }
 
     if (!isNullOrUndefined(memorizedSegmentSink)) {
-      log.info("SB: Reusing a previous custom SegmentSink for the type", bufferType);
+      log.info("Stream", "Reusing a previous custom SegmentSink", { bufferType });
       return memorizedSegmentSink;
     }
 
     let segmentSink: TextSegmentSink;
     if (bufferType === "text") {
-      log.info("SB: Creating a new text SegmentSink");
+      log.info("Stream", "Creating a new text SegmentSink");
       if (this._textInterface === null) {
         throw new Error("HTML Text track feature not activated");
       }
@@ -323,7 +324,7 @@ export default class SegmentSinksStore {
       return segmentSink;
     }
 
-    log.error("SB: Unknown buffer type:", bufferType);
+    log.error("Stream", "Unknown buffer type:", { bufferType });
     throw new MediaError(
       "BUFFER_TYPE_UNKNOWN",
       "The player wants to create a SegmentSink " + "of an unknown type.",
@@ -337,11 +338,13 @@ export default class SegmentSinksStore {
   public disposeSegmentSink(bufferType: IBufferType): void {
     const memorizedSegmentSink = this._initializedSegmentSinks[bufferType];
     if (isNullOrUndefined(memorizedSegmentSink)) {
-      log.warn("SB: Trying to dispose a SegmentSink that does not exist");
+      log.warn("Stream", "Trying to dispose a SegmentSink that does not exist", {
+        bufferType,
+      });
       return;
     }
 
-    log.info("SB: Aborting SegmentSink", bufferType);
+    log.info("Stream", "Aborting SegmentSink", { bufferType });
     memorizedSegmentSink.dispose();
     delete this._initializedSegmentSinks[bufferType];
   }

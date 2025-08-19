@@ -152,7 +152,10 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   }
 
   initialize(): void {
-    log.error("A `StaticRepresentationIndex` does not need to be initialized");
+    log.error(
+      "manifest",
+      "A `StaticRepresentationIndex` does not need to be initialized",
+    );
   }
 
   /**
@@ -174,14 +177,17 @@ export default class StaticRepresentationIndex implements IRepresentationIndex {
   }
 
   addPredictedSegments(): void {
-    log.warn("Cannot add predicted segments to a `StaticRepresentationIndex`");
+    log.warn(
+      "manifest",
+      "Cannot add predicted segments to a `StaticRepresentationIndex`",
+    );
   }
 
   _replace(): void {
-    log.warn("Tried to replace a static RepresentationIndex");
+    log.warn("manifest", "Tried to replace a static RepresentationIndex");
   }
 
   _update(): void {
-    log.warn("Tried to update a static RepresentationIndex");
+    log.warn("manifest", "Tried to update a static RepresentationIndex");
   }
 }

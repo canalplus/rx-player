@@ -50,7 +50,7 @@ export function parseSElementNode(root: ITNode): IParsedS {
       case "t": {
         const start = parseInt(attributeVal, 10);
         if (isNaN(start)) {
-          log.warn(`DASH: invalid t ("${attributeVal}")`);
+          log.warn("dash", "invalid t value for <S> element", { val: attributeVal });
         } else {
           parsedS.start = start;
         }
@@ -59,7 +59,7 @@ export function parseSElementNode(root: ITNode): IParsedS {
       case "d": {
         const duration = parseInt(attributeVal, 10);
         if (isNaN(duration)) {
-          log.warn(`DASH: invalid d ("${attributeVal}")`);
+          log.warn("dash", "invalid d value for <S> element", { val: attributeVal });
         } else {
           parsedS.duration = duration;
         }
@@ -68,7 +68,7 @@ export function parseSElementNode(root: ITNode): IParsedS {
       case "r": {
         const repeatCount = parseInt(attributeVal, 10);
         if (isNaN(repeatCount)) {
-          log.warn(`DASH: invalid r ("${attributeVal}")`);
+          log.warn("dash", "invalid r value for <S> element", { val: attributeVal });
         } else {
           parsedS.repeatCount = repeatCount;
         }

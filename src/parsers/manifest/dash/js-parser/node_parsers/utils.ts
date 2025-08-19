@@ -321,10 +321,8 @@ function ValueParser<T>(dest: T, warnings: Error[]) {
   /**
    * Parse a single value and add it to the `dest` objects.
    * If an error arised while parsing, add it at the end of the `warnings` array.
-   * @param {string} objKey - The key which will be added to the `dest` object.
    * @param {string} val - The value found in the MPD which we should parse.
    * @param {Function} parsingFn - The parsing function adapted for this value.
-   * @param {string} displayName - The name of the key as it appears in the MPD.
    * This is used only in error formatting,
    */
   return function (
@@ -344,7 +342,9 @@ function ValueParser<T>(dest: T, warnings: Error[]) {
   ): void {
     const [parsingResult, parsingError] = parser(val, dashName);
     if (parsingError !== null) {
-      log.warn(parsingError.message);
+      log.warn("dash", "failed to parse DASH value:", parsingError.message, {
+        dashName,
+      });
       warnings.push(parsingError);
     }
 

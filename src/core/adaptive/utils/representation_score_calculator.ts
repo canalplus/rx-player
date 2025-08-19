@@ -118,7 +118,9 @@ export default class RepresentationScoreCalculator {
       currentEWMA.getEstimate() > 1 &&
       this._lastRepresentationWithGoodScore !== representation
     ) {
-      log.debug("ABR: New last stable representation", representation.bitrate);
+      log.debug("ABR", "New last stable representation", {
+        bitrate: representation.bitrate,
+      });
       this._lastRepresentationWithGoodScore = representation;
     }
   }

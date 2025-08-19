@@ -41,7 +41,7 @@ export default function clearElementSrc(element: IMediaElement): void {
           try {
             element.removeChild(childNodes[j]);
           } catch (_err) {
-            log.warn("Compat: Could not remove text track child from element.");
+            log.warn("media", "Could not remove text track child from element.");
           }
         }
       }
