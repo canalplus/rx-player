@@ -251,7 +251,7 @@ export default class PersistentSessionsStore {
       if (entry.initDataType === initData.type) {
         switch (entry.version) {
           case 4:
-            if (initData.keyIds !== undefined) {
+            if (Array.isArray(initData.keyIds) && initData.keyIds.length > 0) {
               const foundCompatible = initData.keyIds.every((keyId) => {
                 const keyIdB64 = bytesToBase64(keyId);
                 for (const entryKid of entry.keyIds) {
