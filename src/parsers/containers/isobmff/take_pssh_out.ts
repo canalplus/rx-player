@@ -24,7 +24,7 @@ export interface IISOBMFFPSSHInfo {
   /** Corresponding DRM's system ID, as an hexadecimal string. */
   systemId: string;
   /** Additional data contained in the PSSH Box. */
-  data: Uint8Array;
+  data: Uint8Array<ArrayBuffer>;
 }
 
 /**
@@ -36,7 +36,7 @@ export interface IISOBMFFPSSHInfo {
  * @returns {Array.<Uint8Array>} - The extracted PSSH boxes. In the order they
  * are encountered.
  */
-export default function takePSSHOut(data: Uint8Array): IISOBMFFPSSHInfo[] {
+export default function takePSSHOut(data: Uint8Array<ArrayBuffer>): IISOBMFFPSSHInfo[] {
   let i = 0;
   const moov = getBoxContent(data, 0x6d6f6f76 /* moov */);
   if (moov === null) {

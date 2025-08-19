@@ -181,7 +181,7 @@ export function bytesToBase64(bytes: number[] | Uint8Array): string {
  * @param {string} str
  * @returns {string}
  */
-export function base64ToBytes(str: string): Uint8Array {
+export function base64ToBytes(str: string): Uint8Array<ArrayBuffer> {
   const paddingNeeded = str.length % 4;
   let paddedStr = str;
   if (paddingNeeded !== 0) {

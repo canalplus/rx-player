@@ -497,7 +497,7 @@ export function extrackInfoFromFakeChallenge(challenge: Uint8Array): {
 export function formatFakeChallengeFromInitData(
   initData: BufferSource,
   initDataType: string,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const initDataAB = initData instanceof ArrayBuffer ? initData : initData.buffer;
   const objChallenge = [initDataType, bytesToBase64(new Uint8Array(initDataAB))];
   let data = strToUtf8(JSON.stringify(objChallenge));

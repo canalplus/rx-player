@@ -46,7 +46,9 @@ import { PSSH_TO_INTEGER } from "./constants";
  * @param {Uint8Array} initData - Initialization data you want to patch
  * @returns {Uint8Array} - Initialization data, patched
  */
-export function patchInitData(initData: Uint8Array): Uint8Array {
+export function patchInitData(
+  initData: Uint8Array<ArrayBuffer>,
+): Uint8Array<ArrayBuffer> {
   log.info("DRM", "Trying to move CENC PSSH from init data at the end of it.");
   let foundCencV1 = false;
   let concatenatedCencs = new Uint8Array();
@@ -68,7 +70,7 @@ export function patchInitData(initData: Uint8Array): Uint8Array {
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
 
-    const currentPSSH = initData.subarray(offset, offset + len);
+    const currentPSSH: Uint8Array<ArrayBuffer> = initData.subarray(offset, offset + len);
     // yep
     if (
       initData[offset + 12] === 0x10 &&
@@ -132,10 +134,10 @@ export function patchInitData(initData: Uint8Array): Uint8Array {
 export default function generateKeyRequest(
   session: IMediaKeySession,
   initializationDataType: string | undefined,
-  initializationData: Uint8Array,
+  initializationData: Uint8Array<ArrayBuffer>,
 ): Promise<unknown> {
   log.debug("DRM", "Calling generateRequest on the MediaKeySession");
-  let patchedInit: Uint8Array;
+  let patchedInit: Uint8Array<ArrayBuffer>;
   try {
     patchedInit = patchInitData(initializationData);
   } catch (_e) {

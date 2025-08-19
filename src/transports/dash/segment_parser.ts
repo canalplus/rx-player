@@ -24,6 +24,7 @@ import {
   parseEmsgBoxes,
 } from "../../parsers/containers/isobmff/utils";
 import { getSegmentsFromCues, getTimeCodeScale } from "../../parsers/containers/matroska";
+import { toUint8Array } from "../../utils/byte_parsing";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type {
   IProtectionDataInfo,
@@ -44,17 +45,20 @@ export default function generateAudioVideoSegmentParser({
   __priv_patchLastSegmentInSidx,
 }: {
   __priv_patchLastSegmentInSidx?: boolean | undefined;
-}): ISegmentParser<ArrayBuffer | Uint8Array | null, ArrayBuffer | Uint8Array | null> {
+}): ISegmentParser<
+  ArrayBuffer | Uint8Array<ArrayBuffer> | null,
+  ArrayBuffer | Uint8Array<ArrayBuffer> | null
+> {
   return function audioVideoSegmentParser(
     loadedSegment: {
-      data: ArrayBuffer | Uint8Array | null;
+      data: ArrayBuffer | Uint8Array<ArrayBuffer> | null;
       isChunked: boolean;
     },
     context: ISegmentContext,
     initTimescale: number | undefined,
   ):
-    | ISegmentParserParsedMediaChunk<Uint8Array | ArrayBuffer | null>
-    | ISegmentParserParsedInitChunk<Uint8Array | ArrayBuffer | null> {
+    | ISegmentParserParsedMediaChunk<Uint8Array<ArrayBuffer> | ArrayBuffer | null>
+    | ISegmentParserParsedInitChunk<Uint8Array<ArrayBuffer> | ArrayBuffer | null> {
     const { segment, periodStart, periodEnd } = context;
     const { data, isChunked } = loadedSegment;
     const appendWindow: [number, number | undefined] = [periodStart, periodEnd];
@@ -80,7 +84,7 @@ export default function generateAudioVideoSegmentParser({
       };
     }
 
-    const chunkData = data instanceof Uint8Array ? data : new Uint8Array(data);
+    const chunkData = toUint8Array(data);
 
     const containerType = inferSegmentContainer(context.type, context.mimeType);
 

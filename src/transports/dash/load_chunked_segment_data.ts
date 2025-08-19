@@ -48,7 +48,7 @@ export default async function loadChunkedSegmentData(
     timeout: number | undefined;
     connectionTimeout: number | undefined;
   },
-  callbacks: ISegmentLoaderCallbacks<Uint8Array>,
+  callbacks: ISegmentLoaderCallbacks<Uint8Array<ArrayBuffer>>,
   cancelSignal: CancellationSignal,
 ): Promise<ISegmentLoaderResultChunkedComplete> {
   let partialChunk: Uint8Array | null = null;

@@ -15,7 +15,9 @@ export const DUMMY_PLAY_READY_HEADER =
  * @returns {Uint8Array} The init data generated for that PlayreadyHeader.
  * @see https://learn.microsoft.com/en-us/playready/specifications/playready-header-specification
  */
-export function generatePlayReadyInitData(playreadyHeader: string): Uint8Array {
+export function generatePlayReadyInitData(
+  playreadyHeader: string,
+): Uint8Array<ArrayBuffer> {
   const recordValueEncoded = strToUtf16LE(playreadyHeader);
   const recordLength = itole2(recordValueEncoded.length);
   // RecordType: 0x0001	Indicates that the record contains a PlayReady Header (PRH).
@@ -46,7 +48,10 @@ export function generatePlayReadyInitData(playreadyHeader: string): Uint8Array {
  * @param systemId - The systemId to use.
  * @returns
  */
-function generateInitData(data: Uint8Array, systemId: Uint8Array): Uint8Array {
+function generateInitData(
+  data: Uint8Array<ArrayBuffer>,
+  systemId: Uint8Array<ArrayBuffer>,
+): Uint8Array<ArrayBuffer> {
   const psshBoxName = strToUtf8("pssh");
   const versionAndFlags = new Uint8Array([0, 0, 0, 0]); // pssh version 0
   const sizeOfData = itobe4(data.length);

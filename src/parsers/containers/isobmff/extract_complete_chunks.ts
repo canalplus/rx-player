@@ -25,12 +25,12 @@ import findCompleteBox from "./find_complete_box";
  * @param {Uint8Array} buffer
  * @returns {Array}
  */
-export default function extractCompleteChunks(
-  buffer: Uint8Array,
-): [Uint8Array[] | null, Uint8Array | null] {
+export default function extractCompleteChunks<T extends ArrayBufferLike>(
+  buffer: Uint8Array<T>,
+): [Array<Uint8Array<T>> | null, Uint8Array<T> | null] {
   let _position = 0;
-  const chunks: Uint8Array[] = [];
-  let currentBuffer = null;
+  const chunks: Array<Uint8Array<T>> = [];
+  let currentBuffer: null | Uint8Array<T> = null;
   while (_position <= buffer.length) {
     if (_position === buffer.length) {
       currentBuffer = null;
@@ -77,9 +77,9 @@ export default function extractCompleteChunks(
  * @param {Uint8Array} buffer
  * @returns {Array}
  */
-export function extractInitSegment(
-  buffer: Uint8Array,
-): [Uint8Array | null, Uint8Array | null] {
+export function extractInitSegment<T extends ArrayBufferLike>(
+  buffer: Uint8Array<T>,
+): [Uint8Array<T> | null, Uint8Array<T> | null] {
   const moovIndex = findCompleteBox(buffer, 0x6d6f6f76 /* moov */);
   if (moovIndex < 0) {
     // no moov, not an init segment.

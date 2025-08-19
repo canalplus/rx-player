@@ -50,7 +50,7 @@ import {
  * @returns {Object}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  data: ArrayBuffer | Uint8Array | string,
+  data: Uint8Array<ArrayBuffer> | ArrayBuffer | string,
   isChunked: boolean,
   context: ISegmentContext,
   initTimescale: number | undefined,
@@ -61,7 +61,7 @@ function parseISOBMFFEmbeddedTextTrack(
   const { segment } = context;
   const { isInit, indexRange } = segment;
 
-  let chunkBytes;
+  let chunkBytes: Uint8Array<ArrayBuffer>;
   if (typeof data === "string") {
     chunkBytes = strToUtf8(data);
   } else if (data instanceof Uint8Array) {
@@ -193,7 +193,7 @@ export default function generateTextTrackParser({
 }: {
   __priv_patchLastSegmentInSidx?: boolean | undefined;
 }): ISegmentParser<
-  ArrayBuffer | Uint8Array | string | null,
+  ArrayBuffer | Uint8Array<ArrayBuffer> | string | null,
   ITextTrackSegmentData | null
 > {
   /**
@@ -205,7 +205,7 @@ export default function generateTextTrackParser({
    */
   return function textTrackParser(
     loadedSegment: {
-      data: ArrayBuffer | Uint8Array | string | null;
+      data: ArrayBuffer | Uint8Array<ArrayBuffer> | string | null;
       isChunked: boolean;
     },
     context: ISegmentContext,

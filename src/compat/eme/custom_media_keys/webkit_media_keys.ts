@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { toUint8Array } from "../../../utils/byte_parsing";
 import EventEmitter from "../../../utils/event_emitter";
 import noop from "../../../utils/noop";
 import startsWith from "../../../utils/starts_with";
@@ -71,7 +72,7 @@ class WebkitMediaKeySession
   private readonly _videoElement: IMediaElement;
   private readonly _keyType: string;
   private _nativeSession: undefined | IMediaKeySession;
-  private _serverCertificate: Uint8Array | undefined;
+  private _serverCertificate: BufferSource | undefined;
 
   private _closeSession: (val: MediaKeySessionClosedReason) => void;
   private _unbindSession: () => void;
@@ -84,7 +85,7 @@ class WebkitMediaKeySession
   constructor(
     mediaElement: IMediaElement,
     keyType: string,
-    serverCertificate?: Uint8Array,
+    serverCertificate?: BufferSource,
   ) {
     super();
     this._serverCertificate = serverCertificate;
@@ -110,14 +111,7 @@ class WebkitMediaKeySession
         return reject("Unavailable WebKit key session.");
       }
       try {
-        let uInt8Arraylicense: Uint8Array;
-        if (license instanceof ArrayBuffer) {
-          uInt8Arraylicense = new Uint8Array(license);
-        } else if (license instanceof Uint8Array) {
-          uInt8Arraylicense = license;
-        } else {
-          uInt8Arraylicense = new Uint8Array(license.buffer);
-        }
+        const uInt8Arraylicense = toUint8Array(license);
         resolve(this._nativeSession.update(uInt8Arraylicense));
       } catch (err) {
         reject(err);
@@ -125,14 +119,14 @@ class WebkitMediaKeySession
     });
   }
 
-  public generateRequest(_initDataType: string, initData: ArrayBuffer): Promise<void> {
+  public generateRequest(_initDataType: string, initData: BufferSource): Promise<void> {
     return new Promise((resolve) => {
       const elt = this._videoElement;
       if (elt.webkitKeys?.createSession === undefined) {
         throw new Error("No WebKitMediaKeys API.");
       }
 
-      let formattedInitData;
+      let formattedInitData: BufferSource;
       if (isFairplayKeyType(this._keyType)) {
         if (this._serverCertificate === undefined) {
           throw new Error(
@@ -209,7 +203,7 @@ class WebkitMediaKeySession
 class WebKitCustomMediaKeys implements IMediaKeys {
   private _videoElement?: IMediaElement;
   private _mediaKeys?: IWebKitMediaKeys;
-  private _serverCertificate?: Uint8Array;
+  private _serverCertificate?: BufferSource;
   private _keyType: string;
 
   constructor(keyType: string) {
@@ -240,7 +234,7 @@ class WebKitCustomMediaKeys implements IMediaKeys {
     );
   }
 
-  setServerCertificate(serverCertificate: Uint8Array): Promise<boolean> {
+  setServerCertificate(serverCertificate: BufferSource): Promise<boolean> {
     this._serverCertificate = serverCertificate;
     return Promise.resolve(true);
   }

@@ -53,12 +53,12 @@ export interface ITransportPipelines {
   /** Functions allowing to load an parse audio segments. */
   audio: ISegmentPipeline<
     ILoadedAudioVideoSegmentFormat,
-    Uint8Array | ArrayBuffer | null
+    Uint8Array<ArrayBuffer> | ArrayBuffer | null
   >;
   /** Functions allowing to load an parse video segments. */
   video: ISegmentPipeline<
     ILoadedAudioVideoSegmentFormat,
-    Uint8Array | ArrayBuffer | null
+    Uint8Array<ArrayBuffer> | ArrayBuffer | null
   >;
   /** Functions allowing to load an parse text (e.g. subtitles) segments. */
   text: ISegmentPipeline<ILoadedTextSegmentFormat, ITextTrackSegmentData | null>;
@@ -475,7 +475,7 @@ export interface ITextTrackSegmentData<
   TDataFormatName extends ISupportedTextTrackFormat = ISupportedTextTrackFormat,
 > {
   /** The text track data, in the format indicated in `type`. */
-  data: TDataFormatName extends "mp4vtt" ? BufferSource : string;
+  data: TDataFormatName extends "mp4vtt" ? Uint8Array<ArrayBuffer> | ArrayBuffer : string;
   /** The format of `data`. */
   type: TDataFormatName;
   /**
@@ -526,7 +526,7 @@ export interface ITransportAudioVideoSegmentPipeline {
   loadSegment: ISegmentLoader<ILoadedAudioVideoSegmentFormat>;
   parseSegment: ISegmentParser<
     ILoadedAudioVideoSegmentFormat,
-    Uint8Array | ArrayBuffer | null
+    Uint8Array<ArrayBuffer> | ArrayBuffer | null
   >;
 }
 
@@ -677,10 +677,14 @@ export interface IChunkCompleteInformation {
 }
 
 /** Format of a loaded audio and video segment before parsing. */
-export type ILoadedAudioVideoSegmentFormat = Uint8Array | ArrayBuffer | null;
+export type ILoadedAudioVideoSegmentFormat = Uint8Array<ArrayBuffer> | ArrayBuffer | null;
 
 /** Format of a loaded text segment before parsing. */
-export type ILoadedTextSegmentFormat = Uint8Array | ArrayBuffer | string | null;
+export type ILoadedTextSegmentFormat =
+  | Uint8Array<ArrayBuffer>
+  | ArrayBuffer
+  | string
+  | null;
 
 /**
  * Result returned by a segment parser when it parsed a chunk from an init
@@ -806,7 +810,7 @@ export interface IProtectionDataInfo {
   initDataType: "cenc";
 
   /** Optional key id found in the segment. */
-  keyId: Uint8Array | undefined;
+  keyId: Uint8Array<ArrayBuffer> | undefined;
 
   /**
    * The protection data.
@@ -815,7 +819,7 @@ export interface IProtectionDataInfo {
     /** Hex string identifying the key system concerned by this protection data. */
     systemId: string;
     /** The protection data itself. */
-    data: Uint8Array;
+    data: Uint8Array<ArrayBuffer>;
   }>;
 }
 

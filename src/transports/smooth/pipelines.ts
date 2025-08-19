@@ -113,14 +113,14 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
 
     parseSegment(
       loadedSegment: {
-        data: ArrayBuffer | Uint8Array | null;
+        data: ArrayBuffer | Uint8Array<ArrayBuffer> | null;
         isChunked: boolean;
       },
       context: ISegmentContext,
       initTimescale: number | undefined,
     ):
-      | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null>
-      | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null> {
+      | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array<ArrayBuffer> | null>
+      | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array<ArrayBuffer> | null> {
       const { segment } = context;
       const { data, isChunked } = loadedSegment;
       if (data === null) {
@@ -263,7 +263,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
 
     parseSegment(
       loadedSegment: {
-        data: ArrayBuffer | Uint8Array | string | null;
+        data: ArrayBuffer | Uint8Array<ArrayBuffer> | string | null;
         isChunked: boolean;
       },
       context: ISegmentContext,
@@ -306,7 +306,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
       let _sdType: ISupportedTextTrackFormat | undefined;
 
       if (isMP4) {
-        let chunkBytes: Uint8Array;
+        let chunkBytes: Uint8Array<ArrayBuffer>;
         if (typeof data === "string") {
           chunkBytes = strToUtf8(data);
         } else {

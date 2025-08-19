@@ -51,8 +51,6 @@ function createMOOVBox(mvhd: Uint8Array, mvex: Uint8Array, trak: Uint8Array): Ui
  * @param {Uint8Array} mhd
  * @param {Number} width
  * @param {Number} height
- * @param {Array.<Object>} pssList - List of dict, example:
- * {systemId: "DEADBEEF", codecPrivateData: "DEAFBEEF}
  * @returns {Uint8Array}
  */
 export default function createInitSegment(
@@ -62,7 +60,7 @@ export default function createInitSegment(
   mhd: Uint8Array,
   width: number,
   height: number,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const stbl = createBoxWithChildren("stbl", [
     stsd,
     createBox("stts", new Uint8Array(0x08)),

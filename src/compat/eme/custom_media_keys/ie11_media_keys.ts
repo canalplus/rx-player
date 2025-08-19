@@ -31,7 +31,7 @@ class IE11MediaKeySession
   extends EventEmitter<MediaKeySessionEventMap>
   implements IMediaKeySession
 {
-  public readonly update: (license: Uint8Array) => Promise<void>;
+  public readonly update: (license: BufferSource) => Promise<void>;
   public readonly closed: Promise<MediaKeySessionClosedReason>;
   public expiration: number;
   public keyStatuses: MediaKeyStatusMap;
@@ -49,14 +49,14 @@ class IE11MediaKeySession
         resolve("closed-by-application"),
       );
     });
-    this.update = (license: Uint8Array) => {
+    this.update = (license: BufferSource) => {
       return new Promise((resolve, reject) => {
         if (this._ss === undefined) {
           return reject("MediaKeySession not set.");
         }
         try {
           resolve(
-            (this._ss.update as (license: Uint8Array, sessionId: string) => void)(
+            (this._ss.update as (license: BufferSource, sessionId: string) => void)(
               license,
               "",
             ),

@@ -37,7 +37,7 @@ export function generateMPDChildrenParser(
   mpdChildren: IMPDChildren,
   linearMemory: WebAssembly.Memory,
   parsersStack: ParsersStack,
-  fullMpd: ArrayBuffer,
+  fullMpd: ArrayBufferLike,
 ): IChildrenParser {
   return function onRootChildren(nodeId: number) {
     switch (nodeId) {

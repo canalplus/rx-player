@@ -23,7 +23,11 @@
  * from the last Byte.
  * @returns {Uint8Array}
  */
-function arraySlice(arr: Uint8Array, start: number, end?: number): Uint8Array {
+function arraySlice(
+  arr: Uint8Array,
+  start: number,
+  end?: number,
+): Uint8Array<ArrayBuffer> {
   return new Uint8Array(Array.prototype.slice.call(arr, start, end));
 }
 
@@ -36,7 +40,11 @@ function arraySlice(arr: Uint8Array, start: number, end?: number): Uint8Array {
  * from the last Byte.
  * @returns {Uint8Array}
  */
-function uint8ArraySlice(arr: Uint8Array, start: number, end?: number): Uint8Array {
+function uint8ArraySlice(
+  arr: Uint8Array,
+  start: number,
+  end?: number,
+): Uint8Array<ArrayBuffer> {
   return arr.slice(start, end);
 }
 

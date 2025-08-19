@@ -78,7 +78,7 @@ export default class DashWasmParser {
      * Complete data that needs to be parsed.
      * This is either the full MPD or xlinks.
      */
-    mpd: ArrayBuffer;
+    mpd: ArrayBufferLike;
   } | null;
   /**
    * Warnings event currently encountered during parsing.
@@ -310,7 +310,7 @@ export default class DashWasmParser {
    * @returns {Object}
    */
   public runWasmParser(
-    mpd: ArrayBuffer,
+    mpd: ArrayBufferLike,
     args: IMPDParserArguments,
   ): IDashParserResponse<string> | IDashParserResponse<ArrayBuffer> {
     const [mpdIR, warnings] = this._parseMpd(mpd);
@@ -331,7 +331,9 @@ export default class DashWasmParser {
     return hasWebassembly && typeof globalScope.TextDecoder === "function";
   }
 
-  private _parseMpd(mpd: ArrayBuffer): [IMPDIntermediateRepresentation | null, Error[]] {
+  private _parseMpd(
+    mpd: ArrayBufferLike,
+  ): [IMPDIntermediateRepresentation | null, Error[]] {
     if (this._instance === null) {
       throw new Error("DashWasmParser not initialized");
     }

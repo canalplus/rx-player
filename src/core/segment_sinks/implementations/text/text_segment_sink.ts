@@ -151,7 +151,10 @@ export default class TextSegmentSink extends SegmentSink {
 
 /** Data of chunks that should be pushed to the HTMLTextSegmentSink. */
 export interface ITextTracksBufferSegmentData<
-  T extends string | BufferSource = string | BufferSource,
+  T extends string | Uint8Array<ArrayBuffer> | ArrayBuffer =
+    | string
+    | Uint8Array<ArrayBuffer>
+    | ArrayBuffer,
 > {
   /** The text track data, in the format indicated in `type`. */
   data: T;
@@ -204,8 +207,8 @@ function assertChunkIsTextTrackSegmentData(
   }
   if (
     typeof (chunk as ITextTracksBufferSegmentData<string>).data !== "string" &&
-    typeof (chunk as ITextTracksBufferSegmentData<BufferSource>).data.byteLength !==
-      "number"
+    typeof (chunk as ITextTracksBufferSegmentData<Uint8Array<ArrayBuffer> | ArrayBuffer>)
+      .data.byteLength !== "number"
   ) {
     throw new Error("Invalid format given to a TextSegmentSink");
   }

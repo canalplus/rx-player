@@ -31,7 +31,7 @@ export function generateRootChildrenParser(
   rootObj: { mpd?: IMPDIntermediateRepresentation },
   linearMemory: WebAssembly.Memory,
   parsersStack: ParsersStack,
-  fullMpd: ArrayBuffer,
+  fullMpd: ArrayBufferLike,
 ): (nodeId: number) => void {
   return function onRootChildren(nodeId: number) {
     switch (nodeId) {

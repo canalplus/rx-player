@@ -32,7 +32,7 @@ import type { CancellationSignal } from "../../../utils/task_canceller";
 export default function loadAndPushSegment(
   segmentInfo: ISegmentLoaderContent,
   sourceBufferInterface: MainSourceBufferInterface,
-  segmentFetcher: ISegmentFetcher<ArrayBuffer | Uint8Array>,
+  segmentFetcher: ISegmentFetcher<ArrayBuffer | Uint8Array<ArrayBuffer>>,
   cancelSignal: CancellationSignal,
 ): Promise<unknown> {
   const pushOperations: Array<Promise<unknown>> = [];

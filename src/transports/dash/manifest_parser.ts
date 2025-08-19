@@ -316,7 +316,7 @@ function getManifestAsString(manifestSrc: unknown): string {
  * @param {*} manifestSrc
  * @returns {ArrayBuffer}
  */
-function getManifestAsArrayBuffer(manifestSrc: unknown): ArrayBuffer {
+function getManifestAsArrayBuffer(manifestSrc: unknown): ArrayBufferLike {
   if (manifestSrc instanceof ArrayBuffer) {
     return manifestSrc;
   } else if (typeof manifestSrc === "string") {
@@ -339,7 +339,7 @@ function getManifestAsArrayBuffer(manifestSrc: unknown): ArrayBuffer {
  * @param {ArrayBuffer} xmlData
  * @returns {boolean}
  */
-function doesXmlSeemsUtf8Encoded(xmlData: ArrayBuffer): boolean {
+function doesXmlSeemsUtf8Encoded(xmlData: ArrayBufferLike): boolean {
   const dv = new DataView(xmlData);
   if (dv.getUint16(0) === 0xefbb && dv.getUint8(2) === 0xbf) {
     // (UTF-8 BOM)

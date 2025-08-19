@@ -45,11 +45,13 @@ import { createAudioInitSegment, createVideoInitSegment } from "./isobmff";
 async function regularSegmentLoader(
   initialUrl: string,
   context: ISegmentContext,
-  callbacks: ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
+  callbacks: ISegmentLoaderCallbacks<Uint8Array<ArrayBuffer> | ArrayBuffer | null>,
   loaderOptions: ISegmentLoaderOptions,
   cancelSignal: CancellationSignal,
   checkMediaSegmentIntegrity?: boolean | undefined,
-): Promise<ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null>> {
+): Promise<
+  ISegmentLoaderResultSegmentLoaded<Uint8Array<ArrayBuffer> | ArrayBuffer | null>
+> {
   const cmcdHeaders =
     loaderOptions.cmcdPayload?.type === "headers"
       ? loaderOptions.cmcdPayload.value
@@ -109,10 +111,10 @@ const generateSegmentLoader =
     context: ISegmentContext,
     loaderOptions: ISegmentLoaderOptions,
     cancelSignal: CancellationSignal,
-    callbacks: ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
+    callbacks: ISegmentLoaderCallbacks<Uint8Array<ArrayBuffer> | ArrayBuffer | null>,
   ): Promise<
-    | ISegmentLoaderResultSegmentLoaded<Uint8Array | ArrayBuffer | null>
-    | ISegmentLoaderResultSegmentCreated<Uint8Array | ArrayBuffer | null>
+    | ISegmentLoaderResultSegmentLoaded<Uint8Array<ArrayBuffer> | ArrayBuffer | null>
+    | ISegmentLoaderResultSegmentCreated<Uint8Array<ArrayBuffer> | ArrayBuffer | null>
   > => {
     const { segment } = context;
     if (segment.isInit) {
@@ -123,7 +125,7 @@ const generateSegmentLoader =
         throw new Error("Smooth: Invalid segment format");
       }
       const smoothInitPrivateInfos = segment.privateInfos.smoothInitSegment;
-      let responseData: Uint8Array;
+      let responseData: Uint8Array<ArrayBuffer>;
       const {
         codecPrivateData,
         timescale,
@@ -203,7 +205,7 @@ const generateSegmentLoader =
 
         /**
          * Callback triggered when the custom segment loader has a response.
-         * @param {Object} args
+         * @param {Object} _args
          */
         const resolve = (_args: {
           data: ArrayBuffer | Uint8Array;
@@ -215,21 +217,31 @@ const generateSegmentLoader =
           }
           hasFinished = true;
           cancelSignal.deregister(abortCustomLoader);
+          let data: ArrayBuffer | Uint8Array<ArrayBuffer>;
+          if (_args.data instanceof Uint8Array) {
+            if (_args.data.buffer instanceof ArrayBuffer) {
+              // Typescript is not so smart here for now
+              data = _args.data as Uint8Array<ArrayBuffer>;
+            } else {
+              data = _args.data.slice();
+            }
+          } else {
+            data = _args.data;
+          }
 
           const isMP4 = isMP4EmbeddedTrack(context.mimeType);
           if (!isMP4 || checkMediaSegmentIntegrity !== true) {
             res({
               resultType: "segment-loaded" as const,
               resultData: {
-                responseData: _args.data,
+                responseData: data,
                 size: _args.size,
                 requestDuration: _args.duration,
               },
             });
           }
 
-          const dataU8 =
-            _args.data instanceof Uint8Array ? _args.data : new Uint8Array(_args.data);
+          const dataU8 = data instanceof Uint8Array ? data : new Uint8Array(data);
           checkISOBMFFIntegrity(dataU8, context.segment.isInit);
           res({
             resultType: "segment-loaded" as const,

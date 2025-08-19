@@ -21,11 +21,11 @@ import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff";
 
 export interface IKeySystem {
   systemId: string;
-  privateData: Uint8Array;
+  privateData: Uint8Array<ArrayBuffer>;
 }
 
 export interface IContentProtectionSmooth {
-  keyId: Uint8Array;
+  keyId: Uint8Array<ArrayBuffer>;
   keySystems: IKeySystem[];
 }
 
@@ -70,6 +70,7 @@ export default function parseProtectionNode(
     .toLowerCase()
     .replace(/\{|\}/g, "");
 
+  const supplementaryKeySystems = keySystemCreator(keyIdBytes);
   return {
     keyId: keyIdBytes,
     keySystems: [
@@ -78,6 +79,6 @@ export default function parseProtectionNode(
         privateData,
         /* keyIds: [keyIdBytes], */
       },
-    ].concat(keySystemCreator(keyIdBytes)),
+    ].concat(supplementaryKeySystems),
   };
 }

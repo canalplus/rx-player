@@ -35,9 +35,9 @@ import createTrafBox from "./create_traf_box";
  * @return {Uint8Array}
  */
 export default function patchSegment(
-  segment: Uint8Array,
+  segment: Uint8Array<ArrayBuffer>,
   decodeTime: number,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const oldMoofOffsets = getBoxOffsets(segment, 0x6d6f6f66 /* moof */);
   if (oldMoofOffsets === null) {
     throw new Error("Smooth: Invalid ISOBMFF given");
@@ -145,9 +145,9 @@ export default function patchSegment(
  * @returns {Uint8Array}
  */
 function updateTrunDataOffset(
-  oldTrunBox: Uint8Array,
+  oldTrunBox: Uint8Array<ArrayBuffer>,
   initialDataOffset: number,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const trunHasDataOffset =
     (oldTrunBox[initialDataOffset + 3 /* last flag */] & 0x01) > 0;
   if (trunHasDataOffset) {

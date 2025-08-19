@@ -282,8 +282,8 @@ export default function (options: ITransportOptions): ITransportPipelines {
       context: ISegmentContext,
       initTimescale: number | undefined,
     ):
-      | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null>
-      | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null> {
+      | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array<ArrayBuffer> | null>
+      | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array<ArrayBuffer> | null> {
       const { segment } = context;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { audio } = getTransportPipelinesFromSegment(segment);
@@ -330,8 +330,8 @@ export default function (options: ITransportOptions): ITransportPipelines {
       context: ISegmentContext,
       initTimescale: number | undefined,
     ):
-      | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null>
-      | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null> {
+      | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array<ArrayBuffer> | null>
+      | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array<ArrayBuffer> | null> {
       const { segment } = context;
       const { contentStart, contentEnd } = getMetaPlaylistPrivateInfos(segment);
       const { video } = getTransportPipelinesFromSegment(segment);

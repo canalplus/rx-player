@@ -134,7 +134,7 @@ export default function generateSegmentLoader({
   lowLatencyMode: boolean;
   segmentLoader?: ICustomSegmentLoader | undefined;
   checkMediaSegmentIntegrity?: boolean | undefined;
-}): ISegmentLoader<Uint8Array | ArrayBuffer | null> {
+}): ISegmentLoader<Uint8Array<ArrayBuffer> | ArrayBuffer | null> {
   return checkMediaSegmentIntegrity !== true
     ? segmentLoader
     : addSegmentIntegrityChecks(segmentLoader);
@@ -152,7 +152,7 @@ export default function generateSegmentLoader({
     context: ISegmentContext,
     options: ISegmentLoaderOptions,
     cancelSignal: CancellationSignal,
-    callbacks: ISegmentLoaderCallbacks<Uint8Array | ArrayBuffer | null>,
+    callbacks: ISegmentLoaderCallbacks<Uint8Array<ArrayBuffer> | ArrayBuffer | null>,
   ): Promise<
     | ISegmentLoaderResultSegmentLoaded<ILoadedAudioVideoSegmentFormat>
     | ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>
@@ -195,10 +195,21 @@ export default function generateSegmentLoader({
         }
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
+        let data: ArrayBuffer | Uint8Array<ArrayBuffer>;
+        if (_args.data instanceof Uint8Array) {
+          if (_args.data.buffer instanceof ArrayBuffer) {
+            // Typescript is not so smart here for now
+            data = _args.data as Uint8Array<ArrayBuffer>;
+          } else {
+            data = _args.data.slice();
+          }
+        } else {
+          data = _args.data;
+        }
         res({
           resultType: "segment-loaded",
           resultData: {
-            responseData: _args.data,
+            responseData: data,
             size: _args.size,
             requestDuration: _args.duration,
           },

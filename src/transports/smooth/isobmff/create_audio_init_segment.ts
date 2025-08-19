@@ -48,7 +48,7 @@ export default function createAudioInitSegment(
   sampleRate: number,
   codecPrivateData: string,
   keyId?: Uint8Array,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const _codecPrivateData =
     codecPrivateData.length === 0
       ? getAacesHeader(2, sampleRate, channelsCount)
