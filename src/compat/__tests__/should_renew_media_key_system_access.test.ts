@@ -31,12 +31,16 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
       return {
         __esModule: true as const,
         isIE11: false,
+        isEdgeChromium: false,
+        isFirefox: false,
       };
     });
     const shouldRenewMediaKeySystemAccess = jest.requireActual(
       "../should_renew_media_key_system_access",
     );
-    expect(shouldRenewMediaKeySystemAccess.default()).toBe(false);
+    expect(shouldRenewMediaKeySystemAccess.default("com.microsoft.playready")).toBe(
+      false,
+    );
   });
 
   it("should return true if we are on IE11", () => {
@@ -44,14 +48,13 @@ describe("compat - shouldRenewMediaKeySystemAccess", () => {
       return {
         __esModule: true as const,
         isIE11: true,
+        isEdgeChromium: false,
+        isFirefox: false,
       };
     });
     const shouldRenewMediaKeySystemAccess = jest.requireActual(
       "../should_renew_media_key_system_access",
     );
-    expect(shouldRenewMediaKeySystemAccess.default()).toBe(true);
-  });
-  beforeEach(() => {
-    jest.resetModules();
+    expect(shouldRenewMediaKeySystemAccess.default("com.microsoft.playready")).toBe(true);
   });
 });
