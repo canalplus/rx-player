@@ -30,7 +30,7 @@ const hasTextEncoder =
  * @param {string} str
  * @returns {Uint8Array}
  */
-function strToUtf16LE(str: string): Uint8Array {
+function strToUtf16LE(str: string): Uint8Array<ArrayBuffer> {
   const buffer = new ArrayBuffer(str.length * 2);
   const res = new Uint8Array(buffer);
   for (let i = 0; i < res.length; i += 2) {
@@ -47,7 +47,7 @@ function strToUtf16LE(str: string): Uint8Array {
  * @param {string} str
  * @returns {Uint8Array}
  */
-function strToBeUtf16(str: string): Uint8Array {
+function strToBeUtf16(str: string): Uint8Array<ArrayBuffer> {
   const buffer = new ArrayBuffer(str.length * 2);
   const res = new Uint8Array(buffer);
   for (let i = 0; i < res.length; i += 2) {
@@ -122,7 +122,7 @@ function beUtf16ToStr(bytes: Uint8Array): string {
  * @param {string} str
  * @returns {Uint8Array}
  */
-function strToUtf8(str: string): Uint8Array {
+function strToUtf8(str: string): Uint8Array<ArrayBuffer> {
   if (hasTextEncoder) {
     try {
       const encoder = new TextEncoder();
@@ -327,7 +327,7 @@ function utf8ToStr(data: Uint8Array): string {
  * @returns {Uint8Array}
  * @throws TypeError - str.length is odd
  */
-function hexToBytes(str: string): Uint8Array {
+function hexToBytes(str: string): Uint8Array<ArrayBuffer> {
   const len = str.length;
   const arr = new Uint8Array(len / 2);
   for (let i = 0, j = 0; i < len; i += 2, j++) {
@@ -361,7 +361,7 @@ function bytesToHex(bytes: Uint8Array, sep: string = ""): string {
  * @returns {Uint8Array} - uuid
  * @throws AssertionError - The guid length is not 16
  */
-function guidToUuid(guid: Uint8Array): Uint8Array {
+function guidToUuid(guid: Uint8Array): Uint8Array<ArrayBuffer> {
   assert(guid.length === 16, "GUID length should be 16");
 
   const p1A = guid[0];

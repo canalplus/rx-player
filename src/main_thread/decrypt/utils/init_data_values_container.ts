@@ -44,7 +44,7 @@ export default class InitDataValuesContainer {
    * Construct data that should be given to the `generateRequest` EME API.
    * @returns {Uint8Array}
    */
-  public constructRequestData(): Uint8Array {
+  public constructRequestData(): Uint8Array<ArrayBuffer> {
     // `generateKeyRequest` awaits a single Uint8Array containing all
     // initialization data.
     return concat(...this._innerValues.map((i) => i.data));

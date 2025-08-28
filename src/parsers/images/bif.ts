@@ -26,7 +26,7 @@ export interface IBifThumbnail {
   index: number;
   duration: number;
   ts: number;
-  data: Uint8Array;
+  data: Uint8Array<ArrayBuffer>;
 }
 
 export interface IBifObject {

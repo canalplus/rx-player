@@ -91,7 +91,7 @@ export function getISOBMFFEmbeddedTextTrackData(
     codecs?: string | undefined;
     language?: string | undefined;
   },
-  chunkBytes: Uint8Array,
+  chunkBytes: Uint8Array<ArrayBuffer>,
   initTimescale: number | undefined,
   chunkInfos: IChunkTimeInfo | null,
   isChunked: boolean,

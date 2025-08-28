@@ -21,7 +21,7 @@
  * @param {...(Number|Uint8Array)} args
  * @returns {Uint8Array}
  */
-function concat(...args: Array<Uint8Array | number[] | number>): Uint8Array {
+function concat(...args: Array<Uint8Array | number[] | number>): Uint8Array<ArrayBuffer> {
   const l = args.length;
   let i = -1;
   let len = 0;
@@ -264,9 +264,12 @@ function isABEqualBytes(buffer: ArrayBuffer, bytes: Uint8Array): boolean {
  * @param {BufferSource} input
  * @returns {Uint8Array}
  */
-function toUint8Array(input: BufferSource): Uint8Array {
+function toUint8Array(
+  input: ArrayBufferView<ArrayBuffer> | ArrayBuffer,
+): Uint8Array<ArrayBuffer> {
   if (input instanceof Uint8Array) {
-    return input;
+    // TypeScript's just dumb here
+    return input as Uint8Array<ArrayBuffer>;
   } else if (input instanceof ArrayBuffer) {
     return new Uint8Array(input);
   } else {

@@ -37,7 +37,7 @@ export function generateEventStreamChildrenParser(
   childrenObj: IEventStreamChildren,
   linearMemory: WebAssembly.Memory,
   parsersStack: ParsersStack,
-  fullMpd: ArrayBuffer,
+  fullMpd: ArrayBufferLike,
 ): IChildrenParser {
   return function onRootChildren(nodeId: number) {
     switch (nodeId) {
@@ -113,7 +113,7 @@ export function generateEventStreamAttrParser(
 function generateEventAttrParser(
   eventAttr: IEventStreamEventIntermediateRepresentation,
   linearMemory: WebAssembly.Memory,
-  fullMpd: ArrayBuffer,
+  fullMpd: ArrayBufferLike,
 ): IAttributeParser {
   const textDecoder = new TextDecoder();
   return function onEventStreamAttribute(attr: number, ptr: number, len: number) {

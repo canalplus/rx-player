@@ -15,6 +15,7 @@
  */
 
 import { base64ToBytes } from "../../../utils/base64";
+import { toUint8Array } from "../../../utils/byte_parsing";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
 import noop from "../../../utils/noop";
@@ -102,12 +103,11 @@ class OldWebkitMediaKeySession
     });
   }
 
-  public update(license: Uint8Array): Promise<void> {
+  public update(license: BufferSource): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         if (this._key.indexOf("clearkey") >= 0) {
-          const licenseTypedArray =
-            license instanceof ArrayBuffer ? new Uint8Array(license) : license;
+          const licenseTypedArray = toUint8Array(license);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const json = JSON.parse(utf8ToStr(licenseTypedArray));
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument

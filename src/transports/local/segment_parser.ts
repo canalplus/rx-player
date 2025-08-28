@@ -27,12 +27,15 @@ import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
 import inferSegmentContainer from "../utils/infer_segment_container";
 
 export default function segmentParser(
-  loadedSegment: { data: ArrayBuffer | Uint8Array | null; isChunked: boolean },
+  loadedSegment: {
+    data: ArrayBuffer | Uint8Array<ArrayBuffer> | null;
+    isChunked: boolean;
+  },
   context: ISegmentContext,
   initTimescale: number | undefined,
 ):
-  | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array | null>
-  | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array | null> {
+  | ISegmentParserParsedInitChunk<ArrayBuffer | Uint8Array<ArrayBuffer> | null>
+  | ISegmentParserParsedMediaChunk<ArrayBuffer | Uint8Array<ArrayBuffer> | null> {
   const { segment, periodStart, periodEnd } = context;
   const { data } = loadedSegment;
   const appendWindow: [number, number | undefined] = [periodStart, periodEnd];

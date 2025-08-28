@@ -500,7 +500,7 @@ function patchPssh(buf: Uint8Array, psshList: IISOBMFFPSSHInfo[]): Uint8Array {
  * @param {Uint8Array} buf - The ISOBMFF box
  * @returns {Uint8Array}
  */
-function updateBoxLength(buf: Uint8Array): Uint8Array {
+function updateBoxLength(buf: Uint8Array<ArrayBuffer>): Uint8Array<ArrayBuffer> {
   const newLen = buf.length;
   if (newLen < 4) {
     throw new Error("Cannot update box length: box too short");
@@ -605,7 +605,9 @@ function parseEmsgBoxes(buffer: Uint8Array): IEMSG[] | undefined {
  * @param {Uint8Array} segment
  * @returns {Uint8Array|null}
  */
-function getKeyIdFromInitSegment(segment: Uint8Array): Uint8Array | null {
+function getKeyIdFromInitSegment<T extends ArrayBufferLike>(
+  segment: Uint8Array<T>,
+): Uint8Array<T> | null {
   const stsd = getChildBox(
     segment,
     [

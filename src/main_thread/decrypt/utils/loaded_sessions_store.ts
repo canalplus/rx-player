@@ -157,7 +157,7 @@ export default class LoadedSessionsStore {
   public async generateLicenseRequest(
     mediaKeySession: IMediaKeySession,
     initializationDataType: string | undefined,
-    initializationData: Uint8Array,
+    initializationData: Uint8Array<ArrayBuffer>,
   ): Promise<unknown> {
     let entry: IStoredSessionEntry | undefined;
     for (const stored of this._storage) {

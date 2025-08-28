@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { itole4, le4toi } from "../../utils/byte_parsing";
+import { itole4, le4toi, toUint8Array } from "../../utils/byte_parsing";
 import { strToUtf16LE, utf16LEToStr } from "../../utils/string_parsing";
 
 /**
@@ -22,20 +22,16 @@ import { strToUtf16LE, utf16LEToStr } from "../../utils/string_parsing";
  * Layout is :
  * [initData][4 byte: idLength][idLength byte: id]
  * [4 byte:certLength][certLength byte: cert]
- * @param {Uint8Array} initData
- * @param {Uint8Array} serverCertificate
+ * @param {Uint8Array} initDataBytes
+ * @param {Uint8Array} serverCertificateBytes
  * @returns {Uint8Array}
  */
 export default function getWebKitFairPlayInitData(
-  initDataBytes: Uint8Array | ArrayBuffer,
-  serverCertificateBytes: Uint8Array | ArrayBuffer,
-): Uint8Array {
-  const initData =
-    initDataBytes instanceof Uint8Array ? initDataBytes : new Uint8Array(initDataBytes);
-  const serverCertificate =
-    serverCertificateBytes instanceof Uint8Array
-      ? serverCertificateBytes
-      : new Uint8Array(serverCertificateBytes);
+  initDataBytes: BufferSource,
+  serverCertificateBytes: BufferSource,
+): Uint8Array<ArrayBuffer> {
+  const initData = toUint8Array(initDataBytes);
+  const serverCertificate = toUint8Array(serverCertificateBytes);
   const length = le4toi(initData, 0);
   if (length + 4 !== initData.length) {
     throw new Error("Unsupported WebKit initData.");

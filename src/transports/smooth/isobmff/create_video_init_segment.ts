@@ -50,7 +50,7 @@ export default function createVideoInitSegment(
   nalLength: number,
   codecPrivateData: string,
   keyId?: Uint8Array,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const [, spsHex, ppsHex] = codecPrivateData.split("00000001");
   if (spsHex === undefined || ppsHex === undefined) {
     throw new Error("Smooth: unsupported codec private data.");

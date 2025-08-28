@@ -46,7 +46,7 @@ import {
  * @returns {Object}
  */
 function parseISOBMFFEmbeddedTextTrack(
-  data: string | Uint8Array | ArrayBuffer,
+  data: string | Uint8Array<ArrayBuffer> | ArrayBuffer,
   isChunked: boolean,
   context: ISegmentContext,
   initTimescale: number | undefined,
@@ -55,7 +55,7 @@ function parseISOBMFFEmbeddedTextTrack(
   | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null> {
   const { periodStart, periodEnd, segment } = context;
 
-  let chunkBytes;
+  let chunkBytes: Uint8Array<ArrayBuffer>;
   if (typeof data === "string") {
     chunkBytes = strToUtf8(data);
   } else if (data instanceof Uint8Array) {

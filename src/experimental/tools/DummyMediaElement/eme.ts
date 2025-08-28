@@ -8,7 +8,7 @@ import { getBoxOffsets } from "../../../parsers/containers/isobmff";
 import arrayIncludes from "../../../utils/array_includes";
 import assert from "../../../utils/assert";
 import { base64ToBytes, bytesToBase64 } from "../../../utils/base64";
-import { be4toi, le2toi } from "../../../utils/byte_parsing";
+import { be4toi, le2toi, toUint8Array } from "../../../utils/byte_parsing";
 import createUuid from "../../../utils/create_uuid";
 import EventEmitter from "../../../utils/event_emitter";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
@@ -234,7 +234,7 @@ export class DummyMediaKeys implements IMediaKeys {
         "Cannot set `serverCertificate`: an empty certificate was given",
       );
     }
-    const clonedServerCertificate = bufferSourceToUint8Array(serverCertificate).slice();
+    const clonedServerCertificate = toUint8Array(serverCertificate).slice();
     this._serverCertificateRef.setValue(clonedServerCertificate);
     return Promise.resolve(true);
   }
@@ -607,7 +607,7 @@ export class DummyMediaKeySession
       return Promise.reject(new TypeError("Invalid `update` call: empty response"));
     }
 
-    const responseU8 = bufferSourceToUint8Array(response);
+    const responseU8 = toUint8Array(response);
     const parsed = utf8ToStr(responseU8);
 
     let hasUpdatedKeys = false;
@@ -744,14 +744,14 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
   public forEach(
     callbackfn: (
       value: MediaKeyStatus,
-      key: BufferSource,
+      key: ArrayBuffer,
       parent: MediaKeyStatusMap,
     ) => void,
   ): void {
     return this._innerMap.forEach((value, key) => {
       const toLocalFormat = kidToPlatformKid(
         this._keySystem,
-        bufferSourceToUint8Array(hexToBytes(key)),
+        toUint8Array(hexToBytes(key)),
       );
       callbackfn(value.status, toLocalFormat.buffer, this);
     });
@@ -781,10 +781,7 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
    * returned.
    */
   public get(key: BufferSource): MediaKeyStatus | undefined {
-    const toLocalFormat = kidToPlatformKid(
-      this._keySystem,
-      bufferSourceToUint8Array(key),
-    );
+    const toLocalFormat = kidToPlatformKid(this._keySystem, toUint8Array(key));
     const keyStr = bytesToHex(toLocalFormat);
     return this._innerMap.get(keyStr)?.status;
   }
@@ -794,10 +791,7 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
    * exists or not.
    */
   public has(key: BufferSource): boolean {
-    const toLocalFormat = kidToPlatformKid(
-      this._keySystem,
-      bufferSourceToUint8Array(key),
-    );
+    const toLocalFormat = kidToPlatformKid(this._keySystem, toUint8Array(key));
     const keyStr = bytesToHex(toLocalFormat);
     return this._innerMap.has(keyStr);
   }
@@ -807,21 +801,6 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
    */
   public clear(): void {
     return this._innerMap.clear();
-  }
-}
-
-/**
- * Convert a vague `BufferSource` Object to a more precize `Uint8Array`.
- * @param {BufferSource} buf
- * @returns {Uint8Array}
- */
-function bufferSourceToUint8Array(buf: BufferSource): Uint8Array {
-  if (buf instanceof Uint8Array) {
-    return buf;
-  } else if (buf instanceof ArrayBuffer) {
-    return new Uint8Array(buf);
-  } else {
-    return new Uint8Array(buf.buffer);
   }
 }
 
@@ -1024,10 +1003,10 @@ function splitPsshBoxes(data: Uint8Array): Uint8Array[] {
  * @param {Uint8Array} baseKeyId
  * @returns {Uint8Array}
  */
-export default function kidToPlatformKid(
+export default function kidToPlatformKid<T extends ArrayBufferLike>(
   keySystem: string,
-  baseKeyId: Uint8Array,
-): Uint8Array {
+  baseKeyId: Uint8Array<T>,
+): Uint8Array<T | ArrayBuffer> {
   if (
     keySystem.indexOf("playready") !== -1 &&
     (EnvDetector.browser === EnvDetector.BROWSERS.EdgeChromium ||
@@ -1044,7 +1023,7 @@ export default function kidToPlatformKid(
  * @returns {Uint8Array} - guid
  * @throws AssertionError - The uuid length is not 16
  */
-function uuidToGuid(uuid: Uint8Array): Uint8Array {
+function uuidToGuid(uuid: Uint8Array): Uint8Array<ArrayBuffer> {
   assert(uuid.length === 16, "UUID length should be 16");
 
   const p1A = uuid[0];

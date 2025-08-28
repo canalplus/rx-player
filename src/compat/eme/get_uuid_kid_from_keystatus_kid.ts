@@ -26,8 +26,8 @@ import EnvDetector from "../env_detector";
  */
 export default function getUUIDKIDFromKeyStatusKID(
   keySystem: string,
-  baseKeyId: Uint8Array,
-): Uint8Array {
+  baseKeyId: Uint8Array<ArrayBuffer>,
+): Uint8Array<ArrayBuffer> {
   if (
     keySystem.indexOf("playready") !== -1 &&
     (EnvDetector.browser === EnvDetector.BROWSERS.EdgeChromium ||

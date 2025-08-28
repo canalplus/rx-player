@@ -32,7 +32,7 @@ export interface MSMediaKeySession extends EventTarget {
   readonly keySystem: string;
   readonly sessionId: string;
   close(): void;
-  update(key: Uint8Array): void;
+  update(key: BufferSource): void;
 }
 
 export interface MSMediaKeys {

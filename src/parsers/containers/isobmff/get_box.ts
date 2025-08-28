@@ -26,7 +26,10 @@ import { be4toi, be8toi } from "../../../utils/byte_parsing";
  * @param {number[]} childNames
  * @returns {Uint8Array|null}
  */
-function getChildBox(buf: Uint8Array, childNames: number[]): Uint8Array | null {
+function getChildBox<T extends ArrayBufferLike>(
+  buf: Uint8Array<T>,
+  childNames: number[],
+): Uint8Array<T> | null {
   let currBox = buf;
   for (const childName of childNames) {
     const box = getBoxContent(currBox, childName);
@@ -46,7 +49,10 @@ function getChildBox(buf: Uint8Array, childNames: number[]): Uint8Array | null {
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {UInt8Array|null}
  */
-function getBoxContent(buf: Uint8Array, boxName: number): Uint8Array | null {
+function getBoxContent<T extends ArrayBufferLike>(
+  buf: Uint8Array<T>,
+  boxName: number,
+): Uint8Array<T> | null {
   const offsets = getBoxOffsets(buf, boxName);
   return offsets !== null ? buf.subarray(offsets[1], offsets[2]) : null;
 }
@@ -59,7 +65,10 @@ function getBoxContent(buf: Uint8Array, boxName: number): Uint8Array | null {
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {Array.<Uint8Array>}
  */
-function getBoxesContent(buf: Uint8Array, boxName: number): Uint8Array[] {
+function getBoxesContent<T extends ArrayBufferLike>(
+  buf: Uint8Array<T>,
+  boxName: number,
+): Array<Uint8Array<T>> {
   const ret = [];
   let currentBuf = buf;
   while (true) {
@@ -84,7 +93,10 @@ function getBoxesContent(buf: Uint8Array, boxName: number): Uint8Array[] {
  * generated from encoding the corresponding ASCII in big endian.
  * @returns {UInt8Array|null}
  */
-function getBox(buf: Uint8Array, boxName: number): Uint8Array | null {
+function getBox<T extends ArrayBufferLike>(
+  buf: Uint8Array<T>,
+  boxName: number,
+): Uint8Array<T> | null {
   const offsets = getBoxOffsets(buf, boxName);
   return offsets !== null ? buf.subarray(offsets[0], offsets[2]) : null;
 }
@@ -168,13 +180,13 @@ function getBoxOffsets(
  * @param {Number} id4
  * @returns {Uint8Array|undefined}
  */
-function getUuidContent(
-  buf: Uint8Array,
+function getUuidContent<T extends ArrayBufferLike>(
+  buf: Uint8Array<T>,
   id1: number,
   id2: number,
   id3: number,
   id4: number,
-): Uint8Array | undefined {
+): Uint8Array<T> | undefined {
   const len = buf.length;
 
   let boxSize: number;

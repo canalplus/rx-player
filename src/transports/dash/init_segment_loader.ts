@@ -42,10 +42,10 @@ export default function initSegmentLoader(
   segment: ISegment,
   options: ISegmentLoaderOptions,
   cancelSignal: CancellationSignal,
-  callbacks: ISegmentLoaderCallbacks<ArrayBuffer | Uint8Array>,
+  callbacks: ISegmentLoaderCallbacks<ArrayBuffer | Uint8Array<ArrayBuffer>>,
 ): Promise<
-  | ISegmentLoaderResultSegmentLoaded<ArrayBuffer | Uint8Array>
-  | ISegmentLoaderResultSegmentCreated<ArrayBuffer | Uint8Array>
+  | ISegmentLoaderResultSegmentLoaded<ArrayBuffer | Uint8Array<ArrayBuffer>>
+  | ISegmentLoaderResultSegmentCreated<ArrayBuffer | Uint8Array<ArrayBuffer>>
   | ISegmentLoaderResultChunkedComplete
 > {
   let url = initialUrl;

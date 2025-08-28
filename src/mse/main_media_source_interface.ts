@@ -476,7 +476,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
           log.info("mse", `: Merging ${toConcat.length} segments together for perf`, {
             type: this.type,
           });
-          segmentData = concat(...toConcat);
+          segmentData = concat(...toConcat).buffer;
         }
       }
       try {
