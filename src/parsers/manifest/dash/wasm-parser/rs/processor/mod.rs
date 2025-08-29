@@ -162,7 +162,7 @@ impl MPDProcessor {
     /// This method is always inlined for optimization reasons as it is both
     /// short and generally used in loops.
     #[inline(always)]
-    fn read_next_event(&mut self) -> quick_xml::Result<quick_xml::events::Event> {
+    fn read_next_event<'a>(&'a mut self) -> quick_xml::Result<quick_xml::events::Event<'a>> {
         if !self.reader_buf.is_empty() {
             self.reader_buf.clear();
         }
