@@ -569,7 +569,7 @@ export interface IKeySystemOption {
   type: string;
   /** Logic used to fetch the license */
   getLicense: (
-    message: Uint8Array,
+    message: Uint8Array<ArrayBuffer>,
     messageType: string,
   ) => Promise<BufferSource | null> | BufferSource | null;
   /** Supplementary optional configuration for the getLicense call. */

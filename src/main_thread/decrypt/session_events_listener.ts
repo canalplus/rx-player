@@ -202,7 +202,7 @@ export default function SessionEventsListener(
   }
 
   function runGetLicense(
-    message: Uint8Array,
+    message: Uint8Array<ArrayBuffer>,
     messageType: MediaKeyMessageType,
   ): Promise<BufferSource | null> {
     let timeoutId: number | undefined;

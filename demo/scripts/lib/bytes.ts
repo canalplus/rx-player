@@ -4,7 +4,7 @@
  * @param {string} str
  * @returns {Uint8Array}
  */
-export function strToLeUtf16(str: string): Uint8Array {
+export function strToLeUtf16(str: string): Uint8Array<ArrayBuffer> {
   const buffer = new ArrayBuffer(str.length * 2);
   const res = new Uint8Array(buffer);
   for (let i = 0; i < res.length; i += 2) {
@@ -34,7 +34,7 @@ export function leUtf16ToStr(bytes: Uint8Array): string {
  * @param {string} str
  * @returns {Uint8Array}
  */
-export function strToUtf8(str: string): Uint8Array {
+export function strToUtf8(str: string): Uint8Array<ArrayBuffer> {
   // http://stackoverflow.com/a/13691499 provides an ugly but functional solution.
   // (Note you have to dig deeper to understand it but I have more faith in
   // stackoverflow not going down in the future so I leave that link.)

@@ -58,7 +58,7 @@ export default async function parseDRMConfigurations(
 export function toDummyDrmConfiguration(
   baseOptions: IKeySystemOption[],
 ): IKeySystemOption[] {
-  return baseOptions.map((ks) => {
+  return baseOptions.map((ks): IKeySystemOption => {
     return {
       ...ks,
       getLicense(...args: Parameters<IKeySystemOption["getLicense"]>) {
@@ -86,7 +86,7 @@ export function toDummyDrmConfiguration(
             persistent: false,
             keys,
           };
-          const licenseU8 = strToUtf8(JSON.stringify(license));
+          const licenseU8: Uint8Array<ArrayBuffer> = strToUtf8(JSON.stringify(license));
           return licenseU8.buffer;
         } catch (e) {
           return ks.getLicense(...args);
@@ -116,17 +116,7 @@ function getServerCertificate(url: string): Promise<ArrayBuffer> {
   });
 }
 
-function formatPlayreadyChallenge(challenge: BufferSource): string {
-  let u8Challenge;
-  if (!(challenge instanceof Uint8Array)) {
-    if (challenge instanceof ArrayBuffer) {
-      u8Challenge = new Uint8Array(challenge);
-    } else {
-      u8Challenge = new Uint8Array(challenge.buffer);
-    }
-  } else {
-    u8Challenge = challenge;
-  }
+function formatPlayreadyChallenge(u8Challenge: Uint8Array): string {
   const str = leUtf16ToStr(u8Challenge);
   const match = /<Challenge encoding="base64encoded">(.*)<\/Challenge>/.exec(str);
   const xml = match ? atob(match[1]) /* IE11 / EDGE */ : utf8ToStr(u8Challenge); // Chromecast
@@ -137,9 +127,9 @@ function generateGetLicense(
   licenseServerUrl: string,
   drmType: string,
   fallbackOnLastTry: boolean | undefined,
-): (rawChallenge: BufferSource) => Promise<BufferSource | null> {
+): (rawChallenge: Uint8Array<ArrayBuffer>) => Promise<BufferSource | null> {
   const isPlayready = drmType.indexOf("playready") !== -1;
-  return (rawChallenge: BufferSource): Promise<BufferSource | null> => {
+  return (rawChallenge: Uint8Array<ArrayBuffer>): Promise<BufferSource | null> => {
     if (licenseServerUrl === "") {
       throw new Error("The content is encrypted but no license server URL was entered");
     }
