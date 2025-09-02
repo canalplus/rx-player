@@ -174,6 +174,13 @@ export default function StreamOrchestrator(
         if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
           return;
         }
+        const nextPeriod =
+          manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
+        if (!isNullOrUndefined(nextPeriod) && periodList.has(nextPeriod)) {
+          // Last check just for resilience reasons that the wanted Period is
+          // not one of the already-handled ones
+          return;
+        }
 
         log.info(
           "Stream",
@@ -190,8 +197,6 @@ export default function StreamOrchestrator(
         currentCanceller = new TaskCanceller();
         currentCanceller.linkToSignal(orchestratorCancelSignal);
 
-        const nextPeriod =
-          manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
         if (nextPeriod === undefined) {
           log.warn("Stream", "The wanted position is not found in the Manifest.");
           enableOutOfBoundsCheck = true;
