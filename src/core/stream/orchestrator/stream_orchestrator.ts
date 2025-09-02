@@ -177,6 +177,11 @@ export default function StreamOrchestrator(
         const nextPeriod =
           manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
         const lastPeriodEnd = periodList.last()?.end;
+        log.warn("Stream", "!!!!!!!!!", {
+          lastPeriodEnd,
+          time,
+          nextStart: nextPeriod?.start,
+        });
         if (
           !isNullOrUndefined(lastPeriodEnd) &&
           lastPeriodEnd === time &&
@@ -194,6 +199,7 @@ export default function StreamOrchestrator(
           // To avoid issues, also consider this special case here. Considering
           // the just-ended Period as still in-bound should not create issues
           // anyway.
+          log.warn("Stream", "!!!!!!!!!!!!! Do not destroy");
           return;
         }
 
@@ -486,7 +492,7 @@ export default function StreamOrchestrator(
     // that Period.
     playbackObserver.listen(
       ({ position }, stopListeningObservations) => {
-        if (basePeriod.end !== undefined && position.getWanted() >= basePeriod.end) {
+        if (basePeriod.end !== undefined && position.getWanted() > basePeriod.end) {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
 
           // Handle special wantedPosition === basePeriod.end cases
