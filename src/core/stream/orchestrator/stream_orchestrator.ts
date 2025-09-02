@@ -174,6 +174,28 @@ export default function StreamOrchestrator(
         if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
           return;
         }
+        const nextPeriod =
+          manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
+        const lastPeriodEnd = periodList.last()?.end;
+        if (
+          !isNullOrUndefined(lastPeriodEnd) &&
+          lastPeriodEnd === time &&
+          !isNullOrUndefined(nextPeriod) &&
+          nextPeriod.start > time
+        ) {
+          // There's a kind-of ambiguous situation when the position is exactly
+          // at a Period's end but the next Period starts later: Do we consider
+          // that to be an out-of-bounds from the `PeriodStream` linked to that
+          // former Period?
+          // Technically we could, but the rest of the RxPlayer (e.g. a
+          // `Manifest`) may treat it as a special case where the position is
+          // still linked to the former Period.
+          //
+          // To avoid issues, also consider this special case here. Considering
+          // the just-ended Period as still in-bound should not create issues
+          // anyway.
+          return;
+        }
 
         log.info(
           "Stream",
@@ -190,8 +212,6 @@ export default function StreamOrchestrator(
         currentCanceller = new TaskCanceller();
         currentCanceller.linkToSignal(orchestratorCancelSignal);
 
-        const nextPeriod =
-          manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
         if (nextPeriod === undefined) {
           log.warn("Stream", "The wanted position is not found in the Manifest.");
           enableOutOfBoundsCheck = true;
