@@ -1,12 +1,14 @@
 # Changelog
 
-## Current dev build: v4.4.0-dev.2025072300
+## Current dev build: v4.0.0-dev.2025090300
 
 ### Features
 
 - Add `onAudioTracksNotPlayable` and `onVideoTracksNotPlayable` `loadVideo` options to
   control whether to continue playback is one of those components is not compatible to the
   current device [#1624]
+- Add `getWallClockOffset` API to obtain a "live position"'s offset [#1601]
+- add `disableAudioTrack` API [#1715]
 - DRM: Add `keySystem` and `keySystemConfiguration` to most `EncryptedMediaError` so an
   application can determine which key system caused an issue [#1690]
 - Update API of the experimental `mediaCapabilitiesProber` API so it's more flexible to
@@ -18,20 +20,29 @@
 - Subtitles: Fix some subtitle missing on multiple period assets [#1708]
 - DRM: renew the mediaKeySystemAccess on Edge and Firefox when using a Playready keySystem
   to work-around frequent DRM issues. [#1694]
+- DASH: Fix some rare occurence of infinite rebuffering on multi-Period when seeking
+  exactly at the end of a Period. [#1738]
 - DRM: On Firefox check extensively Playready DRMs support before using them to
   work-around recent firefox issue with PlayReady integration [#1691]
 - DRM: Fix persistent session loading when content has no key id [#1713]
+- `representation` object returned by some API had incorrect shape for optional attributes
+  [#1720]
 - fix(safari): wait for canplay event to seek on safari [#1707]
+- Fix: set autoplay attribute ondirectfile contents [#1711]
 
 ### Other improvements
 
 - Add hidden experimental API "Dummy media API" to facilitate tests and debugging of the
   RxPlayer behavior without having to support the content in the current environment
   [#1478]
+- Thumbnails: Cache pending thumbnail request [#1718]
+- Update log syntax so users can follow them more easily [#1717]
+- Add to hidden RxPlayer config most compat switches [#1514]
 - Prevent unnecessary resources usage by inactive worker [#1696]
 - Improve on freeze resolution, especially for encrypted contents [#1705]
 - Detect that `fetch` / `AbortController` is native to provide a better experience for
   application relying on (broken) polyfills instead [#1698]
+- enable debug logs as soon as `__RX_PLAYER_DEBUG_MODE__` is set [#1626]
 
 ## v4.3.0
 
