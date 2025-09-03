@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.0.0-dev.2025090300
+## Current dev build: v4.4.0-dev.2025090300
 
 ### Features
 
