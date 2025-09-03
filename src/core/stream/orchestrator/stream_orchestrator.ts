@@ -175,6 +175,16 @@ export default function StreamOrchestrator(
           return;
         }
 
+        const getNewBasePeriod = (): IPeriod | undefined =>
+          manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
+
+        let nextPeriod = getNewBasePeriod();
+        if (!isNullOrUndefined(nextPeriod) && periodList.has(nextPeriod)) {
+          // Last check just for resilience reasons that the wanted Period is
+          // not one of the already-handled ones
+          return;
+        }
+
         log.info(
           "Stream",
           "Destroying all PeriodStreams due to out of bounds situation",
@@ -190,8 +200,9 @@ export default function StreamOrchestrator(
         currentCanceller = new TaskCanceller();
         currentCanceller.linkToSignal(orchestratorCancelSignal);
 
-        const nextPeriod =
-          manifest.getPeriodForTime(time) ?? manifest.getNextPeriod(time);
+        // As previous callbacks may have performed unknown side-effects, just
+        // re-compute the next Period now.
+        nextPeriod = getNewBasePeriod();
         if (nextPeriod === undefined) {
           log.warn("Stream", "The wanted position is not found in the Manifest.");
           enableOutOfBoundsCheck = true;
