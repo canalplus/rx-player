@@ -516,14 +516,16 @@ function ContentList({
 
   const onClickLoad = () => {
     if (contentChoiceIndex === 0) {
-      const drmInfos = [
-        {
-          licenseServerUrl,
-          serverCertificateUrl,
-          drm: chosenDRMType,
-          customKeySystem,
-        },
-      ];
+      const drmInfos = shouldDisplayDRMSettings
+        ? [
+            {
+              licenseServerUrl,
+              serverCertificateUrl,
+              drm: chosenDRMType,
+              customKeySystem,
+            },
+          ]
+        : [];
       loadUrl(currentManifestURL, drmInfos);
     } else {
       loadContent(contentsToSelect[contentChoiceIndex]);
