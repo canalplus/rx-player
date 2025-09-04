@@ -15,7 +15,6 @@
  */
 
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import shouldWaitCanPlayEventForSeeking from "../../../compat/should_seek_only_after_canplay";
 import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
@@ -132,21 +131,8 @@ export default function performInitialSeekAndPlay(
             }
             if (obs.readyState >= 1) {
               stopListening();
-
               if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
-                if (shouldWaitCanPlayEventForSeeking()) {
-                  const seekOnCanPlay = () => {
-                    performInitialSeek(initiallySeekedTime);
-                    mediaElement.removeEventListener("canplay", seekOnCanPlay);
-                  };
-                  mediaElement.addEventListener("canplay", seekOnCanPlay);
-                  cancelSignal.register(() => {
-                    // clean up the event listener on content stop
-                    mediaElement.removeEventListener("canplay", seekOnCanPlay);
-                  });
-                } else {
-                  performInitialSeek(initiallySeekedTime);
-                }
+                performInitialSeek(initiallySeekedTime);
               }
               waitForSeekable();
             }

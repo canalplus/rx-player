@@ -323,7 +323,7 @@ function getDirectFileInitialTime(
     }
     log.warn(
       "Init",
-      "startAt.fromLastPosition set but no known duration, " +
+      "startAt.fromLastPosition set but duration is not known, " +
         "it may be too soon to seek",
     );
     return undefined;
@@ -333,7 +333,8 @@ function getDirectFileInitialTime(
     if (isNullOrUndefined(livePosition)) {
       log.warn(
         "Init",
-        "startAt.fromLivePosition set but no known live position, " + "beginning at 0.",
+        "startAt.fromLivePosition set but live position is not known, " +
+          "beginning at 0.",
       );
       return 0;
     }
@@ -342,7 +343,7 @@ function getDirectFileInitialTime(
     if (isNullOrUndefined(duration) || !isFinite(duration)) {
       log.warn(
         "Init",
-        "startAt.percentage set but no known duration, " + "beginning at 0.",
+        "startAt.percentage set but duration is not known, " + "beginning at 0.",
       );
       return 0;
     }

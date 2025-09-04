@@ -1275,13 +1275,6 @@ const DEFAULT_CONFIG = {
   FORCE_CANNOT_REUSE_MEDIA_KEYS: false,
 
   /**
-   * If set to `true`, we'll never seek directly after receiving the
-   * `loadedmetadata` event from an `HTMLMediaElement`, instead waiting a small
-   * amount of time before.
-   */
-  FORCE_WAIT_CAN_PLAY_FOR_SEEKING: false,
-
-  /**
    * If set to `true`, force work-around for devices which have issues with
    * `MediaSource` objects with a high `duration` property.
    */
