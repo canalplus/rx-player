@@ -121,7 +121,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
             this.trigger("warning", warning);
           }
         },
-        { includeLastObservation: true, clearSignal: cancelSignal },
+        { includeLastObservation: false, clearSignal: cancelSignal },
       );
     });
 
