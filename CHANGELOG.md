@@ -14,6 +14,8 @@
 - Update API of the experimental `mediaCapabilitiesProber` API so it's more flexible to
   use [#1472]
 - Implement inband WebVTT (vtte/vttc) [#1639]
+- Add `"NO_AUDIO_VIDEO_TRACKS"` error for when neither audio nor video is available or
+  when both are explicitly disabled [#1624]
 
 ### Bug fixes
 
@@ -27,8 +29,8 @@
 - DRM: Fix persistent session loading when content has no key id [#1713]
 - `representation` object returned by some API had incorrect shape for optional attributes
   [#1720]
-- fix(safari): wait for canplay event to seek on safari [#1707]
-- Fix: set autoplay attribute ondirectfile contents [#1711]
+- Directfile: set autoplay attribute on directfile contents, to work-around
+  safari-specific issues [#1711]
 
 ### Other improvements
 
