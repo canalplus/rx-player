@@ -270,7 +270,7 @@ export interface IParsedAdaptation {
    * languages, texted graphics or location/person IDs that are not otherwise
    * covered in the dubbed/localized audio Adaptation.
    */
-  forcedSubtitles?: boolean;
+  forcedSubtitles?: boolean | undefined;
   /**
    * If true this Adaptation is in a dub: it was recorded in another language
    * than the original(s) one(s).

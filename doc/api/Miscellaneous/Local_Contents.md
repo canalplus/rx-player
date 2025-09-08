@@ -276,6 +276,7 @@ We'll finish with a text track example:
   closedCaption: false, // if `true`, that text track contains supplementary
                         // cues about the audio content (generally used for the
                         // hard of hearing)
+  forcedSubtitles: false, // if `true`, that text track contains "forced subtitles".
   representations: [ /* ... */ ]
 }
 ```
@@ -313,12 +314,14 @@ Here how it looks when adaptations are integrated in a given period:
       type: "text",
       language: "fra",
       closedCaption: false,
+      forcedSubtitles: false,
       representations: [ /* ... */ ]
     },
     {
       type: "text",
       language: "fra",
       closedCaption: true,
+      forcedSubtitles: false,
       representations: [ /* ... */ ]
     }
   ]
@@ -350,6 +353,14 @@ The following properties are found in an adaptation object:
   is generally only relevant for text tracks helping to understand what's on the screen.
   Mostly useful for the visually impaired, this property is generally only relevant for
   audio tracks.
+
+- forcedSubtitles (`boolean|undefined`): If `true`, that text track is intended as a
+  "forced subtitles" text track, which is the text track to display when there's no other
+  text track selected.
+
+  This type of text track usually contains e.g. translation of foreign language inside a
+  film (think things like klingon in star trek for example) or important foreign writing
+  that needs translation on screen.
 
 - representations (`Array.<Object>`): The different available qualities for this track.
   Will be described below.
