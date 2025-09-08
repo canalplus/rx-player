@@ -303,9 +303,8 @@ describe("API - parseLoadVideoOptions", () => {
     textTrackElement: undefined,
     textTrackMode: "native",
     url: undefined,
-    experimentalOptions: {
-      enableRepresentationAvoidance: false,
-    },
+    enableRepresentationAvoidance: true,
+    experimentalOptions: undefined,
   };
 
   it("should throw if no option is given", () => {

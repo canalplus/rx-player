@@ -128,6 +128,13 @@ export interface ILoadVideoOptions {
    */
   enableFastSwitching?: boolean;
 
+  /**
+   * If `true`, the RxPlayer can enable its "Representation avoidance"
+   * mechanism, where it avoid loading Representation that it suspect
+   * have issues being decoded on the current device.
+   */
+  enableRepresentationAvoidance?: boolean | undefined;
+
   /** Default behavior when switching to a different audio track. */
   defaultAudioTrackSwitchingMode?: IAudioTrackSwitchingMode;
 
@@ -209,16 +216,8 @@ export interface ILoadVideoOptions {
    * Most of those are options which we temporarily test before making
    * them part of the RxPlayer API.
    */
-  experimentalOptions?:
-    | {
-        /**
-         * If `true`, the RxPlayer can enable its "Representation avoidance"
-         * mechanism, where it avoid loading Representation that it suspect
-         * have issues being decoded on the current device.
-         */
-        enableRepresentationAvoidance: boolean | undefined;
-      }
-    | undefined;
+  /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
+  experimentalOptions?: {} | undefined;
 }
 
 /** Value of the `serverSyncInfos` transport option. */

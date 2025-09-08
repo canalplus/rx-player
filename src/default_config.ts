@@ -42,6 +42,9 @@ const DEFAULT_CONFIG = {
    */
   DEFAULT_ENABLE_FAST_SWITCHING: true,
 
+  /** Default behavior for the `enableRepresentationAvoidance` loadVideo option. */
+  DEFAULT_ENABLE_REPRESENTATION_AVOIDANCE: true,
+
   /**
    * In some cases after switching the current track or bitrate, the RxPlayer
    * could be led to go into the `"RELOADING"` state, which corresponds to

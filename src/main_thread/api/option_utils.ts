@@ -114,10 +114,11 @@ interface IParsedLoadVideoOptionsBase {
   mode: IRxPlayerMode;
   /** @see ILoadVideoOptions.cmcd */
   cmcd: ICmcdOptions | undefined;
+  /** @see ILoadVideoOptions.enableRepresentationAvoidance */
+  enableRepresentationAvoidance: boolean;
   /** @see ILoadVideoOptions.experimentalOptions */
-  experimentalOptions: {
-    enableRepresentationAvoidance: boolean;
-  };
+  /* eslint-disable-next-line @typescript-eslint/no-empty-object-type */
+  experimentalOptions?: {} | undefined;
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
 }
@@ -318,6 +319,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     DEFAULT_AUTO_PLAY,
     DEFAULT_CODEC_SWITCHING_BEHAVIOR,
     DEFAULT_ENABLE_FAST_SWITCHING,
+    DEFAULT_ENABLE_REPRESENTATION_AVOIDANCE,
     DEFAULT_TEXT_TRACK_MODE,
     DEFAULT_AUDIO_TRACKS_NOT_PLAYABLE_BEHAVIOR,
     DEFAULT_VIDEO_TRACKS_NOT_PLAYABLE_BEHAVIOR,
@@ -489,6 +491,12 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     ? DEFAULT_ENABLE_FAST_SWITCHING
     : options.enableFastSwitching;
 
+  const enableRepresentationAvoidance = isNullOrUndefined(
+    options.enableRepresentationAvoidance,
+  )
+    ? DEFAULT_ENABLE_REPRESENTATION_AVOIDANCE
+    : options.enableRepresentationAvoidance;
+
   if (!isNullOrUndefined(options.startAt)) {
     if (
       "wallClockTime" in options.startAt &&
@@ -516,6 +524,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     autoPlay,
     defaultAudioTrackSwitchingMode,
     enableFastSwitching,
+    enableRepresentationAvoidance,
     initialManifest,
     keySystems,
     lowLatencyMode,
@@ -536,10 +545,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     mode,
     url,
     cmcd: options.cmcd,
-    experimentalOptions: {
-      enableRepresentationAvoidance:
-        options.experimentalOptions?.enableRepresentationAvoidance === true,
-    },
+    experimentalOptions: options.experimentalOptions,
   };
 }
 
