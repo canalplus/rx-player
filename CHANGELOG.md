@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.4.0-dev.2025090300
+## Current dev build: v4.4.0-dev.2025090800
 
 ### Features
 
@@ -16,6 +16,10 @@
 - Implement inband WebVTT (vtte/vttc) [#1639]
 - Add `"NO_AUDIO_VIDEO_TRACKS"` error for when neither audio nor video is available or
   when both are explicitly disabled [#1624]
+- Allow seeking through `seekTo` even while `LOADING` or `RELOADING` the content [#1607]
+- local: local-manifests now can have a `forcedSubtitles` property in an `adaptations`
+  object, to indicate that a text track actually represents "forced narrative" subtitles
+  [#1722]
 
 ### Bug fixes
 
@@ -38,6 +42,9 @@
   RxPlayer behavior without having to support the content in the current environment
   [#1478]
 - Thumbnails: Cache pending thumbnail request [#1718]
+- For Dynamic contents, let the initial position go outside the range of the Manifest and
+  let the application correct if if needed based on `MEDIA_TIME_BEFORE_MANIFEST` or
+  `MEDIA_TIME_AFTER_MANIFEST` events [#1607]
 - Update log syntax so users can follow them more easily [#1717]
 - Add to hidden RxPlayer config most compat switches [#1514]
 - Prevent unnecessary resources usage by inactive worker [#1696]
