@@ -172,6 +172,28 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
           });
         });
 
+        it("should allow seeking over startAt while content is still loading", async function () {
+          const startAt = 10;
+          player.loadVideo({
+            transport: manifestInfos.transport,
+            url: manifestInfos.url,
+            autoPlay: false,
+            startAt: { position: startAt },
+          });
+          // In a microtask just to ensure asynchronicity without the content
+          // being loaded.
+          Promise.resolve().then(() => {
+            player.seekTo(20);
+          });
+          await waitForLoadedStateAfterLoadVideo(player);
+          expect(player.getPlayerState()).to.equal("LOADED");
+          const initialPosition = player.getPosition();
+          expect(initialPosition).to.be.closeTo(20, 0.5);
+          await checkAfterSleepWithBackoff(null, () => {
+            expect(player.getPosition()).to.equal(initialPosition);
+          });
+        });
+
         it("should seek at the right position if startAt.wallClockTime is set", async function () {
           const startAt = 10;
           player.loadVideo({

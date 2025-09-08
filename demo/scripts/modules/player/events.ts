@@ -229,6 +229,7 @@ function linkPlayerEventsToState(
 
     switch (playerState) {
       case "LOADING":
+        startPositionUpdates();
         stateUpdates.useWorker = player.getCurrentModeInformation()?.useWorker === true;
         break;
       case "ENDED":
@@ -243,7 +244,6 @@ function linkPlayerEventsToState(
         stateUpdates.isPaused = false;
         break;
       case "LOADED":
-        startPositionUpdates();
         stateUpdates.isPaused = true;
         stateUpdates.isLive = player.isLive();
         break;

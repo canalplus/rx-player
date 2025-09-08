@@ -80,12 +80,13 @@ export default class PlaybackObserver {
   private _lowLatencyMode: boolean;
 
   /**
-   * If set, position which could not yet be seeked to as the HTMLMediaElement
-   * had a readyState of `0`.
-   * This position should be seeked to as soon as the HTMLMediaElement is able
-   * to handle it.
+   * If set, position which could not yet be seeked to due to either seeking
+   * operations being blocked or due to the HTMLMediaElement having a
+   * `readyState` of `0`.
+   * This position should be seeked to as soon as none of those conditions are
+   * met.
    */
-  private _pendingSeek: number | null;
+  private _pendingSeek: IPendingSeekInformation | null;
 
   /**
    * The RxPlayer usually wants to differientate when a seek was sourced from
@@ -132,6 +133,13 @@ export default class PlaybackObserver {
   private _expectedSeekingPosition: number | null;
 
   /**
+   * If `true` seek operations asked through the
+   * `MediaElementPlaybackObserver` will not be performed now but after the
+   * `unblockSeeking` method is called.
+   */
+  private _isSeekBlocked: boolean;
+
+  /**
    * Create a new `PlaybackObserver`, which allows to produce new "playback
    * observations" on various media events and intervals.
    *
@@ -150,12 +158,13 @@ export default class PlaybackObserver {
     this._observationRef = this._createSharedReference();
     this._expectedSeekingPosition = null;
     this._pendingSeek = null;
+    this._isSeekBlocked = false;
 
     const onLoadedMetadata = () => {
-      if (this._pendingSeek !== null) {
-        const positionToSeekTo = this._pendingSeek;
+      if (this._pendingSeek !== null && !this._isSeekBlocked) {
+        const { position: positionToSeekTo, isInternal } = this._pendingSeek;
         this._pendingSeek = null;
-        this._actuallySetCurrentTime(positionToSeekTo);
+        this._actuallySetCurrentTime(positionToSeekTo, isInternal);
       }
     };
     mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
@@ -206,6 +215,69 @@ export default class PlaybackObserver {
   }
 
   /**
+   * Prevent seeking operations from being performed from inside the
+   * `MediaElementPlaybackObserver` until the `unblockSeeking` method is called.
+   *
+   * You might want to call this method when you want to ensure that the next
+   * seek operation on the media element happens at a specific, controlled,
+   * point in time.
+   */
+  public blockSeeking(): void {
+    this._isSeekBlocked = true;
+  }
+
+  /**
+   * Remove seeking block created by the `blockSeeking` method if it was called.
+   *
+   * If a seek operation was requested while the block was active, the
+   * `MediaElementPlaybackObserver` will seek at the last seeked position as
+   * soon as possible (either right now, or when the `readyState` of the
+   * `HTMLMediaElement` will have at least reached the `"HAVE_METADATA"` state).
+   */
+  public unblockSeeking(): void {
+    if (this._isSeekBlocked) {
+      this._isSeekBlocked = false;
+      if (this._pendingSeek !== null && this._mediaElement.readyState >= 1) {
+        const { position: positionToSeekTo, isInternal } = this._pendingSeek;
+        this._pendingSeek = null;
+        this._actuallySetCurrentTime(positionToSeekTo, isInternal);
+      }
+    }
+  }
+
+  /**
+   * Returns `true` if seeking operations are currently blocked due to a call to
+   * `blockSeeking` that was not yet undone by a call to `unblockSeeking`.
+   * @returns {boolean} - `true` if seeking operations are blocked currently.
+   */
+  public isSeekingBlocked(): boolean {
+    return this._isSeekBlocked;
+  }
+
+  /**
+   * Seek operations, as performed by the `setCurrentTime` method, might be not
+   * yet performed due to either of those reasons:
+   *
+   *   - Seek operations are blocked due to a call to the `blockSeeking` method.
+   *
+   *   - The `HTMLMediaElement`'s `readyState` property has not yet reached the
+   *     `"HAVE_METADATA"` state.
+   *
+   * Under any of those two conditions, this method will return the position
+   * that is planned to be seeked to as soon as both conditions are not met
+   * anymore.
+   *
+   * If seeks are possible right now, no seek should be "pending" and as such
+   * this method will return `null`.
+   *
+   * @returns {Object|null} - If a seek is planned, the position to seek to.
+   * `null` otherwise.
+   */
+  public getPendingSeekInformation(): IPendingSeekInformation | null {
+    return this._pendingSeek;
+  }
+
+  /**
    * Update the current position (seek) on the `HTMLMediaElement`, by giving a
    * new position in seconds.
    *
@@ -214,14 +286,18 @@ export default class PlaybackObserver {
    * observation than regular seeks (which most likely comes from the outside,
    * e.g. the user).
    * @param {number} time
+   * @param {boolean} [isInternal=true] - If `false`, the seek was performed by
+   * the user.
    */
-  public setCurrentTime(time: number): void {
-    if (this._mediaElement.readyState >= 1) {
-      this._actuallySetCurrentTime(time);
+  public setCurrentTime(time: number, isInternal: boolean = true): void {
+    if (!this._isSeekBlocked && this._mediaElement.readyState >= 1) {
+      this._actuallySetCurrentTime(time, isInternal);
     } else {
+      this._pendingSeek = { position: time, isInternal };
       this._internalSeeksIncoming = [];
-      this._pendingSeek = time;
-      this._generateObservationForEvent("manual");
+      if (!this._isSeekBlocked) {
+        this._generateObservationForEvent("manual");
+      }
     }
   }
 
@@ -303,9 +379,11 @@ export default class PlaybackObserver {
     return generateReadOnlyObserver(this, transform, this._canceller.signal);
   }
 
-  private _actuallySetCurrentTime(time: number): void {
-    log.info("media", "Seeking internally.", { time });
-    this._internalSeeksIncoming.push(time);
+  private _actuallySetCurrentTime(time: number, isInternal: boolean): void {
+    log.info("media", "Actually seeking.", { time, isInternal });
+    if (isInternal) {
+      this._internalSeeksIncoming.push(time);
+    }
     this._mediaElement.currentTime = time;
   }
 
@@ -385,7 +463,7 @@ export default class PlaybackObserver {
     let isInternalSeeking = false;
 
     /** If set, the position for which we plan to seek to as soon as possible. */
-    let pendingPosition: number | null = this._pendingSeek;
+    let pendingPosition: number | null = this._pendingSeek?.position ?? null;
 
     /** Initially-polled playback observation, before adjustments. */
     const mediaTimings = getMediaInfos(this._mediaElement);
@@ -919,4 +997,11 @@ function getInitialObservation(mediaElement: IMediaElement): IPlaybackObservatio
     currentRange: null,
     fullyLoaded: false,
   });
+}
+
+interface IPendingSeekInformation {
+  /** Position to seek to. */
+  position: number;
+  /** If `true`, the seek was performed by the RxPlayer's internal logic. */
+  isInternal: boolean;
 }

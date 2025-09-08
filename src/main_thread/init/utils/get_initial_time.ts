@@ -98,7 +98,11 @@ export default function getInitialTime(
         position: startAt.position,
         min,
         max,
+        isDynamic: manifest.isDynamic,
       });
+      if (manifest.isDynamic) {
+        return startAt.position;
+      }
       return Math.max(Math.min(startAt.position, max), min);
     } else if (!isNullOrUndefined(startAt.wallClockTime)) {
       const ast =
@@ -110,7 +114,11 @@ export default function getInitialTime(
         deOffseted: position,
         min,
         max,
+        isDynamic: manifest.isDynamic,
       });
+      if (manifest.isDynamic) {
+        return position;
+      }
       return Math.max(Math.min(position, max), min);
     } else if (!isNullOrUndefined(startAt.fromFirstPosition)) {
       const { fromFirstPosition } = startAt;
