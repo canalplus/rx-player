@@ -39,11 +39,3 @@ sed -i.bak -E -e "s/\/\\* PLAYER_VERSION \\*\/[[:space:]]*\".*\";/\/* PLAYER_VER
 sed -i.bak -E -e "s/\"version\":[[:space:]]*\"[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+[^\"]*\"/\"version\": \"${version}\"/g" package.json && rm package.json.bak
 sed -i.bak -E -e "s/sonar\.projectVersion= *.*/sonar.projectVersion=${version}/g" sonar-project.properties && rm sonar-project.properties.bak
 echo "$version" > VERSION
-
-npm install
-npm run build:all
-
-echo "creating types for legacy code bases..."
-rm -f dist/rx-player.d.ts rx-player.min.d.ts
-echo "import RxPlayer from \"./es2017/index\";
-export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts > /dev/null

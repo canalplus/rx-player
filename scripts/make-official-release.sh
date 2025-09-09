@@ -192,8 +192,8 @@ fi
 emphasized_log "Creating \"release/v$version\" branch..."
 git checkout -b "release/v$version"
 
-emphasized_log "Calling update-version.sh script to update files and produce builds..."
-npm run update-version.sh "$version"
+emphasized_log "Calling update-version script to update files and produce builds..."
+npm run update-version "$version"
 
 if [ -n "$(git status --porcelain)" ]; then
   echo ""
@@ -309,7 +309,9 @@ while :; do
   echo ""
 
   if [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-    emphasized_log "Pushing \"stable\" branch to GitHub..."
+    emphasized_log "Making tag and pushing \"stable\" branch to GitHub..."
+    # TODO: Include release note as a tag description?
+    it tag -a "v${version}" -m "RxPlayer official release: v${version}"
     git push git@github.com:canalplus/rx-player.git stable
     break
   elif [[ $REPLY =~ ^[Rr](ewind)?$ ]]; then
@@ -354,7 +356,8 @@ log ""
 log "The stable branch has been updated to now point to the v$version release and"
 log "has been pushed to remote."
 log ""
-log 'You may now run "npm publish", check the published package, and then create'
-log "the release on GitHub's interface (don't forget to include builds in it)."
+log 'Server-side, a build and publish of the package on npm is now scheduled.'
+log "Check the result, and then create the release on GitHub's interface (don't"
+log "forget to include builds in it)."
 log ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
