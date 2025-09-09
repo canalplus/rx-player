@@ -192,7 +192,7 @@
     "test:unit": "vitest --config vitest.config.unit.mjs",
     "test:unit:watch": "vitest --config vitest.config.unit.mjs --watch",
     "update-version": "npm run version --git-tag-version=false",
-    "version": "bash ./scripts/update-version"
+    "version": "bash ./scripts/update-version-number.sh"
   },
   "repository": {
     "type": "git",

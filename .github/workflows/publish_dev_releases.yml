@@ -1,0 +1,71 @@
+name: RxPlayer dev publishing
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+"
+
+jobs:
+  publish_dev:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Create canal version (replace -dev. with -canal.)
+          CANAL_VERSION=${VERSION/-dev./-canal.}
+          echo "canal_version=$CANAL_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if canal patch can be applied
+        run: |
+          echo "Checking if canal patch can be applied..."
+          if ! git apply --check ./scripts/canal-release.patch; then
+            echo "Error: Canal patch cannot be applied cleanly!"
+            echo "Please resolve conflicts in the patch file before proceeding."
+            exit 1
+          fi
+          echo "Canal patch check passed ✓"
+
+      - name: Install RxPlayer dependencies
+        run: npm ci
+
+      - name: Type files generation (for legacy bundles)
+        run: |
+          echo "creating types for legacy code bases..."
+          echo "import RxPlayer from \"./es2017/index\"; export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts >/dev/null
+
+      - name: Update version for dev release
+        run: npm run update-version ${{ steps.get_version.outputs.version }}
+
+      - name: Build and publish dev version
+        run: npm publish --tag dev --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Apply Canal+ patch
+        run: git apply ./scripts/canal-release.patch
+
+      - name: Update version for canal release
+        run: npm run update-version ${{ steps.get_version.outputs.canal_version }}
+
+      - name: Build and publish Canal version
+        run: npm publish --tag canal --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
