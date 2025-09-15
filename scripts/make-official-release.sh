@@ -41,14 +41,14 @@ err() {
 
 # Check that the given command is installed and quit on error if that's not the case
 check_dependency() {
-  if [ -z $(command -v $1) ]; then
+  if [ -z "$(command -v "$1")" ]; then
     err "This script needs \"$1\" to be installed and be executable"
   fi
 }
 
 # Get the name of the current git branch
 current_branch() {
-  echo $(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
+  git branch | sed -n -e 's/^\* \(.*\)/\1/p'
 }
 
 # Get the local name for canalplus's remote repository
@@ -61,7 +61,7 @@ git_remote_name() {
 check_branch_synchronized_with_remote() {
   checked_branch=$(current_branch)
   checked_remote=$(git_remote_name)
-  if ! [ x"$(git rev-parse $checked_branch)" = x"$(git rev-parse $checked_remote/$checked_branch)" ]; then
+  if ! [ "$(git rev-parse "$checked_branch")" = "$(git rev-parse "$checked_remote"/"$checked_branch")" ]; then
     err "The branch \"$checked_branch\" is not synchronized with the remote \"$checked_remote\". Please synchronize it first."
   fi
 }
@@ -101,16 +101,16 @@ fi
 emphasized_log "This script will create the official version: $version"
 
 echo "checking that the branche does not already exist locally or remotely..."
-if ! [ -z $(git branch --list "release/v$version") ]; then
-  err "Branch name "release/v$version" already exists locally. Please delete it first."
+if ! [ -z "$(git branch --list "release/v$version")" ]; then
+  err "Branch name \"release/v""$version""\" already exists locally. Please delete it first."
 fi
 
-if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/release/v$version") ]; then
-  err "Branch name "release/v$version" already exists remotely. Please delete it first."
+if ! [ -z "$(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/release/v$version")" ]; then
+  err "Branch name \"release/v""$version""\" already exists remotely. Please delete it first."
 fi
 
 echo "checking that the version are not already published on npm..."
-if npm view rx-player@$version >/dev/null 2>&1; then
+if npm view "rx-player@$version" >/dev/null 2>&1; then
   err "Version already published to npm: $version"
 fi
 
@@ -135,7 +135,7 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 
 # Make Changelog
-npm run releases:changelog -- $version
+npm run releases:changelog -- "$version"
 
 $EDITOR CHANGELOG.md
 echo "Running prettier on CHANGELOG.md..."
@@ -150,7 +150,7 @@ if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
   while :; do
     echo ""
     echo "We will push this CHANGELOG.md update to $base_branch."
-    read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
+    read -r -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
     echo ""
 
     if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
@@ -167,7 +167,7 @@ if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
       git add CHANGELOG.md
       git commit -m "Update CHANGELOG.md for v$version"
-      git push git@github.com:canalplus/rx-player.git $base_branch
+      git push "git@github.com:canalplus/rx-player.git" "$base_branch"
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
       git diff CHANGELOG.md || true # ignore when return 1
@@ -192,8 +192,8 @@ fi
 emphasized_log "Creating \"release/v$version\" branch..."
 git checkout -b "release/v$version"
 
-emphasized_log "Calling update-version script to update files and produce builds..."
-npm run update-version $version
+emphasized_log "Calling update-version.sh script to update files and produce builds..."
+npm run update-version.sh "$version"
 
 if [ -n "$(git status --porcelain)" ]; then
   echo ""
@@ -216,7 +216,7 @@ if [ -n "$(git status --porcelain)" ]; then
       log "| h: see this help                                       |"
       log "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      if ! [ $(current_branch) == "release/v$version" ]; then
+      if ! [ "$(current_branch)" == "release/v$version" ]; then
         err "The current branch is not \"release/v$version\""
       fi
       emphasized_log "Commiting those updates..."
@@ -313,7 +313,7 @@ while :; do
     git push git@github.com:canalplus/rx-player.git stable
     break
   elif [[ $REPLY =~ ^[Rr](ewind)?$ ]]; then
-    if ! [ $(current_branch) == "stable" ]; then
+    if ! [ "$(current_branch)" == "stable" ]; then
       err "The current branch is not \"stable\""
     fi
     emphasized_log "Resetting \"stable\" branch and checkouting \"release/v$version\" branch again..."

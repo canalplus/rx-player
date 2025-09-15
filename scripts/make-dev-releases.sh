@@ -74,30 +74,30 @@ fi
 echo "This script will create the dev versions: $dev_version and $canal_version"
 
 echo "checking that the branches do not already exist locally or remotely..."
-if ! [ -z $(git branch --list "$dev_branch") ]; then
+if ! [ -z "$(git branch --list "$dev_branch")" ]; then
   err "Branch name \"$dev_branch\" already exists locally. Please delete it first."
 fi
-if ! [ -z $(git branch --list "$canal_branch") ]; then
+if ! [ -z "$(git branch --list "$canal_branch")" ]; then
   err "Branch name \"$canal_branch\" already exists locally. Please delete it first."
 fi
-if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$dev_branch") ]; then
+if ! [ -z "$(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$dev_branch")" ]; then
   err "Branch name \"$dev_branch\" already exists remotely. Please delete it first."
 fi
-if ! [ -z $(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$canal_branch") ]; then
+if ! [ -z "$(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$canal_branch")" ]; then
   err "Branch name \"$canal_branch\" already exists remotely. Please delete it first."
 fi
 
 echo "checking that the versions are not already published on npm..."
-if npm view rx-player@$dev_version >/dev/null 2>&1; then
+if npm view "rx-player@$dev_version" >/dev/null 2>&1; then
   err "Version already published to npm: $version-dev.${date}${incr}"
 fi
 
-if npm view rx-player@$canal_version >/dev/null 2>&1; then
+if npm view "rx-player@$canal_version" >/dev/null 2>&1; then
   err "Version already published to npm: $version-canal.${date}${incr}"
 fi
 
 # Make dev Changelog
-npm run releases:changelog -- -d $dev_version
+npm run releases:changelog -- -d "$dev_version"
 
 $EDITOR CHANGELOG.md
 echo "Running prettier on CHANGELOG.md..."
@@ -112,7 +112,7 @@ if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
   while :; do
     echo ""
     echo "We will push this CHANGELOG.md update to ${current_branch}."
-    read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
+    read -r -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
     echo ""
 
     if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
@@ -129,7 +129,7 @@ if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
       git add CHANGELOG.md
       git commit -m "Update CHANGELOG.md for v$dev_version"
-      git push git@github.com:canalplus/rx-player.git $current_branch
+      git push git@github.com:canalplus/rx-player.git "$current_branch"
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
       git diff CHANGELOG.md || true # ignore when return 1
@@ -150,12 +150,12 @@ if [ -n "$(git status --porcelain)" ]; then
   err "Unexpected diff in \"${current_branch}\""
 fi
 
-git checkout -b ${dev_branch}
-./scripts/update-version $version-dev.${date}${incr}
+git checkout -b "${dev_branch}"
+./scripts/update-version.sh "$version-dev.${date}${incr}"
 git add --all
 git commit -m "update version"
 while true; do
-  read -n1 -p "Do you wish to push and publish the dev build? [y/n] " yn
+  read -r -n1 -p "Do you wish to push and publish the dev build? [y/n] " yn
   echo ""
   case $yn in
   [Yy]*) break ;;
@@ -163,19 +163,19 @@ while true; do
   *) echo "Please answer y or n." ;;
   esac
 done
-git push origin ${dev_branch}
+git push origin "${dev_branch}"
 npm publish --tag dev-v4
 
-git checkout $current_branch
+git checkout "$current_branch"
 
-git checkout -b ${canal_branch}
+git checkout -b "${canal_branch}"
 git apply ./scripts/canal-release.patch
-./scripts/update-version $version-canal.${date}${incr}
+./scripts/update-version.sh "$version-canal.${date}${incr}"
 git add --all
 git commit -m "update version"
-git push origin ${canal_branch}
+git push origin "${canal_branch}"
 while true; do
-  read -n1 -p "Do you wish to push and publish the canal build? [y/n] " yn
+  read -r -n1 -p "Do you wish to push and publish the canal build? [y/n] " yn
   echo ""
   case $yn in
   [Yy]*) break ;;

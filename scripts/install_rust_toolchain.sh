@@ -91,8 +91,8 @@ ensure mkdir -p tmp
 
 # Install RustUp in tmp directory with the right target
 log "Fetching rustup..."
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | CARGO_HOME=./tmp/cargo RUSTUP_HOME=./tmp/rustup RUSTUP_INIT_SKIP_PATH_CHECK=yes sh -s -- --no-modify-path --profile minimal --target wasm32-unknown-unknown -y
-if ! [ $? -eq 0 ]; then
+
+if ! curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | CARGO_HOME=./tmp/cargo RUSTUP_HOME=./tmp/rustup RUSTUP_INIT_SKIP_PATH_CHECK=yes sh -s -- --no-modify-path --profile minimal --target wasm32-unknown-unknown -y; then
   err "Failed to install rustup"
 fi
 
@@ -186,8 +186,8 @@ if [ "$NO_CONFIRM" = false ]; then
 fi
 
 log "Fetching binaryen 116..."
-curl -L "$binaryen_url" >tmp/binaryen.tar.gz
-if ! [ $? -eq 0 ]; then
+
+if ! curl -L "$binaryen_url" >tmp/binaryen.tar.gz; then
   err "Failed to fetch binaryen"
 fi
 

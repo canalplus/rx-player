@@ -54,11 +54,14 @@ elif ! wasmopt_loc="$(type -p "wasm-opt")" || [[ -z $wasmopt_loc ]]; then
 fi
 
 # Move to MPD parser directory
-cd ./src/parsers/manifest/dash/wasm-parser
+if ! cd ./src/parsers/manifest/dash/wasm-parser; then
+	echo "ERROR: wasm-parser directory not found"
+	exit 1
+fi
 echo " 🦀 Building mpd-parser WebAssembly file with Cargo..."
 if $has_local_cargo; then
   echo "NOTE: Relying on local cargo in ./tmp/cargo/bin/cargo"
-  . ../../../../../tmp/cargo/env
+  . ../../../../../tmp/cargo/env | true
   ../../../../../tmp/cargo/bin/cargo build --target wasm32-unknown-unknown --release -q
 else
   cargo build --target wasm32-unknown-unknown --release -q
