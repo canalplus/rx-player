@@ -59,9 +59,6 @@ export default async function generateBuild(options = {}) {
         console.log(" 🏭 Generating WebAssembly file...");
         await spawnShellProm(
           "npm run --silent " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
-        );
-        await spawnShellProm(
-          "npm run --silent " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
           (code) => new Error(`WebAssembly compilation process exited with code ${code}`),
         );
       } else {

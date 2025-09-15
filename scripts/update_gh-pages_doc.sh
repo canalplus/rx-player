@@ -39,9 +39,9 @@ tmpDir=$(mktemp -d)
 tmpDemoList=$(mktemp)
 tmpDocList=$(mktemp)
 
-cp -r doc/generated/* $tmpDir
-cp -v scripts/generate_demo_list.mjs $tmpDemoList 
-cp -v scripts/generate_documentation_list.mjs $tmpDocList 
+cp -r doc/generated/* "$tmpDir"
+cp -v scripts/generate_demo_list.mjs "$tmpDemoList"
+cp -v scripts/generate_documentation_list.mjs "$tmpDocList"
 
 # update gh-pages
 git checkout gh-pages
@@ -50,10 +50,10 @@ git pull origin gh-pages
 rm -rf "versions/$current_version/doc"
 mkdir -p "versions/$current_version/doc"
 rm -rf doc
-mv $tmpDir/* "versions/$current_version/doc"
+mv "$tmpDir"/* "versions/$current_version/doc"
 ln -s "./versions/$current_version/doc" doc
-mv $tmpDemoList generate_demo_list.mjs
-mv $tmpDocList generate_documentation_list.mjs
+mv "$tmpDemoList" generate_demo_list.mjs
+mv "$tmpDocList" generate_documentation_list.mjs
 
 node generate_documentation_list.mjs
 rm generate_documentation_list.mjs

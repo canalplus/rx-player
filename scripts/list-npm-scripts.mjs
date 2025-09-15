@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * # list-npm-scripts
  *

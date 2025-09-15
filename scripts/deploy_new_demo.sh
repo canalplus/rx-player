@@ -49,16 +49,15 @@ tmpFontsDir=$(mktemp -d)
 tmpAssetsDir=$(mktemp -d)
 tmpStylesDir=$(mktemp -d)
 tmpDemoFile=$(mktemp)
-tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
 
-cp -rv demo/fonts $tmpFontsDir
-cp -rv demo/assets $tmpAssetsDir
-cp -rv demo/styles $tmpStylesDir
-cp -v demo/bundle.js $tmpDemoFile
-cp -v demo/index.html $tmpIndexFile
-cp -v demo/plus.ico $tmpFaviconFile
+cp -rv demo/fonts "$tmpFontsDir"
+cp -rv demo/assets "$tmpAssetsDir"
+cp -rv demo/styles "$tmpStylesDir"
+cp -v demo/bundle.js "$tmpDemoFile"
+cp -v demo/index.html "$tmpIndexFile"
+cp -v demo/plus.ico "$tmpFaviconFile"
 
 # update gh-pages
 git checkout gh-pages
@@ -66,14 +65,14 @@ git pull origin gh-pages
 
 rm -rf "$deployed_branch"
 mkdir -p "$deployed_branch"
-mv $tmpIndexFile "${deployed_branch}/index.html"
-mv $tmpFaviconFile "${deployed_branch}/plus.ico"
-mv $tmpDemoFile "${deployed_branch}/bundle.js"
-mv $tmpFontsDir/fonts "${deployed_branch}/fonts"
-mv $tmpAssetsDir/assets "${deployed_branch}/assets"
-mv $tmpStylesDir/styles "${deployed_branch}/styles"
+mv "$tmpIndexFile" "${deployed_branch}/index.html"
+mv "$tmpFaviconFile" "${deployed_branch}/plus.ico"
+mv "$tmpDemoFile" "${deployed_branch}/bundle.js"
+mv "$tmpFontsDir/fonts" "${deployed_branch}/fonts"
+mv "$tmpAssetsDir/assets" "${deployed_branch}/assets"
+mv "$tmpStylesDir/styles" "${deployed_branch}/styles"
 
-if [ -n "$(git status --porcelain $deployed_branch)" ]; then
+if [ -n "$(git status --porcelain "$deployed_branch")" ]; then
   echo "-- Current Status on gh-pages: --"
   echo ""
   git status "$deployed_branch"

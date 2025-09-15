@@ -39,22 +39,21 @@ tmpFontsDir=$(mktemp -d)
 tmpAssetsDir=$(mktemp -d)
 tmpStylesDir=$(mktemp -d)
 tmpDemoFile=$(mktemp)
-tmpRxPlayerFile=$(mktemp)
 tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
 tmpWorkerFile=$(mktemp)
 tmpMpdWasmFile=$(mktemp)
 tmpDemoList=$(mktemp)
 
-cp -rv demo/fonts $tmpFontsDir
-cp -rv demo/assets $tmpAssetsDir
-cp -rv demo/styles $tmpStylesDir
-cp -v demo/bundle.js $tmpDemoFile
-cp -v demo/index.html $tmpIndexFile
-cp -v demo/plus.ico $tmpFaviconFile
-cp -v demo/worker.js $tmpWorkerFile
-cp -v dist/mpd-parser.wasm $tmpMpdWasmFile
-cp -v scripts/generate_demo_list.mjs $tmpDemoList
+cp -rv demo/fonts "$tmpFontsDir"
+cp -rv demo/assets "$tmpAssetsDir"
+cp -rv demo/styles "$tmpStylesDir"
+cp -v demo/bundle.js "$tmpDemoFile"
+cp -v demo/index.html "$tmpIndexFile"
+cp -v demo/plus.ico "$tmpFaviconFile"
+cp -v demo/worker.js "$tmpWorkerFile"
+cp -v dist/mpd-parser.wasm "$tmpMpdWasmFile"
+cp -v scripts/generate_demo_list.mjs "$tmpDemoList"
 
 # update gh-pages
 git checkout gh-pages
@@ -70,15 +69,15 @@ rm bundle.js
 rm -rf fonts
 rm -rf assets
 rm -rf styles
-mv $tmpIndexFile "versions/$current_version/demo/index.html"
-mv $tmpFaviconFile "versions/$current_version/demo/plus.ico"
-mv $tmpDemoFile "versions/$current_version/demo/bundle.js"
-mv $tmpWorkerFile "versions/$current_version/demo/worker.js"
-mv $tmpMpdWasmFile "versions/$current_version/demo/mpd-parser.wasm"
-mv $tmpFontsDir/fonts "versions/$current_version/demo/fonts"
-mv $tmpAssetsDir/assets "versions/$current_version/demo/assets"
-mv $tmpStylesDir/styles "versions/$current_version/demo/styles"
-mv $tmpDemoList generate_demo_list.mjs
+mv "$tmpIndexFile" "versions/$current_version/demo/index.html"
+mv "$tmpFaviconFile" "versions/$current_version/demo/plus.ico"
+mv "$tmpDemoFile" "versions/$current_version/demo/bundle.js"
+mv "$tmpWorkerFile" "versions/$current_version/demo/worker.js"
+mv "$tmpMpdWasmFile" "versions/$current_version/demo/mpd-parser.wasm"
+mv "$tmpFontsDir/fonts" "versions/$current_version/demo/fonts"
+mv "$tmpAssetsDir/assets" "versions/$current_version/demo/assets"
+mv "$tmpStylesDir/styles" "versions/$current_version/demo/styles"
+mv "$tmpDemoList" generate_demo_list.mjs
 ln -s "./versions/$current_version/demo/index.html" index.html
 ln -s "./versions/$current_version/demo/plus.ico" plus.ico
 ln -s "./versions/$current_version/demo/bundle.js" bundle.js
