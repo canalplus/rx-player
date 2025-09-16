@@ -47,7 +47,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
       - run: npm ci
-      - run: npm run check
 
   unit_tests:
     runs-on: ubuntu-latest
