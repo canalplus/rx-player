@@ -9,6 +9,9 @@ jobs:
   publish_dev:
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write # required for npm provenance
+
     strategy:
       matrix:
         node-version: [22.x]
@@ -61,6 +64,7 @@ jobs:
         run: npm run update-version "${{ steps.get_version.outputs.canal_version }}"
 
       - name: Build and publish Canal version
+
         run: npm publish --tag canal --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
