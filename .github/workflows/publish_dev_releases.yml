@@ -27,11 +27,11 @@ jobs:
         run: |
           # Extract version from tag (remove 'v' prefix)
           VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=\"$VERSION\"" >> "$GITHUB_OUTPUT"
 
           # Create canal version (replace -dev. with -canal.)
-          CANAL_VERSION=${VERSION/-dev./-canal.}
-          echo "canal_version=$CANAL_VERSION" >> $GITHUB_OUTPUT
+          CANAL_VERSION="${VERSION/-dev./-canal.}"
+          echo "canal_version=$CANAL_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check if canal patch can be applied
         run: |
@@ -46,14 +46,8 @@ jobs:
       - name: Install RxPlayer dependencies
         run: npm ci
 
-      - name: Type files generation (for legacy bundles)
-        run: |
-          echo "creating types for legacy code bases..."
-          mkdir -p dist
-          echo "import RxPlayer from \"./es2017/index\"; export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts >/dev/null
-
       - name: Update version for dev release
-        run: npm run update-version ${{ steps.get_version.outputs.version }}
+        run: npm run update-version "${{ steps.get_version.outputs.version }}"
 
       - name: Build and publish dev version
         run: npm publish --tag dev --provenance
@@ -64,7 +58,7 @@ jobs:
         run: git apply ./scripts/canal-release.patch
 
       - name: Update version for canal release
-        run: npm run update-version ${{ steps.get_version.outputs.canal_version }}
+        run: npm run update-version "${{ steps.get_version.outputs.canal_version }}"
 
       - name: Build and publish Canal version
         run: npm publish --tag canal --provenance
