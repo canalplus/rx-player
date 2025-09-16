@@ -171,7 +171,10 @@ function setMediaSourceDuration(
     const sourceBuffer = mediaSource.sourceBuffers[i];
     const sbBufferedLen = sourceBuffer.buffered.length;
     if (sbBufferedLen > 0) {
-      maxBufferedEnd = Math.max(sourceBuffer.buffered.end(sbBufferedLen - 1));
+      maxBufferedEnd = Math.max(
+        maxBufferedEnd,
+        sourceBuffer.buffered.end(sbBufferedLen - 1),
+      );
     }
   }
 
