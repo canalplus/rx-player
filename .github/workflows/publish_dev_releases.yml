@@ -52,7 +52,7 @@ jobs:
       - name: Build and publish dev version
         run: npm publish --tag dev --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
       - name: Apply Canal+ patch
         run: git apply ./scripts/canal-release.patch
@@ -63,4 +63,4 @@ jobs:
       - name: Build and publish Canal version
         run: npm publish --tag canal --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
