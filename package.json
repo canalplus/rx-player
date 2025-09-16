@@ -146,7 +146,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "node ./scripts/generate_build.mjs",
-    "build:all": "npm run clean:build && npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
+    "build:all": "bash ./scripts/make_all_builds.sh",
     "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "bash ./scripts/build_wasm_release.sh",
     "bundle": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer default bundle\" -o dist/rx-player.js",
@@ -172,7 +172,7 @@
     "lint:scripts": "eslint -c scripts/eslint.config.mjs --ext .js --ext .mjs --ext .cjs scripts",
     "lint:tests": "eslint -c tests/eslint.config.mjs tests",
     "list": "node scripts/list-npm-scripts.mjs",
-    "prepublishOnly": "npm run build:all",
+    "prepublishOnly": "bash ./scripts/make_all_builds.sh",
     "releases:changelog": "node ./scripts/update_changelog.mjs",
     "releases:demo": "bash ./scripts/update_gh-pages_demo.sh",
     "releases:dev": "bash ./scripts/make-dev-releases.sh",

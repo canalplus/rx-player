@@ -22,9 +22,6 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: |
           npm ci
-          npm run build:all
-          echo "creating types for legacy code bases..."
-          echo "import RxPlayer from \"./es2017/index\"; export default RxPlayer;" | tee dist/rx-player.d.ts dist/rx-player.min.d.ts >/dev/null
       - run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
