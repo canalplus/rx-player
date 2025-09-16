@@ -1,0 +1,38 @@
+name: Reusable integration tests job
+on:
+  workflow_call:
+    inputs:
+      # e.g. "windows-latest", "ubuntu-latest" etc.
+      os: { required: true, type: string }
+
+      # "chrome", "firefox" or "edge"
+      browser: { required: true, type: string }
+
+jobs:
+  integration_tests:
+    runs-on: ${{ inputs.os }}
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Linux prep
+        if: contains(inputs.os, 'ubuntu')
+        run: |
+          sudo add-apt-repository multiverse -y
+          sudo apt update && sudo apt install -y ubuntu-restricted-extras
+
+      - name: Run integration tests for ${{ inputs.browser }} on ${{ inputs.os }}
+        shell: bash
+        run: |
+          npm ci
+          npm run build
+          npm run "test:integration:${{ inputs.browser }}"
