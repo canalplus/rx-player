@@ -1,18 +1,12 @@
 name: RxPlayer dev publishing
 
 on:
-  workflow_run:
-    workflows: ["RxPlayer Tests", "Performance tests"]
-    types: [completed]
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+"
 
 jobs:
   publish_dev:
-    if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      startsWith(github.event.workflow_run.head_branch, 'v') &&
-      contains(github.event.workflow_run.head_branch, '-dev.')
-
     runs-on: ubuntu-latest
 
     permissions:
@@ -23,47 +17,26 @@ jobs:
         node-version: [22.x]
 
     steps:
-      - name: Check if this is a dev tag
-        id: check-tag
-        run: |
-          BRANCH="${{ github.event.workflow_run.head_branch }}"
-          echo "Checking branch: $BRANCH"
-
-          if [[ "$BRANCH" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+$ ]]; then
-            echo "✓ Valid dev tag format detected"
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "✗ Not a dev tag, skipping publication"
-            echo "should_publish=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: actions/checkout@v4
-        if: steps.check-tag.outputs.should_publish == 'true'
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Use Node.js ${{ matrix.node-version }}
-        if: steps.check-tag.outputs.should_publish == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: "https://registry.npmjs.org"
 
       - name: Extract version from tag
-        if: steps.check-tag.outputs.should_publish == 'true'
         id: get_version
         run: |
           # Extract version from tag (remove 'v' prefix)
-          BRANCH="${{ github.event.workflow_run.head_branch }}"
-          VERSION=${BRANCH#v}
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=\"$VERSION\"" >> "$GITHUB_OUTPUT"
 
           # Create canal version (replace -dev. with -canal.)
           CANAL_VERSION="${VERSION/-dev./-canal.}"
           echo "canal_version=$CANAL_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check if canal patch can be applied
-        if: steps.check-tag.outputs.should_publish == 'true'
         run: |
           echo "Checking if canal patch can be applied..."
           if ! git apply --check ./scripts/canal-release.patch; then
@@ -74,29 +47,24 @@ jobs:
           echo "Canal patch check passed ✓"
 
       - name: Install RxPlayer dependencies
-        if: steps.check-tag.outputs.should_publish == 'true'
         run: npm ci
 
       - name: Update version for dev release
-        if: steps.check-tag.outputs.should_publish == 'true'
         run: npm run update-version "${{ steps.get_version.outputs.version }}"
 
       - name: Build and publish dev version
-        if: steps.check-tag.outputs.should_publish == 'true'
         run: npm publish --tag dev --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
       - name: Apply Canal+ patch
-        if: steps.check-tag.outputs.should_publish == 'true'
         run: git apply ./scripts/canal-release.patch
 
       - name: Update version for canal release
-        if: steps.check-tag.outputs.should_publish == 'true'
         run: npm run update-version "${{ steps.get_version.outputs.canal_version }}"
 
       - name: Build and publish Canal version
-        if: steps.check-tag.outputs.should_publish == 'true'
+
         run: npm publish --tag canal --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
