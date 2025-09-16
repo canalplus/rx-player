@@ -6,8 +6,66 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+"
 
 jobs:
+  # -------------------------------------------------------------
+  # 1. Guard job – keeps polling until the other workflows pass
+  # -------------------------------------------------------------
+  #
+  # This over-complicated job is here because github actions seems to not
+  # have good ways to depend both on tags and on other workflows to pass.
+  poll-other_workflows_before_dev_release:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - uses: actions/github-script@v7
+        id: wait
+        env:
+          NEEDED_WORKFLOWS: '["RxPlayer Tests", "Performance tests"]'
+        with:
+          retries: 120            # Maximum attempts, polled every minute
+          retry-exempt-status-codes: 400,401,403,404
+          script: |
+            await new Promise(r => setTimeout(r, 60000));
+
+            const needed = JSON.parse(process.env.NEEDED_WORKFLOWS);
+            const owner  = context.repo.owner;
+            const repo   = context.repo.repo;
+
+            let allGreen = true; // Here I am, take me by the hand, yeah ♫ ♫ ♫
+
+            // Find workflow_id by name
+            const { data: workflows } = await github.rest.actions.listRepoWorkflows({
+              owner,
+              repo,
+            });
+            for (const workflowName of needed) {
+              const wf = workflows.find(w => w.name === workflowName);
+              if (!wf) {
+                core.setFailed(`No workflow named "${workflowName}" found`);
+                return;
+              }
+              // Get last run status
+              const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                owner, repo, workflow_id: wf.id, per_page: 1
+              });
+              const { conclusion } = runs.workflow_runs[0] || {};
+              if (conclusion !== "success") {
+                allGreen = false;
+                break;
+              }
+            }
+
+            if (allGreen) {
+              core.info(`All required workflows succeeded.`);
+              return;
+            }
+
+  # -------------------------------------------------------------
+  # 2. Real release job – runs only when guard succeeds
+  # -------------------------------------------------------------
   publish_dev:
     runs-on: ubuntu-latest
+    needs: poll-other_workflows_before_dev_release
 
     permissions:
       id-token: write # required for npm provenance
@@ -17,6 +75,7 @@ jobs:
         node-version: [22.x]
 
     steps:
+
       - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
