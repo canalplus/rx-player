@@ -4,8 +4,8 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+" # v1.0.0, v2.3.4 … nothing else
-    workflow_dispatch:  # This allows manual triggering, for when the original
-                        # tag commit already failed
+    workflow_dispatch: # This allows manual triggering, for when the original
+      # tag commit already failed
 
 jobs:
   check_official_version:
@@ -152,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # fetch all branches and history
+          fetch-depth: 0 # fetch all branches and history
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -172,6 +172,20 @@ jobs:
             echo "Error: Cannot fast-forward merge. The stable branch may be ahead of the release branch."
             exit 1
           fi
+
+      - name: Now align the dev branch on stable
+        run: |
+          git fetch origin dev:dev
+          git checkout dev
+          if ! git rebase stable; then
+            echo "Could not rebase dev on stable. Please check for any conflict first"
+            exit 1
+          fi
+          git push origin dev --force-with-lease
+
+      - name: Push stable branch
+        run: |
+          git checkout stable # go back to stable for publish
           git push origin stable
 
       - name: Build and publish official release

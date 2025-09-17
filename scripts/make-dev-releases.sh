@@ -43,6 +43,21 @@ err() {
   exit 1
 }
 
+# Check that the given command is installed and quit on error if that's not the case
+check_dependency() {
+  if [ -z "$(command -v "$1")" ]; then
+    err "This script needs \"$1\" to be installed and be executable"
+  fi
+}
+
+check_dependency git
+check_dependency echo
+check_dependency npm
+check_dependency sed
+if [ -z "$EDITOR" ]; then
+  err "Environment variable EDITOR is not set. Please set it to your preferred text editor."
+fi
+
 if [ $# -eq 0 ]; then
   read -r -p "Please enter the wanted version number (example: 4.12.1): " version
   echo ""

@@ -21,6 +21,12 @@
 
 set -e
 
+GIT_REPO="git@github.com:canalplus/rx-player.git"
+
+# Both declared first as they will be needed for cleanup
+base_branch=""
+release_branch=""
+
 # Log a line prefixed with our script's name
 log() {
   echo "---- RxPlayer Release Script ----   $1"
@@ -35,7 +41,13 @@ emphasized_log() {
 
 # Log a line to stderr and exit with error code 1
 err() {
-  echo "ERROR: $1" >&2
+  echo "---- RxPlayer Release Script ----   ERROR: $1" >&2
+  if [[ -n "$base_branch" ]]; then
+		git checkout "$base_branch"
+		if [[ -n "$release_branch" ]]; then
+			git branch -D "$release_branch"
+		fi
+	fi
   exit 1
 }
 
@@ -53,7 +65,7 @@ current_branch() {
 
 # Get the local name for canalplus's remote repository
 git_remote_name() {
-  git remote -v | grep "git@github.com:canalplus/rx-player.git" | grep "(push)" | cut -f1
+  git remote -v | grep "$GIT_REPO" | grep "(push)" | cut -f1
 }
 
 # Check that the current branch is up-to-date with remote, errors if that's not
@@ -73,6 +85,9 @@ check_dependency cut
 check_dependency grep
 check_dependency sed
 check_dependency sleep
+if [ -z "$EDITOR" ]; then
+  err "Environment variable EDITOR is not set. Please set it to your preferred text editor."
+fi
 
 base_branch=$(current_branch)
 
@@ -84,7 +99,7 @@ if [ -n "$(git status --porcelain)" ]; then
   err "Please commit your modifications first"
 fi
 
-echo "Checking current branch is synchronized with remote..."
+log "Checking current branch is synchronized with remote..."
 check_branch_synchronized_with_remote
 
 if [ $# -eq 0 ]; then
@@ -100,16 +115,16 @@ fi
 
 emphasized_log "This script will create the official version: $version"
 
-echo "checking that the branche does not already exist locally or remotely..."
+log "checking that the branche does not already exist locally or remotely..."
 if ! [ -z "$(git branch --list "release/v$version")" ]; then
   err "Branch name \"release/v""$version""\" already exists locally. Please delete it first."
 fi
 
-if ! [ -z "$(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/release/v$version")" ]; then
+if ! [ -z "$(git ls-remote --heads "$GIT_REPO" "refs/heads/release/v$version")" ]; then
   err "Branch name \"release/v""$version""\" already exists remotely. Please delete it first."
 fi
 
-echo "checking that the version are not already published on npm..."
+log "checking that the version are not already published on npm..."
 if npm view "rx-player@$version" >/dev/null 2>&1; then
   err "Version already published to npm: $version"
 fi
@@ -117,7 +132,7 @@ fi
 if [ "$base_branch" == "dev" ]; then
   emphasized_log "Checkout the stable branch and pull it..."
   git checkout stable
-  git pull git@github.com:canalplus/rx-player.git stable
+  git pull "$GIT_REPO" stable
 
   if [ -n "$(git status --porcelain)" ]; then
     err "Please commit your modifications first"
@@ -127,6 +142,7 @@ if [ "$base_branch" == "dev" ]; then
 
   emphasized_log "Rebase the dev branch on stable..."
   git checkout dev
+  git pull "$GIT_REPO" dev
   git rebase stable --rebase-merges
 fi
 
@@ -135,16 +151,17 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 
 emphasized_log "Creating \"release/v$version\" branch..."
-git checkout -b "release/v$version"
+release_branch="release/v$version"
+git checkout -b "$release_branch"
 
 emphasized_log "Calling update-version script to update files with the last version..."
-npm run update-version "$version"
+npm run update-version -- "$version"
 
 # Make Changelog
 npm run releases:changelog -- "$version"
 
 $EDITOR CHANGELOG.md
-echo "Running prettier on CHANGELOG.md..."
+log "Running prettier on CHANGELOG.md..."
 npx prettier --write CHANGELOG.md --log-level silent
 echo ""
 
@@ -155,7 +172,7 @@ if [ -n "$(git status --porcelain)" ]; then
 
   while :; do
     echo ""
-    log "We will push the following modification to a new release/v$version branch."
+    log "We will push the following modification to a new $release_branch branch."
     REPLY=""
     read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n 1 -r
     echo ""
@@ -169,8 +186,8 @@ if [ -n "$(git status --porcelain)" ]; then
       log "| h: see this help                                       |"
       log "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      if ! [ "$(current_branch)" == "release/v$version" ]; then
-        err "The current branch is not \"release/v$version\""
+      if ! [ "$(current_branch)" == "$release_branch" ]; then
+        err "The current branch is not \"$release_branch\""
       fi
       emphasized_log "Commiting those updates..."
       git add --all
@@ -189,23 +206,35 @@ else
   log "nothing to do on the release branch"
 fi
 
+# Two following script ensure we are on the base branch with the right rights
+git checkout "$base_branch"
+
 emphasized_log "Running \"releases:demo\" script to update the gh-pages' demo..."
-npm run releases:demo
+if ! npm run releases:demo; then
+  git checkout "$base_branch"
+  git branch -D "$release_branch"
+  err "Failed to update demo page: \`releases:demo\` script failed"
+fi
 
 emphasized_log "Running \"releases:doc\" script to update the gh-pages' documentation..."
-npm run releases:doc
+if ! npm run releases:doc; then
+  git checkout "$base_branch"
+  git branch -D "$release_branch"
+  err "Failed to update doc page: \`releases:doc\` script failed"
+fi
 
-git checkout "release/v$version"
+# Go back to our new branch to be able to push it now that everything seems to pass
+git checkout "$release_branch"
 
-emphasized_log "Pushing \"release/v$version\" branch to GitHub..."
+emphasized_log "Pushing \"$release_branch\" branch to remote..."
 # TODO: Include release note as a tag description?
 git tag -s -a "v${version}" -m "RxPlayer release: v${version}"
-git push git@github.com:canalplus/rx-player.git "release/v$version"
+git push "$GIT_REPO" "$release_branch"
 
 echo ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
 log ""
-log "Your release branch has been pushed to a new \"release/v$version\" branch"
+log "Your release branch has been pushed to a new \"$release_branch\" branch"
 log "Please open a Pull Request on GitHub's interface for it and ensure the CI"
 log "passes. If the corresponding CI jobs do not trigger - it might be because"
 log "this is a retry attempt, in which case you may need to trigger it manually."
@@ -214,13 +243,15 @@ log "If the CI passes, it should automatically publish a version and merge that"
 log "work into the \"stable\" branch of the rx-player"
 log ""
 log "If the CI fails:"
-log "  1. Remove the \"release/v$version\" branch locally and remotely:"
-log "     - local remove: \`git branch -d \"release/v$version\"\`"
-log "     - remote remove: \`git push origin --delete \"release/v$version\"\`"
+log "  1. Remove the \"$release_branch\" branch locally and remotely:"
+log "     - local remove: \`git branch -d \"$release_branch\"\`"
+log "     - remote remove: \`git push origin --delete \"$release_branch\"\`"
 log "  2. Remove the version tag from the RxPlayer repository locally and remotely:"
 log "     - local remove: \`git tag -d \"$version\"\`"
 log "     - remote remove: \`git push origin --delete tag \"$version\"\`"
-log "  3. Re-launch this script again."
+log "  3. Launch this script again."
 log ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+# Go back to original branch
 git checkout "$base_branch"

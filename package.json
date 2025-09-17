@@ -191,8 +191,7 @@
     "test:memory:chrome:watch": "cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:unit": "vitest --config vitest.config.unit.mjs",
     "test:unit:watch": "vitest --config vitest.config.unit.mjs --watch",
-    "update-version": "npm run version --git-tag-version=false",
-    "version": "bash ./scripts/update-version-number.sh"
+    "update-version": "bash ./scripts/update-version-number.sh"
   },
   "repository": {
     "type": "git",

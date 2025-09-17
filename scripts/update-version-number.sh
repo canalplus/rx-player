@@ -3,11 +3,11 @@
 # Update version
 # ==============
 #
-# This script updates the version number in files where it is indicated and
-# builds the rx-player for this new version.
+# This script updates the version number in files where it is indicated.
 #
-# /!\ It does not create a new git tag, nor commit anything. It only update
-# files and produce builds.
+# /!\ It does not create a new git tag, nor commit anything, nor produce
+# builds.
+# It only update files.
 #
 # To use it:
 #
