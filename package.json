@@ -153,7 +153,7 @@
     "bundle:min": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer minified bundle\" -o dist/rx-player.min.js --minify",
     "certificate": "bash ./scripts/generate_certificate.sh",
     "check": "npm run check:types && npm run lint && npm run check:types:unit_tests",
-    "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run lint:scripts && npm run test:unit && npm run test:integration && npm run test:memory",
+    "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run lint:scripts",
     "check:demo": "npm run check:demo:types && npm run lint:demo",
     "check:demo:types": "tsc --noEmit --project demo/",
     "clean:build": "node ./scripts/utils/remove_dir.mjs dist",
@@ -240,18 +240,18 @@
     },
     "Type-check, format, or lint the current code": {
       "check": "Check the validity of the src directory by running the type checker and linter on it",
-      "check:all": "Check the validity of the whole project by running linters, type checkers and every tests",
+      "check:all": "Check the validity of the whole project by running linters and type checkers on all project directories",
+      "fmt:prettier": "Automatically format JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files",
+      "fmt:prettier:check": "Check that JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files are well-formatted",
+      "fmt:rust": "Automatically format Rust files",
+      "fmt:rust:check": "Check that Rust files are well-formatted",
       "check:types": "Check TypeScript typings in src",
       "check:types:watch": "Check TypeScript typings in src each time files change",
       "lint": "Lint rx-player source files",
       "lint:all": "Lint all RxPlayer JS files, including scripts, demo, integration tests etc.",
       "lint:demo": "Lint demo source files",
       "lint:scripts": "Lint our JS scripts in the scripts/ directory",
-      "lint:tests": "Lint integration tests source files",
-      "fmt:prettier": "Automatically format JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files",
-      "fmt:prettier:check": "Check that JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files are well-formatted",
-      "fmt:rust": "Automatically format Rust files",
-      "fmt:rust:check": "Check that Rust files are well-formatted"
+      "lint:tests": "Lint integration tests source files"
     },
     "Run tests": {
       "Integration tests (test the whole API, call the `build` script BEFORE running them)": {
