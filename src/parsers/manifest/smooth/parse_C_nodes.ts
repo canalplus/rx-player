@@ -57,10 +57,10 @@ export default function parseCNodes(
     }
     if (duration === undefined || isNaN(duration)) {
       let nextNodeIdx = i;
-      let nextNodeElt;
+      let nextNodeElt: ITNode | undefined | string;
       do {
         nextNodeIdx++;
-        nextNodeElt = node.children[nextNodeIdx];
+        nextNodeElt = nodes[nextNodeIdx];
       } while (nextNodeElt !== undefined && typeof nextNodeElt === "string");
       if (nextNodeElt !== undefined) {
         const nextTAttr = nextNodeElt.attributes.t ?? null;
