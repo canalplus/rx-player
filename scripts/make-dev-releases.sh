@@ -31,6 +31,9 @@
 #      did not output any issue and if it didn't you can confirm.
 #
 #   4. That's it!
+#
+#      If everything goes right, dev releases will be generated server-side
+#      once the right tag is created an pushed.
 
 set -e
 
@@ -151,5 +154,5 @@ while true; do
 done
 
 # TODO: Include release note as a tag description?
-git tag -a "v${dev_version}" -m "RxPlayer dev release: v${dev_version}"
+git tag -s -a "v${dev_version}" -m "RxPlayer dev release: v${dev_version}"
 git push origin "${current_branch}"

@@ -4,8 +4,26 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+" # v1.0.0, v2.3.4 … nothing else
+    workflow_dispatch:  # This allows manual triggering, for when the original
+                        # tag commit already failed
 
 jobs:
+  check_official_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.getversion.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check last commit contains right version tag
+        id: getversion
+        run: |
+          TAG=$(git describe --tags --exact-match HEAD)   # tag on current commit
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "No compatible semver tag on HEAD; exiting."
+            exit 1
+          fi
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"   # strip leading 'v'
+
   general_release_checks:
     runs-on: ubuntu-latest
 
@@ -82,11 +100,16 @@ jobs:
       - run: npm run test:memory
 
   performance_tests:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
     permissions:
       pull-requests: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -106,6 +129,7 @@ jobs:
   publish_official:
     runs-on: ubuntu-latest
     needs:
+      - check_official_version
       - general_release_checks
       - integration_linux_chrome
       - integration_linux_firefox
@@ -117,7 +141,7 @@ jobs:
       - performance_tests
 
     permissions:
-      contents: read
+      contents: write
       id-token: write # required for npm provenance
 
     strategy:
@@ -126,13 +150,31 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # fetch all branches and history
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: "https://registry.npmjs.org"
-      - run: |
-          npm ci
-      - run: npm publish --provenance
+
+      - name: Install RxPlayer dependencies
+        run: npm ci
+
+      - name: Merge on stable branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin stable:stable
+          git checkout stable
+          if ! git merge --ff-only ${{ github.ref_name }}; then
+            echo "Error: Cannot fast-forward merge. The stable branch may be ahead of the release branch."
+            exit 1
+          fi
+          git push origin stable
+
+      - name: Build and publish official release
+        run: npm publish --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

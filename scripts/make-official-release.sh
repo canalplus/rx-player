@@ -134,6 +134,12 @@ if [ -n "$(git status --porcelain)" ]; then
   err "Error after doing rebases: updated files"
 fi
 
+emphasized_log "Creating \"release/v$version\" branch..."
+git checkout -b "release/v$version"
+
+emphasized_log "Calling update-version script to update files with the last version..."
+npm run update-version "$version"
+
 # Make Changelog
 npm run releases:changelog -- "$version"
 
@@ -141,59 +147,6 @@ $EDITOR CHANGELOG.md
 echo "Running prettier on CHANGELOG.md..."
 npx prettier --write CHANGELOG.md --log-level silent
 echo ""
-
-if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
-  echo "-- Current CHANGELOG.md Status: --"
-  echo ""
-  git status CHANGELOG.md
-
-  while :; do
-    echo ""
-    echo "We will push this CHANGELOG.md update to $base_branch."
-    read -r -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
-    echo ""
-
-    if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
-      echo ""
-      echo ""
-      echo "+- help -------------------------------------------------+"
-      echo "| y: commit and continue                                 |"
-      echo "| d: see diff                                            |"
-      echo "| s: see status                                          |"
-      echo "| a: abort script from here                              |"
-      echo "| c: skip CHANGELOG.md update and go to the next step    |"
-      echo "| h: see this help                                       |"
-      echo "+--------------------------------------------------------+"
-    elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add CHANGELOG.md
-      git commit -m "Update CHANGELOG.md for v$version"
-      git push "git@github.com:canalplus/rx-player.git" "$base_branch"
-      break
-    elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff CHANGELOG.md || true # ignore when return 1
-    elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status CHANGELOG.md
-    elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
-      echo "exiting"
-      exit 0
-    elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout CHANGELOG.md
-    else
-      echo "invalid input"
-    fi
-  done
-fi
-
-if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Unexpected diff in \"$base_branch\""
-  exit 1
-fi
-
-emphasized_log "Creating \"release/v$version\" branch..."
-git checkout -b "release/v$version"
-
-emphasized_log "Calling update-version script to update files and produce builds..."
-npm run update-version "$version"
 
 if [ -n "$(git status --porcelain)" ]; then
   echo ""
@@ -236,128 +189,38 @@ else
   log "nothing to do on the release branch"
 fi
 
-$EDITOR CHANGELOG.md
-echo "Running prettier on CHANGELOG.md..."
-npx prettier --write CHANGELOG.md --log-level silent
-echo ""
-if [ -n "$(git status --porcelain)" ]; then
-  emphasized_log "Commiting CHANGELOG.md update..."
-  git add CHANGELOG.md
-  git commit -m "Update CHANGELOG.md for v$version"
-fi
+emphasized_log "Running \"releases:demo\" script to update the gh-pages' demo..."
+npm run releases:demo
+
+emphasized_log "Running \"releases:doc\" script to update the gh-pages' documentation..."
+npm run releases:doc
+
+git checkout "release/v$version"
 
 emphasized_log "Pushing \"release/v$version\" branch to GitHub..."
+# TODO: Include release note as a tag description?
+git tag -s -a "v${version}" -m "RxPlayer release: v${version}"
 git push git@github.com:canalplus/rx-player.git "release/v$version"
-
-while :; do
-  echo ""
-  log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
-  log ""
-  log "Your release branch has been pushed to release/v$version"
-  log "Please open a Pull Request on GitHub's interface for it and ensure the CI"
-  log "passes."
-  log ""
-  log "If the CI fails, you can fix it directly on that release branch, keeping that"
-  log "script pending."
-  log ""
-  log 'Once the CI passes, type "y"'
-  log ""
-  log "If this script has to be interrupted before the CI passes, please delete the"
-  log "remote and local release branch before calling this script again."
-  log ""
-  log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  REPLY=""
-  read -p "" -n 1 -r
-  echo ""
-
-  if [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-    break
-  fi
-done
-
-while :; do
-  emphasized_log "Merging \"release/v$version\" branch to \"stable\" branch..."
-  git checkout stable
-  git merge -S --no-ff "release/v$version" stable
-
-  emphasized_log "Running \"releases:demo\" script to update the gh-pages' demo..."
-  npm run releases:demo
-
-  emphasized_log "Running \"releases:doc\" script to update the gh-pages' documentation..."
-  npm run releases:doc
-  echo ""
-  log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
-  log ""
-  log "The demo page:"
-  log "https://developers.canal-plus.com/rx-player/"
-  log ""
-  log "And the documentation pages:"
-  log "https://developers.canal-plus.com/rx-player/doc/api/Overview.html"
-  log ""
-  log "Have just been updated (actual deployment may take several minutes, please"
-  log "check the anounced version on both pages first)."
-  log ""
-  log "Check that everything is working as intended."
-  log ""
-  log 'If those pages are OK, type "y"'
-  log ""
-  log 'If one of those pages has an issue, type "r"'
-  log ""
-  log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  REPLY=""
-  read -p "" -n 1 -r
-  echo ""
-
-  if [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-    emphasized_log "Making tag and pushing \"stable\" branch to GitHub..."
-    # TODO: Include release note as a tag description?
-    it tag -a "v${version}" -m "RxPlayer official release: v${version}"
-    git push git@github.com:canalplus/rx-player.git stable
-    break
-  elif [[ $REPLY =~ ^[Rr](ewind)?$ ]]; then
-    if ! [ "$(current_branch)" == "stable" ]; then
-      err "The current branch is not \"stable\""
-    fi
-    emphasized_log "Resetting \"stable\" branch and checkouting \"release/v$version\" branch again..."
-    check_branch_synchronized_with_remote
-    git reset --hard HEAD~1
-    git checkout "release/v$version"
-    while :; do
-      echo ""
-      log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
-      log ""
-      log "We switched back to the branch: release/v$version"
-      log ""
-      log "Please fix the seen issues there, then ensure the CI passes."
-      log ""
-      log "If the CI fails, you can fix it directly on that release branch, keeping that"
-      log "script pending."
-      log ""
-      log 'Once the CI passes, type "y"'
-      log ""
-      log "If this script has to be interrupted before the CI passes, please delete the"
-      log "remote and local release branch before calling this script again."
-      log ""
-      log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-      REPLY=""
-      read -p "" -n 1 -r
-      echo ""
-
-      if [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-        break
-      fi
-    done
-  fi
-done
 
 echo ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
 log ""
-log "The stable branch has been updated to now point to the v$version release and"
-log "has been pushed to remote."
+log "Your release branch has been pushed to a new \"release/v$version\" branch"
+log "Please open a Pull Request on GitHub's interface for it and ensure the CI"
+log "passes. If the corresponding CI jobs do not trigger - it might be because"
+log "this is a retry attempt, in which case you may need to trigger it manually."
 log ""
-log 'Server-side, a build and publish of the package on npm is now scheduled.'
-log "Check the result, and then create the release on GitHub's interface (don't"
-log "forget to include builds in it)."
+log "If the CI passes, it should automatically publish a version and merge that"
+log "work into the \"stable\" branch of the rx-player"
+log ""
+log "If the CI fails:"
+log "  1. Remove the \"release/v$version\" branch locally and remotely:"
+log "     - local remove: \`git branch -d \"release/v$version\"\`"
+log "     - remote remove: \`git push origin --delete \"release/v$version\"\`"
+log "  2. Remove the version tag from the RxPlayer repository locally and remotely:"
+log "     - local remove: \`git tag -d \"$version\"\`"
+log "     - remote remove: \`git push origin --delete tag \"$version\"\`"
+log "  3. Re-launch this script again."
 log ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+git checkout "$base_branch"

@@ -13,11 +13,11 @@ jobs:
   perf-tests:
     if:
       ${{ !contains(github.event.pull_request.labels.*.name, 'skip-performance-checks') }}
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
