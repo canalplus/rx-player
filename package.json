@@ -294,9 +294,8 @@
       "releases:doc": "Publish current documentation as the GitHub's pages new documentation pages (\"stable\" branch only)"
     },
     "Make a release": {
-      "releases:dev": "Produce dev npm releases (which are tagged pre-releases on npm) from the current branch.",
-      "releases:official": "Produce a new official release of the RxPlayer from the current branch.",
-      "update-version": "Update the version of the RxPlayer. Will update the codebase and perform every builds."
+      "releases:dev": "Trigger our CI to produce dev npm releases (which are tagged pre-releases on npm) from the current branch.",
+      "releases:official": "Trigger our CI to produce a new official release of the RxPlayer from the current branch."
     }
   }
 }
