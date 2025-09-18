@@ -21,6 +21,12 @@
 
 set -e
 
+GIT_REPO="git@github.com:canalplus/rx-player.git"
+
+# Both declared first as they will be needed for cleanup
+base_branch=""
+release_branch=""
+
 # Log a line prefixed with our script's name
 log() {
   echo "---- RxPlayer Release Script ----   $1"
@@ -35,7 +41,13 @@ emphasized_log() {
 
 # Log a line to stderr and exit with error code 1
 err() {
-  echo "ERROR: $1" >&2
+  echo "---- RxPlayer Release Script ----   ERROR: $1" >&2
+  if [[ -n "$base_branch" ]]; then
+		git checkout "$base_branch"
+		if [[ -n "$release_branch" ]]; then
+			git branch -D "$release_branch"
+		fi
+	fi
   exit 1
 }
 
@@ -53,7 +65,7 @@ current_branch() {
 
 # Get the local name for canalplus's remote repository
 git_remote_name() {
-  git remote -v | grep "git@github.com:canalplus/rx-player.git" | grep "(push)" | cut -f1
+  git remote -v | grep "$GIT_REPO" | grep "(push)" | cut -f1
 }
 
 # Check that the current branch is up-to-date with remote, errors if that's not
@@ -73,6 +85,9 @@ check_dependency cut
 check_dependency grep
 check_dependency sed
 check_dependency sleep
+if [ -z "$EDITOR" ]; then
+  err "Environment variable EDITOR is not set. Please set it to your preferred text editor."
+fi
 
 base_branch=$(current_branch)
 
@@ -84,7 +99,7 @@ if [ -n "$(git status --porcelain)" ]; then
   err "Please commit your modifications first"
 fi
 
-echo "Checking current branch is synchronized with remote..."
+log "Checking current branch is synchronized with remote..."
 check_branch_synchronized_with_remote
 
 if [ $# -eq 0 ]; then
@@ -100,16 +115,16 @@ fi
 
 emphasized_log "This script will create the official version: $version"
 
-echo "checking that the branche does not already exist locally or remotely..."
+log "checking that the branche does not already exist locally or remotely..."
 if ! [ -z "$(git branch --list "release/v$version")" ]; then
   err "Branch name \"release/v""$version""\" already exists locally. Please delete it first."
 fi
 
-if ! [ -z "$(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/release/v$version")" ]; then
+if ! [ -z "$(git ls-remote --heads "$GIT_REPO" "refs/heads/release/v$version")" ]; then
   err "Branch name \"release/v""$version""\" already exists remotely. Please delete it first."
 fi
 
-echo "checking that the version are not already published on npm..."
+log "checking that the version are not already published on npm..."
 if npm view "rx-player@$version" >/dev/null 2>&1; then
   err "Version already published to npm: $version"
 fi
@@ -117,7 +132,7 @@ fi
 if [ "$base_branch" == "dev" ]; then
   emphasized_log "Checkout the stable branch and pull it..."
   git checkout stable
-  git pull git@github.com:canalplus/rx-player.git stable
+  git pull "$GIT_REPO" stable
 
   if [ -n "$(git status --porcelain)" ]; then
     err "Please commit your modifications first"
@@ -127,6 +142,7 @@ if [ "$base_branch" == "dev" ]; then
 
   emphasized_log "Rebase the dev branch on stable..."
   git checkout dev
+  git pull "$GIT_REPO" dev
   git rebase stable --rebase-merges
 fi
 
@@ -134,66 +150,20 @@ if [ -n "$(git status --porcelain)" ]; then
   err "Error after doing rebases: updated files"
 fi
 
+emphasized_log "Creating \"release/v$version\" branch..."
+release_branch="release/v$version"
+git checkout -b "$release_branch"
+
+emphasized_log "Calling update-version script to update files with the last version..."
+npm run update-version -- "$version"
+
 # Make Changelog
 npm run releases:changelog -- "$version"
 
 $EDITOR CHANGELOG.md
-echo "Running prettier on CHANGELOG.md..."
+log "Running prettier on CHANGELOG.md..."
 npx prettier --write CHANGELOG.md --log-level silent
 echo ""
-
-if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
-  echo "-- Current CHANGELOG.md Status: --"
-  echo ""
-  git status CHANGELOG.md
-
-  while :; do
-    echo ""
-    echo "We will push this CHANGELOG.md update to $base_branch."
-    read -r -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n1 REPLY
-    echo ""
-
-    if [[ $REPLY =~ ^[Hh](elp)?$ ]]; then
-      echo ""
-      echo ""
-      echo "+- help -------------------------------------------------+"
-      echo "| y: commit and continue                                 |"
-      echo "| d: see diff                                            |"
-      echo "| s: see status                                          |"
-      echo "| a: abort script from here                              |"
-      echo "| c: skip CHANGELOG.md update and go to the next step    |"
-      echo "| h: see this help                                       |"
-      echo "+--------------------------------------------------------+"
-    elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      git add CHANGELOG.md
-      git commit -m "Update CHANGELOG.md for v$version"
-      git push "git@github.com:canalplus/rx-player.git" "$base_branch"
-      break
-    elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
-      git diff CHANGELOG.md || true # ignore when return 1
-    elif [[ $REPLY =~ ^[Ss](tatus)?$ ]]; then
-      git status CHANGELOG.md
-    elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
-      echo "exiting"
-      exit 0
-    elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
-      git checkout CHANGELOG.md
-    else
-      echo "invalid input"
-    fi
-  done
-fi
-
-if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Unexpected diff in \"$base_branch\""
-  exit 1
-fi
-
-emphasized_log "Creating \"release/v$version\" branch..."
-git checkout -b "release/v$version"
-
-emphasized_log "Calling update-version.sh script to update files and produce builds..."
-npm run update-version.sh "$version"
 
 if [ -n "$(git status --porcelain)" ]; then
   echo ""
@@ -202,7 +172,7 @@ if [ -n "$(git status --porcelain)" ]; then
 
   while :; do
     echo ""
-    log "We will push the following modification to a new release/v$version branch."
+    log "We will push the following modification to a new $release_branch branch."
     REPLY=""
     read -p "do you want to continue [y/d/s/a/c/t/h] (h for help) ? " -n 1 -r
     echo ""
@@ -216,8 +186,8 @@ if [ -n "$(git status --porcelain)" ]; then
       log "| h: see this help                                       |"
       log "+--------------------------------------------------------+"
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-      if ! [ "$(current_branch)" == "release/v$version" ]; then
-        err "The current branch is not \"release/v$version\""
+      if ! [ "$(current_branch)" == "$release_branch" ]; then
+        err "The current branch is not \"$release_branch\""
       fi
       emphasized_log "Commiting those updates..."
       git add --all
@@ -236,125 +206,52 @@ else
   log "nothing to do on the release branch"
 fi
 
-$EDITOR CHANGELOG.md
-echo "Running prettier on CHANGELOG.md..."
-npx prettier --write CHANGELOG.md --log-level silent
-echo ""
-if [ -n "$(git status --porcelain)" ]; then
-  emphasized_log "Commiting CHANGELOG.md update..."
-  git add CHANGELOG.md
-  git commit -m "Update CHANGELOG.md for v$version"
+# Two following script ensure we are on the base branch with the right rights
+git checkout "$base_branch"
+
+emphasized_log "Running \"releases:demo\" script to update the gh-pages' demo..."
+if ! npm run releases:demo; then
+  git checkout "$base_branch"
+  git branch -D "$release_branch"
+  err "Failed to update demo page: \`releases:demo\` script failed"
 fi
 
-emphasized_log "Pushing \"release/v$version\" branch to GitHub..."
-git push git@github.com:canalplus/rx-player.git "release/v$version"
+emphasized_log "Running \"releases:doc\" script to update the gh-pages' documentation..."
+if ! npm run releases:doc; then
+  git checkout "$base_branch"
+  git branch -D "$release_branch"
+  err "Failed to update doc page: \`releases:doc\` script failed"
+fi
 
-while :; do
-  echo ""
-  log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
-  log ""
-  log "Your release branch has been pushed to release/v$version"
-  log "Please open a Pull Request on GitHub's interface for it and ensure the CI"
-  log "passes."
-  log ""
-  log "If the CI fails, you can fix it directly on that release branch, keeping that"
-  log "script pending."
-  log ""
-  log 'Once the CI passes, type "y"'
-  log ""
-  log "If this script has to be interrupted before the CI passes, please delete the"
-  log "remote and local release branch before calling this script again."
-  log ""
-  log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  REPLY=""
-  read -p "" -n 1 -r
-  echo ""
+# Go back to our new branch to be able to push it now that everything seems to pass
+git checkout "$release_branch"
 
-  if [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-    break
-  fi
-done
-
-while :; do
-  emphasized_log "Merging \"release/v$version\" branch to \"stable\" branch..."
-  git checkout stable
-  git merge -S --no-ff "release/v$version" stable
-
-  emphasized_log "Running \"releases:demo\" script to update the gh-pages' demo..."
-  npm run releases:demo
-
-  emphasized_log "Running \"releases:doc\" script to update the gh-pages' documentation..."
-  npm run releases:doc
-  echo ""
-  log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
-  log ""
-  log "The demo page:"
-  log "https://developers.canal-plus.com/rx-player/"
-  log ""
-  log "And the documentation pages:"
-  log "https://developers.canal-plus.com/rx-player/doc/api/Overview.html"
-  log ""
-  log "Have just been updated (actual deployment may take several minutes, please"
-  log "check the anounced version on both pages first)."
-  log ""
-  log "Check that everything is working as intended."
-  log ""
-  log 'If those pages are OK, type "y"'
-  log ""
-  log 'If one of those pages has an issue, type "r"'
-  log ""
-  log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  REPLY=""
-  read -p "" -n 1 -r
-  echo ""
-
-  if [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-    emphasized_log "Pushing \"stable\" branch to GitHub..."
-    git push git@github.com:canalplus/rx-player.git stable
-    break
-  elif [[ $REPLY =~ ^[Rr](ewind)?$ ]]; then
-    if ! [ "$(current_branch)" == "stable" ]; then
-      err "The current branch is not \"stable\""
-    fi
-    emphasized_log "Resetting \"stable\" branch and checkouting \"release/v$version\" branch again..."
-    check_branch_synchronized_with_remote
-    git reset --hard HEAD~1
-    git checkout "release/v$version"
-    while :; do
-      echo ""
-      log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
-      log ""
-      log "We switched back to the branch: release/v$version"
-      log ""
-      log "Please fix the seen issues there, then ensure the CI passes."
-      log ""
-      log "If the CI fails, you can fix it directly on that release branch, keeping that"
-      log "script pending."
-      log ""
-      log 'Once the CI passes, type "y"'
-      log ""
-      log "If this script has to be interrupted before the CI passes, please delete the"
-      log "remote and local release branch before calling this script again."
-      log ""
-      log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-      REPLY=""
-      read -p "" -n 1 -r
-      echo ""
-
-      if [[ $REPLY =~ ^[Yy](es)?$ ]]; then
-        break
-      fi
-    done
-  fi
-done
+emphasized_log "Pushing \"$release_branch\" branch to remote..."
+# TODO: Include release note as a tag description?
+git tag -s -a "v${version}" -m "RxPlayer release: v${version}"
+git push "$GIT_REPO" "$release_branch"
 
 echo ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~  RxPlayer Release Script  ~~~~~~~~~~~~~~~~~~~~~~~~~"
 log ""
-log "The stable branch has been updated to now point to the v$version release and"
-log "has been pushed to remote."
+log "Your release branch has been pushed to a new \"$release_branch\" branch"
+log "Please open a Pull Request on GitHub's interface for it and ensure the CI"
+log "passes. If the corresponding CI jobs do not trigger - it might be because"
+log "this is a retry attempt, in which case you may need to trigger it manually."
 log ""
-log 'You may now run "npm publish", check the published package, and then create'
-log "the release on GitHub's interface (don't forget to include builds in it)."
+log "If the CI passes, it should automatically publish a version and merge that"
+log "work into the \"stable\" branch of the rx-player"
+log ""
+log "If the CI fails:"
+log "  1. Remove the \"$release_branch\" branch locally and remotely:"
+log "     - local remove: \`git branch -d \"$release_branch\"\`"
+log "     - remote remove: \`git push origin --delete \"$release_branch\"\`"
+log "  2. Remove the version tag from the RxPlayer repository locally and remotely:"
+log "     - local remove: \`git tag -d \"$version\"\`"
+log "     - remote remove: \`git push origin --delete tag \"$version\"\`"
+log "  3. Launch this script again."
 log ""
 log "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+# Go back to original branch
+git checkout "$base_branch"

@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.4.0-dev.2025090801
+## Current dev build: v4.4.0-dev.2025091701
 
 ### Features
 
@@ -35,6 +35,7 @@
   [#1720]
 - Directfile: set autoplay attribute on directfile contents, to work-around
   safari-specific issues [#1711]
+- Remove unnecessary duration logs when reaching the end of some VoD contents [#1744]
 
 ### Other improvements
 

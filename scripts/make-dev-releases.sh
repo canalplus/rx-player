@@ -31,6 +31,9 @@
 #      did not output any issue and if it didn't you can confirm.
 #
 #   4. That's it!
+#
+#      If everything goes right, dev releases will be generated server-side
+#      once the right tag is created an pushed.
 
 set -e
 
@@ -39,6 +42,21 @@ err() {
   echo "ERROR: $1" >&2
   exit 1
 }
+
+# Check that the given command is installed and quit on error if that's not the case
+check_dependency() {
+  if [ -z "$(command -v "$1")" ]; then
+    err "This script needs \"$1\" to be installed and be executable"
+  fi
+}
+
+check_dependency git
+check_dependency echo
+check_dependency npm
+check_dependency sed
+if [ -z "$EDITOR" ]; then
+  err "Environment variable EDITOR is not set. Please set it to your preferred text editor."
+fi
 
 if [ $# -eq 0 ]; then
   read -r -p "Please enter the wanted version number (example: 4.12.1): " version
@@ -64,28 +82,19 @@ current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 date=$(date "+%Y%m%d")
 dev_version="${version}-dev.${date}${incr}"
 canal_version="${version}-canal.${date}${incr}"
-dev_branch="release/v${dev_version}"
-canal_branch="release/v${canal_version}"
 
 if [ -n "$(git status --porcelain)" ]; then
   err "There is unstaged changes in your worktree. Please commit your changes or stash them before creating the release."
 fi
 
-echo "This script will create the dev versions: $dev_version and $canal_version"
+echo "This script will prepare dev RxPlayer versions: $dev_version and $canal_version"
 
-echo "checking that the branches do not already exist locally or remotely..."
-if ! [ -z "$(git branch --list "$dev_branch")" ]; then
-  err "Branch name \"$dev_branch\" already exists locally. Please delete it first."
+if ! git apply --check "./scripts/canal-release.patch"; then
+  echo "Error: Canal patch cannot be applied cleanly!"
+  echo "Please resolve conflicts in the patch file before proceeding."
+  exit 1
 fi
-if ! [ -z "$(git branch --list "$canal_branch")" ]; then
-  err "Branch name \"$canal_branch\" already exists locally. Please delete it first."
-fi
-if ! [ -z "$(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$dev_branch")" ]; then
-  err "Branch name \"$dev_branch\" already exists remotely. Please delete it first."
-fi
-if ! [ -z "$(git ls-remote --heads git@github.com:canalplus/rx-player.git "refs/heads/$canal_branch")" ]; then
-  err "Branch name \"$canal_branch\" already exists remotely. Please delete it first."
-fi
+echo "Canal patch check passed ✓"
 
 echo "checking that the versions are not already published on npm..."
 if npm view "rx-player@$dev_version" >/dev/null 2>&1; then
@@ -129,7 +138,6 @@ if [ -n "$(git status --porcelain CHANGELOG.md)" ]; then
     elif [[ $REPLY =~ ^[Yy](es)?$ ]]; then
       git add CHANGELOG.md
       git commit -m "Update CHANGELOG.md for v$dev_version"
-      git push git@github.com:canalplus/rx-player.git "$current_branch"
       break
     elif [[ $REPLY =~ ^[Dd](iff)?$ ]]; then
       git diff CHANGELOG.md || true # ignore when return 1
@@ -150,12 +158,8 @@ if [ -n "$(git status --porcelain)" ]; then
   err "Unexpected diff in \"${current_branch}\""
 fi
 
-git checkout -b "${dev_branch}"
-./scripts/update-version.sh "$version-dev.${date}${incr}"
-git add --all
-git commit -m "update version"
 while true; do
-  read -r -n1 -p "Do you wish to push and publish the dev build? [y/n] " yn
+  read -r -n1 -p "Do you wish to publish the dev and canal builds? [y/n] " yn
   echo ""
   case $yn in
   [Yy]*) break ;;
@@ -163,24 +167,7 @@ while true; do
   *) echo "Please answer y or n." ;;
   esac
 done
-git push origin "${dev_branch}"
-npm publish --tag dev-v4
 
-git checkout "$current_branch"
-
-git checkout -b "${canal_branch}"
-git apply ./scripts/canal-release.patch
-./scripts/update-version.sh "$version-canal.${date}${incr}"
-git add --all
-git commit -m "update version"
-git push origin "${canal_branch}"
-while true; do
-  read -r -n1 -p "Do you wish to push and publish the canal build? [y/n] " yn
-  echo ""
-  case $yn in
-  [Yy]*) break ;;
-  [Nn]*) exit ;;
-  *) echo "Please answer y or n." ;;
-  esac
-done
-npm publish --tag canal-v4
+# TODO: Include release note as a tag description?
+git tag -s -a "v${dev_version}" -m "RxPlayer dev release: v${dev_version}"
+git push origin "${current_branch}"

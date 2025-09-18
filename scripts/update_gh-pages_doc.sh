@@ -94,7 +94,7 @@ if [ -n "$(git status --porcelain doc "versions/$current_version/doc" documentat
       git status doc "versions/$current_version/doc" documentation_pages_by_version.html
     elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
       echo "exiting"
-      exit 0
+      exit 1
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
       git checkout doc "versions/$current_version/doc" documentation_pages_by_version.html
     elif [[ $REPLY =~ ^[Tt]$ ]]; then

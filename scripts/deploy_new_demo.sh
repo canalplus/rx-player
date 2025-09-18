@@ -107,7 +107,7 @@ if [ -n "$(git status --porcelain "$deployed_branch")" ]; then
       git status "$deployed_branch"
     elif [[ $REPLY =~ ^[Aa](bort)?$ ]]; then
       echo "exiting"
-      exit 0
+      exit 1
     elif [[ $REPLY =~ ^[Cc](heckout)?$ ]]; then
       git checkout "$deployed_branch"
     elif [[ $REPLY =~ ^([Tt]|([Ss]tash))?$ ]]; then

@@ -146,14 +146,14 @@
   "sideEffects": false,
   "scripts": {
     "build": "node ./scripts/generate_build.mjs",
-    "build:all": "npm run clean:build && npm run build:wasm:release && npm run bundle && npm run bundle:min && npm run build",
+    "build:all": "bash ./scripts/make_all_builds.sh",
     "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
     "build:wasm:release": "bash ./scripts/build_wasm_release.sh",
     "bundle": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer default bundle\" -o dist/rx-player.js",
     "bundle:min": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer minified bundle\" -o dist/rx-player.min.js --minify",
     "certificate": "bash ./scripts/generate_certificate.sh",
     "check": "npm run check:types && npm run lint && npm run check:types:unit_tests",
-    "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run lint:scripts && npm run test:unit && npm run test:integration && npm run test:memory",
+    "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run lint:scripts",
     "check:demo": "npm run check:demo:types && npm run lint:demo",
     "check:demo:types": "tsc --noEmit --project demo/",
     "clean:build": "node ./scripts/utils/remove_dir.mjs dist",
@@ -172,7 +172,7 @@
     "lint:scripts": "eslint -c scripts/eslint.config.mjs --ext .js --ext .mjs --ext .cjs scripts",
     "lint:tests": "eslint -c tests/eslint.config.mjs tests",
     "list": "node scripts/list-npm-scripts.mjs",
-    "prepublishOnly": "npm run build:all",
+    "prepublishOnly": "bash ./scripts/make_all_builds.sh",
     "releases:changelog": "node ./scripts/update_changelog.mjs",
     "releases:demo": "bash ./scripts/update_gh-pages_demo.sh",
     "releases:dev": "bash ./scripts/make-dev-releases.sh",
@@ -191,8 +191,7 @@
     "test:memory:chrome:watch": "cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:unit": "vitest --config vitest.config.unit.mjs",
     "test:unit:watch": "vitest --config vitest.config.unit.mjs --watch",
-    "update-version": "npm run version --git-tag-version=false",
-    "version": "bash ./scripts/update-version.sh"
+    "update-version": "bash ./scripts/update-version-number.sh"
   },
   "repository": {
     "type": "git",
@@ -241,18 +240,18 @@
     },
     "Type-check, format, or lint the current code": {
       "check": "Check the validity of the src directory by running the type checker and linter on it",
-      "check:all": "Check the validity of the whole project by running linters, type checkers and every tests",
+      "check:all": "Check the validity of the whole project by running linters and type checkers on all project directories",
+      "fmt:prettier": "Automatically format JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files",
+      "fmt:prettier:check": "Check that JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files are well-formatted",
+      "fmt:rust": "Automatically format Rust files",
+      "fmt:rust:check": "Check that Rust files are well-formatted",
       "check:types": "Check TypeScript typings in src",
       "check:types:watch": "Check TypeScript typings in src each time files change",
       "lint": "Lint rx-player source files",
       "lint:all": "Lint all RxPlayer JS files, including scripts, demo, integration tests etc.",
       "lint:demo": "Lint demo source files",
       "lint:scripts": "Lint our JS scripts in the scripts/ directory",
-      "lint:tests": "Lint integration tests source files",
-      "fmt:prettier": "Automatically format JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files",
-      "fmt:prettier:check": "Check that JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files are well-formatted",
-      "fmt:rust": "Automatically format Rust files",
-      "fmt:rust:check": "Check that Rust files are well-formatted"
+      "lint:tests": "Lint integration tests source files"
     },
     "Run tests": {
       "Integration tests (test the whole API, call the `build` script BEFORE running them)": {
@@ -295,9 +294,8 @@
       "releases:doc": "Publish current documentation as the GitHub's pages new documentation pages (\"stable\" branch only)"
     },
     "Make a release": {
-      "releases:dev": "Produce dev npm releases (which are tagged pre-releases on npm) from the current branch.",
-      "releases:official": "Produce a new official release of the RxPlayer from the current branch.",
-      "update-version": "Update the version of the RxPlayer. Will update the codebase and perform every builds."
+      "releases:dev": "Trigger our CI to produce dev npm releases (which are tagged pre-releases on npm) from the current branch.",
+      "releases:official": "Trigger our CI to produce a new official release of the RxPlayer from the current branch."
     }
   }
 }
