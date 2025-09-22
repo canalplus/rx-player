@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.4.0-dev.2025091701
+## Current dev build: v4.4.0-dev.2025092200
 
 ### Features
 
@@ -53,6 +53,7 @@
 - Detect that `fetch` / `AbortController` is native to provide a better experience for
   application relying on (broken) polyfills instead [#1698]
 - enable debug logs as soon as `__RX_PLAYER_DEBUG_MODE__` is set [#1626]
+- rely on "provenance statements" when publishing our builds [#1742]
 
 ## v4.3.0
 
