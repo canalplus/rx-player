@@ -62,7 +62,7 @@ echo " 🦀 Building mpd-parser WebAssembly file with Cargo..."
 if $has_local_cargo; then
   echo "NOTE: Relying on local cargo in ./tmp/cargo/bin/cargo"
   . ../../../../../tmp/cargo/env | true
-  ../../../../../tmp/cargo/bin/cargo build --target wasm32-unknown-unknown --release -q
+  PATH="../../../../../tmp/cargo/bin:$PATH" ../../../../../tmp/cargo/bin/cargo build --target wasm32-unknown-unknown --release -q
 else
   cargo build --target wasm32-unknown-unknown --release -q
 fi
@@ -70,7 +70,7 @@ fi
 echo " 🪚 Optimizing mpd-parser WebAssembly build..."
 if $has_local_wasmopt; then
   echo "NOTE: Relying on local wasm-opt in ./tmp/binaryen/bin/wasm-opt"
-  ../../../../../tmp/binaryen/bin/wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm --signext-lowering --strip-dwarf -O4 -o ../../../../../dist/mpd-parser.wasm
+  PATH="../../../../../tmp/binaryen/bin:$PATH" ../../../../../tmp/binaryen/bin/wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm --signext-lowering --strip-dwarf -O4 -o ../../../../../dist/mpd-parser.wasm
 else
   wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm --signext-lowering --strip-dwarf -O4 -o ../../../../../dist/mpd-parser.wasm
 fi
