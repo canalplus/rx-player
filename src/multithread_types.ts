@@ -944,12 +944,18 @@ export interface IResetTextDisplayerWorkerMessage {
   value: null;
 }
 
+type ISentLogValueBase = boolean | string | number | null | undefined;
+export type ISentLogValue =
+  | ISentLogValueBase
+  | ISentError
+  | Partial<Record<string, ISentLogValueBase>>;
+
 export interface ILogMessageWorkerMessage {
   type: WorkerMessageType.LogMessage;
   value: {
     namespace: ILogNamespace;
     logLevel: ILoggerLevel;
-    logs: Array<boolean | string | number | ISentError | null | undefined>;
+    logs: ISentLogValue[];
   };
 }
 

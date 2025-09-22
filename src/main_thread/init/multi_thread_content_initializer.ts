@@ -27,6 +27,7 @@ import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
   ICreateMediaSourceWorkerMessage,
   ISentError,
+  ISentLogValue,
   IWorkerMessage,
 } from "../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../multithread_types";
@@ -46,6 +47,7 @@ import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
+import type { IAcceptedLogValue } from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
@@ -223,7 +225,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       const type = msgData.type;
       switch (type) {
         case WorkerMessageType.LogMessage: {
-          const formatted = msgData.value.logs.map((l) => {
+          const formatted: IAcceptedLogValue[] = msgData.value.logs.map((l) => {
             switch (typeof l) {
               case "string":
               case "number":
@@ -234,7 +236,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
                 if (l === null) {
                   return null;
                 }
-                return formatWorkerError(l);
+                return formatSentLogObject(l);
               default:
                 assertUnreachable(l);
             }
@@ -2303,4 +2305,25 @@ function formatSourceBufferError(error: unknown): SourceBufferError {
   } else {
     return new SourceBufferError("Error", "Unknown SourceBufferError Error", false);
   }
+}
+
+/**
+ * The Core might send back logs. In that situation, the message might be
+ * formatted slightly differently to be able to cross threads (so a
+ * serializable format has to be sent).
+ *
+ * This function translates that Core format to what's expected by the
+ * logger.
+ *
+ * @param {*} arg
+ * @returns {*}
+ */
+function formatSentLogObject(arg: ISentLogValue): IAcceptedLogValue {
+  if (typeof arg !== "object") {
+    return arg;
+  }
+  if (arg?.isSerializedError === true) {
+    return formatWorkerError(arg as ISentError);
+  }
+  return arg as Exclude<ISentLogValue, ISentError>;
 }

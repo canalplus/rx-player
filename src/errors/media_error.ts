@@ -92,6 +92,7 @@ export default class MediaError extends Error {
    */
   public serialize(): ISerializedMediaError {
     return {
+      isSerializedError: true,
       name: this.name,
       code: this.code,
       reason: this._originalMessage,
@@ -102,6 +103,7 @@ export default class MediaError extends Error {
 
 /** Serializable object which allows to create a `MediaError` later. */
 export interface ISerializedMediaError {
+  isSerializedError: true;
   name: "MediaError";
   code: IMediaErrorCode;
   reason: string;

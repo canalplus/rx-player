@@ -105,6 +105,7 @@ export default class EncryptedMediaError extends Error {
    */
   public serialize(): ISerializedEncryptedMediaError {
     return {
+      isSerializedError: true,
       name: this.name,
       code: this.code,
       reason: this._originalMessage,
@@ -116,6 +117,7 @@ export default class EncryptedMediaError extends Error {
 }
 
 export interface ISerializedEncryptedMediaError {
+  isSerializedError: true;
   name: "EncryptedMediaError";
   code: IEncryptedMediaErrorCode;
   reason: string;
