@@ -53,12 +53,18 @@ export default class OtherError extends Error {
    * @returns {Object}
    */
   public serialize(): ISerializedOtherError {
-    return { name: this.name, code: this.code, reason: this._originalMessage };
+    return {
+      isSerializedError: true,
+      name: this.name,
+      code: this.code,
+      reason: this._originalMessage,
+    };
   }
 }
 
 /** Serializable object which allows to create an `OtherError` later. */
 export interface ISerializedOtherError {
+  isSerializedError: true;
   name: "OtherError";
   code: IOtherErrorCode;
   reason: string;

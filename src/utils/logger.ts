@@ -23,7 +23,7 @@ export type ILoggerLevel = "NONE" | "ERROR" | "WARNING" | "INFO" | "DEBUG";
 export type ILogFormat = "standard" | "full";
 
 type IAcceptedLogValueBase = boolean | string | number | null | undefined;
-type IAcceptedLogValue =
+export type IAcceptedLogValue =
   | IAcceptedLogValueBase
   | Error
   | Partial<Record<string, IAcceptedLogValueBase>>;
@@ -197,12 +197,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     const generateLogFn =
       this._currentFormat === "full"
         ? (logMethod: string, consoleFn: (...vals: unknown[]) => void): IConsoleFn => {
-            return (
-              namespace: ILogNamespace,
-              ...args: Array<
-                IAcceptedLogValue | Partial<Record<string, IAcceptedLogValue>>
-              >
-            ) => {
+            return (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => {
               const now = getMonotonicTimeStamp();
               return consoleFn(
                 String(now.toFixed(2)),
@@ -217,12 +212,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
             };
           }
         : (_logMethod: string, consoleFn: (...vals: unknown[]) => void): IConsoleFn => {
-            return (
-              namespace: ILogNamespace,
-              ...args: Array<
-                IAcceptedLogValue | Partial<Record<string, IAcceptedLogValue>>
-              >
-            ) => {
+            return (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => {
               return consoleFn(
                 namespace + ":",
                 ...args.map((a) =>

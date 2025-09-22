@@ -76,6 +76,7 @@ export default class NetworkError extends Error {
    */
   public serialize(): ISerializedNetworkError {
     return {
+      isSerializedError: true,
       name: this.name,
       code: this.code,
       baseError: this._baseError.serialize(),
@@ -85,6 +86,7 @@ export default class NetworkError extends Error {
 
 /** Serializable object which allows to create a `NetworkError` later. */
 export interface ISerializedNetworkError {
+  isSerializedError: true;
   name: "NetworkError";
   code: INetworkErrorCode;
   baseError: ISerializedRequestError;
