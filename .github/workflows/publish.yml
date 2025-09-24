@@ -3,15 +3,33 @@ name: RxPlayer npm publishing
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+" # v1.0.0, v2.3.4 … nothing else
-    workflow_dispatch: # This allows manual triggering, for when the original
-      # tag commit already failed
+      - "v[0-9]+.[0-9]+.[0-9]+" # Official releases: v1.0.0, v2.3.4
+      - "v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+" # Dev releases: v1.0.0-dev....
+  workflow_dispatch: # Manual triggering for failed tag commits
 
 jobs:
-  check_official_version:
+  determine_release_type:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.getversion.outputs.version }}
+      release_type: ${{ steps.release_type.outputs.type }}
+
+    steps:
+      - name: Set release type
+        id: release_type
+        run: |
+          echo "Analyzing tag: ${{ github.ref }}"
+
+          if [[ ${{ github.ref }} =~ refs/tags/v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+ ]]; then
+            echo "type=dev" >> $GITHUB_OUTPUT
+            echo "This is a dev release"
+          else
+            echo "type=official" >> $GITHUB_OUTPUT
+            echo "This is an official release"
+          fi
+
+  check_official_version:
+    if: needs.determine_release_type.outputs.release_type == 'official'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Check last commit contains right version tag
@@ -22,7 +40,6 @@ jobs:
             echo "No compatible semver tag on HEAD; exiting."
             exit 1
           fi
-          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"   # strip leading 'v'
 
   general_release_checks:
     runs-on: ubuntu-latest
@@ -106,8 +123,6 @@ jobs:
         node-version: [22.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
-    permissions:
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -123,12 +138,88 @@ jobs:
       - run: export DISPLAY=:99
       - run: sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
       - run:
-          node tests/performance/run.mjs --branch $GITHUB_BASE_REF --remote-git-url
+          node tests/performance/run.mjs --branch stable --remote-git-url
           https://github.com/canalplus/rx-player.git
 
-  publish_official:
+  publish_dev:
+    if: needs.determine_release_type.outputs.release_type == 'dev'
     runs-on: ubuntu-latest
     needs:
+      - determine_release_type
+      - general_release_checks
+      - integration_linux_chrome
+      - integration_linux_firefox
+      - integration_linux_edge
+      - integration_windows_chrome
+      - integration_windows_firefox
+      - integration_windows_edge
+      - memory_linux
+
+    permissions:
+      id-token: write # required for npm provenance
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=\"$VERSION\"" >> "$GITHUB_OUTPUT"
+
+          # Create canal version (replace -dev. with -canal.)
+          CANAL_VERSION="${VERSION/-dev./-canal.}"
+          echo "canal_version=$CANAL_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if canal patch can be applied
+        run: |
+          echo "Checking if canal patch can be applied..."
+          if ! git apply --check ./scripts/canal-release.patch; then
+            echo "Error: Canal patch cannot be applied cleanly!"
+            echo "Please resolve conflicts in the patch file before proceeding."
+            exit 1
+          fi
+          echo "Canal patch check passed ✓"
+
+      # Ensure npm 11.5.1 or later is installed for OIDC
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Install RxPlayer dependencies
+        run: npm ci
+
+      - name: Update version for dev release
+        run: npm run update-version "${{ steps.get_version.outputs.version }}"
+
+      - name: Build and publish dev version
+        run: npm publish --tag dev --provenance
+
+      - name: Apply Canal+ patch
+        run: git apply ./scripts/canal-release.patch
+
+      - name: Update version for canal release
+        run: npm run update-version "${{ steps.get_version.outputs.canal_version }}"
+
+      - name: Build and publish Canal version
+
+        run: npm publish --tag canal --provenance
+
+  publish_official:
+    if: needs.determine_release_type.outputs.release_type == 'official'
+    runs-on: ubuntu-latest
+    needs:
+      - determine_release_type
       - check_official_version
       - general_release_checks
       - integration_linux_chrome
@@ -158,6 +249,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: "https://registry.npmjs.org"
+
+      # Ensure npm 11.5.1 or later is installed for OIDC
+      - name: Update npm
+        run: npm install -g npm@latest
 
       - name: Install RxPlayer dependencies
         run: npm ci
@@ -190,5 +285,3 @@ jobs:
 
       - name: Build and publish official release
         run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
