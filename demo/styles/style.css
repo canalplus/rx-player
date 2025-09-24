@@ -241,6 +241,9 @@ header .right {
 
 .video-screen-parent {
   position: relative;
+}
+
+.video-screen {
   display: flex;
   aspect-ratio: 16 / 9;
   min-height: 0; /* Ensures aspect-ratio takes effect */
