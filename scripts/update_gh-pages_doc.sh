@@ -8,8 +8,7 @@
 #
 # To use it:
 #
-#   1. Be sure that you're on a clean (no staged files and no diff) `stable`
-#      branch.
+#   1. Be sure that you're on a clean (no staged files and no diff) branch.
 #
 #   2. Call this script.
 #      Some user interactions will be needed to avoid doing unwanted commits.
@@ -22,16 +21,11 @@ set -e
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 current_version=$(cat VERSION)
 
-if ! [ "$current_branch" == "stable" ]; then
-  echo "ERROR: Updating the gh-pages documentation is only possible from the \"stable\" branch"
-  exit 1
-fi
-
 # Generate documentation
 npm run doc
 
 if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Please commit your modifications to \"stable\""
+  echo "ERROR: Please commit your modifications to \"$current_branch\""
   exit 1
 fi
 
@@ -106,4 +100,4 @@ else
   echo "nothing to do on the gh-pages branch"
 fi
 
-git checkout stable
+git checkout "$current_branch"
