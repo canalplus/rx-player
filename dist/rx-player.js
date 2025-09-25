@@ -4977,8 +4977,8 @@ function canReuseMediaKeys() {
  * renewed on each content.
  * @returns {Boolean}
  */
-function shouldRenewMediaKeySystemAccess() {
-  return browser_detection/* isIE11 */.lw;
+function shouldRenewMediaKeySystemAccess(keySystem) {
+  return keySystem.indexOf("playready") !== -1 && (browser_detection/* isIE11 */.lw || browser_detection/* isEdgeChromium */.op || browser_detection/* isFirefox */.gm);
 }
 ;// CONCATENATED MODULE: ./src/compat/can_rely_on_request_media_key_system_access.ts
 /**
@@ -5010,13 +5010,19 @@ function shouldRenewMediaKeySystemAccess() {
  *   "com.microsoft.playready.recommendation.3000", generating a request with
  *   `generateRequest` throws an error: "NotSupportedError: Failed to execute
  *   'generateRequest' on 'MediaKeySession': Failed to create MF PR CdmSession".
- *   In this particular case, the work-around was to consider
- *   recommendation.3000 as not supported and try another keySystem.
+ *   In this particular case, the work-around was to consider recommendation.3000 as not supported
+ *   and try another keySystem.
+ *
+ * - On Firefox v.137:
+ *   Similar issue with requestMediaKeySystemAccess that resolves correctly with
+ *   'com.microsoft.playready.recommendation.3000' but fail at the `createMediaKeys``
+ *   step with error `WMFCDMProxy: Init: WMFCDM init error`
+ *
  * @param keySystem - The key system in use.
  * @returns {boolean}
  */
 function canRelyOnRequestMediaKeySystemAccess(keySystem) {
-  if (browser_detection/* isEdgeChromium */.op && keySystem.indexOf("playready") !== -1) {
+  if ((browser_detection/* isEdgeChromium */.op || browser_detection/* isFirefox */.gm) && keySystem.indexOf("playready") !== -1) {
     return false;
   }
   return true;
@@ -5400,7 +5406,7 @@ function getMediaKeySystemAccess(mediaElement, keySystemsConfigs, cancelSignal) 
               break;
             }
             keySystemConfiguration = keySystemConfigurations[configIdx]; // Check if the current `MediaKeySystemAccess` created cannot be reused here
-            if (!(currentState !== null && !shouldRenewMediaKeySystemAccess() &&
+            if (!(currentState !== null && !shouldRenewMediaKeySystemAccess(currentState.mediaKeySystemAccess.keySystem) &&
             // TODO: Do it with MediaKeySystemAccess.prototype.keySystem instead?
             keyType === currentState.mediaKeySystemAccess.keySystem && eme.implementation === currentState.emeImplementation.implementation && isNewMediaKeySystemConfigurationCompatibleWithPreviousOne(keySystemConfiguration, currentState.askedConfiguration))) {
               _context.next = 15;
@@ -7078,7 +7084,7 @@ var PersistentSessionsStore = /*#__PURE__*/function () {
         if (entry.initDataType === initData.type) {
           switch (entry.version) {
             case 4:
-              if (initData.keyIds !== undefined) {
+              if (Array.isArray(initData.keyIds) && initData.keyIds.length > 0) {
                 var foundCompatible = initData.keyIds.every(function (keyId) {
                   var keyIdB64 = (0,utils_base64/* bytesToBase64 */.i)(keyId);
                   for (var _iterator = persistent_sessions_store_createForOfIteratorHelperLoose(entry.keyIds), _step; !(_step = _iterator()).done;) {
@@ -9783,6 +9789,7 @@ var currentMediaState = new WeakMap();
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   A: function() { return /* binding */ DirectFileContentInitializer; }
 /* harmony export */ });
+/* unused harmony export setAutoplay */
 /* harmony import */ var _babel_runtime_helpers_inheritsLoose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(7387);
 /* harmony import */ var _compat__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3116);
 /* harmony import */ var _log__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(9477);
@@ -9880,6 +9887,10 @@ var DirectFileContentInitializer = /*#__PURE__*/function (_ContentInitializer) {
      */
     var decryptionRef = new _utils_reference__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A(null);
     decryptionRef.finish();
+    // Set the autoplay attribute on the mediaElement.
+    // On Apple devices, the native HLS player needs autoplay to be set
+    // in order to start buffering,which is required for our API's autoplay to work.
+    setAutoplay(mediaElement, this._settings.autoPlay, cancelSignal);
     var drmInitRef = (0,_utils_initialize_content_decryption__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A)(mediaElement, keySystems, decryptionRef, {
       onError: function onError(err) {
         return _this2._onFatalError(err);
@@ -10005,12 +10016,37 @@ var DirectFileContentInitializer = /*#__PURE__*/function (_ContentInitializer) {
   return DirectFileContentInitializer;
 }(_types__WEBPACK_IMPORTED_MODULE_11__/* .ContentInitializer */ .Y);
 /**
+ * Set autoplay value on the mediaElement.
+ *
+ * @param {HTMLElement} mediaElement - The media element whose `autoplay`
+ * attribute will be modified.
+ * @param {CancellationSignal} cancellationSignal - The signal that, when triggered,
+ * restores the `autoplay` attribute to its original value.
+ */
+
+function setAutoplay(mediaElement, autoplay, cancellationSignal) {
+  if (!autoplay) {
+    // If autoplay option is set to false, don't touch to `autoplay`
+    // videoElement attribute.
+    return;
+  }
+  var autoplayPreviousValue = mediaElement.autoplay;
+  mediaElement.autoplay = autoplay;
+  cancellationSignal.register(function () {
+    /**
+     * Restore the `autoplay` attribute to its previous value.
+     * This ensures that the media element's state is the same as it was before
+     * calling `RxPlayer.loadVideo` in the application.
+     */
+    mediaElement.autoplay = autoplayPreviousValue;
+  });
+}
+/**
  * calculate initial time as a position in seconds.
  * @param {HTMLMediaElement} mediaElement
  * @param {Object|undefined} [startAt]
  * @returns {number}
  */
-
 function getDirectFileInitialTime(mediaElement, startAt) {
   if ((0,_utils_is_null_or_undefined__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .A)(startAt)) {
     return 0;
@@ -20175,7 +20211,7 @@ function setMediaSourceDuration(mediaSource, duration, isRealEndKnown) {
     var sourceBuffer = mediaSource.sourceBuffers[i];
     var sbBufferedLen = sourceBuffer.buffered.length;
     if (sbBufferedLen > 0) {
-      maxBufferedEnd = Math.max(sourceBuffer.buffered.end(sbBufferedLen - 1));
+      maxBufferedEnd = Math.max(maxBufferedEnd, sourceBuffer.buffered.end(sbBufferedLen - 1));
     }
   }
   if (newDuration === mediaSource.duration) {
@@ -23589,7 +23625,8 @@ var HTMLTextSegmentBuffer = /*#__PURE__*/function (_SegmentBuffer) {
       while (i >= 0 && cues[i].start >= appendWindowEnd) {
         i--;
       }
-      cues.splice(i, cues.length);
+      // cues[i] is the last cue we want to keep, remove from i + 1
+      cues.splice(i + 1, cues.length);
       i = cues.length - 1;
       while (i >= 0 && cues[i].end > appendWindowEnd) {
         cues[i].end = appendWindowEnd;
@@ -40965,7 +41002,18 @@ function fetchRequest(options) {
  * @return {boolean}
  */
 function fetchIsSupported() {
-  return typeof window.fetch === "function" && !(0,is_null_or_undefined/* default */.A)(_AbortController) && !(0,is_null_or_undefined/* default */.A)(_Headers);
+  // Match [native code] and variants with different white space.
+  var nativeCodeRegex = /\[\s*native\s+code\s*\]/;
+  return typeof window.fetch === "function" &&
+  /**
+   * Detect if AbortController function has been rewritten.
+   * Polyfills can rewrite those function without a proper implementation
+   * leading to issues.
+   * In this case it's preferable to use XHR over fetch, because fetch uses
+   * AbortSignal to cancel requests.
+   * @see https://github.com/TanStack/query/discussions/9049
+   */
+  !(0,is_null_or_undefined/* default */.A)(_AbortController) && nativeCodeRegex.test(_AbortController.toString()) && !(0,is_null_or_undefined/* default */.A)(_Headers);
 }
 // EXTERNAL MODULE: ./src/utils/warn_once.ts
 var warn_once = __webpack_require__(5950);
@@ -53832,7 +53880,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
     // Workaround to support Firefox autoplay on FF 42.
     // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1194624
     videoElement.preload = "auto";
-    _this.version = /* PLAYER_VERSION */"3.33.5";
+    _this.version = /* PLAYER_VERSION */"3.33.6";
     _this.log = src_log/* default */.A;
     _this.state = "STOPPED";
     _this.videoElement = videoElement;
@@ -56320,7 +56368,7 @@ var Player = /*#__PURE__*/function (_EventEmitter) {
  * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
  */
 Player._priv_currentlyUsedVideoElements = new WeakSet();
-Player.version = /* PLAYER_VERSION */"3.33.5";
+Player.version = /* PLAYER_VERSION */"3.33.6";
 /* harmony default export */ var public_api = (Player);
 ;// CONCATENATED MODULE: ./src/core/api/index.ts
 /**
