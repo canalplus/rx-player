@@ -910,7 +910,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           const manifest = msgData.value.manifest;
           this._currentContentInfo.manifest = manifest;
-          this._updateCodecSupport(manifest);
+          this._updateCodecSupport(manifest, mediaElement);
           this._startPlaybackIfReady(playbackStartParams);
           break;
         }
@@ -932,7 +932,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           );
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
-          this._updateCodecSupport(manifest);
+          this._updateCodecSupport(manifest, mediaElement);
           this.trigger("manifestUpdate", msgData.value.updates);
           break;
         }
@@ -1381,7 +1381,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         if (isNullOrUndefined(manifest)) {
           return;
         }
-        this._updateCodecSupport(manifest);
+        this._updateCodecSupport(manifest, mediaElement);
         contentDecryptor.removeEventListener(
           "stateChange",
           updateCodecSupportOnStateChange,
@@ -1500,11 +1500,12 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * status of these codecs, and forwards the list of supported codecs to the web worker.
    * @param manifest
    */
-  private _updateCodecSupport(manifest: IManifestMetadata) {
+  private _updateCodecSupport(manifest: IManifestMetadata, mediaElement: IMediaElement) {
     try {
       const updatedCodecs = updateManifestCodecSupport(
         manifest,
         this._currentContentInfo?.contentDecryptor ?? null,
+        mediaElement,
         this._currentContentInfo?.useMseInWorker ?? false,
       );
       if (updatedCodecs.length > 0) {

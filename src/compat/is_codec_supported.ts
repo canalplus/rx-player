@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+import type DummyMediaElement from "../experimental/tools/DummyMediaElement";
 import log from "../log";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import isWorker from "../utils/is_worker";
 import { MediaSource_ } from "./browser_compatibility_types";
+import type { IMediaElement } from "./browser_compatibility_types";
 
 /**
  * Setting this value limit the number of entries in the support map
@@ -33,13 +35,24 @@ const supportMap: Map<string, boolean> = new Map();
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
+ * @param {HTMLMediaElement} mediaElement
  * @param {string} mimeType - The MIME media type that you want to test support
  * for in the current browser.
  * This may include the codecs parameter to provide added details about the
  * codecs used within the file.
  * @returns {Boolean}
  */
-export default function isCodecSupported(mimeType: string): boolean {
+export default function isCodecSupported(
+  mediaElement: IMediaElement,
+  mimeType: string,
+): boolean {
+  // TODO: We only added that as a hotfix for now, to allow support of the right codecs
+  // on a dummy media element
+  if ((mediaElement as DummyMediaElement).isDummy) {
+    return (mediaElement as DummyMediaElement).FORCED_MEDIA_SOURCE.isTypeSupported(
+      mimeType,
+    );
+  }
   if (isNullOrUndefined(MediaSource_)) {
     if (isWorker) {
       log.error("mse", "Cannot request codec support in a worker without MSE.");

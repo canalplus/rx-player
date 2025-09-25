@@ -1,3 +1,4 @@
+import type { IMediaElement } from "../../../compat/browser_compatibility_types";
 import isCodecSupported from "../../../compat/is_codec_supported";
 import type { IManifestMetadata } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
@@ -62,6 +63,7 @@ export function getCodecsWithUnknownSupport(
 export function updateManifestCodecSupport(
   manifest: IManifestMetadata,
   contentDecryptor: ContentDecryptor | null,
+  mediaElement: IMediaElement,
   isPlayingWithMSEinWorker: boolean,
 ): ICodecSupportInfo[] {
   const codecSupportMap: Map<
@@ -87,7 +89,7 @@ export function updateManifestCodecSupport(
     }
 
     let newData;
-    const isSupported = isCodecSupported(inputCodec);
+    const isSupported = isCodecSupported(mediaElement, inputCodec);
     if (!isSupported) {
       newData = {
         isSupportedClear: false,

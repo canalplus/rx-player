@@ -317,10 +317,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                 if (this._initCanceller.isUsed()) {
                   return;
                 }
-                this._refreshManifestCodecSupport(loadedManifest);
+                this._refreshManifestCodecSupport(loadedManifest, mediaElement);
               }, noop);
             } else {
-              this._refreshManifestCodecSupport(syncManifest);
+              this._refreshManifestCodecSupport(syncManifest, mediaElement);
             }
           },
         },
@@ -419,7 +419,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       "manifestUpdate",
       (updates) => {
         this.trigger("manifestUpdate", updates);
-        this._refreshManifestCodecSupport(manifest);
+        this._refreshManifestCodecSupport(manifest, mediaElement);
       },
       initCanceller.signal,
     );
@@ -459,7 +459,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       segmentRequestOptions,
     );
 
-    this._refreshManifestCodecSupport(manifest);
+    this._refreshManifestCodecSupport(manifest, mediaElement);
     this.trigger("manifestReady", manifest);
     if (initCanceller.isUsed()) {
       return;
@@ -1094,10 +1094,11 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    */
   private getCodecsSupportInfo(
     codecsToCheck: Array<{ mimeType: string; codec: string }>,
+    mediaElement: IMediaElement,
   ): ICodecSupportInfo[] {
     const codecsSupportInfo: ICodecSupportInfo[] = codecsToCheck.map((codecToCheck) => {
       const inputCodec = `${codecToCheck.mimeType};codecs="${codecToCheck.codec}"`;
-      const isSupported = isCodecSupported(inputCodec);
+      const isSupported = isCodecSupported(mediaElement, inputCodec);
       if (!isSupported) {
         return {
           mimeType: codecToCheck.mimeType,
@@ -1146,9 +1147,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * to test for codec support are available.
    * @param {Object} manifest
    */
-  private _refreshManifestCodecSupport(manifest: IManifest): void {
+  private _refreshManifestCodecSupport(
+    manifest: IManifest,
+    mediaElement: IMediaElement,
+  ): void {
     const codecsToTest = manifest.getCodecsWithUnknownSupport();
-    const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest);
+    const codecsSupportInfo = this.getCodecsSupportInfo(codecsToTest, mediaElement);
     if (codecsSupportInfo.length > 0) {
       try {
         manifest.updateCodecSupport(codecsSupportInfo);
