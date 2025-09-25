@@ -55,7 +55,7 @@
 - enable debug logs as soon as `__RX_PLAYER_DEBUG_MODE__` is set [#1626]
 - rely on "provenance statements" when publishing our builds [#1742]
 
-## v4.3.0
+## v4.3.0 (2025-04-01)
 
 ### Features
 
