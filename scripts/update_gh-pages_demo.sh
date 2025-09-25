@@ -19,13 +19,19 @@
 set -e
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-current_version=$(cat VERSION)
+current_version="$1"
+
+if [ -z "$current_version" ]; then
+  echo "ERROR: Please call this script with your version in argument" >&2
+	echo "For example: ./update_gh-pages_demo.sh 4.4.0" >&2
+  exit 1
+fi
 
 # Generate demo
 npm run demo -- --minify
 
-if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Please commit your modifications to \"$current_branch\""
+if [ -n "$(git status --porcelain demo)" ]; then
+  echo "ERROR: Please commit your modifications to \"$current_branch\"" >&2
   exit 1
 fi
 
