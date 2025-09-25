@@ -210,14 +210,14 @@ fi
 git checkout "$base_branch"
 
 emphasized_log "Running \"releases:demo\" script to update the gh-pages' demo..."
-if ! npm run releases:demo; then
+if ! npm run releases:demo -- "$version"; then
   git checkout "$base_branch"
   git branch -D "$release_branch"
   err "Failed to update demo page: \`releases:demo\` script failed"
 fi
 
 emphasized_log "Running \"releases:doc\" script to update the gh-pages' documentation..."
-if ! npm run releases:doc; then
+if ! npm run releases:doc -- "$version"; then
   git checkout "$base_branch"
   git branch -D "$release_branch"
   err "Failed to update doc page: \`releases:doc\` script failed"

@@ -10,7 +10,7 @@
 #
 #   1. Be sure that you're on a clean (no staged files and no diff) branch.
 #
-#   2. Call this script.
+#   2. Call this script with the SEMVER version number in argument.
 #      Some user interactions will be needed to avoid doing unwanted commits.
 #
 #   3. That's it!
@@ -19,13 +19,19 @@
 set -e
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
-current_version=$(cat VERSION)
+current_version="$1"
+
+if [ -z "$current_version" ]; then
+  echo "ERROR: Please call this script with your version in argument" >&2
+	echo "For example: ./update_gh-pages_demo.sh 4.4.0" >&2
+  exit 1
+fi
 
 # Generate documentation
 npm run doc
 
 if [ -n "$(git status --porcelain doc)" ]; then
-  echo "ERROR: Please commit your modifications to \"$current_branch\""
+  echo "ERROR: Please commit your modifications to \"$current_branch\"" >&2
   exit 1
 fi
 
