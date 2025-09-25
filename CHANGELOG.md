@@ -1,6 +1,6 @@
 # Changelog
 
-## v3.33.6
+## v3.33.6 (2025-09-25)
 
 ### Bug fixes
 
@@ -14,7 +14,7 @@
   safari-specific issues [#1729]
 - Remove unnecessary duration logs when reaching the end of some VoD contents [1750]
 
-## v3.33.5
+## v3.33.5 (2025-04-01)
 
 ### Bug fixes
 
@@ -42,7 +42,7 @@
 - Avoid error log when stopping a stream with a pending `BufferGarbageCollector` buffer
   removal [#1685]
 
-## v3.33.4
+## v3.33.4 (2024-10-17)
 
 ### Bug fixes
 
