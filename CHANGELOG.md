@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.33.6
+
+### Bug fixes
+
+- Subtitles: Fix some subtitle missing on multiple period assets [#1726]
+- DRM: renew the mediaKeySystemAccess on Edge and Firefox when using a Playready keySystem
+  to work-around frequent DRM issues. [#1728]
+- DRM: On Firefox check extensively Playready DRMs support before using them to
+  work-around recent firefox issue with PlayReady integration [#1730]
+- DRM: Fix persistent session loading when content has no key id [#1724]
+- Directfile: set autoplay attribute on directfile contents, to work-around
+  safari-specific issues [#1729]
+- Remove unnecessary duration logs when reaching the end of some VoD contents [1750]
+
 ## v3.33.5
 
 ### Bug fixes
