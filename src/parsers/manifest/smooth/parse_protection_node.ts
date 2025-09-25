@@ -17,6 +17,7 @@
 import { base64ToBytes } from "../../../utils/base64";
 import { concat } from "../../../utils/byte_parsing";
 import { hexToBytes } from "../../../utils/string_parsing";
+import type { ITNode } from "../../../utils/xml-parser";
 import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff";
 
 export interface IKeySystem {
@@ -44,28 +45,35 @@ function createWidevineKeySystem(keyIdBytes: Uint8Array): IKeySystem[] {
 
 /**
  * Parse "Protection" Node, which contains DRM information
- * @param {Element} protectionNode
+ * @param {Object} protectionNode
  * @returns {Object}
  */
 export default function parseProtectionNode(
-  protectionNode: Element,
+  protectionNode: ITNode,
   keySystemCreator: (keyId: Uint8Array) => IKeySystem[] = createWidevineKeySystem,
 ): IContentProtectionSmooth {
-  if (
-    protectionNode.firstElementChild === null ||
-    protectionNode.firstElementChild.nodeName !== "ProtectionHeader"
-  ) {
+  let header;
+  for (const subNode of protectionNode.children) {
+    if (typeof subNode === "string") {
+      continue;
+    }
+    if (subNode.tagName === "ProtectionHeader") {
+      header = subNode;
+      break;
+    }
+  }
+  if (header === undefined) {
     throw new Error("Protection should have ProtectionHeader child");
   }
-  const header = protectionNode.firstElementChild;
+
   const privateData = base64ToBytes(
-    header.textContent === null ? "" : header.textContent,
+    typeof header.children[0] === "string" ? header.children[0] : "",
   );
   const keyIdHex = getPlayReadyKIDFromPrivateData(privateData);
   const keyIdBytes = hexToBytes(keyIdHex);
 
   // remove possible braces
-  const systemIdAttr = header.getAttribute("SystemID");
+  const systemIdAttr = header.attributes.SystemID ?? null;
   const systemId = (systemIdAttr !== null ? systemIdAttr : "")
     .toLowerCase()
     .replace(/\{|\}/g, "");
