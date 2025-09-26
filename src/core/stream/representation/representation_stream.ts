@@ -195,7 +195,7 @@ export default function RepresentationStream<TSegmentDataType>(
   const segmentsToLoadRef = segmentQueue.resetForContent(
     content,
     hasInitSegment,
-    "new RepresentationStream in town",
+    "new RepresentationStream linked to SegmentQueue",
   );
 
   canceller.signal.register((err) => {
