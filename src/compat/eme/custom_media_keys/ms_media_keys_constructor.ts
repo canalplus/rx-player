@@ -58,7 +58,7 @@ if (
   MSMediaKeys !== undefined &&
   MSMediaKeys.prototype !== undefined &&
   typeof MSMediaKeys.isTypeSupported === "function" &&
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access
   typeof MSMediaKeys.prototype.createSession === "function"
 ) {
   MSMediaKeysConstructor = MSMediaKeys;

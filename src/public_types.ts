@@ -1232,7 +1232,7 @@ export interface IBrokenRepresentationsLockContext {
 export interface ITrackUpdateEventPayload {
   period: IPeriod;
   trackType: ITrackType;
-  /* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+  /* oxlint-disable @typescript-eslint/no-redundant-type-constituents */
   reason:
     | "missing" // Missing from Manifest update
     | "manual" // Manually and explicitely updated
@@ -1240,7 +1240,7 @@ export interface ITrackUpdateEventPayload {
     | "trickmode-disabled" // Video trickmode tracks being disabled
     | "no-playable-representation" // Previous track had no playable Representation
     | string;
-  /* eslint-enable @typescript-eslint/no-redundant-type-constituents */
+  /* oxlint-enable @typescript-eslint/no-redundant-type-constituents */
 }
 
 export interface INoPlayableTrackEventPayload {
@@ -1255,7 +1255,7 @@ export interface INoPlayableTrackEventPayload {
 export interface IRepresentationListUpdateContext {
   period: IPeriod;
   trackType: ITrackType;
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  // oxlint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   reason: "decipherability-update" | string;
 }
 

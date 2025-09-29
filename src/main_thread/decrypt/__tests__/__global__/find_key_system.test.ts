@@ -3,7 +3,7 @@ import { describe, beforeEach, it, expect, vi } from "vitest";
 import * as compat from "../../../../compat/can_rely_on_request_media_key_system_access";
 import { testKeySystem } from "../../find_key_system";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 describe("find_key_systems - ", () => {
   let requestMediaKeySystemAccessMock: MockInstance;
@@ -34,7 +34,7 @@ describe("find_key_systems - ", () => {
       Promise.resolve({
         createMediaKeys: () => ({
           createSession: () => ({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            // oxlint-disable-next-line @typescript-eslint/no-empty-function
             generateRequest: () => {},
           }),
         }),

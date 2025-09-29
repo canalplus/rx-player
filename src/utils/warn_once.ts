@@ -27,7 +27,7 @@ const WARNED_MESSAGES: string[] = [];
  */
 export default function warnOnce(message: string): void {
   if (!arrayIncludes(WARNED_MESSAGES, message)) {
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
     console.warn(message);
     WARNED_MESSAGES.push(message);
   }

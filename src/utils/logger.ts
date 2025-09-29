@@ -189,7 +189,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     if (actualFormat === "full" && actualFormat !== this._currentFormat) {
       // Add the current Date so we can see at which time logs are displayed
       const now = getMonotonicTimeStamp();
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.log(String(now.toFixed(2)), "[Init]", `Local-Date: ${Date.now()}`);
     }
     this._currentFormat = actualFormat;
@@ -225,7 +225,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
           };
 
     if (logFn === undefined) {
-      /* eslint-disable no-console */
+      /* oxlint-disable no-console */
       this.error =
         level >= this._levels.ERROR
           ? generateLogFn("error", console.error.bind(console))
@@ -242,7 +242,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
         level >= this._levels.DEBUG
           ? generateLogFn("log", console.log.bind(console))
           : noop;
-      /* eslint-enable no-console */
+      /* oxlint-enable no-console */
     } else {
       const produceLogFn = (logLevel: ILoggerLevel): IConsoleFn => {
         return level >= this._levels[logLevel]

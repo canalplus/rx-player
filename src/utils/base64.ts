@@ -188,14 +188,14 @@ export function base64ToBytes(str: string): Uint8Array<ArrayBuffer> {
     log.warn("utils", "base64ToBytes: base64 given miss padding", {
       padding: paddingNeeded,
     });
-    // eslint-disable-next-line no-nested-ternary
+    // oxlint-disable-next-line no-nested-ternary
     paddedStr += paddingNeeded === 3 ? "=" : paddingNeeded === 2 ? "==" : "==="; // invalid, but we will catch it
   }
   const index = paddedStr.indexOf("=");
   if (index !== -1 && index < paddedStr.length - 2) {
     throw new Error("Unable to parse base64 string.");
   }
-  // eslint-disable-next-line no-nested-ternary
+  // oxlint-disable-next-line no-nested-ternary
   const missingOctets = paddedStr.endsWith("==") ? 2 : paddedStr.endsWith("=") ? 1 : 0;
   const n = paddedStr.length;
   const result = new Uint8Array((n / 4) * 3);

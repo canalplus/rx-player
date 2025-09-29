@@ -214,28 +214,22 @@ describe("API - parseConstructorOptions", () => {
 
   it("should throw if the videoElement given is not an HTMLMediaElement", () => {
     expect(() =>
-      // eslint-disable-next-line @typescript-eslint/no-restricted-types
       parseConstructorOptions({ videoElement: "a" as unknown as HTMLMediaElement }),
     ).toThrow();
     expect(() =>
-      // eslint-disable-next-line @typescript-eslint/no-restricted-types
       parseConstructorOptions({ videoElement: /a/ as unknown as HTMLMediaElement }),
     ).toThrow();
     expect(() =>
-      // eslint-disable-next-line @typescript-eslint/no-restricted-types
       parseConstructorOptions({ videoElement: {} as unknown as HTMLMediaElement }),
     ).toThrow();
     expect(() =>
-      // eslint-disable-next-line @typescript-eslint/no-restricted-types
       parseConstructorOptions({ videoElement: [] as unknown as HTMLMediaElement }),
     ).toThrow();
     expect(() =>
-      // eslint-disable-next-line @typescript-eslint/no-restricted-types
       parseConstructorOptions({ videoElement: 0 as unknown as HTMLMediaElement }),
     ).toThrow();
     expect(() =>
       parseConstructorOptions({
-        // eslint-disable-next-line @typescript-eslint/no-restricted-types
         videoElement: document.createElement("div") as unknown as HTMLMediaElement,
       }),
     ).toThrow();

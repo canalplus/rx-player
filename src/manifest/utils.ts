@@ -580,7 +580,7 @@ export function replicateUpdatesOnManifestMetadata(
   for (const prop of Object.keys(newManifest)) {
     if (prop !== "periods") {
       // trust me bro
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       (baseManifest as any)[prop] = (newManifest as any)[prop];
     }
   }
@@ -602,7 +602,7 @@ export function replicateUpdatesOnManifestMetadata(
         for (const prop of Object.keys(newPeriod)) {
           if (prop !== "adaptations") {
             // trust me bro
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+            // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
             (basePeriod as any)[prop] = (newPeriod as any)[prop];
           }
         }
@@ -734,7 +734,7 @@ export function replicateUpdatesOnManifestMetadata(
 export function createRepresentationFilterFromFnString(
   fnString: string,
 ): IRepresentationFilter {
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
+  // oxlint-disable-next-line @typescript-eslint/no-implied-eval
   return new Function(
     `return (${fnString}(arguments[0], arguments[1]))`,
   ) as IRepresentationFilter;

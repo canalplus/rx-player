@@ -95,7 +95,7 @@ export function log(...logs) {
     method: "POST",
     body: JSON.stringify({ type: "log", data: logs.join(" ") }),
   }).catch((err) => {
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
     console.error("Error: Cannot send log due to a request error.", err);
   });
 }
@@ -110,7 +110,7 @@ export function error(...logs) {
     method: "POST",
     body: JSON.stringify({ type: "error", data: logs.join(" ") }),
   }).catch((err) => {
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
     console.error("Error: Cannot send error due to a request error.", err);
   });
 }

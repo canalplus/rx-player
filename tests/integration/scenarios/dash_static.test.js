@@ -72,7 +72,7 @@ describe("DASH content CENC wrong version in MPD", function () {
   });
   it("should filter out CENC pssh with a wrong version", async function () {
     if (window.MediaKeySession === undefined || window.MediaKeySession === null) {
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.warn(
         "Cannot test with a wrong CENC version: no MediaKeySession implementation on this browser",
       );

@@ -83,7 +83,7 @@ export default class LoadedSessionsStore {
           }
         })
         .catch((e: unknown) => {
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          // oxlint-disable-next-line @typescript-eslint/restrict-template-expressions
           log.warn("DRM", `MediaKeySession.closed rejected: ${e}`);
         });
     }

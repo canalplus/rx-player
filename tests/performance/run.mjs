@@ -112,7 +112,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     if (branchNameIndex >= 0) {
       branchName = args[branchNameIndex + 1];
       if (branchName === undefined) {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.error("ERROR: no branch name provided\n");
         displayHelp();
         process.exit(1);
@@ -129,7 +129,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     if (branchNameIndex >= 0) {
       remote = args[branchNameIndex + 1];
       if (remote === undefined) {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.error("ERROR: no remote URL provided\n");
         displayHelp();
         process.exit(1);
@@ -146,7 +146,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     if (reportFileIndex >= 0) {
       reportFile = args[reportFileIndex + 1];
       if (reportFile === undefined) {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.error("ERROR: no file path provided\n");
         displayHelp();
         process.exit(1);
@@ -154,7 +154,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     }
   }
 
-  /* eslint-disable no-console */
+  /* oxlint-disable no-console */
   if (reportFile !== undefined) {
     try {
       console.log(`Removing previous report file if it exists ("${reportFile}")`);
@@ -272,7 +272,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       console.error("Error:", err);
       return process.exit(1);
     });
-  /* eslint-enable no-console */
+  /* oxlint-enable no-console */
 }
 
 /**
@@ -376,7 +376,7 @@ function runPerformanceTests() {
       closeServers();
       const results = compareSamples();
       closeBrowser().catch((err) => {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.error("Failed to close the browser:", err);
       });
       resolve(results);
@@ -385,7 +385,7 @@ function runPerformanceTests() {
       isFinished = true;
       closeServers();
       closeBrowser().catch((err) => {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.error("Failed to close the browser:", err);
       });
       reject(error);
@@ -607,7 +607,7 @@ function startNextTaskOrFinish(onFinished) {
  * @returns {Promise}
  */
 async function startTestsOnChrome(startWithCurrent, testNb, testTotal) {
-  // eslint-disable-next-line no-console
+  // oxlint-disable-next-line no-console
   console.log(`Running tests on Chrome (${testNb}/${testTotal})`);
   return startPerfhomepageOnChrome(
     startWithCurrent
@@ -669,7 +669,7 @@ function createResultServer(onFinished, onError) {
         try {
           const parsedBody = JSON.parse(body);
           if (parsedBody.type === "log") {
-            // eslint-disable-next-line no-console
+            // oxlint-disable-next-line no-console
             console.warn("LOG:", parsedBody.data);
           } else if (parsedBody.type === "error") {
             onError(new Error("ERROR: A fatal error happened: " + parsedBody.data));
@@ -791,7 +791,7 @@ function compareSamples() {
     const sampleCurrent = samplesPerScenario.current[testName];
     const samplePrevious = samplesPerScenario.previous[testName];
     if (samplePrevious === undefined) {
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.error("Error: second result misses a scenario:", testName);
       continue;
     }
@@ -809,7 +809,7 @@ function compareSamples() {
     // For p-value of 1%
     const isSignificant = zScore > 2.575829;
 
-    /* eslint-disable no-console */
+    /* oxlint-disable no-console */
     console.log("");
     console.log(`> Current results for test:`, testName);
     console.log("");
@@ -878,7 +878,7 @@ function compareSamples() {
     }
     console.log("");
   }
-  /* eslint-enable no-console */
+  /* oxlint-enable no-console */
   return results;
   function calculateZScore(u, len1, len2) {
     return (u - (len1 * len2) / 2) / Math.sqrt((len1 * len2 * (len1 + len2 + 1)) / 12);

@@ -180,13 +180,13 @@ export default function request<T>(
           let responseData: T;
           if (loadedResponseType === "json") {
             // IE bug where response is string with responseType json
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseData =
               typeof xhr.response === "object"
                 ? xhr.response
                 : toJSONForIE(xhr.responseText);
           } else {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseData = xhr.response;
           }
 

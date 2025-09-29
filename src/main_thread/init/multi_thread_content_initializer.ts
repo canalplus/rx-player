@@ -2204,7 +2204,7 @@ function bindNumberReferencesToWorker(
         // overload, but the body here is not aware of that.
         sendMessage(worker, {
           type: MainThreadMessageType.ReferenceUpdate,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
           value: { name: ref[1] as any, newVal: newVal as any },
         });
       },
@@ -2231,12 +2231,12 @@ function formatWorkerError(sentError: ISentError): IPlayerError {
       });
     case "EncryptedMediaError":
       // We assume that everything have already been checked Worker-side here
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      // oxlint-disable-next-line @typescript-eslint/no-unsafe-argument
       return new EncryptedMediaError(sentError.code, sentError.reason, {
         keyStatuses: sentError.keyStatuses,
         keySystemConfiguration: sentError.keySystemConfiguration,
         keySystem: sentError.keySystem,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
     case "OtherError":
       return new OtherError(sentError.code, sentError.reason);

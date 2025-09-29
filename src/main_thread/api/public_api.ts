@@ -403,7 +403,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         "The video element is already attached to another RxPlayer instance." +
         "\nMake sure to dispose the previous instance with player.dispose() before creating" +
         " a new player instance attaching that video element.";
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.warn(errorMessage);
       /*
        * TODO: for next major version 5.0: this need to throw an error instead of just logging
@@ -3294,9 +3294,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
     this.trigger(
       // !!! undocumented API :O !!!
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       "__priv_bitrateEstimateChange" as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       { type, bitrate } as any,
     );
   }

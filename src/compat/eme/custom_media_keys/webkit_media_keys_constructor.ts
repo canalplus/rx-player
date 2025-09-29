@@ -34,7 +34,7 @@ export default function getWebKitMediaKeysConstructor():
   if (
     WebKitMediaKeys !== undefined &&
     typeof WebKitMediaKeys.isTypeSupported === "function" &&
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access
     typeof WebKitMediaKeys.prototype.createSession === "function" &&
     typeof (HTMLMediaElement.prototype as IMediaElement).webkitSetMediaKeys === "function"
   ) {

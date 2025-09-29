@@ -89,7 +89,7 @@ export default function parseMetaPlaylist(
     parsedData = data;
   } else if (typeof data === "string") {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment
       parsedData = JSON.parse(data);
     } catch (_error) {
       throw new Error("MPL Parser: Bad MetaPlaylist file. Expected JSON.");

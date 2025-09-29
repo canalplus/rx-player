@@ -68,12 +68,12 @@ function objectAssign<T extends object, U extends object[]>(
   if (target === null || target === undefined) {
     throw new TypeError("Cannot convert undefined or null to object");
   }
-  // eslint-disable-next-line  @typescript-eslint/no-unsafe-assignment
+  // oxlint-disable-next-line  @typescript-eslint/no-unsafe-assignment
   const to = Object(target);
   for (const source of sources) {
     for (const key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access
         to[key] = source[key as keyof typeof source];
       }
     }

@@ -507,9 +507,9 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
   // All those eslint disable are needed because the option is voluntarily
   // hidden from the base type to limit discovery of this hidden API.
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     __priv_patchLastSegmentInSidx: (options as any).__priv_patchLastSegmentInSidx,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     __priv_manifestUpdateUrl: (options as any).__priv_manifestUpdateUrl,
     checkMediaSegmentIntegrity: options.checkMediaSegmentIntegrity,
     checkManifestIntegrity: options.checkManifestIntegrity,

@@ -69,7 +69,7 @@ declare const __INCLUDE_WASM_PARSER__: boolean;
 if (__INCLUDE_WASM_PARSER__) {
   RxPlayer.addFeatures([DASH_WASM]);
   DASH_WASM.initialize({ wasmUrl: "./mpd-parser.wasm" }).catch((err) => {
-    // eslint-disable-next-line no-console
+    // oxlint-disable-next-line no-console
     console.error("Error when initializing WASM DASH MPD parser:", err);
   });
 }
@@ -480,7 +480,7 @@ const PlayerModule = declareModule(
           dashWasmUrl: __INCLUDE_WASM_PARSER__ ? "./mpd-parser.wasm" : undefined,
         })
         .catch((err) => {
-          // eslint-disable-next-line no-console
+          // oxlint-disable-next-line no-console
           console.error("Error when attaching worker:", err);
         });
     }

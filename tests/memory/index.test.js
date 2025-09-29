@@ -31,7 +31,7 @@ describe("Memory tests", () => {
         window.performance.memory == null ||
         window.gc == null
       ) {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.warn("API not available. Skipping test.");
         return;
       }
@@ -58,7 +58,7 @@ describe("Memory tests", () => {
       const newMemory = window.performance.memory;
       const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.log(`
       ===========================================================
       | Current heap usage (B) | ${newMemory.usedJSHeapSize}
@@ -81,7 +81,7 @@ describe("Memory tests", () => {
         window.performance.memory == null ||
         window.gc == null
       ) {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.warn("API not available. Skipping test.");
         return;
       }
@@ -110,7 +110,7 @@ describe("Memory tests", () => {
       const newMemory = window.performance.memory;
       const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.log(`
       ===========================================================
       | Current heap usage (B) | ${newMemory.usedJSHeapSize}
@@ -133,7 +133,7 @@ describe("Memory tests", () => {
         window.performance.memory == null ||
         window.gc == null
       ) {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.warn("API not available. Skipping test.");
         return;
       }
@@ -154,7 +154,7 @@ describe("Memory tests", () => {
       const newMemory = window.performance.memory;
       const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.log(`
       ===========================================================
       | Current heap usage (B) | ${newMemory.usedJSHeapSize}
@@ -177,7 +177,7 @@ describe("Memory tests", () => {
         window.performance.memory == null ||
         window.gc == null
       ) {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.warn("API not available. Skipping test.");
         return;
       }
@@ -227,7 +227,7 @@ describe("Memory tests", () => {
       const newMemory = window.performance.memory;
       const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.log(`
       ===========================================================
       | Current heap usage (B) | ${newMemory.usedJSHeapSize}
@@ -251,7 +251,7 @@ describe("Memory tests", () => {
         window.performance.memory == null ||
         window.gc == null
       ) {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.warn("API not available. Skipping test.");
         return;
       }
@@ -286,7 +286,7 @@ describe("Memory tests", () => {
       const newMemory = window.performance.memory;
       const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
 
-      // eslint-disable-next-line no-console
+      // oxlint-disable-next-line no-console
       console.log(`
       ===========================================================
       | Current heap usage (B) | ${newMemory.usedJSHeapSize}

@@ -9,7 +9,7 @@ import LoadedSessionsStore from "../utils/loaded_sessions_store";
 import mediaKeysAttacher from "../utils/media_keys_attacher";
 
 describe("find_key_systems - ", () => {
-  // eslint-disable-next-line @typescript-eslint/unbound-method
+  // oxlint-disable-next-line @typescript-eslint/unbound-method
   const oldRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
   let eme: IEmeApiImplementation;
   let requestMediaKeySystemAccessMock: MockInstance;
@@ -169,7 +169,7 @@ describe("find_key_systems - ", () => {
         keySystem: "com.widevine.alpha",
         createMediaKeys: () => ({
           createSession: () => ({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            // oxlint-disable-next-line @typescript-eslint/no-empty-function
             generateRequest: () => {},
           }),
         }),
@@ -222,7 +222,7 @@ describe("find_key_systems - ", () => {
         keySystem: "com.widevine.alpha",
         createMediaKeys: () => ({
           createSession: () => ({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            // oxlint-disable-next-line @typescript-eslint/no-empty-function
             generateRequest: () => {},
           }),
         }),
@@ -283,7 +283,7 @@ describe("find_key_systems - ", () => {
         keySystem: "com.widevine.alpha",
         createMediaKeys: () => ({
           createSession: () => ({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            // oxlint-disable-next-line @typescript-eslint/no-empty-function
             generateRequest: () => {},
           }),
         }),

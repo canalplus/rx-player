@@ -217,6 +217,7 @@
     "github-buttons": "2.29.1",
     "html-entities": "2.6.0",
     "jsdom": "^26.1.0",
+    "oxlint": "^1.19.0",
     "prettier": "^3.6.2",
     "react": "19.1.1",
     "react-dom": "19.1.1",

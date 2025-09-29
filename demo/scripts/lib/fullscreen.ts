@@ -82,7 +82,7 @@ export function requestFullscreen(elt: ICompatHTMLElement): void {
     }
     if (prom && typeof prom.catch === "function") {
       prom.catch((err) => {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.error("Failed to go into fullscreen:", err);
       });
     }
@@ -108,7 +108,7 @@ export function exitFullscreen() {
     }
     if (prom && typeof prom.catch === "function") {
       prom.catch((err) => {
-        // eslint-disable-next-line no-console
+        // oxlint-disable-next-line no-console
         console.error("Failed to go into fullscreen:", err);
       });
     }

@@ -31,7 +31,7 @@ if (
   MozMediaKeys !== undefined &&
   MozMediaKeys.prototype !== undefined &&
   typeof MozMediaKeys.isTypeSupported === "function" &&
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access
   typeof MozMediaKeys.prototype.createSession === "function"
 ) {
   MozMediaKeysConstructor = MozMediaKeys;

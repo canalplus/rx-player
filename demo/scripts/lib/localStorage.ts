@@ -4,7 +4,7 @@ const { localStorage } = window;
 export const hasLocalStorage = !!localStorage;
 
 if (!hasLocalStorage) {
-  // eslint-disable-next-line no-console
+  // oxlint-disable-next-line no-console
   console.warn(
     "`localStorage` is not available." +
       " You will not be able to store content information.",

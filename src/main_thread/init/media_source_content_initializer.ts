@@ -790,7 +790,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         this._onFatalError(err);
       });
 
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    // oxlint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     StreamOrchestrator(
       { manifest, initialPeriod },

@@ -202,7 +202,7 @@ export class DummyMediaKeys implements IMediaKeys {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    // oxlint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const newSession = new DummyMediaKeySession({
       keySystem: this._keySystem,
@@ -939,6 +939,7 @@ function getKeyIdsFromPssh(
         systemId: "Nagra",
         kids: [hexToBytes(parsed.keyId.replace(/-/g, ""))],
       };
+      break;
     }
     case "cenc":
       throw new Error("cenc pssh should have been set to version 1");

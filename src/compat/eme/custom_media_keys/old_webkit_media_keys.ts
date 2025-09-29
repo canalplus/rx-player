@@ -108,11 +108,11 @@ class OldWebkitMediaKeySession
       try {
         if (this._key.indexOf("clearkey") >= 0) {
           const licenseTypedArray = toUint8Array(license);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          // oxlint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const json = JSON.parse(utf8ToStr(licenseTypedArray));
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+          // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
           const key = base64ToBytes(json.keys[0].k);
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+          // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
           const kid = base64ToBytes(json.keys[0].kid);
           resolve(this._vid.webkitAddKey(this._key, key, kid, /* sessionId */ ""));
         } else {

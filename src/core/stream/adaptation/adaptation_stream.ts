@@ -134,7 +134,7 @@ export default function AdaptationStream(
   /** Allows a `RepresentationStream` to easily fetch media segments. */
   const segmentQueue = segmentQueueCreator.createSegmentQueue(
     adaptation.type,
-    /* eslint-disable @typescript-eslint/unbound-method */
+    /* oxlint-disable @typescript-eslint/unbound-method */
     {
       onRequestBegin: abrCallbacks.requestBegin,
       onRequestEnd: abrCallbacks.requestEnd,
@@ -143,7 +143,7 @@ export default function AdaptationStream(
     },
     isMediaSegmentQueueInterrupted,
   );
-  /* eslint-enable @typescript-eslint/unbound-method */
+  /* oxlint-enable @typescript-eslint/unbound-method */
 
   /** Used to determine when "fast-switching" is possible. */
   const fastSwitchThreshold = new SharedReference<number | undefined>(0);

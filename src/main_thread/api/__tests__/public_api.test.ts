@@ -599,11 +599,11 @@ describe("API - Public API", () => {
           currentContentCanceller: taskCanceller,
           activeRepresentations: null,
         };
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
         (player as any)._priv_contentInfos = contentInfos;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const spy = vi.spyOn(player as any, "_priv_triggerEventIfNotStopped");
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
         (player as any)._priv_onRepresentationChange(contentInfos, {
           type: "video",
           period: { id: "p1" },
@@ -653,11 +653,11 @@ describe("API - Public API", () => {
           currentContentCanceller: taskCanceller,
           activeRepresentations: null,
         };
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
         (player as any)._priv_contentInfos = contentInfos;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const spy = vi.spyOn(player as any, "_priv_triggerEventIfNotStopped");
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
         (player as any)._priv_onRepresentationChange(contentInfos, {
           type: "audio",
           period: { id: "p1" },

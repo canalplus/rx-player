@@ -156,7 +156,7 @@ class WebkitMediaKeySession
         reject("No session to close.");
         return;
       }
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
       this._nativeSession.close();
       resolve();
     });

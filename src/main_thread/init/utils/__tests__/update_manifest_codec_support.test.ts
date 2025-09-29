@@ -77,7 +77,7 @@ function generateFakeManifestWithRepresentations(
 beforeAll(() => {
   // Mock MediaSource APIs
   vi.mock("../../../../compat/browser_compatibility_types", () => ({
-    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+    // oxlint-disable-next-line @typescript-eslint/no-extraneous-class
     MediaSource_: class {
       static isTypeSupported(type: string) {
         // Mocked behavior: return true for all codecs and return false for vp9 codec

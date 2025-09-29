@@ -127,7 +127,7 @@ export default function getEmeApiImplementation(
     preferredApiType === "standard" ||
     (preferredApiType === "auto" && !shouldFavourCustomSafariEME())
   ) {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+    // oxlint-disable-next-line @typescript-eslint/unbound-method
     if (isNode || isNullOrUndefined(navigator.requestMediaKeySystemAccess)) {
       return null;
     }

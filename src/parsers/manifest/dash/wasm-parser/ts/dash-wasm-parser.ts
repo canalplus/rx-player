@@ -146,7 +146,7 @@ export default class DashWasmParser {
     /** Re-used TextDecoder instance. */
     const textDecoder = new TextDecoder();
 
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    // oxlint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     const imports = {
