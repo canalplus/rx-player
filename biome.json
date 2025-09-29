@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.1.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
 	"vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
 	"files": { "ignoreUnknown": false },
 	"formatter": { "enabled": true, "indentStyle": "tab" },
@@ -44,24 +44,17 @@
 				"noUnusedPrivateClassMembers": "error",
 				"noUnusedVariables": "error",
 				"useIsNan": "error",
+				"useParseIntRadix": "error",
 				"useValidForDirection": "error",
 				"useValidTypeof": "error",
 				"useYield": "error"
 			},
 			"nursery": {
-				"noBitwiseOperators": "off",
-				"noConstantBinaryExpression": "error",
 				"noFloatingPromises": "error",
 				"noNonNullAssertedOptionalChain": "error",
 				"noShadow": "off",
-				"noTsIgnore": "error",
-				"noUselessBackrefInRegex": "error",
-				"useConsistentObjectDefinition": "error",
-				"useConsistentTypeDefinitions": "error",
-				"useObjectSpread": "error",
-				"useParseIntRadix": "error",
-				"useReadonlyClassProperties": "off",
-				"useUnifiedTypeSignature": "error"
+				"useConsistentArrowReturn": "off",
+				"useConsistentTypeDefinitions": "error"
 			},
 			"security": { "noGlobalEval": "error" },
 			"style": {
@@ -86,6 +79,7 @@
 					"level": "off",
 					"options": { "accessibility": "explicit" }
 				},
+				"useConsistentObjectDefinitions": "error",
 				"useConst": "error",
 				"useDefaultSwitchClause": "off",
 				"useExportType": "error",
@@ -135,18 +129,23 @@
 						]
 					}
 				},
+				"useObjectSpread": "error",
+				"useReadonlyClassProperties": "off",
 				"useShorthandFunctionType": "error",
 				"useSingleVarDeclarator": "error",
 				"useTemplate": "off",
-				"useThrowOnlyError": "error"
+				"useThrowOnlyError": "error",
+				"useUnifiedTypeSignatures": "error"
 			},
 			"suspicious": {
 				"noAssignInExpressions": "error",
 				"noAsyncPromiseExecutor": "error",
+				"noBitwiseOperators": "off",
 				"noCatchAssign": "error",
 				"noClassAssign": "error",
 				"noCompareNegZero": "error",
 				"noConsole": "error",
+				"noConstantBinaryExpressions": "error",
 				"noControlCharactersInRegex": "error",
 				"noDebugger": "error",
 				"noDoubleEquals": "error",
@@ -171,8 +170,10 @@
 				"noShadowRestrictedNames": "error",
 				"noSparseArray": "error",
 				"noTemplateCurlyInString": "error",
+				"noTsIgnore": "error",
 				"noUnsafeDeclarationMerging": "error",
 				"noUnsafeNegation": "error",
+				"noUselessRegexBackrefs": "error",
 				"noVar": "error",
 				"noWith": "error",
 				"useAdjacentOverloadSignatures": "error",

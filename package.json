@@ -198,7 +198,7 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.1.4",
+    "@biomejs/biome": "^2.2.4",
     "@canalplus/readme.doc": "0.6.0",
     "@eslint/js": "^9.33.0",
     "@types/react": "19.1.10",
