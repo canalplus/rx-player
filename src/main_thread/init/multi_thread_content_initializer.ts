@@ -48,6 +48,7 @@ import assert, { assertUnreachable } from "../../utils/assert";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IAcceptedLogValue } from "../../utils/logger";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import objectAssign from "../../utils/object_assign";
 import { convertToRanges } from "../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../utils/reference";
@@ -366,7 +367,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(
       mediaElement,
-      (error: MediaError) => this._onFatalError(error, mediaElement),
+      (error: MediaError) =>
+        this._onFatalError(error, { mediaElement, playbackObserver }),
       this._initCanceller.signal,
     );
 
@@ -383,6 +385,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     const { statusRef: drmInitializationStatus, contentDecryptor } =
       this._initializeContentDecryption(
         mediaElement,
+        playbackObserver,
         lastContentProtection,
         mediaSourceStatus,
         () => notifyAndStartMediaSourceReload(0, undefined, undefined),
@@ -563,13 +566,17 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          this._onFatalError(formatWorkerError(msgData.value), mediaElement);
+          this._onFatalError(formatWorkerError(msgData.value), {
+            mediaElement,
+            playbackObserver,
+          });
           break;
 
         case WorkerMessageType.CreateMediaSource:
           this._onCreateMediaSourceMessage(
             msgData,
             mediaElement,
+            playbackObserver,
             mediaSourceStatus,
             this._settings.worker,
           );
@@ -911,7 +918,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           }
           const manifest = msgData.value.manifest;
           this._currentContentInfo.manifest = manifest;
-          this._updateCodecSupport(manifest, mediaElement);
+          this._updateCodecSupport(manifest, mediaElement, playbackObserver);
           this._startPlaybackIfReady(playbackStartParams);
           break;
         }
@@ -933,7 +940,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           );
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
-          this._updateCodecSupport(manifest, mediaElement);
+          this._updateCodecSupport(manifest, mediaElement, playbackObserver);
           this.trigger("manifestUpdate", msgData.value.updates);
           break;
         }
@@ -1304,17 +1311,24 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
   }
 
-  private _onFatalError(err: unknown, mediaElement: IMediaElement | null) {
+  private _onFatalError(
+    err: unknown,
+    context: {
+      mediaElement: IMediaElement | null;
+      playbackObserver: IMediaElementPlaybackObserver | null;
+    },
+  ) {
     if (this._initCanceller.isUsed()) {
       return;
     }
-    this._addSnapshotToError(err, mediaElement);
+    this._addSnapshotToError(err, context);
     this._initCanceller.cancel();
     this.trigger("error", err);
   }
 
   private _initializeContentDecryption(
     mediaElement: IMediaElement,
+    playbackObserver: IMediaElementPlaybackObserver,
     lastContentProtection: IReadOnlySharedReference<null | IContentProtection>,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
@@ -1340,7 +1354,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             keySystemConfiguration: undefined,
             keySystem: undefined,
           });
-          this._onFatalError(err, mediaElement);
+          this._onFatalError(err, { mediaElement, playbackObserver });
         },
         { clearSignal: cancelSignal },
       );
@@ -1383,7 +1397,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         if (isNullOrUndefined(manifest)) {
           return;
         }
-        this._updateCodecSupport(manifest, mediaElement);
+        this._updateCodecSupport(manifest, mediaElement, playbackObserver);
         contentDecryptor.removeEventListener(
           "stateChange",
           updateCodecSupportOnStateChange,
@@ -1473,7 +1487,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     });
 
     contentDecryptor.addEventListener("error", (error) => {
-      this._onFatalError(error, mediaElement);
+      this._onFatalError(error, { mediaElement, playbackObserver });
     });
 
     contentDecryptor.addEventListener("warning", (error) => {
@@ -1502,7 +1516,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
    * status of these codecs, and forwards the list of supported codecs to the web worker.
    * @param manifest
    */
-  private _updateCodecSupport(manifest: IManifestMetadata, mediaElement: IMediaElement) {
+  private _updateCodecSupport(
+    manifest: IManifestMetadata,
+    mediaElement: IMediaElement,
+    playbackObserver: IMediaElementPlaybackObserver,
+  ) {
     try {
       const updatedCodecs = updateManifestCodecSupport(
         manifest,
@@ -1520,7 +1538,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         this.trigger("codecSupportUpdate", null);
       }
     } catch (err) {
-      this._onFatalError(err, mediaElement);
+      this._onFatalError(err, { mediaElement, playbackObserver });
     }
   }
 
@@ -1783,7 +1801,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         if (cancelSignal.isCancelled()) {
           return;
         }
-        this._onFatalError(err, mediaElement);
+        this._onFatalError(err, { mediaElement, playbackObserver });
       });
 
     return corePlaybackObserver;
@@ -1918,6 +1936,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   private _onCreateMediaSourceMessage(
     msg: ICreateMediaSourceWorkerMessage,
     mediaElement: IMediaElement,
+    playbackObserver: IMediaElementPlaybackObserver,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     worker: Worker,
   ): void {
@@ -1991,7 +2010,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           "NONE",
           "Unknown error when creating the MediaSource",
         );
-        this._onFatalError(error, mediaElement);
+        this._onFatalError(error, { mediaElement, playbackObserver });
       }
     }
   }
@@ -1999,9 +2018,16 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   // NOTE: This is for a hidden API. Because it is hidden from everyone but us, we
   // don't set it in our types
   /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access */
-  private _addSnapshotToError(err: unknown, mediaElement: IMediaElement | null): void {
+  private _addSnapshotToError(
+    err: unknown,
+    context: {
+      mediaElement: IMediaElement | null;
+      playbackObserver: IMediaElementPlaybackObserver | null;
+    },
+  ): void {
     if (!isNullOrUndefined(err)) {
       const snapshot: Partial<Record<string, unknown>> = {
+        snapshotTimestamp: getMonotonicTimeStamp(),
         drm: {
           systemId: this._currentContentInfo?.contentDecryptor?.systemId,
           contentDecryptorState: this._currentContentInfo?.contentDecryptor?.getState(),
@@ -2019,7 +2045,8 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       } else {
         snapshot.usingMseInCore = undefined;
       }
-      if (mediaElement !== null) {
+      if (context.mediaElement !== null) {
+        const mediaElement = context.mediaElement;
         // TODO: earlier for DRM errors?
         (snapshot.drm as any).configuration = getKeySystemConfiguration(mediaElement);
         snapshot.mediaElementInfo = {
@@ -2042,6 +2069,9 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           error: mediaElement.error,
           mediaKeys: mediaElement.mediaKeys,
         };
+      }
+      if (context.playbackObserver !== null) {
+        snapshot.lastObservation = context.playbackObserver.getReference().getValue();
       }
       (err as any).__snapshot__ = snapshot;
     }

@@ -580,6 +580,7 @@ export default class PlaybackObserver {
     }
 
     const timings: IPlaybackObservation = objectAssign({}, mediaTimings, {
+      timestamp: getMonotonicTimeStamp(),
       position: new ObservationPosition(mediaTimings.position, pendingPosition),
       event: tmpEvt,
       seeking: seekingState,
@@ -988,6 +989,7 @@ function prettyPrintBuffered(buffered: TimeRanges, currentTime: number): string 
 function getInitialObservation(mediaElement: IMediaElement): IPlaybackObservation {
   const mediaTimings = getMediaInfos(mediaElement);
   return objectAssign(mediaTimings, {
+    timestamp: getMonotonicTimeStamp(),
     rebuffering: null,
     event: "init" as const,
     seeking: SeekingState.None,

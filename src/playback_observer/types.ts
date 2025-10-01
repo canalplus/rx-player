@@ -111,6 +111,8 @@ export interface IFreezingStatus {
 
 /** Information emitted on each playback observation. */
 export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "seeking"> {
+  /** value of main thread's `performance.now()` when the observation was emitted */
+  timestamp: number;
   /** Event that triggered this playback observation. */
   event: IPlaybackObserverEventType;
   /** Current seeking state. */
