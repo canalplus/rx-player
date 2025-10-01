@@ -1718,29 +1718,6 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       { clearSignal: cancelSignal, emitCurrentValue: true },
     );
 
-    const _getSegmentSinkMetrics = async (): Promise<ISegmentSinkMetrics | undefined> => {
-      this._awaitingRequests.nextRequestId++;
-      const requestId = this._awaitingRequests.nextRequestId;
-      sendMessage(this._settings.worker, {
-        type: MainThreadMessageType.PullSegmentSinkStoreInfos,
-        value: { requestId },
-      });
-      return new Promise((resolve, reject) => {
-        const rejectFn = (err: CancellationError) => {
-          cancelSignal.deregister(rejectFn);
-          this._awaitingRequests.pendingSinkMetrics.delete(requestId);
-          return reject(err);
-        };
-        this._awaitingRequests.pendingSinkMetrics.set(requestId, {
-          resolve: (value: ISegmentSinkMetrics | undefined) => {
-            cancelSignal.deregister(rejectFn);
-            this._awaitingRequests.pendingSinkMetrics.delete(requestId);
-            resolve(value);
-          },
-        });
-        cancelSignal.register(rejectFn);
-      });
-    };
     const _getThumbnailsData = async (
       periodId: string,
       thumbnailTrackId: string,
@@ -1792,7 +1769,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             if (isLoaded) {
               stopListening();
               this.trigger("loaded", {
-                getSegmentSinkMetrics: _getSegmentSinkMetrics,
+                getSegmentSinkMetrics: () => this._getSegmentSinkMetrics(cancelSignal),
                 getThumbnailData: _getThumbnailsData,
               });
             }
@@ -1808,6 +1785,33 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
       });
 
     return corePlaybackObserver;
+  }
+
+  private async _getSegmentSinkMetrics(
+    cancelSignal: CancellationSignal,
+  ): Promise<ISegmentSinkMetrics | undefined> {
+    this._awaitingRequests.nextRequestId++;
+    const requestId = this._awaitingRequests.nextRequestId;
+    sendMessage(this._settings.worker, {
+      type: MainThreadMessageType.PullSegmentSinkStoreInfos,
+      value: { requestId },
+    });
+
+    return new Promise((resolve, reject) => {
+      const rejectFn = (err: CancellationError) => {
+        cancelSignal.deregister(rejectFn);
+        this._awaitingRequests.pendingSinkMetrics.delete(requestId);
+        return reject(err);
+      };
+      this._awaitingRequests.pendingSinkMetrics.set(requestId, {
+        resolve: (value: ISegmentSinkMetrics | undefined) => {
+          cancelSignal.deregister(rejectFn);
+          this._awaitingRequests.pendingSinkMetrics.delete(requestId);
+          resolve(value);
+        },
+      });
+      cancelSignal.register(rejectFn);
+    });
   }
 
   /**
