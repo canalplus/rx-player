@@ -49,6 +49,7 @@ import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { IAcceptedLogValue } from "../../utils/logger";
 import objectAssign from "../../utils/object_assign";
+import { convertToRanges } from "../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
 import { RequestError } from "../../utils/request";
@@ -365,7 +366,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     /** Translate errors coming from the media element into RxPlayer errors. */
     listenToMediaError(
       mediaElement,
-      (error: MediaError) => this._onFatalError(error),
+      (error: MediaError) => this._onFatalError(error, mediaElement),
       this._initCanceller.signal,
     );
 
@@ -562,7 +563,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          this._onFatalError(formatWorkerError(msgData.value));
+          this._onFatalError(formatWorkerError(msgData.value), mediaElement);
           break;
 
         case WorkerMessageType.CreateMediaSource:
@@ -1303,10 +1304,11 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     }
   }
 
-  private _onFatalError(err: unknown) {
+  private _onFatalError(err: unknown, mediaElement: IMediaElement | null) {
     if (this._initCanceller.isUsed()) {
       return;
     }
+    this._addSnapshotToError(err, mediaElement);
     this._initCanceller.cancel();
     this.trigger("error", err);
   }
@@ -1338,7 +1340,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
             keySystemConfiguration: undefined,
             keySystem: undefined,
           });
-          this._onFatalError(err);
+          this._onFatalError(err, mediaElement);
         },
         { clearSignal: cancelSignal },
       );
@@ -1471,7 +1473,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
     });
 
     contentDecryptor.addEventListener("error", (error) => {
-      this._onFatalError(error);
+      this._onFatalError(error, mediaElement);
     });
 
     contentDecryptor.addEventListener("warning", (error) => {
@@ -1518,7 +1520,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         this.trigger("codecSupportUpdate", null);
       }
     } catch (err) {
-      this._onFatalError(err);
+      this._onFatalError(err, mediaElement);
     }
   }
 
@@ -1781,7 +1783,7 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
         if (cancelSignal.isCancelled()) {
           return;
         }
-        this._onFatalError(err);
+        this._onFatalError(err, mediaElement);
       });
 
     return corePlaybackObserver;
@@ -1989,10 +1991,62 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
           "NONE",
           "Unknown error when creating the MediaSource",
         );
-        this._onFatalError(error);
+        this._onFatalError(error, mediaElement);
       }
     }
   }
+
+  // NOTE: This is for a hidden API. Because it is hidden from everyone but us, we
+  // don't set it in our types
+  /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access */
+  private _addSnapshotToError(err: unknown, mediaElement: IMediaElement | null): void {
+    if (!isNullOrUndefined(err)) {
+      const snapshot: Partial<Record<string, unknown>> = {
+        drm: {
+          systemId: this._currentContentInfo?.contentDecryptor?.systemId,
+          contentDecryptorState: this._currentContentInfo?.contentDecryptor?.getState(),
+        },
+        bufferMetrics: this._getSegmentSinkMetrics(new TaskCanceller().signal),
+        initSettings: this._settings,
+        initContext: this._currentContentInfo,
+      };
+      if (this._currentContentInfo?.mediaSourceInfo?.type === "main") {
+        snapshot.usingMseInCore = false;
+        snapshot.sourceBuffers =
+          this._currentContentInfo.mediaSourceInfo.mediaSource.sourceBuffers;
+      } else if (this._currentContentInfo?.mediaSourceInfo?.type === "core") {
+        snapshot.usingMseInCore = true;
+      } else {
+        snapshot.usingMseInCore = undefined;
+      }
+      if (mediaElement !== null) {
+        // TODO: earlier for DRM errors?
+        (snapshot.drm as any).configuration = getKeySystemConfiguration(mediaElement);
+        snapshot.mediaElementInfo = {
+          currentTime: mediaElement.currentTime,
+          readyState: mediaElement.readyState,
+          playbackRate: mediaElement.playbackRate,
+          paused: mediaElement.paused,
+          ended: mediaElement.ended,
+          muted: mediaElement.muted,
+          volume: mediaElement.volume,
+          src: mediaElement.src,
+          buffered: convertToRanges(mediaElement.buffered),
+          seekable: convertToRanges(mediaElement.seekable),
+          autoplay: mediaElement.autoplay,
+          clientHeight: mediaElement.clientHeight,
+          clientWidth: mediaElement.clientWidth,
+          videoHeight: (mediaElement as HTMLVideoElement).videoHeight,
+          videoWidth: (mediaElement as HTMLVideoElement).videoWidth,
+          seeking: mediaElement.seeking,
+          error: mediaElement.error,
+          mediaKeys: mediaElement.mediaKeys,
+        };
+      }
+      (err as any).__snapshot__ = snapshot;
+    }
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access */
 }
 
 export interface IMultiThreadContentInitializerContentInfos {
