@@ -2079,6 +2079,67 @@ export default class MultiThreadContentInitializer extends ContentInitializer {
   /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access */
 }
 
+export interface IErrorSnapshotObject2 {
+  /**
+   * The RxPlayer version producing this object.
+   * Core dump object may change from version to version.
+   */
+  vers: string;
+  /** Value of `performance.now()` when the error happened. */
+  time: number;
+  /** Value of `Date.now()` when the error happened. */
+  date: number;
+  /** DRM-related information */
+  drm_: {
+    /**
+     * If `true` we relied on some DRM logic for that content.
+     * Note that the content can be clear, it just means that the encryption
+     * code was at least ready.
+     */
+    used: boolean;
+    /**
+     * State for our "Content Decryptor"
+     */
+    cSta: number;
+    /**
+     * The "System ID" for the DRM we relied one if one.
+     * `null` if unknown or if we did not rely on DRM for that content.
+     */
+    syId: string | null;
+    /**
+     * The configuration relied on for this content.
+     */
+    conf: MediaKeySystemConfiguration;
+  };
+  /** If `true`, we were relying on MultiThreading. */
+  mult: boolean;
+  /** If `true`, we were relying on MSE-in-Worker. */
+  mseW: boolean;
+  /** information on the media element. */
+  mElt: {
+    /** "a" for an audio element. "v" for a video element. */
+    type: "a" | "v";
+    cTim: number;
+    rSta: number;
+    pRat: number;
+    paus: boolean;
+    endd: boolean;
+    mute: boolean;
+    volu: number;
+    src_: string;
+    buff: Array<[number, number]>;
+    skab: Array<[number, number]>;
+    aPla: boolean;
+    cHei: number;
+    cWid: number;
+    vHei: number;
+    vWid: number;
+    seek: boolean;
+    erro: Error | null;
+  };
+  obsr: {};
+}
+
 export interface IMultiThreadContentInitializerContentInfos {
   /**
    * "contentId", which is the identifier for the currently loaded content.
