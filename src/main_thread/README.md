@@ -27,6 +27,14 @@ Those modules are:
   Negotiate content decryption. Only used for contents with DRM (Digital Right
   Management).
 
+- **the `CoreInterface` (./core_interface)**
+
+  Provide an interface allowing to communicate to the central RxPlayer logic in the `core`
+  directory (`../core/`), which may run in another thread.
+
+  That interface depends on the context (e.g. depending on if we are playing in a
+  mono-threaded mode or a multithreaded mode).
+
 - **the `TracksStore` (or `MediaElementTracksStore`) (./tracks_store)**
 
   Ease up text/audio/video track switching to provide a simple-to-use API.

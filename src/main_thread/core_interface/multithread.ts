@@ -11,7 +11,7 @@ export class WorkerCoreInterface extends CoreInterface {
   /**
    * Initialize a `WorkerCoreInterface` for the given `WebWorker` instance.
    *
-   * The `addMessageListener` and `addMessageListener` will then register
+   * The `addMessageListener` and `addErrorListener` methods will then register
    * listeners respectively for the `onmessage` and `onmessageerror` events
    * from this `WebWorker`.
    * The `sendMessage` method will allow to send messages to the `WebWorker`.
