@@ -82,7 +82,7 @@ export default function RepresentationStream<TSegmentDataType>(
   {
     content,
     options,
-    playbackObserver,
+    mediaElementMonitor,
     segmentSink,
     segmentQueue,
     terminate,
@@ -202,7 +202,7 @@ export default function RepresentationStream<TSegmentDataType>(
     segmentQueue.stop(err.reason);
   });
 
-  playbackObserver.listen(checkStatus, {
+  mediaElementMonitor.listen(checkStatus, {
     includeLastObservation: false,
     clearSignal: canceller.signal,
   });
@@ -231,12 +231,12 @@ export default function RepresentationStream<TSegmentDataType>(
     if (canceller.isUsed()) {
       return; // Stop all buffer status checking if load operations are stopped
     }
-    const observation = playbackObserver.getReference().getValue();
+    const observation = mediaElementMonitor.getReference().getValue();
     const initialWantedTime = observation.position.getWanted();
     const status = getBufferStatus(
       content,
       initialWantedTime,
-      playbackObserver,
+      mediaElementMonitor,
       fastSwitchThreshold.getValue(),
       bufferGoal.getValue(),
       maxBufferSize.getValue(),
@@ -401,7 +401,7 @@ export default function RepresentationStream<TSegmentDataType>(
         segmentSink.declareInitSegment(initSegmentUniqueId, evt.initializationData);
         pushInitSegment(
           {
-            playbackObserver,
+            mediaElementMonitor,
             bufferGoal,
             content,
             initSegmentUniqueId,
@@ -445,7 +445,7 @@ export default function RepresentationStream<TSegmentDataType>(
       const initSegmentUniqueId = initSegmentState.uniqueId;
       pushMediaSegment(
         {
-          playbackObserver,
+          mediaElementMonitor,
           bufferGoal,
           content,
           initSegmentUniqueId,

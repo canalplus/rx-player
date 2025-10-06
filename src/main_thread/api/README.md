@@ -20,11 +20,11 @@ As such, its main roles are to:
 
 To facilitate those actions, the API relies on multiple building blocks:
 
-- **the `PlaybackObserver` (./playback_observer.ts)**
+- **the `MediaElementMonitor` (./media_element_monitor.ts)**
 
   Provide multiple methods allowing to monitor the current playback conditions (e.g. the
   current position and/or the current playback rate). Many RxPlayer modules rely on this
-  PlaybackObserver.
+  MediaElementMonitor.
 
 - **the `option utils` (./option_utils.ts)**
 

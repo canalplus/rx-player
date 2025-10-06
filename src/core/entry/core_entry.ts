@@ -10,9 +10,9 @@ import type {
 } from "../../main_thread/types";
 import { MainThreadMessageType } from "../../main_thread/types";
 import Manifest, { Adaptation, Period, Representation } from "../../manifest/classes";
-import { ObservationPosition } from "../../playback_observer";
-import type { ICorePlaybackObservation } from "../../playback_observer/core_playback_observer";
-import CorePlaybackObserver from "../../playback_observer/core_playback_observer";
+import { ObservationPosition } from "../../media_element_monitor";
+import type { ICoreMediaObservation } from "../../media_element_monitor/core_media_element_monitor";
+import CoreMediaElementMonitor from "../../media_element_monitor/core_media_element_monitor";
 import type { IPlayerError, ITrackType } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
@@ -98,9 +98,9 @@ export default function initializeCoreEntry(
   let currentContentHandle: IContentHandle | null = null;
 
   /**
-   * When set, emit playback observation made on the main thread.
+   * When set, emit media observation made on the main thread.
    */
-  let playbackObservationRef: SharedReference<ICorePlaybackObservation> | null = null;
+  let mediaObservationRef: SharedReference<ICoreMediaObservation> | null = null;
   setMessageReceiver((e) => {
     log.debug("Core", "received message", { name: e.data.type });
 
@@ -156,15 +156,14 @@ export default function initializeCoreEntry(
         }
 
         currentContentHandle?.stop();
-        playbackObservationRef?.finish();
+        mediaObservationRef?.finish();
 
-        const currentContentObservationRef =
-          new SharedReference<ICorePlaybackObservation>(
-            objectAssign(msg.value.initialObservation, {
-              position: new ObservationPosition(...msg.value.initialObservation.position),
-            }),
-          );
-        playbackObservationRef = currentContentObservationRef;
+        const currentContentObservationRef = new SharedReference<ICoreMediaObservation>(
+          objectAssign(msg.value.initialObservation, {
+            position: new ObservationPosition(...msg.value.initialObservation.position),
+          }),
+        );
+        mediaObservationRef = currentContentObservationRef;
         currentContentHandle = loadPreparedContent(
           sendMessage,
           msg.value,
@@ -175,7 +174,7 @@ export default function initializeCoreEntry(
         break;
       }
 
-      case MainThreadMessageType.PlaybackObservation: {
+      case MainThreadMessageType.MediaObservation: {
         const currentContent = contentPreparer.getCurrentContent();
         if (msg.contentId !== currentContent?.contentId) {
           return;
@@ -192,7 +191,7 @@ export default function initializeCoreEntry(
         if (newBuffered.video !== null) {
           buffered.video = newBuffered.video;
         }
-        playbackObservationRef?.setValue(
+        mediaObservationRef?.setValue(
           objectAssign(observation, {
             position: new ObservationPosition(...msg.value.position),
           }),
@@ -213,8 +212,8 @@ export default function initializeCoreEntry(
         currentContentHandle?.stop();
         currentContentHandle = null;
 
-        playbackObservationRef?.finish();
-        playbackObservationRef = null;
+        mediaObservationRef?.finish();
+        mediaObservationRef = null;
         break;
 
       case MainThreadMessageType.MediaSourceReload:
@@ -559,7 +558,7 @@ function loadPreparedContent(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   val: ILoadingContentParameters,
   contentPreparer: ContentPreparer,
-  playbackObservationRef: IReadOnlySharedReference<ICorePlaybackObservation>,
+  mediaObservationRef: IReadOnlySharedReference<ICoreMediaObservation>,
   refs: ICoreReferences,
 ): IContentHandle {
   log.debug("Core", "Loading pepared content.");
@@ -617,7 +616,7 @@ function loadPreparedContent(
     } = preparedContent;
     const { drmSystemId, enableFastSwitching, onCodecSwitch } = val;
 
-    playbackObservationRef.onUpdate(
+    mediaObservationRef.onUpdate(
       (observation) => {
         synchronizeSegmentSinksOnObservation(observation, segmentSinksStore);
         const freezeResolution =
@@ -649,13 +648,13 @@ function loadPreparedContent(
       throw error;
     }
 
-    const playbackObserver = new CorePlaybackObserver(
-      playbackObservationRef,
+    const mediaElementMonitor = new CoreMediaElementMonitor(
+      mediaObservationRef,
       contentId,
       sendMessage,
       currentLoadCanceller.signal,
     );
-    cmcdDataBuilder?.startMonitoringPlayback(playbackObserver);
+    cmcdDataBuilder?.startMonitoringPlayback(mediaElementMonitor);
     currentLoadCanceller.signal.register(() => {
       cmcdDataBuilder?.stopMonitoringPlayback();
     });
@@ -663,7 +662,7 @@ function loadPreparedContent(
     const contentTimeBoundariesObserver = createContentTimeBoundariesObserver(
       manifest,
       mediaSource,
-      playbackObserver,
+      mediaElementMonitor,
       segmentSinksStore,
       {
         onWarning: (err: IPlayerError) =>
@@ -685,7 +684,7 @@ function loadPreparedContent(
 
     StreamOrchestrator(
       { initialPeriod, manifest },
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -1007,7 +1006,7 @@ function loadPreparedContent(
 
   function onMediaSourceReload(): void {
     // TODO more precize one day?
-    const lastObservation = playbackObservationRef.getValue();
+    const lastObservation = mediaObservationRef.getValue();
     const newInitialTime = lastObservation.position.getWanted();
     if (currentLoadCanceller !== null) {
       currentLoadCanceller.cancel("MediaSource reload");

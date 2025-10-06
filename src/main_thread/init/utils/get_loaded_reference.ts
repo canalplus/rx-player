@@ -18,9 +18,9 @@ import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import shouldWaitForDataBeforeLoaded from "../../../compat/should_wait_for_data_before_loaded";
 import shouldWaitForHaveEnoughData from "../../../compat/should_wait_for_have_enough_data";
 import type {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
-} from "../../../playback_observer";
+  IMediaObservation,
+  IReadOnlyMediaElementMonitor,
+} from "../../../media_element_monitor";
 import type { IReadOnlySharedReference } from "../../../utils/reference";
 import SharedReference from "../../../utils/reference";
 import type { CancellationSignal } from "../../../utils/task_canceller";
@@ -29,20 +29,20 @@ import TaskCanceller from "../../../utils/task_canceller";
 /**
  * Returns an `IReadOnlySharedReference` that switches to `true` once the
  * content is considered loaded (i.e. once it can begin to be played).
- * @param {Object} playbackObserver
+ * @param {Object} mediaElementMonitor
  * @param {boolean} isDirectfile - `true` if this is a directfile content
  * @param {Object} cancelSignal
  * @returns {Object}
  */
 export default function getLoadedReference(
-  playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IMediaObservation>,
   isDirectfile: boolean,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
   const listenCanceller = new TaskCanceller("Loaded Reference update");
   listenCanceller.linkToSignal(cancelSignal);
   const isLoaded = new SharedReference(false, listenCanceller.signal);
-  playbackObserver.listen(
+  mediaElementMonitor.listen(
     (observation) => {
       if (
         observation.rebuffering !== null ||

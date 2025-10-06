@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-import type {
-  IStreamOrchestratorPlaybackObservation,
-  IBufferType,
-} from "../../core/types";
+import type { IStreamOrchestratorMediaObservation, IBufferType } from "../../core/types";
 import { MediaError } from "../../errors";
 import type {
   IManifest,
@@ -25,7 +22,7 @@ import type {
   IRepresentationIndex,
   IPeriod,
 } from "../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
+import type { IReadOnlyMediaElementMonitor } from "../../media_element_monitor";
 import type { IPlayerError } from "../../public_types";
 import EventEmitter from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -72,11 +69,11 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
 
   /**
    * @param {Object} manifest
-   * @param {Object} playbackObserver
+   * @param {Object} mediaElementMonitor
    */
   constructor(
     manifest: IManifest,
-    playbackObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
+    mediaElementMonitor: IReadOnlyMediaElementMonitor<IStreamOrchestratorMediaObservation>,
     bufferTypes: IBufferType[],
   ) {
     super();
@@ -100,7 +97,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
     // catchable as a caller could not have called `addEventListener` yet,
     // we schedule it in a micro-task
     queueMicrotask(() => {
-      playbackObserver.listen(
+      mediaElementMonitor.listen(
         ({ position }) => {
           const wantedPosition = position.getWanted();
           if (wantedPosition < manifest.getMinimumSafePosition()) {
@@ -660,7 +657,7 @@ interface IActiveStreamsInfo {
   hasFinishedLoadingLastPeriod: boolean;
 }
 
-export type IContentTimeObserverPlaybackObservation = Pick<
-  IStreamOrchestratorPlaybackObservation,
+export type IContentTimeObserverMediaObservation = Pick<
+  IStreamOrchestratorMediaObservation,
   "position"
 >;

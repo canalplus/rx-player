@@ -16,7 +16,7 @@
 
 import config from "../../../config";
 import type { IAdaptation, IPeriod } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
+import type { IReadOnlyMediaElementMonitor } from "../../../media_element_monitor";
 import arrayIncludes from "../../../utils/array_includes";
 import type { IRange } from "../../../utils/ranges";
 import { excludeFromRanges, insertInto } from "../../../utils/ranges";
@@ -28,7 +28,7 @@ import {
 } from "../../segment_sinks";
 import type {
   IRepresentationsChoice,
-  IRepresentationStreamPlaybackObservation,
+  IRepresentationStreamMediaObservation,
 } from "../representation";
 
 export default function getRepresentationsSwitchingStrategy(
@@ -36,7 +36,7 @@ export default function getRepresentationsSwitchingStrategy(
   adaptation: IAdaptation,
   settings: IRepresentationsChoice,
   segmentSink: SegmentSink,
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>,
 ): IRepresentationSwitchStrategy {
   if (settings.switchingMode === "lazy") {
     return { type: "continue", value: undefined };
@@ -79,7 +79,7 @@ export default function getRepresentationsSwitchingStrategy(
   }
 
   if (settings.switchingMode === "reload") {
-    const readyState = playbackObserver.getReadyState();
+    const readyState = mediaElementMonitor.getReadyState();
     if (readyState === undefined || readyState > 1) {
       return { type: "needs-reload", value: undefined };
     }
@@ -115,10 +115,10 @@ export default function getRepresentationsSwitchingStrategy(
     const paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before ?? 0;
     const paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after ?? 0;
 
-    let currentTime = playbackObserver.getCurrentTime();
+    let currentTime = mediaElementMonitor.getCurrentTime();
     if (currentTime === undefined) {
       // TODO current position might be old. A better solution should be found.
-      const lastObservation = playbackObserver.getReference().getValue();
+      const lastObservation = mediaElementMonitor.getReference().getValue();
       currentTime = lastObservation.position.getPolled();
     }
 

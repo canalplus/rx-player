@@ -6,18 +6,18 @@ import type { IReadOnlySharedReference } from "../utils/reference";
 import type { CancellationSignal } from "../utils/task_canceller";
 import type {
   IFreezingStatus,
-  IReadOnlyPlaybackObserver,
+  IReadOnlyMediaElementMonitor,
   IRebufferingStatus,
 } from "./types";
-import generateReadOnlyObserver from "./utils/generate_read_only_observer";
+import generateReadOnlyMonitor from "./utils/generate_read_only_monitor";
 import type ObservationPosition from "./utils/observation_position";
 
-export interface ICorePlaybackObservation {
+export interface ICoreMediaObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
    */
-  paused: IPausedPlaybackObservation;
+  paused: IPausedMediaObservation;
   /**
    * Information on the current media position in seconds at the time of the
    * Observation.
@@ -53,8 +53,8 @@ export interface ICorePlaybackObservation {
   fullyLoaded: boolean;
 }
 
-/** Pause-related information linked to an emitted Playback observation. */
-export interface IPausedPlaybackObservation {
+/** Pause-related information linked to an emitted media observation. */
+export interface IPausedMediaObservation {
   /**
    * Known paused state at the time the Observation was emitted.
    *
@@ -73,16 +73,16 @@ export interface IPausedPlaybackObservation {
   pending: boolean | undefined;
 }
 
-export default class CorePlaybackObserver
-  implements IReadOnlyPlaybackObserver<ICorePlaybackObservation>
+export default class CoreMediaElementMonitor
+  implements IReadOnlyMediaElementMonitor<ICoreMediaObservation>
 {
-  private _src: IReadOnlySharedReference<ICorePlaybackObservation>;
+  private _src: IReadOnlySharedReference<ICoreMediaObservation>;
   private _cancelSignal: CancellationSignal;
   private _messageSender: (msg: IUpdatePlaybackRateCoreMessage) => void;
   private _contentId: string;
 
   constructor(
-    src: IReadOnlySharedReference<ICorePlaybackObservation>,
+    src: IReadOnlySharedReference<ICoreMediaObservation>,
     contentId: string,
     sendMessage: (msg: IUpdatePlaybackRateCoreMessage) => void,
     cancellationSignal: CancellationSignal,
@@ -105,7 +105,7 @@ export default class CorePlaybackObserver
     return undefined;
   }
 
-  public getReference(): IReadOnlySharedReference<ICorePlaybackObservation> {
+  public getReference(): IReadOnlySharedReference<ICoreMediaObservation> {
     return this._src;
   }
 
@@ -122,7 +122,7 @@ export default class CorePlaybackObserver
   }
 
   public listen(
-    cb: (observation: ICorePlaybackObservation, stopListening: () => void) => void,
+    cb: (observation: ICoreMediaObservation, stopListening: () => void) => void,
     params: {
       includeLastObservation?: boolean | undefined;
       clearSignal: CancellationSignal;
@@ -138,12 +138,12 @@ export default class CorePlaybackObserver
     });
   }
 
-  public deriveReadOnlyObserver<TDest>(
+  public deriveReadOnlyMonitor<TDest>(
     transform: (
-      observationRef: IReadOnlySharedReference<ICorePlaybackObservation>,
+      observationRef: IReadOnlySharedReference<ICoreMediaObservation>,
       cancellationSignal: CancellationSignal,
     ) => IReadOnlySharedReference<TDest>,
-  ): IReadOnlyPlaybackObserver<TDest> {
-    return generateReadOnlyObserver(this, transform, this._cancelSignal);
+  ): IReadOnlyMediaElementMonitor<TDest> {
+    return generateReadOnlyMonitor(this, transform, this._cancelSignal);
   }
 }

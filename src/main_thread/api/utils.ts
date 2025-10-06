@@ -18,10 +18,10 @@ import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import canPreloadBeforePlay from "../../compat/can_preload_before_play";
 import config from "../../config";
 import type {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
-} from "../../playback_observer";
-import { SeekingState } from "../../playback_observer";
+  IMediaObservation,
+  IReadOnlyMediaElementMonitor,
+} from "../../media_element_monitor";
+import { SeekingState } from "../../media_element_monitor";
 import type { IPlayerState } from "../../public_types";
 import arrayIncludes from "../../utils/array_includes";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
@@ -31,7 +31,7 @@ import type { CancellationSignal } from "../../utils/task_canceller";
 import type { ContentInitializer, IStallingSituation } from "../init";
 
 /**
- * @param {Object} playbackObserver - Observes playback conditions on
+ * @param {Object} mediaElementMonitor - Observes playback conditions on
  * `mediaElement`.
  * @param {function} onSeeking - Callback called when a seeking operation starts
  * on `mediaElement`.
@@ -41,7 +41,7 @@ import type { ContentInitializer, IStallingSituation } from "../init";
  * remove all listeners this function has registered.
  */
 export function emitSeekEvents(
-  playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IMediaObservation>,
   onSeeking: () => void,
   onSeeked: () => void,
   cancelSignal: CancellationSignal,
@@ -51,14 +51,14 @@ export function emitSeekEvents(
   }
 
   let wasSeeking =
-    playbackObserver.getReference().getValue().seeking === SeekingState.External;
+    mediaElementMonitor.getReference().getValue().seeking === SeekingState.External;
   if (wasSeeking) {
     onSeeking();
     if (cancelSignal.isCancelled()) {
       return;
     }
   }
-  playbackObserver.listen(
+  mediaElementMonitor.listen(
     (obs) => {
       if (obs.event === "seeking") {
         wasSeeking = true;
@@ -115,7 +115,7 @@ export const enum PLAYER_STATES {
 export function constructPlayerStateReference(
   initializer: ContentInitializer,
   mediaElement: IMediaElement,
-  playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IMediaObservation>,
   isDirectFile: boolean,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<IPlayerState> {
@@ -191,7 +191,7 @@ export function constructPlayerStateReference(
     cancelSignal,
   );
 
-  playbackObserver.listen(
+  mediaElementMonitor.listen(
     (observation) => {
       if (arrayIncludes(["seeking", "ended", "play", "pause"], observation.event)) {
         updateStateIfLoaded(prevStallReason);

@@ -25,8 +25,8 @@ import type {
 } from "../../manifest";
 import type {
   ObservationPosition,
-  IReadOnlyPlaybackObserver,
-} from "../../playback_observer";
+  IReadOnlyMediaElementMonitor,
+} from "../../media_element_monitor";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import noop from "../../utils/noop";
 import type { IRange } from "../../utils/ranges";
@@ -88,7 +88,7 @@ export default function createAdaptiveRepresentationSelector(
    * @param {Object} context
    * @param {Object} currentRepresentation
    * @param {Object} representations
-   * @param {Object} playbackObserver
+   * @param {Object} mediaElementMonitor
    * @param {Object} stopAllEstimates
    * @returns {Array.<Object>}
    */
@@ -96,7 +96,7 @@ export default function createAdaptiveRepresentationSelector(
     context: { manifest: IManifest; period: IPeriod; adaptation: IAdaptation },
     currentRepresentation: IReadOnlySharedReference<IRepresentation | null>,
     representations: IReadOnlySharedReference<IRepresentation[]>,
-    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>,
+    mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationEstimatorMediaObservation>,
     stopAllEstimates: CancellationSignal,
   ): IRepresentationEstimatorResponse {
     const { type } = context.adaptation;
@@ -113,7 +113,7 @@ export default function createAdaptiveRepresentationSelector(
         currentRepresentation,
         filters,
         initialBitrate,
-        playbackObserver,
+        mediaElementMonitor,
         representations,
         lowLatencyMode,
       },
@@ -165,7 +165,7 @@ function getEstimateReference(
     filters,
     initialBitrate,
     lowLatencyMode,
-    playbackObserver,
+    mediaElementMonitor,
     representations: representationsRef,
   }: IRepresentationEstimatorArguments,
   stopAllEstimates: CancellationSignal,
@@ -263,25 +263,25 @@ function getEstimateReference(
     const guessBasedChooser = new GuessBasedChooser(scoreCalculator, prevEstimate);
 
     // get initial observation for initial estimate
-    let lastPlaybackObservation = playbackObserver.getReference().getValue();
+    let lastMediaObservation = mediaElementMonitor.getReference().getValue();
 
     /** Reference through which estimates are emitted. */
     const innerEstimateRef = new SharedReference<IABREstimate>(getCurrentEstimate());
 
-    // Listen to playback observations
-    playbackObserver.listen(
+    // Listen to media observations
+    mediaElementMonitor.listen(
       (obs) => {
-        lastPlaybackObservation = obs;
+        lastMediaObservation = obs;
         updateEstimate();
       },
       { includeLastObservation: false, clearSignal: innerCancellationSignal },
     );
 
     onAddedSegment = function (val: IAddedSegmentCallbackPayload) {
-      if (lastPlaybackObservation === null) {
+      if (lastMediaObservation === null) {
         return;
       }
-      const { position, speed } = lastPlaybackObservation;
+      const { position, speed } = lastMediaObservation;
       const timeRanges = val.buffered;
       const bufferGap = getLeftSizeOfRange(timeRanges, position.getWanted());
       const { representation } = val.content;
@@ -310,7 +310,7 @@ function getEstimateReference(
 
     /** Returns the actual estimate based on all methods and algorithm available. */
     function getCurrentEstimate(): IABREstimate {
-      const { bufferGap, position, maximumPosition } = lastPlaybackObservation;
+      const { bufferGap, position, maximumPosition } = lastMediaObservation;
       const resolutionLimit = filters.limitResolution.getValue();
       const bitrateThrottle = filters.throttleBitrate.getValue();
       const currentRepresentationVal = currentRepresentation.getValue();
@@ -322,7 +322,7 @@ function getEstimateReference(
       );
       const requests = requestsStore.getRequests();
       const { bandwidthEstimate, bitrateChosen } = networkAnalyzer.getBandwidthEstimate(
-        lastPlaybackObservation,
+        lastMediaObservation,
         bandwidthEstimator,
         currentRepresentationVal,
         requests,
@@ -334,7 +334,7 @@ function getEstimateReference(
         stableRepresentation === null
           ? undefined
           : stableRepresentation.bitrate /
-            (lastPlaybackObservation.speed > 0 ? lastPlaybackObservation.speed : 1);
+            (lastMediaObservation.speed > 0 ? lastMediaObservation.speed : 1);
 
       const { ABR_ENTER_BUFFER_BASED_ALGO, ABR_EXIT_BUFFER_BASED_ALGO } =
         config.getCurrent();
@@ -415,7 +415,7 @@ function getEstimateReference(
       ) {
         chosenRepFromGuessMode = guessBasedChooser.getGuess(
           sortedRepresentations,
-          lastPlaybackObservation,
+          lastMediaObservation,
           currentRepresentationVal,
           currentBestBitrate,
           requests,
@@ -460,7 +460,7 @@ function getEstimateReference(
             chosenRepFromBufferSize.bitrate,
             currentRepresentationVal,
             requests,
-            lastPlaybackObservation,
+            lastMediaObservation,
           ),
           knownStableBitrate,
         };
@@ -481,7 +481,7 @@ function getEstimateReference(
             chosenRepFromBandwidth.bitrate,
             currentRepresentationVal,
             requests,
-            lastPlaybackObservation,
+            lastMediaObservation,
           ),
           knownStableBitrate,
         };
@@ -634,7 +634,7 @@ export interface IABREstimate {
 }
 
 /** Media properties `getEstimateReference` will need to keep track of. */
-export interface IRepresentationEstimatorPlaybackObservation {
+export interface IRepresentationEstimatorMediaObservation {
   /**
    * For the concerned media buffer, difference in seconds between the next
    * position where no segment data is available and the current position.
@@ -642,7 +642,7 @@ export interface IRepresentationEstimatorPlaybackObservation {
   bufferGap: number;
   /**
    * Information on the current media position in seconds at the time of a
-   * Playback Observation.
+   * media observation.
    */
   position: ObservationPosition;
   /**
@@ -744,7 +744,7 @@ export interface IRepresentationEstimatorArguments {
   /** Class allowing to estimate the current network bandwidth. */
   bandwidthEstimator: BandwidthEstimator;
   /** Emit regular playback information. */
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>;
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationEstimatorMediaObservation>;
   /**
    * The Representation currently loaded.
    * `null` if no Representation is currently loaded.
@@ -794,7 +794,7 @@ export type IRepresentationEstimator = (
   /** Reference emitting the list of available Representations to choose from. */
   representations: IReadOnlySharedReference<IRepresentation[]>,
   /** Regularly emits playback conditions */
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationEstimatorMediaObservation>,
   /**
    * After this `CancellationSignal` emits, resources will be disposed and
    * estimates will stop to be emitted.

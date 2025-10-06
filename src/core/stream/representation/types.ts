@@ -6,11 +6,11 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../manifest";
-import type { IEMSG } from "../../../parsers/containers/isobmff";
 import type {
   ObservationPosition,
-  IReadOnlyPlaybackObserver,
-} from "../../../playback_observer";
+  IReadOnlyMediaElementMonitor,
+} from "../../../media_element_monitor";
+import type { IEMSG } from "../../../parsers/containers/isobmff";
 import type {
   IAudioRepresentationsSwitchingMode,
   IPlayerError,
@@ -178,18 +178,18 @@ export interface IBufferDiscontinuity {
   end: number | null;
 }
 
-/** Object that should be emitted by the given `IReadOnlyPlaybackObserver`. */
-export interface IRepresentationStreamPlaybackObservation {
+/** Object that should be emitted by the given `IReadOnlyMediaElementMonitor`. */
+export interface IRepresentationStreamMediaObservation {
   /**
    * Information on the current media position in seconds at the time of a
-   * Playback Observation.
+   * media Observation.
    */
   position: ObservationPosition;
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
    */
-  paused: IPausedPlaybackObservation;
+  paused: IPausedMediaObservation;
   /** Last "playback rate" asked by the user. */
   speed: number;
   /**
@@ -204,8 +204,8 @@ export interface IRepresentationStreamPlaybackObservation {
   canStream: boolean;
 }
 
-/** Pause-related information linked to an emitted Playback observation. */
-export interface IPausedPlaybackObservation {
+/** Pause-related information linked to an emitted media observation. */
+export interface IPausedMediaObservation {
   /**
    * Known paused state at the time the Observation was emitted.
    *
@@ -224,8 +224,8 @@ export interface IPausedPlaybackObservation {
   pending: boolean | undefined;
 }
 
-/** Position-related information linked to an emitted Playback observation. */
-export interface IPositionPlaybackObservation {
+/** Position-related information linked to an emitted media observation. */
+export interface IPositionMediaObservation {
   /**
    * Known position at the time the Observation was emitted, in seconds.
    *
@@ -283,8 +283,8 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
    * and stopping all `RepresentationStream` current tasks).
    */
   terminate: IReadOnlySharedReference<null | ITerminationOrder>;
-  /** Periodically emits the current playback conditions. */
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+  /** Regularly polls and emits current playback conditions. */
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>;
   /** Supplementary arguments which configure the RepresentationStream's behavior. */
   options: IRepresentationStreamOptions;
 }

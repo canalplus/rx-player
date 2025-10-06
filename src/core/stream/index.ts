@@ -17,11 +17,11 @@
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorOptions,
-  IStreamOrchestratorPlaybackObservation,
+  IStreamOrchestratorMediaObservation,
   IStreamOrchestratorCallbacks,
 } from "./orchestrator";
 import StreamOrchestrator from "./orchestrator";
-import type { IPausedPlaybackObservation } from "./period";
+import type { IPausedMediaObservation } from "./period";
 export type {
   IRepresentationsChoice,
   IInbandEvent,
@@ -36,9 +36,9 @@ export type {
 
 export default StreamOrchestrator;
 export type {
-  IPausedPlaybackObservation,
+  IPausedMediaObservation,
   INeedsMediaSourceReloadPayload,
-  IStreamOrchestratorPlaybackObservation,
+  IStreamOrchestratorMediaObservation,
   IStreamOrchestratorOptions,
   IStreamOrchestratorCallbacks,
 };

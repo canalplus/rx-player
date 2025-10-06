@@ -21,7 +21,7 @@
 import { MediaError, SourceBufferError } from "../../../../errors";
 import log from "../../../../log";
 import { toTaggedTrack } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
+import type { IReadOnlyMediaElementMonitor } from "../../../../media_element_monitor";
 import type { IRange } from "../../../../utils/ranges";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import sleep from "../../../../utils/sleep";
@@ -32,13 +32,13 @@ import type {
   IPushChunkInfos,
   SegmentSink,
 } from "../../../segment_sinks";
-import type { IRepresentationStreamPlaybackObservation } from "../types";
+import type { IRepresentationStreamMediaObservation } from "../types";
 
 /**
  * Append a segment to the given segmentSink.
  * If it leads to an Error due to a full buffer, try to run our custom range
  * _garbage collector_ then retry.
- * @param {Object} playbackObserver
+ * @param {Object} mediaElementMonitor
  * @param {Object} segmentSink
  * @param {Object} dataInfos
  * @param {number} bufferGoal
@@ -46,7 +46,7 @@ import type { IRepresentationStreamPlaybackObservation } from "../types";
  * @returns {Promise}
  */
 export default async function appendSegmentToBuffer<T>(
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>,
   segmentSink: SegmentSink,
   dataInfos: IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
   bufferGoal: IReadOnlySharedReference<number>,
@@ -66,7 +66,7 @@ export default async function appendSegmentToBuffer<T>(
         tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],
       });
     }
-    const { position } = playbackObserver.getReference().getValue();
+    const { position } = mediaElementMonitor.getReference().getValue();
     const currentPos = position.getWanted();
     try {
       log.warn("Stream", "Running garbage collector");

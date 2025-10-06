@@ -20,7 +20,7 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
+import type { IReadOnlyMediaElementMonitor } from "../../../../media_element_monitor";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type {
   ISignalCompleteSegmentOperation,
@@ -29,7 +29,7 @@ import type {
 import SegmentSinksStore, { SegmentSinkOperation } from "../../../segment_sinks";
 import type {
   IBufferDiscontinuity,
-  IRepresentationStreamPlaybackObservation,
+  IRepresentationStreamMediaObservation,
   IQueuedSegment,
 } from "../types";
 import checkForDiscontinuity from "./check_for_discontinuity";
@@ -77,7 +77,7 @@ export interface IBufferStatus {
  *
  * @param {Object} content
  * @param {number} initialWantedTime
- * @param {Object} playbackObserver
+ * @param {Object} mediaElementMonitor
  * @param {number|undefined} fastSwitchThreshold
  * @param {number} bufferGoal
  * @param {number} maxBufferSize
@@ -92,7 +92,7 @@ export default function getBufferStatus(
     representation: IRepresentation;
   },
   initialWantedTime: number,
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>,
   fastSwitchThreshold: number | undefined,
   bufferGoal: number,
   maxBufferSize: number,
@@ -100,12 +100,12 @@ export default function getBufferStatus(
 ): IBufferStatus {
   const { representation } = content;
   const isPaused =
-    playbackObserver.getIsPaused() ??
-    playbackObserver.getReference().getValue().paused.pending ??
-    playbackObserver.getReference().getValue().paused.last;
+    mediaElementMonitor.getIsPaused() ??
+    mediaElementMonitor.getReference().getValue().paused.pending ??
+    mediaElementMonitor.getReference().getValue().paused.last;
   const playbackRate =
-    playbackObserver.getPlaybackRate() ??
-    playbackObserver.getReference().getValue().speed;
+    mediaElementMonitor.getPlaybackRate() ??
+    mediaElementMonitor.getReference().getValue().speed;
   let askedStart = initialWantedTime;
   if (
     isPaused === undefined ||
@@ -136,10 +136,13 @@ export default function getBufferStatus(
 
   /** Data on every segments buffered around `neededRange`. */
   const bufferedSegments = segmentSink.getLastKnownInventory();
-  let currentPlaybackTime = playbackObserver.getCurrentTime();
+  let currentPlaybackTime = mediaElementMonitor.getCurrentTime();
   if (currentPlaybackTime === undefined) {
     // We're in a WebWorker, just consider the last known position
-    currentPlaybackTime = playbackObserver.getReference().getValue().position.getWanted();
+    currentPlaybackTime = mediaElementMonitor
+      .getReference()
+      .getValue()
+      .position.getWanted();
   }
 
   /** Callback allowing to retrieve a segment's history in the buffer. */

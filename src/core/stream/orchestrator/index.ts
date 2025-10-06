@@ -18,7 +18,7 @@ import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,
-  IStreamOrchestratorPlaybackObservation,
+  IStreamOrchestratorMediaObservation,
 } from "./stream_orchestrator";
 import StreamOrchestrator from "./stream_orchestrator";
 
@@ -27,5 +27,5 @@ export type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,
-  IStreamOrchestratorPlaybackObservation,
+  IStreamOrchestratorMediaObservation,
 };

@@ -21,11 +21,11 @@ import { MediaError } from "../../../errors";
 import log from "../../../log";
 import type { IManifestMetadata, IPeriodMetadata } from "../../../manifest";
 import { getPeriodAfter } from "../../../manifest";
-import { SeekingState } from "../../../playback_observer";
+import { SeekingState } from "../../../media_element_monitor";
 import type {
-  IMediaElementPlaybackObserver,
-  IPlaybackObservation,
-} from "../../../playback_observer";
+  IMediaElementMonitor,
+  IMediaObservation,
+} from "../../../media_element_monitor";
 import type { IPlayerError } from "../../../public_types";
 import EventEmitter from "../../../utils/event_emitter";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
@@ -50,7 +50,7 @@ const EPSILON = 1 / 60;
  */
 export default class RebufferingController extends EventEmitter<IRebufferingControllerEvent> {
   /** Emit the current playback conditions */
-  private _playbackObserver: IMediaElementPlaybackObserver;
+  private _mediaElementMonitor: IMediaElementMonitor;
   private _manifest: IManifestMetadata | null;
   private _speed: IReadOnlySharedReference<number>;
   private _isStarted: boolean;
@@ -64,17 +64,17 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
   private _canceller: TaskCanceller;
 
   /**
-   * @param {object} playbackObserver - emit the current playback conditions.
+   * @param {object} mediaElementMonitor - emit the current playback conditions.
    * @param {Object} manifest - The Manifest of the currently-played content.
    * @param {Object} speed - The last speed set by the user
    */
   constructor(
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
     manifest: IManifestMetadata | null,
     speed: IReadOnlySharedReference<number>,
   ) {
     super();
-    this._playbackObserver = playbackObserver;
+    this._mediaElementMonitor = mediaElementMonitor;
     this._manifest = manifest;
     this._speed = speed;
     this._discontinuitiesStore = [];
@@ -89,14 +89,14 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     this._isStarted = true;
 
     const playbackRateUpdater = new PlaybackRateUpdater(
-      this._playbackObserver,
+      this._mediaElementMonitor,
       this._speed,
     );
     this._canceller.signal.register((err) => {
       playbackRateUpdater.dispose(err.reason);
     });
 
-    this._playbackObserver.listen(
+    this._mediaElementMonitor.listen(
       (observation) => {
         const discontinuitiesStore = this._discontinuitiesStore;
         const { buffered, position, readyState, rebuffering, freezing } = observation;
@@ -183,7 +183,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
          */
         const targetTime = observation.position.isAwaitingFuturePosition()
           ? observation.position.getWanted()
-          : this._playbackObserver.getCurrentTime();
+          : this._mediaElementMonitor.getCurrentTime();
 
         if (
           stalledPosition !== null &&
@@ -207,7 +207,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
                 lastPolledPosition: position.getPolled(),
                 realSeekTime,
               });
-              this._playbackObserver.setCurrentTime(realSeekTime);
+              this._mediaElementMonitor.setCurrentTime(realSeekTime);
               this.trigger(
                 "warning",
                 generateDiscontinuityError(stalledPosition, realSeekTime),
@@ -243,7 +243,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
               seekTo,
               BUFFER_DISCONTINUITY_THRESHOLD,
             });
-            this._playbackObserver.setCurrentTime(seekTo);
+            this._mediaElementMonitor.setCurrentTime(seekTo);
             this.trigger(
               "warning",
               generateDiscontinuityError(positionBlockedAt, seekTo),
@@ -262,7 +262,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
               this._manifest.periods[i + 1].start > targetTime
             ) {
               const nextPeriod = this._manifest.periods[i + 1];
-              this._playbackObserver.setCurrentTime(nextPeriod.start);
+              this._mediaElementMonitor.setCurrentTime(nextPeriod.start);
               this.trigger(
                 "warning",
                 generateDiscontinuityError(positionBlockedAt, nextPeriod.start),
@@ -289,7 +289,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     if (!this._isStarted) {
       this.start();
     }
-    const lastObservation = this._playbackObserver.getReference().getValue();
+    const lastObservation = this._mediaElementMonitor.getReference().getValue();
     updateDiscontinuitiesStore(this._discontinuitiesStore, evt, lastObservation);
   }
 
@@ -305,7 +305,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     if (!this._isStarted) {
       this.start();
     }
-    const observation = this._playbackObserver.getReference().getValue();
+    const observation = this._mediaElementMonitor.getReference().getValue();
     if (
       observation.rebuffering === null ||
       observation.paused ||
@@ -326,7 +326,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
         "rebuffering because of a future locked stream.\n" +
           "Trying to unlock by seeking to the next Period",
       );
-      this._playbackObserver.setCurrentTime(lockedPeriodStart + 0.001);
+      this._mediaElementMonitor.setCurrentTime(lockedPeriodStart + 0.001);
     }
   }
 
@@ -424,7 +424,7 @@ function eventContainsDiscontinuity(
 function updateDiscontinuitiesStore(
   discontinuitiesStore: IDiscontinuityStoredInfo[],
   evt: IDiscontinuityEvent,
-  observation: IPlaybackObservation,
+  observation: IMediaObservation,
 ): void {
   const gcTime = Math.min(
     observation.position.getPolled(),
@@ -495,7 +495,7 @@ function generateDiscontinuityError(stalledPosition: number, seekTo: number): Me
  * @class PlaybackRateUpdater
  */
 class PlaybackRateUpdater {
-  private _playbackObserver: IMediaElementPlaybackObserver;
+  private _mediaElementMonitor: IMediaElementMonitor;
   private _speed: IReadOnlySharedReference<number>;
   private _speedUpdateCanceller: TaskCanceller;
   private _isRebuffering: boolean;
@@ -503,16 +503,16 @@ class PlaybackRateUpdater {
 
   /**
    * Create a new `PlaybackRateUpdater`.
-   * @param {Object} playbackObserver
+   * @param {Object} mediaElementMonitor
    * @param {Object} speed
    */
   constructor(
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
     speed: IReadOnlySharedReference<number>,
   ) {
     this._speedUpdateCanceller = new TaskCanceller("PlaybackRateUpdater speed updates");
     this._isRebuffering = false;
-    this._playbackObserver = playbackObserver;
+    this._mediaElementMonitor = mediaElementMonitor;
     this._isDisposed = false;
     this._speed = speed;
     this._updateSpeed();
@@ -530,7 +530,7 @@ class PlaybackRateUpdater {
     this._isRebuffering = true;
     this._speedUpdateCanceller.cancel("start rebuffering");
     log.info("Init", "Pause playback to build buffer");
-    this._playbackObserver.setPlaybackRate(0);
+    this._mediaElementMonitor.setPlaybackRate(0);
   }
 
   /**
@@ -567,7 +567,7 @@ class PlaybackRateUpdater {
     this._speed.onUpdate(
       (lastSpeed) => {
         log.info("Init", "Resume playback speed", { newSpeed: lastSpeed });
-        this._playbackObserver.setPlaybackRate(lastSpeed);
+        this._mediaElementMonitor.setPlaybackRate(lastSpeed);
       },
       {
         clearSignal: this._speedUpdateCanceller.signal,

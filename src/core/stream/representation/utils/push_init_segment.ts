@@ -21,13 +21,13 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
+import type { IReadOnlyMediaElementMonitor } from "../../../../media_element_monitor";
 import objectAssign from "../../../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
 import type { IPushedChunkData, SegmentSink } from "../../../segment_sinks";
 import type {
-  IRepresentationStreamPlaybackObservation,
+  IRepresentationStreamMediaObservation,
   IStreamEventAddedSegmentPayload,
 } from "../types";
 import appendSegmentToBuffer from "./append_segment_to_buffer";
@@ -40,14 +40,14 @@ import appendSegmentToBuffer from "./append_segment_to_buffer";
  */
 export default async function pushInitSegment<T>(
   {
-    playbackObserver,
+    mediaElementMonitor,
     content,
     initSegmentUniqueId,
     segment,
     segmentSink,
     bufferGoal,
   }: {
-    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+    mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>;
     content: {
       adaptation: IAdaptation;
       manifest: IManifest;
@@ -75,7 +75,7 @@ export default async function pushInitSegment<T>(
     content,
   );
   const buffered = await appendSegmentToBuffer(
-    playbackObserver,
+    mediaElementMonitor,
     segmentSink,
     { data, inventoryInfos },
     bufferGoal,

@@ -30,11 +30,11 @@ import {
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
-import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
-  IReadOnlyPlaybackObserver,
-  IMediaElementPlaybackObserver,
-} from "../../playback_observer";
+  IReadOnlyMediaElementMonitor,
+  IMediaElementMonitor,
+} from "../../media_element_monitor";
+import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
   ICmcdOptions,
   IInitialManifest,
@@ -62,8 +62,8 @@ import type { ITextDisplayer } from "../text_displayer";
 import { MainThreadMessageType } from "../types";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
-import type { ICorePlaybackObservation } from "./utils/create_core_playback_observer";
-import createCorePlaybackObserver from "./utils/create_core_playback_observer";
+import type { ICoreMediaObservation } from "./utils/create_core_media_element_monitor";
+import createCoreMediaElementMonitor from "./utils/create_core_media_element_monitor";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
@@ -337,12 +337,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   /**
-   * @param {HTMLMediaElement} mediaElement
-   * @param {Object} playbackObserver
+   * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
+   * content will be played.
+   * @param {Object} mediaElementMonitor
    */
   public start(
     mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
   ): void {
     this.prepare(); // Load Manifest if not already done
     if (this._initCanceller.isUsed()) {
@@ -402,7 +403,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const playbackStartParams = {
       mediaElement,
       textDisplayer,
-      playbackObserver,
+      mediaElementMonitor,
       drmInitializationStatus,
       mediaSourceStatus,
     };
@@ -487,7 +488,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         log.warn("Init", "Asked to reload when no content is loaded.");
         return;
       }
-      const lastObservation = playbackObserver.getReference().getValue();
+      const lastObservation = mediaElementMonitor.getReference().getValue();
       const currentPosition = lastObservation.position.getWanted();
       const isPaused =
         reloadingContentInfo.initialPlayPerformed?.getValue() === true ||
@@ -505,7 +506,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       this._reload(
         mediaElement,
         textDisplayer,
-        playbackObserver,
+        mediaElementMonitor,
         mediaSourceStatus,
         position,
         !isPaused,
@@ -787,7 +788,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          const lastObservation = playbackObserver.getReference().getValue();
+          const lastObservation = mediaElementMonitor.getReference().getValue();
           const currentTime = lastObservation.position.isAwaitingFuturePosition()
             ? lastObservation.position.getWanted()
             : mediaElement.currentTime;
@@ -804,7 +805,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           } else {
             wantedSeekingTime = currentTime + relativeResumingPosition;
           }
-          playbackObserver.setCurrentTime(wantedSeekingTime);
+          mediaElementMonitor.setCurrentTime(wantedSeekingTime);
           break;
         }
 
@@ -950,7 +951,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
             return;
           }
-          playbackObserver.setPlaybackRate(msgData.value);
+          mediaElementMonitor.setPlaybackRate(msgData.value);
           break;
 
         case CoreMessageType.BitrateEstimateChange:
@@ -1224,16 +1225,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
               notifyAndStartMediaSourceReload(0, undefined, undefined);
             } else {
-              const lastObservation = playbackObserver.getReference().getValue();
+              const lastObservation = mediaElementMonitor.getReference().getValue();
 
               const currentPosition = lastObservation.position.getWanted();
 
               // simple seek close to the current position
               // to flush the buffers
               if (currentPosition + 0.001 < lastObservation.duration) {
-                playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
+                mediaElementMonitor.setCurrentTime(mediaElement.currentTime + 0.001);
               } else {
-                playbackObserver.setCurrentTime(currentPosition);
+                mediaElementMonitor.setCurrentTime(currentPosition);
               }
             }
           }
@@ -1545,7 +1546,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _reload(
     mediaElement: IMediaElement,
     textDisplayer: ITextDisplayer | null,
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     position: number,
     autoPlay: boolean,
@@ -1562,27 +1563,27 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           return;
         }
         stopListeningMSStatusUpdates();
-        const corePlaybackObserver = this._setUpModulesOnNewMediaSource(
+        const coreMediaElementMonitor = this._setUpModulesOnNewMediaSource(
           {
             initialTime: position,
             autoPlay,
             mediaElement,
             textDisplayer,
-            playbackObserver,
+            mediaElementMonitor,
           },
           this._currentMediaSourceCanceller.signal,
         );
 
         if (
           !this._currentMediaSourceCanceller.isUsed() &&
-          corePlaybackObserver !== null &&
+          coreMediaElementMonitor !== null &&
           this._currentContentInfo !== null
         ) {
           const contentId = this._currentContentInfo.contentId;
-          corePlaybackObserver.listen(
+          coreMediaElementMonitor.listen(
             (obs) => {
               this._settings.coreInterface.sendMessage({
-                type: MainThreadMessageType.PlaybackObservation,
+                type: MainThreadMessageType.MediaObservation,
                 contentId,
                 value: objectAssign(obs, {
                   position: obs.position.serialize(),
@@ -1613,9 +1614,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    *
    * @param {Object} parameters
    * @param {Object} cancelSignal
-   * @returns {Object|null} - Playback Observer created for this content. `null`
-   * only if playback initialization failed (most likely because it has been
-   * cancelled).
+   * @returns {Object|null} - `MediaElementMonitor` created for this content.
+   * `null` only if playback initialization failed (most likely because it has
+   * been cancelled).
    */
   private _setUpModulesOnNewMediaSource(
     parameters: {
@@ -1623,10 +1624,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       autoPlay: boolean;
       mediaElement: IMediaElement;
       textDisplayer: ITextDisplayer | null;
-      playbackObserver: IMediaElementPlaybackObserver;
+      mediaElementMonitor: IMediaElementMonitor;
     },
     cancelSignal: CancellationSignal,
-  ): IReadOnlyPlaybackObserver<ICorePlaybackObservation> | null {
+  ): IReadOnlyMediaElementMonitor<ICoreMediaObservation> | null {
     if (cancelSignal.isCancelled()) {
       return null;
     }
@@ -1641,7 +1642,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     const { manifest, mediaSourceInfo } = this._currentContentInfo;
     const { speed } = this._settings;
-    const { initialTime, autoPlay, mediaElement, textDisplayer, playbackObserver } =
+    const { initialTime, autoPlay, mediaElement, textDisplayer, mediaElementMonitor } =
       parameters;
     this._currentContentInfo.initialTime = initialTime;
     this._currentContentInfo.autoPlay = autoPlay;
@@ -1649,7 +1650,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const { autoPlayResult, initialPlayPerformed } = performInitialSeekAndPlay(
       {
         mediaElement,
-        playbackObserver,
+        mediaElementMonitor,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
         onWarning: (err) => this.trigger("warning", err),
@@ -1658,8 +1659,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       cancelSignal,
     );
     this._currentContentInfo.initialPlayPerformed = initialPlayPerformed;
-    const corePlaybackObserver = createCorePlaybackObserver(
-      playbackObserver,
+    const coreMediaElementMonitor = createCoreMediaElementMonitor(
+      mediaElementMonitor,
       {
         autoPlay,
         initialPlayPerformed,
@@ -1681,7 +1682,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      * events when it cannot, as well as "unstalled" events when it get out of one.
      */
     const rebufferingController = new RebufferingController(
-      playbackObserver,
+      mediaElementMonitor,
       manifest,
       speed,
     );
@@ -1705,7 +1706,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       (isPerformed, stopListening) => {
         if (isPerformed) {
           stopListening();
-          const streamEventsEmitter = new StreamEventsEmitter(manifest, playbackObserver);
+          const streamEventsEmitter = new StreamEventsEmitter(
+            manifest,
+            mediaElementMonitor,
+          );
           currentContentInfo.streamEventsEmitter = streamEventsEmitter;
           streamEventsEmitter.addEventListener(
             "event",
@@ -1799,7 +1803,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
      */
     autoPlayResult
       .then(() => {
-        getLoadedReference(playbackObserver, false, cancelSignal).onUpdate(
+        getLoadedReference(mediaElementMonitor, false, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();
@@ -1819,7 +1823,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         this._onFatalError(err);
       });
 
-    return corePlaybackObserver;
+    return coreMediaElementMonitor;
   }
 
   /**
@@ -1841,7 +1845,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   private _startPlaybackIfReady(parameters: {
     mediaElement: IMediaElement;
     textDisplayer: ITextDisplayer | null;
-    playbackObserver: IMediaElementPlaybackObserver;
+    mediaElementMonitor: IMediaElementMonitor;
     drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
     mediaSourceStatus: IReadOnlySharedReference<MediaSourceInitializationStatus>;
   }): boolean {
@@ -1866,21 +1870,21 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     );
     log.debug("Init", "Initial time calculated", { initialTime });
     const { enableFastSwitching, onCodecSwitch } = this._settings.bufferOptions;
-    const corePlaybackObserver = this._setUpModulesOnNewMediaSource(
+    const coreMediaElementMonitor = this._setUpModulesOnNewMediaSource(
       {
         initialTime,
         autoPlay: this._settings.autoPlay,
         mediaElement: parameters.mediaElement,
         textDisplayer: parameters.textDisplayer,
-        playbackObserver: parameters.playbackObserver,
+        mediaElementMonitor: parameters.mediaElementMonitor,
       },
       this._currentMediaSourceCanceller.signal,
     );
 
-    if (this._currentMediaSourceCanceller.isUsed() || corePlaybackObserver === null) {
+    if (this._currentMediaSourceCanceller.isUsed() || coreMediaElementMonitor === null) {
       return true;
     }
-    const initialObservation = corePlaybackObserver.getReference().getValue();
+    const initialObservation = coreMediaElementMonitor.getReference().getValue();
     const sentInitialObservation = objectAssign(initialObservation, {
       position: initialObservation.position.serialize(),
     });
@@ -1896,10 +1900,10 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       },
     });
 
-    corePlaybackObserver.listen(
+    coreMediaElementMonitor.listen(
       (obs) => {
         this._settings.coreInterface.sendMessage({
-          type: MainThreadMessageType.PlaybackObservation,
+          type: MainThreadMessageType.MediaObservation,
           contentId,
           value: objectAssign(obs, { position: obs.position.serialize() }),
         });

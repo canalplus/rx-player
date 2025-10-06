@@ -5,7 +5,7 @@ import type {
   IFreezingStatus,
   IRebufferingStatus,
   ObservationPosition,
-} from "../../playback_observer";
+} from "../../media_element_monitor";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import type SegmentSinksStore from "../segment_sinks";
 import type { IBufferedChunk } from "../segment_sinks";
@@ -192,7 +192,7 @@ export default class FreezeResolver {
    *
    * Refer to the returned type's definition for more information.
    *
-   * @param {Object} observation - The last playback observation produced, it
+   * @param {Object} observation - The last media observation produced, it
    * has to be recent (just triggered for example).
    * @returns {Object|null}
    */
@@ -291,7 +291,7 @@ export default class FreezeResolver {
    * an object describing this wanted unfreezing strategy.
    *
    * If this method decides to take no action for now, it returns `null`.
-   * @param {Object} observation - playback observation that has just been
+   * @param {Object} observation - media observation that has just been
    * performed.
    * @param {number} now - Monotonically-raising timestamp for the current
    * time.
@@ -568,7 +568,7 @@ function haveBuffersUndecipherableData(segmentSinksStore: SegmentSinksStore): {
 
 /**
  * Constructs a `bufferGap` value that is more usable than what the
- * `PlaybackObserver` returns:
+ * `MediaElementMonitor` returns:
  *   - it cannot be `undefined`
  *   - its weird `Infinity` value is translated to the more explicit `0`.
  * @param {number|undefined} bufferGap
@@ -596,7 +596,7 @@ interface IPlayedHistoryEntry {
   timestamp: number;
 }
 
-/** Playback observation needed by the `FreezeResolver`. */
+/** Media observation needed by the `FreezeResolver`. */
 export interface IFreezeResolverObservation {
   /** Current `readyState` value on the media element. */
   readyState: number;
