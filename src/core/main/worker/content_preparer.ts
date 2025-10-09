@@ -1,7 +1,7 @@
 import { MediaSource_ } from "../../../compat/browser_compatibility_types";
 import features from "../../../features";
 import log from "../../../log";
-import type { IManifest, IManifestMetadata } from "../../../manifest";
+import type { IManifest } from "../../../manifest";
 import { createRepresentationFilterFromFnString } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
 import type { IMediaSourceInterface } from "../../../mse";
@@ -10,13 +10,12 @@ import WorkerMediaSourceInterface from "../../../mse/worker_media_source_interfa
 import type {
   IAttachMediaSourceWorkerMessagePayload,
   IContentInitializationData,
+  IWorkerMessage,
 } from "../../../multithread_types";
 import { WorkerMessageType } from "../../../multithread_types";
 import type { IPlayerError } from "../../../public_types";
-import assert from "../../../utils/assert";
 import idGenerator from "../../../utils/id_generator";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import objectAssign from "../../../utils/object_assign";
 import type {
   CancellationError,
   CancellationSignal,
@@ -24,6 +23,7 @@ import type {
 import TaskCanceller from "../../../utils/task_canceller";
 import type { IRepresentationEstimator } from "../../adaptive";
 import createAdaptiveRepresentationSelector from "../../adaptive";
+import type { IRepresentationEstimatorThrottlers } from "../../adaptive/adaptive_representation_selector";
 import CmcdDataBuilder from "../../cmcd";
 import type { IManifestRefreshSettings } from "../../fetchers";
 import { ManifestFetcher, SegmentQueueCreator } from "../../fetchers";
@@ -32,9 +32,8 @@ import createThumbnailFetcher from "../../fetchers/thumbnails/thumbnail_fetcher"
 import type { IThumbnailFetcher } from "../../fetchers/thumbnails/thumbnail_fetcher";
 import SegmentSinksStore from "../../segment_sinks";
 import FreezeResolver from "../common/FreezeResolver";
-import { limitVideoResolution, throttleVideoBitrate } from "./globals";
-import sendMessage, { formatErrorForSender } from "./send_message";
 import TrackChoiceSetter from "./track_choice_setter";
+import { formatErrorForSender } from "./utils";
 import WorkerTextDisplayerInterface from "./worker_text_displayer_interface";
 
 /** Function allowing to associate a unique identifier to all created `MediaSource` */
@@ -111,8 +110,11 @@ export default class ContentPreparer {
    * @returns {Promise.<Object>}
    */
   public initializeNewContent(
+    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
-  ): Promise<IManifestMetadata> {
+    /** Allows to filter which Representations can be choosen. */
+    throttlers: IRepresentationEstimatorThrottlers,
+  ): Promise<IManifest> {
     return new Promise((res, rej) => {
       this.disposeCurrentContent();
       const contentCanceller = this._contentCanceller;
@@ -128,19 +130,25 @@ export default class ContentPreparer {
         transportOptions,
         useMseInWorker,
         enableRepresentationAvoidance,
+        transport,
       } = context;
       let manifest: IManifest | null = null;
 
-      // TODO better way
-      assert(
-        features.transports.dash !== undefined,
-        "Multithread RxPlayer should have access to the DASH feature",
-      );
+      const transportFn = features.transports[transport];
+      if (typeof transportFn !== "function") {
+        rej(
+          new Error(
+            `transport "${transport}" not supported. ` +
+              "Did you add the corresponding feature?",
+          ),
+        );
+        return;
+      }
       const representationFilter =
         typeof transportOptions.representationFilter === "string"
           ? createRepresentationFilterFromFnString(transportOptions.representationFilter)
-          : undefined;
-      const dashPipelines = features.transports.dash({
+          : transportOptions.representationFilter;
+      const transportPipelines = transportFn({
         ...transportOptions,
         representationFilter,
       });
@@ -149,7 +157,7 @@ export default class ContentPreparer {
         context.cmcd === undefined ? null : new CmcdDataBuilder(context.cmcd);
       const manifestFetcher = new ManifestFetcher(
         url === undefined ? undefined : [url],
-        dashPipelines,
+        transportPipelines,
         {
           cmcdDataBuilder,
           ...context.manifestRetryOptions,
@@ -161,10 +169,7 @@ export default class ContentPreparer {
           video: context.initialVideoBitrate ?? 0,
         },
         lowLatencyMode: transportOptions.lowLatencyMode,
-        throttlers: {
-          limitResolution: { video: limitVideoResolution },
-          throttleBitrate: { video: throttleVideoBitrate },
-        },
+        throttlers,
       });
 
       const unbindRejectOnCancellation = currentMediaSourceCanceller.signal.register(
@@ -175,13 +180,13 @@ export default class ContentPreparer {
 
       const cdnPrioritizer = new CdnPrioritizer(contentCanceller.signal);
       const segmentQueueCreator = new SegmentQueueCreator(
-        dashPipelines,
+        transportPipelines,
         cdnPrioritizer,
         cmcdDataBuilder,
         context.segmentRetryOptions,
       );
       const fetchThumbnailData = createThumbnailFetcher(
-        dashPipelines.thumbnails,
+        transportPipelines.thumbnails,
         cdnPrioritizer,
       );
 
@@ -189,6 +194,7 @@ export default class ContentPreparer {
 
       const [mediaSource, segmentSinksStore, workerTextSender] =
         createMediaSourceInterfaceAndSegmentSinksStore(
+          sendMessage,
           contentId,
           {
             useMseInWorker,
@@ -274,7 +280,6 @@ export default class ContentPreparer {
           return;
         }
         updateCodecSupportInWorkerMode(manifest);
-        const sentManifest = manifest.getMetadataSnapshot();
         manifest.addEventListener(
           "manifestUpdate",
           (updates) => {
@@ -282,22 +287,16 @@ export default class ContentPreparer {
               // TODO log warn?
               return;
             }
-
-            // Remove `periods` key to reduce cost of an unnecessary manifest
-            // clone.
-            const snapshot = objectAssign(manifest.getMetadataSnapshot(), {
-              periods: [],
-            });
             sendMessage({
               type: WorkerMessageType.ManifestUpdate,
               contentId,
-              value: { manifest: snapshot, updates },
+              value: { manifest, updates },
             });
           },
           contentCanceller.signal,
         );
         unbindRejectOnCancellation();
-        res(sentManifest);
+        res(manifest);
       }
     });
   }
@@ -329,7 +328,9 @@ export default class ContentPreparer {
    * The returned Promise resolves when it restarts being ready.
    * @returns {Promise}
    */
-  public reloadMediaSource(): Promise<void> {
+  public reloadMediaSource(
+    sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  ): Promise<void> {
     this._currentMediaSourceCanceller.cancel();
     if (this._currentContent === null) {
       return Promise.reject(new Error("CP: No content anymore"));
@@ -339,6 +340,7 @@ export default class ContentPreparer {
 
     const [mediaSourceInterface, segmentSinksStore, workerTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
+        sendMessage,
         this._currentContent.contentId,
         {
           useMseInWorker: this._currentContent.useMseInWorker,
@@ -455,6 +457,7 @@ export interface IPreparedContentData {
 }
 
 /**
+ * @param {Function} sendMessage
  * @param {string} contentId
  * @param {Object} capabilities
  * @param {boolean} capabilities.useMseInWorker
@@ -464,6 +467,7 @@ export interface IPreparedContentData {
  * @returns {Array.<Object>}
  */
 function createMediaSourceInterfaceAndSegmentSinksStore(
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   contentId: string,
   capabilities: {
     useMseInWorker: boolean;

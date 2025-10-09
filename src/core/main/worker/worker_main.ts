@@ -9,18 +9,15 @@ import type {
   IMainThreadMessage,
   IReferenceUpdateMessage,
   IThumbnailDataRequestMainMessage,
+  IWorkerMessage,
 } from "../../../multithread_types";
 import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_types";
-import DashJsParser from "../../../parsers/manifest/dash/js-parser";
-import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
 import { ObservationPosition } from "../../../playback_observer";
 import type { IWorkerPlaybackObservation } from "../../../playback_observer/worker_playback_observer";
 import WorkerPlaybackObserver from "../../../playback_observer/worker_playback_observer";
 import type { IPlayerError, ITrackType } from "../../../public_types";
-import createDashPipelines from "../../../transports/dash";
 import arrayFind from "../../../utils/array_find";
 import assert, { assertUnreachable } from "../../../utils/assert";
-import globalScope from "../../../utils/global_scope";
 import type { ILogFormat, ILoggerLevel } from "../../../utils/logger";
 import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
 import objectAssign from "../../../utils/object_assign";
@@ -33,23 +30,52 @@ import type {
   IStreamStatusPayload,
 } from "../../stream";
 import StreamOrchestrator from "../../stream";
+import type { IResolutionInfo } from "../../types";
 import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
 import type { IFreezeResolution } from "../common/FreezeResolver";
 import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
 import getThumbnailData from "../common/get_thumbnail_data";
 import synchronizeSegmentSinksOnObservation from "../common/synchronize_sinks_on_observation";
 import ContentPreparer from "./content_preparer";
-import {
-  limitVideoResolution,
-  maxBufferAhead,
-  maxBufferBehind,
-  maxVideoBufferSize,
-  throttleVideoBitrate,
-  wantedBufferAhead,
-} from "./globals";
-import sendMessage, { formatErrorForSender } from "./send_message";
+import { formatErrorForSender } from "./utils";
 
-export default function initializeWorkerMain() {
+export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => void;
+
+/**
+ * Initialize a `WorkerMain`, which is the part of the RxPlayer acting as an
+ * entry point to all its "core" code.
+ *
+ * Its role is to receive and react to messages coming from "main thead", which
+ * may include loading and playing a content, and to send back messages for the main
+ * thread.
+ * @param {Function} setMessageReceiver - Declares the function that will
+ * receive messages coming from the "main thread" part of the RxPlayer logic.
+ * @param {Function} sendMessage - Function allowing to send messages to the
+ * "main thread" part of the RxPlayer logic.
+ */
+export default function initializeWorkerMain(
+  setMessageReceiver: (cb: IMessageReceiverCallback) => void,
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+): void {
+  const {
+    DEFAULT_WANTED_BUFFER_AHEAD,
+    DEFAULT_MAX_VIDEO_BUFFER_SIZE,
+    DEFAULT_MAX_BUFFER_AHEAD,
+    DEFAULT_MAX_BUFFER_BEHIND,
+  } = config.getCurrent();
+  const refs: ICoreReferences = {
+    wantedBufferAhead: new SharedReference(DEFAULT_WANTED_BUFFER_AHEAD),
+    maxVideoBufferSize: new SharedReference(DEFAULT_MAX_VIDEO_BUFFER_SIZE),
+    maxBufferAhead: new SharedReference(DEFAULT_MAX_BUFFER_AHEAD),
+    maxBufferBehind: new SharedReference(DEFAULT_MAX_BUFFER_BEHIND),
+    limitVideoResolution: new SharedReference<IResolutionInfo>({
+      height: undefined,
+      width: undefined,
+      pixelRatio: 1,
+    }),
+    throttleVideoBitrate: new SharedReference(Infinity),
+  };
+
   /**
    * `true` once the worker has been initialized.
    * Allow to enforce the fact that it is only initialized once.
@@ -68,48 +94,44 @@ export default function initializeWorkerMain() {
    */
   let currentContentHandle: IContentHandle | null = null;
 
-  // Initialize Manually a `DashWasmParser` and add the feature.
-  // TODO allow worker-side feature-switching? Not sure how
-  const dashWasmParser = new DashWasmParser();
-  features.dashParsers.wasm = dashWasmParser;
-  features.dashParsers.js = DashJsParser;
-  features.transports.dash = createDashPipelines;
-
   /**
    * When set, emit playback observation made on the main thread.
    */
   let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
-
-  globalScope.onmessageerror = (_msg: MessageEvent) => {
-    log.error("Core", "Error when receiving message from main thread.");
-  };
-  onmessage = function (e: MessageEvent<IMainThreadMessage>) {
+  setMessageReceiver((e) => {
     log.debug("Core", "received message", { name: e.data.type });
 
     const msg = e.data;
     switch (msg.type) {
       case MainThreadMessageType.Init:
-        assert(!isInitialized);
-        isInitialized = true;
-        scaleTimestamp(msg.value);
-        updateLoggerLevel(
-          msg.value.logLevel,
-          msg.value.logFormat,
-          msg.value.sendBackLogs,
-        );
-        if (msg.value.dashWasmUrl !== undefined && dashWasmParser.isCompatible()) {
-          dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
-            const error = err instanceof Error ? err.toString() : "Unknown Error";
-            log.error("Core", "Could not initialize DASH_WASM parser", error);
-          });
-        }
+        {
+          assert(!isInitialized);
+          isInitialized = true;
+          scaleTimestamp(msg.value);
+          updateLoggerLevel(
+            msg.value.logLevel,
+            msg.value.logFormat,
+            msg.value.sendBackLogs,
+          );
+          const dashWasmParser = features.dashParsers.wasm;
+          if (
+            dashWasmParser !== null &&
+            msg.value.dashWasmUrl !== undefined &&
+            dashWasmParser.isCompatible()
+          ) {
+            dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
+              const error = err instanceof Error ? err.toString() : "Unknown Error";
+              log.error("Core", "Could not initialize DASH_WASM parser", error);
+            });
+          }
 
-        if (!msg.value.hasVideo) {
-          contentPreparer.disposeCurrentContent();
-          contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
-        }
+          if (!msg.value.hasVideo) {
+            contentPreparer.disposeCurrentContent();
+            contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
+          }
 
-        sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
+          sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
+        }
         break;
 
       case MainThreadMessageType.LogLevelUpdate:
@@ -121,7 +143,7 @@ export default function initializeWorkerMain() {
         break;
 
       case MainThreadMessageType.PrepareContent:
-        prepareNewContent(contentPreparer, msg.value);
+        prepareNewContent(sendMessage, contentPreparer, msg.value, refs);
         break;
 
       case MainThreadMessageType.StartPreparedContent: {
@@ -141,9 +163,11 @@ export default function initializeWorkerMain() {
           );
         playbackObservationRef = currentContentObservationRef;
         currentContentHandle = loadPreparedContent(
+          sendMessage,
           msg.value,
           contentPreparer,
           currentContentObservationRef,
+          refs,
         );
         break;
       }
@@ -174,7 +198,7 @@ export default function initializeWorkerMain() {
       }
 
       case MainThreadMessageType.ReferenceUpdate:
-        updateGlobalReference(msg);
+        updateCoreReference(msg, refs);
         break;
 
       case MainThreadMessageType.StopContent:
@@ -411,12 +435,12 @@ export default function initializeWorkerMain() {
       }
 
       case MainThreadMessageType.PullSegmentSinkStoreInfos: {
-        sendSegmentSinksStoreInfos(contentPreparer, msg.value.requestId);
+        sendSegmentSinksStoreInfos(sendMessage, contentPreparer, msg.value.requestId);
         break;
       }
 
       case MainThreadMessageType.ThumbnailDataRequest: {
-        sendThumbnailData(contentPreparer, msg);
+        sendThumbnailData(sendMessage, contentPreparer, msg);
         break;
       }
 
@@ -428,50 +452,72 @@ export default function initializeWorkerMain() {
       default:
         assertUnreachable(msg);
     }
-  };
+  });
 }
 
+/**
+ * Performs steps needed to prepare a future content to be played:
+ *   - Load its Manifest file
+ *   - Create MSE `MediaSource` for that content.
+ *   - Initialize all modules that will follow that content
+ *   - etc.
+ * @param {Function} sendMessage - Function allowing to send messages to the
+ * "main thread" part of the RxPlayer logic.
+ * @param {ContentPreparer} contentPreparer
+ * @param {Object} contentInitData - Configuration wanted for the content to
+ * load.
+ * @param {Object} refs - Collection of so-called "references": values
+ * configuring playback that may be updated at any time and that the
+ * WorkerMain should react on.
+ */
 function prepareNewContent(
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   contentPreparer: ContentPreparer,
   contentInitData: IContentInitializationData,
+  refs: ICoreReferences,
 ): void {
-  contentPreparer.initializeNewContent(contentInitData).then(
-    (manifest) => {
-      sendMessage({
-        type: WorkerMessageType.ManifestReady,
-        contentId: contentInitData.contentId,
-        value: { manifest },
-      });
-    },
-    (err: unknown) => {
-      sendMessage({
-        type: WorkerMessageType.Error,
-        contentId: contentInitData.contentId,
-        value: formatErrorForSender(err),
-      });
-    },
-  );
+  contentPreparer
+    .initializeNewContent(sendMessage, contentInitData, {
+      limitResolution: { video: refs.limitVideoResolution },
+      throttleBitrate: { video: refs.throttleVideoBitrate },
+    })
+    .then(
+      (manifest) => {
+        sendMessage({
+          type: WorkerMessageType.ManifestReady,
+          contentId: contentInitData.contentId,
+          value: { manifest },
+        });
+      },
+      (err: unknown) => {
+        sendMessage({
+          type: WorkerMessageType.Error,
+          contentId: contentInitData.contentId,
+          value: formatErrorForSender(err),
+        });
+      },
+    );
 }
 
-function updateGlobalReference(msg: IReferenceUpdateMessage): void {
+function updateCoreReference(msg: IReferenceUpdateMessage, refs: ICoreReferences): void {
   switch (msg.value.name) {
     case "wantedBufferAhead":
-      wantedBufferAhead.setValueIfChanged(msg.value.newVal);
+      refs.wantedBufferAhead.setValueIfChanged(msg.value.newVal);
       break;
     case "maxVideoBufferSize":
-      maxVideoBufferSize.setValueIfChanged(msg.value.newVal);
+      refs.maxVideoBufferSize.setValueIfChanged(msg.value.newVal);
       break;
     case "maxBufferBehind":
-      maxBufferBehind.setValueIfChanged(msg.value.newVal);
+      refs.maxBufferBehind.setValueIfChanged(msg.value.newVal);
       break;
     case "maxBufferAhead":
-      maxBufferAhead.setValueIfChanged(msg.value.newVal);
+      refs.maxBufferAhead.setValueIfChanged(msg.value.newVal);
       break;
     case "limitVideoResolution":
-      limitVideoResolution.setValueIfChanged(msg.value.newVal);
+      refs.limitVideoResolution.setValueIfChanged(msg.value.newVal);
       break;
     case "throttleVideoBitrate":
-      throttleVideoBitrate.setValueIfChanged(msg.value.newVal);
+      refs.throttleVideoBitrate.setValueIfChanged(msg.value.newVal);
       break;
     default:
       assertUnreachable(msg.value);
@@ -507,9 +553,11 @@ interface IContentHandle {
 }
 
 function loadPreparedContent(
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   val: ILoadingContentParameters,
   contentPreparer: ContentPreparer,
   playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+  refs: ICoreReferences,
 ): IContentHandle {
   log.debug("Core", "Loading pepared content.");
   const contentCanceller = new TaskCanceller();
@@ -572,7 +620,7 @@ function loadPreparedContent(
         const freezeResolution =
           preparedContent.freezeResolver.onNewObservation(observation);
         if (freezeResolution !== null) {
-          handleFreezeResolution(freezeResolution, {
+          handleFreezeResolution(sendMessage, freezeResolution, {
             contentId,
             manifest,
             handleMediaSourceReload: performMediaSourceReload,
@@ -639,10 +687,10 @@ function loadPreparedContent(
       segmentSinksStore,
       segmentQueueCreator,
       {
-        wantedBufferAhead,
-        maxVideoBufferSize,
-        maxBufferAhead,
-        maxBufferBehind,
+        wantedBufferAhead: refs.wantedBufferAhead,
+        maxVideoBufferSize: refs.maxVideoBufferSize,
+        maxBufferAhead: refs.maxBufferAhead,
+        maxBufferBehind: refs.maxBufferBehind,
         drmSystemId,
         enableFastSwitching,
         onCodecSwitch,
@@ -963,7 +1011,7 @@ function loadPreparedContent(
       currentLoadCanceller = null;
     }
     const contentId = contentPreparer.getCurrentContent()?.contentId;
-    contentPreparer.reloadMediaSource().then(
+    contentPreparer.reloadMediaSource(sendMessage).then(
       () => {
         log.info("Core", "MediaSource Reloaded, loading content again", {
           newInitialTime,
@@ -1018,10 +1066,12 @@ function updateLoggerLevel(
 /**
  * Send a message `SegmentSinkStoreUpdate` to the main thread with
  * a serialized object that represents the segmentSinksStore state.
+ * @param {Function} sendMessage - Function allowing to send messages to the
+ * "main thread" part of the RxPlayer logic.
  * @param {ContentPreparer} contentPreparer
- * @returns {void}
  */
 function sendSegmentSinksStoreInfos(
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   contentPreparer: ContentPreparer,
   requestId: number,
 ): void {
@@ -1039,6 +1089,8 @@ function sendSegmentSinksStoreInfos(
 
 /**
  * Handle accordingly an `IFreezeResolution` object.
+ * @param {Function} sendMessage - Function allowing to send messages to the
+ * "main thread" part of the RxPlayer logic.
  * @param {Object|null} freezeResolution - The `IFreezeResolution` suggested.
  * @param {Object} param - Parameters that might be needed to implement the
  * resolution.
@@ -1052,6 +1104,7 @@ function sendSegmentSinksStoreInfos(
  * `IFreezeResolution` object suggest it.
  */
 function handleFreezeResolution(
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   freezeResolution: IFreezeResolution,
   {
     contentId,
@@ -1111,6 +1164,7 @@ function handleFreezeResolution(
  * @returns {void}
  */
 function sendThumbnailData(
+  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
   contentPreparer: ContentPreparer,
   msg: IThumbnailDataRequestMainMessage,
 ): void {
@@ -1160,4 +1214,21 @@ function sendThumbnailData(
       return respondWithError(err);
     },
   );
+}
+
+/**
+ * Collection of so-called "references": values configuring playback that may
+ * be updated at any time and that the WorkerMain should react on.
+ */
+export interface ICoreReferences {
+  limitVideoResolution: SharedReference<IResolutionInfo>;
+  /** Max buffer size after the current position, in seconds (we GC further up). */
+  maxBufferAhead: SharedReference<number>;
+  /** Max buffer size before the current position, in seconds (we GC further down). */
+  maxBufferBehind: SharedReference<number>;
+  /** Buffer maximum size in kiloBytes at which we stop downloading */
+  maxVideoBufferSize: SharedReference<number>;
+  throttleVideoBitrate: SharedReference<number>;
+  /** Buffer "goal" at which we stop downloading new segments. */
+  wantedBufferAhead: SharedReference<number>;
 }

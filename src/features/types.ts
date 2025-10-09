@@ -15,10 +15,14 @@
  */
 
 import type { IMediaElement } from "../compat/browser_compatibility_types";
+import type IInitializeWorkerMain from "../core/main/worker";
 import type { SegmentSink } from "../core/segment_sinks";
+import type {
+  WorkerCoreInterface,
+  MonoThreadCoreInterface,
+} from "../main_thread/core_interface/types";
 import type ContentDecryptor from "../main_thread/decrypt";
 import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
-import type MediaSourceContentInitializer from "../main_thread/init/media_source_content_initializer";
 import type MultiThreadContentInitializer from "../main_thread/init/multi_thread_content_initializer";
 import type HTMLTextDisplayer from "../main_thread/text_displayer/html";
 import type NativeTextDisplayer from "../main_thread/text_displayer/native/native_text_displayer";
@@ -114,14 +118,29 @@ export interface IFeaturesObject {
    * Feature allowing to load contents through MediaSource API through the
    * main thread.
    */
-  mainThreadMediaSourceInit: typeof MediaSourceContentInitializer | null;
+  monothread: {
+    /** Class to load a content through the MediaSource API. */
+    init: typeof MultiThreadContentInitializer;
+    /** The RxPlayer's core logic. */
+    workerMain: typeof IInitializeWorkerMain;
+    /**
+     * Class allowing to exchange messages with the RxPlayer's `core`, here
+     * running in `workerMain`
+     */
+    coreInterface: typeof MonoThreadCoreInterface;
+  } | null;
   /**
    * Features allowing to load contents through MediaSource API through
    * a WebWorker.
    */
   multithread: {
-    /** Class to load a content through MediaSource API via a WebWorker. */
+    /** Class to load a content through the MediaSource API. */
     init: typeof MultiThreadContentInitializer;
+    /**
+     * Class allowing to exchange messages with the RxPlayer's `core`, here
+     * running in another thread.
+     */
+    coreInterface: typeof WorkerCoreInterface;
   } | null;
   /**
    * Function for loading and parsing contents through various protocols, by

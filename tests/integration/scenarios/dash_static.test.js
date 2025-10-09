@@ -283,6 +283,7 @@ describe("DASH non-linear content with number-based SegmentTimeline", function (
       segmentLoader,
     });
 
+    await sleep(0);
     expect(requestedManifests).to.have.length(1);
     expect(requestedSegments).to.be.empty;
     expect(requestedManifests[0]).to.equal(numberBasedTimelineManifestInfos.url);

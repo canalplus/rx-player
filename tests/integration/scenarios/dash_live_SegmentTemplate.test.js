@@ -5,6 +5,7 @@ import {
   noTimeShiftBufferDepthManifestInfos,
 } from "../../contents/DASH_dynamic_SegmentTemplate";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
+import sleep from "../../utils/sleep.js";
 
 describe("DASH live content (SegmentTemplate)", function () {
   let player;
@@ -41,6 +42,7 @@ describe("DASH live content (SegmentTemplate)", function () {
         },
       },
     });
+    await sleep(0);
 
     expect(manifestLoaderCalledTimes).to.equal(1);
     expect(player.getPlayerState()).to.equal("LOADING");
@@ -280,6 +282,7 @@ describe("DASH live content without timeShiftBufferDepth (SegmentTemplate)", fun
         },
       },
     });
+    await sleep(0);
 
     expect(manifestLoaderCalledTimes).to.equal(1);
     expect(player.getPlayerState()).to.equal("LOADING");

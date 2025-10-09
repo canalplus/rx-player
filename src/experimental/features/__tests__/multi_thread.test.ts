@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { IFeaturesObject } from "../../../features/types";
+import { WorkerCoreInterface } from "../../../main_thread/core_interface/multithread";
 import MultiThreadContentInitializer from "../../../main_thread/init/multi_thread_content_initializer";
 import addMultiThreadFeature from "../multi_thread";
 
@@ -8,10 +9,14 @@ describe("Features list - EME", () => {
     const featureObject: IFeaturesObject = {} as IFeaturesObject;
     addMultiThreadFeature(featureObject);
     expect(featureObject).toEqual({
-      multithread: { init: MultiThreadContentInitializer },
+      multithread: {
+        init: MultiThreadContentInitializer,
+        coreInterface: WorkerCoreInterface,
+      },
     });
     expect(featureObject.multithread).not.toBe(null);
     expect(featureObject.multithread).not.toBe(undefined);
     expect(featureObject.multithread?.init).toBe(MultiThreadContentInitializer);
+    expect(featureObject.multithread?.coreInterface).toBe(WorkerCoreInterface);
   });
 });

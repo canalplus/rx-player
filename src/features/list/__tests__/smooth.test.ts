@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer";
+import initializeWorkerMain from "../../../core/main/worker";
+import { MonoThreadCoreInterface } from "../../../main_thread/core_interface/monothread";
+import MultiThreadContentInitializer from "../../../main_thread/init/multi_thread_content_initializer";
 import SmoothFeature from "../../../transports/smooth";
 import type { IFeaturesObject } from "../../types";
 import addSmoothFeature from "../smooth";
@@ -10,9 +12,16 @@ describe("Features list - Smooth", () => {
     addSmoothFeature(featureObject);
     expect(featureObject).toEqual({
       transports: { smooth: SmoothFeature },
-      mainThreadMediaSourceInit: MediaSourceContentInitializer,
+      monothread: {
+        init: MultiThreadContentInitializer,
+        coreInterface: MonoThreadCoreInterface,
+        workerMain: initializeWorkerMain,
+      },
     });
     expect(featureObject.transports.smooth).toBe(SmoothFeature);
-    expect(featureObject.mainThreadMediaSourceInit).toBe(MediaSourceContentInitializer);
+    expect(featureObject.monothread).not.toBe(null);
+    expect(featureObject.monothread?.init).toBe(MultiThreadContentInitializer);
+    expect(featureObject.monothread?.coreInterface).toBe(MonoThreadCoreInterface);
+    expect(featureObject.monothread?.workerMain).toBe(initializeWorkerMain);
   });
 });

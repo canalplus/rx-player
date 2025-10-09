@@ -60,7 +60,6 @@ import {
   getMaximumSafePosition,
   getMinimumSafePosition,
   ManifestMetadataFormat,
-  createRepresentationFilterFromFnString,
   getPeriodForTime,
   toVideoRepresentation,
   toAudioRepresentation,
@@ -1034,6 +1033,19 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         connectionTimeout: requestConfig.segment?.connectionTimeout,
       };
 
+      const transportOptions = {
+        lowLatencyMode,
+        checkMediaSegmentIntegrity,
+        checkManifestIntegrity,
+        referenceDateTime,
+        serverSyncInfos,
+        manifestLoader,
+        segmentLoader,
+        representationFilter: options.representationFilter,
+        __priv_manifestUpdateUrl,
+        __priv_patchLastSegmentInSidx,
+      };
+
       const canRunInMultiThread =
         features.multithread !== null &&
         this._priv_worker !== null &&
@@ -1044,39 +1056,33 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         ) &&
         typeof options.representationFilter !== "function";
       if (mode === "main" || (mode === "auto" && !canRunInMultiThread)) {
-        if (features.mainThreadMediaSourceInit === null) {
+        if (features.monothread === null) {
           throw new Error(
             "Cannot load video, neither in a WebWorker nor with the " +
               "`MEDIA_SOURCE_MAIN` feature",
           );
         }
-        const transportFn = features.transports[transport];
-        if (typeof transportFn !== "function") {
-          // Stop previous content and reset its state
-          this.stop();
-          this._priv_currentError = null;
-          throw new Error(`transport "${transport}" not supported`);
-        }
-
-        const representationFilter =
-          typeof options.representationFilter === "string"
-            ? createRepresentationFilterFromFnString(options.representationFilter)
-            : options.representationFilter;
-
         log.info("API", "Initializing MediaSource mode in the main thread");
-        const transportPipelines = transportFn({
-          lowLatencyMode,
-          checkMediaSegmentIntegrity,
-          checkManifestIntegrity,
-          manifestLoader,
-          referenceDateTime,
-          representationFilter,
-          segmentLoader,
-          serverSyncInfos,
-          __priv_manifestUpdateUrl,
-          __priv_patchLastSegmentInSidx,
+        const coreInterface = new features.monothread.coreInterface();
+        const coreInterfaceCallbacks = coreInterface.getCallbacks();
+        features.monothread.workerMain(
+          coreInterfaceCallbacks.setCoreMessageReceiver,
+          coreInterfaceCallbacks.sendCoreMessage,
+        );
+        coreInterface.sendMessage({
+          type: MainThreadMessageType.Init,
+          value: {
+            dashWasmUrl: undefined,
+            hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
+            logLevel: log.getLevel(),
+            logFormat: log.getFormat(),
+            sendBackLogs: false,
+            date: Date.now(),
+            timestamp: getMonotonicTimeStamp(),
+          },
         });
-        initializer = new features.mainThreadMediaSourceInit({
+        initializer = new features.monothread.init({
+          coreInterface,
           adaptiveOptions,
           autoPlay,
           bufferOptions,
@@ -1085,13 +1091,15 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             experimentalOptions.enableRepresentationAvoidance,
           keySystems,
           lowLatencyMode,
-          transport: transportPipelines,
+          transport,
+          transportOptions,
           manifestRequestSettings,
           segmentRequestOptions,
           speed: this._priv_speed,
           startAt,
           textTrackOptions,
           url,
+          useMseInWorker: false,
         });
       } else {
         if (features.multithread === null) {
@@ -1108,19 +1116,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         assert(typeof options.representationFilter !== "function");
         useWorker = true;
         log.info("API", "Initializing MediaSource mode in a WebWorker");
-        const transportOptions = {
-          lowLatencyMode,
-          checkMediaSegmentIntegrity,
-          checkManifestIntegrity,
-          referenceDateTime,
-          serverSyncInfos,
-          manifestLoader: undefined,
-          segmentLoader: undefined,
-          representationFilter: options.representationFilter,
-          __priv_manifestUpdateUrl,
-          __priv_patchLastSegmentInSidx,
-        };
         initializer = new features.multithread.init({
+          coreInterface: new features.multithread.coreInterface(this._priv_worker),
           adaptiveOptions,
           autoPlay,
           bufferOptions,
@@ -1129,13 +1126,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             experimentalOptions.enableRepresentationAvoidance,
           keySystems,
           lowLatencyMode,
+          transport,
           transportOptions,
           manifestRequestSettings,
           segmentRequestOptions,
           speed: this._priv_speed,
           startAt,
           textTrackOptions,
-          worker: this._priv_worker,
           url,
           useMseInWorker: hasMseInWorker,
         });

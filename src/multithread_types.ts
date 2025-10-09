@@ -29,7 +29,7 @@ import type {
   SourceBufferType,
 } from "./mse";
 import type { IFreezingStatus, IRebufferingStatus } from "./playback_observer";
-import type { ICmcdOptions, ITrackType } from "./public_types";
+import type { ICmcdOptions, IRepresentationFilter, ITrackType } from "./public_types";
 import type { IThumbnailResponse, ITransportOptions } from "./transports";
 import type { ILogFormat, ILoggerLevel, ILogNamespace } from "./utils/logger";
 import type { IRange } from "./utils/ranges";
@@ -114,21 +114,12 @@ export interface IContentInitializationData {
   /** If `true`, text buffer (e.g. for subtitles) is enabled. */
   hasText: boolean;
   /**
-   * Options relative to the streaming protocol.
-   *
-   * Options not yet supported in a WebWorker environment are omitted.
+   * The type of "transport" wanted, e.g. "dash" or "smooth".
    */
-  transportOptions: Omit<
-    ITransportOptions,
-    "manifestLoader" | "segmentLoader" | "representationFilter"
-  > & {
-    // Unsupported features have to be disabled explicitely
-    // TODO support them
-    manifestLoader: undefined;
-    segmentLoader: undefined;
-
-    // Option which has to be set as a Funtion string to work.
-    representationFilter: string | undefined;
+  transport: string;
+  /** Options relative to the streaming protocol. */
+  transportOptions: Omit<ITransportOptions, "representationFilter"> & {
+    representationFilter?: IRepresentationFilter | string | undefined;
   };
   /** Initial video bitrate on which the adaptive logic will base itself. */
   initialVideoBitrate?: number | undefined;
@@ -819,17 +810,53 @@ export interface IRepresentationChangeWorkerMessage {
   };
 }
 
+/** Message sent by the Worker when the Manifest is first loaded. */
 export interface IManifestReadyWorkerMessage {
+  /** Identify this particular message. */
   type: WorkerMessageType.ManifestReady;
+  /** The `contentId` linked to this Manifest. */
   contentId: string;
-  value: { manifest: IManifestMetadata };
+  value: {
+    /**
+     * The actual `Manifest` loaded.
+     *
+     * When possible, this should be a `Manifest` instance.
+     *
+     * Only if this is not possible (e.g. because the `Manifest` cannot be
+     * communicated as is between both Worker and main_thread) might you convert
+     * it to another object also respecting the `IManifestMetadata` interface.
+     *
+     * However doing this might lead to some loss of performance and minor
+     * features.
+     */
+    manifest: IManifestMetadata;
+  };
 }
 
+/** Message sent by the Worker everytime the Manifest is updated. */
 export interface IManifestUpdateWorkerMessage {
+  /** Identify this particular message. */
   type: WorkerMessageType.ManifestUpdate;
+  /** The `contentId` linked to this Manifest. */
   contentId: string | undefined;
   value: {
-    manifest: IManifestMetadata; // TODO only subpart that changed?
+    /**
+     * The new manifest once updated.
+     *
+     * When possible, this should be a `Manifest` instance to improve
+     * performance and allow some advanced features.
+     *
+     * Only if this is not possible (e.g. because the `Manifest` cannot be
+     * communicated as is between both Worker and main_thread) might you convert
+     * it to another object also respecting the `IManifestMetadata` interface.
+     * In that last case, you're also authorized to reset the `periods` property
+     * of that `IManifestMetadata` to an empty array to save up message-passing
+     * performance.
+     */
+    manifest: IManifestMetadata;
+    /**
+     * Object describing what has changed in this update.
+     */
     updates: IPeriodsUpdateResult;
   };
 }
