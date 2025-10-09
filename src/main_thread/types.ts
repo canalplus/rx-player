@@ -57,7 +57,7 @@ export interface IInitMessage {
     logFormat: ILogFormat;
     /**
      * If `true`, logs should be sent back to the main thread, through a
-     * `ILogMessageWorkerMessage` message.
+     * `ILogMessageCoreMessage` message.
      */
     sendBackLogs: boolean;
     /**
@@ -148,7 +148,7 @@ export interface ILogLevelUpdateMessage {
     logFormat: ILogFormat;
     /**
      * If `true`, logs should be sent back to the main thread, through a
-     * `ILogMessageWorkerMessage` message.
+     * `ILogMessageCoreMessage` message.
      */
     sendBackLogs: boolean;
   };
@@ -441,8 +441,8 @@ export interface ITriggerMediaSourceReloadMainMessage {
 /**
  * Sent when the SourceBuffer linked to the given `mediaSourceId` and
  * `SourceBufferType`, running on the main thread, succeeded to perform the last
- * operation given to it (either through an `AppendBufferWorkerMessage` or a
- * `RemoveBufferWorkerMessage`).
+ * operation given to it (either through an `AppendBufferCoreMessage` or a
+ * `RemoveBufferCoreMessage`).
  */
 export interface ISourceBufferOperationSuccessMainMessage {
   type: MainThreadMessageType.SourceBufferSuccess;
@@ -454,7 +454,7 @@ export interface ISourceBufferOperationSuccessMainMessage {
   /**
    * Id uniquely identifying this SourceBuffer.
    * It should be the same `SourceBufferType` than the one on the
-   * `CreateSourceBufferWorkerMessage`.
+   * `CreateSourceBufferCoreMessage`.
    */
   sourceBufferType: SourceBufferType;
   /** Identify the corresponding SourceBuffer operation. */
