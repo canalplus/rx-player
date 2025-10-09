@@ -1,5 +1,5 @@
-import { formatError } from "../../../errors";
-import type { ISentError } from "../../../multithread_types";
+import { formatError } from "../../errors";
+import type { ISentError } from "../types";
 
 export function formatErrorForSender(error: unknown): ISentError {
   const formattedError = formatError(error, {

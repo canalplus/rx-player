@@ -1,19 +1,19 @@
+import type {
+  IAbortBufferCoreMessage,
+  IAddSourceBufferCoreMessage,
+  IAppendBufferCoreMessage,
+  ICreateMediaSourceCoreMessage,
+  IDisposeMediaSourceCoreMessage,
+  IEndOfStreamCoreMessage,
+  IInterruptMediaSourceDurationCoreMessage,
+  IRemoveBufferCoreMessage,
+  IStopEndOfStreamCoreMessage,
+  IUpdateMediaSourceDurationCoreMessage,
+} from "../core/types";
+import { CoreMessageType } from "../core/types";
 import { SourceBufferError } from "../errors";
 import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
 import log from "../log";
-import type {
-  IAbortBufferWorkerMessage,
-  IAddSourceBufferWorkerMessage,
-  IAppendBufferWorkerMessage,
-  ICreateMediaSourceWorkerMessage,
-  IDisposeMediaSourceWorkerMessage,
-  IEndOfStreamWorkerMessage,
-  IInterruptMediaSourceDurationWorkerMessage,
-  IRemoveBufferWorkerMessage,
-  IStopEndOfStreamWorkerMessage,
-  IUpdateMediaSourceDurationWorkerMessage,
-} from "../multithread_types";
-import { WorkerMessageType } from "../multithread_types";
 import EventEmitter from "../utils/event_emitter";
 import idGenerator from "../utils/id_generator";
 import type { IRange } from "../utils/ranges";
@@ -73,7 +73,7 @@ export default class WorkerMediaSourceInterface
 
     const mediaSourceId = generateMediaSourceId();
     this._messageSender({
-      type: WorkerMessageType.CreateMediaSource,
+      type: CoreMessageType.CreateMediaSource,
       contentId,
       mediaSourceId,
     });
@@ -101,7 +101,7 @@ export default class WorkerMediaSourceInterface
     codec: string,
   ): ISourceBufferInterface {
     this._messageSender({
-      type: WorkerMessageType.AddSourceBuffer,
+      type: CoreMessageType.AddSourceBuffer,
       mediaSourceId: this.id,
       value: {
         sourceBufferType: sbType,
@@ -120,7 +120,7 @@ export default class WorkerMediaSourceInterface
 
   public setDuration(newDuration: number, isRealEndKnown: boolean) {
     this._messageSender({
-      type: WorkerMessageType.UpdateMediaSourceDuration,
+      type: CoreMessageType.UpdateMediaSourceDuration,
       mediaSourceId: this.id,
       value: {
         duration: newDuration,
@@ -131,7 +131,7 @@ export default class WorkerMediaSourceInterface
 
   public interruptDurationSetting() {
     this._messageSender({
-      type: WorkerMessageType.InterruptMediaSourceDurationUpdate,
+      type: CoreMessageType.InterruptMediaSourceDurationUpdate,
       mediaSourceId: this.id,
       value: null,
     });
@@ -139,7 +139,7 @@ export default class WorkerMediaSourceInterface
 
   public maintainEndOfStream() {
     this._messageSender({
-      type: WorkerMessageType.EndOfStream,
+      type: CoreMessageType.EndOfStream,
       mediaSourceId: this.id,
       value: null,
     });
@@ -147,7 +147,7 @@ export default class WorkerMediaSourceInterface
 
   public stopEndOfStream() {
     this._messageSender({
-      type: WorkerMessageType.InterruptEndOfStream,
+      type: CoreMessageType.InterruptEndOfStream,
       mediaSourceId: this.id,
       value: null,
     });
@@ -157,7 +157,7 @@ export default class WorkerMediaSourceInterface
     this.sourceBuffers.forEach((s) => s.dispose());
     this._canceller.cancel();
     this._messageSender({
-      type: WorkerMessageType.DisposeMediaSource,
+      type: CoreMessageType.DisposeMediaSource,
       mediaSourceId: this.id,
       value: null,
     });
@@ -166,16 +166,16 @@ export default class WorkerMediaSourceInterface
 
 export type IWorkerMediaSourceInterfaceMessageSender = (
   msg:
-    | IAppendBufferWorkerMessage
-    | IRemoveBufferWorkerMessage
-    | IAbortBufferWorkerMessage
-    | ICreateMediaSourceWorkerMessage
-    | IAddSourceBufferWorkerMessage
-    | IUpdateMediaSourceDurationWorkerMessage
-    | IInterruptMediaSourceDurationWorkerMessage
-    | IEndOfStreamWorkerMessage
-    | IStopEndOfStreamWorkerMessage
-    | IDisposeMediaSourceWorkerMessage,
+    | IAppendBufferCoreMessage
+    | IRemoveBufferCoreMessage
+    | IAbortBufferCoreMessage
+    | ICreateMediaSourceCoreMessage
+    | IAddSourceBufferCoreMessage
+    | IUpdateMediaSourceDurationCoreMessage
+    | IInterruptMediaSourceDurationCoreMessage
+    | IEndOfStreamCoreMessage
+    | IStopEndOfStreamCoreMessage
+    | IDisposeMediaSourceCoreMessage,
   transferables?: Transferable[],
 ) => void;
 
@@ -299,7 +299,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
         const operationId = generateSourceBufferOperationId();
         this._messageSender(
           {
-            type: WorkerMessageType.SourceBufferAppend,
+            type: CoreMessageType.SourceBufferAppend,
             mediaSourceId: this._mediaSourceId,
             sourceBufferType: this.type,
             operationId,
@@ -334,7 +334,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
       try {
         const operationId = generateSourceBufferOperationId();
         this._messageSender({
-          type: WorkerMessageType.SourceBufferRemove,
+          type: CoreMessageType.SourceBufferRemove,
           mediaSourceId: this._mediaSourceId,
           sourceBufferType: this.type,
           operationId,
@@ -352,7 +352,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
 
   public abort(): void {
     this._messageSender({
-      type: WorkerMessageType.AbortSourceBuffer,
+      type: CoreMessageType.AbortSourceBuffer,
       mediaSourceId: this._mediaSourceId,
       sourceBufferType: this.type,
       value: null,
@@ -411,7 +411,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
           const nOpId = generateSourceBufferOperationId();
           this._messageSender(
             {
-              type: WorkerMessageType.SourceBufferAppend,
+              type: CoreMessageType.SourceBufferAppend,
               mediaSourceId: this._mediaSourceId,
               sourceBufferType: this.type,
               operationId: nOpId,
@@ -427,7 +427,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
           const [start, end] = nextOp.params;
           const nOpId = generateSourceBufferOperationId();
           this._messageSender({
-            type: WorkerMessageType.SourceBufferRemove,
+            type: CoreMessageType.SourceBufferRemove,
             mediaSourceId: this._mediaSourceId,
             sourceBufferType: this.type,
             operationId: nOpId,

@@ -1,48 +1,51 @@
-import config from "../../../config";
-import { MediaError, OtherError } from "../../../errors";
-import features from "../../../features";
-import log from "../../../log";
-import Manifest, { Adaptation, Period, Representation } from "../../../manifest/classes";
+import config from "../../config";
+import { MediaError, OtherError } from "../../errors";
+import features from "../../features";
+import log from "../../log";
 import type {
   IContentInitializationData,
-  IDiscontinuityUpdateWorkerMessagePayload,
   IMainThreadMessage,
   IReferenceUpdateMessage,
   IThumbnailDataRequestMainMessage,
-  IWorkerMessage,
-} from "../../../multithread_types";
-import { MainThreadMessageType, WorkerMessageType } from "../../../multithread_types";
-import { ObservationPosition } from "../../../playback_observer";
-import type { IWorkerPlaybackObservation } from "../../../playback_observer/worker_playback_observer";
-import WorkerPlaybackObserver from "../../../playback_observer/worker_playback_observer";
-import type { IPlayerError, ITrackType } from "../../../public_types";
-import arrayFind from "../../../utils/array_find";
-import assert, { assertUnreachable } from "../../../utils/assert";
-import type { ILogFormat, ILoggerLevel } from "../../../utils/logger";
-import { scaleTimestamp } from "../../../utils/monotonic_timestamp";
-import objectAssign from "../../../utils/object_assign";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference from "../../../utils/reference";
-import TaskCanceller from "../../../utils/task_canceller";
+} from "../../main_thread/types";
+import { MainThreadMessageType } from "../../main_thread/types";
+import Manifest, { Adaptation, Period, Representation } from "../../manifest/classes";
+import { ObservationPosition } from "../../playback_observer";
+import type { ICorePlaybackObservation } from "../../playback_observer/core_playback_observer";
+import CorePlaybackObserver from "../../playback_observer/core_playback_observer";
+import type { IPlayerError, ITrackType } from "../../public_types";
+import arrayFind from "../../utils/array_find";
+import assert, { assertUnreachable } from "../../utils/assert";
+import type { ILogFormat, ILoggerLevel } from "../../utils/logger";
+import { scaleTimestamp } from "../../utils/monotonic_timestamp";
+import objectAssign from "../../utils/object_assign";
+import type { IReadOnlySharedReference } from "../../utils/reference";
+import SharedReference from "../../utils/reference";
+import TaskCanceller from "../../utils/task_canceller";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamStatusPayload,
-} from "../../stream";
-import StreamOrchestrator from "../../stream";
-import type { IResolutionInfo } from "../../types";
-import createContentTimeBoundariesObserver from "../common/create_content_time_boundaries_observer";
-import type { IFreezeResolution } from "../common/FreezeResolver";
-import getBufferedDataPerMediaBuffer from "../common/get_buffered_data_per_media_buffer";
-import getThumbnailData from "../common/get_thumbnail_data";
-import synchronizeSegmentSinksOnObservation from "../common/synchronize_sinks_on_observation";
+} from "../stream";
+import StreamOrchestrator from "../stream";
+import type {
+  ICoreMessage,
+  IDiscontinuityUpdateCoreMessagePayload,
+  IResolutionInfo,
+} from "../types";
+import { CoreMessageType } from "../types";
 import ContentPreparer from "./content_preparer";
+import createContentTimeBoundariesObserver from "./create_content_time_boundaries_observer";
+import type { IFreezeResolution } from "./FreezeResolver";
+import getBufferedDataPerMediaBuffer from "./get_buffered_data_per_media_buffer";
+import getThumbnailData from "./get_thumbnail_data";
+import synchronizeSegmentSinksOnObservation from "./synchronize_sinks_on_observation";
 import { formatErrorForSender } from "./utils";
 
 export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => void;
 
 /**
- * Initialize a `WorkerMain`, which is the part of the RxPlayer acting as an
+ * Initialize a `CoreEntry`, which is the part of the RxPlayer acting as an
  * entry point to all its "core" code.
  *
  * Its role is to receive and react to messages coming from "main thead", which
@@ -53,9 +56,9 @@ export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => vo
  * @param {Function} sendMessage - Function allowing to send messages to the
  * "main thread" part of the RxPlayer logic.
  */
-export default function initializeWorkerMain(
+export default function initializeCoreEntry(
   setMessageReceiver: (cb: IMessageReceiverCallback) => void,
-  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
 ): void {
   const {
     DEFAULT_WANTED_BUFFER_AHEAD,
@@ -77,7 +80,7 @@ export default function initializeWorkerMain(
   };
 
   /**
-   * `true` once the worker has been initialized.
+   * `true` once the CoreEntry has been initialized.
    * Allow to enforce the fact that it is only initialized once.
    */
   let isInitialized = false;
@@ -97,7 +100,7 @@ export default function initializeWorkerMain(
   /**
    * When set, emit playback observation made on the main thread.
    */
-  let playbackObservationRef: SharedReference<IWorkerPlaybackObservation> | null = null;
+  let playbackObservationRef: SharedReference<ICorePlaybackObservation> | null = null;
   setMessageReceiver((e) => {
     log.debug("Core", "received message", { name: e.data.type });
 
@@ -130,7 +133,7 @@ export default function initializeWorkerMain(
             contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
           }
 
-          sendMessage({ type: WorkerMessageType.InitSuccess, value: null });
+          sendMessage({ type: CoreMessageType.InitSuccess, value: null });
         }
         break;
 
@@ -156,7 +159,7 @@ export default function initializeWorkerMain(
         playbackObservationRef?.finish();
 
         const currentContentObservationRef =
-          new SharedReference<IWorkerPlaybackObservation>(
+          new SharedReference<ICorePlaybackObservation>(
             objectAssign(msg.value.initialObservation, {
               position: new ObservationPosition(...msg.value.initialObservation.position),
             }),
@@ -328,14 +331,14 @@ export default function initializeWorkerMain(
           const warning = preparedContent.manifest.updateCodecSupport(newEvaluatedCodecs);
           if (warning !== null) {
             sendMessage({
-              type: WorkerMessageType.Warning,
+              type: CoreMessageType.Warning,
               contentId: preparedContent.contentId,
               value: formatErrorForSender(warning),
             });
           }
         } catch (err) {
           sendMessage({
-            type: WorkerMessageType.Error,
+            type: CoreMessageType.Error,
             contentId: preparedContent.contentId,
             value: formatErrorForSender(err),
           });
@@ -387,11 +390,11 @@ export default function initializeWorkerMain(
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        if (preparedContent.workerTextSender === null) {
+        if (preparedContent.coreTextSender === null) {
           log.error("Core", "Added text track but text track aren't enabled");
           return;
         }
-        preparedContent.workerTextSender.onPushedTrackSuccess(msg.value.ranges);
+        preparedContent.coreTextSender.onPushedTrackSuccess(msg.value.ranges);
         break;
       }
 
@@ -400,11 +403,11 @@ export default function initializeWorkerMain(
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        if (preparedContent.workerTextSender === null) {
+        if (preparedContent.coreTextSender === null) {
           log.error("Core", "Added text track but text track aren't enabled");
           return;
         }
-        preparedContent.workerTextSender.onPushedTrackError(new Error(msg.value.message));
+        preparedContent.coreTextSender.onPushedTrackError(new Error(msg.value.message));
         break;
       }
 
@@ -413,11 +416,11 @@ export default function initializeWorkerMain(
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        if (preparedContent.workerTextSender === null) {
+        if (preparedContent.coreTextSender === null) {
           log.error("Core", "Removed text track but text track aren't enabled");
           return;
         }
-        preparedContent.workerTextSender.onRemoveSuccess(msg.value.ranges);
+        preparedContent.coreTextSender.onRemoveSuccess(msg.value.ranges);
         break;
       }
 
@@ -426,11 +429,11 @@ export default function initializeWorkerMain(
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
-        if (preparedContent.workerTextSender === null) {
+        if (preparedContent.coreTextSender === null) {
           log.error("Core", "Removed text track but text track aren't enabled");
           return;
         }
-        preparedContent.workerTextSender.onRemoveError(new Error(msg.value.message));
+        preparedContent.coreTextSender.onRemoveError(new Error(msg.value.message));
         break;
       }
 
@@ -468,10 +471,10 @@ export default function initializeWorkerMain(
  * load.
  * @param {Object} refs - Collection of so-called "references": values
  * configuring playback that may be updated at any time and that the
- * WorkerMain should react on.
+ * CoreEntry should react on.
  */
 function prepareNewContent(
-  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentPreparer: ContentPreparer,
   contentInitData: IContentInitializationData,
   refs: ICoreReferences,
@@ -484,14 +487,14 @@ function prepareNewContent(
     .then(
       (manifest) => {
         sendMessage({
-          type: WorkerMessageType.ManifestReady,
+          type: CoreMessageType.ManifestReady,
           contentId: contentInitData.contentId,
           value: { manifest },
         });
       },
       (err: unknown) => {
         sendMessage({
-          type: WorkerMessageType.Error,
+          type: CoreMessageType.Error,
           contentId: contentInitData.contentId,
           value: formatErrorForSender(err),
         });
@@ -553,10 +556,10 @@ interface IContentHandle {
 }
 
 function loadPreparedContent(
-  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   val: ILoadingContentParameters,
   contentPreparer: ContentPreparer,
-  playbackObservationRef: IReadOnlySharedReference<IWorkerPlaybackObservation>,
+  playbackObservationRef: IReadOnlySharedReference<ICorePlaybackObservation>,
   refs: ICoreReferences,
 ): IContentHandle {
   log.debug("Core", "Loading pepared content.");
@@ -580,7 +583,7 @@ function loadPreparedContent(
     currentLoadCanceller.linkToSignal(contentCanceller.signal);
 
     /**
-     * Stores last discontinuity update sent to the worker for each Period and type
+     * Stores last discontinuity update sent to the Core for each Period and type
      * combinations, at least until the corresponding `PeriodStreamCleared`
      * message.
      *
@@ -589,14 +592,14 @@ function loadPreparedContent(
      */
     const lastSentDiscontinuitiesStore: Map<
       Period,
-      Map<ITrackType, IDiscontinuityUpdateWorkerMessagePayload>
+      Map<ITrackType, IDiscontinuityUpdateCoreMessagePayload>
     > = new Map();
 
     const preparedContent = contentPreparer.getCurrentContent();
     if (preparedContent === null || preparedContent.manifest === null) {
       const error = new OtherError("NONE", "Loading content when none is prepared");
       sendMessage({
-        type: WorkerMessageType.Error,
+        type: CoreMessageType.Error,
         contentId: undefined,
         value: formatErrorForSender(error),
       });
@@ -639,14 +642,14 @@ function loadPreparedContent(
         "Wanted starting time not found in the Manifest.",
       );
       sendMessage({
-        type: WorkerMessageType.Error,
+        type: CoreMessageType.Error,
         contentId,
         value: formatErrorForSender(error),
       });
       throw error;
     }
 
-    const playbackObserver = new WorkerPlaybackObserver(
+    const playbackObserver = new CorePlaybackObserver(
       playbackObservationRef,
       contentId,
       sendMessage,
@@ -665,13 +668,13 @@ function loadPreparedContent(
       {
         onWarning: (err: IPlayerError) =>
           sendMessage({
-            type: WorkerMessageType.Warning,
+            type: CoreMessageType.Warning,
             contentId,
             value: formatErrorForSender(err),
           }),
         onPeriodChanged: (period: Period) => {
           sendMessage({
-            type: WorkerMessageType.ActivePeriodChanged,
+            type: CoreMessageType.ActivePeriodChanged,
             contentId,
             value: { periodId: period.id },
           });
@@ -708,7 +711,7 @@ function loadPreparedContent(
       return {
         needsBufferFlush(payload) {
           sendMessage({
-            type: WorkerMessageType.NeedsBufferFlush,
+            type: CoreMessageType.NeedsBufferFlush,
             contentId,
             value: payload,
           });
@@ -754,7 +757,7 @@ function loadPreparedContent(
 
         lockedStream(payload) {
           sendMessage({
-            type: WorkerMessageType.LockedStream,
+            type: CoreMessageType.LockedStream,
             contentId,
             value: {
               periodId: payload.period.id,
@@ -776,7 +779,7 @@ function loadPreparedContent(
             return;
           }
           sendMessage({
-            type: WorkerMessageType.AdaptationChanged,
+            type: CoreMessageType.AdaptationChanged,
             contentId,
             value: {
               adaptationId: value.adaptation?.id ?? null,
@@ -795,7 +798,7 @@ function loadPreparedContent(
             return;
           }
           sendMessage({
-            type: WorkerMessageType.RepresentationChanged,
+            type: CoreMessageType.RepresentationChanged,
             contentId,
             value: {
               adaptationId: value.adaptation.id,
@@ -808,7 +811,7 @@ function loadPreparedContent(
 
         inbandEvent(value) {
           sendMessage({
-            type: WorkerMessageType.InbandEvent,
+            type: CoreMessageType.InbandEvent,
             contentId,
             value,
           });
@@ -816,7 +819,7 @@ function loadPreparedContent(
 
         warning(value) {
           sendMessage({
-            type: WorkerMessageType.Warning,
+            type: CoreMessageType.Warning,
             contentId,
             value: formatErrorForSender(value),
           });
@@ -832,7 +835,7 @@ function loadPreparedContent(
             value.adaptationRef,
           );
           sendMessage({
-            type: WorkerMessageType.PeriodStreamReady,
+            type: CoreMessageType.PeriodStreamReady,
             contentId,
             value: { periodId: value.period.id, bufferType: value.type },
           });
@@ -859,7 +862,7 @@ function loadPreparedContent(
             value.type,
           );
           sendMessage({
-            type: WorkerMessageType.PeriodStreamCleared,
+            type: CoreMessageType.PeriodStreamCleared,
             contentId,
             value: { periodId: value.period.id, bufferType: value.type },
           });
@@ -877,7 +880,7 @@ function loadPreparedContent(
           // Considering this is only for an unimportant undocumented API, we may
           // throttle such messages. (e.g. max one per 2 seconds for each type?).
           sendMessage({
-            type: WorkerMessageType.BitrateEstimateChange,
+            type: CoreMessageType.BitrateEstimateChange,
             contentId,
             value: {
               bitrate: payload.bitrate,
@@ -892,7 +895,7 @@ function loadPreparedContent(
 
         needsDecipherabilityFlush() {
           sendMessage({
-            type: WorkerMessageType.NeedsDecipherabilityFlush,
+            type: CoreMessageType.NeedsDecipherabilityFlush,
             contentId,
             value: null,
           });
@@ -915,7 +918,7 @@ function loadPreparedContent(
               content.representation = content.representation.getMetadataSnapshot();
             }
             sendMessage({
-              type: WorkerMessageType.EncryptionDataEncountered,
+              type: CoreMessageType.EncryptionDataEncountered,
               contentId,
               value: {
                 keyIds: value.keyIds,
@@ -929,7 +932,7 @@ function loadPreparedContent(
 
         error(error: unknown) {
           sendMessage({
-            type: WorkerMessageType.Error,
+            type: CoreMessageType.Error,
             contentId,
             value: formatErrorForSender(error),
           });
@@ -968,7 +971,7 @@ function loadPreparedContent(
       };
       periodMap.set(value.bufferType, msgObj);
       sendMessage({
-        type: WorkerMessageType.DiscontinuityUpdate,
+        type: CoreMessageType.DiscontinuityUpdate,
         contentId,
         value: msgObj,
       });
@@ -993,7 +996,7 @@ function loadPreparedContent(
 
     sendMessage(
       {
-        type: WorkerMessageType.ReloadingMediaSource,
+        type: CoreMessageType.ReloadingMediaSource,
         mediaSourceId,
         value: payload,
       },
@@ -1024,7 +1027,7 @@ function loadPreparedContent(
           return;
         }
         sendMessage({
-          type: WorkerMessageType.Error,
+          type: CoreMessageType.Error,
           contentId,
           value: formatErrorForSender(err),
         });
@@ -1052,7 +1055,7 @@ function updateLoggerLevel(
       });
       // Not relying on `sendMessage` as it also logs
       postMessage({
-        type: WorkerMessageType.LogMessage,
+        type: CoreMessageType.LogMessage,
         value: {
           namespace,
           logLevel: levelStr,
@@ -1071,7 +1074,7 @@ function updateLoggerLevel(
  * @param {ContentPreparer} contentPreparer
  */
 function sendSegmentSinksStoreInfos(
-  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentPreparer: ContentPreparer,
   requestId: number,
 ): void {
@@ -1081,7 +1084,7 @@ function sendSegmentSinksStoreInfos(
   }
   const segmentSinksMetrics = currentContent.segmentSinksStore.getSegmentSinksMetrics();
   sendMessage({
-    type: WorkerMessageType.SegmentSinkStoreUpdate,
+    type: CoreMessageType.SegmentSinkStoreUpdate,
     contentId: currentContent.contentId,
     value: { segmentSinkMetrics: segmentSinksMetrics, requestId },
   });
@@ -1104,7 +1107,7 @@ function sendSegmentSinksStoreInfos(
  * `IFreezeResolution` object suggest it.
  */
 function handleFreezeResolution(
-  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   freezeResolution: IFreezeResolution,
   {
     contentId,
@@ -1131,7 +1134,7 @@ function handleFreezeResolution(
     case "flush": {
       log.info("Core", "Flushing buffer due to freeze");
       sendMessage({
-        type: WorkerMessageType.NeedsBufferFlush,
+        type: CoreMessageType.NeedsBufferFlush,
         contentId,
         value: {
           relativeResumingPosition: freezeResolution.value.relativeSeek,
@@ -1164,14 +1167,14 @@ function handleFreezeResolution(
  * @returns {void}
  */
 function sendThumbnailData(
-  sendMessage: (msg: IWorkerMessage, transferables?: Transferable[]) => void,
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentPreparer: ContentPreparer,
   msg: IThumbnailDataRequestMainMessage,
 ): void {
   const preparedContent = contentPreparer.getCurrentContent();
   const respondWithError = (err: unknown) => {
     sendMessage({
-      type: WorkerMessageType.ThumbnailDataResponse,
+      type: CoreMessageType.ThumbnailDataResponse,
       contentId: msg.contentId,
       value: {
         status: "error",
@@ -1199,7 +1202,7 @@ function sendThumbnailData(
     (result) => {
       sendMessage(
         {
-          type: WorkerMessageType.ThumbnailDataResponse,
+          type: CoreMessageType.ThumbnailDataResponse,
           contentId: msg.contentId,
           value: {
             status: "success",
@@ -1218,7 +1221,7 @@ function sendThumbnailData(
 
 /**
  * Collection of so-called "references": values configuring playback that may
- * be updated at any time and that the WorkerMain should react on.
+ * be updated at any time and that the CoreEntry should react on.
  */
 export interface ICoreReferences {
   limitVideoResolution: SharedReference<IResolutionInfo>;

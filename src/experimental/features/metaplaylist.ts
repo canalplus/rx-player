@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-import initializeWorkerMain from "../../core/main/worker";
+import initializeCoreEntry from "../../core/entry";
 import type { IFeaturesObject } from "../../features/types";
 import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
-import MultiThreadContentInitializer from "../../main_thread/init/multi_thread_content_initializer";
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
 import metaplaylist from "../../transports/metaplaylist";
 
 function addMetaPlaylistFeature(features: IFeaturesObject): void {
   features.transports.metaplaylist = metaplaylist;
   features.monothread = {
-    init: MultiThreadContentInitializer,
+    init: MediaSourceContentInitializer,
     coreInterface: MonoThreadCoreInterface,
-    workerMain: initializeWorkerMain,
+    initializeCoreEntry,
   };
 }
 
