@@ -14,13 +14,13 @@ import arrayFind from "../utils/array_find";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import { objectValues } from "../utils/object_values";
-import {
-  ManifestMetadataFormat,
-  type IAdaptationMetadata,
-  type IManifestMetadata,
-  type IPeriodMetadata,
-  type IRepresentationMetadata,
-  type IThumbnailTrackMetadata,
+import { ManifestMetadataFormat } from "./types";
+import type {
+  IAdaptationMetadata,
+  IManifestMetadata,
+  IPeriodMetadata,
+  IRepresentationMetadata,
+  IThumbnailTrackMetadata,
 } from "./types";
 
 /** List in an array every possible value for the Adaptation's `type` property. */

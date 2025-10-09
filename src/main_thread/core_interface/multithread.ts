@@ -1,5 +1,5 @@
 import log from "../../log";
-import type { IMainThreadMessage } from "../../multithread_types";
+import type { IMainThreadMessage } from "../types";
 import CoreInterface from "./base";
 
 /**
