@@ -148,36 +148,10 @@ export default class ContentPreparer {
         );
         return;
       }
-      let manifestLoader;
-      let segmentLoader;
-      let representationFilter;
-      if (typeof transportOptions.representationFilter?.eval === "string") {
-        representationFilter = createRepresentationFilterFromFnString(
-          transportOptions.representationFilter.eval,
-        );
-      } else if (typeof transportOptions.representationFilter?.workerId === "string") {
-        representationFilter = corePlugins.representationFilters.get(
-          transportOptions.representationFilter.workerId,
-        );
-      }
-
-      if (typeof transportOptions.manifestLoader?.workerId === "string") {
-        manifestLoader = corePlugins.manifestLoaders.get(
-          transportOptions.manifestLoader.workerId,
-        );
-      }
-
-      if (typeof transportOptions.segmentLoader?.workerId === "string") {
-        segmentLoader = corePlugins.segmentLoaders.get(
-          transportOptions.segmentLoader.workerId,
-        );
-      }
 
       const transportPipelines = transportFn({
         ...transportOptions,
-        representationFilter,
-        manifestLoader,
-        segmentLoader,
+        ...extractExternalPlugins(transportOptions, corePlugins),
       });
 
       const cmcdDataBuilder =
@@ -596,4 +570,74 @@ function updateCodecSupportInWorkerMode(manifestToUpdate: Manifest) {
       }
     }
   }
+}
+
+/**
+ * Some functions may be defined by the API, we call those "plugins".
+ * This function parses and extract the actual function from the different
+ * ways an application can provide it to us.
+ * @param {Object} input - The API input
+ * @param {Object} corePlugins - Context on what identified functions are
+ * defined right now.
+ * @returns {Function}
+ */
+function extractExternalPlugins(
+  input: {
+    manifestLoader:
+      | {
+          fn?: IManifestLoader | undefined;
+          workerId?: string | undefined;
+        }
+      | undefined;
+    segmentLoader:
+      | {
+          fn?: ISegmentLoader | undefined;
+          workerId?: string | undefined;
+        }
+      | undefined;
+    representationFilter:
+      | undefined
+      | {
+          fn?: IRepresentationFilter | undefined;
+          eval?: string | undefined;
+          workerId?: string | undefined;
+        };
+  },
+  corePlugins: ICorePlugins,
+): {
+  manifestLoader: IManifestLoader | undefined;
+  segmentLoader: ISegmentLoader | undefined;
+  representationFilter: IRepresentationFilter | undefined;
+} {
+  let manifestLoader;
+  let segmentLoader;
+  let representationFilter;
+  if (typeof input.representationFilter?.fn === "function") {
+    representationFilter = input.representationFilter.fn;
+  } else if (typeof input.representationFilter?.eval === "string") {
+    representationFilter = createRepresentationFilterFromFnString(
+      input.representationFilter.eval,
+    );
+  } else if (typeof input.representationFilter?.workerId === "string") {
+    representationFilter = corePlugins.representationFilters.get(
+      input.representationFilter.workerId,
+    );
+  }
+
+  if (typeof input.manifestLoader?.fn === "function") {
+    manifestLoader = input.manifestLoader.fn;
+  } else if (typeof input.manifestLoader?.workerId === "string") {
+    manifestLoader = corePlugins.manifestLoaders.get(input.manifestLoader.workerId);
+  }
+
+  if (typeof input.segmentLoader?.fn === "function") {
+    segmentLoader = input.segmentLoader.fn;
+  } else if (typeof input.segmentLoader?.workerId === "string") {
+    segmentLoader = corePlugins.segmentLoaders.get(input.segmentLoader.workerId);
+  }
+  return {
+    manifestLoader,
+    segmentLoader,
+    representationFilter,
+  };
 }
