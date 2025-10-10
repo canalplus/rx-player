@@ -549,7 +549,7 @@ describe("DRM: Basic use cases", function () {
     expect(["11-90953e09", "12-90953e09"]).toContain(player.getVideoRepresentation().id);
     expect(player.getAudioRepresentation().id).toEqual("15-585f233f");
 
-    await sleep(50);
+    await sleep(200);
     dummy.mediaKeys.dummySessions.forEach((s) => {
       s.updatePolicyLevel(10);
     });
