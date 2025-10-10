@@ -4,7 +4,6 @@ import type {
   ISerializedEncryptedMediaError,
   ISerializedOtherError,
 } from "../errors";
-// XXX TODO: Types should be moved elsewhere?
 import type { IContentProtection, ITextDisplayerData } from "../main_thread/types";
 import type { IManifestMetadata, IPeriodsUpdateResult } from "../manifest";
 import type {
