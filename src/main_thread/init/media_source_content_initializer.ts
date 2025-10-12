@@ -12,6 +12,12 @@ import type {
   ICoreMessage,
   ISentLogValue,
   ILogMessageCoreMessage,
+  INeedsBufferFlushCoreMessage,
+  IAttachMediaSourceCoreMessagePayload,
+  IAppendBufferCoreMessage,
+  IRemoveBufferCoreMessage,
+  IRemoveTextDataCoreMessage,
+  IPushTextDataCoreMessage,
 } from "../../core/types";
 import { CoreMessageType } from "../../core/types";
 import {
@@ -53,7 +59,7 @@ import SharedReference from "../../utils/reference";
 import { RequestError } from "../../utils/request";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
-import type CoreInterface from "../core_interface/types";
+import CoreInterface from "../core_interface/types";
 import type { IContentProtection } from "../decrypt";
 import type IContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
@@ -494,47 +500,26 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               mediaSourceId: msgData.mediaSourceId,
             };
           }
-          const mediaSourceLink = msgData.value;
-          mediaSourceStatus.onUpdate(
-            (currStatus, stopListening) => {
-              if (currStatus === MediaSourceInitializationStatus.AttachNow) {
-                stopListening();
-                log.info("media", "Attaching MediaSource URL to the media element");
-                if (mediaSourceLink.type === "handle") {
-                  mediaElement.srcObject = mediaSourceLink.value;
-                  this._currentMediaSourceCanceller.signal.register(() => {
-                    mediaElement.srcObject = null;
-                  });
-                } else {
-                  mediaElement.src = mediaSourceLink.value;
-                  this._currentMediaSourceCanceller.signal.register(() => {
-                    resetMediaElement(mediaElement, mediaSourceLink.value);
-                  });
-                }
-                disableRemotePlaybackOnManagedMediaSource(
-                  mediaElement,
-                  this._currentMediaSourceCanceller.signal,
-                );
-                mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
-              }
-            },
-            { emitCurrentValue: true, clearSignal: this._initCanceller.signal },
-          );
+          attachMediaSourceFromCore({
+            mediaElement,
+            mediaSourceLink: msgData.value,
+            mediaSourceStatus,
+            mediaSourceCancelSignal: this._currentMediaSourceCanceller.signal,
+            contentCancelSignal: this._initCanceller.signal,
+          });
           break;
         }
 
         case CoreMessageType.Warning:
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            this.trigger("warning", formatCoreError(msgData.value));
           }
-          this.trigger("warning", formatCoreError(msgData.value));
           break;
 
         case CoreMessageType.Error:
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            this._onFatalError(formatCoreError(msgData.value));
           }
-          this._onFatalError(formatCoreError(msgData.value));
           break;
 
         case CoreMessageType.CreateMediaSource:
@@ -547,16 +532,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
 
         case CoreMessageType.AddSourceBuffer:
-          {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
-                msgData.mediaSourceId
-            ) {
-              return;
-            }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            mediaSource.addSourceBuffer(
+          if (
+            this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
+            this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
+              msgData.mediaSourceId
+          ) {
+            this._currentContentInfo.mediaSourceInfo.mediaSource.addSourceBuffer(
               msgData.value.sourceBufferType,
               msgData.value.codec,
             );
@@ -564,229 +545,121 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
 
         case CoreMessageType.SourceBufferAppend:
-          {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
-                msgData.mediaSourceId
-            ) {
-              return;
-            }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            const sourceBuffer = arrayFind(
-              mediaSource.sourceBuffers,
-              (s) => s.type === msgData.sourceBufferType,
-            );
-            if (sourceBuffer === undefined) {
-              return;
-            }
-            sourceBuffer
-              .appendBuffer(msgData.value.data, msgData.value.params)
-              .then((buffered) => {
-                this._settings.coreInterface.sendMessage({
-                  type: MainThreadMessageType.SourceBufferSuccess,
-                  mediaSourceId: mediaSource.id,
-                  sourceBufferType: sourceBuffer.type,
-                  operationId: msgData.operationId,
-                  value: { buffered },
-                });
-              })
-              .catch((error) => {
-                this._settings.coreInterface.sendMessage({
-                  type: MainThreadMessageType.SourceBufferError,
-                  mediaSourceId: mediaSource.id,
-                  sourceBufferType: sourceBuffer.type,
-                  operationId: msgData.operationId,
-                  value:
-                    error instanceof CancellationError
-                      ? { errorName: "CancellationError" }
-                      : formatSourceBufferError(error).serialize(),
-                });
-              });
-          }
+          onSourceBufferAppendMessage(
+            this._currentContentInfo?.mediaSourceInfo ?? null,
+            msgData,
+            this._settings.coreInterface,
+          );
           break;
 
         case CoreMessageType.SourceBufferRemove:
-          {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
-                msgData.mediaSourceId
-            ) {
-              return;
-            }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            const sourceBuffer = arrayFind(
-              mediaSource.sourceBuffers,
-              (s) => s.type === msgData.sourceBufferType,
-            );
-            if (sourceBuffer === undefined) {
-              return;
-            }
-            sourceBuffer
-              .remove(msgData.value.start, msgData.value.end)
-              .then((buffered) => {
-                this._settings.coreInterface.sendMessage({
-                  type: MainThreadMessageType.SourceBufferSuccess,
-                  mediaSourceId: mediaSource.id,
-                  sourceBufferType: sourceBuffer.type,
-                  operationId: msgData.operationId,
-                  value: { buffered },
-                });
-              })
-              .catch((error) => {
-                this._settings.coreInterface.sendMessage({
-                  type: MainThreadMessageType.SourceBufferError,
-                  mediaSourceId: mediaSource.id,
-                  sourceBufferType: sourceBuffer.type,
-                  operationId: msgData.operationId,
-                  value:
-                    error instanceof CancellationError
-                      ? { errorName: "CancellationError" }
-                      : formatSourceBufferError(error).serialize(),
-                });
-              });
-          }
+          onSourceBufferRemoveMessage(
+            this._currentContentInfo?.mediaSourceInfo ?? null,
+            msgData,
+            this._settings.coreInterface,
+          );
           break;
 
         case CoreMessageType.AbortSourceBuffer:
           {
             if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
                 msgData.mediaSourceId
             ) {
-              return;
+              const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
+              const sourceBuffer = arrayFind(
+                mediaSource.sourceBuffers,
+                (s) => s.type === msgData.sourceBufferType,
+              );
+              sourceBuffer?.abort();
             }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            const sourceBuffer = arrayFind(
-              mediaSource.sourceBuffers,
-              (s) => s.type === msgData.sourceBufferType,
-            );
-            if (sourceBuffer === undefined) {
-              return;
-            }
-            sourceBuffer.abort();
           }
           break;
 
         case CoreMessageType.UpdateMediaSourceDuration:
           {
             if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
                 msgData.mediaSourceId
             ) {
-              return;
+              this._currentContentInfo.mediaSourceInfo.mediaSource.setDuration(
+                msgData.value.duration,
+                msgData.value.isRealEndKnown,
+              );
             }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            if (mediaSource?.id !== msgData.mediaSourceId) {
-              return;
-            }
-            mediaSource.setDuration(msgData.value.duration, msgData.value.isRealEndKnown);
           }
           break;
 
         case CoreMessageType.InterruptMediaSourceDurationUpdate:
           {
             if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
                 msgData.mediaSourceId
             ) {
-              return;
+              this._currentContentInfo.mediaSourceInfo.mediaSource.interruptDurationSetting();
             }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            if (mediaSource?.id !== msgData.mediaSourceId) {
-              return;
-            }
-            mediaSource.interruptDurationSetting();
           }
           break;
 
         case CoreMessageType.EndOfStream:
           {
             if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
                 msgData.mediaSourceId
             ) {
-              return;
+              this._currentContentInfo.mediaSourceInfo.mediaSource.maintainEndOfStream();
             }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            mediaSource.maintainEndOfStream();
           }
           break;
 
         case CoreMessageType.InterruptEndOfStream:
           {
             if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
                 msgData.mediaSourceId
             ) {
-              return;
+              this._currentContentInfo.mediaSourceInfo.mediaSource.stopEndOfStream();
             }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            mediaSource.stopEndOfStream();
           }
           break;
 
         case CoreMessageType.DisposeMediaSource:
           {
             if (
-              this._currentContentInfo?.mediaSourceInfo?.type !== "main" ||
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id !==
+              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
+              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
                 msgData.mediaSourceId
             ) {
-              return;
+              this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
             }
-            const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
-            mediaSource.dispose();
           }
           break;
 
-        case CoreMessageType.NeedsBufferFlush: {
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
+        case CoreMessageType.NeedsBufferFlush:
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            onNeedsBufferFlush(playbackObserver, mediaElement, msgData);
           }
-          const lastObservation = playbackObserver.getReference().getValue();
-          const currentTime = lastObservation.position.isAwaitingFuturePosition()
-            ? lastObservation.position.getWanted()
-            : mediaElement.currentTime;
-          const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
-          const canBeApproximateSeek = Boolean(
-            msgData.value?.relativePosHasBeenDefaulted,
-          );
-          let wantedSeekingTime: number;
-
-          if (relativeResumingPosition === 0 && canBeApproximateSeek) {
-            // in case relativeResumingPosition is 0, we still perform
-            // a tiny seek to be sure that the browser will correclty reload the video.
-            wantedSeekingTime = currentTime + 0.001;
-          } else {
-            wantedSeekingTime = currentTime + relativeResumingPosition;
-          }
-          playbackObserver.setCurrentTime(wantedSeekingTime);
           break;
-        }
 
-        case CoreMessageType.ActivePeriodChanged: {
+        case CoreMessageType.ActivePeriodChanged:
           if (
-            this._currentContentInfo?.contentId !== msgData.contentId ||
-            this._currentContentInfo.manifest === null
+            this._currentContentInfo?.contentId === msgData.contentId &&
+            this._currentContentInfo.manifest !== null
           ) {
-            return;
-          }
-          const period = arrayFind(
-            this._currentContentInfo.manifest.periods,
-            (p) => p.id === msgData.value.periodId,
-          );
-          if (period !== undefined) {
-            this.trigger("activePeriodChanged", { period });
+            const period = arrayFind(
+              this._currentContentInfo.manifest.periods,
+              (p) => p.id === msgData.value.periodId,
+            );
+            if (period !== undefined) {
+              this.trigger("activePeriodChanged", { period });
+            }
           }
           break;
-        }
 
         case CoreMessageType.AdaptationChanged: {
           if (
@@ -876,16 +749,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           lastContentProtection.setValue(msgData.value);
           break;
 
-        case CoreMessageType.ManifestReady: {
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
+        case CoreMessageType.ManifestReady:
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            const manifest = msgData.value.manifest;
+            this._currentContentInfo.manifest = manifest;
+            this._updateCodecSupport(manifest, mediaElement);
+            this._startPlaybackIfReady(playbackStartParams);
           }
-          const manifest = msgData.value.manifest;
-          this._currentContentInfo.manifest = manifest;
-          this._updateCodecSupport(manifest, mediaElement);
-          this._startPlaybackIfReady(playbackStartParams);
           break;
-        }
 
         case CoreMessageType.ManifestUpdate: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
@@ -910,27 +781,24 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         }
 
         case CoreMessageType.UpdatePlaybackRate:
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            playbackObserver.setPlaybackRate(msgData.value);
           }
-          playbackObserver.setPlaybackRate(msgData.value);
           break;
 
         case CoreMessageType.BitrateEstimateChange:
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            this.trigger("bitrateEstimateChange", {
+              type: msgData.value.bufferType,
+              bitrate: msgData.value.bitrate,
+            });
           }
-          this.trigger("bitrateEstimateChange", {
-            type: msgData.value.bufferType,
-            bitrate: msgData.value.bitrate,
-          });
           break;
 
         case CoreMessageType.InbandEvent:
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            this.trigger("inbandEvents", msgData.value);
           }
-          this.trigger("inbandEvents", msgData.value);
           break;
 
         case CoreMessageType.LockedStream: {
@@ -1025,19 +893,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
         }
 
-        case CoreMessageType.PeriodStreamCleared: {
+        case CoreMessageType.PeriodStreamCleared:
           if (
-            this._currentContentInfo?.contentId !== msgData.contentId ||
-            this._currentContentInfo.manifest === null
+            this._currentContentInfo?.contentId === msgData.contentId &&
+            this._currentContentInfo.manifest !== null
           ) {
-            return;
+            this.trigger("periodStreamCleared", {
+              periodId: msgData.value.periodId,
+              type: msgData.value.bufferType,
+            });
           }
-          this.trigger("periodStreamCleared", {
-            periodId: msgData.value.periodId,
-            type: msgData.value.bufferType,
-          });
           break;
-        }
 
         case CoreMessageType.DiscontinuityUpdate: {
           if (
@@ -1065,63 +931,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
         }
 
-        case CoreMessageType.PushTextData: {
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
-          }
-          if (textDisplayer === null) {
-            log.warn("text", "Received AddTextData message but no text displayer exists");
-          } else {
-            try {
-              const ranges = textDisplayer.pushTextData(msgData.value);
-              this._settings.coreInterface.sendMessage({
-                type: MainThreadMessageType.PushTextDataSuccess,
-                contentId: msgData.contentId,
-                value: { ranges },
-              });
-            } catch (err) {
-              const message = err instanceof Error ? err.message : "Unknown error";
-              this._settings.coreInterface.sendMessage({
-                type: MainThreadMessageType.PushTextDataError,
-                contentId: msgData.contentId,
-                value: { message },
-              });
-            }
+        case CoreMessageType.PushTextData:
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            onPushTextData(textDisplayer, msgData, this._settings.coreInterface);
           }
           break;
-        }
 
-        case CoreMessageType.RemoveTextData: {
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
-          }
-          if (textDisplayer === null) {
-            log.warn(
-              "text",
-              "Received RemoveTextData message but no text displayer exists",
-            );
-          } else {
-            try {
-              const ranges = textDisplayer.removeBuffer(
-                msgData.value.start,
-                msgData.value.end,
-              );
-              this._settings.coreInterface.sendMessage({
-                type: MainThreadMessageType.RemoveTextDataSuccess,
-                contentId: msgData.contentId,
-                value: { ranges },
-              });
-            } catch (err) {
-              const message = err instanceof Error ? err.message : "Unknown error";
-              this._settings.coreInterface.sendMessage({
-                type: MainThreadMessageType.RemoveTextDataError,
-                contentId: msgData.contentId,
-                value: { message },
-              });
-            }
+        case CoreMessageType.RemoveTextData:
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            onRemoveTextData(textDisplayer, msgData, this._settings.coreInterface);
           }
           break;
-        }
 
         case CoreMessageType.ResetTextDisplayer: {
           if (this._currentContentInfo?.contentId !== msgData.contentId) {
@@ -1178,27 +998,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
 
         case CoreMessageType.NeedsDecipherabilityFlush:
-          {
-            if (this._currentContentInfo?.contentId !== msgData.contentId) {
-              return;
-            }
-
-            const keySystem = getKeySystemConfiguration(mediaElement);
-            if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
-              notifyAndStartMediaSourceReload(0, undefined, undefined);
-            } else {
-              const lastObservation = playbackObserver.getReference().getValue();
-
-              const currentPosition = lastObservation.position.getWanted();
-
-              // simple seek close to the current position
-              // to flush the buffers
-              if (currentPosition + 0.001 < lastObservation.duration) {
-                playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
-              } else {
-                playbackObserver.setCurrentTime(currentPosition);
-              }
-            }
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            onNeedsDecipherabilityFlush(
+              playbackObserver,
+              mediaElement,
+              notifyAndStartMediaSourceReload,
+            );
           }
           break;
 
@@ -1990,11 +1795,15 @@ export interface IMediaSourceContentInitializerContentInfos {
    */
   mediaSourceInfo:
     | {
+        /** Identify a `MediaSource` managed by the Main Thread. */
         type: "main";
+        /** Direct interface to the `MediaSource`. */
         mediaSource: MainMediaSourceInterface;
       }
     | {
+        /** Identify a `MediaSource` managed by the Core. */
         type: "core";
+        /** Identifier linked to the `MediaSource` stored by Core. */
         mediaSourceId: string;
       }
     | null;
@@ -2351,5 +2160,293 @@ function onLogMessage(msgData: ILogMessageCoreMessage): void {
       break;
     default:
       assertUnreachable(msgData.value.logLevel);
+  }
+}
+
+/**
+ * Link MediaSource link sent from Core to the `HTMLMediaElement` when conditions
+ * are right.
+ * @param {Object} args
+ */
+function attachMediaSourceFromCore({
+  mediaElement,
+  mediaSourceLink,
+  mediaSourceStatus,
+  mediaSourceCancelSignal,
+  contentCancelSignal,
+}: {
+  /** The `HTMLMediaElement` on which the `MediaSource` will be set. */
+  mediaElement: IMediaElement;
+  /** Information on when the `MediaSource` can be attached. */
+  mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>;
+  /** The actual handle referencing to the MediaSource. */
+  mediaSourceLink: IAttachMediaSourceCoreMessagePayload;
+  /**
+   * Cancel signal that triggers when the MediaSource has to be removed
+   * from `mediaElement`.
+   */
+  mediaSourceCancelSignal: CancellationSignal;
+  /** Cancel signal that triggers when the content needs to be stopped. */
+  contentCancelSignal: CancellationSignal;
+}): void {
+  mediaSourceStatus.onUpdate(
+    (currStatus, stopListening) => {
+      if (currStatus === MediaSourceInitializationStatus.AttachNow) {
+        stopListening();
+        log.info("media", "Attaching MediaSource URL to the media element");
+        if (mediaSourceLink.type === "handle") {
+          mediaElement.srcObject = mediaSourceLink.value;
+          mediaSourceCancelSignal.register(() => {
+            mediaElement.srcObject = null;
+          });
+        } else {
+          mediaElement.src = mediaSourceLink.value;
+          mediaSourceCancelSignal.register(() => {
+            resetMediaElement(mediaElement, mediaSourceLink.value);
+          });
+        }
+        disableRemotePlaybackOnManagedMediaSource(mediaElement, mediaSourceCancelSignal);
+        mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
+      }
+    },
+    {
+      emitCurrentValue: true,
+      // TODO: I don't remember why we relied on the content's cancel signal
+      // here
+      clearSignal: contentCancelSignal,
+    },
+  );
+}
+
+/**
+ * Actions to perform when a `SourceBufferAppend` message is received from Core.
+ * @param {Object} mediaSourceInfo - Context associated to the current
+ * MediaSource.
+ * @param {Object} msgData - The message object as received from core.
+ * @param {Object} coreInterface - Interface allowing to exchange messages with
+ * core.
+ */
+function onSourceBufferAppendMessage(
+  mediaSourceInfo: IMediaSourceContentInitializerContentInfos["mediaSourceInfo"] | null,
+  msgData: IAppendBufferCoreMessage,
+  coreInterface: CoreInterface,
+): void {
+  if (
+    mediaSourceInfo?.type !== "main" ||
+    mediaSourceInfo.mediaSource.id !== msgData.mediaSourceId
+  ) {
+    return;
+  }
+  const { mediaSource } = mediaSourceInfo;
+  const sourceBuffer = arrayFind(
+    mediaSource.sourceBuffers,
+    (s) => s.type === msgData.sourceBufferType,
+  );
+  if (sourceBuffer === undefined) {
+    return;
+  }
+  sourceBuffer
+    .appendBuffer(msgData.value.data, msgData.value.params)
+    .then((buffered) => {
+      coreInterface.sendMessage({
+        type: MainThreadMessageType.SourceBufferSuccess,
+        mediaSourceId: mediaSource.id,
+        sourceBufferType: sourceBuffer.type,
+        operationId: msgData.operationId,
+        value: { buffered },
+      });
+    })
+    .catch((error) => {
+      coreInterface.sendMessage({
+        type: MainThreadMessageType.SourceBufferError,
+        mediaSourceId: mediaSource.id,
+        sourceBufferType: sourceBuffer.type,
+        operationId: msgData.operationId,
+        value:
+          error instanceof CancellationError
+            ? { errorName: "CancellationError" }
+            : formatSourceBufferError(error).serialize(),
+      });
+    });
+}
+
+/**
+ * Actions to perform when a `SourceBufferRemove` message is received from Core.
+ * @param {Object} mediaSourceInfo - Context associated to the current
+ * MediaSource.
+ * @param {Object} msgData - The message object as received from core.
+ * @param {Object} coreInterface - Interface allowing to exchange messages with
+ * core.
+ */
+function onSourceBufferRemoveMessage(
+  mediaSourceInfo: IMediaSourceContentInitializerContentInfos["mediaSourceInfo"] | null,
+  msgData: IRemoveBufferCoreMessage,
+  coreInterface: CoreInterface,
+): void {
+  if (
+    mediaSourceInfo?.type !== "main" ||
+    mediaSourceInfo.mediaSource.id !== msgData.mediaSourceId
+  ) {
+    return;
+  }
+  const { mediaSource } = mediaSourceInfo;
+  const sourceBuffer = arrayFind(
+    mediaSource.sourceBuffers,
+    (s) => s.type === msgData.sourceBufferType,
+  );
+  if (sourceBuffer === undefined) {
+    return;
+  }
+  sourceBuffer
+    .remove(msgData.value.start, msgData.value.end)
+    .then((buffered) => {
+      coreInterface.sendMessage({
+        type: MainThreadMessageType.SourceBufferSuccess,
+        mediaSourceId: mediaSource.id,
+        sourceBufferType: sourceBuffer.type,
+        operationId: msgData.operationId,
+        value: { buffered },
+      });
+    })
+    .catch((error) => {
+      coreInterface.sendMessage({
+        type: MainThreadMessageType.SourceBufferError,
+        mediaSourceId: mediaSource.id,
+        sourceBufferType: sourceBuffer.type,
+        operationId: msgData.operationId,
+        value:
+          error instanceof CancellationError
+            ? { errorName: "CancellationError" }
+            : formatSourceBufferError(error).serialize(),
+      });
+    });
+}
+
+/**
+ * Actions to perform when a `PushTextData` message is received from Core.
+ * @param {Object|null} textDisplayer - Abstraction used to display subtitles.
+ * @param {Object} msgData - The message object as received from core.
+ * @param {Object} coreInterface - Interface allowing to exchange messages with
+ * core.
+ */
+function onPushTextData(
+  textDisplayer: ITextDisplayer | null,
+  msgData: IPushTextDataCoreMessage,
+  coreInterface: CoreInterface,
+): void {
+  if (textDisplayer === null) {
+    log.warn("text", "Received AddTextData message but no text displayer exists");
+  } else {
+    try {
+      const ranges = textDisplayer.pushTextData(msgData.value);
+      coreInterface.sendMessage({
+        type: MainThreadMessageType.PushTextDataSuccess,
+        contentId: msgData.contentId,
+        value: { ranges },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      coreInterface.sendMessage({
+        type: MainThreadMessageType.PushTextDataError,
+        contentId: msgData.contentId,
+        value: { message },
+      });
+    }
+  }
+}
+
+/**
+ * Actions to perform when a `RemoveTextData` message is received from Core.
+ * @param {Object|null} textDisplayer - Abstraction used to display subtitles.
+ * @param {Object} msgData - The message object as received from core.
+ * @param {Object} coreInterface - Interface allowing to exchange messages with
+ * core.
+ */
+function onRemoveTextData(
+  textDisplayer: ITextDisplayer | null,
+  msgData: IRemoveTextDataCoreMessage,
+  coreInterface: CoreInterface,
+): void {
+  if (textDisplayer === null) {
+    log.warn("text", "Received RemoveTextData message but no text displayer exists");
+  } else {
+    try {
+      const ranges = textDisplayer.removeBuffer(msgData.value.start, msgData.value.end);
+      coreInterface.sendMessage({
+        type: MainThreadMessageType.RemoveTextDataSuccess,
+        contentId: msgData.contentId,
+        value: { ranges },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      coreInterface.sendMessage({
+        type: MainThreadMessageType.RemoveTextDataError,
+        contentId: msgData.contentId,
+        value: { message },
+      });
+    }
+  }
+}
+
+/**
+ * Actions to perform when a `NeedsBufferFlush` message is received from Core.
+ * @param {Object} playbackObserver - Class monitoring playback
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Object} msgData - The message object as received from core.
+ */
+function onNeedsBufferFlush(
+  playbackObserver: IMediaElementPlaybackObserver,
+  mediaElement: IMediaElement,
+  msgData: INeedsBufferFlushCoreMessage,
+): void {
+  const lastObservation = playbackObserver.getReference().getValue();
+  const currentTime = lastObservation.position.isAwaitingFuturePosition()
+    ? lastObservation.position.getWanted()
+    : mediaElement.currentTime;
+  const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
+  const canBeApproximateSeek = Boolean(msgData.value?.relativePosHasBeenDefaulted);
+  let wantedSeekingTime: number;
+
+  if (relativeResumingPosition === 0 && canBeApproximateSeek) {
+    // in case relativeResumingPosition is 0, we still perform
+    // a tiny seek to be sure that the browser will correclty reload the video.
+    wantedSeekingTime = currentTime + 0.001;
+  } else {
+    wantedSeekingTime = currentTime + relativeResumingPosition;
+  }
+  playbackObserver.setCurrentTime(wantedSeekingTime);
+}
+
+/**
+ * Actions to perform when a `NeedsBufferFlush` message is received from Core.
+ * @param {Object} playbackObserver - Class monitoring playback
+ * @param {HTMLMediaElement} mediaElement
+ * @param {Function} triggerReload - Function to call if we need to "reload the"
+ * MediaSource".
+ */
+function onNeedsDecipherabilityFlush(
+  playbackObserver: IMediaElementPlaybackObserver,
+  mediaElement: IMediaElement,
+  triggerReload: (
+    deltaPosition: number,
+    minimumPosition: number | undefined,
+    maximumPosition: number | undefined,
+  ) => void,
+): void {
+  const keySystem = getKeySystemConfiguration(mediaElement);
+  if (shouldReloadMediaSourceOnDecipherabilityUpdate(keySystem?.[0])) {
+    triggerReload(0, undefined, undefined);
+  } else {
+    const lastObservation = playbackObserver.getReference().getValue();
+
+    const currentPosition = lastObservation.position.getWanted();
+
+    // simple seek close to the current position
+    // to flush the buffers
+    if (currentPosition + 0.001 < lastObservation.duration) {
+      playbackObserver.setCurrentTime(mediaElement.currentTime + 0.001);
+    } else {
+      playbackObserver.setCurrentTime(currentPosition);
+    }
   }
 }
