@@ -7,7 +7,6 @@ import type {
   IAdaptiveRepresentationSelectorArguments,
   IAdaptationChoice,
   IResolutionInfo,
-  ICreateMediaSourceCoreMessage,
   ISentError,
   ICoreMessage,
   ISentLogValue,
@@ -35,6 +34,7 @@ import {
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
 } from "../../manifest";
+import { IMediaSourceInterface } from "../../mse";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import type {
   IReadOnlyPlaybackObserver,
@@ -523,30 +523,30 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
 
         case CoreMessageType.CreateMediaSource:
-          this._onCreateMediaSourceMessage(
-            msgData,
-            mediaElement,
-            mediaSourceStatus,
-            this._settings.coreInterface,
-          );
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            this._onCreateMediaSourceMessage(
+              msgData.mediaSourceId,
+              mediaElement,
+              mediaSourceStatus,
+              this._settings.coreInterface,
+            );
+          }
           break;
 
-        case CoreMessageType.AddSourceBuffer:
-          if (
-            this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
-            this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
-              msgData.mediaSourceId
-          ) {
-            this._currentContentInfo.mediaSourceInfo.mediaSource.addSourceBuffer(
+        case CoreMessageType.AddSourceBuffer: {
+          const mediaSource = this._checkMediaSource(msgData.mediaSourceId);
+          if (mediaSource !== null) {
+            mediaSource.addSourceBuffer(
               msgData.value.sourceBufferType,
               msgData.value.codec,
             );
           }
           break;
+        }
 
         case CoreMessageType.SourceBufferAppend:
           onSourceBufferAppendMessage(
-            this._currentContentInfo?.mediaSourceInfo ?? null,
+            this._checkMediaSource(msgData.mediaSourceId),
             msgData,
             this._settings.coreInterface,
           );
@@ -554,7 +554,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         case CoreMessageType.SourceBufferRemove:
           onSourceBufferRemoveMessage(
-            this._currentContentInfo?.mediaSourceInfo ?? null,
+            this._checkMediaSource(msgData.mediaSourceId),
             msgData,
             this._settings.coreInterface,
           );
@@ -562,12 +562,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         case CoreMessageType.AbortSourceBuffer:
           {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
-                msgData.mediaSourceId
-            ) {
-              const { mediaSource } = this._currentContentInfo.mediaSourceInfo;
+            const mediaSource = this._checkMediaSource(msgData.mediaSourceId);
+            if (mediaSource !== null) {
               const sourceBuffer = arrayFind(
                 mediaSource.sourceBuffers,
                 (s) => s.type === msgData.sourceBufferType,
@@ -579,12 +575,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         case CoreMessageType.UpdateMediaSourceDuration:
           {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
-                msgData.mediaSourceId
-            ) {
-              this._currentContentInfo.mediaSourceInfo.mediaSource.setDuration(
+            const mediaSource = this._checkMediaSource(msgData.mediaSourceId);
+            if (mediaSource !== null) {
+              mediaSource.setDuration(
                 msgData.value.duration,
                 msgData.value.isRealEndKnown,
               );
@@ -594,48 +587,36 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
         case CoreMessageType.InterruptMediaSourceDurationUpdate:
           {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
-                msgData.mediaSourceId
-            ) {
-              this._currentContentInfo.mediaSourceInfo.mediaSource.interruptDurationSetting();
+            const mediaSource = this._checkMediaSource(msgData.mediaSourceId);
+            if (mediaSource !== null) {
+              mediaSource.interruptDurationSetting();
             }
           }
           break;
 
         case CoreMessageType.EndOfStream:
           {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
-                msgData.mediaSourceId
-            ) {
-              this._currentContentInfo.mediaSourceInfo.mediaSource.maintainEndOfStream();
+            const mediaSource = this._checkMediaSource(msgData.mediaSourceId);
+            if (mediaSource !== null) {
+              mediaSource.maintainEndOfStream();
             }
           }
           break;
 
         case CoreMessageType.InterruptEndOfStream:
           {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
-                msgData.mediaSourceId
-            ) {
-              this._currentContentInfo.mediaSourceInfo.mediaSource.stopEndOfStream();
+            const mediaSource = this._checkMediaSource(msgData.mediaSourceId);
+            if (mediaSource !== null) {
+              mediaSource.stopEndOfStream();
             }
           }
           break;
 
         case CoreMessageType.DisposeMediaSource:
           {
-            if (
-              this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
-              this._currentContentInfo.mediaSourceInfo.mediaSource.id ===
-                msgData.mediaSourceId
-            ) {
-              this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
+            const mediaSource = this._checkMediaSource(msgData.mediaSourceId);
+            if (mediaSource !== null) {
+              mediaSource.dispose();
             }
           }
           break;
@@ -743,10 +724,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         }
 
         case CoreMessageType.EncryptionDataEncountered:
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            lastContentProtection.setValue(msgData.value);
           }
-          lastContentProtection.setValue(msgData.value);
           break;
 
         case CoreMessageType.ManifestReady:
@@ -944,31 +924,29 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
 
         case CoreMessageType.ResetTextDisplayer: {
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
-          }
-          if (textDisplayer === null) {
-            log.warn(
-              "text",
-              "Received ResetTextDisplayer message but no text displayer exists",
-            );
-          } else {
-            textDisplayer.reset();
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            if (textDisplayer === null) {
+              log.warn(
+                "text",
+                "Received ResetTextDisplayer message but no text displayer exists",
+              );
+            } else {
+              textDisplayer.reset();
+            }
           }
           break;
         }
 
         case CoreMessageType.StopTextDisplayer: {
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
-          }
-          if (textDisplayer === null) {
-            log.warn(
-              "text",
-              "Received StopTextDisplayer message but no text displayer exists",
-            );
-          } else {
-            textDisplayer.stop();
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            if (textDisplayer === null) {
+              log.warn(
+                "text",
+                "Received StopTextDisplayer message but no text displayer exists",
+              );
+            } else {
+              textDisplayer.stop();
+            }
           }
           break;
         }
@@ -985,15 +963,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               this._currentContentInfo.mediaSourceInfo.type === "main"
                 ? this._currentContentInfo.mediaSourceInfo.mediaSource.id
                 : this._currentContentInfo.mediaSourceInfo.mediaSourceId;
-
-            if (mediaSourceId !== msgData.mediaSourceId) {
-              return;
+            if (mediaSourceId === msgData.mediaSourceId) {
+              reloadMediaSource(
+                msgData.value.timeOffset,
+                msgData.value.minimumPosition,
+                msgData.value.maximumPosition,
+              );
             }
-            reloadMediaSource(
-              msgData.value.timeOffset,
-              msgData.value.minimumPosition,
-              msgData.value.maximumPosition,
-            );
           }
           break;
 
@@ -1008,16 +984,15 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
 
         case CoreMessageType.SegmentSinkStoreUpdate: {
-          if (this._currentContentInfo?.contentId !== msgData.contentId) {
-            return;
-          }
-          const sinkObj = this._awaitingRequests.pendingSinkMetrics.get(
-            msgData.value.requestId,
-          );
-          if (sinkObj !== undefined) {
-            sinkObj.resolve(msgData.value.segmentSinkMetrics);
-          } else {
-            log.error("Init", "Failed to send segment sink store update");
+          if (this._currentContentInfo?.contentId === msgData.contentId) {
+            const sinkObj = this._awaitingRequests.pendingSinkMetrics.get(
+              msgData.value.requestId,
+            );
+            if (sinkObj !== undefined) {
+              sinkObj.resolve(msgData.value.segmentSinkMetrics);
+            } else {
+              log.error("Init", "Failed to send segment sink store update");
+            }
           }
           break;
         }
@@ -1044,7 +1019,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               tObj.resolve(msgData.value.data);
             }
           } else {
-            log.error("Init", "Failed to send segment sink store update");
+            log.error("Init", "Did not find thumbnail data request linked to response");
           }
           break;
         }
@@ -1682,96 +1657,117 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   /**
-   * Handles core messages asking to create a MediaSource.
-   * @param {Object} msg - The core's message received.
+   * Handles core messages asking to create a `MediaSource`.
+   * @param {Object} mediaSourceId - The identifier given by Core to refer to
+   * that `MediaSource`.
    * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
    * content plays.
    * @param {Object} coreInterface - The interface to the core.
    */
   private _onCreateMediaSourceMessage(
-    msg: ICreateMediaSourceCoreMessage,
+    mediaSourceId: string,
     mediaElement: IMediaElement,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     coreInterface: CoreInterface,
   ): void {
-    if (this._currentContentInfo?.contentId !== msg.contentId) {
-      log.info("Init", "Ignoring MediaSource attachment due to wrong `contentId`");
-    } else {
-      const { mediaSourceId } = msg;
-      try {
-        mediaSourceStatus.onUpdate(
-          (currStatus, stopListening) => {
-            if (this._currentContentInfo === null) {
-              stopListening();
-              return;
+    try {
+      mediaSourceStatus.onUpdate(
+        (currStatus, stopListening) => {
+          if (this._currentContentInfo === null) {
+            stopListening();
+            return;
+          }
+          if (currStatus === MediaSourceInitializationStatus.AttachNow) {
+            stopListening();
+            const mediaSource = new MainMediaSourceInterface(
+              mediaSourceId,
+              "FORCED_MEDIA_SOURCE" in mediaElement
+                ? mediaElement.FORCED_MEDIA_SOURCE
+                : undefined,
+            );
+            if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
+              this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
             }
-            if (currStatus === MediaSourceInitializationStatus.AttachNow) {
-              stopListening();
-              const mediaSource = new MainMediaSourceInterface(
+            this._currentContentInfo.mediaSourceInfo = {
+              type: "main",
+              mediaSource,
+            };
+            mediaSource.addEventListener("mediaSourceOpen", () => {
+              coreInterface.sendMessage({
+                type: MainThreadMessageType.MediaSourceReadyStateChange,
                 mediaSourceId,
-                "FORCED_MEDIA_SOURCE" in mediaElement
-                  ? mediaElement.FORCED_MEDIA_SOURCE
-                  : undefined,
-              );
-              if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
-                this._currentContentInfo.mediaSourceInfo.mediaSource.dispose();
-              }
-              this._currentContentInfo.mediaSourceInfo = {
-                type: "main",
-                mediaSource,
-              };
-              mediaSource.addEventListener("mediaSourceOpen", () => {
-                coreInterface.sendMessage({
-                  type: MainThreadMessageType.MediaSourceReadyStateChange,
-                  mediaSourceId,
-                  value: "open",
-                });
+                value: "open",
               });
-              mediaSource.addEventListener("mediaSourceEnded", () => {
-                coreInterface.sendMessage({
-                  type: MainThreadMessageType.MediaSourceReadyStateChange,
-                  mediaSourceId,
-                  value: "ended",
-                });
+            });
+            mediaSource.addEventListener("mediaSourceEnded", () => {
+              coreInterface.sendMessage({
+                type: MainThreadMessageType.MediaSourceReadyStateChange,
+                mediaSourceId,
+                value: "ended",
               });
-              mediaSource.addEventListener("mediaSourceClose", () => {
-                coreInterface.sendMessage({
-                  type: MainThreadMessageType.MediaSourceReadyStateChange,
-                  mediaSourceId,
-                  value: "closed",
-                });
+            });
+            mediaSource.addEventListener("mediaSourceClose", () => {
+              coreInterface.sendMessage({
+                type: MainThreadMessageType.MediaSourceReadyStateChange,
+                mediaSourceId,
+                value: "closed",
               });
-              let url: string | null = null;
-              if (mediaSource.handle.type === "handle") {
-                mediaElement.srcObject = mediaSource.handle.value;
-              } else {
-                url = URL.createObjectURL(mediaSource.handle.value);
-                mediaElement.src = url;
-              }
-              this._currentMediaSourceCanceller.signal.register(() => {
-                mediaSource.dispose();
-                resetMediaElement(mediaElement, url);
-              });
-              mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
-              disableRemotePlaybackOnManagedMediaSource(
-                mediaElement,
-                this._currentMediaSourceCanceller.signal,
-              );
+            });
+            let url: string | null = null;
+            if (mediaSource.handle.type === "handle") {
+              mediaElement.srcObject = mediaSource.handle.value;
+            } else {
+              url = URL.createObjectURL(mediaSource.handle.value);
+              mediaElement.src = url;
             }
-          },
-          {
-            emitCurrentValue: true,
-            clearSignal: this._currentMediaSourceCanceller.signal,
-          },
-        );
-      } catch (_err) {
-        const error = new OtherError(
-          "NONE",
-          "Unknown error when creating the MediaSource",
-        );
-        this._onFatalError(error);
-      }
+            this._currentMediaSourceCanceller.signal.register(() => {
+              mediaSource.dispose();
+              resetMediaElement(mediaElement, url);
+            });
+            mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
+            disableRemotePlaybackOnManagedMediaSource(
+              mediaElement,
+              this._currentMediaSourceCanceller.signal,
+            );
+          }
+        },
+        {
+          emitCurrentValue: true,
+          clearSignal: this._currentMediaSourceCanceller.signal,
+        },
+      );
+    } catch (_err) {
+      const error = new OtherError("NONE", "Unknown error when creating the MediaSource");
+      this._onFatalError(error);
     }
+  }
+
+  /**
+   * Returns the current `MediaSourceInteface` handled by main thread if given
+   * the right identifier.
+   *
+   * Returns `null` if any of those is true:
+   * -  The `MediaSource` is handled by Core, not Main Thread.
+   * -  There is no `MediaSource` initialized right now.
+   * -  The given identifier is not associated to the current `MediaSourceInterface`
+   *
+   * The point of this method is mostly to perform quick checks on core message that
+   * an action it asks us to perform is linked to the current `MediaSource`, not a
+   * previous or future one.
+   *
+   * @param {string} mediaSourceId - The identifier that is assumed to be linked
+   * to the current `MediaSourceInterface` on main thread.
+   * @returns {Object|null} - The corresponding `MediaSourceInterface` if the given
+   * `mediaSourceId` does correspond to the one handled by this `ContentInitializer`.
+   */
+  private _checkMediaSource(mediaSourceId: string): IMediaSourceInterface | null {
+    if (
+      this._currentContentInfo?.mediaSourceInfo?.type === "main" &&
+      this._currentContentInfo.mediaSourceInfo.mediaSource.id === mediaSourceId
+    ) {
+      return this._currentContentInfo.mediaSourceInfo.mediaSource;
+    }
+    return null;
   }
 }
 
@@ -2220,24 +2216,19 @@ function attachMediaSourceFromCore({
 
 /**
  * Actions to perform when a `SourceBufferAppend` message is received from Core.
- * @param {Object} mediaSourceInfo - Context associated to the current
- * MediaSource.
+ * @param {Object|null} mediaSource - Current `MediaSourceInterface`
  * @param {Object} msgData - The message object as received from core.
  * @param {Object} coreInterface - Interface allowing to exchange messages with
  * core.
  */
 function onSourceBufferAppendMessage(
-  mediaSourceInfo: IMediaSourceContentInitializerContentInfos["mediaSourceInfo"] | null,
+  mediaSource: IMediaSourceInterface | null,
   msgData: IAppendBufferCoreMessage,
   coreInterface: CoreInterface,
 ): void {
-  if (
-    mediaSourceInfo?.type !== "main" ||
-    mediaSourceInfo.mediaSource.id !== msgData.mediaSourceId
-  ) {
+  if (mediaSource === null) {
     return;
   }
-  const { mediaSource } = mediaSourceInfo;
   const sourceBuffer = arrayFind(
     mediaSource.sourceBuffers,
     (s) => s.type === msgData.sourceBufferType,
@@ -2272,24 +2263,19 @@ function onSourceBufferAppendMessage(
 
 /**
  * Actions to perform when a `SourceBufferRemove` message is received from Core.
- * @param {Object} mediaSourceInfo - Context associated to the current
- * MediaSource.
+ * @param {Object|null} mediaSource - Current `MediaSourceInterface`
  * @param {Object} msgData - The message object as received from core.
  * @param {Object} coreInterface - Interface allowing to exchange messages with
  * core.
  */
 function onSourceBufferRemoveMessage(
-  mediaSourceInfo: IMediaSourceContentInitializerContentInfos["mediaSourceInfo"] | null,
+  mediaSource: IMediaSourceInterface | null,
   msgData: IRemoveBufferCoreMessage,
   coreInterface: CoreInterface,
 ): void {
-  if (
-    mediaSourceInfo?.type !== "main" ||
-    mediaSourceInfo.mediaSource.id !== msgData.mediaSourceId
-  ) {
+  if (mediaSource == null) {
     return;
   }
-  const { mediaSource } = mediaSourceInfo;
   const sourceBuffer = arrayFind(
     mediaSource.sourceBuffers,
     (s) => s.type === msgData.sourceBufferType,
