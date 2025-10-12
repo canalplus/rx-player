@@ -11,6 +11,7 @@ import type {
   ISentError,
   ICoreMessage,
   ISentLogValue,
+  ILogMessageCoreMessage,
 } from "../../core/types";
 import { CoreMessageType } from "../../core/types";
 import {
@@ -231,40 +232,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       const type = msgData.type;
       switch (type) {
         case CoreMessageType.LogMessage: {
-          const formatted: IAcceptedLogValue[] = msgData.value.logs.map((l) => {
-            switch (typeof l) {
-              case "string":
-              case "number":
-              case "boolean":
-              case "undefined":
-                return l;
-              case "object":
-                if (l === null) {
-                  return null;
-                }
-                return formatSentLogObject(l);
-              default:
-                assertUnreachable(l);
-            }
-          });
-          switch (msgData.value.logLevel) {
-            case "NONE":
-              break;
-            case "ERROR":
-              log.error(msgData.value.namespace, ...formatted);
-              break;
-            case "WARNING":
-              log.warn(msgData.value.namespace, ...formatted);
-              break;
-            case "INFO":
-              log.info(msgData.value.namespace, ...formatted);
-              break;
-            case "DEBUG":
-              log.debug(msgData.value.namespace, ...formatted);
-              break;
-            default:
-              assertUnreachable(msgData.value.logLevel);
-          }
+          onLogMessage(msgData);
           break;
         }
         default:
@@ -2342,4 +2310,46 @@ function formatSentLogObject(arg: ISentLogValue): IAcceptedLogValue {
     return formatCoreError(arg as ISentError);
   }
   return arg as Exclude<ISentLogValue, ISentError>;
+}
+
+/**
+ * Callback called when a log message is sent back from the Core.
+ * Format and outputs the actual log.
+ * @param {Object} msgData - The whole received message from Core.
+ */
+function onLogMessage(msgData: ILogMessageCoreMessage): void {
+  const formatted: IAcceptedLogValue[] = msgData.value.logs.map((l) => {
+    switch (typeof l) {
+      case "string":
+      case "number":
+      case "boolean":
+      case "undefined":
+        return l;
+      case "object":
+        if (l === null) {
+          return null;
+        }
+        return formatSentLogObject(l);
+      default:
+        assertUnreachable(l);
+    }
+  });
+  switch (msgData.value.logLevel) {
+    case "NONE":
+      break;
+    case "ERROR":
+      log.error(msgData.value.namespace, ...formatted);
+      break;
+    case "WARNING":
+      log.warn(msgData.value.namespace, ...formatted);
+      break;
+    case "INFO":
+      log.info(msgData.value.namespace, ...formatted);
+      break;
+    case "DEBUG":
+      log.debug(msgData.value.namespace, ...formatted);
+      break;
+    default:
+      assertUnreachable(msgData.value.logLevel);
+  }
 }
