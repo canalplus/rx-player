@@ -10,9 +10,9 @@ const MetaPlaylistDASHSmooth = {
       transport: "dash",
     },
     {
-      url: "https://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest",
+      url: "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
       startTime: 733.3,
-      endTime: 1368,
+      endTime: 853.3,
       transport: "smooth",
     },
   ],
