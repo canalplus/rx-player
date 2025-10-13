@@ -1531,7 +1531,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
             /* do nothing */
           },
         });
-        await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
           const audioTracks = player.getAvailableAudioTracks();
 
           const audioAdaptations = manifestInfos.periods[0].adaptations.audio;
@@ -1577,7 +1577,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
             /* do nothing */
           },
         });
-        await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
           const textTracks = player.getAvailableTextTracks();
 
           const textAdaptations = manifestInfos.periods[0].adaptations.text;
@@ -1621,7 +1621,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
             /* do nothing */
           },
         });
-        await checkAfterSleepWithBackoff({ maxTimeMs: 50 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 200 }, () => {
           const videoTracks = player.getAvailableVideoTracks();
 
           const videoAdaptations = manifestInfos.periods[0].adaptations.video;
