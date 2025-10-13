@@ -17,6 +17,7 @@
 import type { IMediaElement } from "../compat/browser_compatibility_types";
 import isSeekingApproximate from "../compat/is_seeking_approximate";
 import config from "../config";
+import ManualTimeRanges from "../core/segment_sinks/implementations/utils/manual_time_ranges";
 import log from "../log";
 import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
 import noop from "../utils/noop";
@@ -68,9 +69,9 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS = [
  */
 export default class PlaybackObserver {
   /** HTMLMediaElement which we want to observe. */
-  private _mediaElement: IMediaElement;
+  private _mediaElementRef: SharedReference<IMediaElement | null>;
 
-  /** If `true`, a `MediaSource` object is linked to `_mediaElement`. */
+  /** If `true`, a `MediaSource` object is linked to the `HTMLMediaElement`. */
   private _withMediaSource: boolean;
 
   /**
@@ -132,6 +133,8 @@ export default class PlaybackObserver {
    */
   private _expectedSeekingPosition: number | null;
 
+  private _observationIntervalId: ReturnType<typeof setInterval> | null;
+
   /**
    * If `true` seek operations asked through the
    * `MediaElementPlaybackObserver` will not be performed now but after the
@@ -143,34 +146,62 @@ export default class PlaybackObserver {
    * Create a new `PlaybackObserver`, which allows to produce new "playback
    * observations" on various media events and intervals.
    *
+   * Once a `PlaybackObserver` is created, you will want to "attach" the
+   * media element to it through the `attachMediaElement` method once that
+   * element is ready to play your content.
+   *
    * Note that creating a `PlaybackObserver` lead to the usage of resources,
    * such as event listeners which will only be freed once the `stop` method is
    * called.
-   * @param {HTMLMediaElement} mediaElement
    * @param {Object} options
    */
-  constructor(mediaElement: IMediaElement, options: IPlaybackObserverOptions) {
+  constructor(options: IPlaybackObserverOptions) {
     this._internalSeeksIncoming = [];
-    this._mediaElement = mediaElement;
+    this._mediaElementRef = new SharedReference<IMediaElement | null>(null);
     this._withMediaSource = options.withMediaSource;
     this._lowLatencyMode = options.lowLatencyMode;
     this._canceller = new TaskCanceller();
-    this._observationRef = this._createSharedReference();
     this._expectedSeekingPosition = null;
     this._pendingSeek = null;
     this._isSeekBlocked = false;
-
-    const onLoadedMetadata = () => {
-      if (this._pendingSeek !== null && !this._isSeekBlocked) {
-        const { position: positionToSeekTo, isInternal } = this._pendingSeek;
-        this._pendingSeek = null;
-        this._actuallySetCurrentTime(positionToSeekTo, isInternal);
-      }
-    };
-    mediaElement.addEventListener("loadedmetadata", onLoadedMetadata);
+    this._observationIntervalId = null;
+    this._observationRef = this._createSharedReference();
     this._canceller.signal.register(() => {
-      mediaElement.removeEventListener("loadedmetadata", onLoadedMetadata);
+      this._mediaElementRef.finish();
     });
+  }
+
+  /**
+   * "Link" the actual `HTMLMediaElement` to this `PlaybackObserver`.
+   *
+   * This is done in a step separate from the constructor to allow complex
+   * situations where you want to inialize the polling logic before the media
+   * element is ready to play your content (e.g. when pre-loading the next
+   * content).
+   *
+   * @param {HTMLMediaElement} mediaElement - The `HTMLMediaElement` on which
+   * the content plays.
+   */
+  public attachMediaElement(mediaElement: IMediaElement): void {
+    const prevMediaElement = this._mediaElementRef.getValue();
+    if (prevMediaElement !== null) {
+      throw new Error("A media element was already attached to this PlaybackObserver");
+    }
+    this._mediaElementRef.setValue(mediaElement);
+    if (this._canceller.isUsed()) {
+      return;
+    }
+
+    this._registerLoadedMetadataEvent(mediaElement);
+    this._restartInterval();
+    this._registerMediaElementEvents(mediaElement);
+    this._generateObservationForEvent("init");
+    if (this._canceller.isUsed()) {
+      return;
+    }
+    if (mediaElement.readyState >= 1) {
+      this._onLoadedMetadataEvent();
+    }
   }
 
   /**
@@ -192,15 +223,21 @@ export default class PlaybackObserver {
    * @returns {number}
    */
   public getCurrentTime(): number {
-    return this._mediaElement.currentTime;
+    return (
+      this._mediaElementRef.getValue()?.currentTime ??
+      this._observationRef.getValue().position.getPolled()
+    );
   }
 
   /**
    * Returns the current playback rate advertised by the `HTMLMediaElement`.
-   * @returns {number}
+   * @returns {number|undefined}
    */
   public getPlaybackRate(): number {
-    return this._mediaElement.playbackRate;
+    return (
+      this._mediaElementRef.getValue()?.playbackRate ??
+      this._observationRef.getValue().playbackRate
+    );
   }
 
   /**
@@ -208,10 +245,12 @@ export default class PlaybackObserver {
    *
    * Use this instead of the same status emitted on an observation when you want
    * to be sure you're using the current value.
-   * @returns {boolean}
+   * @returns {boolean|undefined}
    */
   public getIsPaused(): boolean {
-    return this._mediaElement.paused;
+    return (
+      this._mediaElementRef.getValue()?.paused ?? this._observationRef.getValue().paused
+    );
   }
 
   /**
@@ -237,10 +276,15 @@ export default class PlaybackObserver {
   public unblockSeeking(): void {
     if (this._isSeekBlocked) {
       this._isSeekBlocked = false;
-      if (this._pendingSeek !== null && this._mediaElement.readyState >= 1) {
+      const mediaElement = this._mediaElementRef.getValue();
+      if (
+        mediaElement !== null &&
+        mediaElement.readyState >= 1 &&
+        this._pendingSeek !== null
+      ) {
         const { position: positionToSeekTo, isInternal } = this._pendingSeek;
         this._pendingSeek = null;
-        this._actuallySetCurrentTime(positionToSeekTo, isInternal);
+        this._actuallySetCurrentTime(mediaElement, positionToSeekTo, isInternal);
       }
     }
   }
@@ -290,31 +334,37 @@ export default class PlaybackObserver {
    * the user.
    */
   public setCurrentTime(time: number, isInternal: boolean = true): void {
-    if (!this._isSeekBlocked && this._mediaElement.readyState >= 1) {
-      this._actuallySetCurrentTime(time, isInternal);
+    const mediaElement = this._mediaElementRef.getValue();
+    if (mediaElement !== null && !this._isSeekBlocked && mediaElement.readyState >= 1) {
+      this._actuallySetCurrentTime(mediaElement, time, isInternal);
     } else {
       this._pendingSeek = { position: time, isInternal };
       this._internalSeeksIncoming = [];
-      if (!this._isSeekBlocked) {
-        this._generateObservationForEvent("manual");
-      }
+      this._generateObservationForEvent("manual");
     }
   }
 
   /**
-   * Update the playback rate of the `HTMLMediaElement`.
+   * Update the playback rate of the `HTMLmediaElement`.
    * @param {number} playbackRate
    */
   public setPlaybackRate(playbackRate: number): void {
-    this._mediaElement.playbackRate = playbackRate;
+    const mediaElement = this._mediaElementRef.getValue();
+    if (mediaElement === null) {
+      return;
+    }
+    mediaElement.playbackRate = playbackRate;
   }
 
   /**
-   * Returns the current `readyState` advertised by the `HTMLMediaElement`.
+   * Returns the current `readyState` advertised by the `HTMLmediaElement`.
    * @returns {number}
    */
   public getReadyState(): number {
-    return this._mediaElement.readyState;
+    return (
+      this._mediaElementRef.getValue()?.readyState ??
+      this._observationRef.getValue().readyState
+    );
   }
 
   /**
@@ -379,12 +429,16 @@ export default class PlaybackObserver {
     return generateReadOnlyObserver(this, transform, this._canceller.signal);
   }
 
-  private _actuallySetCurrentTime(time: number, isInternal: boolean): void {
+  private _actuallySetCurrentTime(
+    mediaElement: IMediaElement,
+    time: number,
+    isInternal: boolean,
+  ): void {
     log.info("media", "Actually seeking.", { time, isInternal });
     if (isInternal) {
       this._internalSeeksIncoming.push(time);
     }
-    this._mediaElement.currentTime = time;
+    mediaElement.currentTime = time;
   }
 
   /**
@@ -396,51 +450,25 @@ export default class PlaybackObserver {
     if (this._observationRef !== undefined) {
       return this._observationRef;
     }
-
-    const {
-      SAMPLING_INTERVAL_MEDIASOURCE,
-      SAMPLING_INTERVAL_LOW_LATENCY,
-      SAMPLING_INTERVAL_NO_MEDIASOURCE,
-    } = config.getCurrent();
     const returnedSharedReference = new SharedReference(
       this._getCurrentObservation("init"),
       this._canceller.signal,
     );
 
-    let interval: number;
-    if (this._lowLatencyMode) {
-      interval = SAMPLING_INTERVAL_LOW_LATENCY;
-    } else if (this._withMediaSource) {
-      interval = SAMPLING_INTERVAL_MEDIASOURCE;
-    } else {
-      interval = SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    this._restartInterval();
+
+    const mediaElement = this._mediaElementRef.getValue();
+    if (mediaElement !== null) {
+      this._registerMediaElementEvents(mediaElement);
     }
 
-    const onInterval = () => {
-      this._generateObservationForEvent("timeupdate");
-    };
-    let intervalId = setInterval(onInterval, interval);
-    SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
-      const onMediaEvent = () => {
-        restartInterval();
-        this._generateObservationForEvent(eventName);
-      };
-
-      this._mediaElement.addEventListener(eventName, onMediaEvent);
-      this._canceller.signal.register(() => {
-        this._mediaElement.removeEventListener(eventName, onMediaEvent);
-      });
-    });
     this._canceller.signal.register(() => {
-      clearInterval(intervalId);
+      if (this._observationIntervalId !== null) {
+        clearInterval(this._observationIntervalId);
+      }
       returnedSharedReference.finish();
     });
     return returnedSharedReference;
-
-    function restartInterval() {
-      clearInterval(intervalId);
-      intervalId = setInterval(onInterval, interval);
-    }
   }
 
   private _getCurrentObservation(
@@ -448,12 +476,13 @@ export default class PlaybackObserver {
   ): IPlaybackObservation {
     /** Actual event emitted through an observation. */
     let tmpEvt: IPlaybackObserverEventType = event;
+    const mediaElement = this._mediaElementRef.getValue();
 
     // NOTE: `this._observationRef` may be `undefined` because we might here be
     // called in the constructor when that property is not yet set.
     const previousObservation =
       this._observationRef === undefined
-        ? getInitialObservation(this._mediaElement)
+        ? getInitialObservation(mediaElement)
         : this._observationRef.getValue();
 
     /**
@@ -466,7 +495,8 @@ export default class PlaybackObserver {
     let pendingPosition: number | null = this._pendingSeek?.position ?? null;
 
     /** Initially-polled playback observation, before adjustments. */
-    const mediaTimings = getMediaInfos(this._mediaElement);
+    const mediaTimings =
+      mediaElement === null ? getEmptyMediaInfo() : getMediaInfos(mediaElement);
     const { buffered, readyState, position, seeking } = mediaTimings;
     if (tmpEvt === "seeking") {
       // We just began seeking.
@@ -622,6 +652,59 @@ export default class PlaybackObserver {
     }
     this._observationRef.setValue(newObservation);
   }
+
+  private _restartInterval() {
+    const {
+      SAMPLING_INTERVAL_MEDIASOURCE,
+      SAMPLING_INTERVAL_LOW_LATENCY,
+      SAMPLING_INTERVAL_NO_MEDIASOURCE,
+    } = config.getCurrent();
+    let interval: number;
+    if (this._lowLatencyMode) {
+      interval = SAMPLING_INTERVAL_LOW_LATENCY;
+    } else if (this._withMediaSource) {
+      interval = SAMPLING_INTERVAL_MEDIASOURCE;
+    } else {
+      interval = SAMPLING_INTERVAL_NO_MEDIASOURCE;
+    }
+    if (this._observationIntervalId !== null) {
+      clearInterval(this._observationIntervalId);
+    }
+    this._observationIntervalId = setInterval(
+      () => this._generateObservationForEvent("timeupdate"),
+      interval,
+    );
+  }
+
+  private _registerMediaElementEvents(mediaElement: IMediaElement): void {
+    SCANNED_MEDIA_ELEMENTS_EVENTS.map((eventName) => {
+      const onMediaEvent = () => {
+        this._restartInterval();
+        this._generateObservationForEvent(eventName);
+      };
+      mediaElement.addEventListener(eventName, onMediaEvent);
+      this._canceller.signal.register(() => {
+        mediaElement.removeEventListener(eventName, onMediaEvent);
+      });
+    });
+  }
+
+  private _registerLoadedMetadataEvent(mediaElement: IMediaElement): void {
+    const loadedmetadataCb = this._onLoadedMetadataEvent.bind(this);
+    mediaElement.addEventListener("loadedmetadata", loadedmetadataCb);
+    this._canceller.signal.register(() => {
+      mediaElement.removeEventListener("loadedmetadata", loadedmetadataCb);
+    });
+  }
+
+  private _onLoadedMetadataEvent(): void {
+    const mediaElement = this._mediaElementRef.getValue();
+    if (mediaElement !== null && this._pendingSeek !== null && !this._isSeekBlocked) {
+      const { position: positionToSeekTo, isInternal } = this._pendingSeek;
+      this._pendingSeek = null;
+      this._actuallySetCurrentTime(mediaElement, positionToSeekTo, isInternal);
+    }
+  }
 }
 
 /**
@@ -681,8 +764,28 @@ function hasLoadedUntilTheEnd(
 }
 
 /**
+ * Get polled media metrics for when the `HTMLMediaElement` is not yet "attached"
+ * to the `PlaybackObserver`.
+ *
+ * Those metrics actually corresponds to an idle media element.
+ * @returns {Object}
+ */
+function getEmptyMediaInfo(): IMediaInfos {
+  return {
+    buffered: new ManualTimeRanges(),
+    position: 0,
+    duration: NaN,
+    ended: false,
+    paused: true,
+    playbackRate: 1,
+    readyState: 0,
+    seeking: false,
+  };
+}
+
+/**
  * Get basic playback information.
- * @param {HTMLMediaElement} mediaElement
+ * @param {HTMLmediaElement} mediaElement
  * @returns {Object}
  */
 function getMediaInfos(mediaElement: IMediaElement): IMediaInfos {
@@ -985,8 +1088,9 @@ function prettyPrintBuffered(buffered: TimeRanges, currentTime: number): string 
  * @param {HTMLMediaElement} mediaElement
  * @returns {Object}
  */
-function getInitialObservation(mediaElement: IMediaElement): IPlaybackObservation {
-  const mediaTimings = getMediaInfos(mediaElement);
+function getInitialObservation(mediaElement: IMediaElement | null): IPlaybackObservation {
+  const mediaTimings =
+    mediaElement === null ? getEmptyMediaInfo() : getMediaInfos(mediaElement);
   return objectAssign(mediaTimings, {
     rebuffering: null,
     event: "init" as const,
