@@ -1,3 +1,5 @@
+// NOTE: Only types and const enums should be exported by this file
+
 import type {
   ISerializedMediaError,
   ISerializedNetworkError,
@@ -39,9 +41,6 @@ import type {
   ITrackSwitchingMode,
 } from "./stream";
 
-// NOTE: Only types (or at worse: const enums) should be exported by this file:
-// Importing it should not increase a JavaScript bundle's size
-
 /** Type of an `SegmentSinksStore` class. */
 export type ISegmentSinksStore = SegmentSinksStore;
 
@@ -50,6 +49,7 @@ export type {
   IAdaptiveRepresentationSelectorArguments,
   IABRThrottlers,
   IResolutionInfo,
+
   // Fetchers Metadata
   IManifestFetcherSettings,
   ISegmentQueueCreatorBackoffOptions,
@@ -58,6 +58,7 @@ export type {
   IBufferType,
   IBufferedChunk,
   ITextDisplayerInterface,
+
   // Stream Metadata
   IAdaptationChoice,
   IInbandEvent,
@@ -66,10 +67,15 @@ export type {
   IRepresentationsChoice,
   ITrackSwitchingMode,
 
-  // CoreMain
+  // CoreEntry
   IMessageReceiverCallback,
 };
 
+/**
+ * Format of an RxPlayer error that has been serialized to be able to be
+ * easily cloned and be communicated through the `postMessage` API if
+ * needed.
+ */
 export type ISentError =
   | ISerializedNetworkError
   | ISerializedMediaError
@@ -112,42 +118,130 @@ export interface IInitErrorCoreMessage {
   };
 }
 
+/**
+ * Message sent by the Core when it want the low-level buffers to be "flushed".
+ *
+ * A "flush" is an operation which tries to "refresh" the content of low-level
+ * media buffers, either to ensure an update to it has been taken into account
+ * or to fix a problematic situation.
+ *
+ * NOTE: This message should not be sent if you want to flush the buffer due to
+ * a new decipherability context (e.g. pushed data just became un-decipherable).
+ * For that special situation, a specific message,
+ * `INeedsDecipherabilityFlushCoreMessage` should be relied on instead.
+ *
+ * This is most often done via a very small seek.
+ */
 export interface INeedsBufferFlushCoreMessage {
+  /** Identify an `INeedsBufferFlushCoreMessage`. */
   type: CoreMessageType.NeedsBufferFlush;
+  /** The `contentId` linked to the content that has asked for this flush. */
   contentId: string;
   value:
-    | { relativeResumingPosition: number; relativePosHasBeenDefaulted: boolean }
+    | {
+        /**
+         * The position, relative to the current one in seconds, we should
+         * restart playback from after the flush.
+         * If set to `0`, we should keep the exact same position. If set to `1`,
+         * we should restart playback one second later etc.
+         */
+        relativeResumingPosition: number;
+        /**
+         * If `true`, `relativeResumingPosition` is just a default value
+         * proposed as an hint by default by the RxPlayer and can be ignored if
+         * not practical in the current context.
+         *
+         * If `false`, the `relativeResumingPosition` has been explicitly set
+         * and should thus be respected.
+         */
+        relativePosHasBeenDefaulted: boolean;
+      }
     | undefined;
 }
 
-export interface IActivePeriodChangedCoreMessage {
-  type: CoreMessageType.ActivePeriodChanged;
-  contentId: string;
-  value: {
-    periodId: string;
-  };
-}
-
+/**
+ * Message sent by the Core when an Error that did not interrupt playback just
+ * arised.
+ *
+ * This can for example be minor request errors.
+ */
 export interface IWarningCoreMessage {
+  /** Identify an `IWarningCoreMessage`. */
   type: CoreMessageType.Warning;
+  /** Identifier of the content linked to that warning. */
   contentId: string | undefined;
+  /** Serialized format for that error. */
   value: ISentError;
 }
 
-export interface IAttachMediaSourceCoreMessage {
-  type: CoreMessageType.AttachMediaSource;
+/**
+ * Message sent by the Core when an Error that interrupted playback of the
+ * current content just happened.
+ *
+ * It should be assumed that the content is not playing anymore once this
+ * message has been sent.
+ */
+export interface IErrorCoreMessage {
+  /** Identify an `IErrorCoreMessage`. */
+  type: CoreMessageType.Error;
+  /** Identifier of the content linked to that error. */
   contentId: string | undefined;
+  /** Serialized format for that error. */
+  value: ISentError;
+}
+
+/**
+ * Message sent by the Core when it created the `MediaSource` itself and ask it
+ * to be attached by the main thread to the media element.
+ *
+ * This is one of the two ways a `MediaSource` can be created by the RxPlayer,
+ * the other one being through an `ICreateMediaSourceCoreMessage` (in which case
+ * the `MediaSource` would be created by `Main Thread`, not `Core`). Choosing
+ * one or the other depends on browser capabilities and settings.
+ *
+ * When an `IAttachMediaSourceCoreMessage` is sent, it is understood by the main
+ * thread that the role of managing the `MediaSource` itself is handled by the
+ * `Core` for the current content, and as such `Core` won't send any
+ * `IAddSourceBufferCoreMessage`, `IAppendBufferCoreMessage`,
+ * `IRemoveBufferCoreMessage`, `IAbortBufferCoreMessage`,
+ * `IUpdateMediaSourceDurationCoreMessage` and other such events that imply a
+ * side effect on `MediaSource`-linked API. All those actions should instead be
+ * taken by `Core` directly in this scenario.
+ */
+export interface IAttachMediaSourceCoreMessage {
+  /** Identify an `IAttachMediaSourceCoreMessage`. */
+  type: CoreMessageType.AttachMediaSource;
+  /** The `contentId` linked to the current content. */
+  contentId: string | undefined;
+  /**
+   * A unique identifier linked to that `MediaSource`.
+   * Will be used to be able to ensure the right `MediaSource` is referred to
+   * in future messages.
+   */
   mediaSourceId: string;
+  /** Information on the `MediaSource` to attach to the media element. */
   value: IAttachMediaSourceCoreMessagePayload;
 }
 
+/** Payload sent alongside an `IAttachMediaSourceCoreMessage` */
 export type IAttachMediaSourceCoreMessagePayload =
   | {
+      /**
+       * Identifies a `MediaSource` of the type "handle", in which case the
+       * `MediaSource` can be linked to the media element as an object directly.
+       */
       type: "handle";
+      /** The corresponding object that should be linked to the media element. */
       value: MediaProvider;
     }
   | {
+      /**
+       * Identifies a `MediaSource` of the type "url", in which case the `value`
+       * will communicate an "object url" that has to be linked to the media
+       * element.
+       */
       type: "url";
+      /** The object URL that refers to the created `MediaSource`. */
       value: string;
     };
 
@@ -230,6 +324,14 @@ export interface IDisposeMediaSourceCoreMessage {
   value: null;
 }
 
+export interface IActivePeriodChangedCoreMessage {
+  type: CoreMessageType.ActivePeriodChanged;
+  contentId: string;
+  value: {
+    periodId: string;
+  };
+}
+
 export interface IAdaptationChangeCoreMessage {
   type: CoreMessageType.AdaptationChanged;
   contentId: string;
@@ -308,12 +410,6 @@ export interface IEncryptionDataEncounteredCoreMessage {
   value: IContentProtection;
 }
 
-export interface IErrorCoreMessage {
-  type: CoreMessageType.Error;
-  contentId: string | undefined;
-  value: ISentError;
-}
-
 export interface IUpdatePlaybackRateCoreMessage {
   type: CoreMessageType.UpdatePlaybackRate;
   contentId: string | undefined;
@@ -331,8 +427,27 @@ export interface IReloadingMediaSourceCoreMessage {
   };
 }
 
+/**
+ * Message sent by the Core when it want the low-level buffers to be "flushed"
+ * with the important caveat that this is linked to a change in decipherability
+ * matters (e.g. content just became un-decipherable).
+ *
+ * A "flush" is an operation which tries to "refresh" the content of low-level
+ * media buffers, either to ensure an update to it has been taken into account
+ * or to fix a problematic situation.
+ *
+ * Flush asked in this scenario may lead to aggressive strategies such as
+ * switching the `MediaSource` - as the less disruptive scenarios (seeking,
+ * play/pause etc.) are often not enough when decipherability is involved.
+ *
+ * In any case, the `Core` shouldn't care what strategy is chosen to flush. The
+ * usual main thread's messages will be enough to handle any scenario without any
+ * special effort from Core.
+ */
 export interface INeedsDecipherabilityFlushCoreMessage {
+  /** Identify an `INeedsDecipherabilityFlushCoreMessage`. */
   type: CoreMessageType.NeedsDecipherabilityFlush;
+  /** The `contentId` linked to the content that has asked for this flush. */
   contentId: string;
   value: null;
 }
