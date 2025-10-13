@@ -83,18 +83,6 @@ const DEFAULT_CONTENTS: IDefaultContent[] = [
     live: false,
   },
   {
-    name: "Big Buck Bunny",
-    url: "https://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest",
-    transport: "smooth",
-    live: false,
-  },
-  {
-    name: "Taxi 3 SoundTrack (Audio-Only)",
-    url: "https://playready.directtaps.net/smoothstreaming/ISMAAACLC/Taxi3_AACLC.ism/Manifest",
-    transport: "smooth",
-    live: false,
-  },
-  {
     name: "Multi-Period (5 Periods of 2 min)",
     url: "https://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-live-periods/mp4-live-periods-mpd.mpd",
     transport: "dash",
