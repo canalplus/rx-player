@@ -10,22 +10,11 @@
   -
   <a href="./CONTRIBUTING.md">🔧 <b>Contributing</b></a>
   <br /><br />
-  <a href="https://github.com/canalplus/rx-player/releases">
-    <img src="https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue" />
-  </a>
-  <a href="https://github.com/canalplus/rx-player/actions/workflows/checks.yml">
-    <img src="https://github.com/canalplus/rx-player/actions/workflows/checks.yml/badge.svg" />
-  </a>
-  <a href="https://sonarcloud.io/summary/new_code?id=rx-player">
-    <img src="https://sonarcloud.io/api/project_badges/measure?project=rx-player&metric=alert_status" />
-  </a>
-  <a href="https://gitter.im/canalplus/rx-player">
-    <img src="https://img.shields.io/gitter/room/canalplus/rx-player.svg" />
-  </a>
+  <a href="https://github.com/canalplus/rx-player/releases"><img src="https://img.shields.io/badge/dynamic/json.svg?label=Latest%20release&url=https://api.github.com/repos/canalplus/rx-player/releases/latest&query=$.tag_name&colorB=blue" /></a>
+  <a href="https://github.com/canalplus/rx-player/actions/workflows/checks.yml"><img src="https://github.com/canalplus/rx-player/actions/workflows/checks.yml/badge.svg" /></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=rx-player"><img src="https://sonarcloud.io/api/project_badges/measure?project=rx-player&metric=alert_status" /></a>
   <br /><br />
-  <a href="https://nodei.co/npm/rx-player/">
-    <img src="https://nodei.co/npm/rx-player.png?compact=true)" />
-  </a>
+  <a href="https://nodei.co/npm/rx-player/"><img src="https://nodei.co/npm/rx-player.png?compact=true)" /></a>
 </p>
 
 The RxPlayer is a library implementing a
@@ -36,55 +25,32 @@ media player on a browser, by relying on the HTML5
 [Encrypted Media extensions](https://en.wikipedia.org/wiki/Encrypted_Media_Extensions)
 browser APIs.
 
+This library only implements the core, non-UI part of a media player - you provide the
+interface while it handles the streaming. See our
+[demo page](https://developers.canal-plus.com/rx-player/) for an example implementation.
+
+Initially built for Canal+'s complex requirements across diverse devices, it prioritizes
+configurability and integration flexibility.
+
 ---
 
-Originally designed to power Canal+ many applications, the RxPlayer is today used in
-production by several companies in multiple countries and runs on most devices where a
-browser can run: Computers, phones, set-top-boxes, smart TVs, game consoles and other
-peculiar environments are all supported and able to profit from its many features.
+The RxPlayer can be seen as the "engine" providing adaptive streaming capabilities to an
+application:
 
-Its main goals are:
+- Beyond DASH and Smooth Streaming support (and HLS on devices with native support like
+  Safari), it handles complex scenarios like multiple DRM keys, fallback mechanisms for
+  undecipherable or undecodable qualities, most subtitle formats and advanced heuristics
+  to keep the playback going.
 
-- **Stability**: The RxPlayer can play live and On Demand DASH and Smooth contents for
-  extended amounts of time, with or without DRM - without any performance, memory or logic
-  issue.
+- Multi-threaded architecture: core logic can be offloaded to a separate thread, keeping
+  the player from blocking your application and vice-versa.
 
-  If you encounter a new issue while using it, we'll be very happy to help fixing it. Any
-  encountered bug is put at high priority.
+- Production-tested across a wide device range: from low-end set-top boxes to high-end
+  computers, with optimizations for constrained environments.
 
-- **Quality of experience**: It aims to play the best possible quality without any
-  rebuffering.
-
-  Unsupported codecs and undecipherable qualities (e.g. higher qualities with more drastic
-  DRM conditions on untrusted devices) are automatically filtered out, even if this
-  happens during playback.
-
-  The player is also very resilient: any temporary network issue, fall in bandwidth,
-  poorly-packaged content or platform quirk should be properly handled with the main goal
-  of avoiding playback interruption.
-
-- **Portability**: The RxPlayer has been ported to a lot of devices, some on the lower-end
-  of performance and memory capabilities and others on the higher end.
-
-  As such, it can adapt to important memory and performance constraints while still being
-  able to retain its many features.
-
-- **Configurability**: The RxPlayer has a plethora of options to let you tweak its
-  behavior. You should be able to play any content the way you want, on any device.
-
-  You should also be able to integrate complex supplementary logic like Peer-to-Peer
-  solutions.
-
-- **Easy to use**: We try hard to make this player easy to integrate and to use in various
-  codebases.
-
-  Even for the more advanced options, we aim to make our documentation as legible and as
-  complete as possible.
-
-The RxPlayer has probably already all the features you want :)!
-
-Even if that's not the case, we will be very pleased to exchange with you on it and look
-forward for external contributions.
+- Highly configurable with
+  [a well-documented API](https://developers.canal-plus.com/rx-player/doc/api/Overview.html):
+  player behavior can be controlled at a granular level.
 
 ## How to use it?
 
@@ -104,13 +70,8 @@ yarn add rx-player
 You can then directly import and use the RxPlayer in your code:
 
 ```js
-// import it ES6 style:
 import RxPlayer from "rx-player";
 
-// same in CommonJS style:
-// const RxPlayer = require("rx-player");
-
-// instantiate it
 const player = new RxPlayer({
   videoElement: document.querySelector("video"),
 });
@@ -155,7 +116,7 @@ RxPlayer.addFeatures([DASH, EME]);
 
 ## API
 
-We documented the API in every little details in
+We documented the API in every little detail in
 [the API documentation](https://developers.canal-plus.com/rx-player/doc/api/Overview.html).
 
 You can also refer to the documentation of our previous versions
@@ -177,72 +138,50 @@ Demo pages for our previous versions are also available
 
 ## Contribute
 
-Details on how to contribute is written in the [CONTRIBUTING.md file](./CONTRIBUTING.md)
-at the root of this repository.
-
-### Dependencies
-
-After cloning our repo, you should first install our dependencies via either
+After cloning our repo, you should first install our dependencies via
 [npm](https://www.npmjs.com/):
 
 ```sh
 npm install
 ```
 
-## Why a new player?
+You can then run the `list` script to see the different scripts provided to test your
+modifications, run a demo locally etc.:
 
-### A need for an advanced media player
+```sh
+npm run list
+```
 
-Canal+ Group is a media company with many advanced needs when it comes to media playback:
-it provides both live and VoD stream with multiple encryption requirements, supports a
-very large panel of devices and has many other specificities (like adult content
-restrictions, ad-insertion, Peer-To-Peer integration, low-latency live streaming...).
+Details on how to contribute is written in the [CONTRIBUTING.md file](./CONTRIBUTING.md)
+at the root of this repository.
 
-When the time came to switch from a plugin-based web player approach to an HTML5 one back
-in 2015, no media player had the key features we wanted, and including those needs into an
-already existing media player would not be straightforward either.
+## Features
 
-The R&D department of Canal+ Group thus started to work on a new featureful media-player:
-the RxPlayer. To both help and profit from the community, it also decided to share it to
-everyone under a permissive open-source licence.
+Key features:
 
-Now, more than 8 years later, the RxPlayer continues to evolve at the same fast pace to
-include a lot of features and improvements you may not find in other media players. You
-can look at our
-[API documentation](https://developers.canal-plus.com/rx-player/doc/api/Overview.html),
-[tutorials](https://developers.canal-plus.com/rx-player/doc/Getting_Started/Tutorials/Quick_Start.html)
-and our [demo page](https://developers.canal-plus.com/rx-player/) (an RxPlayer instance is
-available in the console through the global `player` variable there) to see if it matches
-your need.
+- live and VoD DASH (including low-latency) / Smooth / HLS* / Downloaded contents / MP4* /
+  WebM\* contents and more.
 
-### A featureful player
+- advanced encryption configuration: multiple keys in a single or separate licenses for a
+  given content, automatic fallbacks on undecipherable contents, persistent licenses,
+  complex `MediaKeySystemConfiguration`.
 
-With the help of a carefully-crafted and well-documented architecture, we were able to
-quickly support avanced features when we - or the community - needed them. Amongst those:
+- TTML, WebVTT, SAMI and SRT subtitles.
 
-- support for live and VoD DASH / Smooth / HLS* / Downloaded contents / MP4* / WebM\*
-  contents and more
+- multi-threading support.
 
-- support of advanced encryption configuration, such as multiple keys in a single or
-  separate licences for a given content (with automatic fallbacks when we found an
-  un-decipherable content), persistent licenses, and other device-specific restrictions.
+- extensive APIs: audio-only, video track selection, manual garbage collection of
+  segments, Peer-To-Peer integration, quality filtering...
 
-- support for low-latency DASH streams
+- adaptive streaming algorithms: both a network-based for quick start-up and buffer-based
+  to provide the best quality possible.
 
-- support of TTML, WebVTT, SAMI and SRT subtitles
-
-- an available WebAssembly-based MPD parser for DASH contents, allowing to drastically
-  reduce the loading time and memory usage of larger contents.
-
-- advanced APIs for advanced use-cases (audio-only mode, video track selection, manual
-  garbage collection of segments, Peer-To-Peer integration, quality filtering...)
-
-- advanced adaptive streaming algorithms making use of both a network-based approach (for
-  quick start-up) and a buffer-based one (to provide the best quality possible).
-
-- advanced optimizations for devices with low memory constraints
-
-- a complex segment scheduling logic, prioritizing closer media segments while making sure
+- complex segment scheduling logic: prioritizing closer media segments while making sure
   that the bandwidth usage is always optimal and the rebuffering risks always low.
+
+- heuristics to ensure playback stays smooth, the RxPlayer monitors playback and take
+  actions if the current device has issues while decoding the stream.
+
+- optional WebAssembly-based MPD parser for DASH contents (for very large Manifests).
 
 \* In "directfile" mode, on compatible browsers
