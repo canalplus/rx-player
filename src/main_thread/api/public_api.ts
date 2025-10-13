@@ -1164,7 +1164,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     /** Global "playback observer" which will emit playback conditions */
-    const playbackObserver = new MediaElementPlaybackObserver(videoElement, {
+    const playbackObserver = new MediaElementPlaybackObserver({
       withMediaSource: !isDirectFile,
       lowLatencyMode,
     });
@@ -1286,6 +1286,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     //   - we can avoid involontarily catching events linked to the previous
     //     content.
     this.stop();
+
+    playbackObserver.attachMediaElement(videoElement);
 
     // Update the RxPlayer's state at the right events
     const playerStateRef = constructPlayerStateReference(
