@@ -95,8 +95,8 @@ To be able to play with the player without needing to perform any setup we also 
 multiple live-editable demos:
 
 - [Playing a clear DASH content](https://codesandbox.io/s/rx-player-classic-wc38j)
-- [Playing an encrypted DASH content](https://codesandbox.io/s/rx-player-drm-g51hb)
-- [Playing an RxPlayer-specific MetaPlaylist content](https://codesandbox.io/s/rx-player-metaplaylist-l0t0d)
+- [Playing an encrypted DASH content](https://codesandbox.io/p/sandbox/rx-player-drm-forked-nf6tnx)
+- [Playing an RxPlayer-specific MetaPlaylist content](https://codesandbox.io/p/sandbox/rx-player-metaplaylist-forked-4ww55x)
 
 ### Minimal Builds
 
