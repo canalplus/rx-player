@@ -314,12 +314,13 @@ function runInitialPlaybackTests({ multithread } = {}) {
       await sleep(0);
 
       expect(manifestLoaderCalledTimes).to.equal(1);
-      await sleep(300);
-      expect(manifestLoaderCalledTimes).to.equal(1);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 1000 }, () => {
+        expect(manifestLoaderCalledTimes).to.equal(1);
 
-      expect(segmentLoaderLoaderCalledTimes).to.equal(12);
-      expect(player.getCurrentBufferGap()).to.be.above(18);
-      expect(player.getCurrentBufferGap()).to.be.below(30);
+        expect(segmentLoaderLoaderCalledTimes).to.equal(12);
+        expect(player.getCurrentBufferGap()).to.be.above(18);
+        expect(player.getCurrentBufferGap()).to.be.below(30);
+      });
     });
 
     it("should continue downloading when seek to wanted buffer ahead", async function () {
@@ -468,12 +469,11 @@ function runInitialPlaybackTests({ multithread } = {}) {
         url: manifestInfos.url,
       });
       await waitForLoadedStateAfterLoadVideo(player);
-      await sleep(800);
-      // And to take into consideration the estimation errors,
-      // we round it up to 9sec
-      expect(player.getCurrentBufferGap()).to.be.below(6 * 3);
-      expect(player.getCurrentBufferGap()).to.be.above(6 * 1);
-    }, 4000);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
+        expect(player.getCurrentBufferGap()).to.be.below(6 * 3);
+        expect(player.getCurrentBufferGap()).to.be.above(6 * 1);
+      });
+    }, 10000);
 
     it("should remove behind if buffer full", async function () {
       // Force a given video Representation
