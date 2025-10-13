@@ -36,8 +36,9 @@ initializeCoreEntry((handler) => {
  */
 function sendMessage(msg: ICoreMessage, transferables?: Transferable[]): void {
   updateMessageFormat(msg);
-
-  log.debug("M<--C", "Sending message from worker", { name: msg.type });
+  if (msg.type !== CoreMessageType.LogMessage) {
+    log.debug("M<--C", "Sending message from worker", { name: msg.type });
+  }
   if (transferables === undefined) {
     postMessage(msg);
   } else {

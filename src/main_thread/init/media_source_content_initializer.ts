@@ -228,6 +228,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     this._queuedCoreMessages = [];
     log.debug("Init", "addEventListener prepare buffering core messages");
     const onmessage = (msgData: ICoreMessage): void => {
+      if (msgData.type !== CoreMessageType.LogMessage) {
+        log.debug("Init", "Core message received", msgData.type);
+      }
       const type = msgData.type;
       switch (type) {
         case CoreMessageType.LogMessage: {
