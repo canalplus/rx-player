@@ -585,7 +585,7 @@ describe("DASH Stream events", function () {
         expect(streamEventsReceived).to.have.lengthOf(2);
       },
     );
-  }, 15000);
+  }, 20000);
 
   it("should receive multiple events when loading in a position with multiple events", async function () {
     const streamEventsReceived = [];

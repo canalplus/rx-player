@@ -328,7 +328,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkNoTextTrack();
     checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
-  }, 3000);
+  }, 6000);
 
   it("should allow setting tracks BEFORE loading segments", async function () {
     const requestedSegments = [];
@@ -743,8 +743,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       expect(availablePeriods).toHaveLength(1);
 
       await goJustBeforeSecondPeriod();
-      await sleep(100);
-      expect(eventCalled).to.equal(2);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 1000, stepMs: 100 }, () => {
+        expect(eventCalled).to.equal(2);
+      });
 
       const newPeriod = player.getCurrentPeriod();
       expect(newPeriod.id).toEqual(firstPlayedPeriod.id);

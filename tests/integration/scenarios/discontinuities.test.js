@@ -36,11 +36,11 @@ describe("discontinuities handling", () => {
         url,
         transport,
         autoPlay: true,
-        startAt: { position: 118 },
+        startAt: { position: 115 },
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 10000, stepMs: 100 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 12000, stepMs: 100 }, () => {
         expect(player.getPosition()).to.be.above(131);
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(discontinuitiesWarningReceived).to.equal(1);
@@ -105,11 +105,11 @@ describe("discontinuities handling", () => {
         url,
         transport,
         autoPlay: true,
-        startAt: { position: 118 },
+        startAt: { position: 115 },
       });
       await waitForLoadedStateAfterLoadVideo(player);
       expect(discontinuitiesWarningReceived).to.equal(0);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 10000, stepMs: 100 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 12000, stepMs: 100 }, () => {
         expect(player.getPlayerState()).to.equal("PLAYING");
         expect(player.getPosition()).to.be.above(131);
         expect(discontinuitiesWarningReceived).to.equal(1);

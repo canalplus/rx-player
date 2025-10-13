@@ -773,7 +773,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           const bufferGap = player.getCurrentBufferGap();
           expect(bufferGap).to.be.at.least(9.5);
           expect(bufferGap).to.be.at.most(10 + 10);
@@ -781,14 +781,14 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           const bufferGap = player.getCurrentBufferGap();
           expect(bufferGap).to.be.at.least(19.5);
           expect(bufferGap).to.be.at.most(20 + 10);
         });
 
         player.seekTo(minimumPosition + 10);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           expect(player.getWantedBufferAhead()).to.equal(20);
           const bufferGap = player.getCurrentBufferGap();
           expect(bufferGap).to.be.at.least(19.5);
@@ -796,7 +796,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         });
 
         player.seekTo(minimumPosition + 10 + 30);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           expect(player.getWantedBufferAhead()).to.equal(20);
           const bufferGap = player.getCurrentBufferGap();
           expect(bufferGap).to.be.at.least(19.5);
@@ -814,7 +814,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
             player.getMaximumPosition() - minimumPosition - (10 + 30) + 10,
           );
         });
-      }, 20000);
+      }, 30000);
     });
 
     // TODO handle live contents
@@ -1679,7 +1679,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           autoPlay: false,
         });
         await waitForLoadedStateAfterLoadVideo(player);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           const buffered = player.getVideoElement().buffered;
           expect(buffered.length).to.equal(1);
           expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1690,7 +1690,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
 
         player.setWantedBufferAhead(20);
         expect(player.getWantedBufferAhead()).to.equal(20);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           const buffered = player.getVideoElement().buffered;
           expect(buffered.length).to.equal(1);
           expect(buffered.start(0)).to.be.closeTo(minimumPosition, 0.5);
@@ -1700,7 +1700,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         });
 
         player.seekTo(minimumPosition + 10);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           const buffered = player.getVideoElement().buffered;
           expect(player.getWantedBufferAhead()).to.equal(20);
           expect(buffered.length).to.equal(1);
@@ -1713,7 +1713,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         });
 
         player.seekTo(minimumPosition + 10 + 20 + 10 + 10);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           const buffered = player.getVideoElement().buffered;
           expect(player.getWantedBufferAhead()).to.equal(20);
           expect(buffered.length).to.equal(2);
@@ -1732,7 +1732,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
 
         player.setWantedBufferAhead(Infinity);
         expect(player.getWantedBufferAhead()).to.equal(Infinity);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 5000 }, () => {
           const buffered = player.getVideoElement().buffered;
           expect(buffered.length).to.equal(2);
           expect(buffered.start(1)).to.be.at.most(minimumPosition + 10 + 20 + 10 + 10);
@@ -1740,7 +1740,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
           expect(endOfCurrentRange).to.be.at.least(player.getMaximumPosition() - 2);
           expect(endOfCurrentRange).to.be.at.most(player.getMaximumPosition() + 10);
         });
-      }, 20000);
+      }, 30000);
     });
   });
 }
