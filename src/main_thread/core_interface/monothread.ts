@@ -1,4 +1,8 @@
-import type { ICoreMessage, IMessageReceiverCallback } from "../../core/types";
+import {
+  CoreMessageType,
+  type ICoreMessage,
+  type IMessageReceiverCallback,
+} from "../../core/types";
 import log from "../../log";
 import noop from "../../utils/noop";
 import type { IMainThreadMessage } from "../types";
@@ -29,7 +33,9 @@ export class MonoThreadCoreInterface extends CoreInterface {
     };
     const sendCoreMessage = (msg: ICoreMessage, _transferables?: Transferable[]) => {
       queueMicrotask(() => {
-        log.debug("M<--C", "Sending message", { name: msg.type });
+        if (msg.type !== CoreMessageType.LogMessage) {
+          log.debug("M<--C", "Sending message", { name: msg.type });
+        }
         this.listeners.forEach((listener) => {
           listener(msg);
         });
