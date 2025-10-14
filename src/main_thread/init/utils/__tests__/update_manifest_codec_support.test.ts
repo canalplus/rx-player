@@ -199,8 +199,9 @@ describe("init - utils - updateManifestCodecSupport", () => {
     updateManifestCodecSupport(
       manifest,
       contentDecryptor,
-      document.createElement("video"),
+
       true,
+      undefined,
     );
     expect(representationAVC.isSupported).toBe(true);
     expect(representationHEVC.isSupported).toBe(true);
@@ -285,12 +286,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
     const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
     await sleep(100);
     contentDecryptor.attach();
-    updateManifestCodecSupport(
-      manifest,
-      contentDecryptor,
-      document.createElement("video"),
-      true,
-    );
+    updateManifestCodecSupport(manifest, contentDecryptor, true, undefined);
     expect(encryptedRepresentationAVC.isSupported).toBe(true);
     expect(encryptedRepresentationHEVC.isSupported).toBe(false); // Not supported by EME
     expect(encryptedRepresentationVP9.isSupported).toBe(false); // Not supported by MSE
@@ -337,12 +333,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
     const emeImplem = getEmeApiImplementation("auto");
     assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, []);
-    updateManifestCodecSupport(
-      manifest,
-      contentDecryptor,
-      document.createElement("video"),
-      true,
-    );
+    updateManifestCodecSupport(manifest, contentDecryptor, true, undefined);
     expect(representationAVC.isSupported).toBe(true);
     expect(representationHEVC.isSupported).toBe(false); // not supported with MSE in worker
     expect(representationMP4A.isSupported).toBe(true);

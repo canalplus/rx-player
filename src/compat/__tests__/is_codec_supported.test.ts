@@ -18,18 +18,6 @@ describe("Compat - isCodecSupported", () => {
     expect(isCodecSupported("")).toEqual(false);
   });
 
-  it("should return true in any case if the MediaSource does not have the right function", async () => {
-    vi.doMock("../browser_compatibility_types", () => {
-      return {
-        MediaSource_: { isTypeSupported: undefined },
-      };
-    });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
-      .default as typeof IIsCodecSupported;
-    expect(isCodecSupported("foo")).toEqual(true);
-    expect(isCodecSupported("")).toEqual(true);
-  });
-
   it("should return true if MediaSource.isTypeSupported returns true", async () => {
     vi.doMock("../browser_compatibility_types", () => {
       return {
