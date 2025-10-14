@@ -234,7 +234,10 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
    * Optional property allowing to force a specific MSE Implementation when
    * relying on a given `IMediaElement`.
    */
-  FORCED_MEDIA_SOURCE?: new () => IMediaSource;
+  FORCED_MEDIA_SOURCE?: {
+    new (): IMediaSource;
+    isTypeSupported(mimetype: string): boolean;
+  };
 
   FORCED_EME_API?: IEmeApiImplementation;
 

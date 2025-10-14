@@ -1,8 +1,9 @@
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import disableRemotePlaybackOnManagedMediaSource from "../../compat/disable_remote_playback_on_managed_media_source";
+import {
+  type IMediaElement,
+  type IMediaSource,
+} from "../../compat/browser_compatibility_types";
 import getEmeApiImplementation from "../../compat/eme";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
-import resetMediaElement from "../../compat/reset_media_element";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type {
@@ -64,13 +65,13 @@ import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
 import type { ICoreMediaObservation } from "./utils/create_core_media_element_monitor";
 import createCoreMediaElementMonitor from "./utils/create_core_media_element_monitor";
+import formatMediaError from "./utils/format_media_error";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import RebufferingController from "./utils/rebuffering_controller";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter";
-import listenToMediaError from "./utils/throw_on_media_error";
 import { updateManifestCodecSupport } from "./utils/update_manifest_codec_support";
 
 const generateContentId = idGenerator();
@@ -174,8 +175,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       adaptiveOptions,
       transport,
       transportOptions,
-      useMseInWorker,
       coreInterface,
+      mediaSourceClass,
     } = this._settings;
     const { wantedBufferAhead, maxVideoBufferSize, maxBufferAhead, maxBufferBehind } =
       this._settings.bufferOptions;
@@ -191,7 +192,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       initialTime: undefined,
       autoPlay: undefined,
       initialPlayPerformed: null,
-      useMseInWorker,
     };
     coreInterface.sendMessage({
       type: MainThreadMessageType.PrepareContent,
@@ -210,7 +210,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           lowLatencyMode: this._settings.lowLatencyMode,
         },
         segmentRetryOptions: this._settings.segmentRequestOptions,
-        useMseInWorker,
+        useMseInWorker: mediaSourceClass.type === "core",
       },
     });
     this._initCanceller.signal.register(() => {
@@ -371,11 +371,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     });
 
     /** Translate errors coming from the media element into RxPlayer errors. */
-    listenToMediaError(
-      mediaElement,
-      (error: MediaError) => this._onFatalError(error),
-      this._initCanceller.signal,
-    );
+    mediaElementMonitor.addMediaErrorListener((mediaError) => {
+      this._onFatalError(formatMediaError(mediaError));
+    }, this._initCanceller.signal);
 
     /**
      * Send content protection initialization data.
@@ -401,7 +399,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     }
 
     const playbackStartParams = {
-      mediaElement,
       textDisplayer,
       mediaElementMonitor,
       drmInitializationStatus,
@@ -504,7 +501,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       }
 
       this._reload(
-        mediaElement,
         textDisplayer,
         mediaElementMonitor,
         mediaSourceStatus,
@@ -536,19 +532,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               if (currStatus === MediaSourceInitializationStatus.AttachNow) {
                 stopListening();
                 log.info("media", "Attaching MediaSource URL to the media element");
-                if (mediaSourceLink.type === "handle") {
-                  mediaElement.srcObject = mediaSourceLink.value;
-                  this._currentMediaSourceCanceller.signal.register(() => {
-                    mediaElement.srcObject = null;
-                  });
-                } else {
-                  mediaElement.src = mediaSourceLink.value;
-                  this._currentMediaSourceCanceller.signal.register(() => {
-                    resetMediaElement(mediaElement, mediaSourceLink.value);
-                  });
-                }
-                disableRemotePlaybackOnManagedMediaSource(
-                  mediaElement,
+                mediaElementMonitor.linkUrl(
+                  mediaSourceLink.value,
+                  true,
                   this._currentMediaSourceCanceller.signal,
                 );
                 mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
@@ -576,7 +562,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         case CoreMessageType.CreateMediaSource:
           this._onCreateMediaSourceMessage(
             msgData,
-            mediaElement,
+            mediaElementMonitor,
             mediaSourceStatus,
             this._settings.coreInterface,
           );
@@ -791,7 +777,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           const lastObservation = mediaElementMonitor.getReference().getValue();
           const currentTime = lastObservation.position.isAwaitingFuturePosition()
             ? lastObservation.position.getWanted()
-            : mediaElement.currentTime;
+            : mediaElementMonitor.getCurrentTime();
           const relativeResumingPosition = msgData.value?.relativeResumingPosition ?? 0;
           const canBeApproximateSeek = Boolean(
             msgData.value?.relativePosHasBeenDefaulted,
@@ -920,7 +906,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           }
           const manifest = msgData.value.manifest;
           this._currentContentInfo.manifest = manifest;
-          this._updateCodecSupport(manifest, mediaElement);
+          this._updateCodecSupport(manifest);
           this._startPlaybackIfReady(playbackStartParams);
           break;
         }
@@ -942,7 +928,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           );
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
-          this._updateCodecSupport(manifest, mediaElement);
+          this._updateCodecSupport(manifest);
           this.trigger("manifestUpdate", msgData.value.updates);
           break;
         }
@@ -1232,7 +1218,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               // simple seek close to the current position
               // to flush the buffers
               if (currentPosition + 0.001 < lastObservation.duration) {
-                mediaElementMonitor.setCurrentTime(mediaElement.currentTime + 0.001);
+                mediaElementMonitor.setCurrentTime(
+                  mediaElementMonitor.getCurrentTime() + 0.001,
+                );
               } else {
                 mediaElementMonitor.setCurrentTime(currentPosition);
               }
@@ -1394,7 +1382,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         if (isNullOrUndefined(manifest)) {
           return;
         }
-        this._updateCodecSupport(manifest, mediaElement);
+        this._updateCodecSupport(manifest);
         contentDecryptor.removeEventListener(
           "stateChange",
           updateCodecSupportOnStateChange,
@@ -1513,13 +1501,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * status of these codecs, and forwards the list of supported codecs to core.
    * @param manifest
    */
-  private _updateCodecSupport(manifest: IManifestMetadata, mediaElement: IMediaElement) {
+  private _updateCodecSupport(manifest: IManifestMetadata) {
     try {
+      const useMseInWorker = this._currentContentInfo?.mediaSourceInfo?.type === "core";
       const updatedCodecs = updateManifestCodecSupport(
         manifest,
         this._currentContentInfo?.contentDecryptor ?? null,
-        mediaElement,
-        this._currentContentInfo?.useMseInWorker ?? false,
+        useMseInWorker,
+        this._settings.mediaSourceClass.MediaSource,
       );
       if (updatedCodecs.length > 0) {
         this._settings.coreInterface.sendMessage({
@@ -1544,7 +1533,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   private _reload(
-    mediaElement: IMediaElement,
     textDisplayer: ITextDisplayer | null,
     mediaElementMonitor: IMediaElementMonitor,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
@@ -1567,7 +1555,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           {
             initialTime: position,
             autoPlay,
-            mediaElement,
             textDisplayer,
             mediaElementMonitor,
           },
@@ -1622,7 +1609,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     parameters: {
       initialTime: number;
       autoPlay: boolean;
-      mediaElement: IMediaElement;
       textDisplayer: ITextDisplayer | null;
       mediaElementMonitor: IMediaElementMonitor;
     },
@@ -1642,14 +1628,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     const { manifest, mediaSourceInfo } = this._currentContentInfo;
     const { speed } = this._settings;
-    const { initialTime, autoPlay, mediaElement, textDisplayer, mediaElementMonitor } =
-      parameters;
+    const { initialTime, autoPlay, textDisplayer, mediaElementMonitor } = parameters;
     this._currentContentInfo.initialTime = initialTime;
     this._currentContentInfo.autoPlay = autoPlay;
 
     const { autoPlayResult, initialPlayPerformed } = performInitialSeekAndPlay(
       {
-        mediaElement,
         mediaElementMonitor,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
@@ -1843,7 +1827,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * playback start.
    */
   private _startPlaybackIfReady(parameters: {
-    mediaElement: IMediaElement;
     textDisplayer: ITextDisplayer | null;
     mediaElementMonitor: IMediaElementMonitor;
     drmInitializationStatus: IReadOnlySharedReference<IDrmInitializationStatus>;
@@ -1874,7 +1857,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       {
         initialTime,
         autoPlay: this._settings.autoPlay,
-        mediaElement: parameters.mediaElement,
         textDisplayer: parameters.textDisplayer,
         mediaElementMonitor: parameters.mediaElementMonitor,
       },
@@ -1920,13 +1902,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   /**
    * Handles core messages asking to create a MediaSource.
    * @param {Object} msg - The core's message received.
-   * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
+   * @param {Object} mediaElementMonitor - Object allowing interactions with
+   * the `HTMLMediaElement`.
    * content plays.
    * @param {Object} coreInterface - The interface to the core.
    */
   private _onCreateMediaSourceMessage(
     msg: ICreateMediaSourceCoreMessage,
-    mediaElement: IMediaElement,
+    mediaElementMonitor: IMediaElementMonitor,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     coreInterface: CoreInterface,
   ): void {
@@ -1943,11 +1926,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             }
             if (currStatus === MediaSourceInitializationStatus.AttachNow) {
               stopListening();
+              if (this._settings.mediaSourceClass.MediaSource === undefined) {
+                const error = new MediaError(
+                  "MEDIA_SOURCE_NOT_SUPPORTED",
+                  "No MediaSource Object was found in the current environment.",
+                );
+                this._onFatalError(error);
+                return;
+              }
               const mediaSource = new MainMediaSourceInterface(
                 mediaSourceId,
-                "FORCED_MEDIA_SOURCE" in mediaElement
-                  ? mediaElement.FORCED_MEDIA_SOURCE
-                  : undefined,
+                this._settings.mediaSourceClass.MediaSource,
               );
               if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
                 this._currentContentInfo.mediaSourceInfo.mediaSource.dispose(
@@ -1979,22 +1968,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                   value: "closed",
                 });
               });
-              let url: string | null = null;
-              if (mediaSource.handle.type === "handle") {
-                mediaElement.srcObject = mediaSource.handle.value;
-              } else {
-                url = URL.createObjectURL(mediaSource.handle.value);
-                mediaElement.src = url;
-              }
-              this._currentMediaSourceCanceller.signal.register((err) => {
-                mediaSource.dispose(err.reason);
-                resetMediaElement(mediaElement, url);
-              });
-              mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
-              disableRemotePlaybackOnManagedMediaSource(
-                mediaElement,
+              mediaElementMonitor.linkUrl(
+                mediaSource.handle.type === "handle"
+                  ? mediaSource.handle.value
+                  : URL.createObjectURL(mediaSource.handle.value),
+                true,
                 this._currentMediaSourceCanceller.signal,
               );
+              this._currentMediaSourceCanceller.signal.register((err) => {
+                mediaSource.dispose(err.reason);
+              });
+              mediaSourceStatus.setValue(MediaSourceInitializationStatus.Attached);
             }
           },
           {
@@ -2079,12 +2063,6 @@ export interface IMediaSourceContentInitializerContentInfos {
    * Set to `null` when those considerations are not taken.
    */
   contentDecryptor: IContentDecryptor | null;
-  /**
-   * If `true`, MSE API should be used in the core part of the RxPlayer (in the
-   * WebWorker).
-   * If `false`, they should be relied on on main thread.
-   */
-  useMseInWorker: boolean;
 }
 
 /** Arguments to give to the `InitializeOnMediaSource` function. */
@@ -2100,15 +2078,39 @@ export interface IInitializeArguments {
    */
   coreInterface: CoreInterface;
   /**
-   * If `true`, MSE API should be used in the core part of the RxPlayer (in the
-   * WebWorker).
-   * If `false`, they should be relied on on main thread.
-   *
-   * This might depend on both browser capabilities and preferences. It is
-   * assumed that the caller perform all those checks, the `ContentInitializer`
-   * won't check again the validity of this value.
+   * Set metadata about the `MediaSource` class that should be used for this
+   * content.
    */
-  useMseInWorker: boolean;
+  mediaSourceClass:
+    | {
+        /**
+         * Set to `"core"` when the `MediaSource` should be constructed by the
+         * Core/WebWorker.
+         *
+         * In this case, it is assumed that the core will select by itself the
+         * best `MediaSource` class possible for this - which is why
+         * `MediaSource` is set to `undefined`.
+         */
+        type: "core";
+        MediaSource: undefined;
+      }
+    | {
+        /**
+         * Set when the `MediaSource` should be constructed in main, not
+         * by `core`.
+         */
+        type: "main";
+        /**
+         * The `MediaSource` class that should be used.
+         *
+         * This can be used to ensure the reliance on a custom `MSE`
+         * implementation.
+         */
+        MediaSource: {
+          new (): IMediaSource;
+          isTypeSupported(mimetype: string): boolean;
+        };
+      };
   /** Options concerning the ABR logic. */
   adaptiveOptions: IAdaptiveRepresentationSelectorArguments;
   /** `true` if we should play when loaded. */

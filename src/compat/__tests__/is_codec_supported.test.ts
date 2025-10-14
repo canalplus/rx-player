@@ -14,8 +14,8 @@ describe("Compat - isCodecSupported", () => {
     });
     const isCodecSupported = (await vi.importActual("../is_codec_supported"))
       .default as typeof IIsCodecSupported;
-    expect(isCodecSupported(document.createElement("video"), "foo")).toEqual(false);
-    expect(isCodecSupported(document.createElement("video"), "")).toEqual(false);
+    expect(isCodecSupported("foo")).toEqual(false);
+    expect(isCodecSupported("")).toEqual(false);
   });
 
   it("should return true in any case if the MediaSource does not have the right function", async () => {
@@ -26,8 +26,8 @@ describe("Compat - isCodecSupported", () => {
     });
     const isCodecSupported = (await vi.importActual("../is_codec_supported"))
       .default as typeof IIsCodecSupported;
-    expect(isCodecSupported(document.createElement("video"), "foo")).toEqual(true);
-    expect(isCodecSupported(document.createElement("video"), "")).toEqual(true);
+    expect(isCodecSupported("foo")).toEqual(true);
+    expect(isCodecSupported("")).toEqual(true);
   });
 
   it("should return true if MediaSource.isTypeSupported returns true", async () => {
@@ -42,8 +42,8 @@ describe("Compat - isCodecSupported", () => {
     });
     const isCodecSupported = (await vi.importActual("../is_codec_supported"))
       .default as typeof IIsCodecSupported;
-    expect(isCodecSupported(document.createElement("video"), "foo")).toEqual(true);
-    expect(isCodecSupported(document.createElement("video"), "")).toEqual(true);
+    expect(isCodecSupported("foo")).toEqual(true);
+    expect(isCodecSupported("")).toEqual(true);
   });
 
   it("should return false if MediaSource.isTypeSupported returns false", async () => {
@@ -58,7 +58,7 @@ describe("Compat - isCodecSupported", () => {
     });
     const isCodecSupported = (await vi.importActual("../is_codec_supported"))
       .default as typeof IIsCodecSupported;
-    expect(isCodecSupported(document.createElement("video"), "foo")).toEqual(false);
-    expect(isCodecSupported(document.createElement("video"), "")).toEqual(false);
+    expect(isCodecSupported("foo")).toEqual(false);
+    expect(isCodecSupported("")).toEqual(false);
   });
 });

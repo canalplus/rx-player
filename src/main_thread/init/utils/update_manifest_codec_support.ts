@@ -1,4 +1,4 @@
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
+import type { IMediaSource } from "../../../compat/browser_compatibility_types";
 import isCodecSupported from "../../../compat/is_codec_supported";
 import type { IManifestMetadata } from "../../../manifest";
 import type Manifest from "../../../manifest/classes";
@@ -58,13 +58,20 @@ export function getCodecsWithUnknownSupport(
  * @param {Object} manifest - The manifest to update
  * @param {Object|null} contentDecryptor - The current content decryptor
  * @param {boolean} isPlayingWithMSEinWorker - True if WebWorker is used with MSE in worker
+ * @param {Object} MediaSource_
  * @returns {Array.<Object>}
  */
 export function updateManifestCodecSupport(
   manifest: IManifestMetadata,
   contentDecryptor: ContentDecryptor | null,
-  mediaElement: IMediaElement,
   isPlayingWithMSEinWorker: boolean,
+  /* eslint-disable-next-line @typescript-eslint/naming-convention */
+  MediaSource_:
+    | {
+        new (): IMediaSource;
+        isTypeSupported(mimetype: string): boolean;
+      }
+    | undefined,
 ): ICodecSupportInfo[] {
   const codecSupportMap: Map<
     string,
@@ -89,7 +96,7 @@ export function updateManifestCodecSupport(
     }
 
     let newData;
-    const isSupported = isCodecSupported(mediaElement, inputCodec);
+    const isSupported = isCodecSupported(inputCodec, MediaSource_);
     if (!isSupported) {
       newData = {
         isSupportedClear: false,

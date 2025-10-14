@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-import type DummyMediaElement from "../experimental/tools/DummyMediaElement";
 import log from "../log";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
 import isWorker from "../utils/is_worker";
-import { MediaSource_ } from "./browser_compatibility_types";
-import type { IMediaElement } from "./browser_compatibility_types";
+import { MediaSource_, type IMediaSource } from "./browser_compatibility_types";
 
 /**
  * Setting this value limit the number of entries in the support map
@@ -32,47 +29,51 @@ const MAX_SUPPORT_MAP_ENTRIES = 200;
  * and help for performance especially on low-end devices.
  */
 const supportMap: Map<string, boolean> = new Map();
+
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
- * @param {HTMLMediaElement} mediaElement
  * @param {string} mimeType - The MIME media type that you want to test support
  * for in the current browser.
  * This may include the codecs parameter to provide added details about the
  * codecs used within the file.
+ * @param {Object|undefined} [MediaSourceClass] - The `MediaSource` class relied
+ * on to play contents.
+ * `undefined` if unknown or if the `MediaSource` we rely on is in another
+ * environment (e.g. a WebWorker).
  * @returns {Boolean}
  */
 export default function isCodecSupported(
-  mediaElement: IMediaElement,
   mimeType: string,
+  /* eslint-disable-next-line @typescript-eslint/naming-convention */
+  MediaSourceClass?:
+    | {
+        new (): IMediaSource;
+        isTypeSupported(mimetype: string): boolean;
+      }
+    | undefined,
 ): boolean {
-  // TODO: We only added that as a hotfix for now, to allow support of the right codecs
-  // on a dummy media element
-  if ((mediaElement as DummyMediaElement).isDummy) {
-    return (mediaElement as DummyMediaElement).FORCED_MEDIA_SOURCE.isTypeSupported(
-      mimeType,
-    );
-  }
-  if (isNullOrUndefined(MediaSource_)) {
+  /* eslint-disable @typescript-eslint/unbound-method */
+  const isTypeSupported =
+    MediaSourceClass !== undefined
+      ? MediaSourceClass.isTypeSupported
+      : MediaSource_?.isTypeSupported;
+  if (typeof isTypeSupported !== "function") {
     if (isWorker) {
       log.error("mse", "Cannot request codec support in a worker without MSE.");
     }
     return false;
   }
 
-  if (typeof MediaSource_.isTypeSupported === "function") {
-    const cachedSupport = supportMap.get(mimeType);
-    if (cachedSupport !== undefined) {
-      return cachedSupport;
-    } else {
-      const isSupported = MediaSource_.isTypeSupported(mimeType);
-      if (supportMap.size >= MAX_SUPPORT_MAP_ENTRIES) {
-        supportMap.clear();
-      }
-      supportMap.set(mimeType, isSupported);
-      return isSupported;
+  const cachedSupport = supportMap.get(mimeType);
+  if (cachedSupport !== undefined) {
+    return cachedSupport;
+  } else {
+    const isSupported = isTypeSupported(mimeType);
+    if (supportMap.size >= MAX_SUPPORT_MAP_ENTRIES) {
+      supportMap.clear();
     }
+    supportMap.set(mimeType, isSupported);
+    return isSupported;
   }
-
-  return true;
 }

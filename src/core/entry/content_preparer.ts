@@ -9,6 +9,7 @@ import type { IMediaSourceInterface } from "../../mse";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface";
 import type { IPlayerError } from "../../public_types";
+import assert from "../../utils/assert";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
@@ -480,7 +481,11 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
 ): [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null] {
   let mediaSourceInterface: IMediaSourceInterface;
   if (capabilities.useMseInWorker) {
-    const mainMediaSource = new MainMediaSourceInterface(generateMediaSourceId());
+    assert(MediaSource_ !== undefined);
+    const mainMediaSource = new MainMediaSourceInterface(
+      generateMediaSourceId(),
+      MediaSource_,
+    );
     mediaSourceInterface = mainMediaSource;
 
     let sentMediaSourceLink: IAttachMediaSourceCoreMessagePayload;

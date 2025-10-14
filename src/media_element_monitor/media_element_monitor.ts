@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../compat/browser_compatibility_types";
+import {
+  isManagedMediaSource,
+  type IMediaElement,
+} from "../compat/browser_compatibility_types";
+import clearElementSrc from "../compat/clear_element_src";
 import isSeekingApproximate from "../compat/is_seeking_approximate";
+import resetMediaElement from "../compat/reset_media_element";
 import config from "../config";
 import ManualTimeRanges from "../core/segment_sinks/implementations/utils/manual_time_ranges";
 import log from "../log";
@@ -25,8 +30,8 @@ import objectAssign from "../utils/object_assign";
 import { getBufferedTimeRange } from "../utils/ranges";
 import type { IReadOnlySharedReference } from "../utils/reference";
 import SharedReference from "../utils/reference";
-import type { CancellationSignal } from "../utils/task_canceller";
 import TaskCanceller from "../utils/task_canceller";
+import type { CancellationSignal } from "../utils/task_canceller";
 import type {
   IMediaInfos,
   IMediaObservation,
@@ -151,8 +156,8 @@ export default class MediaElementMonitor {
    * element is ready to play your content.
    *
    * Note that creating a `MediaElementMonitor` lead to the usage of resources,
-   * such as event listeners which will only be freed once the `stop` method is
-   * called.
+   * such as event listeners which will only be freed once the `destroy` method
+   * is called.
    * @param {Object} options
    */
   constructor(options: IMediaElementMonitorOptions) {
@@ -187,6 +192,7 @@ export default class MediaElementMonitor {
     if (prevMediaElement !== null) {
       throw new Error("A media element was already attached to this PlaybackObserver");
     }
+    clearElementSrc(mediaElement);
     this._mediaElementRef.setValue(mediaElement);
     if (this._canceller.isUsed()) {
       return;
@@ -206,25 +212,78 @@ export default class MediaElementMonitor {
 
   /**
    * Get direct access to the `HTMLMediaElement`.
-   * @returns {HTMLMediaElement}
+   *
+   * `null` if not already attached.
+   * @returns {HTMLMediaElement|null}
    */
-  getMediaElement(): IMediaElement | null {
+  public getMediaElement(): IMediaElement | null {
     return this._mediaElementRef.getValue();
+  }
+
+  public addMediaErrorListener(
+    cb: (error: MediaError | null) => void,
+    cancelSignal: CancellationSignal,
+  ): void {
+    this._mediaElementRef.onUpdate(
+      (mediaElement: IMediaElement | null, stopListening) => {
+        if (mediaElement === null) {
+          return;
+        }
+        stopListening();
+        const onError = () => {
+          cb(mediaElement.error);
+        };
+        mediaElement.addEventListener("error", onError);
+        cancelSignal.register(() => {
+          mediaElement.removeEventListener("error", onError);
+        });
+      },
+      { emitCurrentValue: true, clearSignal: cancelSignal },
+    );
+  }
+
+  public linkUrl(
+    value: string | MediaProvider,
+    isMediaSource: boolean,
+    cancelSignal: CancellationSignal,
+  ): void {
+    this._mediaElementRef.onUpdate(
+      (mediaElement: IMediaElement | null, stopListening) => {
+        if (mediaElement === null) {
+          return;
+        }
+        stopListening();
+        if (typeof value === "string") {
+          mediaElement.src = value;
+          cancelSignal.register(() => {
+            resetMediaElement(mediaElement, value);
+          });
+        } else {
+          mediaElement.srcObject = value;
+          cancelSignal.register(() => {
+            mediaElement.srcObject = null;
+          });
+        }
+        if (isMediaSource) {
+          disableRemotePlaybackOnManagedMediaSource(mediaElement, cancelSignal);
+        }
+      },
+      { emitCurrentValue: true, clearSignal: cancelSignal },
+    );
   }
 
   /**
    * Stop the `MediaElementMonitor` from emitting media observations and free all
    * resources reserved to emitting them such as event listeners and intervals.
    *
-   * Once `stop` is called, no new media observation will ever be emitted.
+   * Once `destroy` is called, no new media observation will ever be emitted.
    *
-   * Note that it is important to call stop once the `MediaElementMonitor` is no
-   * more needed to avoid unnecessarily leaking resources.
+   * Note that it is important to call `destroy` once the `MediaElementMonitor` is
+   * no more needed to avoid unnecessarily leaking resources.
    * @param {string | undefined} reason - Human-inspectable reason behind the
-   * stop. Used for debugging matters, especially for debug log
-   * inspection.
+   * destroy. Used for debugging matters, especially for debug log inspection.
    */
-  public stop(reason: string | undefined) {
+  public destroy(reason: string | undefined) {
     this._canceller.cancel(reason ?? "MediaElementPlaybackObserver stop");
   }
 
@@ -1119,4 +1178,41 @@ interface IPendingSeekInformation {
   position: number;
   /** If `true`, the seek was performed by the RxPlayer's internal logic. */
   isInternal: boolean;
+}
+
+/**
+ * Temporarily disables remote playback on a media element by setting the
+ * `disableRemotePlayback` attribute to `true` when using a `ManagedMediaSource`.
+ * The original value of the `disableRemotePlayback` attribute is restored when
+ * the cancellation signal is triggered.
+ *
+ * This is useful when the `ManagedMediaSource` is being used and
+ * the media element needs to ensure that remote playback (e.g., Airplay) is disabled
+ * during the playback session.
+ * @param {HTMLElement} mediaElement - The media element whose `disableRemotePlayback`
+ * attribute will be modified.
+ * @param {CancellationSignal} cancellationSignal - The signal that, when triggered,
+ * restores the `disableRemotePlayback` attribute to its original value.
+ */
+export function disableRemotePlaybackOnManagedMediaSource(
+  mediaElement: IMediaElement,
+  cancellationSignal: CancellationSignal,
+) {
+  if (isManagedMediaSource && "disableRemotePlayback" in mediaElement) {
+    const disableRemotePlaybackPreviousValue = mediaElement.disableRemotePlayback;
+    cancellationSignal.register(() => {
+      /**
+       * Restore the `disableRemotePlayback` attribute to its previous value.
+       * This ensures that the media element's state is the same as it was before
+       * calling `RxPlayer.loadVideo` in the application.
+       */
+      mediaElement.disableRemotePlayback = disableRemotePlaybackPreviousValue;
+    });
+    /**
+     * Using ManagedMediaSource needs to disableRemotePlayback or to provide
+     * an Airplay source alternative, such as HLS.
+     * https://github.com/w3c/media-source/issues/320
+     */
+    mediaElement.disableRemotePlayback = true;
+  }
 }

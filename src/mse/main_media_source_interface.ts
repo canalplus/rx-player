@@ -1,8 +1,7 @@
 import type { IMediaSource, ISourceBuffer } from "../compat/browser_compatibility_types";
-import { MediaSource_ } from "../compat/browser_compatibility_types";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
-import { MediaError, SourceBufferError } from "../errors";
+import { SourceBufferError } from "../errors";
 import log from "../log";
 import { concat } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
@@ -81,22 +80,18 @@ export default class MainMediaSourceInterface
    * You can then obtain a link to that `MediaSource`, for example to link it
    * to an `HTMLMediaElement`, through the `handle` property.
    */
-  constructor(id: string, forcedMediaSource?: new () => IMediaSource) {
+  constructor(
+    id: string,
+    /* eslint-disable-next-line @typescript-eslint/naming-convention */
+    MediaSource_: new () => IMediaSource,
+  ) {
     super();
     this.id = id;
     this.sourceBuffers = [];
     this._canceller = new TaskCanceller("MainMediaSourceInterface");
 
-    if (isNullOrUndefined(MediaSource_)) {
-      throw new MediaError(
-        "MEDIA_SOURCE_NOT_SUPPORTED",
-        "No MediaSource Object was found in the current browser.",
-      );
-    }
-
     log.info("mse", "Creating MediaSource");
-    const mediaSource =
-      forcedMediaSource !== undefined ? new forcedMediaSource() : new MediaSource_();
+    const mediaSource = new MediaSource_();
     const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
     this.handle = isNullOrUndefined(handle)
       ? // eslint-disable-next-line @typescript-eslint/no-restricted-types

@@ -19,7 +19,10 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import {
+  MediaSource_,
+  type IMediaElement,
+} from "../../compat/browser_compatibility_types";
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size";
 import type { IPictureInPictureEvent } from "../../compat/event_listeners";
 import {
@@ -1047,6 +1050,26 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         __priv_patchLastSegmentInSidx,
       };
 
+      const forcedMediaSource =
+        this.videoElement.FORCED_MEDIA_SOURCE !== undefined
+          ? this.videoElement.FORCED_MEDIA_SOURCE
+          : undefined;
+
+      if (forcedMediaSource === undefined || MediaSource_ === undefined) {
+        throw new Error("Cannot load video: no MediaSource class available");
+      }
+
+      const mediaSourceClass =
+        forcedMediaSource === null && hasMseInWorker
+          ? {
+              type: "core" as const,
+              MediaSource: undefined,
+            }
+          : {
+              type: "main" as const,
+              MediaSource: forcedMediaSource ?? MediaSource_,
+            };
+
       const canRunInMultiThread =
         features.multithread !== null &&
         this._priv_worker !== null &&
@@ -1100,7 +1123,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
-          useMseInWorker: false,
+          mediaSourceClass,
         });
       } else {
         if (features.multithread === null) {
@@ -1135,7 +1158,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
-          useMseInWorker: hasMseInWorker,
+          mediaSourceClass,
         });
       }
     } else {
@@ -1176,7 +1199,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     mediaElementMonitor.blockSeeking();
 
     currentContentCanceller.signal.register((err) => {
-      mediaElementMonitor.stop(err.reason);
+      mediaElementMonitor.destroy(err.reason);
     });
 
     /** Future `this._priv_contentInfos` related to this content. */

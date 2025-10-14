@@ -52,7 +52,10 @@ export default function prepareSourceBuffer(
     resetMediaElement(videoElement, oldSrc);
 
     log.info("VideoThumbnailLoader", "Creating MediaSource");
-    const mediaSource = new MainMediaSourceInterface(generateMediaSourceId());
+    const mediaSource = new MainMediaSourceInterface(
+      generateMediaSourceId(),
+      MediaSource_,
+    );
     if (mediaSource.handle.type === "handle") {
       videoElement.srcObject = mediaSource.handle.value;
       cleanUpSignal.register(() => {

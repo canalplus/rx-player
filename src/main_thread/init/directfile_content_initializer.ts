@@ -20,8 +20,6 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import clearElementSrc from "../../compat/clear_element_src";
-import type { MediaError } from "../../errors";
 import log from "../../log";
 import type { IMediaElementMonitor } from "../../media_element_monitor";
 import type { IKeySystemOption, IPlayerError } from "../../public_types";
@@ -32,12 +30,12 @@ import type { IReadOnlySharedReference } from "../../utils/reference";
 import type { CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 import { ContentInitializer } from "./types";
+import formatMediaError from "./utils/format_media_error";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
 import initializeContentDecryption from "./utils/initialize_content_decryption";
 import RebufferingController from "./utils/rebuffering_controller";
-import listenToMediaError from "./utils/throw_on_media_error";
 
 /**
  * `ContentIntializer` which will load contents by putting their URL in the
@@ -92,8 +90,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
 
-    clearElementSrc(mediaElement);
-
     // Set the autoplay attribute on the mediaElement.
     // On Apple devices, the native HLS player needs autoplay to be set
     // in order to start buffering,which is required for our API's autoplay to work.
@@ -112,11 +108,9 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     );
 
     /** Translate errors coming from the media element into RxPlayer errors. */
-    listenToMediaError(
-      mediaElement,
-      (error: MediaError) => this._onFatalError(error),
-      cancelSignal,
-    );
+    mediaElementMonitor.addMediaErrorListener((mediaError) => {
+      this._onFatalError(formatMediaError(mediaError));
+    }, cancelSignal);
 
     /**
      * Class trying to avoid various stalling situations, emitting "stalled"
@@ -150,13 +144,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
         // Start everything! (Just put the URL in the element's src).
         log.info("Init", "Setting URL to HTMLMediaElement", { url });
-        mediaElement.src = url;
-        cancelSignal.register(() => {
-          log.info("Init", "Removing directfile src from media element", {
-            src: mediaElement.src,
-          });
-          clearElementSrc(mediaElement);
-        });
+        mediaElementMonitor.linkUrl(url, false, cancelSignal);
 
         if (evt.initializationState.type === "awaiting-media-link") {
           evt.initializationState.value.isMediaLinked.setValue(true);
@@ -226,7 +214,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     };
     performInitialSeekAndPlay(
       {
-        mediaElement,
         mediaElementMonitor,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
