@@ -1,6 +1,16 @@
 import { defineConfig } from "vitest/config";
 import { webdriverio } from "@vitest/browser-webdriverio";
 
+const UNIT_TEST_FILES = [
+  "tests/unit/src/**/*.[jt]s?(x)",
+  "tests/unit/global/**/*.test.[jt]s?(x)",
+];
+const INTEGRATION_TEST_FILES = [
+  "tests/integration/scenarios/**/*.[jt]s?(x)",
+  "tests/integration/**/*.test.[jt]s?(x)",
+];
+const MEMORY_TEST_FILES = ["tests/memory/**/*.[jt]s?(x)"];
+
 function getBrowserConfig(browser) {
   switch (browser) {
     case "chrome":
@@ -81,38 +91,117 @@ function getBrowserConfig(browser) {
   }
 }
 
-export default defineConfig({
-  define: {
-    // global variables
-    __TEST_CONTENT_SERVER__: {
-      URL: "127.0.0.1",
-      PORT: 3000,
+const allProjects = [
+  {
+    test: {
+      name: "chrome",
+      browser: getBrowserConfig("chrome"),
     },
-    __ENVIRONMENT__: {
-      PRODUCTION: 0,
-      DEV: 1,
-      CURRENT_ENV: 1,
+    define: {
+      // global variables
+      __TEST_CONTENT_SERVER__: {
+        URL: "127.0.0.1",
+        PORT: 3000,
+      },
+      __ENVIRONMENT__: {
+        PRODUCTION: 0,
+        DEV: 1,
+        CURRENT_ENV: 1,
+      },
+      __LOGGER_LEVEL__: {
+        CURRENT_LEVEL: '"NONE"',
+      },
+      __BROWSER_NAME__: JSON.stringify("chrome"),
     },
-    __LOGGER_LEVEL__: {
-      CURRENT_LEVEL: '"NONE"',
-    },
-    __BROWSER_NAME__: JSON.stringify(process.env.BROWSER_CONFIG),
   },
+  {
+    test: {
+      name: "firefox",
+      browser: getBrowserConfig("firefox"),
+    },
+    define: {
+      __TEST_CONTENT_SERVER__: {
+        URL: "127.0.0.1",
+        PORT: 3000,
+      },
+      __ENVIRONMENT__: {
+        PRODUCTION: 0,
+        DEV: 1,
+        CURRENT_ENV: 1,
+      },
+      __LOGGER_LEVEL__: {
+        CURRENT_LEVEL: '"NONE"',
+      },
+      __BROWSER_NAME__: JSON.stringify("firefox"),
+    },
+  },
+  {
+    test: {
+      name: "edge",
+      browser: getBrowserConfig("edge"),
+    },
+    define: {
+      __TEST_CONTENT_SERVER__: {
+        URL: "127.0.0.1",
+        PORT: 3000,
+      },
+      __ENVIRONMENT__: {
+        PRODUCTION: 0,
+        DEV: 1,
+        CURRENT_ENV: 1,
+      },
+      __LOGGER_LEVEL__: {
+        CURRENT_LEVEL: '"NONE"',
+      },
+      __BROWSER_NAME__: JSON.stringify("edge"),
+    },
+  },
+];
+
+const includedFiles = [];
+switch (process.env.INCLUDE_ONLY_TESTS) {
+  case "src":
+    includedFiles.push(...UNIT_TEST_FILES);
+    break;
+  case "integration":
+    includedFiles.push(...INTEGRATION_TEST_FILES);
+    break;
+  case "memory":
+    includedFiles.push(...MEMORY_TEST_FILES);
+    break;
+  case null:
+  case undefined:
+  case "":
+    includedFiles.push(
+      ...INTEGRATION_TEST_FILES,
+      ...MEMORY_TEST_FILES,
+      ...UNIT_TEST_FILES,
+    );
+    break;
+
+  default:
+    console.error(
+      "Vitest config file: unkown test filter: " + process.env.INCLUDE_ONLY_TESTS,
+    );
+}
+
+export default defineConfig({
   test: {
+    // Shared config for all projects
     watch: false,
     globals: false,
     reporters: "dot",
-    include: [
-      // integration tests
-      "tests/integration/scenarios/**/*.[jt]s?(x)",
-      "tests/integration/**/*.test.[jt]s?(x)",
-      // memory tests
-      "tests/memory/**/*.[jt]s?(x)",
-      // unit tests
-      "./tests/unit/src/**/*.ts",
-      "./tests/unit/global/**/*.test.ts",
-    ],
     globalSetup: "tests/globalSetup.mjs",
-    browser: getBrowserConfig(process.env.BROWSER_CONFIG ?? "chrome"),
+    // If BROWSER_CONFIG is set, filter to only that browser
+    projects: (process.env.BROWSER_CONFIG
+      ? allProjects.filter((project) => project.test.name === process.env.BROWSER_CONFIG)
+      : allProjects
+    ).map((project) => ({
+      ...project,
+      test: {
+        ...project.test,
+        include: includedFiles,
+      },
+    })),
   },
 });
