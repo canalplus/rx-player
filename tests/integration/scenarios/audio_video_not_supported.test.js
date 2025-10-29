@@ -270,7 +270,7 @@ describe("Content with video or audio not supported", function () {
     });
     let playerError;
 
-    await sleep(100);
+    await sleep(500);
     expect(noPlayableTrackEvent).toBe(undefined);
     expect(playerError).not.toBe(undefined);
     expect(playerError.message).toBe(
