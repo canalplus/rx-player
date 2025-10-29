@@ -196,17 +196,16 @@
     "releases:doc": "bash ./scripts/update_gh-pages_doc.sh",
     "releases:official": "bash ./scripts/make-official-release.sh",
     "start": "node ./scripts/start_demo_web_server.mjs",
-    "test:integration": "npm run test:integration:chrome && npm run test:integration:firefox",
-    "test:integration:chrome": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest run tests/integration/scenarios",
-    "test:integration:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/integration/scenarios",
-    "test:integration:edge": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest run tests/integration/scenarios",
-    "test:integration:edge:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=edge vitest watch tests/integration/scenarios",
-    "test:integration:firefox": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest run tests/integration/scenarios",
-    "test:integration:firefox:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=firefox vitest watch tests/integration/scenarios",
+    "test:memory": "cross-env INCLUDE_ONLY_TESTS=memory BROWSER_CONFIG=chrome vitest",
+    "test:integration": "npm run --silent test:integration:notice && cross-env INCLUDE_ONLY_TESTS=integration vitest",
+    "test:integration:chrome": "npm run --silent test:integration:notice && cross-env INCLUDE_ONLY_TESTS=integration BROWSER_CONFIG=chrome vitest",
+    "test:integration:edge": "npm run --silent test:integration:notice && cross-env INCLUDE_ONLY_TESTS=integration BROWSER_CONFIG=edge vitest",
+    "test:integration:firefox": "npm run --silent test:integration:notice && cross-env INCLUDE_ONLY_TESTS=integration BROWSER_CONFIG=firefox vitest",
+    "test:integration:notice": "echo \"~~~ ⚠️ NOTICE ⚠️\n~~~ Tests have two dependencies: a local RxPlayer build and ffmpeg.\n~~~ Make sure you:\n~~~ 1.  Have an ffmpeg executable in your path and,\n~~~ 2.  You built an up-to-date RxPlayer through the \\`build\\` npm script.\n\"",
     "test:performance": "node ./tests/performance/run.mjs",
-    "test:unit": "npm run test:unit:chrome && npm run test:unit:firefox",
-    "test:unit:chrome": "cross-env BROWSER_CONFIG=chrome vitest src/",
-    "test:unit:firefox": "cross-env BROWSER_CONFIG=firefox vitest src/",
+    "test:unit": "cross-env INCLUDE_ONLY_TESTS=src vitest",
+    "test:unit:chrome": "cross-env INCLUDE_ONLY_TESTS=src BROWSER_CONFIG=chrome vitest",
+    "test:unit:firefox": "cross-env INCLUDE_ONLY_TESTS=src BROWSER_CONFIG=firefox vitest",
     "types": "tsc --noEmit --project .",
     "types:all": "npm run types && npm run types:demo && npm run types:unit_tests && npm run types:scripts",
     "types:demo": "tsc --noEmit --project demo/",
@@ -274,19 +273,17 @@
       "Integration tests (test the whole API, call the `build` script BEFORE running them)": {
         "test:integration": "Launch integration tests in multiple browser environments",
         "test:integration:chrome": "Launch integration tests in a Chrome browser.",
-        "test:integration:chrome:watch": "Launch integration tests in Chrome each times the files update",
         "test:integration:firefox": "Launch integration tests in a Firefox browser.",
-        "test:integration:firefox:watch": "Launch integration tests in Firefox each times the files update",
-        "test:integration:edge": "Launch integration tests in an Edge browser.",
-        "test:integration:edge:watch": "Launch integration tests in Edge each times the files update"
+        "test:integration:edge": "Launch integration tests in an Edge browser."
       },
       "Unit tests (test particular functions)": {
         "test:unit": "Launch unit tests",
-        "test:unit -- --watch": "Launch unit tests and restart them each one of its file changes"
+        "test:unit:chrome": "Launch unit tests in a Chrome browser.",
+        "test:unit:firefox": "Launch unit tests in a Firefox browser.",
+        "test:unit:edge": "Launch integration tests in an Edge browser."
       },
       "Memory tests (test memory usage to avoid memory leaks, call the `build` script BEFORE running them)": {
-        "test:memory": "Launch memory tests",
-        "test:memory:chrome:watch": "Launch memory tests in Chrome each times the files update"
+        "test:memory": "Launch memory tests"
       },
       "Performance tests (test against performance regressions on some key scenarios)": {
         "test:performance": "Launch performance tests on a Chrome browser",
