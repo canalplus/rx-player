@@ -51,7 +51,7 @@ describe("DASH live content multi-periods (SegmentTemplate)", function () {
       segmentLoader,
     });
 
-    await sleepWithoutFakeTimer(50);
+    await sleepWithoutFakeTimer(500);
 
     const now = 1567781280 + 500;
     const maxPos = player.getMaximumPosition();
