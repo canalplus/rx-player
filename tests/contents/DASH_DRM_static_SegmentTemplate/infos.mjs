@@ -1,10 +1,8 @@
 const BASE_URL =
   "http://" +
-  /* eslint-disable no-undef */
   __TEST_CONTENT_SERVER__.URL +
   ":" +
   __TEST_CONTENT_SERVER__.PORT +
-  /* eslint-enable no-undef */
   "/DASH_DRM_static_SegmentTemplate/media/";
 
 export default {
