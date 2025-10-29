@@ -225,7 +225,7 @@
     "typescript": "5.9.2",
     "typescript-eslint": "^8.40.0",
     "vitest": "3.2.4",
-    "webdriverio": "^9.19.1"
+    "webdriverio": "^9.20.0"
   },
   "scripts-list": {
     " INFO ": "---- This field is read by the `list` npm script and allows to guide you through the RxPlayer's npm scripts ----",
