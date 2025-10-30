@@ -24,15 +24,26 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
 
-      - name: Linux prep
+      - name: Linux package installation
         if: contains(inputs.os, 'ubuntu')
         run: |
           sudo add-apt-repository multiverse -y
-          sudo apt update && sudo apt install -y ubuntu-restricted-extras
+          sudo apt update && sudo apt install -y ubuntu-restricted-extras ffmpeg
 
-      - name: Run integration tests for ${{ inputs.browser }} on ${{ inputs.os }}
+      - name: Windows ffmpeg installation
+        if: contains(inputs.os, 'windows')
         shell: bash
         run: |
-          npm ci
-          npm run build
-          npm run "test:integration:${{ inputs.browser }}"
+          choco install ffmpeg -y
+          echo "C:\\ProgramData\\chocolatey\\lib\\ffmpeg\\tools\\ffmpeg\\bin" >> $GITHUB_PATH
+
+      - name: Install JS dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Build RxPlayer
+        shell: bash
+        run: npm run build
+
+      - name: Run integration tests for ${{ inputs.browser }} on ${{ inputs.os }}
+        run: npm run "test:integration:${{ inputs.browser }}"
