@@ -41,8 +41,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - run: npm ci
-      - run: npm run check
+      - name: Install dependencies
+        run: npm ci
+      - name: Check typescript types
+        run: npm run check:types
+      - name: Lint files in src
+        run: npm run lint
+      - name: Check unit tests typescript types
+        run: npm run check:types:unit_tests
 
   unit_tests:
     runs-on: ubuntu-latest
@@ -53,8 +59,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-      - run: npm ci
-      - run: npm run test:unit
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm run test:unit
 
   integration_linux_chrome:
     uses: ./.github/workflows/integration_tests_base.yml
@@ -95,9 +103,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      # needed for integration & memory tests codecs support
-      - run:
-          sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
+      - name: Linux package installation
+        run: |
+          # needed for integration & memory tests codecs support
+          sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y \
           ubuntu-restricted-extras
-      - run: npm ci
-      - run: npm run test:memory
+      - name: Install JS dependencies
+        run: npm ci
+      - name: Run memory tests
+        run: npm run test:memory
