@@ -28,6 +28,7 @@ export const DummyMediaElementPlaybackObserver =
       setPlaybackRate: notImplemented("setPlaybackRate"),
       listen: notImplemented("listen"),
       deriveReadOnlyObserver: notImplemented("deriveReadOnlyObserver"),
+      onMediaElementAttachment: notImplemented("onMediaElementAttachment"),
     },
     {},
   );

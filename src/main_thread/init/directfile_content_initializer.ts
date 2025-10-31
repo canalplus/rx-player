@@ -72,10 +72,35 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   }
 
   /**
-   * "Prepare" content so it can later be played by calling `start`.
+   * @param {Object} playbackObserver - Interface to the `HTMLMediaElement`,
+   * also allowing to poll playback information from it at regular intervals.
+   * Actual playback will start once an `HTMLMediaElement` is attached to it.
    */
-  public prepare(): void {
-    return; // Directfile contents do not have any preparation
+  public start(playbackObserver: IMediaElementPlaybackObserver): void {
+    playbackObserver.onMediaElementAttachment(
+      (mediaElement: IMediaElement) =>
+        this._startPlayback(mediaElement, playbackObserver),
+      this._initCanceller.signal,
+    );
+  }
+
+  /**
+   * Update URL this `ContentIntializer` depends on.
+   * @param {Array.<string>|undefined} _urls
+   * @param {boolean} _refreshNow
+   */
+  public updateContentUrls(_urls: string[] | undefined, _refreshNow: boolean): void {
+    throw new Error("Cannot update content URL of directfile contents");
+  }
+
+  /**
+   * Stop content and free all resources linked to this `ContentIntializer`.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  public dispose(reason: string | undefined): void {
+    this._initCanceller.cancel(reason ?? "Directfile Init dispose");
   }
 
   /**
@@ -86,7 +111,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * @param {Object} playbackObserver - Object regularly emitting playback
    * information.
    */
-  public start(
+  private _startPlayback(
     mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
@@ -177,25 +202,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       },
       { emitCurrentValue: true, clearSignal: cancelSignal },
     );
-  }
-
-  /**
-   * Update URL this `ContentIntializer` depends on.
-   * @param {Array.<string>|undefined} _urls
-   * @param {boolean} _refreshNow
-   */
-  public updateContentUrls(_urls: string[] | undefined, _refreshNow: boolean): void {
-    throw new Error("Cannot update content URL of directfile contents");
-  }
-
-  /**
-   * Stop content and free all resources linked to this `ContentIntializer`.
-   * @param {string | undefined} reason - Human-inspectable reason behind the
-   * dispose. Used for debugging matters, especially for debug log
-   * inspection.
-   */
-  public dispose(reason: string | undefined): void {
-    this._initCanceller.cancel(reason ?? "Directfile Init dispose");
   }
 
   /**
