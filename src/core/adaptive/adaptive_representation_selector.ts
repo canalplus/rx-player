@@ -195,7 +195,7 @@ function getEstimateReference(
    * This TaskCanceller is used both for restarting estimates with a new
    * configuration and to cancel them altogether.
    */
-  let currentEstimatesCanceller = new TaskCanceller();
+  let currentEstimatesCanceller = new TaskCanceller("ABR " + context.adaptation.type);
   currentEstimatesCanceller.linkToSignal(stopAllEstimates);
 
   // Create `SharedReference` on which estimates will be emitted.
@@ -495,8 +495,8 @@ function getEstimateReference(
    */
   function restartEstimatesProductionFromCurrentConditions(): void {
     const representations = representationsRef.getValue();
-    currentEstimatesCanceller.cancel();
-    currentEstimatesCanceller = new TaskCanceller();
+    currentEstimatesCanceller.cancel("restart");
+    currentEstimatesCanceller = new TaskCanceller("ABR " + context.adaptation.type);
     currentEstimatesCanceller.linkToSignal(stopAllEstimates);
     const newRef = createEstimateReference(
       representations,

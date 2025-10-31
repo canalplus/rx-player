@@ -74,9 +74,11 @@ export default class MediaSourceDurationUpdater {
    */
   public updateDuration(newDuration: number, isRealEndKnown: boolean): void {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
-      this._currentMediaSourceDurationUpdateCanceller.cancel();
+      this._currentMediaSourceDurationUpdateCanceller.cancel("manual duration update");
     }
-    this._currentMediaSourceDurationUpdateCanceller = new TaskCanceller();
+    this._currentMediaSourceDurationUpdateCanceller = new TaskCanceller(
+      "MediaSource Duration Update",
+    );
 
     const mediaSource = this._mediaSource;
     const currentSignal = this._currentMediaSourceDurationUpdateCanceller.signal;
@@ -86,7 +88,9 @@ export default class MediaSourceDurationUpdater {
     );
 
     /** TaskCanceller triggered each time the MediaSource switches to and from "open". */
-    let msOpenStatusCanceller = new TaskCanceller();
+    let msOpenStatusCanceller = new TaskCanceller(
+      undefined /* we do not care for logs here */,
+    );
     msOpenStatusCanceller.linkToSignal(currentSignal);
     isMediaSourceOpened.onUpdate(onMediaSourceOpenedStatusChanged, {
       emitCurrentValue: true,
@@ -94,24 +98,26 @@ export default class MediaSourceDurationUpdater {
     });
 
     function onMediaSourceOpenedStatusChanged() {
-      msOpenStatusCanceller.cancel();
+      msOpenStatusCanceller.cancel("MediaSource open status changed");
       if (!isMediaSourceOpened.getValue()) {
         return;
       }
-      msOpenStatusCanceller = new TaskCanceller();
+      msOpenStatusCanceller = new TaskCanceller(
+        undefined /* we do not care for logs here */,
+      );
       msOpenStatusCanceller.linkToSignal(currentSignal);
       const areSourceBuffersUpdating = createSourceBuffersUpdatingReference(
         mediaSource.sourceBuffers,
         msOpenStatusCanceller.signal,
       );
       /** TaskCanceller triggered each time SourceBuffers' updating status changes */
-      let sourceBuffersUpdatingCanceller = new TaskCanceller();
+      let sourceBuffersUpdatingCanceller = new TaskCanceller(undefined);
       sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
 
       return areSourceBuffersUpdating.onUpdate(
         (areUpdating) => {
-          sourceBuffersUpdatingCanceller.cancel();
-          sourceBuffersUpdatingCanceller = new TaskCanceller();
+          sourceBuffersUpdatingCanceller.cancel("SourceBuffer status update");
+          sourceBuffersUpdatingCanceller = new TaskCanceller(undefined);
           sourceBuffersUpdatingCanceller.linkToSignal(msOpenStatusCanceller.signal);
           if (areUpdating) {
             return;
@@ -131,10 +137,13 @@ export default class MediaSourceDurationUpdater {
 
   /**
    * Abort the last duration-setting operation and free its resources.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * stop. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public stopUpdating() {
+  public stopUpdating(reason: string | undefined) {
     if (this._currentMediaSourceDurationUpdateCanceller !== null) {
-      this._currentMediaSourceDurationUpdateCanceller.cancel();
+      this._currentMediaSourceDurationUpdateCanceller.cancel(reason ?? "stop MSDU");
       this._currentMediaSourceDurationUpdateCanceller = null;
     }
   }

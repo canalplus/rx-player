@@ -67,7 +67,7 @@ export default class WorkerMediaSourceInterface
     super();
     this.id = id;
     this.sourceBuffers = [];
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("WorkerMediaSourceInterface");
     this.readyState = "closed";
     this._messageSender = messageSender;
 
@@ -153,9 +153,14 @@ export default class WorkerMediaSourceInterface
     });
   }
 
-  public dispose() {
-    this.sourceBuffers.forEach((s) => s.dispose());
-    this._canceller.cancel();
+  /**
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  public dispose(reason: string | undefined) {
+    this.sourceBuffers.forEach((s) => s.dispose(reason));
+    this._canceller.cancel("WorkerMediaSourceInterface dispose");
     this._messageSender({
       type: CoreMessageType.DisposeMediaSource,
       mediaSourceId: this.id,
@@ -226,7 +231,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   ) {
     this.type = sbType;
     this.codec = codec;
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("WorkerSourceBufferInterface " + sbType);
     this._mediaSourceId = mediaSourceId;
     this._queuedOperations = [];
     this._pendingOperations = new Map();
@@ -236,7 +241,9 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   public onOperationSuccess(operationId: string, ranges: IRange[]): void {
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
-      log.warn("mse", "unknown SourceBuffer operation succeeded");
+      log.warn("mse", "unknown SourceBuffer operation succeeded", {
+        type: this.type,
+      });
     } else {
       this._pendingOperations.delete(operationId);
       mapElt.resolve(ranges);
@@ -250,17 +257,25 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   ): void {
     const formattedErr =
       error.errorName === "CancellationError"
-        ? new CancellationError()
+        ? new CancellationError("Pending SBI Operation " + this.type, "SBI Failure")
         : new SourceBufferError(error.errorName, error.message, error.isBufferFull);
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
-      log.info("mse", "unknown SourceBuffer operation failed", formattedErr);
+      log.info(
+        "mse",
+        "unknown SourceBuffer operation failed",
+        { type: this.type },
+        formattedErr,
+      );
     } else {
       this._pendingOperations.delete(operationId);
       mapElt.reject(formattedErr);
     }
 
-    const cancellationError = new CancellationError();
+    const cancellationError = new CancellationError(
+      "Queued SBI Operation " + this.type,
+      "SBI failure",
+    );
     for (const operation of this._queuedOperations) {
       operation.reject(cancellationError);
     }
@@ -359,9 +374,14 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     });
   }
 
-  public dispose(): void {
+  /**
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  public dispose(reason: string | undefined): void {
     this.abort();
-    this._canceller.cancel();
+    this._canceller.cancel(reason ?? "WorkerSourceBufferInterface dispose");
   }
 
   public getBuffered(): undefined {

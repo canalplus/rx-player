@@ -487,7 +487,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         bufferType,
         periodId: period.id,
       });
-      periodObj[bufferType].dispatcher.dispose();
+      periodObj[bufferType].dispatcher.dispose("TrackDispatcher double add issue");
     }
 
     const dispatcher = new TrackDispatcher(adaptationRef);
@@ -757,7 +757,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       return;
     }
 
-    choiceItem.dispatcher.dispose();
+    choiceItem.dispatcher.dispose("TrackDispatcher reference removal");
     choiceItem.dispatcher = null;
     if (isPeriodItemRemovable(periodObj)) {
       this._removePeriodObject(periodIndex);
@@ -835,11 +835,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     log.debug("Track", "Resetting Period Objects");
     for (let i = this._storedPeriodInfo.length - 1; i >= 0; i--) {
       const storedObj = this._storedPeriodInfo[i];
-      storedObj.audio.dispatcher?.dispose();
+      storedObj.audio.dispatcher?.dispose("TrackDispatcher reset");
       storedObj.audio.dispatcher = null;
-      storedObj.video.dispatcher?.dispose();
+      storedObj.video.dispatcher?.dispose("TrackDispatcher reset");
       storedObj.video.dispatcher = null;
-      storedObj.text.dispatcher?.dispose();
+      storedObj.text.dispatcher?.dispose("TrackDispatcher reset");
       storedObj.text.dispatcher = null;
       if (!storedObj.inManifest) {
         this._removePeriodObject(i);

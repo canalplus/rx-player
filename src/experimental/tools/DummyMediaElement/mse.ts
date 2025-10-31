@@ -164,14 +164,14 @@ export class DummyMediaSource
       sb.updating = false;
       if (sb instanceof DummySourceBuffer) {
         if (sb.currentAppendCanceller !== null) {
-          sb.currentAppendCanceller.cancel();
+          sb.currentAppendCanceller.cancel("Removing DummySourceBuffer");
           sb.currentAppendCanceller = null;
           sb.eventScheduler
             .schedule(sb, "abort", null)
             .then(() => sb.eventScheduler.schedule(sb, "updateend", null))
             .catch(noop);
         }
-        sb.canceller.cancel();
+        sb.canceller.cancel("Removing DummySourceBuffer");
         sb.removed = true;
       }
     }
@@ -369,7 +369,7 @@ export class DummySourceBuffer
     this.onerror = null;
     this.onabort = null;
     this.hasMetadata = false;
-    this.canceller = new TaskCanceller();
+    this.canceller = new TaskCanceller("DummySourceBuffer");
     this.currentAppendCanceller = null;
     this._lastKeyId = null;
     this._callbacks = callbacks;
@@ -485,7 +485,7 @@ export class DummySourceBuffer
 
     this.updating = true;
 
-    const canceller = new TaskCanceller();
+    const canceller = new TaskCanceller("DummySourceBuffer append");
     canceller.linkToSignal(this.canceller.signal);
     this.currentAppendCanceller = canceller;
     this.eventScheduler
@@ -629,7 +629,7 @@ export class DummySourceBuffer
     }
 
     if (this.updating) {
-      this.currentAppendCanceller?.cancel();
+      this.currentAppendCanceller?.cancel("Aborting DummySourceBuffer");
       this.currentAppendCanceller = null;
       this.updating = false;
       this.eventScheduler

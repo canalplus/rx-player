@@ -43,7 +43,7 @@ class IE11MediaKeySession
     this.expiration = NaN;
     this.keyStatuses = new Map();
     this._mk = mk;
-    this._sessionClosingCanceller = new TaskCanceller();
+    this._sessionClosingCanceller = new TaskCanceller("IE11 MediaKeySession Closing");
     this.closed = new Promise((resolve) => {
       this._sessionClosingCanceller.signal.register(() =>
         resolve("closed-by-application"),
@@ -117,7 +117,7 @@ class IE11MediaKeySession
         this._ss.close();
         this._ss = undefined;
       }
-      this._sessionClosingCanceller.cancel();
+      this._sessionClosingCanceller.cancel("IE11 MediaKeySession close");
       resolve();
     });
   }

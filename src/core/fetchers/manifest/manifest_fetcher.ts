@@ -108,7 +108,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     this._pipelines = pipelines.manifest;
     this._transportName = pipelines.transportName;
     this._settings = settings;
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("ManifestFetcher");
     this._isStarted = false;
     this._isRefreshPending = false;
     this._consecutiveUnsafeMode = 0;
@@ -120,9 +120,12 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    *
    * Once `dispose` has been called. This `ManifestFetcher` cannot be relied on
    * anymore.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * cancellation. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose() {
-    this._canceller.cancel();
+  public dispose(reason: string | undefined) {
+    this._canceller.cancel(reason ?? "ManifestFetcher dispose");
     this.removeEventListener();
   }
 
@@ -469,7 +472,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
      * be effectively considered.
      * `nextRefreshCanceller` will allow to cancel every other when one is triggered.
      */
-    const nextRefreshCanceller = new TaskCanceller();
+    const nextRefreshCanceller = new TaskCanceller("ManifestFetcher refresh handling");
     nextRefreshCanceller.linkToSignal(this._canceller.signal);
 
     /* Function to manually schedule a Manifest refresh */
@@ -486,7 +489,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       );
       const timeoutId = setTimeout(
         () => {
-          nextRefreshCanceller.cancel();
+          nextRefreshCanceller.cancel("manifest request timeout");
           this._triggerNextManifestRefresh(manifest, {
             enablePartialRefresh,
             unsafeMode,
@@ -503,7 +506,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     if (manifest.expired !== null) {
       const timeoutId = setTimeout(() => {
         manifest.expired?.then(() => {
-          nextRefreshCanceller.cancel();
+          nextRefreshCanceller.cancel("manifest expiration");
           this._triggerNextManifestRefresh(manifest, {
             enablePartialRefresh: false,
             unsafeMode: unsafeModeEnabled,
@@ -573,7 +576,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       }
       const timeoutId = setTimeout(
         () => {
-          nextRefreshCanceller.cancel();
+          nextRefreshCanceller.cancel("manifest request timeout");
           this._triggerNextManifestRefresh(manifest, {
             enablePartialRefresh: false,
             unsafeMode: unsafeModeEnabled,
@@ -709,7 +712,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       return;
     }
     this.trigger("error", err);
-    this.dispose();
+    this.dispose("ManifestFetcher fatal err");
   }
 }
 

@@ -37,7 +37,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     });
     let wasInterrupted = 0;
     let wasEnded = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
     const prom = prioritizer
       .create(
         task,
@@ -83,7 +83,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was2Ended = false;
     let was3Interrupted = 0;
     let was3Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     prioritizer
       .create(
@@ -178,7 +178,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was2Ended = false;
     let was3Interrupted = 0;
     let was3Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     prioritizer
       .create(
@@ -273,7 +273,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was2Ended = false;
     let was3Interrupted = 0;
     let was3Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     prioritizer
       .create(
@@ -368,7 +368,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was2Ended = false;
     let was3Interrupted = 0;
     let was3Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     const prom = prioritizer
       .create(
@@ -472,7 +472,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was2Ended = false;
     let was3Interrupted = 0;
     let was3Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     const prom = prioritizer
       .create(
@@ -582,7 +582,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was2Ended = false;
     let was3Interrupted = 0;
     let was3Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     const prom = prioritizer
       .create(
@@ -684,7 +684,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was2Ended = false;
     let was3Interrupted = 0;
     let was3Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     const prom = prioritizer
       .create(
@@ -796,7 +796,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was1Ended = false;
     let was2Interrupted = 0;
     let was2Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     const prom = prioritizer
       .create(
@@ -870,7 +870,7 @@ describe("SegmentFetchers TaskPrioritizer", () => {
     let was1Ended = false;
     let was2Interrupted = 0;
     let was2Ended = false;
-    const taskCanceller = new TaskCanceller();
+    const taskCanceller = new TaskCanceller(undefined);
 
     prioritizer
       .create(

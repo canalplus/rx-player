@@ -50,19 +50,19 @@ export default async function renderThumbnail(
   }
 
   const { thumbnailRequestsInfo, currentContentCanceller } = contentInfos;
-  const canceller = new TaskCanceller();
+  const canceller = new TaskCanceller("Render Thumbnail");
   const unlinkCanceller = canceller.linkToSignal(currentContentCanceller.signal);
 
   let imageUrl: string | undefined;
 
   const olderTaskSameContainer = thumbnailRequestsInfo.pendingRequests.get(container);
-  olderTaskSameContainer?.cancel();
+  olderTaskSameContainer?.cancel("new thumbnail has same container");
 
   thumbnailRequestsInfo.pendingRequests.set(container, canceller);
 
   const onFinished = () => {
     unlinkCanceller();
-    canceller.cancel();
+    canceller.cancel("thumbnail request finished");
     thumbnailRequestsInfo.pendingRequests.delete(container);
 
     // Let's revoke the URL after a round-trip to the event loop just in case

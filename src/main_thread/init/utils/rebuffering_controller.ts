@@ -79,7 +79,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     this._speed = speed;
     this._discontinuitiesStore = [];
     this._isStarted = false;
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("RebufferingController");
   }
 
   public start(): void {
@@ -92,8 +92,8 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
       this._playbackObserver,
       this._speed,
     );
-    this._canceller.signal.register(() => {
-      playbackRateUpdater.dispose();
+    this._canceller.signal.register((err) => {
+      playbackRateUpdater.dispose(err.reason);
     });
 
     this._playbackObserver.listen(
@@ -333,9 +333,12 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
   /**
    * Stops the `RebufferingController` from montoring stalling situations,
    * forever.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public destroy(): void {
-    this._canceller.cancel();
+  public destroy(reason: string | undefined): void {
+    this._canceller.cancel(reason ?? "RebufferingController destroy");
   }
 }
 
@@ -507,7 +510,7 @@ class PlaybackRateUpdater {
     playbackObserver: IMediaElementPlaybackObserver,
     speed: IReadOnlySharedReference<number>,
   ) {
-    this._speedUpdateCanceller = new TaskCanceller();
+    this._speedUpdateCanceller = new TaskCanceller("PlaybackRateUpdater speed updates");
     this._isRebuffering = false;
     this._playbackObserver = playbackObserver;
     this._isDisposed = false;
@@ -525,7 +528,7 @@ class PlaybackRateUpdater {
       return;
     }
     this._isRebuffering = true;
-    this._speedUpdateCanceller.cancel();
+    this._speedUpdateCanceller.cancel("start rebuffering");
     log.info("Init", "Pause playback to build buffer");
     this._playbackObserver.setPlaybackRate(0);
   }
@@ -541,7 +544,7 @@ class PlaybackRateUpdater {
       return;
     }
     this._isRebuffering = false;
-    this._speedUpdateCanceller = new TaskCanceller();
+    this._speedUpdateCanceller = new TaskCanceller("PlaybackRateUpdater speed updates");
     this._updateSpeed();
   }
 
@@ -551,9 +554,12 @@ class PlaybackRateUpdater {
    *
    * Consequently, you should call the `dispose` method, when you don't want the
    * `PlaybackRateUpdater` to have an effect anymore.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * cancellation. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose() {
-    this._speedUpdateCanceller.cancel();
+  public dispose(reason: string | undefined) {
+    this._speedUpdateCanceller.cancel(reason ?? "PlaybackRateUpdater dispose");
     this._isDisposed = true;
   }
 

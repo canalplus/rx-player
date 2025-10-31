@@ -66,7 +66,7 @@ export default function initializeContentDecryption(
     return createEmeDisabledReference("EME feature not activated.");
   }
 
-  const decryptorCanceller = new TaskCanceller();
+  const decryptorCanceller = new TaskCanceller("Init: Decryption Capabilities");
   decryptorCanceller.linkToSignal(cancelSignal);
   const drmStatusRef = new SharedReference<IDrmInitializationStatus>(
     {
@@ -125,7 +125,7 @@ export default function initializeContentDecryption(
   });
 
   contentDecryptor.addEventListener("error", (error) => {
-    decryptorCanceller.cancel();
+    decryptorCanceller.cancel("ContentDecryptor err");
     callbacks.onError(error);
   });
 
@@ -141,8 +141,8 @@ export default function initializeContentDecryption(
     callbacks.onKeyIdsCompatibilityUpdate(x);
   });
 
-  decryptorCanceller.signal.register(() => {
-    contentDecryptor.dispose();
+  decryptorCanceller.signal.register((err) => {
+    contentDecryptor.dispose(err.reason);
   });
 
   return {

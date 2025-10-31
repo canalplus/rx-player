@@ -410,8 +410,8 @@ export class DummyMediaElement
   public set src(val: string) {
     this._src = val;
     this.srcObject = null;
-    this._currentContentCanceller?.cancel();
-    const canceller = new TaskCanceller();
+    this._currentContentCanceller?.cancel("Resetting DummyMediaElement src");
+    const canceller = new TaskCanceller("DummyMediaElement src");
     this._currentContentCanceller = canceller;
     setTimeout(() => {
       while (this._pendingPlayPromises.length > 0) {
@@ -445,7 +445,7 @@ export class DummyMediaElement
   public set srcObject(val: MediaProvider | null) {
     // media element load algorithm
 
-    this._currentContentCanceller?.cancel();
+    this._currentContentCanceller?.cancel("Resetting DummyMediaElement srcObject");
     this._wasLoadedDataSentForCurrentContent = false;
     this._wasPlayPerformedOnCurrentContent = false;
     this.buffered = new TimeRangesWithMetadata();
@@ -478,7 +478,7 @@ export class DummyMediaElement
         throw new Error("A DummyMediaElement can only be linked to a DummyMediaSource");
       }
       this._attachedMediaSource = val;
-      this._currentContentCanceller = new TaskCanceller();
+      this._currentContentCanceller = new TaskCanceller("DummyMediaElement srcObject");
       const intervalId = setInterval(() => {
         this._tick();
       }, TICK_INTERVAL);

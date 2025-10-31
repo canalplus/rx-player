@@ -33,16 +33,16 @@ import type { IMediaKeySession } from "../browser_compatibility_types";
  * @returns {Promise.<undefined>}
  */
 export default function closeSession(session: IMediaKeySession): Promise<void> {
-  const timeoutCanceller = new TaskCanceller();
+  const timeoutCanceller = new TaskCanceller("MediaKeySession close timeout");
 
   return Promise.race([
     session.close().then(() => {
-      timeoutCanceller.cancel();
+      timeoutCanceller.cancel("MediaKeySession close method resolved");
     }),
     // The `closed` promise may resolve, even if `close()` result has not
     // (seen at some point on Firefox).
     session.closed.then(() => {
-      timeoutCanceller.cancel();
+      timeoutCanceller.cancel("MediaKeySession closed property resolved");
     }),
     waitTimeoutAndCheck(),
   ]);

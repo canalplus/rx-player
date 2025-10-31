@@ -125,9 +125,11 @@ export default function PeriodStream(
           return;
         }
 
-        const streamCanceller = new TaskCanceller();
+        const streamCanceller = new TaskCanceller(
+          "PeriodStream: Adaptation choice " + bufferType,
+        );
         streamCanceller.linkToSignal(parentCancelSignal);
-        currentStreamCanceller?.cancel(); // Cancel previously created stream if one
+        currentStreamCanceller?.cancel("PeriodStream: Adaptation update"); // Cancel previously created stream if one
         currentStreamCanceller = streamCanceller;
 
         if (choice === null) {
@@ -192,7 +194,7 @@ export default function PeriodStream(
           (a) => a.id === choice.adaptationId,
         );
         if (adaptation === undefined) {
-          currentStreamCanceller.cancel();
+          currentStreamCanceller.cancel("PeriodStream: Adaptation not found");
           log.warn("Stream", "Unfound chosen Adaptation choice", {
             adaptationId: choice.adaptationId,
           });
@@ -332,7 +334,7 @@ export default function PeriodStream(
         if (err instanceof CancellationError) {
           return;
         }
-        currentStreamCanceller?.cancel();
+        currentStreamCanceller?.cancel("PeriodStream err");
         callbacks.error(err);
       });
     },
@@ -381,7 +383,7 @@ export default function PeriodStream(
           `${bufferType} Stream crashed. Aborting it.`,
           error instanceof Error ? error : "",
         );
-        segmentSinksStore.disposeSegmentSink(bufferType);
+        segmentSinksStore.disposeSegmentSink(bufferType, "AdaptationStream err");
 
         const formattedError = formatError(error, {
           defaultCode: "NONE",

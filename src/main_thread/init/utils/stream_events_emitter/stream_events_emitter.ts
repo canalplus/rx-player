@@ -78,13 +78,13 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     if (this._canceller !== null) {
       return;
     }
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("StreamEventsEmitter");
 
     const cancelSignal = this._canceller.signal;
     const playbackObserver = this._playbackObserver;
 
     let isPollingEvents = false;
-    let cancelCurrentPolling = new TaskCanceller();
+    let cancelCurrentPolling = new TaskCanceller("StreamEventsEmitter Polling");
     cancelCurrentPolling.linkToSignal(cancelSignal);
 
     this._scheduledEventsRef.setValue(refreshScheduledEventsList([], this._manifest));
@@ -93,8 +93,8 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
       ({ length: scheduledEventsLength }) => {
         if (scheduledEventsLength === 0) {
           if (isPollingEvents) {
-            cancelCurrentPolling.cancel();
-            cancelCurrentPolling = new TaskCanceller();
+            cancelCurrentPolling.cancel("no stream event");
+            cancelCurrentPolling = new TaskCanceller("StreamEventsEmitter Polling");
             cancelCurrentPolling.linkToSignal(cancelSignal);
             isPollingEvents = false;
           }
@@ -147,9 +147,14 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     this._scheduledEventsRef.setValue(refreshScheduledEventsList(prev, man));
   }
 
-  public stop(): void {
+  /**
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * stop. Used for debugging matters, especially for debug log
+   * inspection.
+   */
+  public stop(reason: string | undefined): void {
     if (this._canceller !== null) {
-      this._canceller.cancel();
+      this._canceller.cancel(reason ?? "StreamEventsEmitter stop");
       this._canceller = null;
     }
   }

@@ -67,7 +67,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   constructor(settings: IDirectFileOptions) {
     super();
     this._settings = settings;
-    this._initCanceller = new TaskCanceller();
+    this._initCanceller = new TaskCanceller("Directfile Init");
   }
 
   /**
@@ -136,8 +136,8 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     rebufferingController.addEventListener("warning", (err) =>
       this.trigger("warning", err),
     );
-    cancelSignal.register(() => {
-      rebufferingController.destroy();
+    cancelSignal.register((err) => {
+      rebufferingController.destroy(err.reason);
     });
     rebufferingController.start();
 
@@ -189,9 +189,12 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
   /**
    * Stop content and free all resources linked to this `ContentIntializer`.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose(): void {
-    this._initCanceller.cancel();
+  public dispose(reason: string | undefined): void {
+    this._initCanceller.cancel(reason ?? "Directfile Init dispose");
   }
 
   /**
@@ -199,7 +202,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * @param {*} err - The fatal error in question.
    */
   private _onFatalError(err: unknown): void {
-    this._initCanceller.cancel();
+    this._initCanceller.cancel("Directfile Init err");
     this.trigger("error", err);
   }
 

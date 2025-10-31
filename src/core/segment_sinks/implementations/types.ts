@@ -195,8 +195,11 @@ export abstract class SegmentSink {
    * Dispose of the resources used by this SegmentSink.
    * /!\ You won't be able to use the SegmentSink after calling this
    * function.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public abstract dispose(): void;
+  public abstract dispose(reason: string | undefined): void;
 }
 
 /** Every SegmentSink types. */

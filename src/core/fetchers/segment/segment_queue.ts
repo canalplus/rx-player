@@ -129,6 +129,9 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
    * By setting that value to `false`, you anounce to the `SegmentQueue`
    * that it should not wait for an initialization segment before parsing a
    * media segment.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * reset. Used for debugging matters, especially for debug log
+   * inspection.
    * @returns {Object} - `SharedReference` on which the queue of segment for
    * that content can be communicated and updated. See type for more
    * information.
@@ -136,13 +139,14 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
   public resetForContent(
     content: ISegmentQueueContext,
     hasInitSegment: boolean,
+    reason: string | undefined,
   ): SharedReference<ISegmentQueueItem> {
-    this._currentContentInfo?.currentCanceller.cancel();
+    this._currentContentInfo?.currentCanceller.cancel(reason ?? "SegmentQueue reset");
     const downloadQueue = new SharedReference<ISegmentQueueItem>({
       initSegment: null,
       segmentQueue: [],
     });
-    const currentCanceller = new TaskCanceller();
+    const currentCanceller = new TaskCanceller("SegmentQueue " + content.adaptation.type);
     currentCanceller.signal.register(() => {
       downloadQueue.finish();
     });
@@ -165,7 +169,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
           log.debug("SF", "Media segment can be loaded again, restarting queue.", {
             type: content.adaptation.type,
           });
-          this._restartMediaSegmentDownloadingQueue(currentContentInfo);
+          this._restartMediaSegmentDownloadingQueue(currentContentInfo, "interrupt end");
         }
       },
       { clearSignal: currentCanceller.signal },
@@ -195,7 +199,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
           log.debug("SF", "no more media segment to request. Cancelling queue.", {
             type: content.adaptation.type,
           });
-          this._restartMediaSegmentDownloadingQueue(currentContentInfo);
+          this._restartMediaSegmentDownloadingQueue(
+            currentContentInfo,
+            "media segment queue empty",
+          );
           return;
         } else if (currentSegmentRequest === null) {
           // There's no request although there are needed segments: start requests
@@ -203,7 +210,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
             type: content.adaptation.type,
             queueLength: segmentQueue.length,
           });
-          this._restartMediaSegmentDownloadingQueue(currentContentInfo);
+          this._restartMediaSegmentDownloadingQueue(
+            currentContentInfo,
+            "media segment queue start",
+          );
           return;
         } else {
           const nextItem = segmentQueue[0];
@@ -212,7 +222,10 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
             log.debug("SF", "Next media segment changed, cancelling previous", {
               type: content.adaptation.type,
             });
-            this._restartMediaSegmentDownloadingQueue(currentContentInfo);
+            this._restartMediaSegmentDownloadingQueue(
+              currentContentInfo,
+              "next media segment changed",
+            );
             return;
           }
           if (currentSegmentRequest.priority !== nextItem.priority) {
@@ -253,7 +266,11 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
             type: content.adaptation.type,
           });
         }
-        this._restartInitSegmentDownloadingQueue(currentContentInfo, next.initSegment);
+        this._restartInitSegmentDownloadingQueue(
+          currentContentInfo,
+          next.initSegment,
+          "init segment queue empty",
+        );
       },
       { emitCurrentValue: true, clearSignal: currentCanceller.signal },
     );
@@ -265,20 +282,29 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
    * Stop the currently-active `SegmentQueue`.
    *
    * Do nothing if no queue is active.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * stop. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public stop() {
-    this._currentContentInfo?.currentCanceller.cancel();
+  public stop(reason: string | undefined) {
+    this._currentContentInfo?.currentCanceller.cancel(reason ?? "SegmentQueue stop");
     this._currentContentInfo = null;
   }
 
   /**
    * Internal logic performing media segment requests.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * restart. Used for debugging matters, especially for debug log
+   * inspection.
    */
   private _restartMediaSegmentDownloadingQueue(
     contentInfo: ISegmentQueueContentInfo,
+    reason: string | undefined,
   ): void {
     if (contentInfo.mediaSegmentRequest !== null) {
-      contentInfo.mediaSegmentRequest.canceller.cancel();
+      contentInfo.mediaSegmentRequest.canceller.cancel(
+        reason ?? "SegmentQueue media restart",
+      );
     }
 
     const { downloadQueue, content, initSegmentInfoRef, currentCanceller } = contentInfo;
@@ -299,7 +325,9 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
         this.trigger("emptyQueue", null);
         return;
       }
-      const canceller = new TaskCanceller();
+      const canceller = new TaskCanceller(
+        "SegmentQueue media segments queue " + content.adaptation.type,
+      );
       const unlinkCanceller =
         currentCanceller === null
           ? noop
@@ -447,7 +475,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
         unlinkCanceller();
         if (!isComplete) {
           isComplete = true;
-          this.stop();
+          this.stop("request err");
           this.trigger("error", error);
         }
       });
@@ -461,21 +489,29 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
    * Internal logic performing initialization segment requests.
    * @param {Object} contentInfo
    * @param {Object} queuedInitSegment
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
   private _restartInitSegmentDownloadingQueue(
     contentInfo: ISegmentQueueContentInfo,
     queuedInitSegment: IQueuedSegment | null,
+    reason: string | undefined,
   ): void {
     const { content, initSegmentInfoRef } = contentInfo;
 
     if (contentInfo.initSegmentRequest !== null) {
-      contentInfo.initSegmentRequest.canceller.cancel();
+      contentInfo.initSegmentRequest.canceller.cancel(
+        reason ?? "SegmentQueue init restart",
+      );
     }
     if (queuedInitSegment === null) {
       return;
     }
 
-    const canceller = new TaskCanceller();
+    const canceller = new TaskCanceller(
+      "SegmentQueue init segment " + content.adaptation.type,
+    );
     const unlinkCanceller =
       contentInfo.currentCanceller === null
         ? noop
@@ -529,7 +565,7 @@ export default class SegmentQueue<T> extends EventEmitter<ISegmentQueueEvent<T>>
       unlinkCanceller();
       if (!isComplete) {
         isComplete = true;
-        this.stop();
+        this.stop("request err");
         this.trigger("error", error);
       }
     });

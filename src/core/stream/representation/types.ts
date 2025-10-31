@@ -253,6 +253,11 @@ export interface ITerminationOrder {
    * finished.
    */
   urgent: boolean;
+  /**
+   * Human-readable string describing the reason for the change.
+   * This is useful when debugging.
+   */
+  reason: string;
 }
 
 /** Arguments to give to the RepresentationStream. */

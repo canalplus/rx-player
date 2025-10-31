@@ -35,8 +35,10 @@ export interface ITextDisplayer {
   getBufferedRanges(): IRange[];
   /**
    * Stop the `ITextDisplayer` from running and using resources.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * stop. Used for debugging matters, especially for debug log inspection.
    */
-  stop(): void;
+  stop(reason: string | undefined): void;
 }
 
 /** Interface describing a timed text media data "chunk". */

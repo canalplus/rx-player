@@ -81,7 +81,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
   ) {
     super();
 
-    this._canceller = new TaskCanceller();
+    this._canceller = new TaskCanceller("Boundaries Observation");
     this._manifest = manifest;
     this._activeStreams = new Map();
     this._allBufferTypes = bufferTypes;
@@ -262,10 +262,13 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
   /**
    * Free all resources used by the `ContentTimeBoundariesObserver` and cancels
    * all recurring processes it performs.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public dispose() {
+  public dispose(reason: string | undefined) {
     this.removeEventListener();
-    this._canceller.cancel();
+    this._canceller.cancel(reason ?? "ContentTimeBoundariesObserver dispose");
   }
 
   private _addActivelyLoadedPeriod(period: IPeriod, bufferType: IBufferType): void {

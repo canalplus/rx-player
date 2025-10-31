@@ -81,23 +81,26 @@ export default class CoreTextDisplayerInterface implements ITextDisplayerInterfa
       contentId: this._contentId,
       value: null,
     });
-    this._resetCurrentQueue();
+    this._resetCurrentQueue("WorkerTextDisplayerInterface reset");
   }
 
   /**
    * @see ITextDisplayerInterface
    */
-  public stop(): void {
+  public stop(reason: string | undefined): void {
     this._messageSender({
       type: CoreMessageType.StopTextDisplayer,
       contentId: this._contentId,
       value: null,
     });
-    this._resetCurrentQueue();
+    this._resetCurrentQueue(reason);
   }
 
-  private _resetCurrentQueue(): void {
-    const error = new CancellationError();
+  private _resetCurrentQueue(reason: string | undefined): void {
+    const error = new CancellationError(
+      "WorkerTextDisplayerInterface queue",
+      reason ?? "reset",
+    );
     this._queues.pushTextData.forEach((elt) => {
       elt.reject(error);
     });

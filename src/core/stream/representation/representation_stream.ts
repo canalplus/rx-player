@@ -102,7 +102,7 @@ export default function RepresentationStream<TSegmentDataType>(
   const bufferType = adaptation.type;
 
   /** `TaskCanceller` stopping operations performed by the `RepresentationStream` */
-  const canceller = new TaskCanceller();
+  const canceller = new TaskCanceller("RepresentationStream " + bufferType);
   canceller.linkToSignal(parentCancelSignal);
 
   /** Saved initialization segment state for this representation. */
@@ -158,7 +158,7 @@ export default function RepresentationStream<TSegmentDataType>(
     if (canceller.signal.isCancelled()) {
       return; // ignore post requests-cancellation loading-related errors,
     }
-    canceller.cancel(); // Stop every operations
+    canceller.cancel("RepresentationStream: SegmentQueue err"); // Stop every operations
     callbacks.error(err);
   });
   segmentQueue.addEventListener("parsedInitSegment", onParsedChunk, canceller.signal);
@@ -192,10 +192,14 @@ export default function RepresentationStream<TSegmentDataType>(
   );
 
   /** Emit the last scheduled downloading queue for segments. */
-  const segmentsToLoadRef = segmentQueue.resetForContent(content, hasInitSegment);
+  const segmentsToLoadRef = segmentQueue.resetForContent(
+    content,
+    hasInitSegment,
+    "new RepresentationStream linked to SegmentQueue",
+  );
 
-  canceller.signal.register(() => {
-    segmentQueue.stop();
+  canceller.signal.register((err) => {
+    segmentQueue.stop(err.reason);
   });
 
   playbackObserver.listen(checkStatus, {
@@ -290,7 +294,7 @@ export default function RepresentationStream<TSegmentDataType>(
       });
       segmentsToLoadRef.setValue({ initSegment: null, segmentQueue: [] });
       segmentsToLoadRef.finish();
-      canceller.cancel();
+      canceller.cancel(terminateVal.reason);
       callbacks.terminating();
       return;
     } else {
@@ -321,7 +325,7 @@ export default function RepresentationStream<TSegmentDataType>(
           representationBitrate: content.representation.bitrate,
         });
         segmentsToLoadRef.finish();
-        canceller.cancel();
+        canceller.cancel(terminateVal.reason);
         callbacks.terminating();
         return;
       }
@@ -482,7 +486,7 @@ export default function RepresentationStream<TSegmentDataType>(
       },
       err instanceof Error ? err : null,
     );
-    canceller.cancel();
+    canceller.cancel("RepresentationStream: fatal buffer err");
     callbacks.error(err);
   }
 }

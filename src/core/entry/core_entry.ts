@@ -129,7 +129,7 @@ export default function initializeCoreEntry(
           }
 
           if (!msg.value.hasVideo) {
-            contentPreparer.disposeCurrentContent();
+            contentPreparer.disposeCurrentContent("Received Init msg");
             contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
           }
 
@@ -208,7 +208,7 @@ export default function initializeCoreEntry(
         if (msg.contentId !== contentPreparer.getCurrentContent()?.contentId) {
           return;
         }
-        contentPreparer.disposeCurrentContent();
+        contentPreparer.disposeCurrentContent("StopContent message");
 
         currentContentHandle?.stop();
         currentContentHandle = null;
@@ -563,7 +563,7 @@ function loadPreparedContent(
   refs: ICoreReferences,
 ): IContentHandle {
   log.debug("Core", "Loading pepared content.");
-  const contentCanceller = new TaskCanceller();
+  const contentCanceller = new TaskCanceller("Start Content Worker");
 
   let currentLoadCanceller: TaskCanceller | null = null;
 
@@ -573,13 +573,13 @@ function loadPreparedContent(
       return onMediaSourceReload();
     },
     stop: () => {
-      contentCanceller.cancel();
+      contentCanceller.cancel("ContentHandle stop");
     },
   };
 
   function startLoadingAt(startTime: number): void {
-    currentLoadCanceller?.cancel();
-    currentLoadCanceller = new TaskCanceller();
+    currentLoadCanceller?.cancel("Reloading content worker");
+    currentLoadCanceller = new TaskCanceller("(Re)Loading Content Worker");
     currentLoadCanceller.linkToSignal(contentCanceller.signal);
 
     /**
@@ -980,7 +980,7 @@ function loadPreparedContent(
 
   function performMediaSourceReload(payload: INeedsMediaSourceReloadPayload): void {
     if (currentLoadCanceller !== null) {
-      currentLoadCanceller.cancel();
+      currentLoadCanceller.cancel("WorkerMain MediaSource reload");
       currentLoadCanceller = null;
     }
     const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource.id;
@@ -1010,7 +1010,7 @@ function loadPreparedContent(
     const lastObservation = playbackObservationRef.getValue();
     const newInitialTime = lastObservation.position.getWanted();
     if (currentLoadCanceller !== null) {
-      currentLoadCanceller.cancel();
+      currentLoadCanceller.cancel("MediaSource reload");
       currentLoadCanceller = null;
     }
     const contentId = contentPreparer.getCurrentContent()?.contentId;

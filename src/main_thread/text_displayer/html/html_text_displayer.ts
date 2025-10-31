@@ -110,8 +110,10 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 
     this._videoElement = videoElement;
     this._textTrackElement = textTrackElement;
-    this._sizeUpdateCanceller = new TaskCanceller();
-    this._subtitlesIntervalCanceller = new TaskCanceller();
+    this._sizeUpdateCanceller = new TaskCanceller("HTMLTextDisplayer size updates");
+    this._subtitlesIntervalCanceller = new TaskCanceller(
+      "HTMLTextDisplayer subtitles updates",
+    );
     this._buffer = new TextTrackCuesStore();
     this._currentCues = [];
     this._isAutoRefreshing = false;
@@ -231,8 +233,10 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     if (this._isAutoRefreshing && this._buffer.isEmpty()) {
       this.refreshSubtitles();
       this._isAutoRefreshing = false;
-      this._subtitlesIntervalCanceller.cancel();
-      this._subtitlesIntervalCanceller = new TaskCanceller();
+      this._subtitlesIntervalCanceller.cancel("HTMLTextDisplayer no cue");
+      this._subtitlesIntervalCanceller = new TaskCanceller(
+        "HTMLTextDisplayer subtitles updates",
+      );
     }
     return convertToRanges(this._buffered);
   }
@@ -247,27 +251,31 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
 
   public reset(): void {
     log.debug("text", "Resetting HTMLTextDisplayer");
-    this.stop();
-    this._subtitlesIntervalCanceller = new TaskCanceller();
+    this.stop("HTMLTextDisplayer reset");
+    this._subtitlesIntervalCanceller = new TaskCanceller(
+      "HTMLTextDisplayer subtitles updates",
+    );
   }
 
-  public stop(): void {
+  public stop(reason: string | undefined): void {
     if (this._subtitlesIntervalCanceller.isUsed()) {
       return;
     }
     log.debug("text", "Stopping HTMLTextDisplayer");
-    this._disableCurrentCues();
+    this._disableCurrentCues(reason ?? "HTD stop");
     this._buffer.remove(0, Infinity);
     this._buffered.remove(0, Infinity);
     this._isAutoRefreshing = false;
-    this._subtitlesIntervalCanceller.cancel();
+    this._subtitlesIntervalCanceller.cancel(reason ?? "HTD stop");
   }
 
   /**
    * Remove the current cue from being displayed.
+   * @param {string} reason - Human-inspectable reason.
+   * Used for debugging matters, especially for debug log inspection.
    */
-  private _disableCurrentCues(): void {
-    this._sizeUpdateCanceller.cancel();
+  private _disableCurrentCues(reason: string): void {
+    this._sizeUpdateCanceller.cancel(reason);
     if (this._currentCues.length > 0) {
       for (const cue of this._currentCues) {
         safelyRemoveChild(this._textTrackElement, cue.element);
@@ -292,7 +300,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     // Remove and re-display everything
     // TODO More intelligent handling
 
-    this._sizeUpdateCanceller.cancel();
+    this._sizeUpdateCanceller.cancel("HTMLTextDisplayer display");
     for (const cue of this._currentCues) {
       safelyRemoveChild(this._textTrackElement, cue.element);
     }
@@ -314,7 +322,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     );
 
     if (proportionalCues.length > 0) {
-      this._sizeUpdateCanceller = new TaskCanceller();
+      this._sizeUpdateCanceller = new TaskCanceller("HTMLTextDisplayer size updates");
       this._sizeUpdateCanceller.linkToSignal(this._subtitlesIntervalCanceller.signal);
       const { TEXT_TRACK_SIZE_CHECKS_INTERVAL } = config.getCurrent();
       // update propertionally-sized elements periodically
@@ -353,14 +361,16 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     const stopAutoRefresh = () => {
       this._isAutoRefreshing = false;
       if (autoRefreshCanceller !== null) {
-        autoRefreshCanceller.cancel();
+        autoRefreshCanceller.cancel("HTMLTextDisplayer stop auto-refresh");
         autoRefreshCanceller = null;
       }
     };
     const startAutoRefresh = () => {
       stopAutoRefresh();
       this._isAutoRefreshing = true;
-      autoRefreshCanceller = new TaskCanceller();
+      autoRefreshCanceller = new TaskCanceller(
+        "HTMLTextDisplayer subtitles auto-refresh",
+      );
       autoRefreshCanceller.linkToSignal(cancellationSignal);
       const intervalId = setInterval(
         () => this.refreshSubtitles(),
@@ -376,7 +386,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
       this._videoElement,
       () => {
         stopAutoRefresh();
-        this._disableCurrentCues();
+        this._disableCurrentCues("seek");
       },
       cancellationSignal,
     );
@@ -405,7 +415,7 @@ export default class HTMLTextDisplayer implements ITextDisplayer {
     }
     const cues = this._buffer.get(time);
     if (cues.length === 0) {
-      this._disableCurrentCues();
+      this._disableCurrentCues("no cue");
     } else {
       this._displayCues(cues);
     }

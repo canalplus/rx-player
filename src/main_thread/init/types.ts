@@ -101,8 +101,11 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * Stop playing the content linked to this `ContentInitializer` on the
    * `HTMLMediaElement` linked to it and dispose of every resources taken while
    * trying to do so.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * disposal. Might be used for debugging matters, especially for debug log
+   * inspection.
    */
-  public abstract dispose(): void;
+  public abstract dispose(reason: string | undefined): void;
 }
 
 /** Every events emitted by a `ContentInitializer`. */

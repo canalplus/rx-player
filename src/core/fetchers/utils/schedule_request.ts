@@ -307,7 +307,7 @@ export async function scheduleRequestWithCdns<T>(
       return requestCdn(nextWantedCdn);
     }
 
-    const canceller = new TaskCanceller();
+    const canceller = new TaskCanceller("Request Backoff");
     const unlinkCanceller = canceller.linkToSignal(cancellationSignal);
     return new Promise<T>((res, rej) => {
       cdnPrioritizer?.addEventListener(
@@ -321,7 +321,7 @@ export async function scheduleRequestWithCdns<T>(
             return cleanAndReject(prevRequestError);
           }
           if (updatedPrioritaryCdn !== nextWantedCdn) {
-            canceller.cancel();
+            canceller.cancel("new prioritized CDN");
             waitPotentialBackoffAndRequest(updatedPrioritaryCdn, prevRequestError).then(
               cleanAndResolve,
               cleanAndReject,

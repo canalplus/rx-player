@@ -28,7 +28,7 @@ import noop from "./noop";
  * To do that, the code which might ask for cancellation have to create a new
  * `TaskCanceller`:
  * ```js
- * const canceller = new TaskCanceller();
+ * const canceller = new TaskCanceller("my example task");
  * ```
  *
  * And has to provide its associated `CancellationSignal` to the code running
@@ -69,7 +69,7 @@ import noop from "./noop";
  *    // expected that the same Error instance is used when rejecting Promises.
  *    function onCancellation(error : CancellationError) {
  *      // abort asynchronous task
- *      myCancellableTask.cancel();
+ *      myCancellableTask.cancel(error.reason);
  *
  *      // In this example, reject the current pending Promise
  *      reject(CancellationError);
@@ -100,7 +100,7 @@ import noop from "./noop";
  * (even before the signal was given) and listen to possible CancellationErrors
  * to know when it was cancelled.
  * ```js
- * const canceller = new TaskCanceller();
+ * const canceller = new TaskCanceller("my async task");
  *
  * runAsyncTask(canceller.signal)
  *   .then(() => { console.log("Task succeeded!"); )
@@ -111,7 +111,9 @@ import noop from "./noop";
  *        console.log("Task failed:", err);
  *      }
  *   });
- * canceller.cancel(); // Cancel the task, calling registered callbacks
+ *
+ * // Cancel the task (with a given reason), calling registered callbacks
+ * canceller.cancel("I changed my mind");
  * ```
  * @class TaskCanceller
  */
@@ -133,15 +135,27 @@ export default class TaskCanceller {
    */
   private _trigger: (error: CancellationError) => void;
 
+  /** Description for this task, if communicated. */
+  private _taskName: string | undefined;
+
   /**
    * Creates a new `TaskCanceller`, with its own `CancellationSignal` created
-   * as its `signal` provide.
-   * You can then pass this property to async task you wish to be cancellable.
+   * as its `signal` property.
+   * You can then pass this `signal` property to async task you wish to be
+   * cancellable.
+   * @param {string|undefined} taskName - Descriptive "name" for the task you
+   * want to make cancellable. This is used for debugging purposes: this string
+   * will be linked to the thrown `CancellationError` (and will be logged) if
+   * the task is ever cancelled, making cancellation-related issues much easier
+   * to trace.
+   * By setting it to `undefined`, you indicate that this task does not need
+   * those supplementary debug information and does not need to be logged.
    */
-  constructor() {
+  constructor(taskName: string | undefined) {
     const [trigger, register] = createCancellationFunctions();
     this._isUsed = false;
     this._trigger = trigger;
+    this._taskName = taskName;
     this.signal = new CancellationSignal(register);
   }
 
@@ -168,8 +182,8 @@ export default class TaskCanceller {
    * @returns {Function}
    */
   public linkToSignal(signal: CancellationSignal): () => void {
-    const unregister = signal.register(() => {
-      this.cancel();
+    const unregister = signal.register((error) => {
+      this.cancel(error.reason);
     });
     this.signal.register(unregister);
     return unregister;
@@ -180,18 +194,17 @@ export default class TaskCanceller {
    * `CancellationSignal` (its `signal` property) that a task should be aborted.
    *
    * Once called the `TaskCanceller` is permanently triggered.
-   *
-   * An optional CancellationError can be given in argument for when this
-   * cancellation is actually triggered as a chain reaction from a previous
-   * cancellation.
-   * @param {Error} [srcError]
+   * @param {string | undefined} reason - Human-readable reason that led to the
+   * cancellation of this task. This is used for debugging matters: the reason
+   * will be linked to the corresponding `CancellationError` instance.
+   * `undefined` if you don't want to give a reason.
    */
-  public cancel(srcError?: CancellationError): void {
+  public cancel(reason: string | undefined): void {
     if (this._isUsed) {
       return;
     }
     this._isUsed = true;
-    const cancellationError = srcError ?? new CancellationError();
+    const cancellationError = new CancellationError(this._taskName, reason);
     this._trigger(cancellationError);
   }
 
@@ -337,13 +350,46 @@ export type ICancellationListener = (error: CancellationError) => void;
 export class CancellationError extends Error {
   public readonly name: "CancellationError";
 
-  constructor() {
-    const message = "This task was cancelled.";
+  /**
+   * Human-readable reason for the cancellation.
+   * `undefined` if no reason was given.
+   */
+  public readonly reason: string | undefined;
+
+  /**
+   * Create a `CancellationError`
+   * @param {string|undefined} taskName - Descriptive "name" for the task you
+   * just cancelled. This is used for debugging purposes: this string
+   *  will both be logged and be inserted in this `CancellationError`'s
+   *  `message` property.
+   * By setting it to `undefined`, you indicate that this task does not need
+   * those supplementary debug information and does not need to be logged.
+   * @param {string|undefined} reason - Human-readable reason for the
+   * cancellation.
+   */
+  constructor(taskName: string | undefined, reason: string | undefined) {
+    let message =
+      taskName !== undefined
+        ? `"${taskName}" task cancelled.`
+        : "This task was cancelled.";
+    if (reason !== undefined) {
+      message += " Reason: " + reason;
+    }
     super(message);
+
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, CancellationError.prototype);
 
     this.name = "CancellationError";
+    this.reason = reason;
+
+    if (taskName !== undefined) {
+      log.debug(
+        "utils",
+        `task cancellation: "${taskName}"` +
+          (reason === undefined ? "" : ` - Reason: "${reason}"`),
+      );
+    }
   }
 }
 

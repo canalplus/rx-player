@@ -85,9 +85,9 @@ export default class ContentPreparer {
    */
   constructor({ hasVideo }: { hasVideo: boolean }) {
     this._currentContent = null;
-    this._currentMediaSourceCanceller = new TaskCanceller();
+    this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
     this._hasVideo = hasVideo;
-    const contentCanceller = new TaskCanceller();
+    const contentCanceller = new TaskCanceller("ContentPreparer");
     this._contentCanceller = contentCanceller;
   }
 
@@ -110,9 +110,11 @@ export default class ContentPreparer {
     throttlers: IRepresentationEstimatorThrottlers,
   ): Promise<IManifest> {
     return new Promise((res, rej) => {
-      this.disposeCurrentContent();
+      this.disposeCurrentContent("new init");
       const contentCanceller = this._contentCanceller;
-      const currentMediaSourceCanceller = new TaskCanceller();
+      const currentMediaSourceCanceller = new TaskCanceller(
+        "ContentPreparer MediaSource",
+      );
       this._currentMediaSourceCanceller = currentMediaSourceCanceller;
 
       currentMediaSourceCanceller.linkToSignal(contentCanceller.signal);
@@ -222,8 +224,8 @@ export default class ContentPreparer {
         currentMediaSourceCanceller.signal,
       );
 
-      contentCanceller.signal.register(() => {
-        manifestFetcher.dispose();
+      contentCanceller.signal.register((err) => {
+        manifestFetcher.dispose(err.reason);
       });
       manifestFetcher.addEventListener(
         "warning",
@@ -328,12 +330,12 @@ export default class ContentPreparer {
   public reloadMediaSource(
     sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   ): Promise<void> {
-    this._currentMediaSourceCanceller.cancel();
+    this._currentMediaSourceCanceller.cancel("ContentPreparer MediaSource reload");
     if (this._currentContent === null) {
       return Promise.reject(new Error("CP: No content anymore"));
     }
     this._currentContent.trackChoiceSetter.reset();
-    this._currentMediaSourceCanceller = new TaskCanceller();
+    this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
 
     const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
@@ -374,10 +376,13 @@ export default class ContentPreparer {
   /**
    * Dispose all resources linked to the currently preopared content if one and
    * stop linking it to this `ContentPreparer`.
+   * @param {string | undefined} reason - Human-inspectable reason behind the
+   * dispose. Used for debugging matters, especially for debug log
+   * inspection.
    */
-  public disposeCurrentContent() {
-    this._contentCanceller.cancel();
-    this._contentCanceller = new TaskCanceller();
+  public disposeCurrentContent(reason: string | undefined) {
+    this._contentCanceller.cancel(reason);
+    this._contentCanceller = new TaskCanceller("ContentPreparer");
   }
 }
 
@@ -516,10 +521,10 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
     hasVideo,
     textSender,
   );
-  cancelSignal.register(() => {
-    segmentSinksStore.disposeAll();
-    textSender?.stop();
-    mediaSourceInterface.dispose();
+  cancelSignal.register((err) => {
+    segmentSinksStore.disposeAll(err.reason);
+    textSender?.stop(err.reason);
+    mediaSourceInterface.dispose(err.reason);
   });
 
   return [mediaSourceInterface, segmentSinksStore, textSender];

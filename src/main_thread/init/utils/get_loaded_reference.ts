@@ -39,7 +39,7 @@ export default function getLoadedReference(
   isDirectfile: boolean,
   cancelSignal: CancellationSignal,
 ): IReadOnlySharedReference<boolean> {
-  const listenCanceller = new TaskCanceller();
+  const listenCanceller = new TaskCanceller("Loaded Reference update");
   listenCanceller.linkToSignal(cancelSignal);
   const isLoaded = new SharedReference(false, listenCanceller.signal);
   playbackObserver.listen(
@@ -60,7 +60,7 @@ export default function getLoadedReference(
         }
         if (observation.duration > 0) {
           isLoaded.setValue(true);
-          listenCanceller.cancel();
+          listenCanceller.cancel("Content Loaded");
           return;
         }
       }
@@ -70,7 +70,7 @@ export default function getLoadedReference(
         if (observation.currentRange !== null || observation.ended) {
           if (!shouldValidateMetadata() || observation.duration > 0) {
             isLoaded.setValue(true);
-            listenCanceller.cancel();
+            listenCanceller.cancel("Content Loaded");
             return;
           }
         }
