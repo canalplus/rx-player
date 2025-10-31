@@ -16,11 +16,9 @@
 
 import { MediaSource_ } from "../../../compat/browser_compatibility_types";
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
+import disableRemotePlaybackOnManagedMediaSource from "../../../compat/disable_remote_playback_on_managed_media_source";
+import resetMediaElement from "../../../compat/reset_media_element";
 import log from "../../../log";
-import {
-  resetMediaElement,
-  disableRemotePlaybackOnManagedMediaSource,
-} from "../../../main_thread/init/utils/create_media_source";
 import { SourceBufferType } from "../../../mse";
 import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
 import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
