@@ -1,6 +1,8 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
+import disableRemotePlaybackOnManagedMediaSource from "../../compat/disable_remote_playback_on_managed_media_source";
 import getEmeApiImplementation from "../../compat/eme";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data";
+import resetMediaElement from "../../compat/reset_media_element";
 import shouldReloadMediaSourceOnDecipherabilityUpdate from "../../compat/should_reload_media_source_on_decipherability_update";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
 import type {
@@ -62,10 +64,6 @@ import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
 import type { ICorePlaybackObservation } from "./utils/create_core_playback_observer";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer";
-import {
-  resetMediaElement,
-  disableRemotePlaybackOnManagedMediaSource,
-} from "./utils/create_media_source";
 import type { IInitialTimeOptions } from "./utils/get_initial_time";
 import getInitialTime from "./utils/get_initial_time";
 import getLoadedReference from "./utils/get_loaded_reference";
