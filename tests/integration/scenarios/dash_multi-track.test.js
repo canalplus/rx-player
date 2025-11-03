@@ -3,6 +3,7 @@ import RxPlayer from "../../../dist/es2017";
 import { multiAdaptationSetsInfos } from "../../contents/DASH_static_SegmentTimeline";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 import sleep from "../../utils/sleep.js";
+import launchEventInterruptionTests from "../utils/stop_on_event";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
@@ -971,4 +972,6 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       expect(availablePeriods).toHaveLength(2);
     });
   });
+  launchEventInterruptionTests(multiAdaptationSetsInfos, { multithread: false });
+  launchEventInterruptionTests(multiAdaptationSetsInfos, { multithread: true });
 });
