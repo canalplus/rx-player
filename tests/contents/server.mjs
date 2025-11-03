@@ -610,8 +610,10 @@ function generateUrlListHtml(urls, baseUrl) {
 }
 
 async function prepareStaticFile(baseDir, url) {
-  const filePath = path.join(baseDir, url);
-  if (!filePath.startsWith(baseDir)) {
+  const filePath = path.resolve(baseDir, url);
+  const normalizedBase = path.resolve(baseDir);
+  const relative = path.relative(normalizedBase, filePath);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
     return null;
   }
   const exists = await new Promise((resolve) => {
