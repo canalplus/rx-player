@@ -320,9 +320,6 @@ events and so on.
   Deactivate potential pending audio Representations (a.k.a. qualities) lock, thus
   re-allowing any Representation to being played.
 
-- [`isTrickModeEnabled`](../api/Track_Selection/isTrickModeEnabled.md): Returns `true` if
-  trick mode tracks are currently enabled by default.
-
 - [`setPlaybackRate`](../api/Speed_Control/setPlaybackRate.md): Update the speed at which
   the content is played.
 
@@ -330,7 +327,7 @@ events and so on.
   the content is played.
 
 - [`areTrickModeTracksEnabled`](../api/Speed_Control/areTrickModeTracksEnabled.md):
-  Indicates if the tricmode tracks are active by default.
+  Indicates if the trickmode tracks are active by default.
 
 - [`setVolume`](../api/Volume_Control/setVolume.md): Update the audio volume.
 
