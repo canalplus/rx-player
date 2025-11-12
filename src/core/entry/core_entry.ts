@@ -767,17 +767,6 @@ function loadPreparedContent(
         },
 
         adaptationChange(value) {
-          contentTimeBoundariesObserver.onAdaptationChange(
-            value.type,
-            value.period,
-            value.adaptation,
-          );
-          if (
-            currentLoadCanceller === null ||
-            currentLoadCanceller.signal.isCancelled()
-          ) {
-            return;
-          }
           sendMessage({
             type: CoreMessageType.AdaptationChanged,
             contentId,
@@ -787,6 +776,11 @@ function loadPreparedContent(
               type: value.type,
             },
           });
+          contentTimeBoundariesObserver.onAdaptationChange(
+            value.type,
+            value.period,
+            value.adaptation,
+          );
         },
 
         representationChange(value) {
