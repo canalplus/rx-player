@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="RxPlayer's demo page" />
+    <link
+      rel="preload"
+      href="./fonts/FontAwesome.otf"
+      as="font"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="styles/style.css" media="screen" />
+    <link rel="icon" type="image/x-icon" href="plus.ico" />
+    <script>
+(function () {
+  const OriginalXHR = window.XMLHttpRequest;
+
+  function PatchedXHR() {
+    const xhr = new OriginalXHR();
+    const originalSend = xhr.send;
+    xhr.send = function (...args) {
+      const BLOCK_FOR_MS = window.TIME;
+      const start = performance.now();
+      while (performance.now() - start < BLOCK_FOR_MS) {
+        // github-style """sleep""" implem
+        // ref: https://github.com/actions/runner/issues/3792#issuecomment-3182746514
+      }
+      return originalSend.apply(xhr, args);
+    };
+
+    return xhr;
+  }
+  for (const key in OriginalXHR) {
+    if (Object.hasOwn(OriginalXHR, key)) {
+      PatchedXHR[key] = OriginalXHR[key];
+    }
+  }
+  window.XMLHttpRequest = PatchedXHR;
+})();
+window.TIME = 200; // Initial value
+</script>
+    <script type="text/javascript" src="./bundle.js" charset="utf-8"></script>
+    <title>RxPlayer - CANAL+</title>
+  </head>
+  <body>
+    <div id="player-container"></div>
+  </body>
+</html>
