@@ -25,7 +25,7 @@ export type IRxPlayerMode = "auto" | "main" | "multithread";
 
 /** Argument of the `attachWorker` method. */
 export interface IWorkerSettings {
-  workerUrl: string | Blob;
+  workerUrl: string | Worker | Blob;
   dashWasmUrl?: string | ArrayBuffer | undefined;
 }
 

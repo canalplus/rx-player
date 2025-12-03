@@ -546,6 +546,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           worker: new Worker(workerSettings.workerUrl),
           messageListeners: new Map(),
         };
+      } else if ("postMessage" in workerSettings.workerUrl) {
+        workerData = {
+          worker: workerSettings.workerUrl,
+          messageListeners: new Map(),
+        };
       } else {
         const blobUrl = URL.createObjectURL(workerSettings.workerUrl);
         workerData = {
