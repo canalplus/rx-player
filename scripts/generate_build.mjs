@@ -20,7 +20,6 @@ import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import esbuild from "esbuild";
 import generateEmbeds from "./generate_embeds.mjs";
 import runBundler from "./run_bundler.mjs";
 import removeDir from "./utils/remove_dir.mjs";
@@ -87,7 +86,7 @@ export default async function generateBuild(options = {}) {
     console.log(" 🤖 Generating embedded code...");
     await generateEmbeds({ noWasm });
 
-    console.log(" ⚙️ Building project...");
+    console.log(" ⚙️ Compiling project with TypeScript...");
     await compile({ devMode, noCheck });
   } catch (err) {
     console.error("Fatal error:", err instanceof Error ? err.message : err);
@@ -111,99 +110,37 @@ async function removePreviousBuildArtefacts() {
 }
 
 /**
- * Compile the project using esbuild for transpilation.
+ * Compile the project by spawning a separate procress running TypeScript.
  * @param {Object} opts
  * @param {boolean} opts.devMode
  * @param {boolean} opts.noCheck
  * @returns {Promise.<void>}
  */
 async function compile(opts) {
-  const srcDir = path.join(ROOT_DIR, "src");
-  const entryPoints = await getTypeScriptFiles(srcDir);
-  const isDevMode = opts.devMode;
+  // Sadly TypeScript compiler API seems to be sub-par.
+  // I did not find for example how to exclude some files (our unit tests)
+  // easily by running typescript directly from NodeJS.
+  // So we just spawn a separate process running tsc:
 
-  console.log(" 📝 Generating declaration files...");
-  const declarationBuild = spawnShellProm(
-    "npx tsc --emitDeclarationOnly -p " +
+  const es6Build = spawnShellProm(
+    "npx tsc -p " +
       path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json") +
       (opts.noCheck ? " --noCheck" : ""),
     /** @param {number|null} code */
-    (code) => new Error(`Declaration generation failed with code ${code}`),
+    (code) => new Error(`es2017 compilation process exited with code ${code}`),
   );
-
-  const es2017Build = esbuild.build({
-    entryPoints,
-    outdir: path.join(ROOT_DIR, "dist/es2017"),
-    format: "esm",
-    target: "es2017",
-    platform: "browser",
-    minify: false,
-    define: {
-      "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-      __ENVIRONMENT__: JSON.stringify({
-        PRODUCTION: 0,
-        DEV: 1,
-        CURRENT_ENV: isDevMode ? 1 : 0,
-      }),
-      __LOGGER_LEVEL__: JSON.stringify({ CURRENT_LEVEL: isDevMode ? "INFO" : "NONE" }),
-      __GLOBAL_SCOPE__: "false",
-    },
-  });
-
-  const commonJsBuild = esbuild.build({
-    entryPoints,
-    outdir: path.join(ROOT_DIR, "dist/commonjs"),
-    format: "cjs",
-    target: "es2015",
-    platform: "browser",
-    minify: false,
-    define: {
-      "process.env.NODE_ENV": JSON.stringify(isDevMode ? "development" : "production"),
-      __ENVIRONMENT__: JSON.stringify({
-        PRODUCTION: 0,
-        DEV: 1,
-        CURRENT_ENV: isDevMode ? 1 : 0,
-      }),
-      __LOGGER_LEVEL__: JSON.stringify({ CURRENT_LEVEL: isDevMode ? "INFO" : "NONE" }),
-      __GLOBAL_SCOPE__: "false",
-    },
-  });
-
-  await Promise.all([declarationBuild, es2017Build, commonJsBuild]);
-
-  console.log(" 🔄 Transpiling CommonJS files from es2015 to ES5...");
-  await spawnShellProm(
-    "npx swc dist/commonjs -d dist/commonjs --config-file " +
-      path.join(ROOT_DIR, ".swcrc") +
-      " --quiet",
+  const commonJsBuild = spawnShellProm(
+    "npx tsc -p " +
+      path.join(
+        ROOT_DIR,
+        opts.devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
+      ) +
+      (opts.noCheck ? " --noCheck" : ""),
     /** @param {number|null} code */
-    (code) => new Error(`swc transpilation failed with code ${code}`),
+    (code) => new Error(`CommonJS compilation process exited with code ${code}`),
   );
-}
 
-/**
- * Recursively get all TypeScript files from a directory.
- * @param {string} dir
- * @returns {Promise.<string[]>}
- */
-async function getTypeScriptFiles(dir) {
-  const items = await fs.promises.readdir(dir, { withFileTypes: true });
-  const files = [];
-  await Promise.all(
-    items.map(async (item) => {
-      const fullPath = path.join(dir, item.name);
-      if (item.isDirectory() && item.name !== "__tests__") {
-        files.push(...(await getTypeScriptFiles(fullPath)));
-      } else if (
-        item.isFile() &&
-        item.name.endsWith(".ts") &&
-        !item.name.endsWith(".test.ts")
-      ) {
-        files.push(fullPath);
-      }
-    }),
-  );
-  return files;
+  await Promise.all([es6Build, commonJsBuild]);
 }
 
 /**
