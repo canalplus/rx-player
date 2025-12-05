@@ -1,5 +1,14 @@
 # Changelog
 
+## Current dev build: v4.4.1-dev.2025101500
+
+### Bug fixes
+
+- Fix v4.4.0 regression where the RxPlayer might base itself on the previous content's
+  position [#1758]
+- Add resilience to DRM fallback when position is not yet known instead of triggering
+  `MEDIA_TIME_NOT_FOUND` error [#1755]
+
 ## v4.4.0 (2025-09-25)
 
 ### Features
