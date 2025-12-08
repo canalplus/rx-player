@@ -140,15 +140,18 @@ async function compile(opts) {
     (code) => new Error(`CommonJS compilation process exited with code ${code}`),
   );
 
-  await Promise.all([es6Build, commonJsBuild]);
-
-  // Transpile the CommonJS directory from ES2017 to ES5 using swc
-  console.log(" 🔄 Transpiling CommonJS files to ES5...");
-  await spawnShellProm(
-    `npx swc dist/commonjs -d dist/commonjs --config jsc.target=es5 --config module.type=commonjs --quiet`,
-    /** @param {number|null} code */
-    (code) => new Error(`swc transpilation process exited with code ${code}`),
-  );
+  await Promise.all([
+    es6Build,
+    commonJsBuild.then(async () => {
+      // Transpile the CommonJS directory from ES2017 to ES5 using swc
+      console.log(" 🔄 Transpiling CommonJS files to ES5...");
+      await spawnShellProm(
+        `npx swc dist/commonjs -d dist/commonjs --config jsc.target=es5 --config module.type=commonjs --quiet`,
+        /** @param {number|null} code */
+        (code) => new Error(`swc transpilation process exited with code ${code}`),
+      );
+    }),
+  ]);
 }
 
 /**
