@@ -86,7 +86,6 @@ export default async function generateBuild(options = {}) {
     console.log(" 🤖 Generating embedded code...");
     await generateEmbeds({ noWasm });
 
-    console.log(" ⚙️ Compiling project with TypeScript...");
     await compile({ devMode, noCheck });
   } catch (err) {
     console.error("Fatal error:", err instanceof Error ? err.message : err);
@@ -110,7 +109,8 @@ async function removePreviousBuildArtefacts() {
 }
 
 /**
- * Compile the project by spawning a separate procress running TypeScript.
+ * Compile ES2017 and CommonJS builds by spawning tsc, also transpile CommonJS
+ * to ES5 with swc.
  * @param {Object} opts
  * @param {boolean} opts.devMode
  * @param {boolean} opts.noCheck
@@ -122,6 +122,7 @@ async function compile(opts) {
   // easily by running typescript directly from NodeJS.
   // So we just spawn a separate process running tsc:
 
+  console.log(" ⚙️ Compiling project with TypeScript...");
   const es6Build = spawnShellProm(
     "npx tsc -p " +
       path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json") +
