@@ -6,131 +6,87 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+env:
+  NODE_VERSION: "22.x"
+
 jobs:
   format_check:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - uses: actions-rs/toolchain@v1
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - name: Install dependencies
+        run: |
+          npm ci
+          rustup target add wasm32-unknown-unknown
+      - name: Check formatting
+        run: |
+          npm run fmt:prettier:check
+          npm run fmt:rust:check
 
-      - run: npm ci
-      - run: rustup target add wasm32-unknown-unknown
-      - run: npm run fmt:prettier:check
-      - run: npm run fmt:rust:check
-
-  typechecking_and_linting:
+  lint_and_typecheck:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - run: npm ci
-      - run: npm run check
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check typescript types
+        run: npm run check:types
+      - name: Lint files in src
+        run: npm run lint
+      - name: Check unit tests typescript types
+        run: npm run check:types:unit_tests
 
   unit_tests:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      - run: npm ci
-      - run: npm run test:unit
-
-  integration_linux:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-      # needed for integration & memory tests codecs support
-      - run:
-          sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
-          ubuntu-restricted-extras
-      - run: npm ci
-      - run: npm run build
-      - run: |
-          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
-          # retry on failure
-          if [ $? -ne 0 ]; then
-            echo "First tests attempt failed. Retrying after 20 seconds..."
-            sleep 20
-            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
-          fi
-
-  integration_windows:
-    runs-on: windows-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-    steps:
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/checkout@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-
-      - shell: bash
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
         run: npm ci
-      - shell: bash
-        run: npm run build
-      - shell: bash
-        run: |
-          npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
-          # retry on failure
-          if [ $? -ne 0 ]; then
-            echo "First tests attempt failed. Retrying after 20 seconds..."
-            sleep 20
-            npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge ||
-            # Other OSes than linux are particularly bad on github actions, run it three times
-            if [ $? -ne 0 ]; then
-              echo "Second tests attempt failed. Retrying after 60 seconds..."
-              sleep 60
-              npm run test:integration:chrome && npm run test:integration:firefox && npm run test:integration:edge
-            fi
-          fi
+      - name: Run unit tests
+        run: npm run test:unit
+
+  integration_linux_chrome:
+    uses: ./.github/workflows/integration_tests_base.yml
+    with: { os: "ubuntu-latest", browser: "chrome" }
+
+  integration_linux_firefox:
+    uses: ./.github/workflows/integration_tests_base.yml
+    with: { os: "ubuntu-latest", browser: "firefox" }
+
+  integration_linux_edge:
+    uses: ./.github/workflows/integration_tests_base.yml
+    with: { os: "ubuntu-latest", browser: "edge" }
+
+  integration_windows_chrome:
+    uses: ./.github/workflows/integration_tests_base.yml
+    with: { os: "windows-latest", browser: "chrome" }
+
+  integration_windows_firefox:
+    uses: ./.github/workflows/integration_tests_base.yml
+    with: { os: "windows-latest", browser: "firefox" }
+
+  integration_windows_edge:
+    uses: ./.github/workflows/integration_tests_base.yml
+    with: { os: "windows-latest", browser: "edge" }
 
   memory_linux:
     runs-on: ubuntu-latest
@@ -147,9 +103,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      # needed for integration & memory tests codecs support
-      - run:
-          sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
+      - name: Linux package installation
+        run: |
+          # needed for integration & memory tests codecs support
+          sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y \
           ubuntu-restricted-extras
-      - run: npm ci
-      - run: npm run test:memory
+      - name: Install JS dependencies
+        run: npm ci
+      - name: Run memory tests
+        run: npm run test:memory

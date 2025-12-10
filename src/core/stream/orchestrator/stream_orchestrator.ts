@@ -399,7 +399,32 @@ export default function StreamOrchestrator(
         }
 
         const lastPosition = observation.position.getWanted();
-        const newInitialPeriod = manifest.getPeriodForTime(lastPosition);
+        let newInitialPeriod = manifest.getPeriodForTime(lastPosition);
+        if (newInitialPeriod === undefined) {
+          // If there's no Period for the current position exactly, select the next one
+          newInitialPeriod = manifest.getNextPeriod(lastPosition);
+          log.warn(
+            "Stream",
+            "No Period found for the reloading position, selecting next one instead",
+            {
+              reloadPosition: lastPosition,
+              nextPeriodStart: newInitialPeriod?.start,
+            },
+          );
+        }
+        if (newInitialPeriod === undefined) {
+          // If there's no Period after the current position, select the last one
+          newInitialPeriod = manifest.periods[manifest.periods.length - 1];
+          log.warn(
+            "Stream",
+            "No Period found for of after the reloading position, selecting the last one",
+            {
+              reloadPosition: lastPosition,
+              nextPeriodStart: newInitialPeriod?.start,
+              nextPeriodEnd: newInitialPeriod?.end,
+            },
+          );
+        }
         if (newInitialPeriod === undefined) {
           callbacks.error(
             new MediaError(

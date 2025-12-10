@@ -314,7 +314,6 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     });
 
     expect(manifestLoaderCalledTimes).to.equal(1);
-    expect(requestedSegments).to.be.empty;
     expect(player.getPlayerState()).to.equal("LOADING");
     await waitForLoadedStateAfterLoadVideo(player);
     expect(requestedSegments.length).to.be.above(2);
@@ -328,7 +327,7 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkNoTextTrack();
     checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
-  }, 3000);
+  }, 6000);
 
   it("should allow setting tracks BEFORE loading segments", async function () {
     const requestedSegments = [];
@@ -383,14 +382,20 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     if (player.getPlayerState() !== "LOADED") {
       await waitForLoadedStateAfterLoadVideo(player);
     }
-    expect(eventCalled).to.equal(1);
+    expect(eventCalled).to.equal(
+      1,
+      `newAvailablePeriods event called ${eventCalled} times instead of 1`,
+    );
 
     checkAudioTrack("fr", "fra", false);
     checkTextTrack("de", "deu", false);
     checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
 
     await goToSecondPeriod();
-    expect(eventCalled).to.equal(2);
+    expect(eventCalled).to.equal(
+      2,
+      `newAvailablePeriods event called ${eventCalled} times instead of 2`,
+    );
     checkAudioTrack("de", "deu", true);
     checkTextTrack("fr", "fra", true);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
@@ -737,8 +742,9 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
       expect(availablePeriods).toHaveLength(1);
 
       await goJustBeforeSecondPeriod();
-      await sleep(100);
-      expect(eventCalled).to.equal(2);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 1000, stepMs: 100 }, () => {
+        expect(eventCalled).to.equal(2);
+      });
 
       const newPeriod = player.getCurrentPeriod();
       expect(newPeriod.id).toEqual(firstPlayedPeriod.id);

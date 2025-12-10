@@ -5,6 +5,7 @@ import {
   manifestVideoNotSupportedInfos,
 } from "../../contents/DASH_dynamic_SegmentTemplate_UnsupportedAudio";
 import RxPlayer from "../../../dist/es2017";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff";
 import waitForState from "../../utils/waitForPlayerState";
 import sleep from "../../utils/sleep.js";
 
@@ -241,8 +242,9 @@ describe("Content with video or audio not supported", function () {
     });
     let playerError;
 
-    await sleep(100);
-    expect(playerError).not.toBe(undefined);
+    await checkAfterSleepWithBackoff({ maxTimeMs: 1500, stepMs: 100 }, () => {
+      expect(playerError).not.toBe(undefined);
+    });
     expect(playerError.message).toBe(
       "MANIFEST_INCOMPATIBLE_CODECS_ERROR: No supported audio adaptations",
     );

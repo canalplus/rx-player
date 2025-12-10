@@ -67,10 +67,10 @@ jobs:
       - run: npm run fmt:prettier:check # js formatting
       - run: npm run fmt:rust:check # rs formatting
       - run: npm run check # basic checks
-      - run: npm run test:unit
-      - run: npm run lint:demo
-      - run: npm run lint:tests
-      - run: npm run lint:scripts
+      - run: npm run test:unit # Run RxPlayer unit tests
+      - run: npm run lint:demo # Lint files for our demo page
+      - run: npm run lint:tests # Lint our tests directory
+      - run: npm run lint:scripts # Lint our scripts directory
 
   integration_linux_chrome:
     uses: ./.github/workflows/integration_tests_base.yml

@@ -55,6 +55,20 @@ ln -s "./versions/$current_version/doc" doc
 mv "$tmpDemoList" generate_demo_list.mjs
 mv "$tmpDocList" generate_documentation_list.mjs
 
+cat >doc/index.html <<'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirecting…</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=./api/Overview.html">
+</head>
+<body>
+    <p>Redirecting to the API documentation…</p>
+</body>
+</html>
+EOF
+
 node generate_documentation_list.mjs
 rm generate_documentation_list.mjs
 rm generate_demo_list.mjs

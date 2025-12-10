@@ -157,6 +157,8 @@ git checkout -b "$release_branch"
 emphasized_log "Calling update-version script to update files with the last version..."
 npm run update-version -- "$version"
 
+npm install
+
 # Make Changelog
 npm run releases:changelog -- "$version"
 
