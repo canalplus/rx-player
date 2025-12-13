@@ -1,3 +1,4 @@
+import log from "../log";
 import type { IProcessedProtectionData } from "../main_thread/types";
 import type { IManifest, IPeriod, IAdaptation, IPeriodsUpdateResult } from "../manifest";
 import type {
@@ -581,6 +582,21 @@ function updateRepresentationsDeciperability(
 }
 
 /**
+ * Check if an object is a plain IPeriodMetadata object (not a Period instance).
+ * Period instances have the refreshCodecSupport method, while plain metadata
+ * objects do not.
+ * @param {unknown} obj
+ * @returns {boolean} True if it's a plain IPeriodMetadata, false if it's a Period instance
+ */
+function isIPeriodMetadataOnlyObject(obj: unknown): boolean {
+  if (obj === null || typeof obj !== "object") {
+    return false;
+  }
+  const hasRefreshCodecSupport = "refreshCodecSupport" in obj;
+  return !hasRefreshCodecSupport;
+}
+
+/**
  *
  * TODO that function is kind of very ugly, yet should work.
  * Maybe find out a better system for Manifest updates.
@@ -737,13 +753,26 @@ export function replicateUpdatesOnManifestMetadata(
   }
 
   for (const addedPeriod of updates.addedPeriods) {
-    for (let periodIdx = 0; periodIdx < baseManifest.periods.length; periodIdx++) {
-      if (baseManifest.periods[periodIdx].start > addedPeriod.start) {
-        baseManifest.periods.splice(periodIdx, 0, addedPeriod);
-        break;
+    // Only add periods that are Period instances (not plain IPeriodMetadata objects)
+    // Plain metadata objects should not be added to Manifest.periods as they lack
+    // necessary methods like refreshCodecSupport()
+    if (!isIPeriodMetadataOnlyObject(addedPeriod)) {
+      for (let periodIdx = 0; periodIdx < baseManifest.periods.length; periodIdx++) {
+        if (baseManifest.periods[periodIdx].start > addedPeriod.start) {
+          baseManifest.periods.splice(periodIdx, 0, addedPeriod);
+          break;
+        }
       }
+      baseManifest.periods.push(addedPeriod);
+    } else {
+      // Log when a plain metadata period is skipped
+      log.warn(
+        "manifest",
+        "Skipping plain metadata period in replicateUpdatesOnManifestMetadata. " +
+          `Period ID: ${addedPeriod.id}, Start: ${addedPeriod.start}. ` +
+          "This period does not have Period class methods and cannot be used directly.",
+      );
     }
-    baseManifest.periods.push(addedPeriod);
   }
 }
 

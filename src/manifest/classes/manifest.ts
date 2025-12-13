@@ -385,7 +385,15 @@ export default class Manifest
     this._cachedCodecSupport.addCodecs(updatedCodecSupportInfo);
     const unsupportedAdaptations: Adaptation[] = [];
     for (const period of this.periods) {
-      period.refreshCodecSupport(unsupportedAdaptations, this._cachedCodecSupport);
+      if (period instanceof Period) {
+        period.refreshCodecSupport(unsupportedAdaptations, this._cachedCodecSupport);
+      } else {
+        log.warn(
+          "manifest",
+          "Plain metadata period in manifest.periods while updating codec support:",
+          period,
+        );
+      }
     }
     this.trigger("supportUpdate", null);
     if (unsupportedAdaptations.length > 0) {
