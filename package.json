@@ -172,7 +172,6 @@
     "lint:scripts": "eslint -c eslint.config.mjs scripts",
     "lint:tests": "eslint -c eslint.config.mjs tests",
     "list": "node scripts/list-npm-scripts.mjs",
-    "prepublishOnly": "bash ./scripts/make_all_builds.sh",
     "releases:changelog": "node ./scripts/update_changelog.mjs",
     "releases:demo": "bash ./scripts/update_gh-pages_demo.sh",
     "releases:dev": "bash ./scripts/make-dev-releases.sh",
