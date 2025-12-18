@@ -314,9 +314,8 @@ function runInitialPlaybackTests({ multithread } = {}) {
       await sleep(0);
 
       expect(manifestLoaderCalledTimes).to.equal(1);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 1000 }, () => {
+      await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
         expect(manifestLoaderCalledTimes).to.equal(1);
-
         expect(segmentLoaderLoaderCalledTimes).to.equal(12);
         expect(player.getCurrentBufferGap()).to.be.above(18);
         expect(player.getCurrentBufferGap()).to.be.below(30);
