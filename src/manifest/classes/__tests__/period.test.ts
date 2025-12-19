@@ -10,14 +10,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no adaptation is given", async () => {
-    const mockAdaptation = vi.fn((arg: IParsedAdaptation) => ({
-      ...arg,
-      supportStatus: {
-        hasSupportedCodec: undefined,
-        hasCodecWithUndefinedSupport: true,
-        isDecipherable: undefined,
-      },
-    }));
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation) {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      };
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -51,17 +53,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if no audio nor video adaptation is given", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
@@ -115,17 +116,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if only empty audio and video adaptations is given", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
@@ -166,17 +166,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should throw if there is no video nor audio representations in any adaptations.", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
@@ -258,17 +257,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should not throw if there is no video representation but it has an audio representation.", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -313,17 +311,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should report that all video adaptations are not supported", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: arg.type !== "video",
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: arg.type !== "video",
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
@@ -396,17 +393,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should not set a parsing error if an empty unsupported adaptation is given", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
@@ -449,17 +445,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should give a representationFilter to the adaptation", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     const representationFilter = vi.fn();
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
@@ -501,17 +496,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should not report if an Adaptation has no Representation", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -554,17 +548,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should set the given start", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -597,17 +590,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should set a given duration", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -646,17 +638,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should infer the end from the start and the duration", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -695,17 +686,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should return every Adaptations combined with `getAdaptations`", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -756,17 +746,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should return every Adaptations from a given type with `getAdaptationsForType`", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -826,17 +815,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should return the first Adaptations with a given Id when calling `getAdaptation`", async () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
@@ -894,17 +882,16 @@ describe("Manifest - Period", () => {
   });
 
   it("should return undefind if no adaptation has the given Id when calling `getAdaptation`", () => {
-    const mockAdaptation = vi.fn(
-      (arg: IParsedAdaptation): Adaptation =>
-        ({
-          ...arg,
-          supportStatus: {
-            hasSupportedCodec: undefined,
-            hasCodecWithUndefinedSupport: true,
-            isDecipherable: undefined,
-          },
-        }) as unknown as Adaptation,
-    );
+    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+      return {
+        ...arg,
+        supportStatus: {
+          hasSupportedCodec: undefined,
+          hasCodecWithUndefinedSupport: true,
+          isDecipherable: undefined,
+        },
+      } as unknown as Adaptation;
+    });
     vi.doMock("../adaptation", () => ({
       default: mockAdaptation,
       SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
