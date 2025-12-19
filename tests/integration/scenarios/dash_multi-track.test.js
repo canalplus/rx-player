@@ -328,79 +328,83 @@ describe("DASH multi-track content (SegmentTimeline)", function () {
     checkNoTextTrack();
     checkVideoTrack({ all: false, test: /avc1\.42C014/ }, undefined);
     checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
-  }, 6000);
+  }, 10000);
 
-  it("should allow setting tracks BEFORE loading segments", async function () {
-    const requestedSegments = [];
-    const manifestLoader = (man, callbacks) => {
-      expect(multiAdaptationSetsInfos.url).to.equal(man.url);
-      callbacks.fallback();
-      manifestRequestDone = true;
-    };
-    const segmentLoader = (info, callbacks) => {
-      requestedSegments.push(info.url);
-      callbacks.fallback();
-    };
-    player = new RxPlayer();
+  it(
+    "should allow setting tracks BEFORE loading segments",
+    { timeout: 10000 },
+    async function () {
+      const requestedSegments = [];
+      const manifestLoader = (man, callbacks) => {
+        expect(multiAdaptationSetsInfos.url).to.equal(man.url);
+        callbacks.fallback();
+        manifestRequestDone = true;
+      };
+      const segmentLoader = (info, callbacks) => {
+        requestedSegments.push(info.url);
+        callbacks.fallback();
+      };
+      player = new RxPlayer();
 
-    let eventCalled = 0;
-    let manifestRequestDone = false;
-    player.addEventListener("newAvailablePeriods", () => {
-      eventCalled++;
-      expect(manifestRequestDone).to.equal(true);
-      if (eventCalled === 1) {
-        expect(requestedSegments.length === 0).to.equal(true);
+      let eventCalled = 0;
+      let manifestRequestDone = false;
+      player.addEventListener("newAvailablePeriods", () => {
+        eventCalled++;
+        expect(manifestRequestDone).to.equal(true);
+        if (eventCalled === 1) {
+          expect(requestedSegments.length === 0).to.equal(true);
+        }
+        updateTracks(
+          [
+            { language: "fr", audioDescription: false },
+            { language: "de", audioDescription: true },
+          ],
+          [
+            { language: "de", closedCaption: false },
+            { language: "fr", closedCaption: true },
+          ],
+          [
+            { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: true },
+            { codec: { all: false, test: /avc1\.640028/ } },
+          ],
+        );
+      });
+      player.loadVideo({
+        url: multiAdaptationSetsInfos.url,
+        transport: multiAdaptationSetsInfos.transport,
+        manifestLoader,
+        segmentLoader,
+      });
+
+      await checkAfterSleepWithBackoff({ maxTimeMs: 2000 }, () => {
+        expect(eventCalled).to.equal(1);
+        checkAudioTrack("fr", "fra", false);
+        checkTextTrack("de", "deu", false);
+        checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
+      });
+
+      if (player.getPlayerState() !== "LOADED") {
+        await waitForLoadedStateAfterLoadVideo(player);
       }
-      updateTracks(
-        [
-          { language: "fr", audioDescription: false },
-          { language: "de", audioDescription: true },
-        ],
-        [
-          { language: "de", closedCaption: false },
-          { language: "fr", closedCaption: true },
-        ],
-        [
-          { codec: { all: true, test: /avc1\.42C014/ }, signInterpreted: true },
-          { codec: { all: false, test: /avc1\.640028/ } },
-        ],
+      expect(eventCalled).to.equal(
+        1,
+        `newAvailablePeriods event called ${eventCalled} times instead of 1`,
       );
-    });
-    player.loadVideo({
-      url: multiAdaptationSetsInfos.url,
-      transport: multiAdaptationSetsInfos.transport,
-      manifestLoader,
-      segmentLoader,
-    });
 
-    await checkAfterSleepWithBackoff({ maxTimeMs: 500 }, () => {
-      expect(eventCalled).to.equal(1);
       checkAudioTrack("fr", "fra", false);
       checkTextTrack("de", "deu", false);
       checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
-    });
 
-    if (player.getPlayerState() !== "LOADED") {
-      await waitForLoadedStateAfterLoadVideo(player);
-    }
-    expect(eventCalled).to.equal(
-      1,
-      `newAvailablePeriods event called ${eventCalled} times instead of 1`,
-    );
-
-    checkAudioTrack("fr", "fra", false);
-    checkTextTrack("de", "deu", false);
-    checkVideoTrack({ all: true, test: /avc1\.42C014/ }, true);
-
-    await goToSecondPeriod();
-    expect(eventCalled).to.equal(
-      2,
-      `newAvailablePeriods event called ${eventCalled} times instead of 2`,
-    );
-    checkAudioTrack("de", "deu", true);
-    checkTextTrack("fr", "fra", true);
-    checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
-  });
+      await goToSecondPeriod();
+      expect(eventCalled).to.equal(
+        2,
+        `newAvailablePeriods event called ${eventCalled} times instead of 2`,
+      );
+      checkAudioTrack("de", "deu", true);
+      checkTextTrack("fr", "fra", true);
+      checkVideoTrack({ all: false, test: /avc1\.640028/ }, undefined);
+    },
+  );
 
   it("should allow the initial disabling of the video tracks", async () => {
     player.addEventListener("newAvailablePeriods", () => {

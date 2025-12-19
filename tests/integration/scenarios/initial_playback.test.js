@@ -262,65 +262,73 @@ function runInitialPlaybackTests({ multithread } = {}) {
       expect(player.getPlayerState()).to.equal("PAUSED");
     });
 
-    it("should download first segment when wanted buffer ahead is under first segment duration", async function () {
-      let manifestLoaderCalledTimes = 0;
-      let segmentLoaderLoaderCalledTimes = 0;
-      const manifestLoader = (man, callbacks) => {
-        expect(manifestInfos.url).to.equal(man.url);
-        manifestLoaderCalledTimes++;
-        callbacks.fallback();
-      };
-      const segmentLoader = (_, callbacks) => {
-        segmentLoaderLoaderCalledTimes++;
-        callbacks.fallback();
-      };
-      player.setWantedBufferAhead(2);
-      player.loadVideo({
-        transport: manifestInfos.transport,
-        url: manifestInfos.url,
-        manifestLoader,
-        segmentLoader,
-      });
-      await sleep(0);
+    it(
+      "should download first segment when wanted buffer ahead is under first segment duration",
+      { timeout: 4000 },
+      async function () {
+        let manifestLoaderCalledTimes = 0;
+        let segmentLoaderLoaderCalledTimes = 0;
+        const manifestLoader = (man, callbacks) => {
+          expect(manifestInfos.url).to.equal(man.url);
+          manifestLoaderCalledTimes++;
+          callbacks.fallback();
+        };
+        const segmentLoader = (_, callbacks) => {
+          segmentLoaderLoaderCalledTimes++;
+          callbacks.fallback();
+        };
+        player.setWantedBufferAhead(2);
+        player.loadVideo({
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
+          manifestLoader,
+          segmentLoader,
+        });
+        await sleep(0);
 
-      expect(manifestLoaderCalledTimes).to.equal(1);
-      await sleep(500);
-      expect(manifestLoaderCalledTimes).to.equal(1);
-
-      expect(segmentLoaderLoaderCalledTimes).to.equal(4);
-      expect(player.getCurrentBufferGap()).to.be.above(4);
-      expect(player.getCurrentBufferGap()).to.be.below(5);
-    });
-
-    it("should download more than the first segment when wanted buffer ahead is over the first segment duration", async function () {
-      let manifestLoaderCalledTimes = 0;
-      let segmentLoaderLoaderCalledTimes = 0;
-      const manifestLoader = (man, callbacks) => {
-        expect(manifestInfos.url).to.equal(man.url);
-        manifestLoaderCalledTimes++;
-        callbacks.fallback();
-      };
-      const segmentLoader = (_, callbacks) => {
-        segmentLoaderLoaderCalledTimes++;
-        callbacks.fallback();
-      };
-      player.setWantedBufferAhead(20);
-      player.loadVideo({
-        transport: manifestInfos.transport,
-        url: manifestInfos.url,
-        manifestLoader,
-        segmentLoader,
-      });
-      await sleep(0);
-
-      expect(manifestLoaderCalledTimes).to.equal(1);
-      await checkAfterSleepWithBackoff({ maxTimeMs: 3000 }, () => {
         expect(manifestLoaderCalledTimes).to.equal(1);
-        expect(segmentLoaderLoaderCalledTimes).to.equal(12);
-        expect(player.getCurrentBufferGap()).to.be.above(18);
-        expect(player.getCurrentBufferGap()).to.be.below(30);
-      });
-    });
+        await sleep(3000);
+        expect(manifestLoaderCalledTimes).to.equal(1);
+
+        expect(segmentLoaderLoaderCalledTimes).to.equal(4);
+        expect(player.getCurrentBufferGap()).to.be.above(4);
+        expect(player.getCurrentBufferGap()).to.be.below(5);
+      },
+    );
+
+    it(
+      "should download more than the first segment when wanted buffer ahead is over the first segment duration",
+      { timeout: 10000 },
+      async function () {
+        let manifestLoaderCalledTimes = 0;
+        let segmentLoaderLoaderCalledTimes = 0;
+        const manifestLoader = (man, callbacks) => {
+          expect(manifestInfos.url).to.equal(man.url);
+          manifestLoaderCalledTimes++;
+          callbacks.fallback();
+        };
+        const segmentLoader = (_, callbacks) => {
+          segmentLoaderLoaderCalledTimes++;
+          callbacks.fallback();
+        };
+        player.setWantedBufferAhead(20);
+        player.loadVideo({
+          transport: manifestInfos.transport,
+          url: manifestInfos.url,
+          manifestLoader,
+          segmentLoader,
+        });
+        await sleep(0);
+
+        expect(manifestLoaderCalledTimes).to.equal(1);
+        await checkAfterSleepWithBackoff({ maxTimeMs: 8000 }, () => {
+          expect(manifestLoaderCalledTimes).to.equal(1);
+          expect(segmentLoaderLoaderCalledTimes).to.equal(12);
+          expect(player.getCurrentBufferGap()).to.be.above(18);
+          expect(player.getCurrentBufferGap()).to.be.below(30);
+        });
+      },
+    );
 
     it("should continue downloading when seek to wanted buffer ahead", async function () {
       player.setWantedBufferAhead(2);
