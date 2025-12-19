@@ -61,7 +61,7 @@ const minimalRepresentationIndex: IRepresentationIndex = {
     /* noop */
   },
 };
-const mockDefaultRepresentationImpl = vi.fn((arg: IParsedRepresentation) => {
+const mockDefaultRepresentationImpl = vi.fn(function (arg: IParsedRepresentation) {
   return {
     bitrate: arg.bitrate,
     id: arg.id,
@@ -221,7 +221,7 @@ describe("Manifest - Adaptation", () => {
   });
 
   it("should execute the representationFilter if given", async () => {
-    const mockRepresentation = vi.fn((arg: IParsedRepresentation) => {
+    const mockRepresentation = vi.fn(function (arg: IParsedRepresentation) {
       return {
         bitrate: arg.bitrate,
         id: arg.id,

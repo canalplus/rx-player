@@ -123,7 +123,7 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = vi.fn((period: IPeriod) => {
+    const fakePeriod = vi.fn(function (period: IPeriod) {
       return { id: `foo${period.id}`, adaptations: period.adaptations };
     });
     vi.doMock("../period", () => ({
@@ -183,7 +183,7 @@ describe("Manifest - Manifest", () => {
       return false;
     };
 
-    const fakePeriod = vi.fn((period: IParsedPeriod): IPeriod => {
+    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
       return { id: `foo${period.id}` } as IPeriod;
     });
     vi.doMock("../period", () => ({
@@ -238,7 +238,7 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = vi.fn((period: IParsedPeriod): IPeriod => {
+    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
     vi.doMock("../period", () => ({
@@ -299,7 +299,7 @@ describe("Manifest - Manifest", () => {
       uris: ["url1", "url2"],
     };
 
-    const fakePeriod = vi.fn((period: IParsedPeriod): IPeriod => {
+    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
     vi.doMock("../period", () => ({
@@ -342,7 +342,7 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should return all URLs given with `getContentUrls`", async () => {
-    const fakePeriod = vi.fn((period: IParsedPeriod): IPeriod => {
+    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
     vi.doMock("../period", () => ({
@@ -410,7 +410,7 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should replace with a new Manifest when calling `replace`", async () => {
-    const fakePeriod = vi.fn((period: IParsedPeriod): IPeriod => {
+    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
     const fakeReplacePeriodsRes = {
