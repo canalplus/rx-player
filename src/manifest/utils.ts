@@ -1,3 +1,4 @@
+import log from "../log";
 import type { IProcessedProtectionData } from "../main_thread/types";
 import type { IManifest, IPeriod, IAdaptation, IPeriodsUpdateResult } from "../manifest";
 import type {
@@ -593,6 +594,16 @@ export function replicateUpdatesOnManifestMetadata(
   newManifest: Omit<IManifestMetadata, "periods">,
   updates: IPeriodsUpdateResult,
 ) {
+  if (baseManifest.manifestFormat === ManifestMetadataFormat.Class) {
+    // This function is not intended for and could break a `Manifest` instance, as
+    // it might mutate it by adding metadata objects to it, whereas the `Manifest`
+    // instance generally expect the "instance versions" of those objects instead.
+    log.error(
+      "manifest",
+      "`replicateUpdatesOnManifestMetadata` called on a Manifest instance",
+    );
+    return;
+  }
   for (const prop of Object.keys(newManifest)) {
     if (prop !== "periods") {
       // trust me bro

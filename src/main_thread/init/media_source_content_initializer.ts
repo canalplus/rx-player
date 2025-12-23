@@ -26,6 +26,7 @@ import features from "../../features";
 import log from "../../log";
 import type { IManifestMetadata } from "../../manifest";
 import {
+  ManifestMetadataFormat,
   replicateUpdatesOnManifestMetadata,
   updateDecipherabilityFromKeyIds,
   updateDecipherabilityFromProtectionData,
@@ -934,11 +935,17 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             return;
           }
 
-          replicateUpdatesOnManifestMetadata(
-            manifest,
-            msgData.value.manifest,
-            msgData.value.updates,
-          );
+          if (manifest.manifestFormat === ManifestMetadataFormat.MetadataObject) {
+            // If we're currently in possession of an `IManifestMetadata`, we need
+            // to replicate the updates sent by the Core on it.
+            // If we rely on **the** `Manifest` instance directly however, we already
+            // share it with Core and as such don't need to replicate the updates.
+            replicateUpdatesOnManifestMetadata(
+              manifest,
+              msgData.value.manifest,
+              msgData.value.updates,
+            );
+          }
           this._currentContentInfo?.streamEventsEmitter?.onManifestUpdate(manifest);
 
           this._updateCodecSupport(manifest, mediaElement);
