@@ -765,8 +765,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       startAt = { position: reloadOpts.reloadAt.position };
     } else if (reloadOpts?.reloadAt?.relative !== undefined) {
       if (reloadPosition === undefined) {
-        throw new Error(
-          "Can't reload to a relative position when previous content was not loaded.",
+        log.warn(
+          "API",
+          "reload API > reloadAt.relative option given but we don't know the previous content's position",
         );
       } else {
         startAt = { position: reloadOpts.reloadAt.relative + reloadPosition };
