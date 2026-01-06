@@ -20,34 +20,9 @@ thread. The `attachWorker` method let you provide that worker file by doing a ca
 player.attachWorker({ workerUrl });
 ```
 
-You will first need to obtain a reference to that worker file, you can do this through
-either ones of those means:
-
-- The easiest way is to just import in your application its "embedded" version, exported
-  through the `"rx-player/experimental/features/embeds"` path:
-
-  ```js
-  import { EMBEDDED_WORKER } from "rx-player/experimental/features/embeds";
-  ```
-
-  This allows to bypass the need to store and serve separately that file.
-
-  If you would prefer more control and a smaller bundle size, you may instead consider the
-  other following ways to load it as a separate file.
-
-- With every release note published on GitHub as `worker.js` (you should only use the file
-  linked to the RxPlayer's version you're using),
-
-- It is also available as `dist/worker.js` from the root directory of the project
-  published on npm. As such, it might already be found in your project's directory, for
-  example in the `node_modules` directory (most probably in `node_modules/rx-player/dist/`
-  depending on your project).
-
-- For more advanced use cases (such as when relying on a
-  [`representationFilter`](../Loading_a_Content.md#representationfilter),
-  [`manifestLoader`](../Loading_a_Content.md#manifestloader) or a
-  [`segmentLoader`](../Loading_a_Content.md#segmentloader) callback), you may want instead
-  to define your [own worker bundle](../../Getting_Started/ImportableWorker.md).
+You will first need to obtain a reference to that worker file, for more information on how
+to do this can be found in the
+[Multithreading documentation](.../../Getting_Started/MultiThreading.md).
 
 This `attachWorker` method then returns a Promise which:
 

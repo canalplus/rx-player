@@ -551,16 +551,22 @@ It can either be defined directly as a function - adapted when you don't initial
 [multithreading](../Getting_Started/MultiThreading.md) capabilities - or as an object with
 at most the following values:
 
-- `fn` (`function`): Directly the function implementation, used for when the content is
-  loaded in main thread.
+- `fn` (`function|undefined`): Directly the function implementation, used for when the
+  content is loaded in main thread.
 
   More info on that function's implementation can be found
   [here](../api/Miscellaneous/plugins.md#representationfilter).
 
-- `workerId` (`string`): The declared identifier for that `representationFilter` function
-  when the content is loaded in a `"multithreading"` mode. More information on how to
-  declare a `manifestLoader` implementation in a multithreading mode
+  Can be `undefined` / not set, in which case we won't rely on a `representationFilter`
+  when loading in main thread.
+
+- `workerId` (`string|undefined`): The declared identifier for that `representationFilter`
+  function when the content is loaded in a `"multithreading"` mode. More information on
+  how to declare a `manifestLoader` implementation in a multithreading mode
   [here](../Getting_Started/ImportableWorker.md).
+
+  Can be `undefined` / not set, in which case we won't rely on a `representationFilter`
+  when loading in `"multithreading"` mode.
 
 More information on it can be found
 [here](../api/Miscellaneous/plugins.md#representationfilter).
@@ -589,16 +595,22 @@ It can either be defined directly as a function - adapted when you don't initial
 [multithreading](../Getting_Started/MultiThreading.md) capabilities - or as an object with
 at most two values:
 
-- `fn` (`function`): Directly the function implementation, used for when the content is
-  loaded in main thread.
+- `fn` (`function|undefined`): Directly the function implementation, used for when the
+  content is loaded in main thread.
 
   More info on the function's implementation can be found
   [here](../api/Miscellaneous/plugins.md#segmentloader).
 
-- `workerId` (`string`): The declared identifier for that `segmentLoader` function when
-  the content is loaded in a `"multithreading"` mode. More information on how to declare a
-  `segmentLoader` implementation in a multithreading mode
+  Can be `undefined` / not set, in which case we won't rely on a `segmentLoader` when
+  loading in main thread.
+
+- `workerId` (`string|undefined`): The declared identifier for that `segmentLoader`
+  function when the content is loaded in a `"multithreading"` mode. More information on
+  how to declare a `segmentLoader` implementation in a multithreading mode
   [here](../Getting_Started/ImportableWorker.md).
+
+  Can be `undefined` / not set, in which case we won't rely on a `segmentLoader` when
+  loading in `"multithreading"` mode.
 
 ### manifestLoader
 
@@ -624,16 +636,22 @@ It can either be defined directly as a function - adapted when you don't initial
 [multithreading](../Getting_Started/MultiThreading.md) capabilities - or as an object with
 at most two values:
 
-- `fn` (`function`): Directly the function implementation, used for when the content is
-  loaded in main thread.
+- `fn` (`function|undefined`): Directly the function implementation, used for when the
+  content is loaded in main thread.
 
   More info on that function's implementation can be found
   [here](../api/Miscellaneous/plugins.md#manifestloader).
 
-- `workerId` (`string`): The declared identifier for that `manifestLoader` function when
-  the content is loaded in a `"multithreading"` mode. More information on how to declare a
-  `manifestLoader` implementation in a multithreading mode
+  Can be `undefined` / not set, in which case we won't rely on a `manifestLoader` when
+  loading in main thread.
+
+- `workerId` (`string|undefined`): The declared identifier for that `manifestLoader`
+  function when the content is loaded in a `"multithreading"` mode. More information on
+  how to declare a `manifestLoader` implementation in a multithreading mode
   [here](../Getting_Started/ImportableWorker.md).
+
+  Can be `undefined` / not set, in which case we won't rely on a `manifestLoader` when
+  loading in `"multithreading"` mode.
 
 ### onCodecSwitch
 

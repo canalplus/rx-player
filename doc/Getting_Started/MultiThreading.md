@@ -153,7 +153,11 @@ if (currentModeInfo === null) {
 The `addFeatures` call and the `attachWorker` call may be performed in any order and at
 any point in time, even after some contents have already been loaded. This can for example
 allow dynamic importing of the `MULTI_THREAD` feature after some contents have already
-been played on the main thread
+been played on the main thread.
+
+_However note that a new `loadVideo` call needs to be done again before relying on
+multithreaded mode (a content already loaded won't switch to multithread mode in the
+middle of playback)._
 
 ## Limitations
 
@@ -184,8 +188,6 @@ following conditions are respected:
   [`manifestLoader`](../api/Loading_a_Content.md#manifestloader) or
   [`segmentLoader`](../api/Loading_a_Content.md#segmentloader) `loadVideo` option defined
   or you have but you included a `workerId` identifier (see next chapter).
-
-- You did not call the `dispose` API on this RxPlayer instance.
 
 ### "Plugin" won't run when declared as functions
 
