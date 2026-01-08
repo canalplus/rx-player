@@ -100,6 +100,10 @@ const {
 
   let lastCreatedMockMS: InnerMockMediaSource | null = null;
   class InnerMockMediaSource implements IMediaSource {
+    static isTypeSupported(): boolean {
+      return true;
+    }
+
     private _mediaSourceListeners: Record<string, Array<() => void>>;
     readyState: ReadyState = "open";
     duration: number = 0;
@@ -231,7 +235,7 @@ describe("MainMediaSourceInterface", () => {
   });
 
   it("constructs correctly and registers event listeners", () => {
-    const iface = new MainMediaSourceInterface("test-id");
+    const iface = new MainMediaSourceInterface("test-id", MockMediaSource);
     expect(iface.id).toBe("test-id");
     expect(iface.sourceBuffers).toEqual([]);
     expect(iface.readyState).toBe("open");
@@ -254,29 +258,29 @@ describe("MainMediaSourceInterface", () => {
 
   it("sets handle to media-source type when mediaSource.handle is nullish", () => {
     mediaSourceProps.handle = undefined;
-    const iface = new MainMediaSourceInterface("h-id");
+    const iface = new MainMediaSourceInterface("h-id", MockMediaSource);
     expect(iface.handle).toMatchObject({ type: "media-source" });
   });
 
   it("sets handle to 'handle' type when mediaSource.handle is defined", () => {
     const fakeHandle = new Blob();
     mediaSourceProps.handle = fakeHandle;
-    const iface = new MainMediaSourceInterface("h-id");
+    const iface = new MainMediaSourceInterface("h-id", MockMediaSource);
     expect(iface.handle).toMatchObject({ type: "handle", value: fakeHandle });
   });
 
   it("tracks streaming from the MediaSource when it is defined", () => {
     mediaSourceProps.streaming = true;
-    const iface1 = new MainMediaSourceInterface("stream-id");
+    const iface1 = new MainMediaSourceInterface("stream-id", MockMediaSource);
     expect(iface1.streaming).toBe(true);
     mediaSourceProps.streaming = false;
-    const iface2 = new MainMediaSourceInterface("stream-id");
+    const iface2 = new MainMediaSourceInterface("stream-id", MockMediaSource);
     expect(iface2.streaming).toBe(false);
   });
 
   it("updates streaming to true when 'startstreaming' fires", () => {
     mediaSourceProps.streaming = false;
-    const iface = new MainMediaSourceInterface("stream-id");
+    const iface = new MainMediaSourceInterface("stream-id", MockMediaSource);
     mockMS = getLastMediaSourceMock();
     mockMS._emit("startstreaming");
     expect(iface.streaming).toBe(true);
@@ -284,14 +288,14 @@ describe("MainMediaSourceInterface", () => {
 
   it("updates streaming to false when 'endstreaming' fires", () => {
     mediaSourceProps.streaming = true;
-    const iface = new MainMediaSourceInterface("stream-id");
+    const iface = new MainMediaSourceInterface("stream-id", MockMediaSource);
     mockMS = getLastMediaSourceMock();
     mockMS._emit("endstreaming");
     expect(iface.streaming).toBe(false);
   });
 
   it("triggers mediaSourceOpen when onSourceOpen callback fires", () => {
-    const iface = new MainMediaSourceInterface("open-id");
+    const iface = new MainMediaSourceInterface("open-id", MockMediaSource);
     const listener = vi.fn();
     iface.addEventListener("mediaSourceOpen", listener);
     const [[, cb]] = mockOnSourceOpen.mock.calls;
@@ -300,7 +304,7 @@ describe("MainMediaSourceInterface", () => {
   });
 
   it("triggers mediaSourceEnded when onSourceEnded callback fires", () => {
-    const iface = new MainMediaSourceInterface("ended-id");
+    const iface = new MainMediaSourceInterface("ended-id", MockMediaSource);
     const listener = vi.fn();
     iface.addEventListener("mediaSourceEnded", listener);
     const [[, cb]] = mockOnSourceEnded.mock.calls;
@@ -309,7 +313,7 @@ describe("MainMediaSourceInterface", () => {
   });
 
   it("triggers mediaSourceClose when onSourceClose callback fires", () => {
-    const iface = new MainMediaSourceInterface("close-id");
+    const iface = new MainMediaSourceInterface("close-id", MockMediaSource);
     const listener = vi.fn();
     iface.addEventListener("mediaSourceClose", listener);
     const [[, cb]] = mockOnSourceClose.mock.calls;
@@ -320,7 +324,7 @@ describe("MainMediaSourceInterface", () => {
   it("addSourceBuffer creates and stores a MainSourceBufferInterface", () => {
     const sb = new MockSourceBuffer();
     vi.spyOn(MockMediaSource.prototype, "addSourceBuffer").mockReturnValue(sb);
-    const iface = new MainMediaSourceInterface("sb-id");
+    const iface = new MainMediaSourceInterface("sb-id", MockMediaSource);
     const result = iface.addSourceBuffer(
       SourceBufferType.Video,
       "video/mp4; codecs=avc1",
@@ -331,26 +335,26 @@ describe("MainMediaSourceInterface", () => {
   });
 
   it("setDuration delegates to durationUpdater", () => {
-    const iface = new MainMediaSourceInterface("dur-id");
+    const iface = new MainMediaSourceInterface("dur-id", MockMediaSource);
     iface.setDuration(120, true);
     expect(mockUpdateDuration).toHaveBeenCalledWith(120, true);
   });
 
   it("interruptDurationSetting delegates to durationUpdater", () => {
-    const iface = new MainMediaSourceInterface("dur-id");
+    const iface = new MainMediaSourceInterface("dur-id", MockMediaSource);
     iface.interruptDurationSetting("test-reason");
     expect(mockStopUpdating).toHaveBeenCalledWith("test-reason");
   });
 
   it("maintainEndOfStream calls maintainEndOfStream util only once", () => {
-    const iface = new MainMediaSourceInterface("eos-id");
+    const iface = new MainMediaSourceInterface("eos-id", MockMediaSource);
     iface.maintainEndOfStream();
     iface.maintainEndOfStream(); // second call should not create another canceller
     expect(mockMaintainEndOfStream).toHaveBeenCalledOnce();
   });
 
   it("stopEndOfStream cancels active end-of-stream", () => {
-    const iface = new MainMediaSourceInterface("eos-id");
+    const iface = new MainMediaSourceInterface("eos-id", MockMediaSource);
     iface.maintainEndOfStream();
     expect(mockMaintainEndOfStream).toHaveBeenCalledOnce();
     iface.stopEndOfStream();
@@ -362,7 +366,7 @@ describe("MainMediaSourceInterface", () => {
     const sb = new MockSourceBuffer();
     const mockAbort = vi.spyOn(sb, "abort");
     vi.spyOn(MockMediaSource.prototype, "addSourceBuffer").mockReturnValue(sb);
-    const iface = new MainMediaSourceInterface("dispose-id");
+    const iface = new MainMediaSourceInterface("dispose-id", MockMediaSource);
     mockMS = getLastMediaSourceMock();
     mockMS.sourceBuffers = makeMockSourceBufferList([sb]);
     iface.addSourceBuffer(SourceBufferType.Audio, "audio/mp4; codecs=mp4a");

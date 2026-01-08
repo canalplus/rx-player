@@ -234,7 +234,7 @@ export interface IMediaElement extends IEventTarget<IMediaElementEventMap> {
    * Optional property allowing to force a specific MSE Implementation when
    * relying on a given `IMediaElement`.
    */
-  FORCED_MEDIA_SOURCE?: new () => IMediaSource;
+  FORCED_MEDIA_SOURCE?: IMediaSourceClass;
 
   FORCED_EME_API?: IEmeApiImplementation;
 
@@ -437,9 +437,12 @@ const gs = globalScope as typeof window & {
   ManagedMediaSource?: typeof MediaSource | undefined | null;
 };
 
-const MediaSource_:
-  | { new (): IMediaSource; isTypeSupported(type: string): boolean }
-  | undefined =
+export interface IMediaSourceClass {
+  new (): IMediaSource;
+  isTypeSupported(type: string): boolean;
+}
+
+const MediaSource_: IMediaSourceClass | undefined =
   gs?.MediaSource ??
   gs?.MozMediaSource ??
   gs?.WebKitMediaSource ??
