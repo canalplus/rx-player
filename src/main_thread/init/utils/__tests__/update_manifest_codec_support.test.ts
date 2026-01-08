@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { IMediaElement } from "../../../../compat/browser_compatibility_types.ts";
+import type {
+  IMediaElement,
+  IMediaSourceClass,
+} from "../../../../compat/browser_compatibility_types.ts";
 import type {
   IManifestMetadata,
   IPeriodMetadata,
@@ -13,6 +16,17 @@ import assert from "../../../../utils/assert.ts";
 import sleep from "../../../../utils/sleep.ts";
 import ContentDecryptor from "../../../decrypt/index.ts";
 import { updateManifestCodecSupport } from "../update_manifest_codec_support.ts";
+
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+const FakeMediaSourceClass = class {
+  constructor() {
+    throw new Error("Should not create a MediaSource instance");
+  }
+  static isTypeSupported(type: string): boolean {
+    // Mocked behavior: return true for all codecs and return false for vp9 codec
+    return type.indexOf("vp9") === -1;
+  }
+} as IMediaSourceClass;
 
 function generateFakeManifestWithRepresentations(
   videoRepresentations: IRepresentationMetadata[],
@@ -75,27 +89,6 @@ function generateFakeManifestWithRepresentations(
   return manifest;
 }
 beforeAll(() => {
-  // Mock MediaSource APIs
-  vi.mock("../../../../compat/browser_compatibility_types", () => ({
-    default: {
-      READY_STATES: {
-        HAVE_NOTHING: 0,
-        HAVE_METADATA: 1,
-        HAVE_CURRENT_DATA: 2,
-        HAVE_FUTURE_DATA: 3,
-        HAVE_ENOUGH_DATA: 4,
-      },
-      isManagedMediaSource: false,
-      // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-      MediaSource_: class {
-        static isTypeSupported(type: string) {
-          // Mocked behavior: return true for all codecs and return false for vp9 codec
-          return type.indexOf("vp9") === -1;
-        }
-      },
-    },
-  }));
-
   // Mock EME APIs
   vi.mock("../../../../compat/eme/eme-api-implementation", () => ({
     default: () => ({
@@ -212,12 +205,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
     const emeImplem = getEmeApiImplementation("auto");
     assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
-    updateManifestCodecSupport(
-      manifest,
-      contentDecryptor,
-      document.createElement("video"),
-      true,
-    );
+    updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
     expect(representationAVC.isSupported).toBe(true);
     expect(representationHEVC.isSupported).toBe(true);
     expect(representationVP9.isSupported).toBe(false); // Not Supported by MSE
@@ -307,12 +295,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
     const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
     await sleep(100);
     contentDecryptor.attach();
-    updateManifestCodecSupport(
-      manifest,
-      contentDecryptor,
-      document.createElement("video"),
-      true,
-    );
+    updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
     expect(encryptedRepresentationAVC.isSupported).toBe(true);
     expect(encryptedRepresentationHEVC.isSupported).toBe(false); // Not supported by EME
     expect(encryptedRepresentationVP9.isSupported).toBe(false); // Not supported by MSE
@@ -363,12 +346,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
     const emeImplem = getEmeApiImplementation("auto");
     assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, []);
-    updateManifestCodecSupport(
-      manifest,
-      contentDecryptor,
-      document.createElement("video"),
-      true,
-    );
+    updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
     expect(representationAVC.isSupported).toBe(true);
     expect(representationHEVC.isSupported).toBe(false); // not supported with MSE in worker
     expect(representationMP4A.isSupported).toBe(true);

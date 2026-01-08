@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-import type DummyMediaElement from "../experimental/tools/DummyMediaElement/index.ts";
 import log from "../log.ts";
 import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
 import isWorker from "../utils/is_worker.ts";
-import BROWSER_GLOBALS from "./browser_compatibility_types.ts";
-import type { IMediaElement } from "./browser_compatibility_types.ts";
+import type { IMediaSourceClass } from "./browser_compatibility_types.ts";
 
 /**
  * Setting this value limit the number of entries in the support map
@@ -35,7 +33,8 @@ const supportMap: Map<string, boolean> = new Map();
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
- * @param {HTMLMediaElement} mediaElement
+ * @param {Object|Function|null|undefined} MediaSourceClass - The `MediaSource`
+ * class that is intended to be used to play the content.
  * @param {string} mimeType - The MIME media type that you want to test support
  * for in the current browser.
  * This may include the codecs parameter to provide added details about the
@@ -43,30 +42,23 @@ const supportMap: Map<string, boolean> = new Map();
  * @returns {Boolean}
  */
 export default function isCodecSupported(
-  mediaElement: IMediaElement,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  MediaSourceClass: IMediaSourceClass | null,
   mimeType: string,
 ): boolean {
-  // TODO: We only added that as a hotfix for now, to allow support of the right codecs
-  // on a dummy media element
-  if ((mediaElement as DummyMediaElement).isDummy) {
-    return (mediaElement as DummyMediaElement).FORCED_MEDIA_SOURCE.isTypeSupported(
-      mimeType,
-    );
-  }
-  const { MediaSource_ } = BROWSER_GLOBALS;
-  if (isNullOrUndefined(MediaSource_)) {
+  if (isNullOrUndefined(MediaSourceClass)) {
     if (isWorker) {
       log.error("mse", "Cannot request codec support in a worker without MSE.");
     }
     return false;
   }
 
-  if (typeof MediaSource_.isTypeSupported === "function") {
+  if (typeof MediaSourceClass.isTypeSupported === "function") {
     const cachedSupport = supportMap.get(mimeType);
     if (cachedSupport !== undefined) {
       return cachedSupport;
     } else {
-      const isSupported = MediaSource_.isTypeSupported(mimeType);
+      const isSupported = MediaSourceClass.isTypeSupported(mimeType);
       if (supportMap.size >= MAX_SUPPORT_MAP_ENTRIES) {
         supportMap.clear();
       }

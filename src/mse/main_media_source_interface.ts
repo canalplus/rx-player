@@ -1,11 +1,11 @@
 import type {
   IMediaSource,
+  IMediaSourceClass,
   ISourceBuffer,
 } from "../compat/browser_compatibility_types.ts";
-import BROWSER_GLOBALS from "../compat/browser_compatibility_types.ts";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type.ts";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners.ts";
-import { MediaError, SourceBufferError } from "../errors/index.ts";
+import { SourceBufferError } from "../errors/index.ts";
 import log from "../log.ts";
 import { concat } from "../utils/byte_parsing.ts";
 import EventEmitter from "../utils/event_emitter.ts";
@@ -83,24 +83,24 @@ export default class MainMediaSourceInterface
    *
    * You can then obtain a link to that `MediaSource`, for example to link it
    * to an `HTMLMediaElement`, through the `handle` property.
+   *
+   * @param {string} id - The wanted `id` property for this new `MediaSource`
+   * instance.
+   * @param {Object|function} MediaSourceClass - `MediaSource` implementation
+   * relied on.
    */
-  constructor(id: string, forcedMediaSource?: new () => IMediaSource) {
+  constructor(
+    id: string,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    MediaSourceClass: IMediaSourceClass,
+  ) {
     super();
     this.id = id;
     this.sourceBuffers = [];
     this._canceller = new TaskCanceller("MainMediaSourceInterface");
 
-    const { MediaSource_ } = BROWSER_GLOBALS;
-    if (isNullOrUndefined(MediaSource_)) {
-      throw new MediaError(
-        "MEDIA_SOURCE_NOT_SUPPORTED",
-        "No MediaSource Object was found in the current browser.",
-      );
-    }
-
     log.info("mse", "Creating MediaSource");
-    const mediaSource =
-      forcedMediaSource !== undefined ? new forcedMediaSource() : new MediaSource_();
+    const mediaSource = new MediaSourceClass();
     const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
     this.handle = isNullOrUndefined(handle)
       ? // eslint-disable-next-line @typescript-eslint/no-restricted-types

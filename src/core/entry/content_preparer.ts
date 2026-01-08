@@ -1,3 +1,4 @@
+import BROWSER_GLOBALS from "../../compat/browser_compatibility_types.ts";
 import features from "../../features/index.ts";
 import log from "../../log.ts";
 import type { IContentInitializationData } from "../../main_thread/types.ts";
@@ -481,7 +482,13 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
 ): [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null] {
   let mediaSourceInterface: IMediaSourceInterface;
   if (capabilities.useMseInWorker) {
-    const mainMediaSource = new MainMediaSourceInterface(generateMediaSourceId());
+    if (BROWSER_GLOBALS.MediaSource_ === undefined) {
+      throw new Error("ContentPreparer: Cannot use MSE-in-Worker: no MSE");
+    }
+    const mainMediaSource = new MainMediaSourceInterface(
+      generateMediaSourceId(),
+      BROWSER_GLOBALS.MediaSource_,
+    );
     mediaSourceInterface = mainMediaSource;
 
     let sentMediaSourceLink: IAttachMediaSourceCoreMessagePayload;

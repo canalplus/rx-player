@@ -1,4 +1,7 @@
-import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import type {
+  IMediaElement,
+  IMediaSourceClass,
+} from "../../compat/browser_compatibility_types.ts";
 import disableRemotePlaybackOnManagedMediaSource from "../../compat/disable_remote_playback_on_managed_media_source.ts";
 import getEmeApiImplementation from "../../compat/eme/index.ts";
 import mayMediaElementFailOnUndecipherableData from "../../compat/may_media_element_fail_on_undecipherable_data.ts";
@@ -954,7 +957,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           const manifest = msgData.value.manifest;
           streamEventsEmitter.start(manifest);
           this._currentContentInfo.manifest = manifest;
-          this._updateCodecSupport(manifest, mediaElement);
+          this._updateCodecSupport(manifest);
           this._startPlaybackIfReady(playbackStartParams);
           break;
         }
@@ -981,7 +984,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             );
           }
           streamEventsEmitter.onManifestUpdate(manifest);
-          this._updateCodecSupport(manifest, mediaElement);
+          this._updateCodecSupport(manifest);
           this.trigger("manifestUpdate", msgData.value.updates);
           break;
         }
@@ -1435,7 +1438,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         if (isNullOrUndefined(manifest)) {
           return;
         }
-        this._updateCodecSupport(manifest, mediaElement);
+        this._updateCodecSupport(manifest);
         contentDecryptor.removeEventListener(
           "stateChange",
           updateCodecSupportOnStateChange,
@@ -1554,12 +1557,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
    * status of these codecs, and forwards the list of supported codecs to core.
    * @param manifest
    */
-  private _updateCodecSupport(manifest: IManifestMetadata, mediaElement: IMediaElement) {
+  private _updateCodecSupport(manifest: IManifestMetadata) {
     try {
       const updatedCodecs = updateManifestCodecSupport(
+        this._settings.MediaSourceClass,
         manifest,
         this._currentContentInfo?.contentDecryptor ?? null,
-        mediaElement,
         this._currentContentInfo?.useMseInWorker ?? false,
       );
       if (updatedCodecs.length > 0) {
@@ -1967,9 +1970,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
               stopListening();
               const mediaSource = new MainMediaSourceInterface(
                 mediaSourceId,
-                "FORCED_MEDIA_SOURCE" in mediaElement
-                  ? mediaElement.FORCED_MEDIA_SOURCE
-                  : undefined,
+                this._settings.MediaSourceClass,
               );
               if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
                 this._currentContentInfo.mediaSourceInfo.mediaSource.dispose(
@@ -2240,6 +2241,8 @@ export interface IInitializeArguments {
   textTrackOptions: ITextDisplayerOptions;
   /** URL of the Manifest. `undefined` if unknown or not pertinent. */
   url: string | undefined;
+  /** `MediaSource` implementation that is wanted for that content. */
+  MediaSourceClass: IMediaSourceClass;
 }
 
 function bindNumberReferencesToCore(

@@ -19,7 +19,9 @@
  * It also starts the different sub-parts of the player on various API calls.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import BROWSER_GLOBALS, {
+  type IMediaElement,
+} from "../../compat/browser_compatibility_types.ts";
 import canRelyOnVideoVisibilityAndSize from "../../compat/can_rely_on_video_visibility_and_size.ts";
 import type { IPictureInPictureEvent } from "../../compat/event_listeners.ts";
 import {
@@ -1042,6 +1044,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     let useWorker = false;
     let mediaElementTracksStore: IMediaElementTracksStore | null = null;
     if (!isDirectFile) {
+      const MediaSourceClass =
+        this.videoElement.FORCED_MEDIA_SOURCE ?? BROWSER_GLOBALS.MediaSource_;
+      if (MediaSourceClass === undefined) {
+        throw new Error("Cannot load video: No MediaSource instance available currently");
+      }
+
       /** Interface used to load and refresh the Manifest. */
       const manifestRequestSettings = {
         lowLatencyMode,
@@ -1223,6 +1231,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           textTrackOptions,
           url,
           useMseInWorker: false,
+          MediaSourceClass,
         });
       } else {
         if (features.multithread === null) {
@@ -1303,6 +1312,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           textTrackOptions,
           url,
           useMseInWorker: hasMseInWorker,
+          MediaSourceClass,
         });
       }
     } else {
