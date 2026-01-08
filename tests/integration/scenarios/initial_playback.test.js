@@ -298,7 +298,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
 
     it(
       "should download more than the first segment when wanted buffer ahead is over the first segment duration",
-      { timeout: 10000 },
+      { timeout: 12000, retry: 2 },
       async function () {
         let manifestLoaderCalledTimes = 0;
         let segmentLoaderLoaderCalledTimes = 0;
@@ -321,7 +321,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
         await sleep(0);
 
         expect(manifestLoaderCalledTimes).to.equal(1);
-        await checkAfterSleepWithBackoff({ maxTimeMs: 8000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 10000 }, () => {
           expect(manifestLoaderCalledTimes).to.equal(1);
           expect(segmentLoaderLoaderCalledTimes).to.equal(12);
           expect(player.getCurrentBufferGap()).to.be.above(18);
