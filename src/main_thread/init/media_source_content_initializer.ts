@@ -534,11 +534,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         log.warn("Init", "Asked to reload when no content is loaded.");
         return;
       }
-      const mediaElement = playbackObserver.getMediaElement();
-      if (mediaElement === null) {
-        // XXX TODO: We should ask to flush buffers here?
-        return;
-      }
+      // XXX TODO: Not sure if this is actually needed?
+      // const mediaElement = playbackObserver.getMediaElement();
+      // if (mediaElement === null) {
+      //   // TODO: We should ask to flush buffers here?
+      //   return;
+      // }
       const lastObservation = playbackObserver.getReference().getValue();
       const currentPosition = lastObservation.position.getWanted();
       const isPaused =
