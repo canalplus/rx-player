@@ -15,6 +15,7 @@
  */
 
 import isNullOrUndefined from "./is_null_or_undefined";
+import noop from "./noop";
 import type { CancellationSignal } from "./task_canceller";
 
 export interface IEventEmitter<T> {
@@ -40,7 +41,12 @@ export type IListener<TEventRecord, TEventName extends keyof TEventRecord> = (
 ) => void;
 
 type IListeners<TEventRecord> = {
-  [P in keyof TEventRecord]?: Array<IListener<TEventRecord, P>>;
+  [P in keyof TEventRecord]?: Array<{
+    /** Listener to call on that event with the payload in argument. */
+    cb: IListener<TEventRecord, P>;
+    /** Function to call when that listener is removed. */
+    onRemove: () => void;
+  }>;
 };
 
 /**
@@ -48,10 +54,6 @@ type IListeners<TEventRecord> = {
  * @class EventEmitter
  */
 export default class EventEmitter<T> implements IEventEmitter<T> {
-  /**
-   * @type {Object}
-   * @private
-   */
   private _listeners: IListeners<T>;
 
   constructor() {
@@ -65,7 +67,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
    * @param {Function} fn - The callback to call as that event is triggered.
    * The callback will take as argument the eventual payload of the event
    * (single argument).
-   * @param {Object | undefined} cancellationSignal - When that signal emits,
+   * @param {Object | undefined} [cancellationSignal] - When that signal emits,
    * the event listener is automatically removed.
    */
   public addEventListener<TEventName extends keyof T>(
@@ -73,16 +75,21 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
     fn: IListener<T, TEventName>,
     cancellationSignal?: CancellationSignal,
   ): void {
+    let onRemove = noop;
+    if (cancellationSignal !== undefined) {
+      if (cancellationSignal.isCancelled()) {
+        return;
+      }
+      const deregister = cancellationSignal.register(() =>
+        this.removeEventListener(evt, fn),
+      );
+      onRemove = deregister;
+    }
     const listeners = this._listeners[evt];
     if (!Array.isArray(listeners)) {
-      this._listeners[evt] = [fn];
+      this._listeners[evt] = [{ cb: fn, onRemove }];
     } else {
-      listeners.push(fn);
-    }
-    if (cancellationSignal !== undefined) {
-      cancellationSignal.register(() => {
-        this.removeEventListener(evt, fn);
-      });
+      listeners.push({ cb: fn, onRemove });
     }
   }
 
@@ -100,6 +107,13 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
     fn?: IListener<T, TEventName>,
   ): void {
     if (isNullOrUndefined(evt)) {
+      // Call onRemove for all listeners before clearing
+      for (const eventName of Object.keys(this._listeners)) {
+        const listeners = this._listeners[eventName as keyof typeof this._listeners];
+        if (Array.isArray(listeners)) {
+          listeners.forEach((listener) => listener.onRemove());
+        }
+      }
       this._listeners = {};
       return;
     }
@@ -109,13 +123,17 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
       return;
     }
     if (isNullOrUndefined(fn)) {
+      listeners.forEach((listener) => listener.onRemove());
       delete this._listeners[evt];
       return;
     }
 
-    const index = listeners.indexOf(fn);
-    if (index !== -1) {
-      listeners.splice(index, 1);
+    for (let index = 0; index < listeners.length; index++) {
+      if (listeners[index].cb === fn) {
+        listeners[index].onRemove();
+        listeners.splice(index, 1);
+        break;
+      }
     }
 
     if (listeners.length === 0) {
@@ -140,7 +158,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
 
     listeners.slice().forEach((listener) => {
       try {
-        listener(arg);
+        listener.cb(arg);
       } catch (e) {
         if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
           throw e instanceof Error ? e : new Error("EventEmitter: listener error");
