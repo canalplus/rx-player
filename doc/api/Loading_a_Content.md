@@ -105,7 +105,9 @@ Can be either:
 
   - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
 
-    "local" transport is not yet available in that mode.
+    You will need to rely on an
+    [importable worker](../Getting_Started/ImportableWorker.md), and add the
+    `LOCAL_MANIFEST` feature to it.
 
 Example:
 
