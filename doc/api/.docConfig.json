@@ -61,6 +61,10 @@
       "displayName": "Playback Information"
     },
     {
+      "path": "./MultiThread/",
+      "displayName": "MultiThreading"
+    },
+    {
       "path": "./Thumbnails",
       "displayName": "Thumbnails"
     },

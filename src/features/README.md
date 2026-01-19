@@ -8,3 +8,8 @@ RxPlayer without importing others.
 
 How this is technically done is through a global `features` Object, which will have added
 properties (which corresponds to those features' code) each time a new feature is added.
+
+## For workers
+
+The `worker` directory contains features intended for the worker-side that will then be
+exported through the RxPlayer's `worker/features` path.

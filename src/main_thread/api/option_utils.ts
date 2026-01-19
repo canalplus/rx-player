@@ -101,13 +101,29 @@ interface IParsedLoadVideoOptionsBase {
   /** @see ILoadVideoOptions.checkManifestIntegrity */
   checkManifestIntegrity?: boolean | undefined;
   /** @see ILoadVideoOptions.manifestLoader */
-  manifestLoader?: IManifestLoader | undefined;
+  manifestLoader?:
+    | {
+        fn?: IManifestLoader | undefined;
+        workerId?: string | undefined;
+      }
+    | undefined;
   /** @see ILoadVideoOptions.referenceDateTime */
   referenceDateTime?: number | undefined;
   /** @see ILoadVideoOptions.representationFilter */
-  representationFilter?: IRepresentationFilter | string | undefined;
+  representationFilter?:
+    | {
+        fn?: IRepresentationFilter | undefined;
+        eval?: string | undefined;
+        workerId?: string | undefined;
+      }
+    | undefined;
   /** @see ILoadVideoOptions.segmentLoader */
-  segmentLoader?: ISegmentLoader | undefined;
+  segmentLoader?:
+    | {
+        fn?: ISegmentLoader | undefined;
+        workerId?: string | undefined;
+      }
+    | undefined;
   /** @see ILoadVideoOptions.serverSyncInfos */
   serverSyncInfos?: IServerSyncInfos | undefined;
   /** @see ILoadVideoOptions.mode */
@@ -504,6 +520,29 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
 
   const requestConfig = options.requestConfig ?? {};
 
+  let manifestLoader;
+  if (typeof options.manifestLoader === "function") {
+    manifestLoader = { fn: options.manifestLoader };
+  } else {
+    manifestLoader = options.manifestLoader;
+  }
+
+  let segmentLoader;
+  if (typeof options.segmentLoader === "function") {
+    segmentLoader = { fn: options.segmentLoader };
+  } else {
+    segmentLoader = options.segmentLoader;
+  }
+
+  let representationFilter;
+  if (typeof options.representationFilter === "function") {
+    representationFilter = { fn: options.representationFilter };
+  } else if (typeof options.representationFilter === "string") {
+    representationFilter = { eval: options.representationFilter };
+  } else {
+    representationFilter = options.representationFilter;
+  }
+
   // All those eslint disable are needed because the option is voluntarily
   // hidden from the base type to limit discovery of this hidden API.
   return {
@@ -519,15 +558,15 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     initialManifest,
     keySystems,
     lowLatencyMode,
-    manifestLoader: options.manifestLoader,
+    manifestLoader,
     minimumManifestUpdateInterval,
     requestConfig,
     onCodecSwitch,
     onAudioTracksNotPlayable,
     onVideoTracksNotPlayable,
     referenceDateTime: options.referenceDateTime,
-    representationFilter: options.representationFilter,
-    segmentLoader: options.segmentLoader,
+    representationFilter,
+    segmentLoader,
     serverSyncInfos: options.serverSyncInfos,
     startAt,
     textTrackElement: textTrackElement as HTMLElement,

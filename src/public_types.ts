@@ -25,7 +25,7 @@ export type IRxPlayerMode = "auto" | "main" | "multithread";
 
 /** Argument of the `attachWorker` method. */
 export interface IWorkerSettings {
-  workerUrl: string | Blob;
+  workerUrl: string | Worker | Blob;
   dashWasmUrl?: string | ArrayBuffer | undefined;
 }
 
@@ -175,16 +175,36 @@ export interface ILoadVideoOptions {
   initialManifest?: IInitialManifest;
 
   /** Custom implementation for performing Manifest requests. */
-  manifestLoader?: IManifestLoader;
+  manifestLoader?:
+    | IManifestLoader /* equivalent to "fn" mode */
+    | {
+        fn?: IManifestLoader | undefined;
+        workerId?: string | undefined;
+      }
+    | undefined;
 
   /** Minimum bound for Manifest updates, in milliseconds. */
   minimumManifestUpdateInterval?: number;
 
   /** Custom implementation for performing segment requests. */
-  segmentLoader?: ISegmentLoader;
+  segmentLoader?:
+    | ISegmentLoader /* equivalent to "fn" mode */
+    | {
+        fn?: ISegmentLoader | undefined;
+        workerId?: string | undefined;
+      }
+    | undefined;
 
   /** Custom logic to filter out unwanted qualities. */
-  representationFilter?: IRepresentationFilter | string;
+  representationFilter?:
+    | IRepresentationFilter /* equivalent to "fn" mode */
+    | string /* equivalent to `eval` mode, for legacy reasons */
+    | {
+        fn?: IRepresentationFilter | undefined;
+        eval?: string | undefined;
+        workerId?: string | undefined;
+      }
+    | undefined;
 
   /** Base time for the segments in case it is not found in the Manifest. */
   referenceDateTime?: number;

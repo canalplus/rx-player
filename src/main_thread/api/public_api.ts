@@ -186,17 +186,6 @@ if (isDebugModeEnabled) {
 const generateContentId = idGenerator();
 
 /**
- * Options of a `loadVideo` call which are for now not supported when running
- * in a "multithread" mode.
- *
- * TODO support those?
- */
-const MULTI_THREAD_UNSUPPORTED_LOAD_VIDEO_OPTIONS = [
-  "manifestLoader",
-  "segmentLoader",
-] as const;
-
-/**
  * @class Player
  * @extends EventEmitter
  */
@@ -270,7 +259,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     lastBitrates: { audio?: number; video?: number; text?: number };
   };
 
-  private _priv_worker: Worker | null;
+  private _priv_workerData: {
+    worker: Worker;
+    messageListeners: Map<string, Array<(payload: unknown) => void>>;
+  } | null;
 
   /**
    * Current fatal error which STOPPED the player.
@@ -499,7 +491,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     this._priv_lastAutoPlay = false;
 
-    this._priv_worker = null;
+    this._priv_workerData = null;
 
     const onVolumeChange = () => {
       this.trigger("volumeChange", {
@@ -529,7 +521,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       // check if the user already attach worker before
       // terminate the previous worker to release the resources
-      if (this._priv_worker !== null) {
+      if (this._priv_workerData !== null) {
         if (this.state !== "STOPPED") {
           log.warn(
             "API",
@@ -542,22 +534,38 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             ),
           );
         } else {
-          this._priv_worker.terminate();
+          this._priv_workerData.worker.terminate();
+          this._priv_workerData.messageListeners.clear();
+          this._priv_workerData = null;
         }
       }
 
+      let workerData: typeof Player.prototype._priv_workerData;
       if (typeof workerSettings.workerUrl === "string") {
-        this._priv_worker = new Worker(workerSettings.workerUrl);
+        workerData = {
+          worker: new Worker(workerSettings.workerUrl),
+          messageListeners: new Map(),
+        };
+      } else if ("postMessage" in workerSettings.workerUrl) {
+        workerData = {
+          worker: workerSettings.workerUrl,
+          messageListeners: new Map(),
+        };
       } else {
         const blobUrl = URL.createObjectURL(workerSettings.workerUrl);
-        this._priv_worker = new Worker(blobUrl);
+        workerData = {
+          worker: new Worker(blobUrl),
+          messageListeners: new Map(),
+        };
         URL.revokeObjectURL(blobUrl);
       }
+      this._priv_workerData = workerData;
 
-      this._priv_worker.onerror = (evt: ErrorEvent) => {
-        if (this._priv_worker !== null) {
-          this._priv_worker.terminate();
-          this._priv_worker = null;
+      this._priv_workerData.worker.onerror = (evt: ErrorEvent) => {
+        if (this._priv_workerData !== null) {
+          this._priv_workerData.worker.terminate();
+          this._priv_workerData.messageListeners.clear();
+          this._priv_workerData = null;
         }
         log.error(
           "API",
@@ -575,10 +583,14 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         const msgData = msg.data as unknown as ICoreMessage;
         if (msgData.type === CoreMessageType.InitError) {
           log.warn("API", "Processing InitError worker message: detaching worker");
-          if (this._priv_worker !== null) {
-            this._priv_worker.removeEventListener("message", handleInitMessages);
-            this._priv_worker.terminate();
-            this._priv_worker = null;
+          if (this._priv_workerData !== null) {
+            this._priv_workerData.worker.removeEventListener(
+              "message",
+              handleInitMessages,
+            );
+            this._priv_workerData.worker.terminate();
+            this._priv_workerData.messageListeners.clear();
+            this._priv_workerData = null;
           }
           rej(
             new WorkerInitializationError(
@@ -588,16 +600,41 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           );
         } else if (msgData.type === CoreMessageType.InitSuccess) {
           log.info("API", "InitSuccess received from worker.");
-          if (this._priv_worker !== null) {
-            this._priv_worker.removeEventListener("message", handleInitMessages);
+          if (this._priv_workerData !== null) {
+            this._priv_workerData.worker.removeEventListener(
+              "message",
+              handleInitMessages,
+            );
           }
           res();
         }
       };
-      this._priv_worker.addEventListener("message", handleInitMessages);
+      const onAppDefinedMessage = (evt: MessageEvent<ICoreMessage>) => {
+        if (evt.data.type !== CoreMessageType.AppDefined) {
+          return;
+        }
+        const { name, payload } = evt.data.value;
+        const listeners = workerData.messageListeners.get(name);
+        if (listeners === undefined) {
+          return;
+        }
+        for (const listener of listeners.slice()) {
+          try {
+            listener(payload);
+          } catch (err) {
+            log.error(
+              "API",
+              "A message listener failed with an error:",
+              err instanceof Error ? err : "Unknown Error",
+            );
+          }
+        }
+      };
+      this._priv_workerData.worker.addEventListener("message", handleInitMessages);
+      this._priv_workerData.worker.addEventListener("message", onAppDefinedMessage);
 
       log.debug("M-->C", "Sending message", { name: MainThreadMessageType.Init });
-      this._priv_worker.postMessage({
+      this._priv_workerData.worker.postMessage({
         type: MainThreadMessageType.Init,
         value: {
           dashWasmUrl: workerSettings.dashWasmUrl,
@@ -612,13 +649,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       log.addEventListener(
         "onLogLevelChange",
         (logInfo) => {
-          if (this._priv_worker === null) {
+          if (this._priv_workerData === null) {
             return;
           }
           log.debug("M-->C", "Sending message", {
             name: MainThreadMessageType.LogLevelUpdate,
           });
-          this._priv_worker.postMessage({
+          this._priv_workerData.worker.postMessage({
             type: MainThreadMessageType.LogLevelUpdate,
             value: {
               logLevel: logInfo.level,
@@ -631,13 +668,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       );
 
       const sendConfigUpdates = (updates: Partial<IDefaultConfig>) => {
-        if (this._priv_worker === null) {
+        if (this._priv_workerData === null) {
           return;
         }
         log.debug("M-->C", "Sending message:", {
           name: MainThreadMessageType.ConfigUpdate,
         });
-        this._priv_worker.postMessage({
+        this._priv_workerData.worker.postMessage({
           type: MainThreadMessageType.ConfigUpdate,
           value: updates,
         });
@@ -647,6 +684,57 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       config.addEventListener("update", sendConfigUpdates, this._destroyCanceller.signal);
     });
+  }
+
+  /**
+   * Construct Object allowing to exchange message with the worker associated to
+   * this RxPlayer instance.
+   * @returns {Object|null} Object allowing communication with the Worker
+   * associated to an `RxPlayer`'s instance.
+   * `null` if no worker is attached currently.
+   */
+  public getWorkerInterface(): IWorkerInterface | null {
+    if (this._priv_workerData === null) {
+      return null;
+    }
+    const workerData = this._priv_workerData;
+    /** @see IWorkerInterface */
+    return {
+      sendMessage(messageName: string, payload: unknown) {
+        workerData.worker.postMessage({
+          type: MainThreadMessageType.AppDefined,
+          value: {
+            name: messageName,
+            payload,
+          },
+        });
+      },
+      addMessageListener(messageName: string, callback: (x: unknown) => void) {
+        const prev = workerData.messageListeners.get(messageName);
+        if (prev === undefined) {
+          workerData.messageListeners.set(messageName, [callback]);
+        } else {
+          workerData.messageListeners.set(messageName, [...prev, callback]);
+        }
+      },
+      removeMessageListener(messageName: string, callback: (x: unknown) => void) {
+        const prev = workerData.messageListeners.get(messageName);
+        if (prev === undefined) {
+          return;
+        }
+        while (true) {
+          const indexOf = prev.indexOf(callback);
+          if (indexOf < 0) {
+            return;
+          }
+          prev.splice(indexOf, 1);
+          if (prev.length === 0) {
+            workerData.messageListeners.delete(messageName);
+            return;
+          }
+        }
+      },
+    };
   }
 
   /**
@@ -724,9 +812,10 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     // un-attach video element
     this.videoElement = null;
 
-    if (this._priv_worker !== null) {
-      this._priv_worker.terminate();
-      this._priv_worker = null;
+    if (this._priv_workerData !== null) {
+      this._priv_workerData.worker.terminate();
+      this._priv_workerData.messageListeners.clear();
+      this._priv_workerData = null;
     }
   }
 
@@ -923,7 +1012,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       referenceDateTime,
       segmentLoader,
       serverSyncInfos,
-      mode,
       experimentalOptions,
       __priv_manifestUpdateUrl,
       __priv_patchLastSegmentInSidx,
@@ -1048,28 +1136,56 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         __priv_patchLastSegmentInSidx,
       };
 
-      const canRunInMultiThread =
-        features.multithread !== null &&
-        this._priv_worker !== null &&
-        this.videoElement.FORCED_MEDIA_SOURCE === undefined &&
-        transport === "dash" &&
-        MULTI_THREAD_UNSUPPORTED_LOAD_VIDEO_OPTIONS.every((option) =>
-          isNullOrUndefined(options[option]),
-        ) &&
-        typeof options.representationFilter !== "function";
-      if (mode === "main" || (mode === "auto" && !canRunInMultiThread)) {
+      if (!this._priv_shouldLoadMultithread(options)) {
         if (features.monothread === null) {
           throw new Error(
             "Cannot load video, neither in a WebWorker nor with the " +
               "`MEDIA_SOURCE_MAIN` feature",
           );
         }
+
+        // Small checks, log if some option seems wrong
+        if (
+          typeof transportOptions.representationFilter?.workerId === "string" &&
+          (isNullOrUndefined(transportOptions.representationFilter.fn) ||
+            isNullOrUndefined(transportOptions.representationFilter.eval))
+        ) {
+          log.warn(
+            "API",
+            "You only set a `workerId` for a `representationFilter` in monothreaded mode. Ignoring it...",
+          );
+        }
+        if (
+          typeof transportOptions.manifestLoader?.workerId === "string" &&
+          isNullOrUndefined(transportOptions.manifestLoader.fn)
+        ) {
+          log.warn(
+            "API",
+            "You only set a `workerId` for a `manifestLoader` in monothreaded mode. Ignoring it...",
+          );
+        }
+        if (
+          typeof transportOptions.segmentLoader?.workerId === "string" &&
+          isNullOrUndefined(transportOptions.segmentLoader.fn)
+        ) {
+          log.warn(
+            "API",
+            "You only set a `workerId` for a `segmentLoader` in monothreaded mode. Ignoring it...",
+          );
+        }
+
         log.info("API", "Initializing MediaSource mode in the main thread");
         const coreInterface = new features.monothread.coreInterface();
         const coreInterfaceCallbacks = coreInterface.getCallbacks();
         features.monothread.initializeCoreEntry(
           coreInterfaceCallbacks.setCoreMessageReceiver,
           coreInterfaceCallbacks.sendCoreMessage,
+          {
+            // No need for core-side plugins in monothread mode
+            representationFilters: new Map(),
+            segmentLoaders: new Map(),
+            manifestLoaders: new Map(),
+          },
         );
         coreInterface.sendMessage({
           type: MainThreadMessageType.Init,
@@ -1109,17 +1225,62 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             "Cannot load video in multithread mode: `MULTI_THREAD` " +
               "feature not imported.",
           );
-        } else if (this._priv_worker === null) {
+        } else if (this._priv_workerData === null) {
           throw new Error(
             "Cannot load video in multithread mode: `attachWorker` " +
               "method not called.",
           );
         }
-        assert(typeof options.representationFilter !== "function");
+
+        // Small checks, log if some option seems wrong
+        if (
+          transportOptions.representationFilter !== undefined &&
+          !isNullOrUndefined(transportOptions.representationFilter.fn)
+        ) {
+          transportOptions.representationFilter.fn = undefined;
+          if (
+            isNullOrUndefined(transportOptions.representationFilter.workerId) &&
+            isNullOrUndefined(transportOptions.representationFilter.eval)
+          ) {
+            log.warn(
+              "API",
+              "You only set a representationFilter function in a mulithreaded mode, ignoring it...",
+            );
+          }
+        }
+        if (
+          transportOptions.manifestLoader !== undefined &&
+          !isNullOrUndefined(transportOptions.manifestLoader.workerId)
+        ) {
+          transportOptions.manifestLoader.fn = undefined;
+          if (isNullOrUndefined(transportOptions.manifestLoader.fn)) {
+            log.warn(
+              "API",
+              "You only set a manifestLoader function in a mulithreaded mode, ignoring it...",
+            );
+          }
+        }
+        if (
+          transportOptions.segmentLoader !== undefined &&
+          !isNullOrUndefined(transportOptions.segmentLoader.workerId)
+        ) {
+          transportOptions.segmentLoader.fn = undefined;
+          if (isNullOrUndefined(transportOptions.segmentLoader.fn)) {
+            log.warn(
+              "API",
+              "You only set a segmentLoader function in a mulithreaded mode, ignoring it...",
+            );
+          }
+        }
+
+        // `initialManifest` is not supported in multithread mode.
+        manifestRequestSettings.initialManifest = undefined;
         useWorker = true;
         log.info("API", "Initializing MediaSource mode in a WebWorker");
         initializer = new features.multithread.init({
-          coreInterface: new features.multithread.coreInterface(this._priv_worker),
+          coreInterface: new features.multithread.coreInterface(
+            this._priv_workerData.worker,
+          ),
           adaptiveOptions,
           autoPlay,
           bufferOptions,
@@ -3576,6 +3737,70 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this.trigger("error", formattedError);
     }
   }
+
+  /**
+   * Returns `true` if the content concerned by those options should load in
+   * multithread mode.
+   * Returns `false` if it should load in main thread.
+   * @param {Object} options - The `loadVideo` options for that content.
+   * @returns {boolean} - `true` if the content should be loaded in multithread
+   * mode.
+   */
+  private _priv_shouldLoadMultithread(options: IParsedLoadVideoOptions): boolean {
+    if (options.mode === "main") {
+      return false;
+    }
+    if (options.mode === "multithread") {
+      return true;
+    }
+    if (options.transport === "directfile") {
+      return false;
+    }
+
+    if (features.multithread === null || this._priv_workerData === null) {
+      // No possibility for multithread
+      return false;
+    }
+    if (!isNullOrUndefined(this.videoElement?.FORCED_MEDIA_SOURCE)) {
+      // Special case: Dummy Media Element only in main thread for now
+      // TODO: Make it work with multithread?
+      return false;
+    }
+    if (options.transport !== "dash") {
+      return false;
+    }
+    if (
+      features.monothread === null ||
+      typeof features.transports[options.transport] !== "function"
+    ) {
+      // We cannot play in monothread anyway, but we may be able to in
+      // multithread
+      return true;
+    }
+    if (
+      options.manifestLoader !== undefined &&
+      typeof options.manifestLoader.fn === "function" &&
+      isNullOrUndefined(options.manifestLoader.workerId)
+    ) {
+      return false;
+    }
+    if (
+      options.segmentLoader !== undefined &&
+      typeof options.segmentLoader.fn === "function" &&
+      isNullOrUndefined(options.segmentLoader.workerId)
+    ) {
+      return false;
+    }
+    if (
+      options.representationFilter !== undefined &&
+      typeof options.representationFilter.fn === "function" &&
+      isNullOrUndefined(options.representationFilter.workerId) &&
+      isNullOrUndefined(options.representationFilter.eval)
+    ) {
+      return false;
+    }
+    return true;
+  }
 }
 Player.version = /* PLAYER_VERSION */ "4.4.1";
 
@@ -3735,6 +3960,41 @@ export interface IPublicApiContentInfos {
    * Note: If neither the audio nor the video tracks are playable, an error will be thrown regardless of this setting.
    */
   onVideoTracksNotPlayable: "continue" | "error";
+}
+
+/**
+ * Object allowing communication with the Worker associated to an `RxPlayer`'s instance.
+ */
+interface IWorkerInterface {
+  /**
+   * Allows to send a message to a Worker associated with an `RxPlayer` instance.
+   * It should be coupled with an `addMessageListener` done on the worker-side
+   * for the corresponding `messageName`.
+   * @param {string} messageName - Name for the associated event that has been
+   * listened to through an `addMessageListener` call on the worker-side.
+   * Can be any string.
+   * @param {Object} payload - Payload for that particular event.
+   */
+  sendMessage(messageName: string, payload: unknown): void;
+  /**
+   * Listen to events sent by the worker-side, so that if it decides to call
+   * sendMessage` there for that same `messageName`, you callback will be
+   * triggered.
+   * @param {string} messageName - Name for the event you want to listen to.
+   * @param {Function} callback - callback that will be triggered any time that
+   * event is received from the Worker-side with the sent payload as argument.
+   */
+  addMessageListener(messageName: string, callback: (x: unknown) => void): void;
+  /**
+   * Remove a callback previously registered through `addMessageListener` on this
+   * same interface.
+   * @param {string} messageName - Name for the event you want to unregister.
+   * @param {Function} callback - Callback you want to unregister for that
+   * event.
+   * Should be the exact same callback (same reference to it) than the one
+   * registered previously through `addMessageListener`.
+   */
+  removeMessageListener(messageName: string, callback: (x: unknown) => void): void;
 }
 
 export default Player;

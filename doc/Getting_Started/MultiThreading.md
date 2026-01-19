@@ -150,13 +150,24 @@ if (currentModeInfo === null) {
 }
 ```
 
+The `addFeatures` call and the `attachWorker` call may be performed in any order and at
+any point in time, even after some contents have already been loaded. This can for example
+allow dynamic importing of the `MULTI_THREAD` feature after some contents have already
+been played on the main thread.
+
+_However note that a new `loadVideo` call needs to be done again before relying on
+multithreaded mode (a content already loaded won't switch to multithread mode in the
+middle of playback)._
+
 ## Limitations
+
+### Multithreading may not always be available
 
 Note that the `"multithread"` mode will only run on a `loadVideo` call if all the
 following conditions are respected:
 
 - Your supported platforms are compatible to the `WebWorker` browser feature (the great
-  majority are).
+  majority are compatible).
 
 - You've added the `MULTI_THREAD` feature to the `RxPlayer` class (as shown in examples)
   before that `loadVideo` call.
@@ -168,30 +179,41 @@ following conditions are respected:
 - You're playing a DASH content (through the `"dash"` `transport` option of the
   `loadVideo` call).
 
-- You're not using any of those unsupported `loadVideo` options:
-  - `manifestLoader`
-
-  - `segmentLoader`
-
-- If using the `representationFilter` `loadVideo` option is defined, it is under a string
-  form (see
-  [corresponding documentation page](../Loading_a_Content.md#representationfilter).
-
 - You did not force the `"main"` mode through the
-  [`mode` loadVideo option](../Loading_a_Content.md#mode).
+  [`mode` `loadVideo` option](../api/Loading_a_Content.md#mode).
 
-- You did not call the `dispose` API on this RxPlayer instance.
+- If loading with the default `"auto"`
+  [`mode` loadVideo option](../api/Loading_a_Content.md#mode), you either don't have any
+  [`representationFilter`](../api/Loading_a_Content.md#representationfilter),
+  [`manifestLoader`](../api/Loading_a_Content.md#manifestloader) or
+  [`segmentLoader`](../api/Loading_a_Content.md#segmentloader) `loadVideo` option defined
+  or you have but you included a `workerId` identifier (see next chapter).
 
-If any of those conditions may not be respected by your application, you might also want
-to be able to rely on the usual "main" mode (which runs everything on main thread).
+### "Plugin" won't run when declared as functions
 
-Thankfully, this is very easy to do:
+Our plugins API
+([`representationFilter`](../api/Loading_a_Content.md#representationfilter),
+[`manifestLoader`](../api/Loading_a_Content.md#manifestloader) and
+[`segmentLoader`](../api/Loading_a_Content.md#segmentloader) callbacks) won't run when in
+"multithreading mode" if those have only been defined as functions through those API.
+
+They can only run in "multithreading mode" if you've both declared them worker-side
+through your own worker bundle and then reference them throuh their `workerId` on the
+`loadVideo` call. Refer to the [worker-bundling documentation page](./ImportableWorker.md)
+for more information on this.
+
+### Work-around those limitations
+
+If any of those conditions may not always be respected by your application, you can also
+let the player fallback on the usual "main" mode (which runs everything on main thread)
+automatically when multithreading mode is not available. This is what we recommend for
+most cases:
 
 - If you rely on the minimal build of the RxPlayer, ensure you've added the feature for
   the wanted streaming protocol(s).
 
   For example to both be able to play DASH contents on the main thread and through a
-  WebWorker, you may do:
+  WebWorker, you can do:
 
   ```js
   import RxPlayer from "rx-player/minimal";
@@ -202,20 +224,42 @@ Thankfully, this is very easy to do:
     // Allow DASH playback on the main thread
     DASH,
 
-    // Allow DASH playback in "multithread" mode
+    // Also allow "multithreading" mode
+    // (attached worker has to have the `DASH` feature. The default provided ones are.)
     MULTI_THREAD,
   ]);
 
   // ...
   ```
 
-- If you rely on the default RxPlayer build, you've nothing special to do, the `DASH` and
-  `SMOOTH` features being already imported by default.
+- If you want to set a
+  [`representationFilter`](../api/Loading_a_Content.md#representationfilter), a
+  [`manifestLoader`](../api/Loading_a_Content.md#manifestloader) or a
+  [`segmentLoader`](../api/Loading_a_Content.md#segmentloader) callback, make sure to
+  provide both a `workerId`
+  ([see documentation on worker bundling](./ImportableWorker.md)) and your function
+  implementation when calling `loadVideo`:
 
-Also note that the `addFeatures` call and the `attachWorker` call may be performed in any
-order and at any point in time, even after some contents have already been loaded. This
-can for example allow dynamic importing of the `MULTI_THREAD` feature after some contents
-have already been played on the main thread.
+  ```js
+  rxPlayer.loadVideo({
+    /* ... */
+    representationFilter: {
+      // This one is declared with that name worker-side through your worker bundle
+      // and will be used when the content loads in multithreading mode>
+      workerId: "my-representation-filter",
+      // This one s for when the content is loaded on main thread.
+      fn: myRepresentationFilterFunction,
+    },
+    manifestLoader: {
+      workerId: "my-manifest-loader",
+      fn: myManifestLoaderFunction,
+    },
+    segmentLoader: {
+      workerId: "my-segment-loader",
+      fn: mySegmentLoaderFunction,
+    },
+  });
+  ```
 
 ## How to rely on "multithread" mode
 
@@ -237,7 +281,7 @@ You can find it at any of the following places:
   This allows to bypass the need to store and serve separately that file.
 
   If you would prefer more control and a smaller bundle size, you may instead consider the
-  other following ways to it as a separate file.
+  other following ways to add it as a separate file.
 
 - With every release note published on GitHub as `worker.js` (you should only use the file
   linked to the RxPlayer's version you're using),
@@ -247,11 +291,17 @@ You can find it at any of the following places:
   example in the `node_modules` directory (most probably in `node_modules/rx-player/dist/`
   depending on your project).
 
+- For more advanced use cases (such as when relying on a
+  [`representationFilter`](../api/Loading_a_Content.md#representationfilter),
+  [`manifestLoader`](../api/Loading_a_Content.md#manifestloader) or a
+  [`segmentLoader`](../api/Loading_a_Content.md#segmentloader) callback), you may want
+  instead to define your [own worker bundle](./ImportableWorker.md).
+
 #### Optional: Obtaining DASH WASM parser
 
 Optionally, for very specific use-cases where you've seen improvements with it, you can
-also rely on our [DASH WebAssembly parser](./DASH_WASM_Parser.md) in those "multithread"
-scenarios. Note that this is unneeded for most usages.
+also rely on our [DASH WebAssembly parser](../api/Miscellaneous/DASH_WASM_Parser.md) in
+those "multithread" scenarios. Note that this is unneeded for most usages.
 
 To do this, you have to explicitely provide the corresponding WebAssembly file. Like for
 the worker file, it can either be found:
@@ -328,8 +378,8 @@ the `workerUrl` or `dashWasmUrl` are not accessible or if security mechanisms pr
 initialization of the Worker), the player may fail to load that content (in which case it
 will trigger an `"error"` event for it). Once the Promise rejects, the RxPlayer, won't try
 to load in "multithread" mode anymore (excepted cases where `attachWorker` is called
-another time and if the [`mode` `loadVideo` option](../Loading_a_Content.md#mode) has been
-set to `"multithread"`).
+another time and if the [`mode` `loadVideo` option](../api/Loading_a_Content.md#mode) has
+been set to `"multithread"`).
 
 Consequently, unless you want to optimize the loading time of the first loaded content, it
 can be considered safer and simpler to just await `attachWorker`'s returned Promise before
@@ -366,7 +416,7 @@ conditions and how you can still rely on the regular "main" mode for other conte
 
 You can know at any time whether a loaded content is relying on a WebWorker ("multithread"
 mode) or not ("main" mode), by calling the
-[`getCurrentModeInformation` method](../Playback_Information/getCurrentModeInformation.md):
+[`getCurrentModeInformation` method](../api/Playback_Information/getCurrentModeInformation.md):
 
 ```js
 const currentModeInfo = player.getCurrentModeInformation();
@@ -390,5 +440,6 @@ the WebWorker API (and thus could theoretically be compatible with the `MULTI_TH
 feature).
 
 If you need to provide support for the `MULTI_THREAD` feature on those platforms, we
-recommend that you use a transpiler tool on that worker file to make it compatible to ES5.
-Examples of transpiler tools are [babel](https://babeljs.io/) and [swc](https://swc.rs/).
+recommend that you [bundle the worker file on your side](./ImportableWorker.md) using a
+transpiler tool on in the process to make it compatible to ES5. Examples of transpiler
+tools are [babel](https://babeljs.io/) and [swc](https://swc.rs/).

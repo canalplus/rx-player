@@ -597,6 +597,17 @@ export interface IThumbnailDataResponseCoreMessage {
       };
 }
 
+/** Message sent by the application's Worker to the application in main thread. */
+export interface IAppDefinedCoreMessage {
+  type: CoreMessageType.AppDefined;
+  value: {
+    /** "name" for this event, application-defined. */
+    name: string;
+    /** application-defined payload for this event. */
+    payload: unknown;
+  };
+}
+
 export const enum CoreMessageType {
   AbortSourceBuffer = "abort-source-buffer",
   ActivePeriodChanged = "active-period-changed",
@@ -636,6 +647,7 @@ export const enum CoreMessageType {
   Warning = "warning",
   SegmentSinkStoreUpdate = "segment-sink-store-update",
   ThumbnailDataResponse = "thumbnail-response",
+  AppDefined = "app-defined",
 }
 
 export type ICoreMessage =
@@ -676,4 +688,5 @@ export type ICoreMessage =
   | IUpdatePlaybackRateCoreMessage
   | IWarningCoreMessage
   | ISegmentSinkStoreUpdateMessage
-  | IThumbnailDataResponseCoreMessage;
+  | IThumbnailDataResponseCoreMessage
+  | IAppDefinedCoreMessage;

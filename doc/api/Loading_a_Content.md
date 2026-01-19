@@ -33,21 +33,38 @@ Can be either:
 
 - **`"dash"` - for DASH contents.**
 
-  If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md),
-  you will need to add at least either one of the following features to be able to play
-  DASH contents:
-  - the `DASH` feature (rely on a generally-sufficient JavaScript parser)
+  Note that to be able to play DASH contents:
+  - for the default "main thread" RxPlayer mode:
 
-  - the `DASH_WASM` feature (backed by a WebAssembly parser, more efficient when handling
-    very large MPDs). More information in the
-    [`DASH_WASM` feature documentation](./Miscellaneous/DASH_WASM_Parser.md).
+    If you rely on the default RxPlayer export (importing it through the `"rx-player"`
+    path), DASH playback is already included.
 
-  - or both (which will use the latter only when available)
+    If you're using the
+    [minimal build of the player](../Getting_Started/Minimal_Player.md), add the `DASH`
+    feature [through our usual feature mechanism](./RxPlayer_Features.md).
+
+  - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
+
+    If you rely on our default worker file, The `DASH` feature is already included in it.
+
+    If you rely on an [importable worker](../Getting_Started/ImportableWorker.md), you
+    will need to add the `DASH` feature to it.
 
 - **`"smooth"` - for Microsoft Smooth Streaming contents**
 
-  If you're using the [minimal build of the player](../Getting_Started/Minimal_Player.md),
-  you will need to add at least the `SMOOTH` feature to be able to play Smooth contents.
+  Note that to be able to play Smooth contents:
+  - for the default "main thread" RxPlayer mode:
+
+    If you rely on the default RxPlayer export (importing it through the `"rx-player"`
+    path), Smooth playback is already included.
+
+    If you're using the
+    [minimal build of the player](../Getting_Started/Minimal_Player.md), add the `SMOOTH`
+    feature [through our usual feature mechanism](./RxPlayer_Features.md).
+
+  - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
+
+    Smooth transport is not yet available in that mode.
 
 - **`"directfile"` - for loading a video in _DirectFile_ mode, which allows to directly
   play media files** (example: `.mp4` or `.webm` files) without using a transport
@@ -67,16 +84,28 @@ Can be either:
 - `"metaplaylist"` for [MetaPlaylist](./Miscellaneous/MetaPlaylist.md) streams, which are
   a concatenation of multiple smooth and DASH contents
 
-  You will need to add at least the
-  [`METAPLAYLIST` experimental feature](./RxPlayer_Features.md) to be able to play those
-  contents.
+  Note that to be able to play MetaPlaylist contents:
+  - for the default "main thread" RxPlayer mode:
+
+    You will need to add add the `METAPLAYLIST` experimental feature
+    [through our usual feature mechanism](./RxPlayer_Features.md).
+
+  - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
+
+    MetaPlaylist transport is not yet available in that mode.
 
 - `"local"` for [local manifests](./Miscellaneous/Local_Contents.md), which allows to play
   downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
 
-  You will need to add at least the
-  [`LOCAL_MANIFEST` experimental feature](./RxPlayer_Features.md) to be able to play those
-  contents.
+  Note that to be able to play "local" contents:
+  - for the default "main thread" RxPlayer mode:
+
+    You will need to add add the `LOCAL_MANIFEST` experimental feature
+    [through our usual feature mechanism](./RxPlayer_Features.md).
+
+  - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
+
+    "local" transport is not yet available in that mode.
 
 Example:
 
@@ -480,7 +509,7 @@ contents if its request was done immediately before the `loadVideo` call.
 
 ### representationFilter
 
-_type_: `Function|string|undefined`
+_type_: `Function|string|Object|undefined`
 
 <div class="warning">
 This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
@@ -518,65 +547,36 @@ rxPlayer.loadVideo({
 });
 ```
 
+It can either be defined directly as a function - adapted when you don't initialize
+[multithreading](../Getting_Started/MultiThreading.md) capabilities - or as an object with
+at most the following values:
+
+- `fn` (`function|undefined`): Directly the function implementation, used for when the
+  content is loaded in main thread.
+
+  More info on that function's implementation can be found
+  [here](../api/Miscellaneous/plugins.md#representationfilter).
+
+  Can be `undefined` / not set, in which case we won't rely on a `representationFilter`
+  when loading in main thread.
+
+- `workerId` (`string|undefined`): The declared identifier for that `representationFilter`
+  function when the content is loaded in a `"multithreading"` mode. More information on
+  how to declare a `manifestLoader` implementation in a multithreading mode
+  [here](../Getting_Started/ImportableWorker.md).
+
+  Can be `undefined` / not set, in which case we won't rely on a `representationFilter`
+  when loading in `"multithreading"` mode.
+
 More information on it can be found
 [here](../api/Miscellaneous/plugins.md#representationfilter).
 
-#### Important considerations when in "multithread" mode
-
-Note that if you're running in the "multithread" mode, the `representationFilter` function
-might be run in a WebWorker environment and thus face several restrictions.
-
-- The function has to be defined as a string (note that defining a `representationFilter`
-  as a string also works in the regular "main" mode) which contains the function.
-
-  For example to filter only video Representation which are 1080p or lower, you should
-  write it completely under string form, like this:
-
-  ```js
-  `function (representation, context) {
-      if (context.trackType !== 'video') {
-        return true;
-      }
-      const height = representation.height;
-      return typeof height === 'number' ? height <= 1080 : true;
-    }`;
-  ```
-
-  To explain succintly how it works, the RxPlayer is then transforming it to a function
-  when in the right environment (WebWorker or main thread) by passing it through the
-  `Function` constructor (new Function(...)).
-
-  As the provided string will be executed, this option is sensible to attacks like
-  cross-site scripting. It is **VERY** important to either not rely on external (config,
-  user) input at all to produce that string, or if not possible to make sure that all
-  potential inputs will lead to expected behavior (an easy way of doing this for example
-  is too only allow inputed JS numbers, a whitelisted choice of properties etc.).
-
-- As you do not control the scope nor the realm in which it is run in, this function
-  should not use variables declared in its current outer scope, only on its declared
-  parameters. This also means that you should not rely on variables declared in things
-  like `window`.
-
-- It cannot access API that may not be available in a WebWorker or main thread
-  environment, as this function may run in one or the other. In particular this means: no
-  `document`, no `window`, no `localStorage`. Still note that many API are still available
-  in both environments: `JSON`, `Math`, `performance`, most JavaScript features...
-
-- It probably won't be transpiled by your building dependencies. This means that you
-  should refrain from using too new JS features that may not be supported natively by
-  targeted devices.
-
 ### segmentLoader
 
-_type_: `Function|undefined`
+_type_: `Function|Object|undefined`
 
 <div class="warning">
 This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-<div class="warning">
-This option cannot be relied on in <i>Multithread</i> mode (see <a href="./Miscellaneous/MultiThreading.md">
 transport option</a>)
 </div>
 
@@ -591,19 +591,33 @@ rxPlayer.loadVideo({
 });
 ```
 
-More info on it can be found [here](../api/Miscellaneous/plugins.md#segmentloader).
+It can either be defined directly as a function - adapted when you don't initialize
+[multithreading](../Getting_Started/MultiThreading.md) capabilities - or as an object with
+at most two values:
+
+- `fn` (`function|undefined`): Directly the function implementation, used for when the
+  content is loaded in main thread.
+
+  More info on the function's implementation can be found
+  [here](../api/Miscellaneous/plugins.md#segmentloader).
+
+  Can be `undefined` / not set, in which case we won't rely on a `segmentLoader` when
+  loading in main thread.
+
+- `workerId` (`string|undefined`): The declared identifier for that `segmentLoader`
+  function when the content is loaded in a `"multithreading"` mode. More information on
+  how to declare a `segmentLoader` implementation in a multithreading mode
+  [here](../Getting_Started/ImportableWorker.md).
+
+  Can be `undefined` / not set, in which case we won't rely on a `segmentLoader` when
+  loading in `"multithreading"` mode.
 
 ### manifestLoader
 
-_type_: `Function|undefined`
+_type_: `Function|Object|undefined`
 
 <div class="warning">
 This option has no effect in <i>DirectFile</i> mode (see <a href="#transport">
-transport option</a>)
-</div>
-
-<div class="warning">
-This option cannot be relied on in <i>Multithread</i> mode (see <a href="./Miscellaneous/MultiThreading.md">
 transport option</a>)
 </div>
 
@@ -618,7 +632,26 @@ rxPlayer.loadVideo({
 });
 ```
 
-More info on it can be found [here](../api/Miscellaneous/plugins.md#manifestloader).
+It can either be defined directly as a function - adapted when you don't initialize
+[multithreading](../Getting_Started/MultiThreading.md) capabilities - or as an object with
+at most two values:
+
+- `fn` (`function|undefined`): Directly the function implementation, used for when the
+  content is loaded in main thread.
+
+  More info on that function's implementation can be found
+  [here](../api/Miscellaneous/plugins.md#manifestloader).
+
+  Can be `undefined` / not set, in which case we won't rely on a `manifestLoader` when
+  loading in main thread.
+
+- `workerId` (`string|undefined`): The declared identifier for that `manifestLoader`
+  function when the content is loaded in a `"multithreading"` mode. More information on
+  how to declare a `manifestLoader` implementation in a multithreading mode
+  [here](../Getting_Started/ImportableWorker.md).
+
+  Can be `undefined` / not set, in which case we won't rely on a `manifestLoader` when
+  loading in `"multithreading"` mode.
 
 ### onCodecSwitch
 
@@ -858,7 +891,7 @@ It can be set to the following values:
 
   Note that there is several requirements to be able to run on `"multithread"` mode and
   several limitations, they are all documentend
-  [in the MultiThreading documentation page](Miscellaneous/MultiThreading.md).
+  [in the MultiThreading documentation page](../Getting_Started/MultiThreading.md).
 
 - `"auto"`; the RxPlayer will select either of those modes based on features enabled and
   options used. Basically it will run in `"multithread"` mode if possible and the `"main"`

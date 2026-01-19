@@ -17,10 +17,8 @@
 import { describe, it, beforeEach, afterEach, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
 import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
-import {
-  EMBEDDED_WORKER,
-  EMBEDDED_DASH_WASM,
-} from "../../../dist/es2017/__GENERATED_CODE/index.js";
+import { EMBEDDED_DASH_WASM } from "../../../dist/es2017/__GENERATED_CODE/index.js";
+import TestWorkerEmbed from "../../embedded_worker_bundle";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
 import {
@@ -52,7 +50,7 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
       player = new RxPlayer();
       if (multithread === true) {
         player.attachWorker({
-          workerUrl: EMBEDDED_WORKER,
+          workerUrl: TestWorkerEmbed,
           dashWasmUrl: EMBEDDED_DASH_WASM,
         });
       }
@@ -73,26 +71,58 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
       });
 
       it("should request the URL if one is given", async () => {
-        let manifestLoaderCalledTimes = 0;
+        let mainThreadManifestLoaderCalledTimes = 0;
+        let workerManifestLoaderCalledTimes = 0;
+        let validManifestLoaderCallTimes = 0;
+
         const manifestLoader = (man, callbacks) => {
+          mainThreadManifestLoaderCalledTimes++;
           expect(manifestInfos.url).to.equal(man.url);
-          manifestLoaderCalledTimes++;
           callbacks.fallback();
+          validManifestLoaderCallTimes++;
         };
         const segmentLoader = () => {
           // noop
         };
+
+        if (multithread === true) {
+          const workerInterface = player.getWorkerInterface();
+          expect(workerInterface).not.toBeNull();
+          workerInterface.addMessageListener("manifest-loader", (man) => {
+            workerManifestLoaderCalledTimes++;
+            expect(manifestInfos.url).to.equal(man.url);
+            validManifestLoaderCallTimes++;
+          });
+        }
+
         player.loadVideo({
           url: manifestInfos.url,
           transport: "dash",
           autoPlay: true,
-          manifestLoader,
-          segmentLoader,
+          manifestLoader: {
+            fn: manifestLoader,
+            workerId: "default-manifest-loader",
+          },
+          segmentLoader: {
+            fn: segmentLoader,
+            workerId: "hanging-segment-loader",
+          },
         });
 
-        await sleep(0);
+        await sleep(300);
 
-        expect(manifestLoaderCalledTimes).to.equal(1);
+        const mode = player.getCurrentModeInformation();
+        expect(mode).not.toBeNull();
+        expect(mode.useWorker).toEqual(multithread === true);
+        expect(mode.isDirectFile).toEqual(false);
+        expect(validManifestLoaderCallTimes).to.equal(1);
+        if (mode.useWorker) {
+          expect(mainThreadManifestLoaderCalledTimes).toEqual(0);
+          expect(workerManifestLoaderCalledTimes).toEqual(1);
+        } else {
+          expect(mainThreadManifestLoaderCalledTimes).toEqual(1);
+          expect(workerManifestLoaderCalledTimes).toEqual(0);
+        }
       });
     });
 
@@ -408,23 +438,55 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
         const representationInTheMiddle =
           videoRepresentations[Math.floor(initialNumberOfRepresentations / 2)];
 
-        let numberOfTimeRepresentationFilterIsCalledForVideo = 0;
+        let mainThreadVideoRepresentationFilterTimes = 0;
+        let workerVideoRepresentationFilterTimes = 0;
+
+        if (multithread === true) {
+          const workerInterface = player.getWorkerInterface();
+          expect(workerInterface).not.toBeNull();
+          workerInterface.addMessageListener(
+            "representation-filter",
+            ({ representation: _, context }) => {
+              if (context.trackType === "video") {
+                workerVideoRepresentationFilterTimes++;
+              }
+            },
+          );
+          workerInterface.sendMessage("limit-bitrate", representationInTheMiddle.bitrate);
+        }
+
         player.loadVideo({
           transport: manifestInfos.transport,
           url: manifestInfos.url,
-          representationFilter(representation, infos) {
-            if (infos.trackType === "video") {
-              numberOfTimeRepresentationFilterIsCalledForVideo++;
-              return representation.bitrate < representationInTheMiddle.bitrate;
-            }
-            return true;
+          representationFilter: {
+            fn: (representation, infos) => {
+              if (infos.trackType === "video") {
+                mainThreadVideoRepresentationFilterTimes++;
+                return representation.bitrate < representationInTheMiddle.bitrate;
+              }
+              return true;
+            },
+            workerId: "bitrate-limiting-representation-filter",
           },
         });
         await waitForLoadedStateAfterLoadVideo(player);
 
-        expect(numberOfTimeRepresentationFilterIsCalledForVideo).to.equal(
-          initialNumberOfRepresentations,
-        );
+        const mode = player.getCurrentModeInformation();
+        expect(mode).not.toBeNull();
+        expect(mode.useWorker).toEqual(multithread === true);
+        expect(mode.isDirectFile).toEqual(false);
+
+        if (mode.useWorker) {
+          expect(mainThreadVideoRepresentationFilterTimes).to.equal(0);
+          expect(workerVideoRepresentationFilterTimes).to.equal(
+            initialNumberOfRepresentations,
+          );
+        } else {
+          expect(mainThreadVideoRepresentationFilterTimes).to.equal(
+            initialNumberOfRepresentations,
+          );
+          expect(workerVideoRepresentationFilterTimes).to.equal(0);
+        }
 
         const currentVideoTrack = player
           .getAvailableVideoTracks()
@@ -478,14 +540,38 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
       };
 
       it("should pass through the custom manifestLoader for manifest requests", async () => {
+        let workerManifestLoaderCalledTimes = 0;
+        if (multithread === true) {
+          const workerInterface = player.getWorkerInterface();
+          expect(workerInterface).not.toBeNull();
+          workerInterface.addMessageListener("xhr-manifest-loader", () => {
+            workerManifestLoaderCalledTimes++;
+          });
+        }
+
         player.loadVideo({
           transport: manifestInfos.transport,
           url: manifestInfos.url,
-          manifestLoader: customManifestLoader,
+          manifestLoader: {
+            fn: customManifestLoader,
+            workerId: "xhr-manifest-loader",
+          },
         });
+
+        const mode = player.getCurrentModeInformation();
+        expect(mode).not.toBeNull();
+        expect(mode.useWorker).toEqual(multithread === true);
+        expect(mode.isDirectFile).toEqual(false);
+
         await waitForLoadedStateAfterLoadVideo(player);
 
-        expect(numberOfTimeCustomManifestLoaderWasCalled).to.equal(1);
+        if (mode.useWorker) {
+          expect(numberOfTimeCustomManifestLoaderWasCalled).to.equal(0);
+          expect(workerManifestLoaderCalledTimes).to.equal(1);
+        } else {
+          expect(numberOfTimeCustomManifestLoaderWasCalled).to.equal(1);
+          expect(workerManifestLoaderCalledTimes).to.equal(0);
+        }
       });
 
       it("should pass through the custom segmentLoader even when no hint is given about the URL", () => {
@@ -518,20 +604,50 @@ function runLoadVideoOptionsTests({ multithread } = {}) {
     </AdaptationSet>
   </Period>
   </MPD>`;
+
         return new Promise((res, rej) => {
-          player.loadVideo({
-            transport: manifestInfos.transport,
-            manifestLoader(_url, callbacks) {
-              callbacks.resolve({ data: fakeMpdWithoutBaseURLs });
-            },
-            segmentLoader(infos) {
-              expect(infos.url).to.satisfy(
+          if (multithread === true) {
+            const workerInterface = player.getWorkerInterface();
+            expect(workerInterface).not.toBeNull();
+            workerInterface.sendMessage("fake-manifest", fakeMpdWithoutBaseURLs);
+            workerInterface.addMessageListener("segment-loader", (info) => {
+              expect(info.url).to.satisfy(
                 (s) => s.includes("init-stream") || s.includes("chunk-stream"),
               );
               player.stop();
               res();
+            });
+          }
+
+          player.loadVideo({
+            transport: manifestInfos.transport,
+            manifestLoader: {
+              fn: (_url, callbacks) => {
+                callbacks.resolve({ data: fakeMpdWithoutBaseURLs });
+              },
+              workerId: "fake-manifest-manifest-loader",
+            },
+            segmentLoader: {
+              fn: (infos) => {
+                expect(infos.url).to.satisfy(
+                  (s) => s.includes("init-stream") || s.includes("chunk-stream"),
+                );
+                player.stop();
+                res();
+              },
+              workerId: "hanging-segment-loader",
             },
           });
+
+          try {
+            const mode = player.getCurrentModeInformation();
+            expect(mode).not.toBeNull();
+            expect(mode.useWorker).toEqual(multithread === true);
+            expect(mode.isDirectFile).toEqual(false);
+          } catch (err) {
+            rej(err);
+          }
+
           player.addEventListener("error", (err) => {
             rej(err);
           });

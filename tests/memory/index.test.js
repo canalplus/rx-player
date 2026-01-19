@@ -1,4 +1,5 @@
 import { expect, describe, afterEach, test } from "vitest";
+// TODO: rely on `dist` instead
 import RxPlayer from "../../src";
 import VideoThumbnailLoader, {
   DASH_LOADER,

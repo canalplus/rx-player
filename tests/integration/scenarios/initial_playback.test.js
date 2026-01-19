@@ -16,10 +16,8 @@
 
 import RxPlayer from "../../../src/index.ts";
 import { MULTI_THREAD } from "../../../src/experimental/features";
-import {
-  EMBEDDED_WORKER,
-  EMBEDDED_DASH_WASM,
-} from "../../../dist/es2017/__GENERATED_CODE/index.js";
+import { EMBEDDED_DASH_WASM } from "../../../dist/es2017/__GENERATED_CODE/index.js";
+import TestWorkerEmbed from "../../embedded_worker_bundle";
 import { manifestInfos } from "../../contents/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
 import waitForState, {
@@ -52,7 +50,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
       player = new RxPlayer();
       if (multithread === true) {
         player.attachWorker({
-          workerUrl: EMBEDDED_WORKER,
+          workerUrl: TestWorkerEmbed,
           dashWasmUrl: EMBEDDED_DASH_WASM,
         });
       }
@@ -266,31 +264,78 @@ function runInitialPlaybackTests({ multithread } = {}) {
       "should download first segment when wanted buffer ahead is under first segment duration",
       { timeout: 4000 },
       async function () {
-        let manifestLoaderCalledTimes = 0;
-        let segmentLoaderLoaderCalledTimes = 0;
+        let mainThreadManifestLoaderCalledTimes = 0;
+        let mainThreadSegmentLoaderCalledTimes = 0;
+        let workerManifestLoaderCalledTimes = 0;
+        let workerSegmentLoaderCalledTimes = 0;
+        let validManifestLoaderCallTimes = 0;
+
         const manifestLoader = (man, callbacks) => {
+          mainThreadManifestLoaderCalledTimes++;
           expect(manifestInfos.url).to.equal(man.url);
-          manifestLoaderCalledTimes++;
           callbacks.fallback();
+          validManifestLoaderCallTimes++;
         };
+
         const segmentLoader = (_, callbacks) => {
-          segmentLoaderLoaderCalledTimes++;
+          mainThreadSegmentLoaderCalledTimes++;
           callbacks.fallback();
         };
+
+        if (multithread === true) {
+          const workerInterface = player.getWorkerInterface();
+          expect(workerInterface).not.toBeNull();
+          workerInterface.addMessageListener("manifest-loader", (man) => {
+            workerManifestLoaderCalledTimes++;
+            expect(manifestInfos.url).to.equal(man.url);
+            validManifestLoaderCallTimes++;
+          });
+          workerInterface.addMessageListener("segment-loader", (_) => {
+            workerSegmentLoaderCalledTimes++;
+          });
+        }
+
         player.setWantedBufferAhead(2);
         player.loadVideo({
           transport: manifestInfos.transport,
           url: manifestInfos.url,
-          manifestLoader,
-          segmentLoader,
+          manifestLoader: {
+            fn: manifestLoader,
+            workerId: "default-manifest-loader",
+          },
+          segmentLoader: {
+            fn: segmentLoader,
+            workerId: "default-segment-loader",
+          },
         });
         await sleep(0);
 
-        expect(manifestLoaderCalledTimes).to.equal(1);
-        await sleep(3000);
-        expect(manifestLoaderCalledTimes).to.equal(1);
+        const mode = player.getCurrentModeInformation();
+        expect(mode).not.toBeNull();
+        expect(mode.useWorker).toEqual(multithread === true);
+        expect(mode.isDirectFile).toEqual(false);
 
-        expect(segmentLoaderLoaderCalledTimes).to.equal(4);
+        // should only have the manifest for now
+        expect(mainThreadManifestLoaderCalledTimes).to.equal(mode.useWorker ? 0 : 1);
+        expect(workerManifestLoaderCalledTimes).to.equal(0);
+        expect(validManifestLoaderCallTimes).to.equal(mode.useWorker ? 0 : 1);
+
+        await sleep(3000);
+
+        if (mode.useWorker) {
+          expect(mainThreadManifestLoaderCalledTimes).to.equal(0);
+          expect(workerManifestLoaderCalledTimes).to.equal(1);
+          expect(validManifestLoaderCallTimes).to.equal(1);
+          expect(mainThreadSegmentLoaderCalledTimes).to.equal(0);
+          expect(workerSegmentLoaderCalledTimes).to.equal(4);
+        } else {
+          expect(mainThreadManifestLoaderCalledTimes).to.equal(1);
+          expect(workerManifestLoaderCalledTimes).to.equal(0);
+          expect(validManifestLoaderCallTimes).to.equal(1);
+          expect(mainThreadSegmentLoaderCalledTimes).to.equal(4);
+          expect(workerSegmentLoaderCalledTimes).to.equal(0);
+        }
+
         expect(player.getCurrentBufferGap()).to.be.above(4);
         expect(player.getCurrentBufferGap()).to.be.below(5);
       },
@@ -300,33 +345,79 @@ function runInitialPlaybackTests({ multithread } = {}) {
       "should download more than the first segment when wanted buffer ahead is over the first segment duration",
       { timeout: 12000, retry: 2 },
       async function () {
-        let manifestLoaderCalledTimes = 0;
-        let segmentLoaderLoaderCalledTimes = 0;
+        let mainThreadManifestLoaderCalledTimes = 0;
+        let mainThreadSegmentLoaderCalledTimes = 0;
+        let workerManifestLoaderCalledTimes = 0;
+        let workerSegmentLoaderCalledTimes = 0;
+        let validManifestLoaderCallTimes = 0;
+
         const manifestLoader = (man, callbacks) => {
+          mainThreadManifestLoaderCalledTimes++;
           expect(manifestInfos.url).to.equal(man.url);
-          manifestLoaderCalledTimes++;
           callbacks.fallback();
+          validManifestLoaderCallTimes++;
         };
+
         const segmentLoader = (_, callbacks) => {
-          segmentLoaderLoaderCalledTimes++;
+          mainThreadSegmentLoaderCalledTimes++;
           callbacks.fallback();
         };
+
+        if (multithread === true) {
+          const workerInterface = player.getWorkerInterface();
+          expect(workerInterface).not.toBeNull();
+          workerInterface.addMessageListener("manifest-loader", (man) => {
+            workerManifestLoaderCalledTimes++;
+            expect(manifestInfos.url).to.equal(man.url);
+            validManifestLoaderCallTimes++;
+          });
+          workerInterface.addMessageListener("segment-loader", (_) => {
+            workerSegmentLoaderCalledTimes++;
+          });
+        }
+
         player.setWantedBufferAhead(20);
         player.loadVideo({
           transport: manifestInfos.transport,
           url: manifestInfos.url,
-          manifestLoader,
-          segmentLoader,
+          manifestLoader: {
+            fn: manifestLoader,
+            workerId: "default-manifest-loader",
+          },
+          segmentLoader: {
+            fn: segmentLoader,
+            workerId: "default-segment-loader",
+          },
         });
         await sleep(0);
 
-        expect(manifestLoaderCalledTimes).to.equal(1);
+        const mode = player.getCurrentModeInformation();
+        expect(mode).not.toBeNull();
+        expect(mode.useWorker).toEqual(multithread === true);
+        expect(mode.isDirectFile).toEqual(false);
+
+        // should only have the manifest for now
+        expect(mainThreadManifestLoaderCalledTimes).to.equal(mode.useWorker ? 0 : 1);
+        expect(workerManifestLoaderCalledTimes).to.equal(0);
+        expect(validManifestLoaderCallTimes).to.equal(mode.useWorker ? 0 : 1);
+
         await checkAfterSleepWithBackoff({ maxTimeMs: 10000 }, () => {
-          expect(manifestLoaderCalledTimes).to.equal(1);
-          expect(segmentLoaderLoaderCalledTimes).to.equal(12);
-          expect(player.getCurrentBufferGap()).to.be.above(18);
-          expect(player.getCurrentBufferGap()).to.be.below(30);
+          if (mode.useWorker) {
+            expect(mainThreadManifestLoaderCalledTimes).to.equal(0);
+            expect(workerManifestLoaderCalledTimes).to.equal(1);
+            expect(validManifestLoaderCallTimes).to.equal(1);
+            expect(mainThreadSegmentLoaderCalledTimes).to.equal(0);
+            expect(workerSegmentLoaderCalledTimes).to.equal(12);
+          } else {
+            expect(mainThreadManifestLoaderCalledTimes).to.equal(1);
+            expect(workerManifestLoaderCalledTimes).to.equal(0);
+            expect(validManifestLoaderCallTimes).to.equal(1);
+            expect(mainThreadSegmentLoaderCalledTimes).to.equal(12);
+            expect(workerSegmentLoaderCalledTimes).to.equal(0);
+          }
         });
+        expect(player.getCurrentBufferGap()).to.be.above(18);
+        expect(player.getCurrentBufferGap()).to.be.below(30);
       },
     );
 

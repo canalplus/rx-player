@@ -16,6 +16,7 @@ import CorePlaybackObserver from "../../playback_observer/core_playback_observer
 import type { IPlayerError, ITrackType } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
+import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { ILogFormat, ILoggerLevel } from "../../utils/logger";
 import { scaleTimestamp } from "../../utils/monotonic_timestamp";
 import objectAssign from "../../utils/object_assign";
@@ -35,6 +36,7 @@ import type {
 } from "../types";
 import { CoreMessageType } from "../types";
 import ContentPreparer from "./content_preparer";
+import type { ICorePlugins } from "./content_preparer";
 import createContentTimeBoundariesObserver from "./create_content_time_boundaries_observer";
 import type { IFreezeResolution } from "./FreezeResolver";
 import getBufferedDataPerMediaBuffer from "./get_buffered_data_per_media_buffer";
@@ -55,10 +57,13 @@ export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => vo
  * receive messages coming from the "main thread" part of the RxPlayer logic.
  * @param {Function} sendMessage - Function allowing to send messages to the
  * "main thread" part of the RxPlayer logic.
+ * @param {Object} corePlugins - Callbacks that may have been registered by
+ * the application if it loaded the core independantly as a worker.
  */
 export default function initializeCoreEntry(
   setMessageReceiver: (cb: IMessageReceiverCallback) => void,
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
+  corePlugins: ICorePlugins,
 ): void {
   const {
     DEFAULT_WANTED_BUFFER_AHEAD,
@@ -116,16 +121,26 @@ export default function initializeCoreEntry(
             msg.value.logFormat,
             msg.value.sendBackLogs,
           );
-          const dashWasmParser = features.dashParsers.wasm;
-          if (
-            dashWasmParser !== null &&
-            msg.value.dashWasmUrl !== undefined &&
-            dashWasmParser.isCompatible()
-          ) {
-            dashWasmParser.initialize({ wasmUrl: msg.value.dashWasmUrl }).catch((err) => {
-              const error = err instanceof Error ? err.toString() : "Unknown Error";
-              log.error("Core", "Could not initialize DASH_WASM parser", error);
-            });
+          if (!isNullOrUndefined(msg.value.dashWasmUrl)) {
+            const dashWasmParser = features.dashParsers.wasm;
+            if (dashWasmParser === null) {
+              log.error(
+                "Core",
+                "Could not initialize DASH_WASM parser: DASH_WASM feature not added",
+              );
+            } else if (!dashWasmParser.isCompatible()) {
+              log.warn(
+                "Core",
+                "Could not initialize DASH_WASM parser: Browser not compatible",
+              );
+            } else {
+              dashWasmParser
+                .initialize({ wasmUrl: msg.value.dashWasmUrl })
+                .catch((err) => {
+                  const error = err instanceof Error ? err.toString() : "Unknown Error";
+                  log.error("Core", "Could not initialize DASH_WASM parser", error);
+                });
+            }
           }
 
           if (!msg.value.hasVideo) {
@@ -146,7 +161,7 @@ export default function initializeCoreEntry(
         break;
 
       case MainThreadMessageType.PrepareContent:
-        prepareNewContent(sendMessage, contentPreparer, msg.value, refs);
+        prepareNewContent(sendMessage, contentPreparer, msg.value, refs, corePlugins);
         break;
 
       case MainThreadMessageType.StartPreparedContent: {
@@ -452,6 +467,10 @@ export default function initializeCoreEntry(
         break;
       }
 
+      case MainThreadMessageType.AppDefined: {
+        break;
+      }
+
       default:
         assertUnreachable(msg);
     }
@@ -466,24 +485,33 @@ export default function initializeCoreEntry(
  *   - etc.
  * @param {Function} sendMessage - Function allowing to send messages to the
  * "main thread" part of the RxPlayer logic.
- * @param {ContentPreparer} contentPreparer
+ * @param {ContentPreparer} contentPreparer - Interface allowing to setup and
+ * prepare a content.
  * @param {Object} contentInitData - Configuration wanted for the content to
  * load.
  * @param {Object} refs - Collection of so-called "references": values
  * configuring playback that may be updated at any time and that the
  * CoreEntry should react on.
+ * @param {Object} corePlugins - Callbacks that may have been registered by
+ * the application if it loaded the core independantly as a worker.
  */
 function prepareNewContent(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentPreparer: ContentPreparer,
   contentInitData: IContentInitializationData,
   refs: ICoreReferences,
+  corePlugins: ICorePlugins,
 ): void {
   contentPreparer
-    .initializeNewContent(sendMessage, contentInitData, {
-      limitResolution: { video: refs.limitVideoResolution },
-      throttleBitrate: { video: refs.throttleVideoBitrate },
-    })
+    .initializeNewContent(
+      sendMessage,
+      contentInitData,
+      {
+        limitResolution: { video: refs.limitVideoResolution },
+        throttleBitrate: { video: refs.throttleVideoBitrate },
+      },
+      corePlugins,
+    )
     .then(
       (manifest) => {
         sendMessage({

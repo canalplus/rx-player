@@ -397,8 +397,12 @@ events and so on.
 - [`createDebugElement`](../api/Miscellaneous/Debug_Element.md): Display a
   RxPlayer-specialized debugging element.
 
-- [`attachWorker`](../api/Miscellaneous/MultiThreading.md): Attach a WebWorker to the
-  RxPlayer instance to then be able to load contents in "multithread mode".
+- [`attachWorker`](../api/MultiThread/attachWorker.md): Attach a WebWorker to the RxPlayer
+  instance to then be able to load contents in "multithread mode".
+
+- [`getWorkerInterface`](../api/MultiThread/getWorkerInterface.md): Get interface to be
+  able to exchange message to the worker previously attached through an `attachWorker`
+  call.
 
 - [`getCurrentModeInformation`](../api/Playback_Information/getCurrentModeInformation.md):
   Returns information on which "mode" the current content is playing (e.g.:

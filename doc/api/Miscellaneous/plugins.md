@@ -469,12 +469,12 @@ video resolution higher than HD (1920x1080):
 ```js
 /**
  * @param {Object} representationInfo
- * @param {Object} infos - supplementary information about the given
+ * @param {Object} context - supplementary information about the given
  * Representation.
  * @returns {boolean}
  */
-function representationFilter(representationInfo, infos) {
-  if (infos.trackType === "video") {
+function representationFilter(representationInfo, context) {
+  if (context.trackType === "video") {
     // If video representation, allows only those for which the height and width
     // is known to be below our 1920x1080 limit
     const { width, height } = representationInfo;
