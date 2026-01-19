@@ -94,7 +94,9 @@ Can be either:
 
   - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
 
-    MetaPlaylist transport is not yet available in that mode.
+    You will need to rely on an
+    [importable worker](../Getting_Started/ImportableWorker.md), and add the
+    `METAPLAYLIST` feature to it.
 
 - `"local"` for [local manifests](./Miscellaneous/Local_Contents.md), which allows to play
   downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
