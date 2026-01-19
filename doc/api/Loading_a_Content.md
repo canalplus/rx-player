@@ -64,7 +64,9 @@ Can be either:
 
   - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
 
-    Smooth transport is not yet available in that mode.
+    You will need to rely on an
+    [importable worker](../Getting_Started/ImportableWorker.md), and add the `SMOOTH`
+    feature to it.
 
 - **`"directfile"` - for loading a video in _DirectFile_ mode, which allows to directly
   play media files** (example: `.mp4` or `.webm` files) without using a transport
