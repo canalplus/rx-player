@@ -1030,7 +1030,7 @@ export interface ITextTrack {
   forced: boolean | undefined;
   closedCaption: boolean;
   label?: string | undefined;
-  id: number | string;
+  id: string;
 }
 
 /**
