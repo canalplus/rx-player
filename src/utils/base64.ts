@@ -126,6 +126,29 @@ const base64codes = [
   47, 48, 49, 50, 51,
 ];
 
+// Not yet in ECMAScript, but present in most browsers
+// (2024 for SpiderMonkey, 2025 for V8)
+declare global {
+  interface Uint8Array {
+    // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tobase64
+    toBase64(options?: {
+      alphabet?: "base64" | "base64url";
+      omitPadding?: boolean;
+    }): string;
+  }
+
+  interface Uint8ArrayConstructor {
+    // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.frombase64
+    fromBase64(
+      base64: string,
+      options?: {
+        alphabet?: "base64" | "base64url";
+        lastChunkHandling?: "loose" | "strict" | "stop-before-partial";
+      },
+    ): Uint8Array<ArrayBuffer>;
+  }
+}
+
 /**
  * Obtain the value corresponding to a base64 char code.
  * /!\ Can throw if the char code given is invalid.
@@ -148,7 +171,10 @@ function getBase64Code(charCode: number): number {
  * @param {Array.<number>|Uint8Array} bytes
  * @returns {string}
  */
-export function bytesToBase64(bytes: number[] | Uint8Array): string {
+export function bytesToBase64(bytes: Uint8Array): string {
+  if (typeof bytes.toBase64 === "function") {
+    return bytes.toBase64();
+  }
   let result = "";
   let i;
   const length = bytes.length;
@@ -182,6 +208,9 @@ export function bytesToBase64(bytes: number[] | Uint8Array): string {
  * @returns {string}
  */
 export function base64ToBytes(str: string): Uint8Array<ArrayBuffer> {
+  if (typeof Uint8Array.fromBase64 === "function") {
+    return Uint8Array.fromBase64(str);
+  }
   const paddingNeeded = str.length % 4;
   let paddedStr = str;
   if (paddingNeeded !== 0) {
