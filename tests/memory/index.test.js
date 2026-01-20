@@ -9,6 +9,7 @@ import sleep from "../utils/sleep.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../utils/waitForPlayerState";
+import waitForState from "../utils/waitForPlayerState";
 
 let player;
 
@@ -167,9 +168,85 @@ describe("Memory tests", () => {
   );
 
   test(
-    "should not have a sensible memory leak after many video quality switches",
+    "should not have a sensible memory leak after many video quality switches in lazy mode",
     {
-      timeout: 15 * 60 * 1000,
+      timeout: 30 * 60 * 1000,
+      retry: 2,
+    },
+    async function () {
+      if (
+        window.performance == null ||
+        window.performance.memory == null ||
+        window.gc == null
+      ) {
+        // eslint-disable-next-line no-console
+        console.warn("API not available. Skipping test.");
+        return;
+      }
+      player = new RxPlayer({
+        initialVideoBitrate: Infinity,
+        initialAudiobitrate: Infinity,
+        preferredtexttracks: [{ language: "fra", closedcaption: true }],
+      });
+      await sleep(1000);
+      player.setWantedBufferAhead(5);
+      player.setMaxBufferBehind(5);
+      player.setMaxBufferAhead(15);
+      player.loadVideo({
+        url: manifestInfos.url,
+        transport: manifestInfos.transport,
+        autoPlay: false,
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+      const videoTrack = player.getVideoTrack();
+      if (videoTrack.representations.length <= 1) {
+        throw new Error(
+          "Not enough video Representations to perform sufficiently pertinent tests",
+        );
+      }
+      await sleep(5000);
+
+      window.gc();
+      await sleep(5000);
+      const initialMemory = window.performance.memory;
+
+      // Allows to alternate between two positions
+      let seekToBeginning = false;
+      for (let iterationIdx = 0; iterationIdx < 1000; iterationIdx++) {
+        if (seekToBeginning) {
+          player.seekTo(0);
+        } else {
+          player.seekTo(20);
+          seekToBeginning = true;
+        }
+        const repIdx = iterationIdx % videoTrack.representations.length;
+        player.lockVideoRepresentations({
+          representations: [videoTrack.representations[repIdx].id],
+          switchingMode: "lazy",
+        });
+        await sleep(1000);
+      }
+      await sleep(5000);
+      window.gc();
+      await sleep(10000);
+      const newMemory = window.performance.memory;
+      const heapDifference = newMemory.usedJSHeapSize - initialMemory.usedJSHeapSize;
+
+      // eslint-disable-next-line no-console
+      console.log(`
+      ===========================================================
+      | Current heap usage (B) | ${newMemory.usedJSHeapSize}
+      | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
+      | Difference (B)         | ${heapDifference}
+    `);
+      expect(heapDifference).to.be.below(9e6);
+    },
+  );
+
+  test(
+    "should not have a sensible memory leak after many video quality switches in reload mode",
+    {
+      timeout: 30 * 60 * 1000,
       retry: 2,
     },
     async function () {
@@ -219,8 +296,21 @@ describe("Memory tests", () => {
           seekToBeginning = true;
         }
         const repIdx = iterationIdx % videoTrack.representations.length;
-        player.lockVideoRepresentations([videoTrack.representations[repIdx].id]);
-        await sleep(1000);
+        const repId = videoTrack.representations[repIdx].id;
+        const nextResolve = new Promise((resolve) => {
+          const onChange = (rep) => {
+            if (rep?.id === repId) {
+              player.removeEventListener("videoRepresentationChange", onChange);
+              resolve();
+            }
+          };
+          player.addEventListener("videoRepresentationChange", onChange);
+        });
+        player.lockVideoRepresentations({
+          representations: [repId],
+          switchingMode: "reload",
+        });
+        await nextResolve;
       }
       await sleep(5000);
       window.gc();
