@@ -9,7 +9,6 @@ import sleep from "../utils/sleep.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../utils/waitForPlayerState";
-import waitForState from "../utils/waitForPlayerState";
 
 let player;
 
@@ -119,7 +118,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-      expect(heapDifference).to.be.below(7e6);
+      expect(heapDifference).to.be.below(3e6);
     },
   );
 
@@ -163,7 +162,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-      expect(heapDifference).to.be.below(7e6);
+      expect(heapDifference).to.be.below(2e6);
     },
   );
 
@@ -239,7 +238,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-      expect(heapDifference).to.be.below(9e6);
+      expect(heapDifference).to.be.below(2.5e6);
     },
   );
 
@@ -325,7 +324,7 @@ describe("Memory tests", () => {
       | Initial heap usage (B) | ${initialMemory.usedJSHeapSize}
       | Difference (B)         | ${heapDifference}
     `);
-      expect(heapDifference).to.be.below(9e6);
+      expect(heapDifference).to.be.below(2e6);
     },
   );
 
