@@ -154,13 +154,17 @@ export default function RepresentationStream<TSegmentDataType>(
     }
   }
 
-  segmentQueue.addEventListener("error", (err) => {
-    if (canceller.signal.isCancelled()) {
-      return; // ignore post requests-cancellation loading-related errors,
-    }
-    canceller.cancel("RepresentationStream: SegmentQueue err"); // Stop every operations
-    callbacks.error(err);
-  });
+  segmentQueue.addEventListener(
+    "error",
+    (err) => {
+      if (canceller.signal.isCancelled()) {
+        return; // ignore post requests-cancellation loading-related errors,
+      }
+      canceller.cancel("RepresentationStream: SegmentQueue err"); // Stop every operations
+      callbacks.error(err);
+    },
+    canceller.signal,
+  );
   segmentQueue.addEventListener("parsedInitSegment", onParsedChunk, canceller.signal);
   segmentQueue.addEventListener("parsedMediaSegment", onParsedChunk, canceller.signal);
   segmentQueue.addEventListener("emptyQueue", checkStatus, canceller.signal);
