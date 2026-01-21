@@ -37,7 +37,7 @@ const DEFAULT_RESULT_SERVER_PORT = 6789;
  *
  * TODO: GitHub actions fails when running the 128th browser. Find out why.
  */
-const TEST_ITERATIONS = 30;
+const TEST_ITERATIONS = 100;
 
 /**
  * `ChildProcess` instance of the current browser being run.
@@ -227,32 +227,49 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 
       console.warn("\nRetrying one time just to check if unlucky...");
 
-      results2 = await runPerformanceTests(browser);
+      results2 = await runPerformanceTests({
+        browser,
+        contentServerPort,
+        resultServerPort,
+        testPagePort,
+      });
       console.error("\nFinal result after 2 attempts\n-----------------------------\n");
 
-      if (results.better.length > 0) {
-        console.error(
-          "\nBetter performance at first attempt for tests:\n\n" +
-            formatResultAsMarkdownTable(results.better),
-        );
+      // Collect all regressions from both runs
+      const allRegressions = new Map();
+      for (const failure of results.worse) {
+        allRegressions.set(failure.testName, { first: failure, second: null });
       }
-      if (results2.better.length > 0) {
-        console.error(
-          "\nBetter performance at second attempt for tests:\n\n" +
-            formatResultAsMarkdownTable(results2.better),
-        );
+      for (const failure of results2.worse) {
+        const existing = allRegressions.get(failure.testName);
+        if (existing) {
+          existing.second = failure;
+        } else {
+          allRegressions.set(failure.testName, { first: null, second: failure });
+        }
       }
 
-      if (results.worse.length > 0) {
+      const confirmedRegressions = [];
+      const inconsistentResults = [];
+
+      for (const [_testName, { first, second }] of allRegressions) {
+        if (first && second) {
+          confirmedRegressions.push(first);
+        } else {
+          inconsistentResults.push(first || second);
+        }
+      }
+
+      if (confirmedRegressions.length > 0) {
         console.error(
           "\nWorse performance at first attempt for tests:\n\n" +
-            formatResultAsMarkdownTable(results.worse),
+            formatResultAsMarkdownTable(confirmedRegressions),
         );
       }
-      if (results2.worse.length > 0) {
+      if (inconsistentResults.length > 0) {
         console.warn(
-          "\nWorse performance at second attempt for tests:\n\n" +
-            formatResultAsMarkdownTable(results.worse),
+          "\nInconsistent results for tests (failed only one run):\n\n" +
+            formatResultAsMarkdownTable(inconsistentResults),
         );
       }
 
@@ -281,10 +298,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
             }
             const htmlReport = formatHtmlReport({
               success:
-                results.worse.length === 0 &&
-                (results2 === undefined ||
-                  results2 === null ||
-                  results2.worse.length === 0),
+                results.worse.length === 0 ||
+                (results2 !== null &&
+                  !results.worse.some((firstResult) =>
+                    results2.worse.some(
+                      (secondResult) => secondResult.testName === firstResult.testName,
+                    ),
+                  )),
               baseBranch: branchName,
               commitSha,
               firstRun: results,
@@ -408,6 +428,8 @@ function runPerformanceTests({
   resultServerPort = DEFAULT_RESULT_SERVER_PORT,
   testPagePort = DEFAULT_TEST_PAGE_PORT,
 }) {
+  allSamples.current.length = 0;
+  allSamples.previous.length = 0;
   return new Promise((resolve, reject) => {
     let isFinished = false;
     let contentServer;
@@ -678,6 +700,7 @@ function startNextTaskOrFinish(onFinished) {
   const nextTask = tasks.shift();
   if (nextTask === undefined) {
     onFinished();
+    return;
   }
   return nextTask();
 }
@@ -1028,14 +1051,14 @@ function getUValueFromSamples(sampleCurrent, samplePrevious) {
  * @returns {Object}
  */
 function getResultsForSample(sample) {
-  sample.sort();
+  sample.sort((a, b) => a - b);
   let median;
   if (sample.length === 0) {
     median = 0;
   } else {
     median =
       sample.length % 2 === 0
-        ? sample[sample.length / 2 - 1] + sample[sample.length / 2] / 2
+        ? (sample[sample.length / 2 - 1] + sample[sample.length / 2]) / 2
         : sample[Math.floor(sample.length / 2)];
   }
   const mean = sample.reduce((acc, x) => acc + x, 0) / sample.length;
