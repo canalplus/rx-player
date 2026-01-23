@@ -206,7 +206,9 @@ jobs:
         run: npm run update-version "${{ steps.get_version.outputs.version }}"
 
       - name: Build and publish dev version
-        run: npm publish --tag dev --provenance
+        run: |
+          npm run build
+          npm publish --tag dev --provenance
 
       - name: Apply Canal+ patch
         run: git apply ./scripts/canal-release.patch
@@ -215,8 +217,9 @@ jobs:
         run: npm run update-version "${{ steps.get_version.outputs.canal_version }}"
 
       - name: Build and publish Canal version
-
-        run: npm publish --tag canal --provenance
+        run: |
+          npm run build
+          npm publish --tag canal --provenance
 
   publish_official:
     if: needs.determine_release_type.outputs.release_type == 'official'
@@ -287,4 +290,6 @@ jobs:
           git push origin stable
 
       - name: Build and publish official release
-        run: npm publish --provenance
+        run: |
+          npm run build
+          npm publish --provenance
