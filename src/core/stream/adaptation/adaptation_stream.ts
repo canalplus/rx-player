@@ -215,12 +215,12 @@ export default function AdaptationStream(
    * error or on some cancellation.
    * @param {Object} choice - The last Representations choice that has been
    * made.
-   * @param {Object} fnCancelSignal - `CancellationSignal` allowing to cancel
-   * everything this function is doing and free all related resources.
+   * @param {Object} repsChoiceCancelSignal - `CancellationSignal` allowing to
+   * cancel everything this function is doing and free all related resources.
    */
   async function onRepresentationsChoiceChange(
     choice: IRepresentationsChoice,
-    fnCancelSignal: CancellationSignal,
+    repsChoiceCancelSignal: CancellationSignal,
   ): Promise<void> {
     // First check if we should perform any action regarding what was previously
     // in the buffer
@@ -243,7 +243,7 @@ export default function AdaptationStream(
         return queueMicrotask(() => {
           playbackObserver.listen(
             () => {
-              if (fnCancelSignal.isCancelled()) {
+              if (repsChoiceCancelSignal.isCancelled()) {
                 return;
               }
               const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
@@ -255,7 +255,7 @@ export default function AdaptationStream(
                 stayInPeriod: true,
               });
             },
-            { includeLastObservation: true, clearSignal: fnCancelSignal },
+            { includeLastObservation: true, clearSignal: repsChoiceCancelSignal },
           );
         });
 
@@ -263,13 +263,13 @@ export default function AdaptationStream(
       case "clean-buffer": // Just clean
         for (const range of switchStrat.value) {
           await segmentSink.removeBuffer(range.start, range.end);
-          if (fnCancelSignal.isCancelled()) {
+          if (repsChoiceCancelSignal.isCancelled()) {
             return;
           }
         }
         if (switchStrat.type === "flush-buffer") {
           callbacks.needsBufferFlush();
-          if (fnCancelSignal.isCancelled()) {
+          if (repsChoiceCancelSignal.isCancelled()) {
             return;
           }
         }
@@ -278,7 +278,7 @@ export default function AdaptationStream(
         assertUnreachable(switchStrat);
     }
 
-    recursivelyCreateRepresentationStreams(fnCancelSignal);
+    recursivelyCreateRepresentationStreams(repsChoiceCancelSignal);
   }
 
   /**
@@ -410,22 +410,34 @@ export default function AdaptationStream(
    * indicating that the `RepresentationStream` should stop what it's doing.
    * @param {Object} representationStreamCallbacks - Callbacks to call on
    * various `RepresentationStream` events.
-   * @param {Object} fnCancelSignal - `CancellationSignal` which will abort
-   * anything this function is doing and free allocated resources.
+   * @param {Object} globalCancelSignal - `CancellationSignal` which will
+   * immediately clean every resources allocated by this function.
    */
   function createRepresentationStream(
     representation: IRepresentation,
     terminateCurrentStream: IReadOnlySharedReference<ITerminationOrder | null>,
     representationStreamCallbacks: IRepresentationStreamCallbacks,
-    fnCancelSignal: CancellationSignal,
+    globalCancelSignal: CancellationSignal,
   ): void {
     /** Set to `true` if we've encountered an error with this `RepresentationStream` */
     let hasEncounteredError = false;
 
-    const bufferGoalCanceller = new TaskCanceller(
-      "AdaptationStream: BufferGoal " + adaptation.type,
+    /**
+     * Construct a `TaskCanceller`, triggered once the `RepresentationStream` we
+     * will create here announces that it is "terminating" (implies that it is
+     * done loading new data and will clean itself automatically once it has
+     * pushed all loaded segments).
+     *
+     * We keep it distinct from `globalCancelSignal` as the latter's lifetime may
+     * be much much longer than our `RepresentationStream`'s.
+     * Thus it wouldn't be adapted as a canceller for the listeners we're
+     * registering here.
+     */
+    const terminatingCanceller = new TaskCanceller(
+      "RepresentationStream-linked listeners in AdaptationStream - " +
+        `periodStart=${period.start} type=${adaptation.type}`,
     );
-    bufferGoalCanceller.linkToSignal(fnCancelSignal);
+    terminatingCanceller.linkToSignal(globalCancelSignal);
 
     /** Actually built buffer size, in seconds. */
     const bufferGoal = createMappedReference(
@@ -433,7 +445,7 @@ export default function AdaptationStream(
       (prev) => {
         return getBufferGoal(representation, prev);
       },
-      bufferGoalCanceller.signal,
+      terminatingCanceller.signal,
     );
 
     const maxBufferSize =
@@ -480,20 +492,21 @@ export default function AdaptationStream(
 
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
-          cancellableSleep(4000, fnCancelSignal)
+          // If the `RepresentationStream` was terminating anyway, just exits
+          cancellableSleep(4000, terminatingCanceller.signal)
             .then(() => {
               return createRepresentationStream(
                 representation,
                 terminateCurrentStream,
                 representationStreamCallbacks,
-                fnCancelSignal,
+                globalCancelSignal,
               );
             })
             .catch(noop);
         }
       },
       terminating() {
-        bufferGoalCanceller.cancel("Representation terminating");
+        terminatingCanceller.cancel("Representation terminating");
         representationStreamCallbacks.terminating();
       },
     });
@@ -512,7 +525,16 @@ export default function AdaptationStream(
         },
       },
       updatedCallbacks,
-      fnCancelSignal,
+      // NOTE: We give the long-lived `globalCancelSignal` here (and not
+      // `terminatingCanceller.signal`) on purpose.
+      // `RepresentationStream` should clean-up themselves automatically based
+      // on their `terminate` parameter.
+      //
+      // This `CancellationSignal` is a killswitch which if triggered too
+      // soon might interrupt some async operations done when this
+      // `RepresentationStream` is terminating: e.g. stop pushing the segments
+      // it has just loaded.
+      globalCancelSignal,
     );
 
     // reload if the Representation disappears from the Manifest
@@ -525,7 +547,7 @@ export default function AdaptationStream(
               if (updated.adaptation === adaptation.id) {
                 for (const rep of updated.removedRepresentations) {
                   if (rep === representation.id) {
-                    if (fnCancelSignal.isCancelled()) {
+                    if (terminatingCanceller.isUsed()) {
                       return;
                     }
                     return callbacks.waitingMediaSourceReload({
@@ -543,7 +565,7 @@ export default function AdaptationStream(
           }
         }
       },
-      fnCancelSignal,
+      terminatingCanceller.signal,
     );
   }
 
