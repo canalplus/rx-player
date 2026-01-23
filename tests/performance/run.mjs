@@ -496,11 +496,9 @@ async function linkCurrentRxPlayer() {
   await removeDir(innerNodeModulesPath);
   await fsProm.mkdir(innerNodeModulesPath);
   const rxPlayerPath = path.join(innerNodeModulesPath, "rx-player");
-  await spawnProc(
-    "npm run build",
-    [],
-    (code) => new Error(`npm run build exited with code ${code}`),
-  ).promise;
+  await spawnProc("npm", ["run", "build"], {
+    parseError: (code) => new Error(`npm run build exited with code ${code}`),
+  }).promise;
   await fsProm.symlink(path.join(currentDirectory, "..", ".."), rxPlayerPath);
 }
 
@@ -527,21 +525,17 @@ async function linkRxPlayerBranch({ branchName, remoteGitUrl }) {
     remoteGitUrl ??
     (await execCommandAndGetFirstOutput("git config --get remote.origin.url"));
   url = url.trim();
-  await spawnProc(
-    `git clone -b ${branchName} ${url} ${rxPlayerPath}`,
-    [],
-    (code) => new Error(`git clone exited with code ${code}`),
-  ).promise;
-  await spawnProc(
-    `cd ${rxPlayerPath} && npm install`,
-    [],
-    (code) => new Error(`npm install failed with code ${code}`),
-  ).promise;
-  await spawnProc(
-    `cd ${rxPlayerPath} && npm run build`,
-    [],
-    (code) => new Error(`npm run build exited with code ${code}`),
-  ).promise;
+  await spawnProc("git", ["clone", "-b", branchName, url, rxPlayerPath], {
+    parseError: (code) => new Error(`git clone exited with code ${code}`),
+  }).promise;
+  await spawnProc("npm", ["install"], {
+    cwd: rxPlayerPath,
+    parseError: (code) => new Error(`npm install failed with code ${code}`),
+  }).promise;
+  await spawnProc("npm", ["run", "build"], {
+    cwd: rxPlayerPath,
+    parseError: (code) => new Error(`npm run build exited with code ${code}`),
+  }).promise;
 
   // GitHub actions, for unknown reasons, want to use the root's `dist` directory
   // TODO: find why
@@ -1006,16 +1000,18 @@ async function createBundle(options) {
 /**
  * @param {string} command
  * @param {Array.<string>} args
- * @param {Function|undefined} [errorOnCode]
+ * @param {Object} [params]
+ * @param {string|undefined} [params.cwd]
+ * @param {Function|undefined} [params.parseError]
  * @returns {Object}
  */
-function spawnProc(command, args, errorOnCode) {
+function spawnProc(command, args, { cwd, parseError } = {}) {
   let child;
   const prom = new Promise((res, rej) => {
-    child = spawn(command, args, { shell: true, stdio: "inherit" });
+    child = spawn(command, args, { cwd, stdio: "inherit" });
     child.on("close", (code) => {
-      if (code !== 0 && typeof errorOnCode === "function") {
-        rej(errorOnCode(code));
+      if (code !== 0 && typeof parseError === "function") {
+        rej(parseError(code));
       }
       res();
     });
