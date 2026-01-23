@@ -1,5 +1,21 @@
 # Changelog
 
+## Current dev build: v4.5.0-dev.2026012300
+
+### Features
+
+- `MULTI_THREAD`: Allow applications to define their own complex logic worker-side [#1719]
+- Add optional `LOCAL_MANIFEST` feature to our importable worker [#1782]
+
+### Bug fixes
+
+- Fix memory leaks linked to quality changes [#1781]
+
+### Other improvements
+
+- Text track id can only be string [#1785]
+- The reload API now only throws if no `loadVideo` call has been made before [#1767]
+
 ## v4.4.1 (2025-12-10)
 
 ### Bug fixes
