@@ -2,7 +2,8 @@
 /* eslint-env node */
 
 import { exec, spawn } from "child_process";
-import * as fs from "fs/promises";
+import * as fs from "fs";
+import * as fsProm from "fs/promises";
 import { createServer } from "http";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
@@ -10,7 +11,6 @@ import launchStaticServer from "../../scripts/launch_static_server.mjs";
 import removeDir from "../../scripts/utils/remove_dir.mjs";
 import runBundler from "../../scripts/run_bundler.mjs";
 import createContentServer from "../contents/server.mjs";
-import { rmSync, writeFileSync } from "fs";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -158,7 +158,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (reportFile !== undefined) {
     try {
       console.log(`Removing previous report file if it exists ("${reportFile}")`);
-      rmSync(reportFile);
+      fs.rmSync(reportFile);
     } catch (_) {
       // We don't really care here
     }
@@ -261,7 +261,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
               firstRun: results,
               secondRun: results2,
             });
-            writeFileSync(reportFile, htmlReport);
+            fs.writeFileSync(reportFile, htmlReport);
           } catch (err) {
             console.error(`WARNING: Cannot write report: ${err.toString()}`);
           }
@@ -494,14 +494,14 @@ async function linkCurrentRxPlayer() {
 
   const innerNodeModulesPath = path.join(currentDirectory, "node_modules");
   await removeDir(innerNodeModulesPath);
-  await fs.mkdir(innerNodeModulesPath);
+  await fsProm.mkdir(innerNodeModulesPath);
   const rxPlayerPath = path.join(innerNodeModulesPath, "rx-player");
   await spawnProc(
     "npm run build",
     [],
     (code) => new Error(`npm run build exited with code ${code}`),
   ).promise;
-  await fs.symlink(path.join(currentDirectory, "..", ".."), rxPlayerPath);
+  await fsProm.symlink(path.join(currentDirectory, "..", ".."), rxPlayerPath);
 }
 
 /**
@@ -521,7 +521,7 @@ async function linkRxPlayerBranch({ branchName, remoteGitUrl }) {
 
   const innerNodeModulesPath = path.join(currentDirectory, "node_modules");
   await removeDir(innerNodeModulesPath);
-  await fs.mkdir(innerNodeModulesPath);
+  await fsProm.mkdir(innerNodeModulesPath);
   const rxPlayerPath = path.join(innerNodeModulesPath, "rx-player");
   let url =
     remoteGitUrl ??
@@ -545,7 +545,7 @@ async function linkRxPlayerBranch({ branchName, remoteGitUrl }) {
 
   // GitHub actions, for unknown reasons, want to use the root's `dist` directory
   // TODO: find why
-  await fs.symlink(
+  await fsProm.symlink(
     path.join(rxPlayerPath, "dist"),
     path.join(currentDirectory, "..", "..", "dist"),
   );
@@ -977,7 +977,7 @@ function getSamplePerScenarios(samplesObj) {
  * @param {Object} options
  * @param {Object} options.output - The output file
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
- * @param {boolean} [options.production] - If `false`, the code will be compiled
+ * @param {boolean} [options.production=true] - If `false`, the code will be compiled
  * in "development" mode, which has supplementary assertions.
  * @returns {Promise}
  */
@@ -988,7 +988,7 @@ async function createBundle(options) {
       minify,
       silent: true,
       globalScope: false,
-      production: true,
+      production: options.production ?? true,
       watch: false,
       outfile: path.join(currentDirectory, options.output),
       globals: {
@@ -999,7 +999,7 @@ async function createBundle(options) {
       },
     });
   } catch (err) {
-    throw new Error(`Performance build failed:`, err);
+    throw new Error(`Performance build failed: ${err}`);
   }
 }
 
