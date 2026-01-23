@@ -116,6 +116,7 @@ jobs:
           sudo add-apt-repository multiverse && sudo apt update && sudo apt install -y
           ubuntu-restricted-extras
       - run: npm ci
+      - run: npm run build
       - run: npm run test:memory
 
   performance_tests:
