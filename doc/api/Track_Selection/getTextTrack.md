@@ -8,8 +8,8 @@ right now.
 If a text track is set and information about it is known, this method will return an
 object with the following properties:
 
-- `id` (`Number|string`): The id used to identify this track. No other text track for the
-  same [Period](../../Getting_Started/Glossary.md#period) will have the same `id`.
+- `id` (`string`): The id used to identify this track. No other text track for the same
+  [Period](../../Getting_Started/Glossary.md#period) will have the same `id`.
 
   This can be useful when setting the track through the `setTextTrack` method.
 
