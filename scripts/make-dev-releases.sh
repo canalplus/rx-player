@@ -1,39 +1,59 @@
 #!/bin/bash
 
-# make-dev-releases
-# =================
-#
-# This script produces pre-releases on top of the current branch for the
-# `dev` and `canal` versions (as per their npm tags).
-#
-# To use it:
-#
-#   1. Be sure that you're on the branch corresponding to the pre-release you
-#      want to publish, at the repository's root directory.
-#
-#   2. Call this script.
-#
-#      You may optionally provide two arguments:
-#
-#        - the version number (e.g. 5.124.13)
-#
-#        - the "increment number", set to `00` by default (as is wanted for the
-#          first and hopefully only release in a given day).
-#
-#          This is for cases where you're doing multiple releases in a single
-#          day, allowing you to increment that value for each of these releases
-#          and avoid release naming conflicts.
-#
-#      If you forget one of those arguments or both, the script will ask you
-#      to enter those instead.
-#
-#   3. When the script asks you to confirm, check that the preceding commands
-#      did not output any issue and if it didn't you can confirm.
-#
-#   4. That's it!
-#
-#      If everything goes right, dev releases will be generated server-side
-#      once the right tag is created an pushed.
+# Document how to use this script and what it is for
+help() {
+  cat <<EOF
+make-dev-releases.sh
+--------------------
+
+This script produces pre-releases on top of the current branch for the
+\`dev\` and \`canal\` versions (as per their npm tags).
+
+To use it:
+
+  1. Be sure that you're on the branch corresponding to the pre-release you
+     want to publish, at the repository's root directory.
+
+  2. Call this script.
+
+     You may optionally provide two arguments:
+
+       - the version number (e.g. 5.124.13)
+
+       - the "increment number", set to \`00\` by default (as is wanted for the
+         first and hopefully only release in a given day).
+
+         This is for cases where you're doing multiple releases in a single
+         day, allowing you to increment that value for each of these releases
+         and avoid release naming conflicts.
+
+     If you forget one of those arguments or both, the script will ask you
+     to enter those instead.
+
+  3. When the script asks you to confirm, check that the preceding commands
+     did not output any issue and if it didn't you can confirm.
+
+  4. That's it!
+
+     If everything goes right, dev releases will be generated server-side
+     once the right tag is created an pushed.
+
+Usage: $0 [OPTIONS] [VERSION] [INCREMENT]
+
+Options:
+  -h, --help       Show this help message and exit
+EOF
+}
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
+
+# Check for --help flag
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -h|--help) help; exit 0;;
+  esac
+done
 
 set -e
 

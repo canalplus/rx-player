@@ -1,13 +1,56 @@
 #!/bin/bash
 
-# package_live_content.sh
-# =======================
-#
-# This script creates and package a live DASH content from scratch by relying on
-# `ffmpeg` (which has to be installed locally) and the shaka-packager (which
-# will be downloaded if not found locally in a directory called `tmp`).
-#
-# To see configuration options, run this script with the `--help` flag.
+# Document how to use this script and what it is for
+help() {
+  cat <<EOF
+package_live_content.sh
+-----------------------
+
+This script creates and package a live DASH content from scratch by relying on
+\`ffmpeg\` (which has to be installed locally) and the shaka-packager (which
+will be downloaded if not found locally in a directory called \`tmp\`).
+
+Usage: $0 <OPTIONS>
+
+Options:
+
+  --segment-duration <duration>         Duration a single segment will have, in seconds.
+                                        Defaults to $SEGMENT_DURATION (seconds).
+
+  --framerate <duration>                Frame-rate of video Representations from that content,
+                                        in frames per second.
+                                        Defaults to $FRAME_RATE.
+
+  --timeshift-buffer-depth <depth>      Depth of retained segments behind the last generated
+                                        segment, in seconds.
+                                        Defaults to $TIMESHIFT_BUFFER_DEPTH ($((TIMESHIFT_BUFFER_DEPTH / 60)) minutes).
+
+  --output-dir <directory>              Output directory for the generated content. Can be an 
+                                        absolute or a relative path.
+                                        Defaults to '$OUTPUT_DIR'.
+
+  --no-confirmation                     If set, this script will never ask for confirmation and
+                                        just validate all prompts.
+                                        Intended for automated scripts.
+
+  --encrypted                           If set all video and audio will be encrypted with the same
+                                        key.
+                                        ( key_id =  $DEFAULT_KID
+                                          key    =  $DEFAULT_KEY )
+
+  --base-port <port>                    Base UDP port number where media encoded by ffmpeg will be
+                                        communicated to the shaka-packager.
+                                        $NB_PORTS_USED consecutive ports starting from this number will be used.
+                                        Update this if the default ones conflict in your case.
+                                        Defaults to $BASE_PORT (uses ports $BASE_PORT-$((BASE_PORT + NB_PORTS_USED - 1))).
+
+  --shaka-path <path>                   Path to the shaka-packager binary. If not specified,
+                                        the script will search for it in common locations and at
+                                        last resort, try to load it from the web (you'll be asked
+                                        for confirmation).
+
+EOF
+}
 
 # TODO: Multiple keys optionally
 # TODO: Detect if shaka-packager from previous script may be already running
@@ -83,52 +126,6 @@ sanitize_directory_path() {
     path="$(pwd)/$path"
   fi
   echo "$path"
-}
-
-# Will be called if given options are not in a valid format
-show_usage() {
-  cat <<EOF
-Usage: $0 <OPTIONS>
-
-Options:
-
-  --segment-duration <duration>         Duration a single segment will have, in seconds.
-                                        Defaults to $SEGMENT_DURATION (seconds).
-
-  --framerate <duration>                Frame-rate of video Representations from that content,
-                                        in frames per second.
-                                        Defaults to $FRAME_RATE.
-
-  --timeshift-buffer-depth <depth>      Depth of retained segments behind the last generated
-                                        segment, in seconds.
-                                        Defaults to $TIMESHIFT_BUFFER_DEPTH ($((TIMESHIFT_BUFFER_DEPTH / 60)) minutes).
-
-  --output-dir <directory>              Output directory for the generated content. Can be an 
-                                        absolute or a relative path.
-                                        Defaults to '$OUTPUT_DIR'.
-
-  --no-confirmation                     If set, this script will never ask for confirmation and
-                                        just validate all prompts.
-                                        Intended for automated scripts.
-
-  --encrypted                           If set all video and audio will be encrypted with the same
-                                        key.
-                                        ( key_id =  $DEFAULT_KID
-                                          key    =  $DEFAULT_KEY )
-
-  --base-port <port>                    Base UDP port number where media encoded by ffmpeg will be
-                                        communicated to the shaka-packager.
-                                        $NB_PORTS_USED consecutive ports starting from this number will be used.
-                                        Update this if the default ones conflict in your case.
-                                        Defaults to $BASE_PORT (uses ports $BASE_PORT-$((BASE_PORT + NB_PORTS_USED - 1))).
-
-  --shaka-path <path>                   Path to the shaka-packager binary. If not specified,
-                                        the script will search for it in common locations and at
-                                        last resort, try to load it from the web (you'll be asked
-                                        for confirmation).
-
-EOF
-  exit 1
 }
 
 check_if_output_contain_media_files() {
@@ -318,10 +315,12 @@ on_no_packager_found() {
   return 0
 }
 
-requires_cmd printf
-requires_cmd find
+# Set up traps for cleanup on script exit/interruption
+trap 'cleanup; exit 130' INT
+trap 'cleanup; exit 143' TERM
+trap 'cleanup; exit 0' EXIT
 
-# Parse command line options
+# Parse flags
 while [[ $# -gt 0 ]]; do
   case $1 in
   --segment-duration)
@@ -403,15 +402,23 @@ while [[ $# -gt 0 ]]; do
     KEY=$DEFAULT_KEY
     ;;
   --help)
-    show_usage
+    help
+    exit 0
     ;;
   *)
     printf "Error: Unknown option: %s\n" "$1"
-    show_usage
+    help
+    exit 1
     ;;
   esac
   shift
 done
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
+
+requires_cmd printf
+requires_cmd find
 
 # Validate encryption keys if provided
 if [[ -n "$KEY_ID" ]] && ! validate_hex_key "$KEY_ID"; then
@@ -425,13 +432,6 @@ fi
 if ! check_port_range "$BASE_PORT"; then
   err "Port range starting from %d would exceed valid port range (1-65535).\n" "$BASE_PORT"
 fi
-
-# Set up traps for cleanup on script exit/interruption
-trap 'cleanup; exit 130' INT
-trap 'cleanup; exit 143' TERM
-trap 'cleanup; exit 0' EXIT
-
-set -e
 
 # Create output directory with proper error handling
 if ! mkdir -p "$OUTPUT_DIR"; then

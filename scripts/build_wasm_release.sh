@@ -1,6 +1,32 @@
 #!/bin/bash
 
-# TODO documentation
+# Document how to use this script and what it is for
+help() {
+  cat <<EOF
+build_wasm_release.sh
+---------------------
+
+Compile the RxPlayer's MPD parser written in Rust into an optimized WebAssembly
+file: \`dist/mpd-parser.wasm\`.
+This is a step of RxPlayer's building process.
+
+Usage: $0 [OPTIONS]
+
+Options:
+  -h, --help       Show this help message and exit
+EOF
+}
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
+
+# Check for --help flag
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -h|--help) help; exit 0;;
+  *) echo "Unknown option: $1"; echo ""; help; exit 1 ;;
+  esac
+done
 
 print_toolchain_installation_notice() {
   echo ""
@@ -55,8 +81,8 @@ fi
 
 # Move to MPD parser directory
 if ! cd ./src/parsers/manifest/dash/wasm-parser; then
-	echo "ERROR: wasm-parser directory not found"
-	exit 1
+  echo "ERROR: wasm-parser directory not found"
+  exit 1
 fi
 echo " 🦀 Building mpd-parser WebAssembly file with Cargo..."
 if $has_local_cargo; then

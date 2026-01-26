@@ -1,28 +1,57 @@
 #!/bin/bash
 
-# install_shaka_packager.sh
-# =========================
-#
-# This script tries to load locally the shaka-packager (as ./tmp/shaka-packager)
-# compatible with the current platorm (e.g. MacOS ARM, Linux x86_64 etc.).
-#
-# If a compatible binary is found, it loads it, adds executable permissions to
-# it and exit with exit code `0`.
-#
-# If any detected error happens, including:
-#   - no shaka-packager is found for the current platform
-#   - we're unable to determine the current platform
-#   - loading the binary failed
-#   - a necessary dependency isn't found (e.g. `curl`. Hope you have curl!)
-#   - any of the called command failed
-#
-# This script will output a descriptive message about the problem to `stderr`,
-# invite the user to install the binary manually and exit with a non-zero exit
-# code.
+# Document how to use this script and what it is for
+help() {
+  cat <<EOF
+install_shaka_packager.sh
+-------------------------
+
+This script tries to load locally the shaka-packager (as ./tmp/shaka-packager)
+compatible with the current platorm (e.g. MacOS ARM, Linux x86_64 etc.).
+
+If a compatible binary is found, it loads it, adds executable permissions to
+it and exit with exit code \`0\`.
+
+If any detected error happens, including:
+-  No shaka-packager is found for the current platform
+-  We're unable to determine the current platform
+-  Loading the binary failed
+-  A necessary dependency isn't found (e.g. \`curl\`. Hope you have curl!)
+-  Any of the called command failed
+
+This script will output a descriptive message about the problem to \`stderr\`,
+invite the user to install the binary manually and exit with a non-zero exit
+code.
+
+Usage: $0 <OPTIONS>
+
+Options:
+
+  --no-confirmation       If set, this script will never ask for confirmation and
+                          just validate all prompts.
+                          Intended for automated scripts.
+  -h, --help              Show this help message and exit
+EOF
+}
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
 
 # Default value for the `NO_CONFIRM` option, allowing to bypass confirmation
 # prompts, e.g. when calling this script from some other automated script.
 NO_CONFIRM=false
+
+# Parse command line options
+while [[ $# -gt 0 ]]; do
+  case $1 in
+  --no-confirmation)
+    NO_CONFIRM=true
+    ;;
+  -h|--help) help; exit 0;;
+  *) echo "Unknown option: $1"; help; exit 1 ;;
+  esac
+  shift
+done
 
 # As written below, I hardcode for now a specific version's URL.
 # This way we know the API is compatible to what we expect, and this script is
@@ -38,21 +67,6 @@ TMP_DIR="$(
   cd "$(dirname $0)/.."
   pwd
 )/tmp"
-
-# Will be called if given options are not in a valid format
-usage() {
-  cat <<EOF
-Usage: $0 <OPTIONS>
-
-Options:
-
-  --no-confirmation                     If set, this script will never ask for confirmation and
-                                        just validate all prompts.
-                                        Intended for automated scripts.
-
-EOF
-  exit 1
-}
 
 # Log a line to stderr, prefixing it with the name of this script
 err() {
@@ -86,19 +100,6 @@ echo ""
 
 requires_cmd curl
 requires_cmd uname
-
-# Parse command line options
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --no-confirmation)
-    NO_CONFIRM=true
-    ;;
-  *)
-    usage
-    ;;
-  esac
-  shift
-done
 
 # NOTE: `uname` is POSIX and should be supported on all Linux and OSX devices
 ostype="$(uname -s)"
@@ -162,7 +163,7 @@ elif [ "${ostype}" = Windows ]; then
   if [ "${cpuarch}" != x86_64 ]; then
     err "For Windows, only x86_64 is supported by our auto-install script."
   fi
-  log "Architecture detected -> Windows x86_64"
+  echo "Architecture detected -> Windows x86_64"
   packager_url=$PACKAGER_WIN_X64_BIN
 fi
 

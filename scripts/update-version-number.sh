@@ -1,25 +1,43 @@
 #!/bin/bash
 
-# Update version
-# ==============
-#
-# This script updates the version number in files where it is indicated.
-#
-# /!\ It does not create a new git tag, nor commit anything, nor produce
-# builds.
-# It only update files.
-#
-# To use it:
-#
-#   1. Be sure that you're on the branch corresponding to the wanted version.
-#
-#   2. Call this script.
-#
-#   3. Wait for all the script to finish and stay attentive to what it says
-#
-#   4. That's it!
+# Document how to use this script and what it is for
+help() {
+  cat <<EOF
+update-version-number.sh
+------------------------
 
-set -e
+This script updates the version number in files where it is indicated.
+
+/!\ It does not create a new git tag, nor commit anything, nor produce
+builds.
+It only update files.
+
+To use it:
+
+  1. Be sure that you're on the branch corresponding to the wanted version.
+
+  2. Call this script with the corresponding RxPlayer version in argument.
+
+  3. Wait for all the script to finish and stay attentive to what it says
+
+  4. That's it!
+
+Usage: $0 [OPTIONS] <VERSION>
+
+Options:
+  -h, --help       Show this help message and exit
+EOF
+}
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
+
+# Look for help flag first
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -h|--help) help; exit 0;;
+  esac
+done
 
 if [ $# -eq 0 ]; then
   read -r -p "Please enter the wanted version number (example: 4.12.1): " version

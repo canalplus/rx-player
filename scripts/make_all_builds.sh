@@ -1,25 +1,35 @@
 #!/bin/bash
 
-set -euo pipefail
-
-usage() {
+# Document how to use this script and what it is for
+help() {
   cat <<EOF
+make_all_builds.sh
+------------------
+
+Produce all the RxPlayer builds:
+-  Its CommonJS and ES builds in \`dist/commonjs/\` and \`dist/es2017/\` respectively
+-  Its minified bundle in \`dist/rx-player.min.js\`
+-  Its non-minified bundle in \`dist/rx-player.js\`
+-  Its WebAssembly MPD parser in \`mpd-parser.wasm\`
+
 Usage: $0 [OPTIONS]
 
 Options:
   --no-typecheck   Skip TypeScript type-checking
   -h, --help       Show this help message and exit
 EOF
-  exit 0
 }
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
 
 # Parse flags
 NO_TYPECHECK=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --no-typecheck) NO_TYPECHECK=1; shift ;;
-    -h|--help)      usage ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
+  --no-typecheck) NO_TYPECHECK=1; shift ;;
+  -h|--help) help; exit 0;;
+  *) echo "Unknown option: $1"; echo ""; help; exit 1 ;;
   esac
 done
 

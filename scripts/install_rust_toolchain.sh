@@ -1,25 +1,44 @@
 #!/bin/bash
 
-# TODO Documentation
-
-NO_CONFIRM=false
-
-set -e
-
-# Will be called if given options are not in a valid format
-usage() {
+# Document how to use this script and what it is for
+help() {
   cat <<EOF
-Usage: $0 <OPTIONS>
+install_rust_toolchain.sh
+-------------------------
+
+Install tools allowing to build Rust code into WebAssembly, as it is a
+requirement to build some components of the RxPlayer.
+
+After running this script, both \`rustup\` and \`binaryen\` will be installed in
+a local directory named \`tmp\`.
+
+Usage: $0 [OPTIONS]
 
 Options:
 
-  --no-confirmation                     If set, this script will never ask for confirmation and
-                                        just validate all prompts.
-                                        Intended for automated scripts.
-
+  --no-confirmation       If set, this script will never ask for confirmation and
+                          just validate all prompts.
+                          Intended for automated scripts.
+  -h, --help              Show this help message and exit
 EOF
-  exit 1
 }
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
+
+NO_CONFIRM=false
+
+# Parse command line options
+while [[ $# -gt 0 ]]; do
+  case $1 in
+  --no-confirmation)
+    NO_CONFIRM=true
+    ;;
+  -h|--help) help; exit 0;;
+  *) echo "Unknown option: $1"; help; exit 1 ;;
+  esac
+  shift
+done
 
 # Log a line to stdout, prefixing it with the name of this script
 log() {
@@ -53,19 +72,6 @@ ensure() {
 
 log "This script will install Rust dependencies locally in the following directory: $(pwd)/tmp"
 log "A lot of logs may be produced by this installation, they can mostly be ignored."
-
-# Parse command line options
-while [[ $# -gt 0 ]]; do
-  case $1 in
-  --no-confirmation)
-    NO_CONFIRM=true
-    ;;
-  *)
-    usage
-    ;;
-  esac
-  shift
-done
 
 requires_cmd curl
 requires_cmd tar

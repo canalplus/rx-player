@@ -1,29 +1,47 @@
 #!/bin/bash
 
-# Update gh-pages doc
-# ====================
-#
-# This script allows to automatically update the generated documentation on the
-# gh-pages branch.
-#
-# To use it:
-#
-#   1. Be sure that you're on a clean (no staged files and no diff) branch.
-#
-#   2. Call this script with the SEMVER version number in argument.
-#      Some user interactions will be needed to avoid doing unwanted commits.
-#
-#   3. That's it!
-#      A commit should have been pushed to the gh-pages.
+# Document how to use this script and what it is for
+help() {
+  cat <<EOF
+update_gh-pages_doc.sh
+-----------------------
 
-set -e
+This script allows to automatically update the generated documentation on the
+gh-pages branch.
+
+To use it:
+
+  1. Be sure that you're on a clean (no staged files and no diff) branch.
+
+  2. Call this script with the corresponding RxPlayer version in argument.
+     Some user interactions will be needed to avoid doing unwanted commits.
+
+  3. That's it!
+     A commit should have been pushed to the gh-pages.
+
+Usage: $0 [OPTIONS] <VERSION>
+
+Options:
+  -h, --help       Show this help message and exit
+EOF
+}
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
+
+# Look for help flag first
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -h|--help) help; exit 0;;
+  esac
+done
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 current_version="$1"
 
 if [ -z "$current_version" ]; then
   echo "ERROR: Please call this script with your version in argument" >&2
-	echo "For example: ./update_gh-pages_demo.sh 4.4.0" >&2
+  echo "For example: ./update_gh-pages_demo.sh 4.4.0" >&2
   exit 1
 fi
 

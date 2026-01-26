@@ -1,25 +1,43 @@
 #!/bin/bash
 
-# Deploy new demo
-# ====================
-#
-# This script allows to automatically create a new demo page on the gh-pages
-# branch.
-# /!\ This script deploy a non-minified version.
-#
-# To use it:
-#
-#   1. Check that you're on the branch you want to deploy and that this branch
-#      is clean (has no staged files or diff)
-#
-#   2. Call this script with the wanted directory name in argument (e.g.
-#      `./deploy_new_demo my_new_page`).
-#      Some user interactions will be needed to avoid doing unwanted commits.
-#
-#   3. That's it!
-#      A commit with the new directory should have been pushed to the gh-pages.
+# Document how to use this script and what it is for
+help() {
+  cat <<EOF
+deploy_new_demo.sh
+------------------
 
-set -e
+This script allows to automatically create a new demo page on the gh-pages
+branch.
+/!\\ This script deploy a non-minified version.
+
+To use it:
+
+  1. Check that you're on the branch you want to deploy and that this branch is
+     clean (has no staged files or diff)
+
+  2. Call this script with the wanted directory name in argument (e.g.
+     \`./deploy_new_demo my_new_page\`).
+     Some user interactions will be needed to avoid doing unwanted commits.
+
+  3. That's it!
+     A commit with the new directory should have been pushed to the gh-pages.
+
+Usage: $0 [OPTIONS] <BRANCH>
+
+Options:
+  -h, --help       Show this help message and exit
+EOF
+}
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
+
+# Check for --help flag
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -h|--help) help; exit 0;;
+  esac
+done
 
 current_branch=$(git branch | sed -n -e 's/^\* \(.*\)/\1/p')
 deployed_branch=$1

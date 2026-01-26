@@ -1,25 +1,47 @@
 #!/bin/bash
 
-# Make official release
-# =====================
-#
-# This script helps RxPlayer developers to make a new official RxPlayer release.
-#
-# To use it:
-#
-#   1. Be sure that you're either on the `stable` branch (if this is a "patch"
-#      release in terms of SEMVER) or on the `dev` branch (if this is a "minor"
-#      SEMVER release)
-#
-#   2. Call this script, you may optionally provide the wanted version as an
-#      argument to this script. If no argument is provided, the script will ask
-#      for your wanted version number.
-#
-#   3. Wait for all the commands to finish and stay attentive to the output. It
-#      will ask you for inputs at various steps and tell you what you need to
-#      know to make a release.
+# Document how to use this script and what it is for
+help() {
+  cat <<EOF
+make-official-releases.sh
+-------------------------
 
-set -e
+This script helps RxPlayer developers to make a new official RxPlayer release.
+
+To use it:
+
+  1. Be sure that you're either on the \`stable\` branch (if this is a \"patch\"
+     release in terms of SEMVER) or on the \`dev\` branch (if this is a \"minor\"
+     SEMVER release)
+
+  2. Call this script, you may optionally provide the wanted version as an
+     argument to this script. If no argument is provided, the script will ask
+     for your wanted version number.
+
+  3. Wait for all the commands to finish and stay attentive to the output. It
+     will ask you for inputs at various steps and tell you what you need to
+     know to make a release.
+
+Usage: $0 [OPTIONS] [VERSION]
+
+Options:
+  -h, --help       Show this help message and exit
+
+Examples:
+  # Make a new \`4.9.2\` version
+  make-official-releases.sh 4.9.2
+EOF
+}
+
+# Exit on error, undefined variable and error in pipes
+set -euo pipefail
+
+# Check for --help flag
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -h|--help) help; exit 0;;
+  esac
+done
 
 GIT_REPO="git@github.com:canalplus/rx-player.git"
 
@@ -43,11 +65,11 @@ emphasized_log() {
 err() {
   echo "---- RxPlayer Release Script ----   ERROR: $1" >&2
   if [[ -n "$base_branch" ]]; then
-		git checkout "$base_branch"
-		if [[ -n "$release_branch" ]]; then
-			git branch -D "$release_branch"
-		fi
-	fi
+    git checkout "$base_branch"
+    if [[ -n "$release_branch" ]]; then
+      git branch -D "$release_branch"
+    fi
+  fi
   exit 1
 }
 
