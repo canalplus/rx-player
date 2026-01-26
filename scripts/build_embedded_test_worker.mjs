@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * # build_embedded_test_worker.mjs
  *
