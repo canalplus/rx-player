@@ -14,6 +14,7 @@
 /tests/performance/control-current.js
 /tests/performance/package.json
 /tests/performance/package-lock.json
+/tests/simple-test-bundle.js
 
 /dist/
 
