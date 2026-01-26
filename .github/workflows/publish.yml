@@ -141,7 +141,7 @@ jobs:
       - run: export DISPLAY=:99
       - run: sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
       - run:
-          node tests/performance/run.mjs --branch stable --remote-git-url
+          npm run test:performance -- --branch stable --remote-git-url
           https://github.com/canalplus/rx-player.git
 
   publish_dev:

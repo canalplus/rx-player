@@ -204,6 +204,8 @@
     "test:integration:notice": "echo \"~~~ ⚠️ NOTICE ⚠️\n~~~ Tests have two dependencies: a local RxPlayer build and ffmpeg.\n~~~ Make sure you:\n~~~ 1.  Have an ffmpeg executable in your path and,\n~~~ 2.  You built an up-to-date RxPlayer through the \\`build\\` npm script.\n\"",
     "test:memory": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
     "test:memory:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
+    "test:performance": "node ./tests/performance/run.mjs",
+    "test:performance:firefox": "node ./tests/performance/run.mjs --browser firefox",
     "test:unit": "vitest --config vitest.config.unit.mjs",
     "test:unit:watch": "vitest --config vitest.config.unit.mjs --watch",
     "update-version": "bash ./scripts/update-version-number.sh"
@@ -284,6 +286,10 @@
       "Memory tests (test memory usage to avoid memory leaks, call the `build` script BEFORE running them)": {
         "test:memory": "Launch memory tests",
         "test:memory:chrome:watch": "Launch memory tests in Chrome each times the files update"
+      },
+      "Performance tests (test against performance regressions on some key scenarios)": {
+        "test:performance": "Launch performance tests on a Chrome browser",
+        "test:performance:firefox": "Launch performance tests on a Firefox browser"
       }
     },
     "Build the player or one of its sub-parts": {

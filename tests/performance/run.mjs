@@ -7,21 +7,28 @@ import * as fsProm from "fs/promises";
 import { createServer } from "http";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
+import runChrome from "../../scripts/run_chrome.mjs";
+import runFirefox from "../../scripts/run_firefox.mjs";
 import launchStaticServer from "../../scripts/launch_static_server.mjs";
 import removeDir from "../../scripts/utils/remove_dir.mjs";
 import runBundler from "../../scripts/run_bundler.mjs";
 import createContentServer from "../contents/server.mjs";
 
+/**
+ * Path to the directory this script is currently in.
+ * The same path should contain the `./current.html` and `./previous.js` pages
+ * and will contain our `./current.js` and `./previous.js` test page bundles.
+ */
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
-/** Port of the HTTP server which will serve local contents. */
-const CONTENT_SERVER_PORT = 3000;
+/** Default port of the HTTP server which will serve local contents. */
+const DEFAULT_CONTENT_SERVER_PORT = 3000;
 
-/** Port of the HTTP server which will serve the performance test files */
-const PERF_TESTS_PORT = 8080;
+/** Default port of the HTTP server which will serve the test files */
+const DEFAULT_TEST_PAGE_PORT = 8080;
 
-/** Port of the HTTP server which will be used to exchange about test results. */
-const RESULT_SERVER_PORT = 6789;
+/** Default port of the HTTP server which will be used to exchange about test results. */
+const DEFAULT_RESULT_SERVER_PORT = 6789;
 
 /**
  * Number of times test are runs on each browser/RxPlayer configuration.
@@ -31,45 +38,6 @@ const RESULT_SERVER_PORT = 6789;
  * TODO: GitHub actions fails when running the 128th browser. Find out why.
  */
 const TEST_ITERATIONS = 30;
-
-/**
- * After initialization is done, contains the path allowing to run the Chrome
- * browser.
- * @type {string|undefined|null}
- */
-let CHROME_CMD;
-
-// /**
-//  * After initialization is done, contains the path allowing to run the Firefox
-//  * browser.
-//  * @type {string|undefined|null}
-//  */
-// let FIREFOX_CMD;
-
-/** Options used when starting the Chrome browser. */
-const CHROME_OPTIONS = [
-  "--enable-automation",
-  "--no-default-browser-check",
-  "--no-first-run",
-  "--disable-default-apps",
-  "--disable-popup-blocking",
-  "--disable-translate",
-  "--disable-background-timer-throttling",
-  "--disable-renderer-backgrounding",
-  "--disable-device-discovery-notifications",
-  "--autoplay-policy=no-user-gesture-required",
-  "--headless",
-  "--disable-gpu",
-  "--disable-dev-shm-usage",
-  "--disk-cache-dir=/dev/null",
-];
-
-// /** Options used when starting the Firefox browser. */
-// const FIREFOX_OPTIONS = [
-//   "-no-remote",
-//   "-wait-for-browser",
-//   "-headless",
-// ];
 
 /**
  * `ChildProcess` instance of the current browser being run.
@@ -98,77 +66,136 @@ const allSamples = {
 // If true, this script is called directly
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
-  if (args.includes("-h") || args.includes("--help")) {
-    displayHelp();
-    process.exit(0);
-  }
 
+  let resultServerPort = DEFAULT_RESULT_SERVER_PORT;
+  let contentServerPort = DEFAULT_CONTENT_SERVER_PORT;
+  let testPagePort = DEFAULT_TEST_PAGE_PORT;
+
+  let browser;
   let branchName;
-  {
-    let branchNameIndex = args.indexOf("-b");
-    if (branchNameIndex < 0) {
-      branchNameIndex = args.indexOf("--branch");
-    }
-    if (branchNameIndex >= 0) {
-      branchName = args[branchNameIndex + 1];
-      if (branchName === undefined) {
-        // eslint-disable-next-line no-console
-        console.error("ERROR: no branch name provided\n");
-        displayHelp();
-        process.exit(1);
-      }
-    }
-  }
-
   let remote;
-  {
-    let branchNameIndex = args.indexOf("-u");
-    if (branchNameIndex < 0) {
-      branchNameIndex = args.indexOf("--remote-git-url");
-    }
-    if (branchNameIndex >= 0) {
-      remote = args[branchNameIndex + 1];
-      if (remote === undefined) {
-        // eslint-disable-next-line no-console
-        console.error("ERROR: no remote URL provided\n");
-        displayHelp();
-        process.exit(1);
-      }
-    }
-  }
-
   let reportFile;
-  {
-    let reportFileIndex = args.indexOf("-r");
-    if (reportFileIndex < 0) {
-      reportFileIndex = args.indexOf("--report");
+  /**
+   * @param {string|undefined} input
+   * @param {string} flagName
+   * @returns {number}
+   */
+  const parsePort = (input, flagName) => {
+    if (input === undefined) {
+      /* eslint-disable-next-line no-console */
+      console.error(`ERROR: no port provided to ${flagName} flag\n`);
+      displayHelp();
+      process.exit(1);
     }
-    if (reportFileIndex >= 0) {
-      reportFile = args[reportFileIndex + 1];
-      if (reportFile === undefined) {
+    const port = +input;
+    if (isNaN(port)) {
+      /* eslint-disable-next-line no-console */
+      console.error(
+        `ERROR: Invalid port configured for flag ${flagName}. Should be a number, received "` +
+          input +
+          '"\n',
+      );
+      displayHelp();
+      process.exit(1);
+    }
+    return port;
+  };
+  for (let argOffset = 0; argOffset < args.length; argOffset++) {
+    const currentArg = args[argOffset];
+    switch (currentArg) {
+      case "-h":
+      case "--help":
+        displayHelp();
+        process.exit(0);
+
+      case "--result-port":
+        argOffset++;
+        resultServerPort = parsePort(args[argOffset], currentArg);
+        break;
+
+      case "--page-port":
+        argOffset++;
+        testPagePort = parsePort(args[argOffset], currentArg);
+        break;
+
+      case "--content-port":
+        argOffset++;
+        contentServerPort = parsePort(args[argOffset], currentArg);
+        break;
+
+      case "-b":
+      case "--branch":
+        argOffset++;
+        branchName = args[argOffset];
+        if (branchName === undefined) {
+          // eslint-disable-next-line no-console
+          console.error("ERROR: no branch name provided\n");
+          displayHelp();
+          process.exit(1);
+        }
+        break;
+
+      case "-u":
+      case "--remote-git-url":
+        argOffset++;
+        remote = args[argOffset];
+        if (remote === undefined) {
+          // eslint-disable-next-line no-console
+          console.error("ERROR: no remote URL provided\n");
+          displayHelp();
+          process.exit(1);
+        }
+        break;
+
+      case "-r":
+      case "--report":
+        {
+          argOffset++;
+          reportFile = args[argOffset];
+          if (reportFile === undefined) {
+            // eslint-disable-next-line no-console
+            console.error("ERROR: no file path provided\n");
+            displayHelp();
+            process.exit(1);
+          }
+        }
+        break;
+
+      case "--browser":
+        argOffset++;
+        if (!["chrome", "firefox"].includes(args[argOffset])) {
+          /* eslint-disable-next-line no-console */
+          console.error(
+            `ERROR: Invalid browser configured: should be either "chrome" or "firefox", received: ` +
+              args[argOffset] +
+              '"\n',
+          );
+          displayHelp();
+          process.exit(1);
+        }
+        browser = args[argOffset];
+        break;
+
+      case "--":
+        argOffset = args.length;
+        break;
+
+      default:
         // eslint-disable-next-line no-console
-        console.error("ERROR: no file path provided\n");
+        console.error("ERROR: Unrecognized flag:", currentArg);
         displayHelp();
         process.exit(1);
-      }
-    }
-  }
-
-  /* eslint-disable no-console */
-  if (reportFile !== undefined) {
-    try {
-      console.log(`Removing previous report file if it exists ("${reportFile}")`);
-      fs.rmSync(reportFile);
-    } catch (_) {
-      // We don't really care here
     }
   }
 
   initializePerformanceTestsPages({
     branchName: branchName ?? "dev",
     remoteGitUrl: remote,
+    contentServerPort,
   })
-    .then(() => runPerformanceTests())
+    .then(() =>
+      runPerformanceTests({ browser, contentServerPort, resultServerPort, testPagePort }),
+    )
     .then(async (results) => {
       /** Contain results on the second run if it is done */
       let results2 = null;
@@ -198,7 +225,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 
       console.warn("\nRetrying one time just to check if unlucky...");
 
-      results2 = await runPerformanceTests();
+      results2 = await runPerformanceTests(browser);
       console.error("\nFinal result after 2 attempts\n-----------------------------\n");
 
       if (results.better.length > 0) {
@@ -361,10 +388,24 @@ function formatResultAsMarkdownTable(results) {
 }
 
 /**
- * Initialize and start all tests on Chrome.
+ * Initialize and start all tests on a browser..
+ * @param {Object} params
+ * @param {string} [params.browser="chrome"] - The browser to run the tests on.
+ * "chrome" by default. Can be either "chrome" or "firefox".
+ * @param {number} params.contentServerPort - The port through which test
+ * contents are served.
+ * @param {number} params.resultServerPort - The port through which test
+ * results should be sent.
+ * @param {number} params.testPagePort - The port through which the test page
+ * is acceeded.
  * @returns {Promise.<Object>}
  */
-function runPerformanceTests() {
+function runPerformanceTests({
+  browser = "chrome",
+  contentServerPort = DEFAULT_CONTENT_SERVER_PORT,
+  resultServerPort = DEFAULT_RESULT_SERVER_PORT,
+  testPagePort = DEFAULT_TEST_PAGE_PORT,
+}) {
   return new Promise((resolve, reject) => {
     let isFinished = false;
     let contentServer;
@@ -400,7 +441,13 @@ function runPerformanceTests() {
       staticServer = undefined;
     };
 
-    initServers(onFinished, onError)
+    initServers({
+      contentServerPort,
+      testPagePort,
+      resultServerPort,
+      onFinished,
+      onError,
+    })
       .then((servers) => {
         contentServer = servers.contentServer;
         resultServer = servers.resultServer;
@@ -408,7 +455,7 @@ function runPerformanceTests() {
         if (isFinished) {
           closeServers();
         }
-        return startAllTestsOnChrome();
+        return startAllTests({ browser, testPagePort, resultServerPort });
       })
       .catch(onError);
   });
@@ -416,20 +463,33 @@ function runPerformanceTests() {
 
 /**
  * Initialize all servers used for the performance tests.
- * @param {Function} onFinished
- * @param {function} onError
+ * @param {Object} params
+ * @param {number} params.contentServerPort - The port through which test
+ * contents are served.
+ * @param {number} params.resultServerPort - The port through which test
+ * results should be sent.
+ * @param {number} params.testPagePort - The port through which the test page
+ * is acceeded.
+ * @param {Function} params.onFinished
+ * @param {function} params.onError
  * @returns {Promise} - Resolves when all servers are listening.
  */
-async function initServers(onFinished, onError) {
+async function initServers({
+  contentServerPort,
+  testPagePort,
+  resultServerPort,
+  onFinished,
+  onError,
+}) {
   let contentServer;
   let staticServer;
   let resultServer;
   try {
-    contentServer = createContentServer(CONTENT_SERVER_PORT);
+    contentServer = createContentServer({ port: contentServerPort });
     staticServer = launchStaticServer(currentDirectory, {
-      httpPort: PERF_TESTS_PORT,
+      httpPort: testPagePort,
     });
-    resultServer = createResultServer(onFinished, onError);
+    resultServer = createResultServer({ port: resultServerPort, onFinished, onError });
     await Promise.all([
       contentServer.listeningPromise,
       staticServer.listeningPromise,
@@ -447,6 +507,8 @@ async function initServers(onFinished, onError) {
 /**
  * Prepare all scripts needed for the performance tests.
  * @param {Object} opts - Various options for scripts initialization.
+ * @param {number} params.contentServerPort - Port on which media content is
+ * served.
  * @param {string} opts.branchName - The name of the branch results should be
  * compared to.
  * @param {string} [opts.remoteGitUrl] - The git URL where the current
@@ -454,18 +516,30 @@ async function initServers(onFinished, onError) {
  * The one for the current git repository by default.
  * @returns {Promise} - Resolves when the initialization is finished.
  */
-async function initializePerformanceTestsPages({ branchName, remoteGitUrl }) {
-  await prepareLastRxPlayerTests({ branchName, remoteGitUrl });
-  await prepareCurrentRxPlayerTests();
+async function initializePerformanceTestsPages({
+  branchName,
+  remoteGitUrl,
+  contentServerPort,
+}) {
+  await prepareLastRxPlayerTests({ branchName, remoteGitUrl, contentServerPort });
+  await prepareCurrentRxPlayerTests({ contentServerPort });
 }
 
 /**
  * Build test file for testing the current RxPlayer.
+ * @param {Object} params
+ * @param {number} params.contentServerPort - Port on which media content is
+ * served.
  * @returns {Promise}
  */
-async function prepareCurrentRxPlayerTests() {
+async function prepareCurrentRxPlayerTests({ contentServerPort }) {
   await linkCurrentRxPlayer();
-  await createBundle({ output: "current.js", minify: true, production: true });
+  await createBundle({
+    output: "current.js",
+    contentServerPort,
+    minify: true,
+    production: true,
+  });
 }
 
 /**
@@ -473,14 +547,21 @@ async function prepareCurrentRxPlayerTests() {
  * @param {Object} opts - Various options.
  * @param {string} opts.branchName - The name of the branch results should be
  * compared to.
+ * @param {number} params.contentServerPort - Port on which media content is
+ * served.
  * @param {string} [opts.remoteGitUrl] - The git URL where the current
  * repository can be cloned for comparisons.
  * The one for the current git repository by default.
  * @returns {Promise}
  */
-async function prepareLastRxPlayerTests({ branchName, remoteGitUrl }) {
+async function prepareLastRxPlayerTests({ branchName, contentServerPort, remoteGitUrl }) {
   await linkRxPlayerBranch({ branchName, remoteGitUrl });
-  await createBundle({ output: "previous.js", minify: true, production: true });
+  await createBundle({
+    contentServerPort,
+    output: "previous.js",
+    minify: true,
+    production: true,
+  });
 }
 
 /**
@@ -525,7 +606,7 @@ async function linkRxPlayerBranch({ branchName, remoteGitUrl }) {
     remoteGitUrl ??
     (await execCommandAndGetFirstOutput("git config --get remote.origin.url"));
   url = url.trim();
-  await spawnProc("git", ["clone", "-b", branchName, url, rxPlayerPath], {
+  await spawnProc("git", ["clone", "--depth", "1", "-b", branchName, url, rxPlayerPath], {
     parseError: (code) => new Error(`git clone exited with code ${code}`),
   }).promise;
   await spawnProc("npm", ["install"], {
@@ -546,17 +627,29 @@ async function linkRxPlayerBranch({ branchName, remoteGitUrl }) {
 }
 
 /**
- * Build the `tasks` array and start all tests on the Chrome browser.
+ * Build the `tasks` array and start all tests on the given browser.
+ * @param {Object} params
+ * @param {string} params.browser - The web browser to run those tests on. Can
+ * be either "chrome" or "firefox".
+ * @param {number} params.resultServerPort - The port through which test
+ * results should be sent.
+ * @param {number} params.testPagePort - The port through which the test page
+ * is acceeded.
  * @returns {Promise}
  */
-async function startAllTestsOnChrome() {
-  CHROME_CMD = await getChromeCmd();
+async function startAllTests({ browser, testPagePort, resultServerPort }) {
   tasks.length = 0;
   for (let i = 0; i < TEST_ITERATIONS; i++) {
-    tasks.push(() => startTestsOnChrome(i % 2 === 0, i + 1, TEST_ITERATIONS));
-  }
-  if (CHROME_CMD === null) {
-    throw new Error("Error: Chrome not found on the current platform");
+    tasks.push(() =>
+      startIteration({
+        browser,
+        startWithCurrent: i % 2 === 0,
+        iteration: i + 1,
+        total: TEST_ITERATIONS,
+        testPagePort,
+        resultServerPort,
+      }),
+    );
   }
   if (tasks.length === 0) {
     throw new Error("No task scheduled");
@@ -588,60 +681,69 @@ function startNextTaskOrFinish(onFinished) {
 }
 
 /**
- * Start Chrome browser running performance tests.
- * @param {boolean} startWithCurrent - If `true` we will begin with tests on the
- * current build. If `false` we will start with the previous build. We will
- * then alternate.
+ * Start browser running performance tests.
+ * @param {Object} params
+ * @param {boolean} params.startWithCurrent - If `true` we will begin with
+ * tests on the current build. If `false` we will start with the previous
+ * build. We will then alternate.
  * The global idea is to ensure we're testing both cases as to remove some
  * potential for lower performances due e.g. to browser internal logic.
- * @param {number} testNb - The current test iteration, starting from `1` to
- * `testTotal`. Used to indicate progress.
- * @param {number} testTotal - The maximum number of iterations. Used to
+ * @param {string} params.browser - The web browser to run those tests on.
+ * Can be either "chrome" or "firefox".
+ * @param {number} params.iteration - The current test iteration, starting
+ * from `1` to `total`. Used to indicate progress.
+ * @param {number} params.total - The maximum number of iterations. Used to
  * indicate progress.
  * @returns {Promise}
  */
-async function startTestsOnChrome(startWithCurrent, testNb, testTotal) {
-  // eslint-disable-next-line no-console
-  console.log(`Running tests on Chrome (${testNb}/${testTotal})`);
-  return startPerfhomepageOnChrome(
-    startWithCurrent
-      ? `current.html#p=${RESULT_SERVER_PORT};`
-      : `previous.html#p=${RESULT_SERVER_PORT};`,
-  ).catch((err) => {
-    throw new Error("Could not launch page on Chrome: " + err.toString());
-  });
-}
-
-/**
- * Start the performance tests on Chrome.
- * Set `currentBrowser` to chrome.
- * @param {string} homePage - Page on which to run the browser.
- */
-async function startPerfhomepageOnChrome(homePage) {
+async function startIteration({
+  browser,
+  startWithCurrent,
+  iteration,
+  total,
+  testPagePort,
+  resultServerPort,
+}) {
   if (currentBrowser !== undefined) {
     currentBrowser.kill("SIGKILL");
   }
-  if (CHROME_CMD === undefined || CHROME_CMD === null) {
-    throw new Error("Starting browser before initialization");
+  const url = startWithCurrent
+    ? `http://localhost:${testPagePort}/current.html#p=${resultServerPort};`
+    : `http://localhost:${testPagePort}/previous.html#p=${resultServerPort};`;
+  if (browser === "firefox") {
+    // eslint-disable-next-line no-console
+    console.log(`Running tests on Firefox (${iteration}/${total})`);
+    currentBrowser = await runFirefox(url, {
+      headless: true,
+      enableAutoPlay: true,
+    }).catch((err) => {
+      throw new Error("Could not launch page on Firefox: " + err.toString());
+    });
+  } else {
+    // eslint-disable-next-line no-console
+    console.log(`Running tests on Chrome (${iteration}/${total})`);
+    currentBrowser = await runChrome(url, {
+      headless: true,
+      enableAutoPlay: true,
+    }).catch((err) => {
+      throw new Error("Could not launch page on Chrome: " + err.toString());
+    });
   }
-  const spawned = spawnProc(CHROME_CMD, [
-    ...CHROME_OPTIONS,
-    `http://localhost:${PERF_TESTS_PORT}/${homePage}`,
-  ]);
-  currentBrowser = spawned.child;
 }
 
 /**
  * Create HTTP server which will receive test results and react appropriately.
- * @param {Function} onFinished
- * @param {function} onError
+ * @param {Object} params
+ * @param {number} params.port
+ * @param {Function} params.onFinished
+ * @param {function} params.onError
  * @returns {Object}
  */
-function createResultServer(onFinished, onError) {
+function createResultServer({ port, onFinished, onError }) {
   const server = createServer(onRequest);
   return {
     listeningPromise: new Promise((res) => {
-      server.listen(RESULT_SERVER_PORT, function () {
+      server.listen(port, function () {
         res();
       });
     }),
@@ -970,6 +1072,8 @@ function getSamplePerScenarios(samplesObj) {
  * Build the performance tests.
  * @param {Object} options
  * @param {Object} options.output - The output file
+ * @param {number} options.contentServerPort - Port on which media content is
+ * served.
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.production=true] - If `false`, the code will be compiled
  * in "development" mode, which has supplementary assertions.
@@ -988,7 +1092,7 @@ async function createBundle(options) {
       globals: {
         __TEST_CONTENT_SERVER__: JSON.stringify({
           URL: "127.0.0.1",
-          PORT: "3000",
+          PORT: String(options.contentServerPort),
         }),
       },
     });
@@ -1021,71 +1125,6 @@ function spawnProc(command, args, { cwd, parseError } = {}) {
     child,
   };
 }
-
-/**
- * Returns string corresponding to the Chrome binary.
- * @returns {Promise.<string>}
- */
-async function getChromeCmd() {
-  switch (process.platform) {
-    case "win32": {
-      const suffix = "\\Google\\Chrome\\Application\\chrome.exe";
-      const prefixes = [
-        process.env.LOCALAPPDATA,
-        process.env.PROGRAMFILES,
-        process.env["PROGRAMFILES(X86)"],
-      ];
-      for (const prefix of prefixes) {
-        try {
-          const windowsChromeDirectory = path.join(prefix, suffix);
-          fs.accessSync(windowsChromeDirectory);
-          return windowsChromeDirectory;
-        } catch (e) {}
-      }
-
-      return null;
-    }
-
-    case "darwin": {
-      const defaultPath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-      try {
-        const homePath = path.join(process.env.HOME, defaultPath);
-        fs.accessSync(homePath);
-        return homePath;
-      } catch (e) {
-        return defaultPath;
-      }
-    }
-
-    case "linux": {
-      const chromeBins = ["google-chrome", "google-chrome-stable"];
-      for (const chromeBin of chromeBins) {
-        try {
-          await execCommandAndGetFirstOutput(`which ${chromeBin}`);
-          return chromeBin;
-        } catch (e) {}
-      }
-      return null;
-    }
-    default:
-      throw new Error("Error: unsupported platform:", process.platform);
-  }
-}
-//
-// /**
-//  * Returns string corresponding to the Chrome binary.
-//  * @returns {Promise.<string>}
-//  */
-// async function getFirefoxCmd() {
-//   switch (process.platform) {
-//     case "linux": {
-//       return "firefox";
-//     }
-//     // TODO other platforms
-//     default:
-//       throw new Error("Error: unsupported platform:", process.platform);
-//   }
-// }
 
 function execCommandAndGetFirstOutput(command) {
   return new Promise((res, rej) => {
@@ -1219,6 +1258,14 @@ Available options:
                                     Defaults to the "dev" branch.,
   -u <URL>, --remote-git-url <URL>  Specify the remote git URL where the current repository can be cloned from.
                                     Defaults to the current remote URL.
+  --browser <BROWSER>               The browser to run the tests on. Can be \"chrome\" or \"firefox\".
+                                    \"chrome\" by default.
+  --result-port <NUMBER>            Configure the port used to send/receive test results.
+                                    ${DEFAULT_RESULT_SERVER_PORT} by default.
+  --page-port <NUMBER>              Configure the port used to serve the test page.
+                                    ${DEFAULT_TEST_PAGE_PORT} by default.
+  --content-port <NUMBER>           Configure the port used to serve test contents.
+                                    ${DEFAULT_CONTENT_SERVER_PORT} by default.
   -r <path>, --report <path>        Optional path to HTML file where a report will be written in once done.`,
   );
 }
