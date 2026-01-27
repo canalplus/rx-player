@@ -609,6 +609,8 @@ if [[ "$(uname -s)" =~ ^(CYGWIN|MINGW|MSYS) ]]; then
 
   if [[ -n "$KEY_ID" ]]; then
     key_flag="--keys label=:key_id=$KEY_ID:key=$KEY --clear_lead 0 --protection_scheme cenc"
+  else
+    key_flag=""
   fi
 
   "$shaka_packager_cmd" \
