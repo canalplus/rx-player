@@ -414,9 +414,6 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-# Exit on error, undefined variable and error in pipes
-set -euo pipefail
-
 requires_cmd printf
 requires_cmd find
 
