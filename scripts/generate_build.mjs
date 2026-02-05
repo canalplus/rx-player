@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * =================
- * generate_build.mjs
- * =================
+ * # generate_build.mjs
  *
  * This file allows to produce the main RxPlayer's builds.
  *
@@ -11,6 +9,9 @@
  * ```sh
  * node generate_build.mjs
  * ```
+ *
+ * You can provide an `-h` / `--help` flags to see the different options
+ * you can provide.
  */
 
 import { spawn } from "child_process";
