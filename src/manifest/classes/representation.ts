@@ -15,7 +15,6 @@
  */
 
 import log from "../../log";
-import { isRepresentationPlayable, type IRepresentationMetadata } from "../../manifest";
 import type {
   ICdnMetadata,
   IContentProtections,
@@ -25,6 +24,8 @@ import type { ITrackType, IHDRInformation } from "../../public_types";
 import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
 import idGenerator from "../../utils/id_generator";
 import { bytesToHex } from "../../utils/string_parsing";
+import type { IRepresentationMetadata } from "../types";
+import { isRepresentationPlayable } from "../utils";
 import type codecSupportCache from "./codec_support_cache";
 import type { IRepresentationIndex } from "./representation_index";
 
