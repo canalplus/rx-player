@@ -21,6 +21,7 @@
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types";
 import clearElementSrc from "../../compat/clear_element_src";
+import getStartDate from "../../compat/get_start_date";
 import type { MediaError } from "../../errors";
 import log from "../../log";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer";
@@ -307,7 +308,31 @@ function getDirectFileInitialTime(
   if (!isNullOrUndefined(startAt.position)) {
     return startAt.position;
   } else if (!isNullOrUndefined(startAt.wallClockTime)) {
-    return startAt.wallClockTime;
+    /**
+     * Special case for Safari with HLS in directfile mode:
+     *
+     * Safari's native HLS implementation uses `#EXT-X-PROGRAM-DATE-TIME` from the manifest
+     * as the time reference. This means `mediaElement.currentTime` represents time relative
+     * to the playlist's start date.
+     *
+     * When seeking to a specific `wallClockTime`, we calculate the position by subtracting
+     * the playlist's start date from `startPosition.wallClockTime`:
+     *   seekPosition = wallClockTime - startDate
+     *
+     * The startDate is retrieved via `mediaElement.getStartDate()`, which only returns
+     * a valid date once `mediaElement.readyState >= HAVE_CURRENT_DATA` (≥ 2).
+     * If unavailable, we return undefined.
+     */
+    const startDate = getStartDate(mediaElement);
+    if (startDate === undefined) {
+      log.warn(
+        "Init",
+        "startAt.wallClockTime set but startDate is not known, either it's too soon to seek" +
+          " or the browser has no API to get the startDate",
+      );
+      return undefined;
+    }
+    return startAt.wallClockTime - startDate;
   } else if (!isNullOrUndefined(startAt.fromFirstPosition)) {
     return startAt.fromFirstPosition;
   }
