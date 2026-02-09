@@ -170,22 +170,19 @@ export interface IContentInitializerEvents {
     /** The Period we're now playing. */
     period: IPeriodMetadata;
   };
-  /**
-   * A new `PeriodStream` is ready to start but needs an Adaptation (i.e. track)
-   * to be chosen first.
-   */
-  periodStreamReady: {
-    /** The type of buffer linked to the `PeriodStream` we want to create. */
+  /** A new `Stream` is ready to load content but needs a track to be chosen first. */
+  streamReady: {
+    /** The type of buffer linked to the `Stream` we want to create. */
     type: IBufferType;
-    /** The `Period` linked to the `PeriodStream` we have created. */
+    /** The `Period` linked to the `Stream` we have created. */
     period: IPeriodMetadata;
     /**
-     * The Reference through which any Adaptation (i.e. track) choice should be
-     * emitted for that `PeriodStream`.
+     * The Reference through which any track choice should be emitted for that
+     * `Stream`.
      *
-     * The `PeriodStream` will not do anything until this Reference has emitted
+     * The `Stream` will not do anything until this Reference has emitted
      * at least one to give its initial choice.
-     * You can send `null` through it to tell this `PeriodStream` that you don't
+     * You can send `null` through it to tell this `Stream` that you don't
      * want any `Adaptation`.
      * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
      * yourself.
@@ -193,25 +190,25 @@ export interface IContentInitializerEvents {
     adaptationRef: SharedReference<IAdaptationChoice | null | undefined>;
   };
   /**
-   * A `PeriodStream` has been removed.
+   * A `Stream` has been removed.
    * This event can be used for clean-up purposes. For example, you are free to
    * remove from scope the shared reference that you used to choose a track for
-   * that `PeriodStream`.
+   * that `Stream`.
    */
-  periodStreamCleared: {
+  streamCleared: {
     /**
-     * The type of buffer linked to the `PeriodStream` we just removed.
+     * The type of buffer linked to the `Stream` we just removed.
      *
      * The combination of this and `Period` should give you enough information
-     * about which `PeriodStream` has been removed.
+     * about which `Stream` has been removed.
      */
     type: IBufferType;
     /**
-     * The `id` property of the `Period` linked to the `PeriodStream` we just
+     * The `id` property of the `Period` linked to the `Stream` we just
      * removed.
      *
      * The combination of this and `Period` should give you enough information
-     * about which `PeriodStream` has been removed.
+     * about which `Stream` has been removed.
      */
     periodId: string;
   };
@@ -229,12 +226,12 @@ export interface IContentInitializerEvents {
   };
   /** Emitted when a new `Representation` is being considered. */
   representationChange: {
-    /** The type of buffer linked to that `RepresentationStream`. */
+    /** The type of buffer linked to that `SegmentSelector`. */
     type: IBufferType;
-    /** The `Period` linked to the `RepresentationStream` we're creating. */
+    /** The `Period` linked to the `SegmentSelector` we're creating. */
     period: IPeriodMetadata;
     /**
-     * The `Representation` linked to the `RepresentationStream` we're creating.
+     * The `Representation` linked to the `SegmentSelector` we're creating.
      * `null` when we're choosing no Representation at all.
      */
     representation: IRepresentationMetadata | null;
@@ -249,10 +246,10 @@ export interface IContentInitializerEvents {
 export interface IAdaptationChangeEventPayload {
   /** The type of buffer for which the Representation is changing. */
   type: IBufferType;
-  /** The `Period` linked to the `RepresentationStream` we're creating. */
+  /** The `Period` linked to the `SegmentSelector` we're creating. */
   period: IPeriodMetadata;
   /**
-   * The `Adaptation` linked to the `AdaptationStream` we're creating.
+   * The `Adaptation` linked to the `RepresentationSelector` we're creating.
    * `null` when we're choosing no Adaptation at all.
    */
   adaptation: IAdaptationMetadata | null;

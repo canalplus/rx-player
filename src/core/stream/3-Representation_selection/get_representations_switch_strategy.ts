@@ -28,15 +28,15 @@ import {
 } from "../../segment_sinks/index.ts";
 import type {
   IRepresentationsChoice,
-  IRepresentationStreamPlaybackObservation,
-} from "../representation/index.ts";
+  ISegmentSelectorPlaybackObservation,
+} from "../4-Segment_selection/index.ts";
 
 export default function getRepresentationsSwitchingStrategy(
   period: IPeriod,
   adaptation: IAdaptation,
   settings: IRepresentationsChoice,
   segmentSink: SegmentSink,
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<ISegmentSelectorPlaybackObservation>,
 ): IRepresentationSwitchStrategy {
   if (settings.switchingMode === "lazy") {
     return { type: "continue", value: undefined };

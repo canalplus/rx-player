@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import RepresentationStream from "./representation_stream.ts";
+import SegmentSelector from "./segment_selector.ts";
 export type * from "./types.ts";
 
-export default RepresentationStream;
+export default SegmentSelector;
