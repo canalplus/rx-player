@@ -135,7 +135,7 @@ function isTimeInRanges(ranges: IRange[], time: number): boolean {
 /**
  * Returns true if the time given can be considered as part of the given range.
  * @param {Object} range1
- * @param {Number} Time
+ * @param {number} time
  * @returns {Boolean}
  */
 function isTimeInRange({ start, end }: IRange, time: number): boolean {

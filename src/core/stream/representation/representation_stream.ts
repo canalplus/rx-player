@@ -260,7 +260,7 @@ export default function RepresentationStream<TSegmentDataType>(
       } else if (initSegmentState.isLoaded) {
         log.warn(
           "Stream",
-          "Uninitialized index with an already loaded " + "initialization segment",
+          "Uninitialized index with an already loaded initialization segment",
           {
             bufferType,
             representationBitrate: content.representation.bitrate,

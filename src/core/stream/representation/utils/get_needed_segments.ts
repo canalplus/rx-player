@@ -326,7 +326,7 @@ function getAvailableBufferSize(
 /**
  * From the given array of buffered chunks (`bufferedSegments`) returns the last
  * buffered chunk contiguous with the one at the `startIndex` index given.
- * @param {Array.<Object>}
+ * @param {Array.<Object>} bufferedSegments
  * @param {number} startIndex
  * @returns {Object}
  */

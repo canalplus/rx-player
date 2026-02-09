@@ -456,8 +456,8 @@ export interface IRepresentationIndex {
    * Add segments to a RepresentationIndex that were predicted after parsing the
    * segment linked to `currentSegment`.
    * @param {Array.<Object>} nextSegments - The segment information parsed.
-   * @param {Object} segment - Information on the segment which contained that
-   * new segment information.
+   * @param {Object} currentSegment - Information on the segment which contained
+   * that new segment information.
    */
   addPredictedSegments(
     nextSegments: ISegmentInformation[],
