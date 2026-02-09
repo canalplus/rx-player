@@ -21,6 +21,7 @@ import Manifest from "./manifest";
 import Period from "./period";
 import type { IThumbnailTrack } from "./period";
 import Representation from "./representation";
+import type { IRepresentationProtectionData } from "./representation";
 import type {
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
@@ -41,6 +42,7 @@ export type {
   IManifestParsingOptions,
   IMetaPlaylistPrivateInfos,
   IRepresentationIndex,
+  IRepresentationProtectionData,
   IPrivateInfos,
   ISegment,
   IThumbnailTrack,
