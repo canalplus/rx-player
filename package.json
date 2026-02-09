@@ -221,7 +221,7 @@
     "@types/react-dom": "19.1.7",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
-    "@vitest/browser-webdriverio": "^4.0.16",
+    "@vitest/browser-webdriverio": "^4.0.18",
     "core-js": "3.45.0",
     "cross-env": "^10.0.0",
     "esbuild": "0.25.9",
@@ -241,7 +241,7 @@
     "semver": "7.7.2",
     "typescript": "5.9.2",
     "typescript-eslint": "^8.40.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.18"
   },
   "scripts-list": {
     " INFO ": "---- This field is read by the `list` npm script and allows to guide you through the RxPlayer's npm scripts ----",
