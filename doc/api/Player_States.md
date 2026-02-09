@@ -49,9 +49,6 @@ after the `STOPPED` state.
 That means that the player is currently downloading enough of the content to be able to
 play it.
 
-While this state is active, most of the content-related APIs (like `setAudioTrack`) are
-not available. You have to wait for the `LOADED` state for that.
-
 ### The LOADED state
 
 `LOADED` appears only after a `LOADING` state, and indicates that the current content can
@@ -62,8 +59,7 @@ available.
 
 If the `autoPlay` [loadVideo option](./Loading_a_Content.md#autoplay) has been set to
 true, the state will then switch to `PLAYING` directly. Else, the player will usually be
-paused and stay in the `LOADED` state (there is some edge cases, see the "Possible state
-transitions" chapter for more information).
+paused and stay in the `LOADED` state.
 
 ### The PLAYING state
 
@@ -76,8 +72,6 @@ Indicates that the player is currently paused in the content.
 ### The BUFFERING state
 
 The player is paused because it needs to build buffer.
-
-TThe player cannot play the content despite having enough data, due to an unknown reason.
 
 The player will not play until it gets out of this state.
 
