@@ -21,8 +21,8 @@ import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
 import type { SegmentQueue } from "../../fetchers/index.ts";
 import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
 
-/** Callbacks called by the `RepresentationStream` on various events. */
-export interface IRepresentationStreamCallbacks {
+/** Callbacks called by the `SegmentSelector` on various events. */
+export interface ISegmentSelectorCallbacks {
   /**
    * Called to announce the current status regarding the buffer for its
    * associated Period and type (e.g. "audio", "video", "text" etc.).
@@ -44,7 +44,7 @@ export interface IRepresentationStreamCallbacks {
    */
   manifestMightBeOufOfSync(): void;
   /**
-   * Callback called when a `RepresentationStream` is being terminated:
+   * Callback called when a `SegmentSelector` is being terminated:
    *
    *   - it has finished all its segment requests and won't do new ones.
    *
@@ -53,7 +53,7 @@ export interface IRepresentationStreamCallbacks {
    *   - it only waits until all the segments it has loaded have been pushed to the
    *     SegmentSink before actually stopping everything it does.
    *
-   * You can use this call as a hint that a new `RepresentationStream` can be
+   * You can use this call as a hint that a new `SegmentSelector` can be
    * created for the same `Period` and type (e.g. to switch quality).
    */
   terminating(): void;
@@ -179,7 +179,7 @@ export interface IBufferDiscontinuity {
 }
 
 /** Object that should be emitted by the given `IReadOnlyPlaybackObserver`. */
-export interface IRepresentationStreamPlaybackObservation {
+export interface ISegmentSelectorPlaybackObservation {
   /**
    * Information on the current media position in seconds at the time of a
    * Playback Observation.
@@ -244,10 +244,10 @@ export interface IPositionPlaybackObservation {
   pending: number | undefined;
 }
 
-/** Item emitted by the `terminate` reference given to a RepresentationStream. */
+/** Item emitted by the `terminate` reference given to a SegmentSelector. */
 export interface ITerminationOrder {
   /*
-   * If `true`, the RepresentationStream should interrupt immediately every long
+   * If `true`, the SegmentSelector should interrupt immediately every long
    * pending operations such as segment downloads.
    * If it is set to `false`, it can continue until those operations are
    * finished.
@@ -260,8 +260,8 @@ export interface ITerminationOrder {
   reason: string;
 }
 
-/** Arguments to give to the RepresentationStream. */
-export interface IRepresentationStreamArguments<TSegmentDataType> {
+/** Arguments to give to the SegmentSelector. */
+export interface ISegmentSelectorArguments<TSegmentDataType> {
   /** The context of the Representation you want to load. */
   content: {
     adaptation: IAdaptation;
@@ -274,26 +274,26 @@ export interface IRepresentationStreamArguments<TSegmentDataType> {
   /** Interface used to load new segments. */
   segmentQueue: SegmentQueue<TSegmentDataType>;
   /**
-   * Reference emitting when the RepresentationStream should "terminate".
+   * Reference emitting when the SegmentSelector should "terminate".
    *
-   * When this Reference emits an object, the RepresentationStream will begin a
+   * When this Reference emits an object, the SegmentSelector will begin a
    * "termination process": it will, depending on the type of termination
    * wanted, either stop immediately pending segment requests or wait until they
    * are finished before fully terminating (calling the `terminating` callback
-   * and stopping all `RepresentationStream` current tasks).
+   * and stopping all `SegmentSelector` current tasks).
    */
   terminate: IReadOnlySharedReference<null | ITerminationOrder>;
   /** Periodically emits the current playback conditions. */
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
-  /** Supplementary arguments which configure the RepresentationStream's behavior. */
-  options: IRepresentationStreamOptions;
+  playbackObserver: IReadOnlyPlaybackObserver<ISegmentSelectorPlaybackObservation>;
+  /** Supplementary arguments which configure the SegmentSelector's behavior. */
+  options: ISegmentSelectorOptions;
 }
 
 /**
  * Various specific stream "options" which tweak the behavior of the
- * RepresentationStream.
+ * SegmentSelector.
  */
-export interface IRepresentationStreamOptions {
+export interface ISegmentSelectorOptions {
   /**
    * The buffer size we have to reach in seconds (compared to the current
    * position. When that size is reached, no segments will be loaded until it

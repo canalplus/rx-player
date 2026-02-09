@@ -1,9 +1,4 @@
-import type {
-  IManifest,
-  IAdaptation,
-  IPeriod,
-  IRepresentation,
-} from "../../../manifest/index.ts";
+import type { IManifest, IAdaptation, IPeriod, IRepresentation } from "../../../manifest/index.ts";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
 import type {
   IAudioTrackSwitchingMode,
@@ -15,19 +10,17 @@ import type { SegmentQueueCreator } from "../../fetchers/index.ts";
 import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
 import type {
   IRepresentationsChoice,
-  IRepresentationStreamCallbacks,
-  IRepresentationStreamPlaybackObservation,
-} from "../representation/index.ts";
+  ISegmentSelectorCallbacks,
+  ISegmentSelectorPlaybackObservation,
+} from "../4-Segment_selection/index.ts";
 
-/** Callbacks called by the `AdaptationStream` on various events. */
-export interface IAdaptationStreamCallbacks extends Omit<
-  IRepresentationStreamCallbacks,
-  "terminating" | "addedSegment"
-> {
+/** Callbacks called by the `RepresentationSelector` on various events. */
+export interface IRepresentationSelectorCallbacks
+  extends Omit<ISegmentSelectorCallbacks, "terminating" | "addedSegment"> {
   /** Called as new bitrate estimates are done. */
   bitrateEstimateChange(payload: IBitrateEstimateChangePayload): void;
   /**
-   * Called when a new `RepresentationStream` is created to load segments from a
+   * Called when a new `SegmentSelector` is created to load segments from a
    * `Representation`.
    */
   representationChange(payload: IRepresentationChangePayload): void;
@@ -62,14 +55,14 @@ export interface IBitrateEstimateChangePayload {
 
 /** Payload for the `representationChange` callback. */
 export interface IRepresentationChangePayload {
-  /** The type of buffer linked to that `RepresentationStream`. */
+  /** The type of buffer linked to that `SegmentSelector`. */
   type: IBufferType;
-  /** The `Period` linked to the `RepresentationStream` we're creating. */
+  /** The `Period` linked to the `SegmentSelector` we're creating. */
   period: IPeriod;
-  /** The `Adaptation` linked to the `RepresentationStream` we're creating. */
+  /** The `Adaptation` linked to the `SegmentSelector` we're creating. */
   adaptation: IAdaptation;
   /**
-   * The `Representation` linked to the `RepresentationStream` we're creating.
+   * The `Representation` linked to the `SegmentSelector` we're creating.
    * `null` when we're choosing no Representation at all.
    */
   representation: IRepresentation | null;
@@ -117,8 +110,9 @@ export interface INeedsBufferFlushPayload {
   relativePosHasBeenDefaulted: boolean;
 }
 
-/** Regular playback information needed by the AdaptationStream. */
-export interface IAdaptationStreamPlaybackObservation extends IRepresentationStreamPlaybackObservation {
+/** Regular playback information needed by the RepresentationSelector. */
+export interface IRepresentationSelectorPlaybackObservation
+  extends ISegmentSelectorPlaybackObservation {
   /**
    * For the current SegmentSink, difference in seconds between the next position
    * where no segment data is available and the current position.
@@ -140,10 +134,10 @@ export interface IAdaptationStreamPlaybackObservation extends IRepresentationStr
   canStream: boolean;
 }
 
-/** Arguments given when creating a new `AdaptationStream`. */
-export interface IAdaptationStreamArguments {
+/** Arguments given when creating a new `RepresentationSelector`. */
+export interface IRepresentationSelectorArguments {
   /** Regularly emit playback conditions. */
-  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
+  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationSelectorPlaybackObservation>;
   /** Content you want to create this Stream for. */
   content: {
     manifest: IManifest;
@@ -151,7 +145,7 @@ export interface IAdaptationStreamArguments {
     adaptation: IAdaptation;
     representations: IReadOnlySharedReference<IRepresentationsChoice>;
   };
-  options: IAdaptationStreamOptions;
+  options: IRepresentationSelectorOptions;
   /** Estimate the right Representation to play. */
   representationEstimator: IRepresentationEstimator;
   /** SourceBuffer wrapper - needed to push media segments. */
@@ -161,7 +155,7 @@ export interface IAdaptationStreamArguments {
   /**
    * "Buffer goal" wanted, or the ideal amount of time ahead of the current
    * position in the current SegmentSink. When this amount has been reached
-   * this AdaptationStream won't try to download new segments.
+   * this RepresentationSelector won't try to download new segments.
    */
   wantedBufferAhead: IReadOnlySharedReference<number>;
   /**
@@ -175,9 +169,9 @@ export interface IAdaptationStreamArguments {
 
 /**
  * Various specific stream "options" which tweak the behavior of the
- * AdaptationStream.
+ * RepresentationSelector.
  */
-export interface IAdaptationStreamOptions {
+export interface IRepresentationSelectorOptions {
   /**
    * Hex-encoded DRM "system ID" as found in:
    * https://dashif.org/identifiers/content_protection/
@@ -191,7 +185,7 @@ export interface IAdaptationStreamOptions {
    */
   drmSystemId: string | undefined;
   /**
-   * If `true`, the AdaptationStream might replace segments of a lower-quality
+   * If `true`, the RepresentationSelector might replace segments of a lower-quality
    * (with a lower bitrate) with segments of a higher quality (with a higher
    * bitrate). This allows to have a fast transition when network conditions
    * improve.

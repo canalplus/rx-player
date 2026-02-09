@@ -32,7 +32,7 @@ import type {
   IPushChunkInfos,
   SegmentSink,
 } from "../../../segment_sinks/index.ts";
-import type { IRepresentationStreamPlaybackObservation } from "../types.ts";
+import type { ISegmentSelectorPlaybackObservation } from "../types.ts";
 
 /**
  * Append a segment to the given segmentSink.
@@ -46,7 +46,7 @@ import type { IRepresentationStreamPlaybackObservation } from "../types.ts";
  * @returns {Promise}
  */
 export default async function appendSegmentToBuffer<T>(
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<ISegmentSelectorPlaybackObservation>,
   segmentSink: SegmentSink,
   dataInfos: IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
   bufferGoal: IReadOnlySharedReference<number>,
