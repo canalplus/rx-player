@@ -295,19 +295,16 @@ The following APIs are **not available** in the worker context:
 ### Examples of what won't work:
 
 ```js
-// ❌ These will throw errors in your worker:
+// These will throw errors in your worker:
 
-// DOM access
+// DOM access (you don't have access to the DOM in a WebWorker)
 const videoElement = document.querySelector("video");
 
 // Local storage
 const setting = localStorage.getItem("userPreference");
 
-// Window object
+// Window object (use `self` to refect to global object)
 const screenWidth = window.innerWidth;
-
-// User prompts
-const userInput = prompt("Enter value:");
 ```
 
 ### Available APIs
@@ -323,24 +320,18 @@ Many JavaScript APIs are still available in workers:
 
 ### Communication Constraints
 
-Variables and objects cannot be directly shared between main thread and worker:
+Variables and objects cannot be directly shared between main thread and worker, all
+communication must happen through the `sendMessage` system:
 
 ```js
-// ❌ This won't work - variables are not shared
-let sharedConfig = {}; // This exists separately in each context
-```
-
-All communication must happen through the `sendMessage` system:
-
-```js
-// ✅ Correct way to share data
+// Correct way to share data
 rxPlayerWorker.sendMessage("config", { quality: "high" });
 ```
 
 Moreover, only serializable data can be passed between threads:
 
 ```js
-// ✅ These can be passed:
+// These can be passed:
 const validData = {
   string: "hello",
   number: 42,
@@ -349,7 +340,7 @@ const validData = {
   object: { nested: "value" },
 };
 
-// ❌ These cannot be passed:
+// These **CANNOT** be passed:
 const invalidData = {
   function: () => console.log("hello"),
   domElement: document.querySelector("div"),
@@ -385,15 +376,15 @@ rxPlayerWorker.registerSegmentLoader("custom-loader", (segmentInfo, callbacks) =
 #### Attempting to access main thread state
 
 ```js
-// ❌ Common mistake - trying to access main thread variables
+// You cannot access objects defined in the main thread (e.g. `userSettings` here)
 rxPlayerWorker.registerRepresentationFilter("filter", (rep, context) => {
-  // This won't work - userSettings doesn't exist in worker
+  // This won't work: `userSettings` doesn't exist in worker
   if (userSettings.allowHighQuality) {
     return rep.bitrate < 5000000;
   }
 });
 
-// ✅ Correct approach - pass configuration via messages
+// Correct approach: pass configuration via messages
 rxPlayerWorker.addMessageListener("updateSettings", (settings) => {
   // Store settings in worker scope
   workerSettings = settings;
@@ -403,13 +394,18 @@ rxPlayerWorker.addMessageListener("updateSettings", (settings) => {
 #### Forgetting async nature of communication
 
 ```js
-// ❌ Wrong - expecting immediate response
+// Wrong: expecting immediate response
+let config = null:
 rxPlayerWorker.sendMessage("getConfig");
-// config is not immediately available here
+rxPlayerWorker.addMessageListener("configResponse", (response) => {
+  config = response;
+});
+// This won't work: config is not immediately available here
+console.log(config.value);
 
-// ✅ Correct - handle async communication
+// Correct: handle async communication
 rxPlayerWorker.sendMessage("getConfig");
 rxPlayerWorker.addMessageListener("configResponse", (config) => {
-  // Handle config here
+  console.log(config.value);
 });
 ```
