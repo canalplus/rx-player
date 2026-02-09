@@ -14,25 +14,28 @@ import type { CancellationSignal } from "../../../utils/task_canceller.ts";
 import TaskCanceller from "../../../utils/task_canceller.ts";
 import type {
   IRepresentationsChoice,
-  IRepresentationStreamCallbacks,
+  ISegmentSelectorCallbacks,
   ITerminationOrder,
-} from "../representation/index.ts";
-import RepresentationStream from "../representation/index.ts";
+} from "../4-Segment_selection/index.ts";
+import SegmentSelector from "../4-Segment_selection/index.ts";
 import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy.ts";
-import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./types.ts";
+import type {
+  IRepresentationSelectorArguments,
+  IRepresentationSelectorCallbacks,
+} from "./types.ts";
 
 /**
- * Create new `AdaptationStream` whose task will be to download the media data
+ * Create new `RepresentationSelector` whose task will be to download the media data
  * for a given Adaptation (i.e. "track").
  *
  * It will rely on the IRepresentationEstimator to choose at any time the
  * best Representation for this Adaptation and then run the logic to download
  * and push the corresponding segments in the SegmentSink.
  *
- * @param {Object} args - Various arguments allowing the `AdaptationStream` to
+ * @param {Object} args - Various arguments allowing the `RepresentationSelector` to
  * determine which Representation to choose and which segments to load from it.
  * You can check the corresponding type for more information.
- * @param {Object} callbacks - The `AdaptationStream` relies on a system of
+ * @param {Object} callbacks - The `RepresentationSelector` relies on a system of
  * callbacks that it will call on various events.
  *
  * Depending on the event, the caller may be supposed to perform actions to
@@ -40,18 +43,18 @@ import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./t
  *
  * This approach is taken instead of a more classical EventEmitter pattern to:
  *   - Allow callbacks to be called synchronously after the
- *     `AdaptationStream` is called.
+ *     `RepresentationSelector` is called.
  *   - Simplify bubbling events up, by just passing through callbacks
  *   - Force the caller to explicitely handle or not the different events.
  *
- * Callbacks may start being called immediately after the `AdaptationStream`
+ * Callbacks may start being called immediately after the `RepresentationSelector`
  * call and may be called until either the `parentCancelSignal` argument is
  * triggered, or until the `error` callback is called, whichever comes first.
  * @param {Object} parentCancelSignal - `CancellationSignal` allowing, when
- * triggered, to immediately stop all operations the `AdaptationStream` is
+ * triggered, to immediately stop all operations the `RepresentationSelector` is
  * doing.
  */
-export default function AdaptationStream(
+export default function RepresentationSelector(
   {
     playbackObserver,
     content,
@@ -61,14 +64,16 @@ export default function AdaptationStream(
     segmentQueueCreator,
     wantedBufferAhead,
     maxVideoBufferSize,
-  }: IAdaptationStreamArguments,
-  callbacks: IAdaptationStreamCallbacks,
+  }: IRepresentationSelectorArguments,
+  callbacks: IRepresentationSelectorCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
   const { manifest, period, adaptation } = content;
 
-  /** Allows to cancel everything the `AdaptationStream` is doing. */
-  const adapStreamCanceller = new TaskCanceller("AdaptationStream " + adaptation.type);
+  /** Allows to cancel everything the `RepresentationSelector` is doing. */
+  const adapStreamCanceller = new TaskCanceller(
+    "RepresentationSelector " + adaptation.type,
+  );
   adapStreamCanceller.linkToSignal(parentCancelSignal);
 
   /**
@@ -131,7 +136,7 @@ export default function AdaptationStream(
     { clearSignal: adapStreamCanceller.signal },
   );
 
-  /** Allows a `RepresentationStream` to easily fetch media segments. */
+  /** Allows a `SegmentSelector` to easily fetch media segments. */
   const segmentQueue = segmentQueueCreator.createSegmentQueue(
     adaptation.type,
     /* eslint-disable @typescript-eslint/unbound-method */
@@ -166,7 +171,7 @@ export default function AdaptationStream(
   );
 
   /**
-   * When triggered, cancel all `RepresentationStream`s currently created.
+   * When triggered, cancel all `SegmentSelector`s currently created.
    * Set to `undefined` initially.
    */
   let cancelCurrentStreams: TaskCanceller | undefined;
@@ -188,7 +193,7 @@ export default function AdaptationStream(
       );
       representationsList.setValueIfChanged(newRepresentations);
       const currentStreamCanceller = new TaskCanceller(
-        "AdaptationStream: RepresentationStream Group " + adaptation.type,
+        "RepresentationSelector: SegmentSelector Group " + adaptation.type,
       );
       cancelCurrentStreams = currentStreamCanceller;
       currentStreamCanceller.linkToSignal(adapStreamCanceller.signal);
@@ -196,7 +201,7 @@ export default function AdaptationStream(
         if (currentStreamCanceller.isUsed() && TaskCanceller.isCancellationError(err)) {
           return;
         }
-        adapStreamCanceller.cancel("RepresentationStream err");
+        adapStreamCanceller.cancel("SegmentSelector err");
         callbacks.error(err);
       });
     },
@@ -276,27 +281,25 @@ export default function AdaptationStream(
         assertUnreachable(switchStrat);
     }
 
-    recursivelyCreateRepresentationStreams(repsChoiceCancelSignal);
+    recursivelyCreateSegmentSelectors(repsChoiceCancelSignal);
   }
 
   /**
-   * Create `RepresentationStream`s starting with the Representation of the last
+   * Create `SegmentSelector`s starting with the Representation of the last
    * estimate performed.
    * Each time a new estimate is made, this function will create a new
-   * `RepresentationStream` corresponding to that new estimate.
+   * `SegmentSelector` corresponding to that new estimate.
    * @param {Object} fnCancelSignal - `CancellationSignal` which will abort
    * anything this function is doing and free allocated resources.
    */
-  function recursivelyCreateRepresentationStreams(
-    fnCancelSignal: CancellationSignal,
-  ): void {
+  function recursivelyCreateSegmentSelectors(fnCancelSignal: CancellationSignal): void {
     /**
-     * `TaskCanceller` triggered when the current `RepresentationStream` is
+     * `TaskCanceller` triggered when the current `SegmentSelector` is
      * terminating and as such the next one might be immediately created
      * recursively.
      */
     const repStreamTerminatingCanceller = new TaskCanceller(
-      "AdaptationStream: RepresentationStream creation " + adaptation.type,
+      "RepresentationSelector: SegmentSelector creation " + adaptation.type,
     );
     repStreamTerminatingCanceller.linkToSignal(fnCancelSignal);
     const { representation } = estimateRef.getValue();
@@ -368,7 +371,7 @@ export default function AdaptationStream(
       return; // previous callback has stopped everything by side-effect
     }
 
-    const representationStreamCallbacks: IRepresentationStreamCallbacks = {
+    const segmentSelectorCallbacks: ISegmentSelectorCallbacks = {
       streamStatusUpdate: callbacks.streamStatusUpdate,
       encryptionDataEncountered: callbacks.encryptionDataEncountered,
       manifestMightBeOufOfSync: callbacks.manifestMightBeOufOfSync,
@@ -376,7 +379,7 @@ export default function AdaptationStream(
       inbandEvent: callbacks.inbandEvent,
       warning: callbacks.warning,
       error(err: unknown) {
-        adapStreamCanceller.cancel("RepresentationStream err cb");
+        adapStreamCanceller.cancel("SegmentSelector err cb");
         callbacks.error(err);
       },
       addedSegment(segmentInfo) {
@@ -386,53 +389,53 @@ export default function AdaptationStream(
         if (repStreamTerminatingCanceller.isUsed()) {
           return; // Already handled
         }
-        repStreamTerminatingCanceller.cancel("RepresentationStream terminating");
-        return recursivelyCreateRepresentationStreams(fnCancelSignal);
+        repStreamTerminatingCanceller.cancel("SegmentSelector terminating");
+        return recursivelyCreateSegmentSelectors(fnCancelSignal);
       },
     };
 
-    createRepresentationStream(
+    createSegmentSelector(
       representation,
       terminateCurrentStream,
-      representationStreamCallbacks,
+      segmentSelectorCallbacks,
       fnCancelSignal,
     );
   }
 
   /**
-   * Create and returns a new `RepresentationStream`, linked to the
+   * Create and returns a new `SegmentSelector`, linked to the
    * given Representation.
    * @param {Object} representation - The Representation the
-   * `RepresentationStream` has to be created for.
+   * `SegmentSelector` has to be created for.
    * @param {Object} terminateCurrentStream - Gives termination orders,
-   * indicating that the `RepresentationStream` should stop what it's doing.
-   * @param {Object} representationStreamCallbacks - Callbacks to call on
-   * various `RepresentationStream` events.
+   * indicating that the `SegmentSelector` should stop what it's doing.
+   * @param {Object} segmentSelectorCallbacks - Callbacks to call on
+   * various `SegmentSelector` events.
    * @param {Object} globalCancelSignal - `CancellationSignal` which will
    * immediately clean every resources allocated by this function.
    */
-  function createRepresentationStream(
+  function createSegmentSelector(
     representation: IRepresentation,
     terminateCurrentStream: IReadOnlySharedReference<ITerminationOrder | null>,
-    representationStreamCallbacks: IRepresentationStreamCallbacks,
+    segmentSelectorCallbacks: ISegmentSelectorCallbacks,
     globalCancelSignal: CancellationSignal,
   ): void {
-    /** Set to `true` if we've encountered an error with this `RepresentationStream` */
+    /** Set to `true` if we've encountered an error with this `SegmentSelector` */
     let hasEncounteredError = false;
 
     /**
-     * Construct a `TaskCanceller`, triggered once the `RepresentationStream` we
+     * Construct a `TaskCanceller`, triggered once the `SegmentSelector` we
      * will create here announces that it is "terminating" (implies that it is
      * done loading new data and will clean itself automatically once it has
      * pushed all loaded segments).
      *
      * We keep it distinct from `globalCancelSignal` as the latter's lifetime may
-     * be much much longer than our `RepresentationStream`'s.
+     * be much much longer than our `SegmentSelector`'s.
      * Thus it wouldn't be adapted as a canceller for the listeners we're
      * registering here.
      */
     const terminatingCanceller = new TaskCanceller(
-      "RepresentationStream-linked listeners in AdaptationStream - " +
+      "SegmentSelector-linked listeners in RepresentationSelector - " +
         `periodStart=${period.start} type=${adaptation.type}`,
     );
     terminatingCanceller.linkToSignal(globalCancelSignal);
@@ -453,25 +456,25 @@ export default function AdaptationStream(
       representationId: representation.id,
       representationBitrate: representation.bitrate,
     });
-    const updatedCallbacks = objectAssign({}, representationStreamCallbacks, {
+    const updatedCallbacks = objectAssign({}, segmentSelectorCallbacks, {
       error(err: Error) {
         if (hasEncounteredError) {
-          // A RepresentationStream might trigger multiple Errors (for example
+          // A SegmentSelector might trigger multiple Errors (for example
           // multiple segments it tried to push at once led to errors).
           // In that case, we'll only consider the first Error.
           //
           // That could mean that we're hiding legitimate issues but handling
           // multiple of those errors at once is too hard a task for now.
-          log.warn("Stream", "Ignoring RepresentationStream error", err);
+          log.warn("Stream", "Ignoring SegmentSelector error", err);
           return;
         }
         hasEncounteredError = true;
         const formattedError = formatError(err, {
           defaultCode: "NONE",
-          defaultReason: "Unknown `RepresentationStream` error",
+          defaultReason: "Unknown `SegmentSelector` error",
         });
         if (formattedError.code !== "BUFFER_FULL_ERROR") {
-          representationStreamCallbacks.error(err);
+          segmentSelectorCallbacks.error(err);
         } else {
           log.warn("Stream", "received BUFFER_FULL_ERROR", {
             bufferType: adaptation.type,
@@ -484,19 +487,19 @@ export default function AdaptationStream(
           const newBufferGoalRatio = lastBufferGoalRatio * 0.7;
           bufferGoalRatioMap.set(representation.id, newBufferGoalRatio);
           if (newBufferGoalRatio <= 0.05 || getBufferGoal(representation, wba) <= 2) {
-            representationStreamCallbacks.error(formattedError);
+            segmentSelectorCallbacks.error(formattedError);
             return;
           }
 
           // We wait 4 seconds to let the situation evolve by itself before
           // retrying loading segments with a lower buffer goal
-          // If the `RepresentationStream` was terminating anyway, just exits
+          // If the `SegmentSelector` was terminating anyway, just exits
           cancellableSleep(4000, terminatingCanceller.signal)
             .then(() => {
-              return createRepresentationStream(
+              return createSegmentSelector(
                 representation,
                 terminateCurrentStream,
-                representationStreamCallbacks,
+                segmentSelectorCallbacks,
                 globalCancelSignal,
               );
             })
@@ -505,10 +508,10 @@ export default function AdaptationStream(
       },
       terminating() {
         terminatingCanceller.cancel("Representation terminating");
-        representationStreamCallbacks.terminating();
+        segmentSelectorCallbacks.terminating();
       },
     });
-    RepresentationStream(
+    SegmentSelector(
       {
         playbackObserver,
         content: { representation, adaptation, period, manifest },
@@ -525,12 +528,12 @@ export default function AdaptationStream(
       updatedCallbacks,
       // NOTE: We give the long-lived `globalCancelSignal` here (and not
       // `terminatingCanceller.signal`) on purpose.
-      // `RepresentationStream` should clean-up themselves automatically based
+      // `SegmentSelector` should clean-up themselves automatically based
       // on their `terminate` parameter.
       //
       // This `CancellationSignal` is a killswitch which if triggered too
       // soon might interrupt some async operations done when this
-      // `RepresentationStream` is terminating: e.g. stop pushing the segments
+      // `SegmentSelector` is terminating: e.g. stop pushing the segments
       // it has just loaded.
       globalCancelSignal,
     );

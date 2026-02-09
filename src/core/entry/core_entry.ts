@@ -607,8 +607,7 @@ function loadPreparedContent(
 
     /**
      * Stores last discontinuity update sent to the Core for each Period and type
-     * combinations, at least until the corresponding `PeriodStreamCleared`
-     * message.
+     * combinations, at least until the corresponding `StreamCleared` message.
      *
      * This is an optimization to avoid sending too much discontinuity messages to
      * the main thread when it is not needed because nothing changed.
@@ -842,7 +841,7 @@ function loadPreparedContent(
           });
         },
 
-        periodStreamReady(value) {
+        streamReady(value) {
           if (preparedContent === null) {
             return;
           }
@@ -852,13 +851,13 @@ function loadPreparedContent(
             value.adaptationRef,
           );
           sendMessage({
-            type: CoreMessageType.PeriodStreamReady,
+            type: CoreMessageType.StreamReady,
             contentId,
             value: { periodId: value.period.id, bufferType: value.type },
           });
         },
 
-        periodStreamCleared(value) {
+        streamCleared(value) {
           if (preparedContent === null) {
             return;
           }
@@ -879,7 +878,7 @@ function loadPreparedContent(
             value.type,
           );
           sendMessage({
-            type: CoreMessageType.PeriodStreamCleared,
+            type: CoreMessageType.StreamCleared,
             contentId,
             value: { periodId: value.period.id, bufferType: value.type },
           });

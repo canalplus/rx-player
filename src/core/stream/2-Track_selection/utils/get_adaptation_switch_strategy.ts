@@ -26,8 +26,8 @@ import {
   getLastSegmentBeforePeriod,
   SegmentSinkOperation,
 } from "../../../segment_sinks/index.ts";
-import type { ITrackSwitchingMode } from "../../adaptation/index.ts";
-import type { IPeriodStreamPlaybackObservation } from "../types.ts";
+import type { ITrackSwitchingMode } from "../../3-Representation_selection/index.ts";
+import type { ITrackSelectorStreamPlaybackObservation } from "../types.ts";
 
 export type IAdaptationSwitchStrategy =
   /** Do nothing special. */
@@ -64,7 +64,7 @@ export default function getAdaptationSwitchStrategy(
   period: IPeriod,
   adaptation: IAdaptation,
   switchingMode: ITrackSwitchingMode,
-  playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<ITrackSelectorStreamPlaybackObservation>,
   options: IAdaptationSwitchOptions,
 ): IAdaptationSwitchStrategy {
   if (
