@@ -15,6 +15,7 @@
  */
 
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
+import shouldPerformInitialSeekToZero from "../../../compat/should_seek_at_zero";
 import shouldValidateMetadata from "../../../compat/should_validate_metadata";
 import { MediaError } from "../../../errors";
 import log from "../../../log";
@@ -145,7 +146,10 @@ export default function performInitialSeekAndPlay(
             }
             if (obs.readyState >= 1) {
               stopListening();
-              if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
+              if (
+                initiallySeekedTime !== undefined &&
+                (initiallySeekedTime !== 0 || shouldPerformInitialSeekToZero())
+              ) {
                 performInitialSeek(initiallySeekedTime);
               } else {
                 playbackObserver.unblockSeeking();
