@@ -33,6 +33,7 @@ import type {
   IParsedInitSegmentPayload,
   IParsedSegmentPayload,
 } from "../../fetchers/segment/segment_queue";
+import EncryptionDataNotifier from "./encryption_data_notifier";
 import type {
   IQueuedSegment,
   IRepresentationStreamArguments,
@@ -125,33 +126,16 @@ export default function RepresentationStream<TSegmentDataType>(
     initSegmentState.isLoaded = true;
   }
 
-  /**
-   * `true` if the event notifying about encryption data has already been
-   * constructed.
-   * Allows to avoid sending multiple times protection events.
-   */
-  let hasSentEncryptionData = false;
-
-  // If the DRM system id is already known, and if we already have encryption data
-  // for it, we may not need to wait until the initialization segment is loaded to
-  // signal required protection data, thus performing License negotiations sooner
-  if (drmSystemId !== undefined) {
-    const encryptionData = representation.getEncryptionData(drmSystemId);
-
-    // If some key ids are not known yet, it may be safer to wait for this initialization
-    // segment to be loaded first
-    if (
-      encryptionData.length > 0 &&
-      encryptionData.every((e) => e.keyIds !== undefined)
-    ) {
-      hasSentEncryptionData = true;
+  const drmNotifier = new EncryptionDataNotifier({
+    drmSystemId,
+    representation,
+    notify: (encryptionData) =>
       callbacks.encryptionDataEncountered(
         encryptionData.map((d) => objectAssign({ content }, d)),
-      );
-      if (canceller.isUsed()) {
-        return; // previous callback has stopped everything by side-effect
-      }
-    }
+      ),
+  });
+  if (canceller.isUsed()) {
+    return;
   }
 
   segmentQueue.addEventListener(
@@ -369,29 +353,7 @@ export default function RepresentationStream<TSegmentDataType>(
       | IParsedInitSegmentPayload<TSegmentDataType>
       | IParsedSegmentPayload<TSegmentDataType>,
   ): void {
-    // Supplementary encryption information might have been parsed.
-    for (const protInfo of evt.protectionData) {
-      // TODO better handle use cases like key rotation by not always grouping
-      // every protection data together? To check.
-      representation.addProtectionData(
-        protInfo.initDataType,
-        protInfo.keyId,
-        protInfo.initData,
-      );
-    }
-
-    // Now that the initialization segment has been parsed - which may have
-    // included encryption information - take care of the encryption event
-    // if not already done.
-    if (!hasSentEncryptionData) {
-      const allEncryptionData = representation.getAllEncryptionData();
-      if (allEncryptionData.length > 0) {
-        callbacks.encryptionDataEncountered(
-          allEncryptionData.map((p) => objectAssign({ content }, p)),
-        );
-        hasSentEncryptionData = true;
-      }
-    }
+    drmNotifier.onNewProtectionData(evt.protectionData);
 
     if (evt.segmentType === "init") {
       if (!representation.index.isInitialized() && evt.segmentList !== undefined) {
