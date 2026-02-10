@@ -9,7 +9,7 @@ import type {
   MediaError,
   NetworkError,
   OtherError,
-} from "./errors/index.ts";
+} from "./errors/public_api/index.ts";
 import type {
   IPersistentSessionInfoV0,
   IPersistentSessionInfoV1,

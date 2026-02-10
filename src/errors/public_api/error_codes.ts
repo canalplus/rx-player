@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { IRequestErrorType } from "../utils/request/index.ts";
-import { RequestErrorTypes } from "../utils/request/index.ts";
+import type { IRequestErrorType } from "../../utils/request/index.ts";
+import { RequestErrorTypes } from "../../utils/request/index.ts";
 
 export type IErrorType =
   "NETWORK_ERROR" | "MEDIA_ERROR" | "ENCRYPTED_MEDIA_ERROR" | "OTHER_ERROR";

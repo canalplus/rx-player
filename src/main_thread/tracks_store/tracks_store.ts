@@ -21,7 +21,7 @@
 
 import config from "../../config.ts";
 import type { IAdaptationChoice, IRepresentationsChoice } from "../../core/types.ts";
-import { MediaError } from "../../errors/index.ts";
+import { MediaError } from "../../errors/public_api/index.ts";
 import log from "../../log.ts";
 import type {
   IAdaptationMetadata,

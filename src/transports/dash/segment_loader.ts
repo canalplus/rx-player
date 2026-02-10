@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CustomLoaderError } from "../../errors/index.ts";
+import { CustomLoaderError } from "../../errors/internal/index.ts";
 import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
 import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types.ts";
 import request, { fetchIsSupported } from "../../utils/request/index.ts";

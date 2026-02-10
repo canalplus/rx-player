@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import type { IPlayerError } from "../public_types.ts";
-import isKnownError from "./is_known_error.ts";
-import OtherError from "./other_error.ts";
+import type { IPlayerError } from "../../public_types.ts";
+import OtherError from "../public_api/other_error.ts";
+import isApiError from "../utils/is_api_error.ts";
 
 /*
  * Format an unknown error into an API-defined error.
  * @param {*} error
  * @returns {Error}
  */
-export default function formatError(
+export default function formatApiError(
   error: unknown,
   {
     defaultCode,
@@ -33,7 +33,7 @@ export default function formatError(
     defaultReason: string;
   },
 ): IPlayerError {
-  if (isKnownError(error)) {
+  if (isApiError(error)) {
     return error;
   }
   const reason = error instanceof Error ? error.toString() : defaultReason;

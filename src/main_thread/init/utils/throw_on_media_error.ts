@@ -15,7 +15,7 @@
  */
 
 import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
-import { MediaError } from "../../../errors/index.ts";
+import { MediaError } from "../../../errors/public_api/index.ts";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
 import type { CancellationSignal } from "../../../utils/task_canceller.ts";
 
