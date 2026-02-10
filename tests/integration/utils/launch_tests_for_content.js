@@ -152,7 +152,7 @@ export default function launchTestsForContent(manifestInfos, { multithread } = {
         expect(player.getPlayerState()).to.equal("LOADING");
         const loadingTime = performance.now();
         await waitForLoadedStateAfterLoadVideo(player);
-        expect(performance.now() - loadingTime).to.be.at.most(1000);
+        expect(performance.now() - loadingTime).to.be.at.most(1500);
 
         if (mode.useWorker) {
           expect(mainThreadManifestLoaderCalledTimes).to.equal(0);

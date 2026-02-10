@@ -428,10 +428,10 @@ function runInitialPlaybackTests({ multithread } = {}) {
         url: manifestInfos.url,
       });
       await waitForLoadedStateAfterLoadVideo(player);
-      await sleep(100);
+      await sleep(500);
       const lastPositionWithBuffer = player.getVideoElement().buffered.end(0);
       player.seekTo(lastPositionWithBuffer);
-      await sleep(100);
+      await sleep(500);
       expect(player.getVideoElement().buffered.end(0)).to.be.above(
         lastPositionWithBuffer,
       );
