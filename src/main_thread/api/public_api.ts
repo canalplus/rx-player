@@ -2820,6 +2820,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       if (this.videoElement === null) {
         throw new Error("Disposed player");
       }
+
+      if (this.videoElement.seekable.length > 0) {
+        return this.videoElement.seekable.end(this.videoElement.seekable.length - 1);
+      }
+      // if for some reason seekable has no entry, fallback on duration
       return this.videoElement.duration;
     }
 
