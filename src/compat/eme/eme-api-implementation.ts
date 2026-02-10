@@ -1,4 +1,4 @@
-import { MediaError } from "../../errors/index.ts";
+import { MediaError } from "../../errors/public_api/index.ts";
 import assert from "../../utils/assert.ts";
 import globalScope from "../../utils/global_scope.ts";
 import isNode from "../../utils/is_node.ts";

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import NetworkError from "../../../../src/errors/network_error.ts";
-import { RequestError } from "../../../../src/utils/request/index.ts";
+import NetworkError from "../../../../../src/errors/public_api/network_error.ts";
+import { RequestError } from "../../../../../src/utils/request/index.ts";
 
 describe("errors - NetworkError", () => {
   it("should be able to use a RequestError", () => {
