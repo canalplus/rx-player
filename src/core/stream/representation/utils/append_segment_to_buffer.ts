@@ -18,7 +18,8 @@
  * This file allows any Stream to push data to a SegmentSink.
  */
 
-import { MediaError, SourceBufferError } from "../../../../errors/index.ts";
+import { SourceBufferError } from "../../../../errors/internal/index.ts";
+import { MediaError } from "../../../../errors/public_api/index.ts";
 import log from "../../../../log.ts";
 import { toTaggedTrack } from "../../../../manifest/index.ts";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer/index.ts";

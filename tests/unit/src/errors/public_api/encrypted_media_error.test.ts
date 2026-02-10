@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import EncryptedMediaError from "../../../../src/errors/encrypted_media_error.ts";
+import EncryptedMediaError from "../../../../../src/errors/public_api/encrypted_media_error.ts";
 
 describe("errors - EncryptedMediaError", () => {
   it("should format an EncryptedMediaError", () => {

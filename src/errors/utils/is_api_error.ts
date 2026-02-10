@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import type { IPlayerError } from "../public_types.ts";
-import EncryptedMediaError from "./encrypted_media_error.ts";
-import { ErrorTypes } from "./error_codes.ts";
-import MediaError from "./media_error.ts";
-import NetworkError from "./network_error.ts";
-import OtherError from "./other_error.ts";
+import type { IPlayerError } from "../../public_types.ts";
+import EncryptedMediaError from "../public_api/encrypted_media_error.ts";
+import { ErrorTypes } from "../public_api/error_codes.ts";
+import MediaError from "../public_api/media_error.ts";
+import NetworkError from "../public_api/network_error.ts";
+import OtherError from "../public_api/other_error.ts";
 
 /**
  * Whether the error given is a ICustomError.
  * @param {Error} error
  * @returns {Boolean}
  */
-export default function isKnownError(error: unknown): error is IPlayerError {
+export default function isApiError(error: unknown): error is IPlayerError {
   return (
     (error instanceof EncryptedMediaError ||
       error instanceof MediaError ||

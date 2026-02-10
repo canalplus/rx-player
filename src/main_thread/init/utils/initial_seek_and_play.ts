@@ -17,7 +17,7 @@
 import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
 import shouldPerformInitialSeekToZero from "../../../compat/should_seek_at_zero.ts";
 import shouldValidateMetadata from "../../../compat/should_validate_metadata.ts";
-import { MediaError } from "../../../errors/index.ts";
+import { MediaError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { IMediaElementPlaybackObserver } from "../../../playback_observer/index.ts";
 import { SeekingState } from "../../../playback_observer/index.ts";

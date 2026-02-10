@@ -5,7 +5,7 @@ import type {
 } from "../compat/browser_compatibility_types.ts";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type.ts";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners.ts";
-import { SourceBufferError } from "../errors/index.ts";
+import { SourceBufferError } from "../errors/internal/index.ts";
 import log from "../log.ts";
 import { concat } from "../utils/byte_parsing.ts";
 import EventEmitter from "../utils/event_emitter.ts";

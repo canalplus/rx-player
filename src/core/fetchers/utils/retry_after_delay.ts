@@ -1,5 +1,6 @@
 import config from "../../../config.ts";
-import { CustomLoaderError, NetworkErrorTypes } from "../../../errors/index.ts";
+import { CustomLoaderError } from "../../../errors/internal/index.ts";
+import { NetworkErrorTypes } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import { RequestError } from "../../../utils/request/index.ts";
 

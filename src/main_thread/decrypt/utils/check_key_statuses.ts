@@ -19,7 +19,7 @@ import type {
   IMediaKeySystemAccess,
 } from "../../../compat/browser_compatibility_types.ts";
 import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid.ts";
-import { EncryptedMediaError } from "../../../errors/index.ts";
+import { EncryptedMediaError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type {
   IEncryptedMediaErrorKeyStatusObject,

@@ -44,9 +44,14 @@ import type {
 } from "../../core/types.ts";
 import { CoreMessageType } from "../../core/types.ts";
 import type { IDefaultConfig } from "../../default_config.ts";
-import type { IErrorCode, IErrorType } from "../../errors/index.ts";
-import { ErrorCodes, ErrorTypes, formatError, MediaError } from "../../errors/index.ts";
-import WorkerInitializationError from "../../errors/worker_initialization_error.ts";
+import {
+  ErrorCodes,
+  ErrorTypes,
+  formatApiError,
+  MediaError,
+  WorkerInitializationError,
+} from "../../errors/public_api/index.ts";
+import type { IErrorCode, IErrorType } from "../../errors/public_api/index.ts";
 import type { IFeature } from "../../features/index.ts";
 import features, { addFeatures } from "../../features/index.ts";
 import log from "../../log.ts";
@@ -1401,7 +1406,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_onFatalError(error, contentInfos);
     });
     initializer.addEventListener("warning", (error) => {
-      const formattedError = formatError(error, {
+      const formattedError = formatApiError(error, {
         defaultCode: "NONE",
         defaultReason: "An unknown error happened.",
       });
@@ -3780,7 +3785,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
     }
-    const formattedError = formatError(err, {
+    const formattedError = formatApiError(err, {
       defaultCode: "NONE",
       defaultReason: "An unknown error stopped content playback.",
     });
