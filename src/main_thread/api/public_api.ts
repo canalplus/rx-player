@@ -2772,6 +2772,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     }
 
     if (this._priv_contentInfos.isDirectFile) {
+      if (this.videoElement === null) {
+        log.error("API", "getMinimumPosition() called on a disposed player");
+        return 0;
+      }
+      if (this.videoElement.seekable.length > 0) {
+        return this.videoElement.seekable.start(0);
+      }
       return 0;
     }
 
