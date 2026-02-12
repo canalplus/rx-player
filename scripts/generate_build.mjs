@@ -181,7 +181,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
         devMode = true;
         break;
       case "-n":
-      case "--no-check":
+      case "--no-typecheck":
         noCheck = true;
         break;
       case "--no-wasm":
@@ -225,7 +225,7 @@ Usage: node generate_build.mjs [OPTIONS]
 Options:
   -h, --help             Display this help
   -d, --dev-mode         Build all files in development mode (more runtime checks, worker not minified)
-  -n, --no-check         Skip type checking for inputed files.
+  -n, --no-typecheck     Skip type checking for inputed files.
   --no-wasm              Skip WebAssembly file generation (avoid Rust toolchain installation).
                          WARNING: With this option, related JS exports will not be available.`,
   );
