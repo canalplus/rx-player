@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import config from "../../../../../config";
 import getSegmentPriority from "../get_segment_priority";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -7,19 +6,17 @@ import getSegmentPriority from "../get_segment_priority";
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/unbound-method */
 
-// Mock the config module
+const mockGetCurrentConfig = vi.hoisted(() => vi.fn());
 vi.mock("../../../../../config", () => ({
   default: {
-    getCurrent: vi.fn(),
+    getCurrent: mockGetCurrentConfig,
   },
 }));
 
 describe("getSegmentPriority", () => {
-  const mockGetCurrent = vi.mocked(config.getCurrent as any);
-
   beforeEach(() => {
     // Default configuration for most tests
-    mockGetCurrent.mockReturnValue({
+    mockGetCurrentConfig.mockReturnValue({
       SEGMENT_PRIORITIES_STEPS: [1, 5, 10, 20],
     });
   });
@@ -95,7 +92,7 @@ describe("getSegmentPriority", () => {
 
   describe("different config values", () => {
     it("should work with empty priority steps array", () => {
-      mockGetCurrent.mockReturnValue({
+      mockGetCurrentConfig.mockReturnValue({
         SEGMENT_PRIORITIES_STEPS: [],
       });
 
@@ -104,7 +101,7 @@ describe("getSegmentPriority", () => {
     });
 
     it("should work with single priority step", () => {
-      mockGetCurrent.mockReturnValue({
+      mockGetCurrentConfig.mockReturnValue({
         SEGMENT_PRIORITIES_STEPS: [10],
       });
 
@@ -113,7 +110,7 @@ describe("getSegmentPriority", () => {
     });
 
     it("should work with different step values", () => {
-      mockGetCurrent.mockReturnValue({
+      mockGetCurrentConfig.mockReturnValue({
         SEGMENT_PRIORITIES_STEPS: [2, 10, 30, 60],
       });
 
@@ -128,13 +125,13 @@ describe("getSegmentPriority", () => {
   describe("config integration", () => {
     it("should call config.getCurrent() to get priority steps", () => {
       getSegmentPriority(100, 50);
-      expect(mockGetCurrent).toHaveBeenCalledOnce();
+      expect(mockGetCurrentConfig).toHaveBeenCalledOnce();
     });
 
     it("should get fresh config on each call", () => {
       getSegmentPriority(100, 50);
       getSegmentPriority(200, 150);
-      expect(mockGetCurrent).toHaveBeenCalledTimes(2);
+      expect(mockGetCurrentConfig).toHaveBeenCalledTimes(2);
     });
   });
 });
