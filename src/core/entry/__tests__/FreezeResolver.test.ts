@@ -4,6 +4,10 @@ import type { IBufferedChunk } from "../../segment_sinks";
 import FreezeResolver from "../FreezeResolver";
 import type { IFreezeResolverObservation } from "../FreezeResolver";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/unbound-method */
+
 const {
   mockGetCurrent,
   mockLogInfo,

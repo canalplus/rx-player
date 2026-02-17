@@ -1,11 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import getSegmentPriority from "../get_segment_priority";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/unbound-method */
-
 const mockGetCurrentConfig = vi.hoisted(() => vi.fn());
 vi.mock("../../../../../config", () => ({
   default: {

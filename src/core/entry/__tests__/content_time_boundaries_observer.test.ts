@@ -1,8 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import sleep from "../../../utils/sleep";
+import type { IBufferType } from "../../segment_sinks";
 import ContentTimeBoundariesObserver from "../content_time_boundaries_observer";
-import { IBufferType } from "../../segment_sinks";
 
-// Hoisted mocks
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 const {
   mockTrigger,
   mockCancellerSignal,
@@ -46,28 +51,7 @@ vi.mock("../../../utils/task_canceller", () => ({
 }));
 
 vi.mock("../../../utils/queue_microtask", () => ({
-  default: (fn: () => void) => fn(),
-}));
-
-vi.mock("../../../utils/sorted_list", () => ({
-  default: class SortedList<T> {
-    private items: T[] = [];
-    constructor(private compareFn: (a: T, b: T) => number) {}
-    add(item: T) {
-      this.items.push(item);
-      this.items.sort(this.compareFn);
-    }
-    has(item: T) {
-      return this.items.includes(item);
-    }
-    removeElement(item: T) {
-      const index = this.items.indexOf(item);
-      if (index > -1) this.items.splice(index, 1);
-    }
-    toArray() {
-      return [...this.items];
-    }
-  },
+  default: (fn: () => void) => Promise.resolve().then(() => fn()),
 }));
 
 describe("ContentTimeBoundariesObserver", () => {
@@ -116,13 +100,13 @@ describe("ContentTimeBoundariesObserver", () => {
   });
 
   describe("constructor", () => {
-    it("should initialize and set up playback observer", () => {
+    it("should initialize and set up playback observer", async () => {
       const manifest = createMockManifest();
       const playbackObserver = createMockPlaybackObserver();
       const bufferTypes: IBufferType[] = ["audio", "video"];
 
       new ContentTimeBoundariesObserver(manifest, playbackObserver, bufferTypes);
-
+      await sleep(0);
       expect(mockPlaybackObserverListen).toHaveBeenCalledWith(
         expect.any(Function),
         expect.objectContaining({
@@ -132,11 +116,12 @@ describe("ContentTimeBoundariesObserver", () => {
       );
     });
 
-    it("should set up manifest event listener", () => {
+    it("should set up manifest event listener", async () => {
       const manifest = createMockManifest();
       const playbackObserver = createMockPlaybackObserver();
 
       new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      await sleep(0);
 
       expect(mockManifestEventListener).toHaveBeenCalledWith(
         "manifestUpdate",
@@ -145,12 +130,13 @@ describe("ContentTimeBoundariesObserver", () => {
       );
     });
 
-    it("should trigger warning when position is before manifest minimum", () => {
+    it("should trigger warning when position is before manifest minimum", async () => {
       mockGetMinimumSafePosition.mockReturnValue(10);
       const manifest = createMockManifest();
       const playbackObserver = createMockPlaybackObserver();
 
       new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      await sleep(0);
 
       const positionCallback = mockPlaybackObserverListen.mock.calls[0][0];
       positionCallback({ position: { getWanted: () => 5 } });
@@ -160,12 +146,13 @@ describe("ContentTimeBoundariesObserver", () => {
       expect(warning.code).toBe("MEDIA_TIME_BEFORE_MANIFEST");
     });
 
-    it("should trigger warning when position is after manifest maximum", () => {
+    it("should trigger warning when position is after manifest maximum", async () => {
       mockGetMaximumSafePosition.mockReturnValue(100);
       const manifest = createMockManifest();
       const playbackObserver = createMockPlaybackObserver();
 
       new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      await sleep(0);
 
       const positionCallback = mockPlaybackObserverListen.mock.calls[0][0];
       positionCallback({ position: { getWanted: () => 150 } });
@@ -177,7 +164,7 @@ describe("ContentTimeBoundariesObserver", () => {
   });
 
   describe("getCurrentEndingTime", () => {
-    it("should return ending position when manifest is not dynamic", () => {
+    it("should return ending position when manifest is not dynamic", async () => {
       mockGetMaximumSafePosition.mockReturnValue(100);
       const manifest = createMockManifest({ isDynamic: false });
       const playbackObserver = createMockPlaybackObserver();
@@ -185,6 +172,7 @@ describe("ContentTimeBoundariesObserver", () => {
       const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
         "audio",
       ]);
+      await sleep(0);
 
       const result = observer.getCurrentEndingTime();
 

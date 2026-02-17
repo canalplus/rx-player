@@ -27,6 +27,7 @@ import type {
 } from "../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
 import type { IPlayerError } from "../../public_types";
+import arrayIncludes from "../../utils/array_includes";
 import EventEmitter from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import queueMicrotask from "../../utils/queue_microtask";
@@ -92,6 +93,15 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
      * whole content.
      */
     const maximumPositionCalculator = new MaximumPositionCalculator(manifest);
+
+    // Indicate directly that no Adaptation of a particular type will be set
+    if (!arrayIncludes(this._allBufferTypes, "video")) {
+      maximumPositionCalculator.updateLastVideoAdaptation(null);
+    }
+    if (!arrayIncludes(this._allBufferTypes, "audio")) {
+      maximumPositionCalculator.updateLastAudioAdaptation(null);
+    }
+
     this._maximumPositionCalculator = maximumPositionCalculator;
 
     const cancelSignal = this._canceller.signal;
