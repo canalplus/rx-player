@@ -2825,7 +2825,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (isDirectFile) {
       if (this.videoElement === null) {
-        throw new Error("Disposed player");
+        return null;
       }
 
       if (this.videoElement.seekable.length > 0) {
