@@ -101,16 +101,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   getFirefoxCmd()
     .then((firefoxCmd) => {
       if (firefoxCmd) {
-        /* eslint-disable-next-line no-console */
         console.log(firefoxCmd);
       } else {
-        /* eslint-disable-next-line no-console */
         console.error("No Firefox executable found on your machine");
         process.exit(1);
       }
     })
     .catch((err) => {
-      /* eslint-disable-next-line no-console */
       console.error("Could not check the Firefox executable on your machine:", err);
       process.exit(1);
     });
@@ -121,7 +118,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
  * script.
  */
 function displayHelp() {
-  /* eslint-disable-next-line no-console */
   console.log(
     `Returns path to the Firefox browser on your machine.
 Empty with a \`1\` exit code if not found.

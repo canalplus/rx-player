@@ -59,7 +59,6 @@ export default async function runFirefox(
       try {
         await fs.rm(profileDir, { recursive: true, force: true });
       } catch (err) {
-        /* eslint-disable-next-line no-console */
         console.error(`Failed to clean up Firefox profile: ${err}`);
       }
     });
@@ -185,7 +184,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     enableAutoPlay,
     verbose,
   }).catch((err) => {
-    /* eslint-disable-next-line no-console */
     console.error("Could not run Firefox on the given URL:", err);
     process.exit(1);
   });
@@ -196,7 +194,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
  * script.
  */
 function displayHelp() {
-  /* eslint-disable-next-line no-console */
   console.log(
     `Run the Firefox browser to the given URL.
 

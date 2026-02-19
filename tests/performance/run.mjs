@@ -107,6 +107,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       case "--help":
         displayHelp();
         process.exit(0);
+        break;
 
       case "--result-port":
         argOffset++;
@@ -197,6 +198,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       runPerformanceTests({ browser, contentServerPort, resultServerPort, testPagePort }),
     )
     .then(async (results) => {
+      /* eslint-disable no-console */
       /** Contain results on the second run if it is done */
       let results2 = null;
       if (results.worse.length > 0) {
@@ -1258,8 +1260,8 @@ Available options:
                                     Defaults to the "dev" branch.,
   -u <URL>, --remote-git-url <URL>  Specify the remote git URL where the current repository can be cloned from.
                                     Defaults to the current remote URL.
-  --browser <BROWSER>               The browser to run the tests on. Can be \"chrome\" or \"firefox\".
-                                    \"chrome\" by default.
+  --browser <BROWSER>               The browser to run the tests on. Can be "chrome" or "firefox".
+                                    "chrome" by default.
   --result-port <NUMBER>            Configure the port used to send/receive test results.
                                     ${DEFAULT_RESULT_SERVER_PORT} by default.
   --page-port <NUMBER>              Configure the port used to serve the test page.

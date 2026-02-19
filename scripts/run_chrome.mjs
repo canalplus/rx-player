@@ -181,7 +181,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     memoryTools,
     verbose,
   }).catch((err) => {
-    /* eslint-disable-next-line no-console */
     console.error("Could not run Chrome on the given URL:", err);
     process.exit(1);
   });
@@ -192,7 +191,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
  * script.
  */
 function displayHelp() {
-  /* eslint-disable-next-line no-console */
   console.log(
     `Run the Chrome browser to the given URL.
 
