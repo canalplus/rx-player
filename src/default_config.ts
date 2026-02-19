@@ -1333,6 +1333,12 @@ const DEFAULT_CONFIG = {
    * announcing the content as loaded.
    */
   FORCE_WAIT_FOR_HAVE_ENOUGH_DATA: false,
+
+  /**
+   * If `true`, forces an initial seek to 0. Mainly needed for Safari HLS,
+   * where the player may start at the live position instead of 0.
+   */
+  FORCE_INITIAL_SEEK_TO_ZERO: false,
 };
 
 export type IDefaultConfig = typeof DEFAULT_CONFIG;
