@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.5.0-dev.2026012302
+## Current dev build: v4.5.0-dev.2026021900
 
 ### Features
 
@@ -10,11 +10,19 @@
 ### Bug fixes
 
 - Fix memory leaks linked to quality changes [#1781]
+- On Safari when beginning at `0`, seek explicitly to `0` because their native HLS player
+  would else start at live position [#1803]
+- Fix `startAt.wallClockTime` on safari HLS live playlists [#1799]
+- Fix rare scenario when an ended live audio content would not have its duration known
+  until the end-of-stream [#1801]
 
 ### Other improvements
 
+- Add `getMaximumPosition` and `getMinimumPosition` support when using directfile with HLS
+  playlist on safari [#1800]
 - Text track id can only be string [#1785]
 - The reload API now only throws if no `loadVideo` call has been made before [#1767]
+- Use native base64-bytes conversion utils when they exist [#1786]
 
 ## v4.4.1 (2025-12-10)
 
