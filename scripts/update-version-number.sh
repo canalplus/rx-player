@@ -36,7 +36,11 @@ set -euo pipefail
 while [[ $# -gt 0 ]]; do
   case "$1" in
   -h|--help) help; exit 0;;
+  --) shift; break;;
+  -*) echo "Unknown option: $1" >&2; exit 1;;
+  *) break;;  # not a flag, stop parsing
   esac
+  shift
 done
 
 if [ $# -eq 0 ]; then
