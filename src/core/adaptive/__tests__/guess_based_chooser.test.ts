@@ -593,7 +593,7 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should stop guess when estimated bandwidth is too low", () => {
-        vi.mocked(mocks.estimateRequestBandwidth).mockReturnValue(700000); // 70% of bitrate
+        mocks.estimateRequestBandwidth.mockReturnValue(700000); // 70% of bitrate
 
         const requests = [createRequest("rep-3", 2, 9000, false)];
 

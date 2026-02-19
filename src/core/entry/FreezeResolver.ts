@@ -1,4 +1,4 @@
-import { config } from "../../experimental";
+import config from "../../config";
 import log from "../../log";
 import type { IAdaptation, IPeriod, IRepresentation } from "../../manifest";
 import type {
