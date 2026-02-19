@@ -2825,6 +2825,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (isDirectFile) {
       if (this.videoElement === null) {
+        log.error("API", "getMaximumPosition() called on a disposed player");
         return null;
       }
 
