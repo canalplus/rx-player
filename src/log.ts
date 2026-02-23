@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import Logger from "./utils/logger";
+import LoggerContext from "./utils/logger";
 
 // create a logger specifically for the RxPlayer.
-const logger = new Logger();
+const logger = new LoggerContext();
 
 export default logger;

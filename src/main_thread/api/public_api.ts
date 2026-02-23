@@ -47,6 +47,7 @@ import { ErrorCodes, ErrorTypes, formatError, MediaError } from "../../errors";
 import WorkerInitializationError from "../../errors/worker_initialization_error";
 import type { IFeature } from "../../features";
 import features, { addFeatures } from "../../features";
+import logger from "../../log";
 import log from "../../log";
 import type {
   IDecipherabilityStatusChangedElement,
@@ -115,7 +116,7 @@ import EventEmitter from "../../utils/event_emitter";
 import globalScope from "../../utils/global_scope";
 import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type Logger from "../../utils/logger";
+import { ILogger } from "../../utils/logger";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
 import objectAssign from "../../utils/object_assign";
 import { getLeftSizeOfBufferedTimeRange } from "../../utils/ranges";
@@ -210,7 +211,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   public videoElement: IMediaElement | null; // null on dispose
 
   /** Logger the RxPlayer uses.  */
-  public readonly log: Logger;
+  public readonly log: ILogger;
 
   /**
    * Current state of the RxPlayer.
@@ -438,7 +439,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     videoElement.preload = "auto";
 
     this.version = /* PLAYER_VERSION */ "4.4.1";
-    this.log = log;
+    this.log = logger.declareNewContext();
     this.state = "STOPPED";
     this.videoElement = videoElement;
     Player._priv_registerVideoElement(this.videoElement);
@@ -513,7 +514,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   public attachWorker(workerSettings: IWorkerSettings): Promise<void> {
     return new Promise((res, rej) => {
       if (!hasWorkerApi()) {
-        log.warn("API", "Cannot rely on a WebWorker: Worker API unavailable");
+        this.log.warn("API", "Cannot rely on a WebWorker: Worker API unavailable");
         return rej(
           new WorkerInitializationError("INCOMPATIBLE_ERROR", "Worker unavailable"),
         );
@@ -523,7 +524,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // terminate the previous worker to release the resources
       if (this._priv_workerData !== null) {
         if (this.state !== "STOPPED") {
-          log.warn(
+          this.log.warn(
             "API",
             "Cannot attach a new worker while a content is playing, please stop the player first.",
           );
@@ -567,7 +568,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           this._priv_workerData.messageListeners.clear();
           this._priv_workerData = null;
         }
-        log.error(
+        this.log.error(
           "API",
           "Unexpected worker error",
           evt.error instanceof Error ? evt.error : undefined,
@@ -582,7 +583,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       const handleInitMessages = (msg: MessageEvent) => {
         const msgData = msg.data as unknown as ICoreMessage;
         if (msgData.type === CoreMessageType.InitError) {
-          log.warn("API", "Processing InitError worker message: detaching worker");
+          this.log.warn("API", "Processing InitError worker message: detaching worker");
           if (this._priv_workerData !== null) {
             this._priv_workerData.worker.removeEventListener(
               "message",
@@ -599,7 +600,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             ),
           );
         } else if (msgData.type === CoreMessageType.InitSuccess) {
-          log.info("API", "InitSuccess received from worker.");
+          this.log.info("API", "InitSuccess received from worker.");
           if (this._priv_workerData !== null) {
             this._priv_workerData.worker.removeEventListener(
               "message",
@@ -622,7 +623,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           try {
             listener(payload);
           } catch (err) {
-            log.error(
+            this.log.error(
               "API",
               "A message listener failed with an error:",
               err instanceof Error ? err : "Unknown Error",
@@ -633,7 +634,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_workerData.worker.addEventListener("message", handleInitMessages);
       this._priv_workerData.worker.addEventListener("message", onAppDefinedMessage);
 
-      log.debug("M-->C", "Sending message", { name: MainThreadMessageType.Init });
+      this.log.debug("M-->C", "Sending message", { name: MainThreadMessageType.Init });
       this._priv_workerData.worker.postMessage({
         type: MainThreadMessageType.Init,
         value: {
@@ -652,7 +653,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           if (this._priv_workerData === null) {
             return;
           }
-          log.debug("M-->C", "Sending message", {
+          this.log.debug("M-->C", "Sending message", {
             name: MainThreadMessageType.LogLevelUpdate,
           });
           this._priv_workerData.worker.postMessage({
@@ -671,7 +672,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         if (this._priv_workerData === null) {
           return;
         }
-        log.debug("M-->C", "Sending message:", {
+        this.log.debug("M-->C", "Sending message:", {
           name: MainThreadMessageType.ConfigUpdate,
         });
         this._priv_workerData.worker.postMessage({
@@ -800,7 +801,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       // free resources used for decryption management
       disposeDecryptionResources(this.videoElement).catch((err: unknown) => {
         const message = err instanceof Error ? err.message : "Unknown error";
-        log.error("API", "Could not dispose decryption resources: " + message);
+        this.log.error("API", "Could not dispose decryption resources: " + message);
       });
     }
 
@@ -825,7 +826,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   loadVideo(opts: ILoadVideoOptions): void {
     const options = parseLoadVideoOptions(opts);
-    log.info("API", "Calling loadvideo", {
+    this.log.info("API", "Calling loadvideo", {
       url: options.url,
       transport: options.transport,
     });
@@ -854,7 +855,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       startAt = { position: reloadOpts.reloadAt.position };
     } else if (reloadOpts?.reloadAt?.relative !== undefined) {
       if (reloadPosition === undefined) {
-        log.warn(
+        this.log.warn(
           "API",
           "reload API > reloadAt.relative option given but we don't know the previous content's position",
         );
@@ -939,7 +940,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     } else if (periodId !== undefined) {
       period = arrayFind(manifest.periods, (p) => p.id === periodId);
       if (period === undefined) {
-        log.error("API", "getAvailableThumbnailTracks: periodId not found", { periodId });
+        this.log.error("API", "getAvailableThumbnailTracks: periodId not found", {
+          periodId,
+        });
         return [];
       }
     } else {
@@ -1055,7 +1058,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
       if (this._priv_throttleVideoBitrateWhenHidden) {
         if (!relyOnVideoVisibilityAndSize) {
-          log.warn(
+          this.log.warn(
             "API",
             "Can't apply throttleVideoBitrateWhenHidden because " +
               "browser can't be trusted for visibility.",
@@ -1075,7 +1078,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       }
       if (this._priv_videoResolutionLimit === "videoElement") {
         if (!relyOnVideoVisibilityAndSize) {
-          log.warn(
+          this.log.warn(
             "API",
             "Can't apply videoResolutionLimit because browser can't be " +
               "trusted for video size.",
@@ -1144,13 +1147,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           );
         }
 
-        // Small checks, log if some option seems wrong
+        // Small checks, this.log if some option seems wrong
         if (
           typeof transportOptions.representationFilter?.workerId === "string" &&
           (isNullOrUndefined(transportOptions.representationFilter.fn) ||
             isNullOrUndefined(transportOptions.representationFilter.eval))
         ) {
-          log.warn(
+          this.log.warn(
             "API",
             "You only set a `workerId` for a `representationFilter` in monothreaded mode. Ignoring it...",
           );
@@ -1159,7 +1162,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           typeof transportOptions.manifestLoader?.workerId === "string" &&
           isNullOrUndefined(transportOptions.manifestLoader.fn)
         ) {
-          log.warn(
+          this.log.warn(
             "API",
             "You only set a `workerId` for a `manifestLoader` in monothreaded mode. Ignoring it...",
           );
@@ -1168,13 +1171,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           typeof transportOptions.segmentLoader?.workerId === "string" &&
           isNullOrUndefined(transportOptions.segmentLoader.fn)
         ) {
-          log.warn(
+          this.log.warn(
             "API",
             "You only set a `workerId` for a `segmentLoader` in monothreaded mode. Ignoring it...",
           );
         }
 
-        log.info("API", "Initializing MediaSource mode in the main thread");
+        this.log.info("API", "Initializing MediaSource mode in the main thread");
         const coreInterface = new features.monothread.coreInterface();
         const coreInterfaceCallbacks = coreInterface.getCallbacks();
         features.monothread.initializeCoreEntry(
@@ -1242,7 +1245,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
             isNullOrUndefined(transportOptions.representationFilter.workerId) &&
             isNullOrUndefined(transportOptions.representationFilter.eval)
           ) {
-            log.warn(
+            this.log.warn(
               "API",
               "You only set a representationFilter function in a mulithreaded mode, ignoring it...",
             );
@@ -1254,7 +1257,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         ) {
           transportOptions.manifestLoader.fn = undefined;
           if (isNullOrUndefined(transportOptions.manifestLoader.fn)) {
-            log.warn(
+            this.log.warn(
               "API",
               "You only set a manifestLoader function in a mulithreaded mode, ignoring it...",
             );
@@ -1266,7 +1269,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         ) {
           transportOptions.segmentLoader.fn = undefined;
           if (isNullOrUndefined(transportOptions.segmentLoader.fn)) {
-            log.warn(
+            this.log.warn(
               "API",
               "You only set a segmentLoader function in a mulithreaded mode, ignoring it...",
             );
@@ -1276,7 +1279,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         // `initialManifest` is not supported in multithread mode.
         manifestRequestSettings.initialManifest = undefined;
         useWorker = true;
-        log.info("API", "Initializing MediaSource mode in a WebWorker");
+        this.log.info("API", "Initializing MediaSource mode in a WebWorker");
         initializer = new features.multithread.init({
           coreInterface: new features.multithread.coreInterface(
             this._priv_workerData.worker,
@@ -1309,7 +1312,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         throw new Error("No URL for a DirectFile content");
       }
 
-      log.info("API", "Initializing DirectFile mode in the main thread");
+      this.log.info("API", "Initializing DirectFile mode in the main thread");
       mediaElementTracksStore = this._priv_initializeMediaElementTracksStore(
         currentContentCanceller.signal,
       );
@@ -1376,7 +1379,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         defaultCode: "NONE",
         defaultReason: "An unknown error happened.",
       });
-      log.warn("API", "Sending warning:", formattedError);
+      this.log.warn("API", "Sending warning:", formattedError);
       this.trigger("warning", formattedError);
     });
     initializer.addEventListener("reloadingMediaSource", (payload) => {
@@ -2099,7 +2102,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (positionWanted === undefined) {
       throw new Error("invalid time given");
     }
-    log.info("API", "API seekTo", { positionWanted });
+    this.log.info("API", "API seekTo", { positionWanted });
     this._priv_contentInfos.playbackObserver.setCurrentTime(positionWanted, false);
     return positionWanted;
   }
@@ -2773,7 +2776,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (this._priv_contentInfos.isDirectFile) {
       if (this.videoElement === null) {
-        log.error("API", "getMinimumPosition() called on a disposed player");
+        this.log.error("API", "getMinimumPosition() called on a disposed player");
         return 0;
       }
       if (this.videoElement.seekable.length > 0) {
@@ -2825,7 +2828,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     if (isDirectFile) {
       if (this.videoElement === null) {
-        log.error("API", "getMaximumPosition() called on a disposed player");
+        this.log.error("API", "getMaximumPosition() called on a disposed player");
         return null;
       }
 
@@ -2919,7 +2922,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * Reset all state properties relative to a playing content.
    */
   private _priv_cleanUpCurrentContentState(): void {
-    log.debug("API", "Locking `contentLock` to clean-up the current content.");
+    this.log.debug("API", "Locking `contentLock` to clean-up the current content.");
 
     // lock playback of new contents while cleaning up is pending
     this._priv_contentLock.setValue(true);
@@ -2934,7 +2937,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const freeUpContentLock = () => {
       if (this.videoElement !== null) {
         // If not disposed
-        log.debug("API", "Unlocking `contentLock`. Next content can begin.");
+        this.log.debug("API", "Unlocking `contentLock`. Next content can begin.");
         this._priv_contentLock.setValue(false);
       }
     };
@@ -2942,11 +2945,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (!isNullOrUndefined(this.videoElement)) {
       clearOnStop(this.videoElement).then(
         () => {
-          log.debug("API", "DRM session cleaned-up with success!");
+          this.log.debug("API", "DRM session cleaned-up with success!");
           freeUpContentLock();
         },
         (err: unknown) => {
-          log.error(
+          this.log.error(
             "API",
             "An error arised when trying to clean-up the DRM session:" +
               (err instanceof Error ? err.toString() : "Unknown Error"),
@@ -3248,7 +3251,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       case "audio":
       case "text":
         if (isNullOrUndefined(tracksStore)) {
-          log.error("API", `TracksStore not instanciated for a new ${type} period`);
+          this.log.error("API", `TracksStore not instanciated for a new ${type} period`);
           adaptationRef.setValue(null);
         } else {
           tracksStore.addTrackReference(type, period, adaptationRef);
@@ -3486,7 +3489,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   private _priv_setPlayerState(newState: IPlayerState): void {
     if (this.state !== newState) {
       this.state = newState;
-      log.info("API", "playerStateChange event", { newState });
+      this.log.info("API", "playerStateChange event", { newState });
       this.trigger("playerStateChange", newState);
     }
   }
@@ -3658,7 +3661,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       this._priv_contentInfos === null ||
       this._priv_contentInfos.tracksStore === null
     ) {
-      log.warn("API", "Trying to call track API too soon");
+      this.log.warn("API", "Trying to call track API too soon");
       return defaultValue;
     }
     const { tracksStore } = this._priv_contentInfos;
@@ -3755,7 +3758,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos.currentContentCanceller.cancel("fatal err");
     this._priv_cleanUpCurrentContentState();
     this._priv_currentError = formattedError;
-    log.error("API", "The player stopped because of an error", formattedError);
+    this.log.error("API", "The player stopped because of an error", formattedError);
     this._priv_setPlayerState(PLAYER_STATES.STOPPED);
 
     // TODO This condition is here because the eventual callback called when the

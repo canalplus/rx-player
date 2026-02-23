@@ -111,7 +111,11 @@ export type ILogNamespace =
   /** Log from the `VideoThumbnailLoader` tool. */
   | "VideoThumbnailLoader";
 
-type IConsoleFn = (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => void;
+type IConsoleFn = (
+  namespace: ILogNamespace,
+  contextId: number,
+  ...args: IAcceptedLogValue[]
+) => void;
 
 const DEFAULT_LOG_LEVEL: ILoggerLevel = "NONE";
 
@@ -126,28 +130,63 @@ interface ILoggerEvents {
   };
 }
 
+export interface ILogger {
+  error: (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => void;
+  warn: (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => void;
+  info: (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => void;
+  debug: (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => void;
+  reTakeContext: () => void;
+}
+
 /**
  * Logger implementation.
  * @class Logger
  */
-export default class Logger extends EventEmitter<ILoggerEvents> {
-  public error: IConsoleFn;
-  public warn: IConsoleFn;
-  public info: IConsoleFn;
-  public debug: IConsoleFn;
+export default class LoggerContext extends EventEmitter<ILoggerEvents> {
+  private _lastContextId: number;
+  private _currentContextId: number;
+  private _logFns: {
+    error: IConsoleFn;
+    warn: IConsoleFn;
+    info: IConsoleFn;
+    debug: IConsoleFn;
+  };
   private _currentLevel: ILoggerLevel;
   private _currentFormat: ILogFormat;
   private readonly _levels: Record<ILoggerLevel, number>;
 
   constructor() {
     super();
-    this.error = noop;
-    this.warn = noop;
-    this.info = noop;
-    this.debug = noop;
+    this._logFns = {
+      error: noop,
+      warn: noop,
+      info: noop,
+      debug: noop,
+    };
+    this._lastContextId = 0;
+    this._currentContextId = 0;
     this._levels = { NONE: 0, ERROR: 1, WARNING: 2, INFO: 3, DEBUG: 4 };
     this._currentFormat = "standard";
     this._currentLevel = DEFAULT_LOG_LEVEL;
+  }
+
+  public declareNewContext(): ILogger {
+    this._lastContextId++;
+    this._currentContextId = this._lastContextId;
+    return this.useCurrentContext();
+  }
+
+  public useCurrentContext(): ILogger {
+    const capturedId = this._currentContextId;
+    return {
+      error: (namespace, ...args) => this._logFns.error(namespace, capturedId, ...args),
+      warn: (namespace, ...args) => this._logFns.warn(namespace, capturedId, ...args),
+      info: (namespace, ...args) => this._logFns.info(namespace, capturedId, ...args),
+      debug: (namespace, ...args) => this._logFns.debug(namespace, capturedId, ...args),
+      reTakeContext: () => {
+        this._currentContextId = capturedId;
+      },
+    };
   }
 
   /**
@@ -166,6 +205,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     logFn?: (
       levelStr: ILoggerLevel,
       namespace: string,
+      contextId: number,
       logs: IAcceptedLogValue[],
     ) => void,
   ): void {
@@ -197,11 +237,16 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     const generateLogFn =
       this._currentFormat === "full"
         ? (logMethod: string, consoleFn: (...vals: unknown[]) => void): IConsoleFn => {
-            return (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => {
+            return (
+              namespace: ILogNamespace,
+              contextId: number,
+              ...args: IAcceptedLogValue[]
+            ) => {
               const now = getMonotonicTimeStamp();
               return consoleFn(
                 String(now.toFixed(2)),
                 `[${logMethod}]`,
+                `<${contextId}>`,
                 namespace + ":",
                 ...args.map((a) =>
                   typeof a === "object" && a !== null && !(a instanceof Error)
@@ -212,9 +257,14 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
             };
           }
         : (_logMethod: string, consoleFn: (...vals: unknown[]) => void): IConsoleFn => {
-            return (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => {
+            return (
+              namespace: ILogNamespace,
+              contextId: number,
+              ...args: IAcceptedLogValue[]
+            ) => {
               return consoleFn(
                 namespace + ":",
+                `<${contextId}>`,
                 ...args.map((a) =>
                   typeof a === "object" && a !== null && !(a instanceof Error)
                     ? formatContextObject(a)
@@ -226,19 +276,19 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
 
     if (logFn === undefined) {
       /* eslint-disable no-console */
-      this.error =
+      this._logFns.error =
         level >= this._levels.ERROR
           ? generateLogFn("error", console.error.bind(console))
           : noop;
-      this.warn =
+      this._logFns.warn =
         level >= this._levels.WARNING
           ? generateLogFn("warn", console.warn.bind(console))
           : noop;
-      this.info =
+      this._logFns.info =
         level >= this._levels.INFO
           ? generateLogFn("info", console.info.bind(console))
           : noop;
-      this.debug =
+      this._logFns.debug =
         level >= this._levels.DEBUG
           ? generateLogFn("log", console.log.bind(console))
           : noop;
@@ -246,15 +296,19 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
     } else {
       const produceLogFn = (logLevel: ILoggerLevel): IConsoleFn => {
         return level >= this._levels[logLevel]
-          ? (namespace: ILogNamespace, ...args: IAcceptedLogValue[]) => {
-              return logFn(logLevel, namespace, args);
+          ? (
+              namespace: ILogNamespace,
+              contextId: number,
+              ...args: IAcceptedLogValue[]
+            ) => {
+              return logFn(logLevel, namespace, contextId, args);
             }
           : noop;
       };
-      this.error = produceLogFn("ERROR");
-      this.warn = produceLogFn("WARNING");
-      this.info = produceLogFn("INFO");
-      this.debug = produceLogFn("DEBUG");
+      this._logFns.error = produceLogFn("ERROR");
+      this._logFns.warn = produceLogFn("WARNING");
+      this._logFns.info = produceLogFn("INFO");
+      this._logFns.debug = produceLogFn("DEBUG");
     }
 
     this.trigger("onLogLevelChange", {

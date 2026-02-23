@@ -24,7 +24,7 @@
  */
 
 import config from "../../../config";
-import log from "../../../log";
+import logger from "../../../log";
 import type { ISegment } from "../../../manifest";
 import objectAssign from "../../../utils/object_assign";
 import type { CancellationSignal } from "../../../utils/task_canceller";
@@ -91,6 +91,7 @@ export default function RepresentationStream<TSegmentDataType>(
   callbacks: IRepresentationStreamCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
+  const log = logger.useCurrentContext();
   log.debug("Stream", "Creating RepresentationStream", {
     periodStart: content.period.start,
     bufferType: content.adaptation.type,

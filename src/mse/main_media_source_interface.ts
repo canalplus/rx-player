@@ -3,10 +3,11 @@ import { MediaSource_ } from "../compat/browser_compatibility_types";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
 import { MediaError, SourceBufferError } from "../errors";
-import log from "../log";
+import logger from "../log";
 import { concat } from "../utils/byte_parsing";
 import EventEmitter from "../utils/event_emitter";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
+import { ILogger } from "../utils/logger";
 import objectAssign from "../utils/object_assign";
 import type { IRange } from "../utils/ranges";
 import { convertToRanges } from "../utils/ranges";
@@ -73,6 +74,8 @@ export default class MainMediaSourceInterface
    * is dispossed
    */
   private _canceller: TaskCanceller;
+  /** logger linked to this instance. */
+  private _logger: ILogger;
 
   /**
    * Creates a new `MainMediaSourceInterface` alongside its `MediaSource` MSE
@@ -84,6 +87,7 @@ export default class MainMediaSourceInterface
   constructor(id: string, forcedMediaSource?: new () => IMediaSource) {
     super();
     this.id = id;
+    this._logger = logger.useCurrentContext();
     this.sourceBuffers = [];
     this._canceller = new TaskCanceller("MainMediaSourceInterface");
 
@@ -94,7 +98,7 @@ export default class MainMediaSourceInterface
       );
     }
 
-    log.info("mse", "Creating MediaSource");
+    this._logger.info("mse", "Creating MediaSource");
     const mediaSource =
       forcedMediaSource !== undefined ? new forcedMediaSource() : new MediaSource_();
     const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
@@ -171,7 +175,7 @@ export default class MainMediaSourceInterface
         "MainMediaSourceInterface EndOfStream",
       );
       this._endOfStreamCanceller.linkToSignal(this._canceller.signal);
-      log.debug("mse", "end-of-stream order received.");
+      this._logger.debug("mse", "end-of-stream order received.");
       maintainEndOfStream(this._mediaSource, this._endOfStreamCanceller.signal);
     }
   }
@@ -179,7 +183,7 @@ export default class MainMediaSourceInterface
   /** @see IMediaSourceInterface */
   public stopEndOfStream() {
     if (this._endOfStreamCanceller !== null) {
-      log.debug("mse", "resume-stream order received.");
+      this._logger.debug("mse", "resume-stream order received.");
       this._endOfStreamCanceller.cancel("MediaSourceInterface stopEndOfStream");
       this._endOfStreamCanceller = null;
     }
@@ -222,6 +226,8 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    * `null` if no known operation is pending.
    */
   private _currentOperations: Array<Omit<ISbiQueuedOperation, "params">>;
+  /** logger linked to this instance. */
+  private _logger: ILogger;
 
   /**
    * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
@@ -231,6 +237,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    * @param {SourceBuffer} sourceBuffer
    */
   constructor(sbType: SourceBufferType, codec: string, sourceBuffer: ISourceBuffer) {
+    this._logger = logger.useCurrentContext();
     this.type = sbType;
     this.codec = codec;
     this._canceller = new TaskCanceller("MainSourceBufferInterface " + sbType);
@@ -252,7 +259,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   public appendBuffer(
     ...args: Parameters<ISourceBufferInterface["appendBuffer"]>
   ): Promise<IRange[]> {
-    log.debug("mse", "receiving order to push data to the SourceBuffer", {
+    this._logger.debug("mse", "receiving order to push data to the SourceBuffer", {
       type: this.type,
     });
     return this._addToQueue({
@@ -263,7 +270,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
   /** @see ISourceBufferInterface */
   public remove(start: number, end: number): Promise<IRange[]> {
-    log.debug("mse", "receiving order to remove data from the SourceBuffer", {
+    this._logger.debug("mse", "receiving order to remove data from the SourceBuffer", {
       type: this.type,
       start,
       end,
@@ -279,7 +286,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     try {
       return convertToRanges(this._sourceBuffer.buffered);
     } catch (err) {
-      log.error(
+      this._logger.error(
         "mse",
         "Failed to get buffered time range of SourceBuffer",
         {
@@ -296,7 +303,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     try {
       this._sourceBuffer.abort();
     } catch (err) {
-      log.debug(
+      this._logger.debug(
         "mse",
         "Failed to abort SourceBuffer:",
         err instanceof Error ? err : "Unknown Error",
@@ -327,7 +334,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     const currentOps = this._currentOperations;
     this._currentOperations = [];
     if (currentOps.length === 0) {
-      log.error("mse", "error for an unknown operation", error);
+      this._logger.error("mse", "error for an unknown operation", error);
     } else {
       const rejected = new SourceBufferError(
         error.name,
@@ -483,9 +490,13 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
           }
         }
         if (toConcat.length > 1) {
-          log.info("mse", `: Merging ${toConcat.length} segments together for perf`, {
-            type: this.type,
-          });
+          this._logger.info(
+            "mse",
+            `: Merging ${toConcat.length} segments together for perf`,
+            {
+              type: this.type,
+            },
+          );
           segmentData = concat(...toConcat).buffer;
         }
       }
@@ -527,7 +538,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       // TODO merge contiguous removes?
       this._currentOperations = [nextElem];
       const [start, end] = nextElem.params;
-      log.debug("mse", "removing data from SourceBuffer", {
+      this._logger.debug("mse", "removing data from SourceBuffer", {
         type: this.type,
         start,
         end,
@@ -562,7 +573,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     const sourceBuffer = this._sourceBuffer;
     const { codec, timestampOffset, appendWindow = [] } = params;
     if (codec !== undefined && codec !== this.codec) {
-      log.debug("mse", "updating codec", {
+      this._logger.debug("mse", "updating codec", {
         type: this.type,
         prevCodec: this.codec,
         newCodec: codec,
@@ -571,7 +582,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       if (hasUpdatedSourceBufferType) {
         this.codec = codec;
       } else {
-        log.debug("mse", "could not update codec", {
+        this._logger.debug("mse", "could not update codec", {
           type: this.type,
           prevCodec: this.codec,
           newCodec: codec,
@@ -584,7 +595,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       sourceBuffer.timestampOffset !== timestampOffset
     ) {
       const newTimestampOffset = timestampOffset;
-      log.debug("mse", "updating timestampOffset", {
+      this._logger.debug("mse", "updating timestampOffset", {
         type: this.type,
         codec,
         prevTimestampOffset: sourceBuffer.timestampOffset,
@@ -595,7 +606,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
     if (appendWindow[0] === undefined) {
       if (sourceBuffer.appendWindowStart > 0) {
-        log.debug("mse", "re-setting `appendWindowStart`", {
+        this._logger.debug("mse", "re-setting `appendWindowStart`", {
           type: this.type,
           prevWindowStart: sourceBuffer.appendWindowStart,
         });
@@ -604,14 +615,14 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     } else if (appendWindow[0] !== sourceBuffer.appendWindowStart) {
       if (appendWindow[0] >= sourceBuffer.appendWindowEnd) {
         const newWindowEnd = appendWindow[0] + 1;
-        log.debug("mse", "pre-updating `appendWindowEnd`", {
+        this._logger.debug("mse", "pre-updating `appendWindowEnd`", {
           type: this.type,
           prevWindowEnd: sourceBuffer.appendWindowEnd,
           newWindowEnd,
         });
         sourceBuffer.appendWindowEnd = newWindowEnd;
       }
-      log.debug("mse", "setting `appendWindowStart`", {
+      this._logger.debug("mse", "setting `appendWindowStart`", {
         type: this.type,
         appendWindowStart: appendWindow[0],
       });
@@ -620,26 +631,27 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
 
     if (appendWindow[1] === undefined) {
       if (sourceBuffer.appendWindowEnd !== Infinity) {
-        log.debug("mse", "re-setting `appendWindowEnd`", {
+        this._logger.debug("mse", "re-setting `appendWindowEnd`", {
           type: this.type,
           prevWindowStart: sourceBuffer.appendWindowStart,
         });
         sourceBuffer.appendWindowEnd = Infinity;
       }
     } else if (appendWindow[1] !== sourceBuffer.appendWindowEnd) {
-      log.debug("mse", "setting `appendWindowEnd`", {
+      this._logger.debug("mse", "setting `appendWindowEnd`", {
         type: this.type,
         prevWindowEnd: sourceBuffer.appendWindowEnd,
         newWindowEnd: appendWindow[1],
       });
       sourceBuffer.appendWindowEnd = appendWindow[1];
     }
-    log.debug("mse", "pushing segment", { type: this.type });
+    this._logger.debug("mse", "pushing segment", { type: this.type });
     sourceBuffer.appendBuffer(data);
   }
 }
 
 function resetMediaSource(mediaSource: IMediaSource): void {
+  const log = logger.useCurrentContext();
   if (mediaSource.readyState !== "closed") {
     const { readyState, sourceBuffers } = mediaSource;
     for (let i = sourceBuffers.length - 1; i >= 0; i--) {
