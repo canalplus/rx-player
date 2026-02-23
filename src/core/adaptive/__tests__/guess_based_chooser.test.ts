@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { IRepresentation } from "../../../manifest";
 import GuessBasedChooser from "../guess_based_chooser";
 import { ABRAlgorithmType } from "../utils/last_estimate_storage";
@@ -74,7 +74,6 @@ describe("GuessBasedChooser", () => {
   let representations: IRepresentation[];
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mocks.getMonotonicTimeStamp.mockReturnValue(10000);
 
     // Setup mock representations (sorted by bitrate ascending)
@@ -94,6 +93,10 @@ describe("GuessBasedChooser", () => {
       representation: null,
       algorithmType: ABRAlgorithmType.GuessBased,
     };
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
   });
 
   describe("constructor", () => {

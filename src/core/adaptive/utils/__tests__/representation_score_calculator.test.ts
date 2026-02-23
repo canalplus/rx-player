@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { IRepresentation } from "../../../../manifest";
 import RepresentationScoreCalculator, {
   ScoreConfidenceLevel,
@@ -38,7 +38,6 @@ describe("RepresentationScoreCalculator", () => {
   let mockRepresentation2: IRepresentation;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     calculator = new RepresentationScoreCalculator();
 
     mockRepresentation1 = {
@@ -50,6 +49,9 @@ describe("RepresentationScoreCalculator", () => {
       id: "rep2",
       bitrate: 2000000,
     } as IRepresentation;
+  });
+  afterEach(() => {
+    vi.resetAllMocks();
   });
 
   describe("addSample", () => {
