@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import PendingRequestsStore from "../pending_requests_store";
 import type {
   IPendingRequestStoreBegin,
@@ -57,7 +57,10 @@ describe("PendingRequestsStore", () => {
 
   beforeEach(() => {
     store = new PendingRequestsStore();
-    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
   });
 
   describe("add", () => {
