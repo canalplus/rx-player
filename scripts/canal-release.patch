@@ -70,8 +70,8 @@ index 63c98bbfc..92a8796e0 100644
    const trimmedLineHeight = lineHeight.trim();
    const splittedLineHeight = trimmedLineHeight.split(" ");
  
-@@ -38,10 +37,10 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
-     firstLineHeight[2] === "%" ||
+@@ -54,10 +53,10 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
+     // firstLineHeight[2] === "%" ||
      firstLineHeight[2] === "em"
    ) {
 -    element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];

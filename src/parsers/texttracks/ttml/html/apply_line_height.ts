@@ -35,7 +35,22 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
   }
   if (
     firstLineHeight[2] === "px" ||
-    firstLineHeight[2] === "%" ||
+    // TODO: For now, we disable the percentage unit as its rules are complex to
+    // implement in our current logic:
+    // A percentage `lineHeight` depends on the `fontSize` computed at that point,
+    // yet a lineHeight applies to a `p` in TTML and `fontSize` applies to a `span`
+    // (below `p`) and our translation applies that same level of style: CSS `lineHeight`
+    // is set on the element defining it, but `fontSize` is set at the end on each cue.
+    //
+    // Thus we cannot easily just rely on CSS' similar behavior for percentage
+    // `lineHeight`s because the `fontSize` might not be known at that point by
+    // the CSS (yet it might be for TTML). Work-around tricks are not straightforward
+    // either (e.g. we cannot just repeat the `fontSize` at both places because
+    // the potential percentage values in which they are expressed could coumpound).
+    // Seeing other players, it also seems poorly supported, so for now I think
+    // we can just ignore those. In a perfect world, it should be implemented
+    // though!
+    // firstLineHeight[2] === "%" ||
     firstLineHeight[2] === "em"
   ) {
     element.style.lineHeight = firstLineHeight[1] + firstLineHeight[2];
