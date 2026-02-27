@@ -1,14 +1,28 @@
 import { defineConfig } from "vitest/config";
 import { webdriverio } from "@vitest/browser-webdriverio";
 
+/**
+ * - `"src"` (unit tests)
+ * - `"integration"` (integration tests)
+ * - `"memory"` (memory tests)
+ * - or `undefined` (all those)
+ */
+const includeOnlyTests = process.env.INCLUDE_ONLY_TESTS;
+
+/** "chrome", "edge", "firefox", or undefined (all browsers) */
+const configuredBrowser = process.env.BROWSER_CONFIG;
+
+/** Paths were unit tests are defined. */
 const UNIT_TEST_FILES = [
   "tests/unit/src/**/*.[jt]s?(x)",
   "tests/unit/global/**/*.test.[jt]s?(x)",
 ];
+/** Paths were integration tests are defined. */
 const INTEGRATION_TEST_FILES = [
   "tests/integration/scenarios/**/*.[jt]s?(x)",
   "tests/integration/**/*.test.[jt]s?(x)",
 ];
+/** Paths were memory tests are defined. */
 const MEMORY_TEST_FILES = ["tests/memory/**/*.[jt]s?(x)"];
 
 function getBrowserConfig(browser) {
@@ -159,7 +173,7 @@ const allProjects = [
 ];
 
 const includedFiles = [];
-switch (process.env.INCLUDE_ONLY_TESTS) {
+switch (includeOnlyTests) {
   case "src":
     includedFiles.push(...UNIT_TEST_FILES);
     break;
@@ -180,9 +194,7 @@ switch (process.env.INCLUDE_ONLY_TESTS) {
     break;
 
   default:
-    console.error(
-      "Vitest config file: unkown test filter: " + process.env.INCLUDE_ONLY_TESTS,
-    );
+    console.error("Vitest config file: unkown test filter: " + includeOnlyTests);
 }
 
 export default defineConfig({
@@ -191,10 +203,12 @@ export default defineConfig({
     watch: false,
     globals: false,
     reporters: "dot",
-    globalSetup: "tests/globalSetup.mjs",
+    globalSetup:
+      // Unit tests (in src) do not necessitate a complex setup
+      includeOnlyTests === "src" ? undefined : "tests/globalSetup.mjs",
     // If BROWSER_CONFIG is set, filter to only that browser
-    projects: (process.env.BROWSER_CONFIG
-      ? allProjects.filter((project) => project.test.name === process.env.BROWSER_CONFIG)
+    projects: (configuredBrowser
+      ? allProjects.filter((project) => project.test.name === configuredBrowser)
       : allProjects
     ).map((project) => ({
       ...project,
