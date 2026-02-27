@@ -397,7 +397,7 @@ export default class CmcdDataBuilder {
       const val = props[prop];
       if (val !== undefined) {
         const formatted = `"${val.replace("\\", "\\\\").replace('"', '\\"')}"`;
-        const toAdd = `prop=${formatted},`;
+        const toAdd = `${prop}=${formatted},`;
         addPayload(toAdd, headerName);
       }
     };
@@ -408,7 +408,7 @@ export default class CmcdDataBuilder {
     ): void => {
       const val = props[prop];
       if (val !== undefined) {
-        const toAdd = `prop=${val},`;
+        const toAdd = `${prop}=${val},`;
         addPayload(toAdd, headerName);
       }
     };
