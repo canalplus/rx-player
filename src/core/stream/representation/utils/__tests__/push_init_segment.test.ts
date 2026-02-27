@@ -21,7 +21,7 @@ describe("pushInitSegment", () => {
   let mockSegment: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
 
     mockPlaybackObserver = {};
 

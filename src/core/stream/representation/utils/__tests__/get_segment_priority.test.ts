@@ -17,7 +17,7 @@ describe("getSegmentPriority", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe("priority based on distance from wanted timestamp", () => {

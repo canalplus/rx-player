@@ -46,7 +46,7 @@ describe("pushMediaSegment", () => {
   } as any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     mockGetCurrent.mockReturnValue({
       APPEND_WINDOW_SECURITIES: {
         START: 0.1,

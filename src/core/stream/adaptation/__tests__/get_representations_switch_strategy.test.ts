@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { IAdaptation, IPeriod } from "../../../../manifest";
 import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
 import type { SegmentSink } from "../../../segment_sinks";
@@ -30,8 +30,6 @@ describe("getRepresentationsSwitchingStrategy", () => {
   let mockPlaybackObserver: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-
     mockPeriod = {
       id: "period-1",
       start: 0,
@@ -59,6 +57,9 @@ describe("getRepresentationsSwitchingStrategy", () => {
         }),
       })),
     } as unknown as IReadOnlyPlaybackObserver<any>;
+  });
+  afterEach(() => {
+    vi.resetAllMocks();
   });
 
   describe("lazy switching mode", () => {

@@ -51,7 +51,7 @@ describe("appendSegmentToBuffer", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe("successful append", () => {
