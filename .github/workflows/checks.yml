@@ -69,8 +69,6 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Build RxPlayer
-        run: npm run build
       - name: Run unit tests
         run: npm run test:unit
 
