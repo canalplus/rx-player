@@ -5,6 +5,7 @@ import type { ISegment, IThumbnailTrack } from "../../../manifest";
 import type { ICdnMetadata } from "../../../parsers/manifest";
 import type { IPeriod } from "../../../public_types";
 import type {
+  IRequestedData,
   IThumbnailLoader,
   IThumbnailLoaderOptions,
   IThumbnailPipeline,
@@ -46,7 +47,7 @@ export default function createThumbnailFetcher(
 
   interface IPendingThumbnailRequestInfo {
     /** Promise behind the thumbnail request. */
-    promise: Promise<IThumbnailResponse>;
+    promise: Promise<IRequestedData<ArrayBuffer>>;
     /**
      * Multiple caller might share the same request promise.
      * This reference counter keeps track of the number of caller that are
@@ -86,6 +87,8 @@ export default function createThumbnailFetcher(
   ): Promise<IThumbnailResponse> {
     cancellationSignal.register(onCancellation);
 
+    const { segment: thumbnail, track: thumbnailTrack } = thumbnailContext;
+
     let currRequestInfo: IPendingThumbnailRequestInfo;
 
     // First check if we're not requesting again the last thumbnail
@@ -113,10 +116,12 @@ export default function createThumbnailFetcher(
         throw err;
       }
       cancellationSignal.deregister(onCancellation);
-      return response;
-    }
 
-    const { segment: thumbnail, track: thumbnailTrack } = thumbnailContext;
+      if (cancellationSignal.isCancelled()) {
+        throw cancellationSignal.cancellationError;
+      }
+      return parseThumbnailStep(response);
+    }
 
     // NOTE: For now, as multiple `fetchThumbnail` calls might rely on the
     // same request, it is difficult to let different request options
@@ -144,7 +149,7 @@ export default function createThumbnailFetcher(
      * as several calls might share the same request.
      */
     const requestCanceller = new TaskCanceller("Thumbnail request");
-    const fetchPromise = doFetch();
+    const fetchPromise = fetchThumbnailStep();
     currRequestInfo = {
       thumbnailContext,
       promise: fetchPromise,
@@ -157,37 +162,37 @@ export default function createThumbnailFetcher(
         pendingRequestsInfo.splice(currRequestIdx, 1);
       }
     };
+    let fetchResult;
     try {
-      const fetchResult = await fetchPromise;
-      clearRequestInfo();
-      return fetchResult;
+      fetchResult = await fetchPromise;
     } catch (err) {
       clearRequestInfo();
+      cancellationSignal.deregister(onCancellation);
       throw err;
     }
 
-    async function doFetch() {
+    clearRequestInfo();
+    cancellationSignal.deregister(onCancellation);
+    if (cancellationSignal.isCancelled()) {
+      throw cancellationSignal.cancellationError;
+    }
+    return parseThumbnailStep(fetchResult);
+
+    async function fetchThumbnailStep(): Promise<IRequestedData<ArrayBuffer>> {
       log.debug("Thumbnails", "Beginning thumbnail request", { time: thumbnail.time });
-      let res;
       try {
-        res = await scheduleRequestWithCdns(
+        const res = await scheduleRequestWithCdns(
           thumbnailTrack.cdnMetadata,
           cdnPrioritizer,
           callLoaderWithUrl,
           objectAssign({ onRetry }, requestOptions),
           requestCanceller.signal,
         );
-
-        if (cancellationSignal.isCancelled()) {
-          return Promise.reject(cancellationSignal.cancellationError);
-        }
-
         log.debug("Thumbnails", "Thumbnail request ended with success", {
           time: thumbnail.time,
         });
-        cancellationSignal.deregister(onCancellation);
+        return res;
       } catch (err) {
-        cancellationSignal.deregister(onCancellation);
         if (err instanceof CancellationError) {
           log.debug("Thumbnails", "Thumbnail request aborted", { time: thumbnail.time });
           throw err;
@@ -195,13 +200,16 @@ export default function createThumbnailFetcher(
         log.debug("Thumbnails", "Thumbnail request failed", { time: thumbnail.time });
         throw errorSelector(err);
       }
+    }
 
+    function parseThumbnailStep(
+      rawResponse: IRequestedData<ArrayBuffer>,
+    ): IThumbnailResponse {
       try {
-        const parsed = pipeline.parseThumbnail(res.responseData, {
+        return pipeline.parseThumbnail(rawResponse.responseData, {
           thumbnail,
           thumbnailTrack,
         });
-        return parsed;
       } catch (error) {
         throw formatError(error, {
           defaultCode: "PIPELINE_PARSE_ERROR",

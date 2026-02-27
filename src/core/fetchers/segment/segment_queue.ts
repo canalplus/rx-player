@@ -595,8 +595,8 @@ export interface ISegmentQueueEvent<T> {
    * You can now push that segment to its corresponding buffer and use its parsed
    * metadata.
    *
-   * Only sent if an initialization segment exists (when the `SegmentQueue`'s
-   * `hasInitSegment` constructor option has been set to `true`).
+   * Only sent if an initialization segment exists (when the `hasInitSegment`
+   * option has been set to `true`).
    * In that case, an `IParsedInitSegmentEvent` will always be sent before any
    * `IParsedSegmentEvent` event is sent.
    */
@@ -605,10 +605,9 @@ export interface ISegmentQueueEvent<T> {
    * Notify that a media chunk (decodable sub-part of a media segment) has been
    * loaded and parsed.
    *
-   * If an initialization segment exists (when the `SegmentQueue`'s
-   * `hasInitSegment` constructor option has been set to `true`), an
-   * `IParsedSegmentEvent` will always be sent AFTER the `IParsedInitSegmentEvent`
-   * event.
+   * If an initialization segment exists (when the `hasInitSegment` option has
+   * been set to `true`), an `IParsedSegmentEvent` will always be sent AFTER
+   * the `IParsedInitSegmentEvent` event.
    *
    * It can now be pushed to its corresponding buffer. Note that there might be
    * multiple `IParsedSegmentEvent` for a single segment, if that segment is
