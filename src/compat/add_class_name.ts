@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-let hasClassList: boolean | undefined;
-
 /**
  * Add className to an HTMLElement. Do nothing if the className was already
  * added.
@@ -23,11 +21,7 @@ let hasClassList: boolean | undefined;
  * @param {string} className
  */
 export default function addClassName(elt: HTMLElement, className: string): void {
-  if (hasClassList === undefined) {
-    hasClassList = elt.classList !== undefined && typeof elt.classList.add === "function";
-  }
-
-  if (hasClassList) {
+  if (elt.classList !== undefined && typeof elt.classList.add === "function") {
     elt.classList.add(className);
   } else {
     const classNamesWithSpaces = " " + elt.className + " ";
