@@ -90,13 +90,12 @@ describe("ContentTimeBoundariesObserver", () => {
   });
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockGetMinimumSafePosition.mockReturnValue(0);
     mockGetMaximumSafePosition.mockReturnValue(100);
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe("constructor", () => {

@@ -85,7 +85,7 @@ describe("FreezeResolver", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe("onNewObservation - No freeze scenarios", () => {

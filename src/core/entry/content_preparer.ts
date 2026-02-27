@@ -1,21 +1,12 @@
-import { MediaSource_ } from "../../compat/browser_compatibility_types";
 import features from "../../features";
 import log from "../../log";
 import type { IContentInitializationData } from "../../main_thread/types";
 import type { IManifest } from "../../manifest";
-import { createRepresentationFilterFromFnString } from "../../manifest";
-import type Manifest from "../../manifest/classes";
 import type { IMediaSourceInterface } from "../../mse";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface";
 import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface";
-import type {
-  IPlayerError,
-  IRepresentationFilter,
-  ISegmentLoader,
-  IManifestLoader,
-} from "../../public_types";
+import type { IPlayerError } from "../../public_types";
 import idGenerator from "../../utils/id_generator";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 import type { IRepresentationEstimator } from "../adaptive";
@@ -33,7 +24,12 @@ import { CoreMessageType } from "../types";
 import CoreTextDisplayerInterface from "./core_text_displayer_interface";
 import FreezeResolver from "./FreezeResolver";
 import TrackChoiceSetter from "./track_choice_setter";
-import { formatErrorForSender } from "./utils";
+import type { ICorePlugins } from "./utils";
+import {
+  extractExternalPlugins,
+  formatErrorForSender,
+  updateCodecSupportInWorkerMode,
+} from "./utils";
 
 /** Function allowing to associate a unique identifier to all created `MediaSource` */
 const generateMediaSourceId = idGenerator();
@@ -463,12 +459,6 @@ export interface IPreparedContentData {
   useMseInWorker: boolean;
 }
 
-export interface ICorePlugins {
-  representationFilters: Map<string, IRepresentationFilter>;
-  segmentLoaders: Map<string, ISegmentLoader>;
-  manifestLoaders: Map<string, IManifestLoader>;
-}
-
 /**
  * @param {Function} sendMessage
  * @param {string} contentId
@@ -539,105 +529,4 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
   });
 
   return [mediaSourceInterface, segmentSinksStore, textSender];
-}
-
-/**
- * Set Representation.isCodecSupportedInWebWorker to true or false
- * If the codec is supported in the current context.
- * If MSE in worker is not available, the attribute is not set.
- */
-function updateCodecSupportInWorkerMode(manifestToUpdate: Manifest) {
-  if (isNullOrUndefined(MediaSource_)) {
-    return;
-  }
-
-  const codecsMap = new Map<string, boolean>();
-  for (const period of manifestToUpdate.periods) {
-    const checkedAdaptations = [
-      ...(period.adaptations.video ?? []),
-      ...(period.adaptations.audio ?? []),
-    ];
-    for (const adaptation of checkedAdaptations) {
-      for (const representation of adaptation.representations) {
-        const codec = `${representation.mimeType};codecs="${representation.codecs[0]}"`;
-        if (codecsMap.has(codec)) {
-          representation.isCodecSupportedInWebWorker = codecsMap.get(codec);
-        } else {
-          const supported = MediaSource_.isTypeSupported(codec);
-          representation.isCodecSupportedInWebWorker = supported;
-          codecsMap.set(codec, supported);
-        }
-      }
-    }
-  }
-}
-
-/**
- * Some functions may be defined by the API, we call those "plugins".
- * This function parses and extract the actual function from the different
- * ways an application can provide it to us.
- * @param {Object} input - The API input
- * @param {Object} corePlugins - Context on what identified functions are
- * defined right now.
- * @returns {Function}
- */
-function extractExternalPlugins(
-  input: {
-    manifestLoader:
-      | {
-          fn?: IManifestLoader | undefined;
-          workerId?: string | undefined;
-        }
-      | undefined;
-    segmentLoader:
-      | {
-          fn?: ISegmentLoader | undefined;
-          workerId?: string | undefined;
-        }
-      | undefined;
-    representationFilter:
-      | undefined
-      | {
-          fn?: IRepresentationFilter | undefined;
-          eval?: string | undefined;
-          workerId?: string | undefined;
-        };
-  },
-  corePlugins: ICorePlugins,
-): {
-  manifestLoader: IManifestLoader | undefined;
-  segmentLoader: ISegmentLoader | undefined;
-  representationFilter: IRepresentationFilter | undefined;
-} {
-  let manifestLoader;
-  let segmentLoader;
-  let representationFilter;
-  if (typeof input.representationFilter?.fn === "function") {
-    representationFilter = input.representationFilter.fn;
-  } else if (typeof input.representationFilter?.eval === "string") {
-    representationFilter = createRepresentationFilterFromFnString(
-      input.representationFilter.eval,
-    );
-  } else if (typeof input.representationFilter?.workerId === "string") {
-    representationFilter = corePlugins.representationFilters.get(
-      input.representationFilter.workerId,
-    );
-  }
-
-  if (typeof input.manifestLoader?.fn === "function") {
-    manifestLoader = input.manifestLoader.fn;
-  } else if (typeof input.manifestLoader?.workerId === "string") {
-    manifestLoader = corePlugins.manifestLoaders.get(input.manifestLoader.workerId);
-  }
-
-  if (typeof input.segmentLoader?.fn === "function") {
-    segmentLoader = input.segmentLoader.fn;
-  } else if (typeof input.segmentLoader?.workerId === "string") {
-    segmentLoader = corePlugins.segmentLoaders.get(input.segmentLoader.workerId);
-  }
-  return {
-    manifestLoader,
-    segmentLoader,
-    representationFilter,
-  };
 }
