@@ -36,13 +36,12 @@ import type {
 } from "../types";
 import { CoreMessageType } from "../types";
 import ContentPreparer from "./content_preparer";
-import type { ICorePlugins } from "./content_preparer";
 import createContentTimeBoundariesObserver from "./create_content_time_boundaries_observer";
 import type { IFreezeResolution } from "./FreezeResolver";
 import getBufferedDataPerMediaBuffer from "./get_buffered_data_per_media_buffer";
 import getThumbnailData from "./get_thumbnail_data";
-import synchronizeSegmentSinksOnObservation from "./synchronize_sinks_on_observation";
-import { formatErrorForSender } from "./utils";
+import type { ICorePlugins } from "./utils";
+import { formatErrorForSender, synchronizeSegmentSinksOnObservation } from "./utils";
 
 export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => void;
 

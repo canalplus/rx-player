@@ -104,9 +104,11 @@ export default class CoreTextDisplayerInterface implements ITextDisplayerInterfa
     this._queues.pushTextData.forEach((elt) => {
       elt.reject(error);
     });
+    this._queues.pushTextData.length = 0;
     this._queues.remove.forEach((elt) => {
       elt.reject(error);
     });
+    this._queues.remove.length = 0;
   }
 
   /**
@@ -149,7 +151,7 @@ export default class CoreTextDisplayerInterface implements ITextDisplayerInterfa
    * @param {unknown} err
    */
   public onRemoveError(err: Error): void {
-    const element = this._queues.pushTextData.shift();
+    const element = this._queues.remove.shift();
     if (element === undefined) {
       log.error("text", "pushTextData error for inexistant operation");
       return;
