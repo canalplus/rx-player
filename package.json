@@ -286,7 +286,7 @@
         "test:unit:firefox": "Launch unit tests on firefox",
         "test:unit:firefox -- --watch": "Launch unit tests on Chrome and restart them each time of its file changes"
       },
-      "Memory tests (test memory usage to avoid memory leaks, call the `build` script BEFORE running them)": {
+      "Memory tests (test memory usage to avoid memory leaks)": {
         "test:memory": "Launch memory tests",
         "test:memory -- --watch": "Launch memory tests in Chrome each times the files update"
       },
