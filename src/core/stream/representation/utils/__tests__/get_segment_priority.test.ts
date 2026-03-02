@@ -1,17 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import configHandler from "../../../../../config";
 import getSegmentPriority from "../get_segment_priority";
 
-const mockGetCurrentConfig = vi.hoisted(() => vi.fn());
-vi.mock("../../../../../config", () => ({
-  default: {
-    getCurrent: mockGetCurrentConfig,
-  },
-}));
-
 describe("getSegmentPriority", () => {
+  const originalConfig = configHandler.getCurrent();
+  const mockGetCurrentConfig = vi.spyOn(configHandler, "getCurrent");
   beforeEach(() => {
     // Default configuration for most tests
     mockGetCurrentConfig.mockReturnValue({
+      ...originalConfig,
       SEGMENT_PRIORITIES_STEPS: [1, 5, 10, 20],
     });
   });
@@ -88,6 +85,7 @@ describe("getSegmentPriority", () => {
   describe("different config values", () => {
     it("should work with empty priority steps array", () => {
       mockGetCurrentConfig.mockReturnValue({
+        ...originalConfig,
         SEGMENT_PRIORITIES_STEPS: [],
       });
 
@@ -97,6 +95,7 @@ describe("getSegmentPriority", () => {
 
     it("should work with single priority step", () => {
       mockGetCurrentConfig.mockReturnValue({
+        ...originalConfig,
         SEGMENT_PRIORITIES_STEPS: [10],
       });
 
@@ -106,6 +105,7 @@ describe("getSegmentPriority", () => {
 
     it("should work with different step values", () => {
       mockGetCurrentConfig.mockReturnValue({
+        ...originalConfig,
         SEGMENT_PRIORITIES_STEPS: [2, 10, 30, 60],
       });
 

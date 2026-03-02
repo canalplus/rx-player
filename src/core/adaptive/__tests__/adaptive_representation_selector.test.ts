@@ -1,7 +1,14 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import noop from "../../../utils/noop";
+import type { IAdaptation, IManifest, IRepresentation, IPeriod } from "../../../manifest";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../manifest/classes";
+import { __PLAYBACK_OBSERVER_MOCKS } from "../../../playback_observer";
 import SharedReference from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
+import type { IBufferType } from "../../segment_sinks";
+import type {
+  IAdaptiveRepresentationSelectorArguments,
+  IRepresentationEstimatorPlaybackObservation,
+} from "../adaptive_representation_selector";
 import createAdaptiveRepresentationSelector from "../adaptive_representation_selector";
 import BufferBasedChooser from "../buffer_based_chooser";
 import GuessBasedChooser from "../guess_based_chooser";
@@ -11,54 +18,54 @@ import * as BandwidthEstimatorModule from "../utils/bandwidth_estimator";
 import PendingRequestsStore from "../utils/pending_requests_store";
 import RepresentationScoreCalculator from "../utils/representation_score_calculator";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 vi.mock("../../../log", () => ({
   default: { debug: vi.fn(), warn: vi.fn(), info: vi.fn(), error: vi.fn() },
 }));
 
-function makeRepresentation(id: string, bitrate: number) {
-  return { id, bitrate, width: undefined, height: undefined } as any;
-}
+/** Dummy object that will be used as the `PlaybackObserver` instance */
+const mockedPlaybackObserver =
+  __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>(
+    {
+      bufferGap: 10,
+      position: makeObservationPosition(0),
+      speed: 1,
+      duration: 10000,
+      maximumPosition: 10000,
+    },
+  );
 
-function makeObservationPosition(wanted: number) {
-  return { getWanted: () => wanted } as any;
-}
-
-function makePlaybackObservation(overrides: Partial<any> = {}) {
+/**
+ * Create a dummy `context` argument as taken by an
+ * `AdaptativeRepresentationSelector`.
+ */
+function makeContext(
+  isDynamic: boolean = false,
+  bufferType: IBufferType = "video",
+): {
+  manifest: IManifest;
+  adaptation: IAdaptation;
+  period: IPeriod;
+} {
   return {
-    bufferGap: 0,
-    position: makeObservationPosition(10),
-    speed: 1,
-    duration: 300,
-    maximumPosition: 300,
-    ...overrides,
+    manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest({ isDynamic }),
+    period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
+    adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ type: bufferType }),
   };
 }
 
-/** Build a minimal playback observer around a single observation value. */
-function makePlaybackObserver(obs: any) {
-  const ref = new SharedReference(obs);
-  return {
-    getReference: () => ref,
-    listen: vi.fn(
-      // nothing – tests will trigger manually via returned ref if needed
-      noop,
-    ),
-  } as any;
+/** Simple util to make a `Representation` with a specific `id` and/or bitrate. */
+function makeRepresentation(id: string = "foo", bitrate: number = 1000): IRepresentation {
+  return new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+    id,
+    bitrate,
+  });
 }
 
-function makeContext(isDynamic = false) {
-  return {
-    manifest: { isDynamic },
-    period: {},
-    adaptation: { type: "video" as const },
-  } as any;
-}
-
-function makeOptions() {
+/**
+ * Create default options for the `createAdaptiveRepresentationSelector`
+ * function.
+ */
+function makeAbrOptions(): IAdaptiveRepresentationSelectorArguments {
   return {
     initialBitrates: { video: 1000 },
     lowLatencyMode: false,
@@ -69,27 +76,53 @@ function makeOptions() {
   };
 }
 
+/** Emit a new playback observation through `mockedPlaybackObserver`. */
+function emitObservation(
+  overrides: Partial<IRepresentationEstimatorPlaybackObservation> = {},
+) {
+  mockedPlaybackObserver.emit({
+    bufferGap: 0,
+    position: makeObservationPosition(10),
+    speed: 1,
+    duration: 300,
+    maximumPosition: 300,
+    ...overrides,
+  });
+}
+
+/** Create the `position` attribute for a playback observation. */
+function makeObservationPosition(wanted: number) {
+  return new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+    getWanted: () => wanted,
+  });
+}
+
 describe("createAdaptiveRepresentationSelector", () => {
   afterEach(() => {
-    vi.restoreAllMocks();
+    mockedPlaybackObserver.reset();
+    vi.resetAllMocks();
   });
 
   it("returns a function (IRepresentationEstimator)", () => {
-    const selector = createAdaptiveRepresentationSelector(makeOptions());
+    const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
     expect(typeof selector).toBe("function");
   });
 
   it("creates a new BandwidthEstimator per buffer type on first call", () => {
     const MockBandwidthEstimator = vi.spyOn(BandwidthEstimatorModule, "default");
-    const selector = createAdaptiveRepresentationSelector(makeOptions());
+    const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
     const rep = makeRepresentation("r1", 500);
     const canceller = new TaskCanceller("test");
     const currentRepRef = new SharedReference(null);
     const repsRef = new SharedReference([rep]);
-    const obs = makePlaybackObservation({ bufferGap: 0 });
-    const observer = makePlaybackObserver(obs);
-
-    selector(makeContext(), currentRepRef, repsRef, observer, canceller.signal);
+    emitObservation({ bufferGap: 0 });
+    selector(
+      makeContext(),
+      currentRepRef,
+      repsRef,
+      mockedPlaybackObserver.observer,
+      canceller.signal,
+    );
 
     expect(MockBandwidthEstimator).toHaveBeenCalledTimes(1);
     canceller.cancel("done");
@@ -98,21 +131,25 @@ describe("createAdaptiveRepresentationSelector", () => {
 
   it("reuses the same BandwidthEstimator for the same buffer type across calls", () => {
     const MockBandwidthEstimator = vi.spyOn(BandwidthEstimatorModule, "default");
-    const selector = createAdaptiveRepresentationSelector(makeOptions());
+    const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
     const rep = makeRepresentation("r1", 500);
     const canceller = new TaskCanceller("test");
     const currentRepRef = new SharedReference(null);
     const repsRef = new SharedReference([rep]);
-    const obs = makePlaybackObservation();
-    const observer = makePlaybackObserver(obs);
     const ctx = makeContext();
 
-    selector(ctx, currentRepRef, repsRef, observer, canceller.signal);
+    selector(
+      ctx,
+      currentRepRef,
+      repsRef,
+      mockedPlaybackObserver.observer,
+      canceller.signal,
+    );
     selector(
       ctx,
       new SharedReference(null),
       new SharedReference([rep]),
-      makePlaybackObserver(obs),
+      mockedPlaybackObserver.observer,
       canceller.signal,
     );
 
@@ -123,36 +160,27 @@ describe("createAdaptiveRepresentationSelector", () => {
 
   it("creates separate BandwidthEstimators for different buffer types", () => {
     const MockBandwidthEstimator = vi.spyOn(BandwidthEstimatorModule, "default");
-    const options = makeOptions();
+    const options = makeAbrOptions();
     const selector = createAdaptiveRepresentationSelector(options);
     const rep = makeRepresentation("r1", 500);
 
     const canceller = new TaskCanceller("test");
-    const obs = makePlaybackObservation();
 
-    const videoCtx = {
-      manifest: { isDynamic: false },
-      period: {},
-      adaptation: { type: "video" },
-    } as any;
-    const audioCtx = {
-      manifest: { isDynamic: false },
-      period: {},
-      adaptation: { type: "audio" },
-    } as any;
+    const videoCtx = makeContext(false, "video");
+    const audioCtx = makeContext(false, "audio");
 
     selector(
       videoCtx,
       new SharedReference(null),
       new SharedReference([rep]),
-      makePlaybackObserver(obs),
+      mockedPlaybackObserver.observer,
       canceller.signal,
     );
     selector(
       audioCtx,
       new SharedReference(null),
       new SharedReference([rep]),
-      makePlaybackObserver(obs),
+      mockedPlaybackObserver.observer,
       canceller.signal,
     );
 
@@ -163,20 +191,18 @@ describe("createAdaptiveRepresentationSelector", () => {
 
   describe("getEstimates (single representation)", () => {
     it("immediately returns the only representation without bandwidth logic", () => {
-      const selector = createAdaptiveRepresentationSelector(makeOptions());
+      const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
       const rep = makeRepresentation("r1", 500);
       const canceller = new TaskCanceller("test");
 
       const currentRepRef = new SharedReference(null);
       const repsRef = new SharedReference([rep]);
-      const obs = makePlaybackObservation();
-      const observer = makePlaybackObserver(obs);
 
       const { estimates } = selector(
         makeContext(),
         currentRepRef,
         repsRef,
-        observer,
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
       const estimate = estimates.getValue();
@@ -192,14 +218,14 @@ describe("createAdaptiveRepresentationSelector", () => {
   describe("getEstimates (multiple representations)", () => {
     function setupMultiRep(
       overrides: {
-        obs?: Partial<any>;
+        obs?: Partial<IRepresentationEstimatorPlaybackObservation>;
         lowLatencyMode?: boolean;
         isDynamic?: boolean;
         bitrateChosen?: number;
         bandwidthEstimate?: number;
         bufferBasedEstimate?: number | undefined;
-        guessResult?: any;
-        currentRep?: any;
+        guessResult?: IRepresentation;
+        currentRep?: IRepresentation;
       } = {},
     ) {
       const mockGetBandwidthEstimate = vi.spyOn(
@@ -241,18 +267,18 @@ describe("createAdaptiveRepresentationSelector", () => {
       const canceller = new TaskCanceller("test");
       const currentRepRef = new SharedReference(currentRep);
       const repsRef = new SharedReference([repLow, repMid, repHigh]);
-      const obs = makePlaybackObservation(obsOverrides);
-      const observer = makePlaybackObserver(obs);
+
+      emitObservation(obsOverrides);
 
       const result = selector(
         makeContext(isDynamic),
         currentRepRef,
         repsRef,
-        observer,
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
 
-      return { result, canceller, repLow, repMid, repHigh, obs };
+      return { result, canceller, repLow, repMid, repHigh };
     }
 
     it("returns bandwidth-based estimate by default", () => {
@@ -396,17 +422,15 @@ describe("createAdaptiveRepresentationSelector", () => {
       const currentRep = makeRepresentation("high", 1200);
       const currentRepRef = new SharedReference(currentRep);
       const repsRef = new SharedReference([makeRepresentation("low", 100), repHigh]);
-      const obs = makePlaybackObservation({
+      emitObservation({
         maximumPosition: 50,
         position: makeObservationPosition(20),
       });
-      const observer = makePlaybackObserver(obs);
-
       const { estimates } = selector(
         makeContext(true),
         currentRepRef,
         repsRef,
-        observer,
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
 
@@ -418,21 +442,19 @@ describe("createAdaptiveRepresentationSelector", () => {
 
   describe("callbacks", () => {
     function getCallbackSetup() {
-      const selector = createAdaptiveRepresentationSelector(makeOptions());
+      const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
       const repLow = makeRepresentation("low", 300);
       const repHigh = makeRepresentation("high", 1200);
 
       const canceller = new TaskCanceller("test");
       const currentRepRef = new SharedReference(null);
       const repsRef = new SharedReference([repLow, repHigh]);
-      const obs = makePlaybackObservation();
-      const observer = makePlaybackObserver(obs);
 
       const { callbacks } = selector(
         makeContext(),
         currentRepRef,
         repsRef,
-        observer,
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
 
@@ -450,9 +472,16 @@ describe("createAdaptiveRepresentationSelector", () => {
         size: 50000,
         segmentDuration: 4,
         content: {
-          representation: makeRepresentation("r", 500),
-          adaptation: {} as any,
-          segment: { isInit: false, complete: true, duration: 4 } as any,
+          representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+            id: "r",
+            bitrate: 500,
+          }),
+          segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+            isInit: false,
+            complete: true,
+            duration: 4,
+          }),
+          adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
         },
       });
       expect(mockAddSample).toHaveBeenCalledWith(200, 50000);
@@ -471,8 +500,12 @@ describe("createAdaptiveRepresentationSelector", () => {
         segmentDuration: undefined,
         content: {
           representation: makeRepresentation("r", 500),
-          adaptation: {} as any,
-          segment: { isInit: true, complete: false, duration: 0 } as any,
+          adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
+          segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+            isInit: true,
+            complete: false,
+            duration: 0,
+          }),
         },
       });
       expect(mockScoreAddSample).not.toHaveBeenCalled();
@@ -492,8 +525,12 @@ describe("createAdaptiveRepresentationSelector", () => {
         segmentDuration: 4,
         content: {
           representation: rep,
-          adaptation: {} as any,
-          segment: { isInit: false, complete: true, duration: 4 } as any,
+          adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({}),
+          segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+            isInit: false,
+            complete: true,
+            duration: 4,
+          }),
         },
       });
       expect(mockScoreAddSample).toHaveBeenCalledWith(rep, 0.2, 4);
@@ -503,7 +540,16 @@ describe("createAdaptiveRepresentationSelector", () => {
     it("requestBegin callback delegates to requestsStore.add", () => {
       const mockRequestAdd = vi.spyOn(PendingRequestsStore.prototype, "add");
       const { callbacks, canceller } = getCallbackSetup();
-      const payload = { id: "req1", time: 0, requestTimestamp: 0, content: {} } as any;
+      const payload = {
+        id: "req1",
+        time: 0,
+        requestTimestamp: 0,
+        content: {
+          ...makeContext(),
+          representation: makeRepresentation(),
+          segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+        },
+      };
       callbacks.requestBegin(payload);
       expect(mockRequestAdd).toHaveBeenCalledWith(payload);
       canceller.cancel("done");
@@ -515,7 +561,16 @@ describe("createAdaptiveRepresentationSelector", () => {
         "addProgress",
       );
       const { callbacks, canceller } = getCallbackSetup();
-      const payloadAdd = { id: "req1", time: 0, requestTimestamp: 0, content: {} as any };
+      const payloadAdd = {
+        id: "req1",
+        time: 0,
+        requestTimestamp: 0,
+        content: {
+          ...makeContext(),
+          representation: makeRepresentation(),
+          segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+        },
+      };
       const payloadProgress = {
         id: "req1",
         size: 1000,
@@ -532,7 +587,16 @@ describe("createAdaptiveRepresentationSelector", () => {
     it("requestEnd callback delegates to requestsStore.remove", () => {
       const mockRequestRemove = vi.spyOn(PendingRequestsStore.prototype, "remove");
       const { callbacks, canceller } = getCallbackSetup();
-      const payloadAdd = { id: "req1", time: 0, requestTimestamp: 0, content: {} as any };
+      const payloadAdd = {
+        id: "req1",
+        time: 0,
+        requestTimestamp: 0,
+        content: {
+          ...makeContext(),
+          representation: makeRepresentation(),
+          segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+        },
+      };
       callbacks.requestBegin(payloadAdd);
       callbacks.requestEnd({ id: "req1" });
       expect(mockRequestRemove).toHaveBeenCalledWith("req1");
@@ -565,7 +629,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         "getBandwidthEstimate",
       );
       mockGetLastStableRepresentation.mockReturnValue(null);
-      const selector = createAdaptiveRepresentationSelector(makeOptions());
+      const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
       const reps = [makeRepresentation("low", 300), makeRepresentation("high", 900)];
       mockGetBandwidthEstimate.mockReturnValue({
         bandwidthEstimate: 800,
@@ -577,7 +641,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(),
         new SharedReference(null),
         new SharedReference(reps),
-        makePlaybackObserver(makePlaybackObservation()),
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
 
@@ -596,7 +660,7 @@ describe("createAdaptiveRepresentationSelector", () => {
       );
       const stableRep = makeRepresentation("stable", 600);
       mockGetLastStableRepresentation.mockReturnValue(stableRep);
-      const selector = createAdaptiveRepresentationSelector(makeOptions());
+      const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
       const reps = [makeRepresentation("low", 300), makeRepresentation("high", 900)];
       mockGetBandwidthEstimate.mockReturnValue({
         bandwidthEstimate: 800,
@@ -604,11 +668,12 @@ describe("createAdaptiveRepresentationSelector", () => {
       });
 
       const canceller = new TaskCanceller("test");
+      emitObservation({ speed: 2 });
       const { estimates } = selector(
         makeContext(),
         new SharedReference(null),
         new SharedReference(reps),
-        makePlaybackObserver(makePlaybackObservation({ speed: 2 })),
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
 
@@ -628,7 +693,7 @@ describe("createAdaptiveRepresentationSelector", () => {
       );
       const stableRep = makeRepresentation("stable", 600);
       mockGetLastStableRepresentation.mockReturnValue(stableRep);
-      const selector = createAdaptiveRepresentationSelector(makeOptions());
+      const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
       const reps = [makeRepresentation("low", 300), makeRepresentation("high", 900)];
       mockGetBandwidthEstimate.mockReturnValue({
         bandwidthEstimate: 800,
@@ -636,11 +701,12 @@ describe("createAdaptiveRepresentationSelector", () => {
       });
 
       const canceller = new TaskCanceller("test");
+      emitObservation({ speed: 0 });
       const { estimates } = selector(
         makeContext(),
         new SharedReference(null),
         new SharedReference(reps),
-        makePlaybackObserver(makePlaybackObservation({ speed: 0 })),
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
 
@@ -655,7 +721,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         NetworkAnalyzer.prototype,
         "getBandwidthEstimate",
       );
-      const selector = createAdaptiveRepresentationSelector(makeOptions());
+      const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
       const repLow = makeRepresentation("low", 300);
       const repHigh = makeRepresentation("high", 1200);
       mockGetBandwidthEstimate.mockReturnValue({
@@ -666,14 +732,12 @@ describe("createAdaptiveRepresentationSelector", () => {
       const canceller = new TaskCanceller("test");
       const currentRepRef = new SharedReference(null);
       const repsRef = new SharedReference([repLow]);
-      const obs = makePlaybackObservation();
-      const observer = makePlaybackObserver(obs);
 
       const { estimates } = selector(
         makeContext(),
         currentRepRef,
         repsRef,
-        observer,
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
 
@@ -701,7 +765,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         NetworkAnalyzer.prototype,
         "getBandwidthEstimate",
       );
-      const selector = createAdaptiveRepresentationSelector(makeOptions());
+      const selector = createAdaptiveRepresentationSelector(makeAbrOptions());
       const rep = makeRepresentation("r1", 500);
       mockGetBandwidthEstimate.mockReturnValue({
         bandwidthEstimate: 800,
@@ -711,14 +775,12 @@ describe("createAdaptiveRepresentationSelector", () => {
       const canceller = new TaskCanceller("test");
       const currentRepRef = new SharedReference(null);
       const repsRef = new SharedReference([rep]);
-      const obs = makePlaybackObservation();
-      const observer = makePlaybackObserver(obs);
 
       const { estimates } = selector(
         makeContext(),
         currentRepRef,
         repsRef,
-        observer,
+        mockedPlaybackObserver.observer,
         canceller.signal,
       );
       const valueBefore = estimates.getValue();

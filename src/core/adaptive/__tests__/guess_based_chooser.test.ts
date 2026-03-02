@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { IRepresentation } from "../../../manifest";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../manifest/classes";
+import noop from "../../../utils/noop";
+import { makeMockedClass } from "../../../utils/test-utils";
 import GuessBasedChooser from "../guess_based_chooser";
+import type LastEstimateStorage from "../utils/last_estimate_storage";
 import { ABRAlgorithmType } from "../utils/last_estimate_storage";
 import type { IRequestInfo } from "../utils/pending_requests_store";
 import type { IRepresentationMaintainabilityScore } from "../utils/representation_score_calculator";
+import type RepresentationScoreCalculator from "../utils/representation_score_calculator";
 import { ScoreConfidenceLevel } from "../utils/representation_score_calculator";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 const mocks = vi.hoisted(() => ({
   estimateRequestBandwidth: vi.fn(),
@@ -21,26 +22,18 @@ vi.mock("../../../log", () => ({
     error: vi.fn(),
   },
 }));
-
-vi.mock("../../../utils/array_find_index", () => ({
-  // eslint-disable-next-line no-restricted-properties
-  default: vi.fn((arr, predicate) => arr.findIndex(predicate)),
-}));
-
 vi.mock("../../../utils/monotonic_timestamp", () => ({
   default: mocks.getMonotonicTimeStamp,
 }));
-
 vi.mock("../network_analyzer", () => ({
   estimateRequestBandwidth: mocks.estimateRequestBandwidth,
 }));
 
-// Helper functions
 function createRepresentation(id: string, bitrate: number): IRepresentation {
-  return {
+  return new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
     id,
     bitrate,
-  } as IRepresentation;
+  });
 }
 
 function createScoreData(
@@ -58,41 +51,53 @@ function createRequest(
 ): IRequestInfo {
   return {
     content: {
-      representation: { id: representationId } as IRepresentation,
-      segment: {
+      representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        id: representationId,
+      }),
+      segment: __MANIFEST_CLASSES_MOCKS.createSegment({
         duration: segmentDuration,
         isInit,
-      },
+      }),
+      adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
+      period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
+      manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
     },
     requestTimestamp,
-  } as IRequestInfo;
+    progress: [],
+  };
 }
 
+const DummyScoreCalculator = makeMockedClass<RepresentationScoreCalculator>(
+  {
+    addSample: noop,
+    getEstimate: () => createScoreData(1, ScoreConfidenceLevel.LOW),
+    getLastStableRepresentation: () => null,
+  },
+  {},
+);
+const DummyLastEstimateStorage = makeMockedClass<LastEstimateStorage>(
+  {
+    update: noop,
+  },
+  { bandwidth: undefined, representation: null, algorithmType: ABRAlgorithmType.None },
+);
+
 describe("GuessBasedChooser", () => {
-  let mockScoreCalculator: any;
-  let mockPrevEstimate: any;
-  let representations: IRepresentation[];
+  let mockScoreCalculator: RepresentationScoreCalculator;
+  let mockLastEstimateStorage: LastEstimateStorage;
+
+  const representations = [
+    createRepresentation("rep-1", 100000),
+    createRepresentation("rep-2", 500000),
+    createRepresentation("rep-3", 1000000),
+    createRepresentation("rep-4", 2000000),
+    createRepresentation("rep-5", 3000000),
+  ];
 
   beforeEach(() => {
     mocks.getMonotonicTimeStamp.mockReturnValue(10000);
-
-    // Setup mock representations (sorted by bitrate ascending)
-    representations = [
-      createRepresentation("rep-1", 100000),
-      createRepresentation("rep-2", 500000),
-      createRepresentation("rep-3", 1000000),
-      createRepresentation("rep-4", 2000000),
-      createRepresentation("rep-5", 3000000),
-    ];
-
-    mockScoreCalculator = {
-      getEstimate: vi.fn(),
-    };
-
-    mockPrevEstimate = {
-      representation: null,
-      algorithmType: ABRAlgorithmType.GuessBased,
-    };
+    mockScoreCalculator = new DummyScoreCalculator();
+    mockLastEstimateStorage = new DummyLastEstimateStorage();
   });
 
   afterEach(() => {
@@ -101,7 +106,7 @@ describe("GuessBasedChooser", () => {
 
   describe("constructor", () => {
     it("should initialize with correct default values", () => {
-      const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+      const chooser = new GuessBasedChooser(mockScoreCalculator, mockLastEstimateStorage);
       expect(chooser).toBeDefined();
     });
   });
@@ -109,8 +114,11 @@ describe("GuessBasedChooser", () => {
   describe("getGuess", () => {
     describe("when last chosen representation is null", () => {
       it("should return null - nothing to base guess on", () => {
-        mockPrevEstimate.representation = null;
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        mockLastEstimateStorage.representation = null;
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -126,10 +134,13 @@ describe("GuessBasedChooser", () => {
 
     describe("when incomingBestBitrate > lastChosenRep.bitrate", () => {
       it("should return null - ABR estimates are already superior", () => {
-        mockPrevEstimate.representation = representations[1]; // 500000
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.GuessBased;
+        mockLastEstimateStorage.representation = representations[1]; // 500000
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.GuessBased;
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -143,10 +154,13 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should reset consecutive wrong guesses when algorithm was GuessBased", () => {
-        mockPrevEstimate.representation = representations[1];
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.GuessBased;
+        mockLastEstimateStorage.representation = representations[1];
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.GuessBased;
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         // First call should reset counter
         chooser.getGuess(
@@ -172,14 +186,17 @@ describe("GuessBasedChooser", () => {
 
     describe("when not in guessing mode yet", () => {
       beforeEach(() => {
-        mockPrevEstimate.representation = representations[1];
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.BufferBased;
+        mockLastEstimateStorage.representation = representations[1];
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.BufferBased;
       });
 
       it("should return null when score data is undefined", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(undefined);
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(undefined);
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -193,11 +210,13 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should return next representation when conditions allow guessing higher", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.HIGH),
         );
-
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -211,11 +230,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should return null when buffer gap is too low to guess higher", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -229,11 +251,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should return null when confidence level is not HIGH", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.LOW),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -247,11 +272,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should return null when score/speed ratio is too low", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.005, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -265,11 +293,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should account for playback speed when checking score", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(2.0, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -283,11 +314,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should return null when already at highest representation", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -303,16 +337,19 @@ describe("GuessBasedChooser", () => {
 
     describe("when already in guessing mode", () => {
       beforeEach(() => {
-        mockPrevEstimate.representation = representations[2]; // 1000000
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.GuessBased;
+        mockLastEstimateStorage.representation = representations[2]; // 1000000
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.GuessBased;
       });
 
       it("should take higher guess when conditions are met", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(2.0, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -325,12 +362,15 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should take same guess when conditions are met with highest guess", () => {
-        mockPrevEstimate.representation = representations[4];
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        mockLastEstimateStorage.representation = representations[4];
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(2.0, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -343,11 +383,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should return last chosen representation when current differs", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.2, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -361,11 +404,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should stop guess and downgrade when score is too low", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(0.9, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -379,11 +425,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should stop guess when buffer gap is low and score is marginal", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.1, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -397,9 +446,12 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should stop guess when score is undefined and buffer gap is low", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(undefined);
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(undefined);
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -413,11 +465,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should block guesses for increasing duration after consecutive wrong guesses", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(0.9, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         // First wrong guess
         chooser.getGuess(
@@ -430,7 +485,7 @@ describe("GuessBasedChooser", () => {
 
         // Try to guess again immediately
         mocks.getMonotonicTimeStamp.mockReturnValue(10000 + 5000); // 5 seconds later
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.BufferBased;
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.BufferBased;
 
         const result = chooser.getGuess(
           representations,
@@ -445,11 +500,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should allow guessing after block period expires", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(0.9, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         // First wrong guess
         chooser.getGuess(
@@ -462,8 +520,8 @@ describe("GuessBasedChooser", () => {
 
         // Wait for block to expire
         mocks.getMonotonicTimeStamp.mockReturnValue(10000 + 20000); // 20 seconds later
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.BufferBased;
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.BufferBased;
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.HIGH),
         );
 
@@ -480,11 +538,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should guess higher when conditions allow in guessing mode", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -498,9 +559,12 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should return current representation when score data is undefined and not stopping", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(undefined);
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(undefined);
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -516,9 +580,9 @@ describe("GuessBasedChooser", () => {
 
     describe("request-based guess stopping", () => {
       beforeEach(() => {
-        mockPrevEstimate.representation = representations[2];
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.GuessBased;
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        mockLastEstimateStorage.representation = representations[2];
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.GuessBased;
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.2, ScoreConfidenceLevel.HIGH),
         );
       });
@@ -528,7 +592,10 @@ describe("GuessBasedChooser", () => {
           createRequest("rep-3", 0, 8000, true), // 2000ms elapsed (10000 - 8000)
         ];
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -546,7 +613,10 @@ describe("GuessBasedChooser", () => {
           createRequest("rep-3", 0, 9500, true), // 500ms elapsed
         ];
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -564,7 +634,10 @@ describe("GuessBasedChooser", () => {
           createRequest("rep-3", 2, 5000, false), // 5000ms elapsed, duration is 2s
         ];
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -582,7 +655,10 @@ describe("GuessBasedChooser", () => {
           createRequest("rep-3", 2, 8500, false), // 1500ms elapsed, duration is 2s (threshold: 2200ms)
         ];
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -600,7 +676,10 @@ describe("GuessBasedChooser", () => {
 
         const requests = [createRequest("rep-3", 2, 9000, false)];
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -616,11 +695,14 @@ describe("GuessBasedChooser", () => {
       it("should not consider requests for other representations", () => {
         const requests = [createRequest("rep-4", 2, 5000, false)];
 
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.1, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -640,7 +722,10 @@ describe("GuessBasedChooser", () => {
           createRequest("rep-3", 2, 9000, false), // OK
         ];
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -656,16 +741,19 @@ describe("GuessBasedChooser", () => {
 
     describe("guess validation", () => {
       beforeEach(() => {
-        mockPrevEstimate.representation = representations[2];
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.GuessBased;
+        mockLastEstimateStorage.representation = representations[2];
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.GuessBased;
       });
 
       it("should validate guess with high score and high confidence", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.6, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         chooser.getGuess(
           representations,
@@ -688,11 +776,14 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should validate guess when incoming bitrate matches and it's an improvement", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.2, ScoreConfidenceLevel.LOW),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -709,13 +800,16 @@ describe("GuessBasedChooser", () => {
 
     describe("edge cases", () => {
       it("should handle infinite buffer gap correctly", () => {
-        mockPrevEstimate.representation = representations[1];
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.BufferBased;
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        mockLastEstimateStorage.representation = representations[1];
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.BufferBased;
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -729,13 +823,16 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should handle NaN buffer gap by not guessing", () => {
-        mockPrevEstimate.representation = representations[1];
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.BufferBased;
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        mockLastEstimateStorage.representation = representations[1];
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.BufferBased;
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.HIGH),
         );
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         const result = chooser.getGuess(
           representations,
@@ -749,13 +846,16 @@ describe("GuessBasedChooser", () => {
       });
 
       it("should cap block duration at 120 seconds", () => {
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(0.9, ScoreConfidenceLevel.HIGH),
         );
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.GuessBased;
-        mockPrevEstimate.representation = representations[2];
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.GuessBased;
+        mockLastEstimateStorage.representation = representations[2];
 
-        const chooser = new GuessBasedChooser(mockScoreCalculator, mockPrevEstimate);
+        const chooser = new GuessBasedChooser(
+          mockScoreCalculator,
+          mockLastEstimateStorage,
+        );
 
         // Trigger many consecutive wrong guesses
         for (let i = 0; i < 20; i++) {
@@ -772,9 +872,9 @@ describe("GuessBasedChooser", () => {
         // The block should be capped at 120 seconds max
         // After 120 seconds, should be able to guess again
         mocks.getMonotonicTimeStamp.mockReturnValue(10000 + 20000 + 120100);
-        mockPrevEstimate.algorithmType = ABRAlgorithmType.BufferBased;
-        mockPrevEstimate.representation = representations[1]; // Update to reflect actual downgraded state
-        mockScoreCalculator.getEstimate.mockReturnValue(
+        mockLastEstimateStorage.algorithmType = ABRAlgorithmType.BufferBased;
+        mockLastEstimateStorage.representation = representations[1]; // Update to reflect actual downgraded state
+        vi.spyOn(mockScoreCalculator, "getEstimate").mockReturnValue(
           createScoreData(1.5, ScoreConfidenceLevel.HIGH),
         );
 

@@ -55,3 +55,6 @@ export {
   Representation,
   StaticRepresentationIndex,
 };
+
+// NOTE: Reserved for tests
+export * as __MANIFEST_CLASSES_MOCKS from "./__tests__/mocks";

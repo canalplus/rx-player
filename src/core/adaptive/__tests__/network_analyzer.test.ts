@@ -1,34 +1,15 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import configHandler from "../../../config";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../manifest/classes";
+import { __PLAYBACK_OBSERVER_MOCKS } from "../../../playback_observer";
+import { makeMockedClass } from "../../../utils/test-utils";
+import type { IPlaybackConditionsInfo } from "../network_analyzer";
 import NetworkAnalyzer, { estimateRequestBandwidth } from "../network_analyzer";
-import type { IRequestInfo } from "../utils/pending_requests_store";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-vi.mock("../../../config", () => ({
-  default: {
-    getCurrent: vi.fn(() => ({
-      ABR_STARVATION_GAP: {
-        DEFAULT: 2,
-        LOW_LATENCY: 1,
-      },
-      OUT_OF_STARVATION_GAP: {
-        DEFAULT: 3,
-        LOW_LATENCY: 1.5,
-      },
-      ABR_STARVATION_FACTOR: {
-        DEFAULT: 0.72,
-        LOW_LATENCY: 0.8,
-      },
-      ABR_REGULAR_FACTOR: {
-        DEFAULT: 0.8,
-        LOW_LATENCY: 0.85,
-      },
-      ABR_STARVATION_DURATION_DELTA: 5,
-    })),
-  },
-}));
+import type BandwidthEstimator from "../utils/bandwidth_estimator";
+import type {
+  IPendingRequestStoreProgress,
+  IRequestInfo,
+} from "../utils/pending_requests_store";
 
 vi.mock("../../../log", () => ({
   default: {
@@ -36,29 +17,37 @@ vi.mock("../../../log", () => ({
   },
 }));
 
-vi.mock("../../../utils/monotonic_timestamp", () => ({
-  // eslint-disable-next-line no-restricted-properties
-  default: vi.fn(() => performance.now()),
-}));
-
 function createMockRequest(
   segmentTime: number,
   segmentDuration: number,
   requestTimestamp: number,
-  progress: Array<{ size: number; timestamp: number; totalSize: number }> = [],
+  progress: Array<Partial<IPendingRequestStoreProgress>> = [],
   complete = true,
 ): IRequestInfo {
   return {
     content: {
-      segment: {
+      segment: __MANIFEST_CLASSES_MOCKS.createSegment({
         time: segmentTime,
         duration: segmentDuration,
         complete,
-      },
+      }),
+      adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
+      period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
+      representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
+      manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
     },
     requestTimestamp,
-    progress,
-  } as IRequestInfo;
+    progress: progress.map((p) => {
+      return {
+        size: 1000,
+        timestamp: 1000,
+        totalSize: 10000,
+        duration: 2,
+        id: "toto",
+        ...p,
+      };
+    }),
+  };
 }
 
 function createMockPlaybackInfo(
@@ -66,21 +55,55 @@ function createMockPlaybackInfo(
   position: number,
   speed = 1,
   duration = 100,
-): any {
+): IPlaybackConditionsInfo {
   return {
     bufferGap,
-    position: { getWanted: () => position },
+    position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+      getWanted: () => position,
+      getPolled: () => position,
+    }),
     speed,
     duration,
   };
 }
 
-function createMockBandwidthEstimator(estimate?: number): any {
-  return {
-    getEstimate: vi.fn(() => estimate),
-    reset: vi.fn(),
-  };
+function createMockBandwidthEstimator(estimate?: number): BandwidthEstimator {
+  const DummyBandwidthEstimator = makeMockedClass<BandwidthEstimator>(
+    {
+      getEstimate: vi.fn(() => estimate),
+      reset: vi.fn(),
+      addSample: vi.fn(),
+    },
+    {},
+  );
+  return new DummyBandwidthEstimator();
 }
+beforeEach(() => {
+  const originalConfig = configHandler.getCurrent();
+  vi.spyOn(configHandler, "getCurrent").mockReturnValue({
+    ...originalConfig,
+    ABR_STARVATION_GAP: {
+      DEFAULT: 2,
+      LOW_LATENCY: 1,
+    },
+    OUT_OF_STARVATION_GAP: {
+      DEFAULT: 3,
+      LOW_LATENCY: 1.5,
+    },
+    ABR_STARVATION_FACTOR: {
+      DEFAULT: 0.72,
+      LOW_LATENCY: 0.8,
+    },
+    ABR_REGULAR_FACTOR: {
+      DEFAULT: 0.8,
+      LOW_LATENCY: 0.85,
+    },
+    ABR_STARVATION_DURATION_DELTA: 5,
+  });
+});
+afterEach(() => {
+  vi.resetAllMocks();
+});
 
 describe("estimateRequestBandwidth", () => {
   it("should return undefined if progress events are less than 5", () => {
@@ -322,7 +345,9 @@ describe("NetworkAnalyzer", () => {
     it("should return false when bitrate is higher than current representation", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(5, 0);
-      const currentRepresentation = { bitrate: 1000000 } as any;
+      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        bitrate: 1000000,
+      });
 
       const result = analyzer.isUrgent(2000000, currentRepresentation, [], playbackInfo);
 
@@ -332,7 +357,9 @@ describe("NetworkAnalyzer", () => {
     it("should return true in low latency mode when switching to lower bitrate", () => {
       const analyzer = new NetworkAnalyzer(1000000, true);
       const playbackInfo = createMockPlaybackInfo(5, 0);
-      const currentRepresentation = { bitrate: 2000000 } as any;
+      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        bitrate: 2000000,
+      });
 
       const result = analyzer.isUrgent(1000000, currentRepresentation, [], playbackInfo);
 
@@ -342,7 +369,9 @@ describe("NetworkAnalyzer", () => {
     it("should return true when no pending requests for lower bitrate", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(5, 10);
-      const currentRepresentation = { bitrate: 2000000 } as any;
+      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        bitrate: 2000000,
+      });
 
       const result = analyzer.isUrgent(1000000, currentRepresentation, [], playbackInfo);
 
@@ -354,7 +383,9 @@ describe("NetworkAnalyzer", () => {
       // eslint-disable-next-line no-restricted-properties
       const now = performance.now();
       const playbackInfo = createMockPlaybackInfo(2, 10);
-      const currentRepresentation = { bitrate: 2000000 } as any;
+      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        bitrate: 2000000,
+      });
 
       const request = createMockRequest(10, 4, now - 1000, [
         { size: 0, timestamp: now - 1000, totalSize: 10000 },
@@ -377,7 +408,9 @@ describe("NetworkAnalyzer", () => {
     it("should handle requests with zero duration segments", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(5, 10);
-      const currentRepresentation = { bitrate: 2000000 } as any;
+      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        bitrate: 2000000,
+      });
 
       // eslint-disable-next-line no-restricted-properties
       const request = createMockRequest(10, 0, performance.now()); // Zero duration
@@ -395,7 +428,9 @@ describe("NetworkAnalyzer", () => {
     it("should handle infinite buffer gap in urgency check", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(Infinity, 10);
-      const currentRepresentation = { bitrate: 2000000 } as any;
+      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        bitrate: 2000000,
+      });
 
       const result = analyzer.isUrgent(1000000, currentRepresentation, [], playbackInfo);
 
@@ -422,7 +457,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(1.5, 20),
         bandwidthEstimator,
-        { bitrate: 1600000 } as any,
+        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 1600000 }),
         [],
         result.bitrateChosen,
       );
@@ -432,7 +467,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(4, 30),
         bandwidthEstimator,
-        { bitrate: 1440000 } as any,
+        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 1440000 }),
         [],
         result.bitrateChosen,
       );
@@ -458,7 +493,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(5, 10),
         estimator,
-        { bitrate: 2400000 } as any,
+        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 2400000 }),
         [],
         result.bitrateChosen,
       );
@@ -469,7 +504,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(5, 20),
         estimator,
-        { bitrate: 800000 } as any,
+        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 800000 }),
         [],
         result.bitrateChosen,
       );
@@ -494,7 +529,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(5, 10, 2),
         estimator,
-        { bitrate: normalBitrate } as any,
+        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: normalBitrate }),
         [],
         result.bitrateChosen,
       );
@@ -504,7 +539,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(5, 20, 0.5),
         estimator,
-        { bitrate: normalBitrate } as any,
+        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: normalBitrate }),
         [],
         result.bitrateChosen,
       );

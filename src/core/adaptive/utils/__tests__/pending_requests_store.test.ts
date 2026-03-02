@@ -1,13 +1,10 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
 import PendingRequestsStore from "../pending_requests_store";
 import type {
   IPendingRequestStoreBegin,
   IPendingRequestStoreProgress,
 } from "../pending_requests_store";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 const mocks = vi.hoisted(() => ({
   warn: vi.fn(),
@@ -24,11 +21,11 @@ describe("PendingRequestsStore", () => {
   let store: PendingRequestsStore;
 
   const createMockContent = (segmentTime: number = 0) => ({
-    manifest: {} as any,
-    period: {} as any,
-    adaptation: {} as any,
-    representation: {} as any,
-    segment: { time: segmentTime } as any,
+    manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
+    period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
+    adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
+    representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
+    segment: __MANIFEST_CLASSES_MOCKS.createSegment({ time: segmentTime }),
   });
 
   const createMockRequest = (
@@ -231,6 +228,7 @@ describe("PendingRequestsStore", () => {
 
       store.add(request);
       // Manually corrupt the internal state to test filtering
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
       (store as any)._currentRequests.corrupted = null;
 
       const requests = store.getRequests();

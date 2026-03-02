@@ -1,27 +1,34 @@
+import type { Mock } from "vitest";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { IRepresentationProtectionData } from "../../../../manifest/classes";
+import {
+  __MANIFEST_CLASSES_MOCKS,
+  type IRepresentationProtectionData,
+  type Representation,
+} from "../../../../manifest/classes";
 import type { IProtectionDataInfo } from "../../../../transports";
 import EncryptionDataNotifier from "../encryption_data_notifier";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-vi.mock("../../../../manifest/classes", () => ({
-  Representation: vi.fn(),
-}));
-
 describe("EncryptionDataNotifier", () => {
-  let mockRepresentation: any;
-  let mockNotify: any;
+  let mockNotify: (contentProtections: IRepresentationProtectionData[]) => void;
+
+  let dummyRepresentation: Representation;
+  let mockGetEncryptionData: Mock<typeof dummyRepresentation.getEncryptionData>;
+  let mockGetAllEncryptionData: Mock<typeof dummyRepresentation.getAllEncryptionData>;
+  let mockAddProtectionData: Mock<typeof dummyRepresentation.addProtectionData>;
 
   beforeEach(() => {
     mockNotify = vi.fn();
-    mockRepresentation = {
-      getEncryptionData: vi.fn(() => []),
-      addProtectionData: vi.fn(),
-      getAllEncryptionData: vi.fn(() => []),
-    };
+
+    dummyRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation();
+    mockGetEncryptionData = vi
+      .spyOn(dummyRepresentation, "getEncryptionData")
+      .mockReturnValue([]);
+    mockGetAllEncryptionData = vi
+      .spyOn(dummyRepresentation, "getAllEncryptionData")
+      .mockReturnValue([]);
+    mockAddProtectionData = vi
+      .spyOn(dummyRepresentation, "addProtectionData")
+      .mockReturnValue(false);
   });
 
   describe("constructor - early notification", () => {
@@ -38,16 +45,13 @@ describe("EncryptionDataNotifier", () => {
           type: "cenc",
         },
       ];
-
-      mockRepresentation.getEncryptionData.mockReturnValue(mockEncryptionData);
-
+      mockGetEncryptionData.mockReturnValue(mockEncryptionData);
       new EncryptionDataNotifier({
         drmSystemId: "edef8ba979d64acea3c827dcd51d21ed",
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
-
-      expect(mockRepresentation.getEncryptionData).toHaveBeenCalledWith(
+      expect(mockGetEncryptionData).toHaveBeenCalledWith(
         "edef8ba979d64acea3c827dcd51d21ed",
       );
       expect(mockNotify).toHaveBeenCalledWith(mockEncryptionData);
@@ -67,16 +71,15 @@ describe("EncryptionDataNotifier", () => {
           type: "cenc",
         },
       ];
-
-      mockRepresentation.getEncryptionData.mockReturnValue(mockEncryptionData);
+      mockGetEncryptionData.mockReturnValue(mockEncryptionData);
 
       new EncryptionDataNotifier({
         drmSystemId: "edef8ba979d64acea3c827dcd51d21ed",
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
-      expect(mockRepresentation.getEncryptionData).toHaveBeenCalledWith(
+      expect(mockGetEncryptionData).toHaveBeenCalledWith(
         "edef8ba979d64acea3c827dcd51d21ed",
       );
       expect(mockNotify).not.toHaveBeenCalled();
@@ -106,11 +109,13 @@ describe("EncryptionDataNotifier", () => {
         },
       ];
 
-      mockRepresentation.getEncryptionData.mockReturnValue(mockEncryptionData);
+      vi.spyOn(dummyRepresentation, "getEncryptionData").mockReturnValue(
+        mockEncryptionData,
+      );
 
       new EncryptionDataNotifier({
         drmSystemId: "edef8ba979d64acea3c827dcd51d21ed",
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -120,7 +125,7 @@ describe("EncryptionDataNotifier", () => {
     it("should NOT send notification when encryption data array is empty", () => {
       new EncryptionDataNotifier({
         drmSystemId: "edef8ba979d64acea3c827dcd51d21ed",
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -130,11 +135,11 @@ describe("EncryptionDataNotifier", () => {
     it("should NOT send notification when drmSystemId is undefined", () => {
       new EncryptionDataNotifier({
         drmSystemId: undefined,
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
-      expect(mockRepresentation.getEncryptionData).not.toHaveBeenCalled();
+      expect(mockGetEncryptionData).not.toHaveBeenCalled();
       expect(mockNotify).not.toHaveBeenCalled();
     });
 
@@ -152,11 +157,13 @@ describe("EncryptionDataNotifier", () => {
         },
       ];
 
-      mockRepresentation.getEncryptionData.mockReturnValue(mockEncryptionData);
+      vi.spyOn(dummyRepresentation, "getEncryptionData").mockReturnValue(
+        mockEncryptionData,
+      );
 
       new EncryptionDataNotifier({
         drmSystemId: "edef8ba979d64acea3c827dcd51d21ed",
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -168,7 +175,7 @@ describe("EncryptionDataNotifier", () => {
     it("should add protection data to representation and send notification", () => {
       const notifier = new EncryptionDataNotifier({
         drmSystemId: undefined,
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -197,11 +204,12 @@ describe("EncryptionDataNotifier", () => {
           type: "cenc",
         },
       ];
-      mockRepresentation.getAllEncryptionData.mockReturnValue(allEncryptionData);
+      mockGetAllEncryptionData.mockReturnValue(allEncryptionData);
+      mockAddProtectionData.mockReturnValue(true);
 
       notifier.onNewProtectionData(protectionData);
 
-      expect(mockRepresentation.addProtectionData).toHaveBeenCalledWith(
+      expect(mockAddProtectionData).toHaveBeenCalledWith(
         "cenc",
         new Uint8Array([1, 2, 3]),
         [
@@ -211,14 +219,14 @@ describe("EncryptionDataNotifier", () => {
           },
         ],
       );
-      expect(mockRepresentation.getAllEncryptionData).toHaveBeenCalled();
+      expect(mockGetAllEncryptionData).toHaveBeenCalled();
       expect(mockNotify).toHaveBeenCalledWith(allEncryptionData);
     });
 
     it("should add multiple protection data items to representation", () => {
       const notifier = new EncryptionDataNotifier({
         drmSystemId: undefined,
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -258,12 +266,15 @@ describe("EncryptionDataNotifier", () => {
         },
       ];
 
-      mockRepresentation.getAllEncryptionData.mockReturnValue(allEncryptionData);
+      vi.spyOn(dummyRepresentation, "getAllEncryptionData").mockReturnValue(
+        allEncryptionData,
+      );
+      mockAddProtectionData.mockReturnValue(true);
 
       notifier.onNewProtectionData(protectionData);
 
-      expect(mockRepresentation.addProtectionData).toHaveBeenCalledTimes(2);
-      expect(mockRepresentation.addProtectionData).toHaveBeenNthCalledWith(
+      expect(mockAddProtectionData).toHaveBeenCalledTimes(2);
+      expect(mockAddProtectionData).toHaveBeenNthCalledWith(
         1,
         "cenc",
         new Uint8Array([1, 2, 3]),
@@ -274,7 +285,7 @@ describe("EncryptionDataNotifier", () => {
           },
         ],
       );
-      expect(mockRepresentation.addProtectionData).toHaveBeenNthCalledWith(
+      expect(mockAddProtectionData).toHaveBeenNthCalledWith(
         2,
         "cenc",
         new Uint8Array([7, 8, 9]),
@@ -291,9 +302,12 @@ describe("EncryptionDataNotifier", () => {
     it("should NOT send notification if no encryption data is available after adding", () => {
       const notifier = new EncryptionDataNotifier({
         drmSystemId: undefined,
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
+
+      mockGetAllEncryptionData.mockReturnValue([]);
+      mockAddProtectionData.mockReturnValue(true);
 
       const protectionData: IProtectionDataInfo[] = [
         {
@@ -309,20 +323,21 @@ describe("EncryptionDataNotifier", () => {
       ];
       notifier.onNewProtectionData(protectionData);
 
-      expect(mockRepresentation.addProtectionData).toHaveBeenCalled();
-      expect(mockRepresentation.getAllEncryptionData).toHaveBeenCalled();
+      expect(mockAddProtectionData).toHaveBeenCalled();
+      expect(mockGetAllEncryptionData).toHaveBeenCalled();
       expect(mockNotify).not.toHaveBeenCalled();
     });
 
     it("should handle empty protection data array", () => {
       const notifier = new EncryptionDataNotifier({
         drmSystemId: undefined,
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
+      mockAddProtectionData.mockReturnValue(true);
       notifier.onNewProtectionData([]);
-      expect(mockRepresentation.addProtectionData).not.toHaveBeenCalled();
-      expect(mockRepresentation.getAllEncryptionData).toHaveBeenCalled();
+      expect(mockAddProtectionData).not.toHaveBeenCalled();
+      expect(mockGetAllEncryptionData).toHaveBeenCalled();
       expect(mockNotify).not.toHaveBeenCalled();
     });
   });
@@ -341,11 +356,13 @@ describe("EncryptionDataNotifier", () => {
           type: "cenc",
         },
       ];
-      mockRepresentation.getEncryptionData.mockReturnValue(mockEncryptionData);
+      vi.spyOn(dummyRepresentation, "getEncryptionData").mockReturnValue(
+        mockEncryptionData,
+      );
 
       const notifier = new EncryptionDataNotifier({
         drmSystemId: "edef8ba979d64acea3c827dcd51d21ed",
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -366,27 +383,32 @@ describe("EncryptionDataNotifier", () => {
         },
       ];
 
-      mockRepresentation.getAllEncryptionData.mockReturnValue([
+      vi.spyOn(dummyRepresentation, "getAllEncryptionData").mockReturnValue([
         ...mockEncryptionData,
         {
           keyIds: [new Uint8Array([8, 7, 6, 5])],
-          systemId: "edef8ba979d64acea3c827dcd51d21ed",
-          initData: new Uint8Array([7, 8, 9]),
-          initDataType: "cenc",
+          values: [
+            {
+              systemId: "edef8ba979d64acea3c827dcd51d21ed",
+              data: new Uint8Array([7, 8, 9]),
+            },
+          ],
+          type: "cenc",
         },
       ]);
+      mockAddProtectionData.mockReturnValue(true);
 
       notifier.onNewProtectionData(protectionData);
 
       // Should still be called only once
       expect(mockNotify).toHaveBeenCalledTimes(1);
-      expect(mockRepresentation.addProtectionData).toHaveBeenCalled();
+      expect(mockAddProtectionData).toHaveBeenCalled();
     });
 
     it("should NOT send notification again on subsequent onNewProtectionData calls", () => {
       const notifier = new EncryptionDataNotifier({
         drmSystemId: undefined,
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -414,7 +436,9 @@ describe("EncryptionDataNotifier", () => {
           ],
         },
       ];
-      mockRepresentation.getAllEncryptionData.mockReturnValue(allEncryptionData);
+      vi.spyOn(dummyRepresentation, "getAllEncryptionData").mockReturnValue(
+        allEncryptionData,
+      );
 
       // First call should trigger notification
       notifier.onNewProtectionData(protectionData1);
@@ -433,10 +457,11 @@ describe("EncryptionDataNotifier", () => {
           ],
         },
       ];
+      mockAddProtectionData.mockReturnValue(true);
 
       notifier.onNewProtectionData(protectionData2);
       expect(mockNotify).toHaveBeenCalledTimes(1);
-      expect(mockRepresentation.addProtectionData).toHaveBeenCalledTimes(2);
+      expect(mockAddProtectionData).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -465,11 +490,13 @@ describe("EncryptionDataNotifier", () => {
         },
       ];
 
-      mockRepresentation.getEncryptionData.mockReturnValue(mockEncryptionData);
+      vi.spyOn(dummyRepresentation, "getEncryptionData").mockReturnValue(
+        mockEncryptionData,
+      );
 
       new EncryptionDataNotifier({
         drmSystemId: "edef8ba979d64acea3c827dcd51d21ed",
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -490,11 +517,13 @@ describe("EncryptionDataNotifier", () => {
         },
       ];
 
-      mockRepresentation.getEncryptionData.mockReturnValue(mockEncryptionData);
+      vi.spyOn(dummyRepresentation, "getEncryptionData").mockReturnValue(
+        mockEncryptionData,
+      );
 
       const notifier = new EncryptionDataNotifier({
         drmSystemId: "edef8ba979d64acea3c827dcd51d21ed",
-        representation: mockRepresentation,
+        representation: dummyRepresentation,
         notify: mockNotify,
       });
 
@@ -512,11 +541,12 @@ describe("EncryptionDataNotifier", () => {
           ],
         },
       ];
+      mockAddProtectionData.mockReturnValue(true);
 
       notifier.onNewProtectionData(protectionData);
 
       // Data should still be added even though notification won't be sent again
-      expect(mockRepresentation.addProtectionData).toHaveBeenCalledWith(
+      expect(mockAddProtectionData).toHaveBeenCalledWith(
         "cenc",
         new Uint8Array([7, 8, 9]),
         [

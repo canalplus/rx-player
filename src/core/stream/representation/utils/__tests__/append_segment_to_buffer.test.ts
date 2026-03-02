@@ -1,12 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MediaError, SourceBufferError } from "../../../../../errors";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../../../manifest/classes";
+import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../../playback_observer";
 import SharedReference from "../../../../../utils/reference";
 import TaskCanceller, { CancellationError } from "../../../../../utils/task_canceller";
+import type {
+  IInsertedChunkInfos,
+  IPushChunkInfos,
+  SegmentSink,
+} from "../../../../segment_sinks";
+import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
+import type { IRepresentationStreamPlaybackObservation } from "../../types";
 import appendSegmentToBuffer from "../append_segment_to_buffer";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 vi.mock("../../../../../log", () => ({
   default: {
@@ -19,53 +24,81 @@ vi.mock("../../../../../utils/sleep", () => ({
 }));
 
 describe("appendSegmentToBuffer", () => {
-  let mockPlaybackObserver: any;
-  let mockSegmentSink: any;
-  let mockDataInfos: any;
+  const mockedPlaybackObserver =
+    __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>(
+      {
+        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+          getWanted: vi.fn(() => 10),
+        }),
+        paused: {
+          last: false,
+          pending: undefined,
+        },
+        speed: 1,
+        canStream: true,
+      },
+    );
+  let mockDataInfos: IPushChunkInfos<unknown> & { inventoryInfos: IInsertedChunkInfos };
   let mockBufferGoal: SharedReference<number>;
-  let mockTaskCanceller = new TaskCanceller("test canceller");
+  let mockTaskCanceller: TaskCanceller;
+  const mockPushChunk = vi.fn();
+  const mockRemoveBuffer = vi.fn();
+  let mockSegmentSink: SegmentSink;
 
   beforeEach(() => {
-    mockPlaybackObserver = {
-      getReference: vi.fn(
-        () =>
-          new SharedReference({
-            position: {
-              getWanted: () => 10,
-            },
-          }),
-      ),
-    };
-    mockSegmentSink = {
-      pushChunk: vi.fn(() => Promise.resolve([{ start: 0, end: 10 }])),
-      removeBuffer: vi.fn(() => Promise.resolve(undefined)),
-    };
+    mockBufferGoal = new SharedReference(30);
+    mockTaskCanceller = new TaskCanceller("test canceller");
+
+    mockPushChunk.mockImplementation(() => Promise.resolve([{ start: 0, end: 10 }]));
+    mockRemoveBuffer.mockImplementation(() => Promise.resolve(undefined));
+    mockSegmentSink = new DummySegmentSink({
+      pushChunk: mockPushChunk,
+      removeBuffer: mockRemoveBuffer,
+    });
+
     mockDataInfos = {
       inventoryInfos: {
-        adaptation: { id: "test-adaptation", type: "video", representations: [] },
+        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+          id: "test-adaptation",
+          type: "video",
+          representations: [],
+        }),
+        representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
+        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
+        segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+        chunkSize: 1024,
+        start: 0,
+        end: 2,
+      },
+      data: {
+        initSegmentUniqueId: "...",
+        codec: "...",
+        chunk: new Uint8Array([1, 2, 3]),
+        timestampOffset: 0,
+        appendWindow: [undefined, undefined],
       },
     };
-    mockBufferGoal = new SharedReference(30);
-    mockTaskCanceller.cancel("test end");
-    mockTaskCanceller = new TaskCanceller("test canceller");
   });
 
   afterEach(() => {
+    mockBufferGoal.finish();
+    mockTaskCanceller.cancel("test end");
+    mockedPlaybackObserver.reset();
     vi.resetAllMocks();
   });
 
   describe("successful append", () => {
     it("should push chunk successfully on first try", async () => {
       const result = await appendSegmentToBuffer(
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
         mockTaskCanceller.signal,
       );
 
-      expect(mockSegmentSink.pushChunk).toHaveBeenCalledTimes(1);
-      expect(mockSegmentSink.pushChunk).toHaveBeenCalledWith(mockDataInfos);
+      expect(mockPushChunk).toHaveBeenCalledTimes(1);
+      expect(mockPushChunk).toHaveBeenCalledWith(mockDataInfos);
       expect(result).toEqual([{ start: 0, end: 10 }]);
     });
   });
@@ -78,20 +111,20 @@ describe("appendSegmentToBuffer", () => {
         true,
       );
 
-      mockSegmentSink.pushChunk
+      mockPushChunk
         .mockRejectedValueOnce(bufferFullError)
         .mockResolvedValueOnce([{ start: 0, end: 10 }]);
 
       const result = await appendSegmentToBuffer(
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
         mockTaskCanceller.signal,
       );
 
-      expect(mockSegmentSink.pushChunk).toHaveBeenCalledTimes(2);
-      expect(mockSegmentSink.removeBuffer).toHaveBeenCalledTimes(2);
+      expect(mockPushChunk).toHaveBeenCalledTimes(2);
+      expect(mockRemoveBuffer).toHaveBeenCalledTimes(2);
       expect(result).toEqual([{ start: 0, end: 10 }]);
     });
 
@@ -102,12 +135,12 @@ describe("appendSegmentToBuffer", () => {
         true,
       );
 
-      mockSegmentSink.pushChunk
+      mockPushChunk
         .mockRejectedValueOnce(bufferFullError)
         .mockResolvedValueOnce([{ start: 0, end: 10 }]);
 
       await appendSegmentToBuffer(
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
@@ -115,7 +148,7 @@ describe("appendSegmentToBuffer", () => {
       );
 
       // Should remove from 0 to (currentPos - 5) = 5
-      expect(mockSegmentSink.removeBuffer).toHaveBeenCalledWith(0, 5);
+      expect(mockRemoveBuffer).toHaveBeenCalledWith(0, 5);
     });
 
     it("should remove buffer after buffer goal (end)", async () => {
@@ -125,14 +158,14 @@ describe("appendSegmentToBuffer", () => {
         true,
       );
 
-      mockSegmentSink.pushChunk
+      mockPushChunk
         .mockRejectedValueOnce(bufferFullError)
         .mockResolvedValueOnce([{ start: 0, end: 10 }]);
 
       mockBufferGoal.setValue(30);
 
       await appendSegmentToBuffer(
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
@@ -140,7 +173,7 @@ describe("appendSegmentToBuffer", () => {
       );
 
       // Should remove from (currentPos + bufferGoal + 12) = 52 to MAX_VALUE
-      expect(mockSegmentSink.removeBuffer).toHaveBeenCalledWith(52, Number.MAX_VALUE);
+      expect(mockRemoveBuffer).toHaveBeenCalledWith(52, Number.MAX_VALUE);
     });
 
     it("should not remove start buffer when position is < 5", async () => {
@@ -150,28 +183,32 @@ describe("appendSegmentToBuffer", () => {
         true,
       );
 
-      mockSegmentSink.pushChunk
+      mockPushChunk
         .mockRejectedValueOnce(bufferFullError)
         .mockResolvedValueOnce([{ start: 0, end: 10 }]);
 
-      mockPlaybackObserver.getReference.mockReturnValue(
-        new SharedReference({
-          position: {
-            getWanted: vi.fn(() => 3),
-          },
+      mockedPlaybackObserver.emit({
+        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+          getWanted: vi.fn(() => 3),
         }),
-      );
+        paused: {
+          last: false,
+          pending: undefined,
+        },
+        speed: 1,
+        canStream: true,
+      });
       await appendSegmentToBuffer(
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
         mockTaskCanceller.signal,
       );
-      expect(mockSegmentSink.removeBuffer).toHaveBeenCalledWith(45, Number.MAX_VALUE);
+      expect(mockRemoveBuffer).toHaveBeenCalledWith(45, Number.MAX_VALUE);
 
       // Should only be called once for the end buffer
-      expect(mockSegmentSink.removeBuffer).toHaveBeenCalledTimes(1);
+      expect(mockRemoveBuffer).toHaveBeenCalledTimes(1);
     });
 
     it("should throw BUFFER_FULL_ERROR if retry fails", async () => {
@@ -183,13 +220,13 @@ describe("appendSegmentToBuffer", () => {
 
       const retryError = new Error("Retry failed");
 
-      mockSegmentSink.pushChunk
+      mockPushChunk
         .mockRejectedValueOnce(bufferFullError)
         .mockRejectedValueOnce(retryError);
 
       await expect(
         appendSegmentToBuffer(
-          mockPlaybackObserver,
+          mockedPlaybackObserver.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -202,10 +239,10 @@ describe("appendSegmentToBuffer", () => {
   describe("non-buffer-full errors", () => {
     it("should throw BUFFER_APPEND_ERROR for non-buffer-full SourceBufferError", async () => {
       const error = new SourceBufferError("SOME_ERROR", "Some error", false);
-      mockSegmentSink.pushChunk.mockRejectedValueOnce(error);
+      mockPushChunk.mockRejectedValueOnce(error);
       await expect(
         appendSegmentToBuffer(
-          mockPlaybackObserver,
+          mockedPlaybackObserver.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -228,11 +265,11 @@ describe("appendSegmentToBuffer", () => {
 
     it("should throw BUFFER_APPEND_ERROR for generic Error", async () => {
       const error = new Error("Generic error");
-      mockSegmentSink.pushChunk.mockRejectedValueOnce(error);
+      mockPushChunk.mockRejectedValueOnce(error);
 
       await expect(
         appendSegmentToBuffer(
-          mockPlaybackObserver,
+          mockedPlaybackObserver.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -242,11 +279,11 @@ describe("appendSegmentToBuffer", () => {
     });
 
     it("should throw BUFFER_APPEND_ERROR for unknown error type", async () => {
-      mockSegmentSink.pushChunk.mockRejectedValueOnce("string error");
+      mockPushChunk.mockRejectedValueOnce("string error");
 
       await expect(
         appendSegmentToBuffer(
-          mockPlaybackObserver,
+          mockedPlaybackObserver.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -260,11 +297,11 @@ describe("appendSegmentToBuffer", () => {
     it("should throw CancellationError on initial pushChunk if cancelled", async () => {
       const cancellationError = new CancellationError("Test", "test");
       mockTaskCanceller.cancel("test cancellation");
-      mockSegmentSink.pushChunk.mockRejectedValueOnce(cancellationError);
+      mockPushChunk.mockRejectedValueOnce(cancellationError);
 
       await expect(
         appendSegmentToBuffer(
-          mockPlaybackObserver,
+          mockedPlaybackObserver.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -280,12 +317,12 @@ describe("appendSegmentToBuffer", () => {
         true,
       );
 
-      mockSegmentSink.pushChunk.mockRejectedValueOnce(bufferFullError);
+      mockPushChunk.mockRejectedValueOnce(bufferFullError);
       mockTaskCanceller.cancel("test 523");
 
       await expect(
         appendSegmentToBuffer(
-          mockPlaybackObserver,
+          mockedPlaybackObserver.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -303,13 +340,13 @@ describe("appendSegmentToBuffer", () => {
 
       const cancellationError = new CancellationError("Test", "test");
 
-      mockSegmentSink.pushChunk
+      mockPushChunk
         .mockRejectedValueOnce(bufferFullError)
         .mockRejectedValueOnce(cancellationError);
 
       await expect(
         appendSegmentToBuffer(
-          mockPlaybackObserver,
+          mockedPlaybackObserver.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
