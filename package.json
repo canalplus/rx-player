@@ -199,13 +199,8 @@
     "test": "node ./scripts/run_tests.mjs",
     "test:memory": "node ./scripts/run_tests.mjs --memory --browser chrome",
     "test:integration": "node ./scripts/run_tests.mjs --integration",
-    "test:integration:chrome": "node ./scripts/run_tests.mjs --integration --browser chrome",
-    "test:integration:edge": "node ./scripts/run_tests.mjs --integration --browser edge",
-    "test:integration:firefox": "node ./scripts/run_tests.mjs --integration --browser firefox",
     "test:performance": "node ./tests/performance/run.mjs",
     "test:unit": "node ./scripts/run_tests.mjs --unit",
-    "test:unit:chrome": "node ./scripts/run_tests.mjs --unit --browser chrome",
-    "test:unit:firefox": "node ./scripts/run_tests.mjs --unit --browser firefox",
     "types": "tsc --noEmit --project .",
     "types:all": "npm run types && npm run types:demo && npm run types:unit_tests && npm run types:scripts",
     "types:demo": "tsc --noEmit --project demo/",
@@ -271,27 +266,26 @@
     "Run tests": {
       "Integration tests (test the whole API, call the `build` script BEFORE running them)": {
         "test:integration": "Launch integration tests in multiple browser environments",
-        "test:integration:chrome": "Launch integration tests in a Chrome browser.",
-        "test:integration:chrome -- --watch": "Launch integration tests in Chrome each time the files update",
-        "test:integration:firefox": "Launch integration tests in a Firefox browser.",
-        "test:integration:firefox -- --watch": "Launch integration tests in Firefox each time the files update",
-        "test:integration:edge": "Launch integration tests in an Edge browser.",
-        "test:integration:edge -- --watch": "Launch integration tests in Edge each time the files update"
+        "test:integration -- -b chrome": "Launch integration tests in a Chrome browser.",
+        "test:integration -- -b firefox": "Launch integration tests in a Firefox browser.",
+        "test:integration -- -b edge": "Launch integration tests in an Edge browser.",
+        "test:integration -- -b chrome -w": "Launch integration tests on Chrome and restart them each time the files update"
       },
       "Unit tests (test particular functions)": {
         "test:unit": "Launch unit tests",
-        "test:unit:chrome": "Launch unit tests on Chrome",
-        "test:unit:chrome -- --watch": "Launch unit tests on Chrome and restart them each time of its file changes",
-        "test:unit:firefox": "Launch unit tests on firefox",
-        "test:unit:firefox -- --watch": "Launch unit tests on Chrome and restart them each time of its file changes"
+        "test:unit -- --watch": "Launch unit tests and restart them each one of its file changes",
+        "test:unit -- -b chrome": "Launch unit tests on a Chrome browser",
+        "test:unit -- -b firefox": "Launch unit tests on a Firefox browser",
+        "test:unit -- -b edge": "Launch unit tests on an Edge browser",
+        "test:unit -- -b chrome -w": "Launch unit tests on Chrome and restart them each time of its files update"
       },
       "Memory tests (test memory usage to avoid memory leaks)": {
         "test:memory": "Launch memory tests",
-        "test:memory -- --watch": "Launch memory tests in Chrome each times the files update"
+        "test:memory -- -w": "Launch memory tests on Chrome and restart them each times the files update"
       },
       "Performance tests (test against performance regressions on some key scenarios)": {
         "test:performance": "Launch performance tests on a Chrome browser",
-        "test:performance:firefox": "Launch performance tests on a Firefox browser"
+        "test:performance -- --browser firefox": "Launch performance tests on a Firefox browser"
       }
     },
     "Build the player or one of its sub-parts": {
