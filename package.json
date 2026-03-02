@@ -196,6 +196,7 @@
     "releases:doc": "bash ./scripts/update_gh-pages_doc.sh",
     "releases:official": "bash ./scripts/make-official-release.sh",
     "start": "node ./scripts/start_demo_web_server.mjs",
+    "test": "node ./scripts/run_tests.mjs",
     "test:memory": "node ./scripts/run_tests.mjs --memory --browser chrome",
     "test:integration": "node ./scripts/run_tests.mjs --integration",
     "test:integration:chrome": "node ./scripts/run_tests.mjs --integration --browser chrome",
