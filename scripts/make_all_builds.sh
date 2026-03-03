@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-npm run clean:build
+npm run clean
 npm run build:wasm:release
 npm run bundle
 npm run bundle:min
