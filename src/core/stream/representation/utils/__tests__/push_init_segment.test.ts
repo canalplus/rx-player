@@ -1,70 +1,101 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type Manifest from "../../../../../manifest/classes";
+import {
+  type Adaptation,
+  type Period,
+  type Representation,
+  type ISegment,
+  __MANIFEST_CLASSES_MOCKS,
+} from "../../../../../manifest/classes";
+import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../../playback_observer";
+import type { IRange } from "../../../../../utils/ranges";
+import SharedReference from "../../../../../utils/reference";
+import TaskCanceller from "../../../../../utils/task_canceller";
+import { __SEGMENT_SINKS_MOCKS, type SegmentSink } from "../../../../segment_sinks";
+import type { IRepresentationStreamPlaybackObservation } from "../../types";
+import type appendSegmentToBuffer from "../append_segment_to_buffer";
 import pushInitSegment from "../push_init_segment";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-const mockAppendSegmentToBuffer = vi.hoisted(() => vi.fn());
-
+const mockAppendSegmentToBuffer = vi.hoisted(
+  (): Mock<typeof appendSegmentToBuffer> =>
+    vi.fn((): Promise<IRange[]> => Promise.resolve([])),
+);
 vi.mock("../append_segment_to_buffer", () => ({
   default: mockAppendSegmentToBuffer,
 }));
 
 describe("pushInitSegment", () => {
-  let mockPlaybackObserver: any;
-  let mockSegmentSink: any;
-  let mockBufferGoal: any;
-  let mockCancelSignal: any;
-  let mockContent: any;
-  let mockSegment: any;
+  const mockedPlaybackObserver =
+    __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>(
+      {
+        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+          getWanted: vi.fn(() => 10),
+        }),
+        paused: {
+          last: false,
+          pending: undefined,
+        },
+        speed: 1,
+        canStream: true,
+      },
+    );
+  let mockSegmentSink: SegmentSink;
+  let mockBufferGoal: SharedReference<number>;
+  let mockCanceller: TaskCanceller;
+  let mockContent: {
+    adaptation: Adaptation;
+    manifest: Manifest;
+    period: Period;
+    representation: Representation;
+  };
+  let mockSegment: ISegment;
 
   beforeEach(() => {
     vi.resetAllMocks();
 
-    mockPlaybackObserver = {};
-
-    mockSegmentSink = {};
-
-    mockBufferGoal = {
-      getValue: vi.fn().mockReturnValue(30),
-    };
-
-    mockCancelSignal = {
-      signal: { aborted: false },
-      cancellationError: null,
-    };
-
+    mockSegmentSink = new __SEGMENT_SINKS_MOCKS.DummySegmentSink();
+    mockBufferGoal = new SharedReference<number>(30);
+    mockCanceller = new TaskCanceller("pushInitSegment tests");
     mockContent = {
-      adaptation: { id: "adaptation-1" },
-      manifest: { id: "manifest-1" },
-      period: { id: "period-1" },
-      representation: {
+      adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ id: "adaptation-1" }),
+      manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest({ id: "manifest-1" }),
+      period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({ id: "period-1" }),
+      representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
         id: "rep-1",
-        getMimeTypeString: vi.fn().mockReturnValue('video/mp4; codecs="avc1.42E01E"'),
-      },
+      }),
     };
-
-    mockSegment = {
+    mockContent.representation.getMimeTypeString = vi
+      .fn()
+      .mockReturnValue('video/mp4; codecs="avc1.42E01E"');
+    mockSegment = __MANIFEST_CLASSES_MOCKS.createSegment({
       id: "init-segment",
       isInit: true,
       time: 0,
       duration: 0,
-    };
+    });
+  });
+
+  afterEach(() => {
+    mockBufferGoal.finish();
+    mockCanceller.cancel("test end");
+    mockedPlaybackObserver.reset();
+    vi.resetModules();
   });
 
   it("should call appendSegmentToBuffer with correct data structure", async () => {
-    mockAppendSegmentToBuffer.mockResolvedValue({
-      start: 0,
-      end: 10,
-    });
+    mockAppendSegmentToBuffer.mockResolvedValue([
+      {
+        start: 0,
+        end: 10,
+      },
+    ]);
 
     const initSegmentUniqueId = "unique-init-123";
 
     await pushInitSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         content: mockContent,
         initSegmentUniqueId,
         segmentData: null,
@@ -72,16 +103,16 @@ describe("pushInitSegment", () => {
         segmentSink: mockSegmentSink,
         bufferGoal: mockBufferGoal,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(mockAppendSegmentToBuffer).toHaveBeenCalledTimes(1);
 
     const callArgs = mockAppendSegmentToBuffer.mock.calls[0];
-    expect(callArgs[0]).toBe(mockPlaybackObserver);
+    expect(callArgs[0]).toBe(mockedPlaybackObserver.observer);
     expect(callArgs[1]).toBe(mockSegmentSink);
     expect(callArgs[3]).toBe(mockBufferGoal);
-    expect(callArgs[4]).toBe(mockCancelSignal);
+    expect(callArgs[4]).toBe(mockCanceller.signal);
 
     const { data, inventoryInfos } = callArgs[2];
     expect(data).toEqual({
@@ -105,12 +136,12 @@ describe("pushInitSegment", () => {
   });
 
   it("should return correct payload with buffered result", async () => {
-    const mockBuffered = { start: 0, end: 10 };
+    const mockBuffered = [{ start: 0, end: 10 }];
     mockAppendSegmentToBuffer.mockResolvedValue(mockBuffered);
 
     const result = await pushInitSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         content: mockContent,
         initSegmentUniqueId: "init-456",
         segmentData: null,
@@ -118,7 +149,7 @@ describe("pushInitSegment", () => {
         segmentSink: mockSegmentSink,
         bufferGoal: mockBufferGoal,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(result).toEqual({
@@ -129,11 +160,15 @@ describe("pushInitSegment", () => {
   });
 
   it("should call getMimeTypeString on representation", async () => {
-    mockAppendSegmentToBuffer.mockResolvedValue({ start: 0, end: 0 });
+    const mockGetMimeTypeString = vi.spyOn(
+      mockContent.representation,
+      "getMimeTypeString",
+    );
+    mockAppendSegmentToBuffer.mockResolvedValue([{ start: 0, end: 0 }]);
 
     await pushInitSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         content: mockContent,
         initSegmentUniqueId: "init-789",
         segmentData: null,
@@ -141,18 +176,18 @@ describe("pushInitSegment", () => {
         segmentSink: mockSegmentSink,
         bufferGoal: mockBufferGoal,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
-    expect(mockContent.representation.getMimeTypeString).toHaveBeenCalledTimes(1);
+    expect(mockGetMimeTypeString).toHaveBeenCalledTimes(1);
   });
 
   it("should set chunk to null for init segments", async () => {
-    mockAppendSegmentToBuffer.mockResolvedValue({});
+    mockAppendSegmentToBuffer.mockResolvedValue([]);
 
     await pushInitSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         content: mockContent,
         initSegmentUniqueId: "init-abc",
         segmentData: { someData: "value" },
@@ -160,7 +195,7 @@ describe("pushInitSegment", () => {
         segmentSink: mockSegmentSink,
         bufferGoal: mockBufferGoal,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     const { data } = mockAppendSegmentToBuffer.mock.calls[0][2];
@@ -168,11 +203,11 @@ describe("pushInitSegment", () => {
   });
 
   it("should set timestampOffset to 0", async () => {
-    mockAppendSegmentToBuffer.mockResolvedValue({});
+    mockAppendSegmentToBuffer.mockResolvedValue([]);
 
     await pushInitSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         content: mockContent,
         initSegmentUniqueId: "init-def",
         segmentData: null,
@@ -180,7 +215,7 @@ describe("pushInitSegment", () => {
         segmentSink: mockSegmentSink,
         bufferGoal: mockBufferGoal,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     const { data } = mockAppendSegmentToBuffer.mock.calls[0][2];
@@ -188,11 +223,11 @@ describe("pushInitSegment", () => {
   });
 
   it("should set appendWindow to [undefined, undefined]", async () => {
-    mockAppendSegmentToBuffer.mockResolvedValue({});
+    mockAppendSegmentToBuffer.mockResolvedValue([]);
 
     await pushInitSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         content: mockContent,
         initSegmentUniqueId: "init-ghi",
         segmentData: null,
@@ -200,7 +235,7 @@ describe("pushInitSegment", () => {
         segmentSink: mockSegmentSink,
         bufferGoal: mockBufferGoal,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     const { data } = mockAppendSegmentToBuffer.mock.calls[0][2];

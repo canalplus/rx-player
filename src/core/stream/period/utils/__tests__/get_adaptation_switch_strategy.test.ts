@@ -1,79 +1,143 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SegmentSinkOperation } from "../../../../segment_sinks";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import configHandler from "../../../../../config";
+import {
+  __MANIFEST_CLASSES_MOCKS,
+  type Adaptation,
+  type Period,
+} from "../../../../../manifest/classes";
+import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../../playback_observer";
+import type { IBufferedChunk, SegmentSink } from "../../../../segment_sinks";
+import {
+  __SEGMENT_SINKS_MOCKS,
+  ChunkStatus,
+  SegmentSinkOperation,
+} from "../../../../segment_sinks";
+import type { IPeriodStreamPlaybackObservation } from "../../types";
 import getAdaptationSwitchStrategy from "../get_adaptation_switch_strategy";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
-// Mock only external dependencies that have side effects or complex behavior
-vi.mock("../../../../../config", () => ({
-  default: {
-    getCurrent: vi.fn(() => ({
+describe("getAdaptationSwitchStrategy", () => {
+  let mockSegmentSink: SegmentSink;
+  let mockPeriod: Period;
+  let mockAdaptation: Adaptation;
+  const mockedPlaybackObserver =
+    __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>(
+      {
+        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+          getPolled: () => 15,
+        }),
+        readyState: 3,
+        paused: {
+          last: false,
+          pending: undefined,
+        },
+        duration: NaN,
+        speed: 1,
+        maximumPosition: Number.MAX_SAFE_INTEGER,
+        buffered: { video: null, audio: null, text: null },
+        canStream: true,
+      },
+    );
+  beforeEach(() => {
+    const originalConfig = configHandler.getCurrent();
+    vi.spyOn(configHandler, "getCurrent").mockReturnValue({
+      ...originalConfig,
       ADAP_REP_SWITCH_BUFFER_PADDINGS: {
         video: { before: 0.5, after: 0.5 },
         audio: { before: 0.5, after: 0.5 },
         text: { before: 0, after: 0 },
       },
-    })),
-  },
-}));
-
-describe("getAdaptationSwitchStrategy", () => {
-  let mockSegmentSink: any;
-  let mockPeriod: any;
-  let mockAdaptation: any;
-  let mockPlaybackObserver: any;
-
-  beforeEach(() => {
-    // Create base mocks
-    mockSegmentSink = {
-      codec: undefined,
-      getLastKnownInventory: vi.fn(() => []),
-      getPendingOperations: vi.fn(() => []),
-    };
-
-    mockPeriod = {
+    });
+    mockSegmentSink = new __SEGMENT_SINKS_MOCKS.DummySegmentSink({
+      getLastKnownInventory: () => [],
+      getPendingOperations: () => [],
+    });
+    mockPeriod = new __MANIFEST_CLASSES_MOCKS.DummyPeriod({
       id: "period-1",
       start: 10,
       end: 20,
-    };
-
-    mockAdaptation = {
+    });
+    mockAdaptation = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
       id: "adaptation-1",
       type: "video",
-      representations: [],
-    };
-
-    mockPlaybackObserver = {
-      getCurrentTime: vi.fn(() => 15),
-      getReadyState: vi.fn(() => 3),
-      getReference: vi.fn(() => ({
-        getValue: () => ({
-          position: {
-            getPolled: () => 15,
-          },
-        }),
-      })),
-    };
+    });
+    vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockImplementation(
+      () => 15,
+    );
+    vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+      () => 3,
+    );
   });
+  afterEach(() => {
+    mockedPlaybackObserver.reset();
+    vi.resetModules();
+  });
+  function makeBufferedChunk({
+    bufferedStart,
+    bufferedEnd,
+    start,
+    end,
+    periodId = "period-1",
+    periodStart = 0,
+    periodEnd,
+    adaptationId = "adaptation-1",
+    representationId = "rep-1",
+  }: {
+    bufferedStart: number | undefined;
+    bufferedEnd: number | undefined;
+    start: number;
+    end: number;
+    periodId?: string;
+    periodStart?: number;
+    periodEnd?: number | undefined;
+    adaptationId?: string;
+    representationId?: string;
+  }): IBufferedChunk {
+    return {
+      infos: {
+        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({
+          id: periodId,
+          start: periodStart,
+          end: periodEnd,
+        }),
+        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ id: adaptationId }),
+        representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+          id: representationId,
+        }),
+        segment: __MANIFEST_CLASSES_MOCKS.createSegment({ time: start, end }),
+      },
+      bufferedStart,
+      bufferedEnd,
+      start,
+      end,
+      insertionTs: 0,
+      chunkSize: 1024,
+      precizeStart: true,
+      precizeEnd: true,
+      status: ChunkStatus.FullyLoaded,
+      splitted: false,
+    };
+  }
 
   describe("codec compatibility", () => {
     it("should return needs-reload when codec is incompatible and onCodecSwitch is reload", () => {
       mockSegmentSink.codec = "avc1.64001f";
-      mockAdaptation.representations = [
-        {
-          isPlayable: () => true,
-          getMimeTypeString: () => "video/mp4; codecs=hev1.1.6.L93.B0",
-        },
-      ];
+      const currMockAdap = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+        id: "adaptation-1",
+        type: "video",
+        representations: [
+          new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+            isPlayable: () => true,
+            getMimeTypeString: () => "video/mp4; codecs=hev1.1.6.L93.B0",
+          }),
+        ],
+      });
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
-        mockAdaptation,
+        currMockAdap,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "reload" },
       );
 
@@ -82,19 +146,23 @@ describe("getAdaptationSwitchStrategy", () => {
 
     it("should continue when codec is compatible", () => {
       mockSegmentSink.codec = "video/mp4;codecs=avc1.64001f";
-      mockAdaptation.representations = [
-        {
-          isPlayable: () => true,
-          getMimeTypeString: () => "video/mp4;codecs=avc1.65001f",
-        },
-      ];
+      const currMockAdap = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+        id: "adaptation-1",
+        type: "video",
+        representations: [
+          new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+            isPlayable: () => true,
+            getMimeTypeString: () => "video/mp4;codecs=avc1.65001f",
+          }),
+        ],
+      });
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
-        mockAdaptation,
+        currMockAdap,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "reload" },
       );
 
@@ -103,19 +171,23 @@ describe("getAdaptationSwitchStrategy", () => {
 
     it("should continue when onCodecSwitch is continue regardless of codec", () => {
       mockSegmentSink.codec = "avc1.64001f";
-      mockAdaptation.representations = [
-        {
-          isPlayable: () => true,
-          getMimeTypeString: () => "video/mp4; codecs=hev1.1.6.L93.B0",
-        },
-      ];
+      const currMockAdap = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+        id: "adaptation-1",
+        type: "video",
+        representations: [
+          new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+            isPlayable: () => true,
+            getMimeTypeString: () => "video/mp4; codecs=hev1.1.6.L93.B0",
+          }),
+        ],
+      });
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
-        mockAdaptation,
+        currMockAdap,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -125,17 +197,15 @@ describe("getAdaptationSwitchStrategy", () => {
 
   describe("no unwanted segments", () => {
     it("should return continue when no other adaptation is buffered", () => {
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 10,
           end: 15,
           bufferedStart: 10,
           bufferedEnd: 15,
-          infos: {
-            period: { id: "period-1", start: 0 },
-            adaptation: { id: "adaptation-1" }, // Same adaptation
-          },
-        },
+          periodId: "period-1",
+          adaptationId: "adaptation-1",
+        }),
       ]);
 
       const result = getAdaptationSwitchStrategy(
@@ -143,7 +213,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -151,17 +221,15 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should return continue when segments are from different period", () => {
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 5,
           end: 10,
           bufferedStart: 5,
           bufferedEnd: 10,
-          infos: {
-            period: { id: "period-0", start: 0 }, // Different period
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-0",
+          adaptationId: "adaptation-2",
+        }),
       ]);
 
       const result = getAdaptationSwitchStrategy(
@@ -169,7 +237,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -179,17 +247,15 @@ describe("getAdaptationSwitchStrategy", () => {
 
   describe("unwanted segments in inventory", () => {
     it("should detect unwanted segments from different adaptation in same period", () => {
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 10,
           end: 15,
           bufferedStart: 10,
           bufferedEnd: 15,
-          infos: {
-            period: { id: "period-1", start: 0 },
-            adaptation: { id: "adaptation-2" }, // Different adaptation
-          },
-        },
+          periodId: "period-1",
+          adaptationId: "adaptation-2", // Different adaptation
+        }),
       ]);
 
       const result = getAdaptationSwitchStrategy(
@@ -197,7 +263,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -205,17 +271,15 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should use bufferedStart/bufferedEnd when available", () => {
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 10,
           end: 15,
           bufferedStart: 10.5,
           bufferedEnd: 14.5,
-          infos: {
-            period: { id: "period-1", start: 0 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          adaptationId: "adaptation-2",
+        }),
       ]);
 
       const result = getAdaptationSwitchStrategy(
@@ -223,7 +287,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -233,17 +297,30 @@ describe("getAdaptationSwitchStrategy", () => {
 
   describe("pending operations", () => {
     it("should include unwanted segments from pending push operations", () => {
-      mockSegmentSink.getPendingOperations.mockReturnValue([
+      vi.spyOn(mockSegmentSink, "getPendingOperations").mockReturnValue([
         {
           type: SegmentSinkOperation.Push,
           value: {
             inventoryInfos: {
-              period: { id: "period-1", start: 0 },
-              adaptation: { id: "adaptation-2" },
-              segment: {
+              period: mockPeriod,
+              adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+                id: "adaptation-2",
+              }),
+              representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
+              segment: __MANIFEST_CLASSES_MOCKS.createSegment({
                 time: 12,
                 duration: 3,
-              },
+              }),
+              chunkSize: 1024,
+              start: 0,
+              end: 1000,
+            },
+            data: {
+              initSegmentUniqueId: "a",
+              chunk: 4,
+              codec: "toto",
+              timestampOffset: 0,
+              appendWindow: [undefined, undefined],
             },
           },
         },
@@ -253,7 +330,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -261,14 +338,19 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should ignore non-push operations", () => {
-      mockSegmentSink.getPendingOperations.mockReturnValue([
+      vi.spyOn(mockSegmentSink, "getPendingOperations").mockReturnValue([
         {
           type: SegmentSinkOperation.Remove,
           value: { start: 10, end: 15 },
         },
         {
           type: SegmentSinkOperation.SignalSegmentComplete,
-          value: { start: 10, end: 15 },
+          value: {
+            adaptation: mockAdaptation,
+            period: mockPeriod,
+            representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
+            segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+          },
         },
       ]);
 
@@ -277,7 +359,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -287,29 +369,26 @@ describe("getAdaptationSwitchStrategy", () => {
 
   describe("switching modes", () => {
     beforeEach(() => {
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 10,
           end: 15,
           bufferedStart: 10,
           bufferedEnd: 15,
-          infos: {
-            period: { id: "period-1", start: 0 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          adaptationId: "adaptation-2",
+        }),
       ]);
     });
 
     it("should return needs-reload when switchingMode is reload and readyState > 1", () => {
-      mockPlaybackObserver.getReadyState.mockReturnValue(3);
-
+      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockReturnValue(3);
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "reload",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -317,14 +396,14 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should not reload when readyState is 1 or less", () => {
-      mockPlaybackObserver.getReadyState.mockReturnValue(1);
+      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockReturnValue(1);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "reload",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -337,7 +416,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "direct",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -347,14 +426,17 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should clean-buffer for direct mode with text adaptation", () => {
-      mockAdaptation.type = "text";
+      const currMockAdap = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+        id: "adaptation-1",
+        type: "text",
+      });
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
-        mockAdaptation,
+        currMockAdap,
         "direct",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -369,7 +451,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -379,42 +461,37 @@ describe("getAdaptationSwitchStrategy", () => {
 
   describe("range exclusion logic", () => {
     beforeEach(() => {
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 12,
           end: 18,
           bufferedStart: 12,
           bufferedEnd: 18,
-          infos: {
-            period: { id: "period-1", start: 0 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          adaptationId: "adaptation-2",
+        }),
       ]);
     });
 
     it("should return continue when all unwanted ranges are excluded around current position", () => {
       // Set up inventory with segments only around current time (which will be excluded)
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 14.6,
           end: 15.4,
           bufferedStart: 14.6,
           bufferedEnd: 15.4,
-          infos: {
-            period: { id: "period-1", start: 0 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          adaptationId: "adaptation-2",
+        }),
       ]);
-      mockPlaybackObserver.getCurrentTime.mockReturnValue(15);
-
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(15);
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -423,26 +500,25 @@ describe("getAdaptationSwitchStrategy", () => {
 
     it("should clean ranges that are far from period boundaries", () => {
       // Segment in the middle of the period, away from boundaries
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 13,
           end: 17,
           bufferedStart: 13,
           bufferedEnd: 17,
-          infos: {
-            period: { id: "period-1", start: 0 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          adaptationId: "adaptation-2",
+        }),
       ]);
-      mockPlaybackObserver.getCurrentTime.mockReturnValue(18); // Away from segment
+      // Away from segment
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(18);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -452,36 +528,32 @@ describe("getAdaptationSwitchStrategy", () => {
 
     it("should exclude range near period start when previous period segment is close", () => {
       // Set up inventory where segment from period-1 exists
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 8,
           end: 9.5,
           bufferedStart: 8,
           bufferedEnd: 9.5, // Less than 1 second before period start (10)
-          infos: {
-            period: { id: "period-0", start: 0 },
-            adaptation: { id: "adaptation-1" },
-          },
-        },
-        {
+          periodId: "period-0",
+          adaptationId: "adaptation-1",
+        }),
+        makeBufferedChunk({
           start: 10,
           end: 10.5,
           bufferedStart: 10,
           bufferedEnd: 10.5,
-          infos: {
-            period: { id: "period-1", start: 0 },
-            adaptation: { id: "adaptation-2" }, // Different adaptation
-          },
-        },
+          periodId: "period-1",
+          adaptationId: "adaptation-2",
+        }),
       ]);
-      mockPlaybackObserver.getCurrentTime.mockReturnValue(18); // Far away
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(18);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -491,36 +563,35 @@ describe("getAdaptationSwitchStrategy", () => {
 
     it("should exclude range near period end when next period segment is close", () => {
       // Set up inventory where segment from next period exists
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 19.5,
           end: 20,
           bufferedStart: 19.5,
           bufferedEnd: 20,
-          infos: {
-            period: { id: "period-1", start: 0, end: 20 },
-            adaptation: { id: "adaptation-2" }, // Different adaptation
-          },
-        },
-        {
+          periodId: "period-1",
+          periodStart: 0,
+          periodEnd: 20,
+          adaptationId: "adaptation-2",
+        }),
+        makeBufferedChunk({
           start: 20,
           end: 21,
           bufferedStart: 20.5, // Less than 1 second after period end (20)
           bufferedEnd: 21,
-          infos: {
-            period: { id: "period-2", start: 20 },
-            adaptation: { id: "adaptation-1" },
-          },
-        },
+          periodId: "period-2",
+          periodStart: 20,
+          adaptationId: "adaptation-1",
+        }),
       ]);
-      mockPlaybackObserver.getCurrentTime.mockReturnValue(12); // Far away
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(12);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -530,26 +601,25 @@ describe("getAdaptationSwitchStrategy", () => {
 
     it("should not exclude period end range when period.end is undefined", () => {
       mockPeriod.end = undefined;
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 12,
           end: 15,
           bufferedStart: 12,
           bufferedEnd: 15,
-          infos: {
-            period: { id: "period-1", start: 10 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          periodStart: 10,
+          adaptationId: "adaptation-2",
+        }),
       ]);
-      mockPlaybackObserver.getCurrentTime.mockReturnValue(18);
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(18);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -558,26 +628,25 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should exclude current position padding for seamless mode", () => {
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 14.6,
           end: 15.4,
           bufferedStart: 14.6,
           bufferedEnd: 15.4,
-          infos: {
-            period: { id: "period-1", start: 10 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          periodStart: 10,
+          adaptationId: "adaptation-2",
+        }),
       ]);
-      mockPlaybackObserver.getCurrentTime.mockReturnValue(15);
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(15);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -586,26 +655,25 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should not exclude current position padding for direct mode", () => {
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 14.6,
           end: 15.4,
           bufferedStart: 14.6,
           bufferedEnd: 15.4,
-          infos: {
-            period: { id: "period-1", start: 10 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          periodStart: 10,
+          adaptationId: "adaptation-2",
+        }),
       ]);
-      mockPlaybackObserver.getCurrentTime.mockReturnValue(15);
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(15);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "direct",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -615,18 +683,20 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should use polled position when getCurrentTime returns undefined", () => {
-      mockPlaybackObserver.getCurrentTime.mockReturnValue(undefined);
-      mockSegmentSink.getLastKnownInventory.mockReturnValue([
-        {
+      const mockGetRef = vi.spyOn(mockedPlaybackObserver.observer, "getReference");
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(
+        undefined,
+      );
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
+        makeBufferedChunk({
           start: 14.6,
           end: 15.4,
           bufferedStart: 14.6,
           bufferedEnd: 15.4,
-          infos: {
-            period: { id: "period-1", start: 10 },
-            adaptation: { id: "adaptation-2" },
-          },
-        },
+          periodId: "period-1",
+          periodStart: 10,
+          adaptationId: "adaptation-2",
+        }),
       ]);
 
       const result = getAdaptationSwitchStrategy(
@@ -634,11 +704,11 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
         { onCodecSwitch: "continue" },
       );
 
-      expect(mockPlaybackObserver.getReference).toHaveBeenCalled();
+      expect(mockGetRef).toHaveBeenCalled();
       // Should still exclude based on polled position (15)
       expect(result).toEqual({ type: "continue", value: undefined });
     });

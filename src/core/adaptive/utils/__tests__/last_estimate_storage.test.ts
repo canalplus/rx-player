@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
 import LastEstimateStorage, { ABRAlgorithmType } from "../last_estimate_storage";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 describe("LastEstimateStorage", () => {
   let storage: LastEstimateStorage;
@@ -28,44 +25,60 @@ describe("LastEstimateStorage", () => {
 
   describe("update()", () => {
     it("should update representation with the provided value", () => {
-      const representation = { id: "rep1", bitrate: 1000 } as any;
+      const representation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        id: "rep1",
+        bitrate: 1000,
+      });
       storage.update(representation, 500, ABRAlgorithmType.BandwidthBased);
       expect(storage.representation).toBe(representation);
     });
 
     it("should update bandwidth with the provided value", () => {
-      const representation = { id: "rep1", bitrate: 1000 } as any;
+      const representation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        id: "rep1",
+        bitrate: 1000,
+      });
       storage.update(representation, 500, ABRAlgorithmType.BandwidthBased);
       expect(storage.bandwidth).toBe(500);
     });
 
     it("should update algorithmType with the provided value", () => {
-      const representation = { id: "rep1", bitrate: 1000 } as any;
+      const representation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        id: "rep1",
+        bitrate: 1000,
+      });
       storage.update(representation, 500, ABRAlgorithmType.BandwidthBased);
       expect(storage.algorithmType).toBe(ABRAlgorithmType.BandwidthBased);
     });
 
     it("should allow bandwidth to be undefined", () => {
-      const representation = { id: "rep1", bitrate: 1000 } as any;
+      const representation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        id: "rep1",
+        bitrate: 1000,
+      });
       storage.update(representation, undefined, ABRAlgorithmType.BufferBased);
       expect(storage.bandwidth).toBeUndefined();
     });
 
     it("should correctly reflect a BufferBased algorithm type", () => {
-      const representation = { id: "rep2" } as any;
+      const representation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        id: "rep2",
+      });
       storage.update(representation, 200, ABRAlgorithmType.BufferBased);
       expect(storage.algorithmType).toBe(ABRAlgorithmType.BufferBased);
     });
 
     it("should correctly reflect a GuessBased algorithm type", () => {
-      const representation = { id: "rep3" } as any;
+      const representation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        id: "rep3",
+      });
       storage.update(representation, 300, ABRAlgorithmType.GuessBased);
       expect(storage.algorithmType).toBe(ABRAlgorithmType.GuessBased);
     });
 
     it("should overwrite previous values on subsequent updates", () => {
-      const rep1 = { id: "rep1" } as any;
-      const rep2 = { id: "rep2" } as any;
+      const rep1 = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ id: "rep1" });
+      const rep2 = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ id: "rep2" });
       storage.update(rep1, 100, ABRAlgorithmType.BandwidthBased);
       storage.update(rep2, 999, ABRAlgorithmType.GuessBased);
       expect(storage.representation).toBe(rep2);
