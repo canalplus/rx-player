@@ -153,9 +153,15 @@ describe("createAdaptiveRepresentationSelector", () => {
       size: 50000,
       segmentDuration: 4,
       content: {
+        manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
+        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
+        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ type: "video" }),
         representation: rep,
-        adaptation: {} as any,
-        segment: { isInit: false, complete: true, duration: 4 } as any,
+        segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+          isInit: false,
+          complete: true,
+          duration: 4,
+        }),
       },
     };
 
@@ -203,9 +209,15 @@ describe("createAdaptiveRepresentationSelector", () => {
       size: 50000,
       segmentDuration: 4,
       content: {
+        manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
+        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
+        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ type: "video" }),
         representation: rep,
-        adaptation: {} as any,
-        segment: { isInit: false, complete: true, duration: 4 } as any,
+        segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+          isInit: false,
+          complete: true,
+          duration: 4,
+        }),
       },
     };
 
