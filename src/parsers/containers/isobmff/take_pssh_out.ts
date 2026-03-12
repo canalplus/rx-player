@@ -37,14 +37,13 @@ export interface IISOBMFFPSSHInfo {
  * are encountered.
  */
 export default function takePSSHOut(data: Uint8Array<ArrayBuffer>): IISOBMFFPSSHInfo[] {
-  let i = 0;
-  const moov = getBoxContent(data, 0x6d6f6f76 /* moov */);
+  let moov = getBoxContent(data, 0x6d6f6f76 /* moov */);
   if (moov === null) {
     return [];
   }
 
   const psshBoxes: IISOBMFFPSSHInfo[] = [];
-  while (i < moov.length) {
+  while (moov.length !== 0) {
     let psshOffsets;
     try {
       psshOffsets = getBoxOffsets(moov, 0x70737368 /* pssh */);
@@ -63,11 +62,12 @@ export default function takePSSHOut(data: Uint8Array<ArrayBuffer>): IISOBMFFPSSH
     }
 
     // replace by `free` box.
-    moov[psshOffsets[0] + 4] = 0x66;
-    moov[psshOffsets[0] + 5] = 0x72;
-    moov[psshOffsets[0] + 6] = 0x65;
-    moov[psshOffsets[0] + 7] = 0x65;
-    i = psshOffsets[2];
+    // moov[psshOffsets[0] + 4] = 0x66;
+    // moov[psshOffsets[0] + 5] = 0x72;
+    // moov[psshOffsets[0] + 6] = 0x65;
+    // moov[psshOffsets[0] + 7] = 0x65;
+    // i = psshOffsets[2];
+    moov = moov?.slice(psshOffsets[2]);
   }
   return psshBoxes;
 }
