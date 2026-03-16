@@ -37,16 +37,17 @@ export interface IISOBMFFPSSHInfo {
  * are encountered.
  */
 export default function takePSSHOut(data: Uint8Array<ArrayBuffer>): IISOBMFFPSSHInfo[] {
-  let moov = getBoxContent(data, 0x6d6f6f76 /* moov */);
-  if (moov === null) {
+  const moovContent = getBoxContent(data, 0x6d6f6f76 /* moov */);
+  if (moovContent === null) {
     return [];
   }
 
   const psshBoxes: IISOBMFFPSSHInfo[] = [];
-  while (moov.length !== 0) {
+  let remainingMoovContent = moovContent;
+  while (remainingMoovContent.length > 0) {
     let psshOffsets;
     try {
-      psshOffsets = getBoxOffsets(moov, 0x70737368 /* pssh */);
+      psshOffsets = getBoxOffsets(remainingMoovContent, 0x70737368 /* pssh */);
     } catch (e) {
       const err = e instanceof Error ? e : "";
       log.warn("isobmff", "Error while removing PSSH from ISOBMFF", err);
@@ -55,19 +56,12 @@ export default function takePSSHOut(data: Uint8Array<ArrayBuffer>): IISOBMFFPSSH
     if (psshOffsets === null) {
       return psshBoxes;
     }
-    const pssh = sliceUint8Array(moov, psshOffsets[0], psshOffsets[2]);
+    const pssh = sliceUint8Array(remainingMoovContent, psshOffsets[0], psshOffsets[2]);
     const systemId = getPsshSystemID(pssh, psshOffsets[1] - psshOffsets[0]);
     if (systemId !== undefined) {
       psshBoxes.push({ systemId, data: pssh });
     }
-
-    // replace by `free` box.
-    // moov[psshOffsets[0] + 4] = 0x66;
-    // moov[psshOffsets[0] + 5] = 0x72;
-    // moov[psshOffsets[0] + 6] = 0x65;
-    // moov[psshOffsets[0] + 7] = 0x65;
-    // i = psshOffsets[2];
-    moov = moov?.slice(psshOffsets[2]);
+    remainingMoovContent = remainingMoovContent.subarray(psshOffsets[2]);
   }
   return psshBoxes;
 }
