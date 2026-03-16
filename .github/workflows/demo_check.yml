@@ -25,6 +25,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Typecheck the demo source files
-        run: npm run check:demo:types
+        run: npm run types:demo
       - name: Lint the demo source files
         run: npm run lint:demo

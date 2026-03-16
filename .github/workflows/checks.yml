@@ -44,11 +44,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Check typescript types
-        run: npm run check:types
+        run: npm run types
       - name: Lint files in src
         run: npm run lint
       - name: Check unit tests typescript types
-        run: npm run check:types:unit_tests
+        run: npm run types:unit_tests
 
   unit_tests:
     runs-on: ubuntu-latest

@@ -168,16 +168,13 @@
     "bundle": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer default bundle\" -o dist/rx-player.js",
     "bundle:min": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer minified bundle\" -o dist/rx-player.min.js --minify",
     "certificate": "bash ./scripts/generate_certificate.sh",
-    "check": "npm run check:types && npm run lint && npm run check:types:unit_tests",
-    "check:all": "npm run check:types && npm run lint && npm run lint:demo && npm run lint:tests && npm run lint:scripts",
-    "check:demo": "npm run check:demo:types && npm run lint:demo",
-    "check:demo:types": "tsc --noEmit --project demo/",
-    "clean:build": "node ./scripts/utils/remove_dir.mjs dist",
-    "check:types": "tsc --noEmit --project .",
-    "check:types:unit_tests": "tsc --noEmit --project ./tsconfig.unit-tests.json",
-    "check:types:watch": "tsc --noEmit --watch --project .",
+    "check": "npm run types && npm run lint && npm run types:unit_tests",
+    "check:all": "npm run types:all && npm run lint:all",
+    "check:demo": "npm run types:demo && npm run lint:demo",
+    "clean": "node ./scripts/utils/remove_dir.mjs dist",
     "demo": "node ./scripts/build_demo.mjs --production-mode",
     "doc": "readme.doc --clean --input doc/ --output doc/generated -p \"$(cat VERSION)\"",
+    "fmt": "npm run fmt:prettier && npm run fmt:rust",
     "fmt:prettier": "prettier --write .",
     "fmt:prettier:check": "prettier . --check",
     "fmt:rust": "cd ./src/parsers/manifest/dash/wasm-parser && cargo fmt",
@@ -205,9 +202,11 @@
     "test:memory": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest run tests/memory",
     "test:memory:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:performance": "node ./tests/performance/run.mjs",
-    "test:performance:firefox": "node ./tests/performance/run.mjs --browser firefox",
     "test:unit": "vitest --config vitest.config.unit.mjs",
-    "test:unit:watch": "vitest --config vitest.config.unit.mjs --watch",
+    "types": "tsc --noEmit --project .",
+    "types:all": "npm run types && npm run types:demo && npm run types:unit_tests",
+    "types:demo": "tsc --noEmit --project demo/",
+    "types:unit_tests": "tsc --noEmit --project ./tsconfig.unit-tests.json",
     "update-version": "bash ./scripts/update-version-number.sh"
   },
   "repository": {
@@ -249,25 +248,23 @@
       "start": "Build the demo with the non-minified RxPlayer and serve it on a local server. Re-build on file updates.\nUse `--help` option (`-- --help` when using `npm run`) to list options.",
       "demo": "Build the demo in demo/bundle.js.\nUse `--help` option (`-- --help` when using `npm run`) to list options.",
       "check:demo": "Check the validity of the demo directory by running the type checker and linter on it",
-      "check:demo:types": "Check TypeScript types in demo files",
+      "types:demo": "Check TypeScript types in demo files",
       "lint:demo": "Run linter on demo files",
       "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` will then listen to HTTPS requests through a communicated port)",
       "releases:demo": "Publish current demo as the GitHub's pages new demo page (\"stable\" branch only)"
     },
     "Type-check, format, or lint the current code": {
       "check": "Check the validity of the src directory by running the type checker and linter on it",
-      "check:all": "Check the validity of the whole project by running linters and type checkers on all project directories",
+      "check:all": "Check the validity of the whole project by running linters and type checkers on all directories",
       "fmt:prettier": "Automatically format JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files",
       "fmt:prettier:check": "Check that JavaScript, TypeScript, JSON, XML, HTML, YML and Markdown files are well-formatted",
       "fmt:rust": "Automatically format Rust files",
       "fmt:rust:check": "Check that Rust files are well-formatted",
-      "check:types": "Check TypeScript typings in src",
-      "check:types:watch": "Check TypeScript typings in src each time files change",
-      "lint": "Lint rx-player source files",
-      "lint:all": "Lint all RxPlayer JS files, including scripts, demo, integration tests etc.",
-      "lint:demo": "Lint demo source files",
-      "lint:scripts": "Lint our JS scripts in the scripts/ directory",
-      "lint:tests": "Lint integration tests source files"
+      "types": "Check TypeScript typings in src",
+      "types:all": "Check TypeScript typings in all RxPlayer files: src and demo",
+      "types -- -w": "Check TypeScript typings in src and restart at each time file update",
+      "lint": "Lint RxPlayer files in src",
+      "lint:all": "Lint all RxPlayer files, including scripts, demo, integration tests etc."
     },
     "Run tests": {
       "Integration tests (test the whole API, call the `build` script BEFORE running them)": {
@@ -294,8 +291,8 @@
     },
     "Build the player or one of its sub-parts": {
       "Regular builds (used by JS bundlers)": {
-        "build": "Build the rx-player code in release mode. Use `--help` option (`-- --help` when using `npm run`) to list options.",
-        "build -- --dev-mode": "Build the rx-player code in development mode (more runtime checks, non-minified worker)"
+        "build": "Build the RxPlayer code in release mode. Use `--help` option (`-- --help` when using `npm run`) to list options.",
+        "build -- --dev-mode": "Build the RxPlayer code in development mode (more runtime checks, non-minified worker)"
       },
       "Legacy bundle builds (single-file bundles exporting to window.RxPlayer)": {
         "bundle": "Build the player in dist/rx-player.js. Use `--help` option (`-- --help` when using `npm run`) to list options.",
