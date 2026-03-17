@@ -258,7 +258,9 @@ For now only the following features exist:
 | ------------------- | --------------------------------------------------------- |
 | `DASH` [1]          | Enable DASH playback using a JavaScript-based MPD parser  |
 | `DASH_WASM` [1] [2] | Enable DASH playback using a WebAssembly-based MPD parser |
+| `SMOOTH`            | Enable playback of Smooth Streaming contents              |
 | `LOCAL_MANIFEST`    | Enable playback of "local" contents                       |
+| `METAPLAYLIST`      | Enable playback of "metaplaylist" contents                |
 
 ---
 

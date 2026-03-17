@@ -176,12 +176,12 @@ following conditions are respected:
   `loadVideo` call on that same RxPlayer instance, and the returned Promise is either
   still pending or resolved (i.e. it hasn't rejected).
 
-- You're playing either a DASH content (through the `"dash"` `transport` option of the
-  `loadVideo` call), or a "local-manifest" content (through the `"local"` `transport`).
+- You're not playing a directfile content (through the `"directfile"` `transport` option
+  of the `loadVideo` call).
 
-  Note that if you're playing a "local-manifest" content, you'll have to add the
-  `LOCAL_MANIFEST` feature [to your own worker bundle](./ImportableWorker.md) to make it
-  work.
+  Note that if you're playing a "smooth", a "metaplaylist" or a "local-manifest" content,
+  you'll have to add the corresponding feature
+  [to your own worker bundle](./ImportableWorker.md) to make it work.
 
 - You did not force the `"main"` mode through the
   [`mode` `loadVideo` option](../api/Loading_a_Content.md#mode).
