@@ -472,8 +472,8 @@ type ISbiQueuedOperation = IQueuedSbiPush | IQueuedSbiRemove;
  * "operations".
  */
 const enum SbiOperationName {
-  Push,
-  Remove,
+  Push = 0,
+  Remove = 1,
 }
 
 interface IQueuedSbiPush {
