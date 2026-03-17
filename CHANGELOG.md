@@ -1,11 +1,13 @@
 # Changelog
 
-## Current dev build: v4.5.0-dev.2026021900
+## Current dev build: v4.5.0-dev.2026031700
 
 ### Features
 
-- `MULTI_THREAD`: Allow applications to define their own complex logic worker-side [#1719]
-- Add optional `LOCAL_MANIFEST` feature to our importable worker [#1782]
+- `MULTI_THREAD`: Allow applications to define their own `representationFilter`,
+  `segmentLoader` and `manifestLoader` callbacks worker-side [#1719]
+- `MULTI_THREAD`: Enable adding most transport feature worker-side (`DASH`, `DASH_WASM`,
+  `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`) [#1783]
 
 ### Bug fixes
 
@@ -15,14 +17,22 @@
 - Fix `startAt.wallClockTime` on safari HLS live playlists [#1799]
 - Fix rare scenario when an ended live audio content would not have its duration known
   until the end-of-stream [#1801]
+- TTML: Do not apply percentage line heights anymore as they are sometimes subtly broken
+  [#1812]
+- CMCD: fix the `headers` CMCD `communicationType` [#1809]
+- Thumbnails: Fix thumbnail request sometimes being wrongly cancelled [#1810]
 
 ### Other improvements
 
 - Add `getMaximumPosition` and `getMinimumPosition` support when using directfile with HLS
   playlist on safari [#1800]
+- Fix ordering of a PeriodChange/AdaptationChange couple that may have previously led to
+  unnecessary duplicate events [#1764]
 - Text track id can only be string [#1785]
 - The reload API now only throws if no `loadVideo` call has been made before [#1767]
 - Use native base64-bytes conversion utils when they exist [#1786]
+- Merge most of the multithreaded and monothreaded codebase to simplify maintainance
+  [#1627]
 
 ## v4.4.1 (2025-12-10)
 
