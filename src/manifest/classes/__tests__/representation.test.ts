@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import type { IParsedRepresentation } from "../../../parsers/manifest";
 import CodecSupportCache from "../codec_support_cache";
 import Representation from "../representation";
@@ -60,6 +60,9 @@ const minimalIndex: IRepresentationIndex = {
 
 describe("Manifest - Representation", () => {
   const cache = new CodecSupportCache([]);
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
   it("should be able to create Representation with the minimum arguments given", () => {
     const args = {
       bitrate: 12,
@@ -71,7 +74,8 @@ describe("Manifest - Representation", () => {
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual([]);
+    expect(representation.baseCodecs).toEqual([]);
+    expect(representation.chosenCodec).toEqual(undefined);
     expect(representation.contentProtections).toBe(undefined);
     expect(representation.frameRate).toBe(undefined);
     expect(representation.height).toBe(undefined);
@@ -97,7 +101,8 @@ describe("Manifest - Representation", () => {
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual([]);
+    expect(representation.baseCodecs).toEqual([]);
+    expect(representation.chosenCodec).toEqual(undefined);
     expect(representation.contentProtections).toBe(undefined);
     expect(representation.frameRate).toBe(undefined);
     expect(representation.height).toBe(57);
@@ -122,7 +127,8 @@ describe("Manifest - Representation", () => {
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual([]);
+    expect(representation.baseCodecs).toEqual([]);
+    expect(representation.chosenCodec).toEqual(undefined);
     expect(representation.contentProtections).toBe(undefined);
     expect(representation.frameRate).toBe(undefined);
     expect(representation.height).toBe(undefined);
@@ -142,19 +148,24 @@ describe("Manifest - Representation", () => {
       codecs: "vp9",
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
-    const spyCodecCache = vi.spyOn(cache, "isSupported");
+    const spyCodecCache = vi
+      .spyOn(cache, "isSupported")
+      .mockImplementation((mimeType, codec, isEncrypted) => {
+        return mimeType === "" && codec === "vp9" && !isEncrypted;
+      });
     const representation = new Representation(args, "audio", cache);
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual(["vp9"]);
+    expect(representation.baseCodecs).toEqual(["vp9"]);
+    expect(representation.chosenCodec).toEqual("vp9");
     expect(representation.contentProtections).toBe(undefined);
     expect(representation.frameRate).toBe(undefined);
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe(undefined);
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe(';codecs="vp9"');
-    expect(representation.isSupported).toBe(undefined);
+    expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
     spyCodecCache.mockClear();
@@ -168,21 +179,57 @@ describe("Manifest - Representation", () => {
       supplementalCodecs: "test",
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
-    const spyCodecCache = vi.spyOn(cache, "isSupported");
+    const spyCodecCache = vi
+      .spyOn(cache, "isSupported")
+      .mockImplementation((mimeType, codec, isEncrypted) => {
+        return mimeType === "" && codec === "test" && !isEncrypted;
+      });
     const representation = new Representation(args, "audio", cache);
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual(["test", "vp9"]);
+    expect(representation.baseCodecs).toEqual(["test", "vp9"]);
+    expect(representation.chosenCodec).toEqual("test");
     expect(representation.contentProtections).toBe(undefined);
     expect(representation.frameRate).toBe(undefined);
     expect(representation.height).toBe(undefined);
     expect(representation.mimeType).toBe(undefined);
     expect(representation.width).toBe(undefined);
     expect(representation.getMimeTypeString()).toBe(';codecs="test"');
-    expect(representation.isSupported).toBe(undefined);
+    expect(representation.isSupported).toBe(true);
     expect(representation.decipherable).toBe(undefined);
     expect(spyCodecCache).toHaveBeenCalledTimes(1);
+    spyCodecCache.mockClear();
+  });
+
+  it("should take the back-up codec if supplementalCodec is not supported", () => {
+    const args = {
+      bitrate: 12,
+      id: "test",
+      codecs: "vp9",
+      supplementalCodecs: "test",
+      index: minimalIndex,
+    } as unknown as IParsedRepresentation;
+    const spyCodecCache = vi
+      .spyOn(cache, "isSupported")
+      .mockImplementation((mimeType, codec, isEncrypted) => {
+        return mimeType === "" && codec === "vp9" && !isEncrypted;
+      });
+    const representation = new Representation(args, "audio", cache);
+    expect(representation.id).toBe("test");
+    expect(representation.bitrate).toBe(12);
+    expect(representation.index).toBe(minimalIndex);
+    expect(representation.baseCodecs).toEqual(["test", "vp9"]);
+    expect(representation.chosenCodec).toEqual("vp9");
+    expect(representation.contentProtections).toBe(undefined);
+    expect(representation.frameRate).toBe(undefined);
+    expect(representation.height).toBe(undefined);
+    expect(representation.mimeType).toBe(undefined);
+    expect(representation.width).toBe(undefined);
+    expect(representation.getMimeTypeString()).toBe(';codecs="vp9"');
+    expect(representation.isSupported).toBe(true);
+    expect(representation.decipherable).toBe(undefined);
+    expect(spyCodecCache).toHaveBeenCalledTimes(2);
     spyCodecCache.mockClear();
   });
 
@@ -198,7 +245,8 @@ describe("Manifest - Representation", () => {
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual([]);
+    expect(representation.baseCodecs).toEqual([]);
+    expect(representation.chosenCodec).toEqual(undefined);
     expect(representation.contentProtections).toBe(undefined);
     expect(representation.frameRate).toBe(undefined);
     expect(representation.height).toBe(undefined);
@@ -235,7 +283,8 @@ describe("Manifest - Representation", () => {
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual(["vp12"]);
+    expect(representation.baseCodecs).toEqual(["vp12"]);
+    expect(representation.chosenCodec).toEqual("vp12");
     expect(representation.contentProtections).toBe(args.contentProtections);
     expect(representation.frameRate).toBe(undefined);
     expect(representation.height).toBe(undefined);
@@ -262,7 +311,8 @@ describe("Manifest - Representation", () => {
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual(["mp4a.40.2"]);
+    expect(representation.baseCodecs).toEqual(["mp4a.40.2"]);
+    expect(representation.chosenCodec).toEqual("mp4a.40.2");
     expect(representation.contentProtections).toBe(undefined);
     expect(representation.frameRate).toBe("1/60");
     expect(representation.height).toBe(undefined);
@@ -334,12 +384,15 @@ describe("Manifest - Representation", () => {
         supportedIfEncrypted: false,
       },
     ]);
-    const spyCodecCache = vi.spyOn(customCache, "isSupported");
+    const spyCodecCache = vi
+      .spyOn(customCache, "isSupported")
+      .mockImplementation(() => false);
     const representation = new Representation(args, "audio", customCache);
     expect(representation.id).toBe("test");
     expect(representation.bitrate).toBe(12);
     expect(representation.index).toBe(minimalIndex);
-    expect(representation.codecs).toEqual(["mp4a.40.2"]);
+    expect(representation.baseCodecs).toEqual(["mp4a.40.2"]);
+    expect(representation.chosenCodec).toEqual("mp4a.40.2");
     expect(representation.contentProtections).toBe(undefined);
     expect(representation.frameRate).toBe("1/60");
     expect(representation.height).toBe(undefined);
@@ -365,7 +418,8 @@ describe("Manifest - Representation", () => {
     const spyCodecCache = vi.spyOn(cache, "isSupported");
     spyCodecCache.mockReset(); // TODO: find out why this is necessary
     const representation = new Representation(args, "text", cache);
-    expect(representation.codecs).toEqual(["boop"]);
+    expect(representation.baseCodecs).toEqual(["boop"]);
+    expect(representation.chosenCodec).toEqual("boop");
     expect(representation.mimeType).toBe("bip");
     expect(representation.getMimeTypeString()).toBe('bip;codecs="boop"');
     expect(representation.isSupported).toBe(true);
@@ -385,7 +439,8 @@ describe("Manifest - Representation", () => {
     } as unknown as IParsedRepresentation;
     const spyCodecCache = vi.spyOn(cache, "isSupported");
     const representation = new Representation(args, "audio", cache);
-    expect(representation.codecs).toEqual(["boop"]);
+    expect(representation.baseCodecs).toEqual(["boop"]);
+    expect(representation.chosenCodec).toEqual("boop");
     expect(representation.mimeType).toBe("bip");
     expect(representation.getMimeTypeString()).toBe('bip;codecs="boop"');
     expect(representation.isSupported).toBe(undefined);
@@ -394,7 +449,7 @@ describe("Manifest - Representation", () => {
     spyCodecCache.mockClear();
   });
 
-  it("should have both supplementalCodecs and codecs if codec cache returns undefined", () => {
+  it("should not choose codecs if codec cache returns undefined", () => {
     const args = {
       bitrate: 12,
       id: "test",
@@ -406,7 +461,8 @@ describe("Manifest - Representation", () => {
     } as unknown as IParsedRepresentation;
     const spyCodecCache = vi.spyOn(cache, "isSupported");
     const representation = new Representation(args, "audio", cache);
-    expect(representation.codecs).toEqual(["bap", "boop"]);
+    expect(representation.baseCodecs).toEqual(["bap", "boop"]);
+    expect(representation.chosenCodec).toEqual(undefined);
     expect(representation.mimeType).toBe("bip");
     expect(representation.getMimeTypeString()).toBe('bip;codecs="bap"');
     expect(representation.isSupported).toBe(undefined);
@@ -415,7 +471,7 @@ describe("Manifest - Representation", () => {
     spyCodecCache.mockClear();
   });
 
-  it("should only have codecs if codec cache returns false for the supplementalCodecs and true for the codecs", () => {
+  it("should only choose codecs if codec cache returns false for the supplementalCodecs and true for the codecs", () => {
     const spyCodecCache = vi
       .spyOn(cache, "isSupported")
       .mockImplementation((_mimeType: string, codec: string, _encrypted: boolean) => {
@@ -432,7 +488,8 @@ describe("Manifest - Representation", () => {
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
     const representation = new Representation(args, "audio", cache);
-    expect(representation.codecs).toEqual(["boop"]);
+    expect(representation.baseCodecs).toEqual(["bap", "boop"]);
+    expect(representation.chosenCodec).toEqual("boop");
     expect(representation.mimeType).toBe("bip");
     expect(representation.getMimeTypeString()).toBe('bip;codecs="boop"');
     expect(representation.isSupported).toBe(true);
@@ -441,7 +498,7 @@ describe("Manifest - Representation", () => {
     spyCodecCache.mockClear();
   });
 
-  it("should have both supplementalCodecs and codecs if codec cache returns undefined for the former and true for the latter", () => {
+  it("should not choose codec if codec cache returns undefined for the former and true for the latter", () => {
     const spyCodecCache = vi
       .spyOn(cache, "isSupported")
       .mockImplementation((_mimeType: string, codec: string, _encrypted: boolean) => {
@@ -458,7 +515,8 @@ describe("Manifest - Representation", () => {
       index: minimalIndex,
     } as unknown as IParsedRepresentation;
     const representation = new Representation(args, "audio", cache);
-    expect(representation.codecs).toEqual(["bap", "boop"]);
+    expect(representation.baseCodecs).toEqual(["bap", "boop"]);
+    expect(representation.chosenCodec).toEqual(undefined);
     expect(representation.mimeType).toBe("bip");
     expect(representation.getMimeTypeString()).toBe('bip;codecs="bap"');
     expect(representation.isSupported).toBe(undefined);
@@ -467,7 +525,7 @@ describe("Manifest - Representation", () => {
     spyCodecCache.mockClear();
   });
 
-  it("should only have supplementalCodecs if codec cache returns true for the former", () => {
+  it("should choose supplementalCodecs if codec cache returns true for the former", () => {
     const args = {
       bitrate: 12,
       id: "test",
@@ -483,7 +541,8 @@ describe("Manifest - Representation", () => {
         return codec === "bap" ? true : undefined;
       });
     const representation = new Representation(args, "audio", cache);
-    expect(representation.codecs).toEqual(["bap"]);
+    expect(representation.baseCodecs).toEqual(["bap", "boop"]);
+    expect(representation.chosenCodec).toEqual("bap");
     expect(representation.mimeType).toBe("bip");
     expect(representation.getMimeTypeString()).toBe('bip;codecs="bap"');
     expect(representation.isSupported).toBe(true);

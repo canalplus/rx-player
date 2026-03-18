@@ -175,7 +175,7 @@ export function getPlainTextTrackData(
     }
   }
 
-  const type = getPlainTextTrackFormat(context.codecs, context.mimeType);
+  const type = getPlainTextTrackFormat(context.chosenCodec, context.mimeType);
   return {
     data: textTrackData,
     type,

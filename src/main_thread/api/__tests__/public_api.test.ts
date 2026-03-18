@@ -145,7 +145,8 @@ describe("API - Public API", () => {
           video: {
             id: "1",
             bitrate: 1000,
-            codecs: ["avc1"],
+            baseCodecs: ["avc1"],
+            chosenCodec: "avc1",
             uniqueId: "unique1",
             isSupported: true,
           },
@@ -181,7 +182,8 @@ describe("API - Public API", () => {
           audio: {
             id: "2",
             bitrate: 1000,
-            codecs: ["mp4a"],
+            baseCodecs: ["mp4a"],
+            chosenCodec: "mp4a",
             uniqueId: "unique2",
             isSupported: true,
           },
@@ -610,7 +612,8 @@ describe("API - Public API", () => {
           representation: {
             id: "1",
             bitrate: 1000,
-            codecs: ["avc1"],
+            baseCodecs: ["avc1"],
+            chosenCodec: "avc1",
             uniqueId: "unique1",
             isSupported: true,
           } satisfies IRepresentationMetadata,
@@ -664,7 +667,8 @@ describe("API - Public API", () => {
           representation: {
             id: "2",
             bitrate: 1000,
-            codecs: ["mp4a"],
+            baseCodecs: ["mp4a"],
+            chosenCodec: "mp4a",
             uniqueId: "unique2",
             isSupported: true,
           } satisfies IRepresentationMetadata,

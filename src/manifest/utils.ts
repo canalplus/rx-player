@@ -328,12 +328,12 @@ export function toVideoTrack(
 export function toAudioRepresentation(
   representation: IRepresentationMetadata,
 ): IAudioRepresentation {
-  const { id, bitrate, codecs, isSpatialAudio, isSupported, decipherable } =
+  const { id, bitrate, chosenCodec, isSpatialAudio, isSupported, decipherable } =
     representation;
   return {
     id,
     bitrate,
-    codec: codecs?.[0],
+    codec: chosenCodec,
     isSpatialAudio,
     isCodecSupported: isSupported,
     decipherable,
@@ -353,7 +353,7 @@ export function toVideoRepresentation(
     frameRate,
     width,
     height,
-    codecs,
+    chosenCodec,
     hdrInfo,
     isSupported,
     decipherable,
@@ -365,7 +365,7 @@ export function toVideoRepresentation(
     frameRate,
     width,
     height,
-    codec: codecs?.[0],
+    codec: chosenCodec,
     hdrInfo,
     isCodecSupported: isSupported,
     decipherable,

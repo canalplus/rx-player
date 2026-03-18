@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+import shouldPatchOutDolbyVisionConfigDataFromMp4 from "../../compat/should_patch_out_dolby_vision_config_data_from_mp4";
+import logger from "../../log";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
   takePSSHOut,
+  removeDolbyVisionConfigData,
 } from "../../parsers/containers/isobmff";
 import {
   getKeyIdFromInitSegment,
@@ -163,6 +166,16 @@ export default function generateAudioVideoSegmentParser({
     if (containerType === "webm") {
       segmentList = getSegmentsFromCues(chunkData, 0);
     } else if (seemsToBeMP4) {
+      if (
+        shouldPatchOutDolbyVisionConfigDataFromMp4(
+          context.baseCodecs,
+          context.chosenCodec,
+        )
+      ) {
+        logger.debug("dash", "patching out Dolby Vision metadata from segment");
+        removeDolbyVisionConfigData(chunkData);
+      }
+
       segmentList = getSegmentsFromSidx(
         chunkData,
         Array.isArray(indexRange) ? indexRange[0] : 0,

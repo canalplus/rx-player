@@ -431,14 +431,22 @@ export interface IRepresentationMetadata {
    * In that scenario, we could have an array with two elements:
    *   1. The Dolby Vision codec
    *   2. The base HDR10 codec, hopefully with higher device compatibility.
-   *
-   * To note that we should aim to have the shorter array possible to always
-   * expose the actually relied-on codec through the API. The idea could be
-   * to only have several elements in this Array _BEFORE_ testing for codec
-   * support on the current device, only to then remove all non-used codecs to
-   * keep the one actually relied on.
    */
-  codecs?: string[];
+  baseCodecs?: string[];
+  /**
+   * `baseCodecs` can define multiple codecs linked to this `Representation`,
+   * e.g. Dolby Vision retro-compatible to a non-Dolby Vision HEVC-based
+   * codec).
+   *
+   * But on the current device, we'll generally want to announce a unique
+   * codec, after checking the one that is supported.
+   *
+   * This is what `chosenCodecs` is for: the actual codec to rely on.
+   *
+   * Set to `undefined` initially until we know which codec from `baseCodecs`
+   * is supported.
+   */
+  chosenCodec?: string | undefined;
   /**
    * A string describing the mime-type for this Representation.
    * Examples: audio/mp4, video/webm, application/mp4, text/plain

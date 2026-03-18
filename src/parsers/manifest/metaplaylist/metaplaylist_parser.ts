@@ -224,18 +224,20 @@ function createManifest(
                 baseContentMetadata,
               );
               let supplementalCodecs: string | undefined;
-              if (currentRepresentation.codecs.length > 1) {
-                if (currentRepresentation.codecs.length > 2) {
+              if (currentRepresentation.baseCodecs.length > 1) {
+                if (currentRepresentation.baseCodecs.length > 2) {
                   log.warn(
                     "metaplaylist",
                     "MetaPlaylist relying on more than 2 groups of " +
                       "codecs with retro-compatibility",
                   );
                 }
-                supplementalCodecs = currentRepresentation.codecs[0];
+                supplementalCodecs = currentRepresentation.baseCodecs[0];
               }
               const codecs =
-                currentRepresentation.codecs[currentRepresentation.codecs.length - 1];
+                currentRepresentation.baseCodecs[
+                  currentRepresentation.baseCodecs.length - 1
+                ];
               representations.push({
                 bitrate: currentRepresentation.bitrate,
                 index: newIndex,

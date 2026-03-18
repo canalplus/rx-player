@@ -171,7 +171,10 @@ export default class Adaptation implements IAdaptationMetadata {
         const reprObject: IRepresentationFilterRepresentation = {
           id: representation.id,
           bitrate: representation.bitrate,
-          codecs: representation.codecs,
+          codecs:
+            representation.chosenCodec !== undefined
+              ? [representation.chosenCodec]
+              : representation.baseCodecs,
           height: representation.height,
           width: representation.width,
           frameRate: representation.frameRate,

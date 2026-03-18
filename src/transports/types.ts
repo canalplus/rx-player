@@ -556,8 +556,34 @@ export interface ISegmentContext {
   periodEnd: number | undefined;
   /** Mimetype of the corresponding Representation. */
   mimeType?: string | undefined;
-  /** Codec(s) of the corresponding Representation. */
-  codecs?: string | undefined;
+  /**
+   * An array of strings describing codecs that Representation relies on.
+   *
+   * If multiple elements are in this array, each element is a codec (or groups
+   * of codecs, e.g. for both audio and video) enhancing and backward compatible
+   * to the next element of that array.
+   *
+   * For example, a Dolby Vision video Representation could be retro-compatible
+   * with HDR10 decoders not handling Dolby Vision-specific metadata.
+   * In that scenario, we could have an array with two elements:
+   *   1. The Dolby Vision codec
+   *   2. The base HDR10 codec, hopefully with higher device compatibility.
+   */
+  baseCodecs: string[];
+  /**
+   * `baseCodecs` can define multiple codecs linked to this `Representation`,
+   * e.g. Dolby Vision retro-compatible to a non-Dolby Vision HEVC-based
+   * codec).
+   *
+   * But on the current device, we'll generally want to announce a unique
+   * codec, after checking the one that is supported.
+   *
+   * This is what `chosenCodecs` is for: the actual codec to rely on.
+   *
+   * Set to `undefined` initially until we know which codec from `baseCodecs`
+   * is supported.
+   */
+  chosenCodec: string | undefined;
   /**
    * Last published time for the Manifest file in which this segment has been
    * defined.
