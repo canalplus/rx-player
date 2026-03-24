@@ -1,20 +1,30 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
 import type { IStyleElements } from "../../parse_style_block";
-import type IToHtml from "../to_html";
+import toHTML from "../to_html";
+
+const mocks = vi.hoisted(() => {
+  return {
+    convertPayloadToHTML: vi.fn(),
+  };
+});
+vi.mock("../convert_payload_to_html", () => ({
+  default: mocks.convertPayloadToHTML,
+}));
 
 describe("parsers - webvtt - toHTML", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    mocks.convertPayloadToHTML.mockReset();
+  });
 
-  it("should include payload HTML", async () => {
-    vi.doMock("../convert_payload_to_html", () => ({
-      default: () => {
-        return [document.createElement("b"), document.createTextNode("Hello")];
-      },
-    }));
+  it("should include payload HTML", () => {
+    mocks.convertPayloadToHTML.mockImplementation(() => [
+      document.createElement("b"),
+      document.createTextNode("Hello"),
+    ]);
 
-    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
@@ -46,14 +56,12 @@ describe("parsers - webvtt - toHTML", () => {
     );
   });
 
-  it("should include payload HTML and apply correclty style class element", async () => {
-    vi.doMock("../convert_payload_to_html", () => ({
-      default: () => {
-        return [document.createElement("b"), document.createTextNode("Hello")];
-      },
-    }));
+  it("should include payload HTML and apply correclty style class element", () => {
+    mocks.convertPayloadToHTML.mockImplementation(() => [
+      document.createElement("b"),
+      document.createTextNode("Hello"),
+    ]);
 
-    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
@@ -87,14 +95,12 @@ describe("parsers - webvtt - toHTML", () => {
     );
   });
 
-  it("should include payload HTML and apply correctly global style element", async () => {
-    vi.doMock("../convert_payload_to_html", () => ({
-      default: () => {
-        return [document.createElement("b"), document.createTextNode("Hello")];
-      },
-    }));
+  it("should include payload HTML and apply correctly global style element", () => {
+    mocks.convertPayloadToHTML.mockImplementation(() => [
+      document.createElement("b"),
+      document.createTextNode("Hello"),
+    ]);
 
-    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
@@ -127,14 +133,12 @@ describe("parsers - webvtt - toHTML", () => {
     );
   });
 
-  it("should apply both the global style element and a given class", async () => {
-    vi.doMock("../convert_payload_to_html", () => ({
-      default: () => {
-        return [document.createElement("b"), document.createTextNode("Hello")];
-      },
-    }));
+  it("should apply both the global style element and a given class", () => {
+    mocks.convertPayloadToHTML.mockImplementation(() => [
+      document.createElement("b"),
+      document.createTextNode("Hello"),
+    ]);
 
-    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,
@@ -168,14 +172,9 @@ describe("parsers - webvtt - toHTML", () => {
     );
   });
 
-  it("should return default element if no payload", async () => {
-    vi.doMock("../convert_payload_to_html", () => ({
-      default: () => {
-        return [];
-      },
-    }));
+  it("should return default element if no payload", () => {
+    mocks.convertPayloadToHTML.mockImplementation(() => []);
 
-    const toHTML = (await vi.importActual("../to_html")).default as typeof IToHtml;
     const cueObject = {
       start: 0,
       end: 100,

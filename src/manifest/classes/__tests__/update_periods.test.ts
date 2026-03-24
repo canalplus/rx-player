@@ -1,11 +1,17 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
+import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import type { IManifestStreamEvent } from "../../../parsers/manifest";
 import type { IPeriod, IPeriodMetadata } from "../../index";
 import type { IManifestAdaptations, IThumbnailTrack } from "../period";
-import type {
-  replacePeriods as IReplacePeriods,
-  updatePeriods as IUpatePeriods,
-} from "../update_periods";
+import { replacePeriods, updatePeriods } from "../update_periods";
+
+const mocks = vi.hoisted(() => {
+  return {
+    updatePeriodInPlace: vi.fn(),
+  };
+});
+vi.mock("../update_period_in_place.ts", () => ({
+  default: mocks.updatePeriodInPlace,
+}));
 
 const MANIFEST_UPDATE_TYPE = {
   Full: 0,
@@ -101,26 +107,22 @@ describe("Manifest - replacePeriods", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    mocks.updatePeriodInPlace.mockReset();
+  });
 
   // Case 1 :
   //
   // old periods : p1, p2
   // new periods : p2
-  it("should remove old period", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should remove old period", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p1", start: 0 }),
       generateFakePeriod({ id: "p2" }),
     ];
     const initialPeriods = oldPeriods.slice();
     const newPeriods = [generateFakePeriod({ id: "p2" })];
-    const replacePeriods = (await vi.importActual("../update_periods"))
-      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -140,8 +142,8 @@ describe("Manifest - replacePeriods", () => {
     });
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(1);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[1],
       newPeriods[0],
@@ -153,21 +155,14 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods : p1
   // new periods : p1, p2
-  it("should add new period", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should add new period", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [generateFakePeriod({ id: "p2" })];
     const initialPeriods = oldPeriods.slice();
     const newPeriods = [
       generateFakePeriod({ id: "p2" }),
       generateFakePeriod({ id: "p3" }),
     ];
-    const replacePeriods = (await vi.importActual("../update_periods"))
-      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[1].getMetadataSnapshot()],
@@ -188,8 +183,8 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p2");
     expect(oldPeriods[1].id).toBe("p3");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(1);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[0],
       newPeriods[0],
@@ -201,17 +196,10 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods: p1
   // new periods: p2
-  it("should replace period", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should replace period", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [generateFakePeriod({ id: "p1" })];
     const newPeriods = [generateFakePeriod({ id: "p2" })];
-    const replacePeriods = (await vi.importActual("../update_periods"))
-      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[0].getMetadataSnapshot()],
@@ -220,20 +208,15 @@ describe("Manifest - replacePeriods", () => {
     });
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 4 :
   //
   // old periods: p0, p1, p2
   // new periods: p1, a, b, p2, p3
-  it("should handle more complex period replacement", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should handle more complex period replacement", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p0" }),
       generateFakePeriod({ id: "p1" }),
@@ -247,8 +230,6 @@ describe("Manifest - replacePeriods", () => {
       generateFakePeriod({ id: "p3" }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const replacePeriods = (await vi.importActual("../update_periods"))
-      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -275,14 +256,14 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods[2].id).toBe("b");
     expect(oldPeriods[3].id).toBe("p2");
     expect(oldPeriods[4].id).toBe("p3");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(2);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[1],
       newPeriods[0],
       0,
     );
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       2,
       initialPeriods[2],
       newPeriods[3],
@@ -294,21 +275,14 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods : p2
   // new periods : p1, p2
-  it("should add new period before", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should add new period before", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [generateFakePeriod({ id: "p2" })];
     const newPeriods = [
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const replacePeriods = (await vi.importActual("../update_periods"))
-      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[0].getMetadataSnapshot()],
@@ -323,8 +297,8 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(oldPeriods[1].id).toBe("p2");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(1);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[0],
       newPeriods[1],
@@ -336,20 +310,13 @@ describe("Manifest - replacePeriods", () => {
   //
   // old periods : p1, p2
   // new periods : No periods
-  it("should remove all periods", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should remove all periods", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p1", start: 0 }),
       generateFakePeriod({ id: "p2", start: 0 }),
     ];
-    const newPeriods = [] as IPeriod[];
-    const replacePeriods = (await vi.importActual("../update_periods"))
-      .replacePeriods as typeof IReplacePeriods;
+    const newPeriods: IPeriod[] = [];
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -360,27 +327,20 @@ describe("Manifest - replacePeriods", () => {
       updatedPeriods: [],
     });
     expect(oldPeriods.length).toBe(0);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 7 :
   //
   // old periods : No periods
   // new periods : p1, p2
-  it("should add all periods to empty array", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
-    const oldPeriods = [] as IPeriod[];
+  it("should add all periods to empty array", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
+    const oldPeriods: IPeriod[] = [];
     const newPeriods = [
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
-    const replacePeriods = (await vi.importActual("../update_periods"))
-      .replacePeriods as typeof IReplacePeriods;
     const res = replacePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -393,7 +353,7 @@ describe("Manifest - replacePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(oldPeriods[1].id).toBe("p2");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 });
 
@@ -401,18 +361,16 @@ describe("Manifest - updatePeriods", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    mocks.updatePeriodInPlace.mockReset();
+  });
 
   // Case 1 :
   //
   // old periods : p1, p2
   // new periods : p2
-  it("should not remove old period", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should not remove old period", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p1", start: 50, end: 60 }),
       generateFakePeriod({ id: "p2", start: 60 }),
@@ -420,8 +378,6 @@ describe("Manifest - updatePeriods", () => {
     const newPeriods = [generateFakePeriod({ id: "p2", start: 60 })];
     const initialPeriods = oldPeriods.slice();
 
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -435,8 +391,8 @@ describe("Manifest - updatePeriods", () => {
     });
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(1);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[1],
       newPeriods[0],
@@ -448,21 +404,14 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods : p1
   // new periods : p1, p2
-  it("should add new period", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should add new period", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [generateFakePeriod({ id: "p2", start: 60 })];
     const newPeriods = [
       generateFakePeriod({ id: "p2", start: 60, end: 80 }),
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[1].getMetadataSnapshot()],
@@ -477,8 +426,8 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p2");
     expect(oldPeriods[1].id).toBe("p3");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(1);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(1);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[0],
       newPeriods[0],
@@ -490,17 +439,10 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p1
   // new periods: p3
-  it("should throw when encountering two distant Periods", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should throw when encountering two distant Periods", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "p3", start: 70, end: 80 })];
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
 
     let error: unknown = null;
     try {
@@ -522,20 +464,15 @@ describe("Manifest - updatePeriods", () => {
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p1");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 4 :
   //
   // old periods: p0, p1, p2
   // new periods: p1, a, b, p2, p3
-  it("should handle more complex period replacement", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should handle more complex period replacement", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p0", start: 50, end: 60 }),
       generateFakePeriod({ id: "p1", start: 60, end: 69 }),
@@ -550,8 +487,6 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -579,14 +514,14 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods[3].id).toBe("b");
     expect(oldPeriods[4].id).toBe("p2");
     expect(oldPeriods[5].id).toBe("p3");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(2);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[1],
       newPeriods[0],
       MANIFEST_UPDATE_TYPE.Partial,
     );
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       2,
       initialPeriods[3],
       newPeriods[3],
@@ -598,21 +533,13 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods : p2
   // new periods : p1, p2
-  it("should throw when the first period is not encountered", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should throw when the first period is not encountered", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [generateFakePeriod({ id: "p2", start: 70 })];
     const newPeriods = [
       generateFakePeriod({ id: "p1", start: 50, end: 70 }),
       generateFakePeriod({ id: "p2", start: 70 }),
     ];
-
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
 
     let error: unknown = null;
     try {
@@ -634,27 +561,20 @@ describe("Manifest - updatePeriods", () => {
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p2");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 6 :
   //
   // old periods : p1, p2
   // new periods : No periods
-  it("should keep old periods if no new Period is available", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should keep old periods if no new Period is available", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
-    const newPeriods = [] as IPeriod[];
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
+    const newPeriods: IPeriod[] = [];
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -664,27 +584,20 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(oldPeriods[1].id).toBe("p2");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 7 :
   //
   // old periods : No periods
   // new periods : p1, p2
-  it("should set only new Periods if none were available before", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
-    const oldPeriods = [] as IPeriod[];
+  it("should set only new Periods if none were available before", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
+    const oldPeriods: IPeriod[] = [];
     const newPeriods = [
       generateFakePeriod({ id: "p1" }),
       generateFakePeriod({ id: "p2" }),
     ];
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [
@@ -697,22 +610,15 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(oldPeriods[1].id).toBe("p2");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 8 :
   //
   // old periods : p0, p1
   // new periods : p4, p5
-  it("should throw if the new periods come strictly after", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
+  it("should throw if the new periods come strictly after", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p0", start: 50, end: 60 }),
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
@@ -740,24 +646,17 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p0");
     expect(oldPeriods[1].id).toBe("p1");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 9 :
   //
   // old periods: p1
   // new periods: p2
-  it("should concatenate consecutive periods", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should concatenate consecutive periods", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "p2", start: 60, end: 80 })];
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
 
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
@@ -768,24 +667,17 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods.length).toBe(2);
     expect(oldPeriods[0].id).toBe("p1");
     expect(oldPeriods[1].id).toBe("p2");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 10 :
   //
   // old periods: p1
   // new periods: px
-  it("should throw when encountering two completely different Periods with the same start", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should throw when encountering two completely different Periods with the same start", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [generateFakePeriod({ id: "p1", start: 50, end: 60 })];
     const newPeriods = [generateFakePeriod({ id: "px", start: 50, end: 70 })];
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
 
     let error: unknown = null;
     try {
@@ -807,20 +699,15 @@ describe("Manifest - updatePeriods", () => {
     );
     expect(oldPeriods.length).toBe(1);
     expect(oldPeriods[0].id).toBe("p1");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(0);
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(0);
   });
 
   // Case 11 :
   //
   // old periods: p0, p1, p2
   // new periods: p1, p2, p3
-  it("should handle more complex period replacement", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should handle more complex period replacement", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p0", start: 50, end: 60 }),
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
@@ -832,8 +719,6 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [newPeriods[2].getMetadataSnapshot()],
@@ -855,14 +740,14 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods[1].id).toBe("p1");
     expect(oldPeriods[2].id).toBe("p2");
     expect(oldPeriods[3].id).toBe("p3");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(2);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[1],
       newPeriods[0],
       MANIFEST_UPDATE_TYPE.Partial,
     );
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       2,
       initialPeriods[2],
       newPeriods[1],
@@ -874,13 +759,8 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p0, p1, p2, p3
   // new periods: p1, p3
-  it("should handle more complex period replacement", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should handle more complex period replacement", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p0", start: 50, end: 60 }),
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
@@ -892,8 +772,6 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p3", start: 80 }),
     ];
     const initialPeriods = oldPeriods.slice();
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -914,14 +792,14 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods[0].id).toBe("p0");
     expect(oldPeriods[1].id).toBe("p1");
     expect(oldPeriods[2].id).toBe("p3");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(2);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[1],
       newPeriods[0],
       MANIFEST_UPDATE_TYPE.Partial,
     );
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       2,
       initialPeriods[3],
       newPeriods[1],
@@ -933,13 +811,8 @@ describe("Manifest - updatePeriods", () => {
   //
   // old periods: p0, p1, p2, p3, p4
   // new periods: p1, p3
-  it("should remove periods not included in the new Periods", async () => {
-    const fakeUpdatePeriodInPlace = vi.fn(() => {
-      return fakeUpdatePeriodInPlaceRes;
-    });
-    vi.doMock("../update_period_in_place", () => ({
-      default: fakeUpdatePeriodInPlace,
-    }));
+  it("should remove periods not included in the new Periods", () => {
+    mocks.updatePeriodInPlace.mockImplementation(() => fakeUpdatePeriodInPlaceRes);
     const oldPeriods = [
       generateFakePeriod({ id: "p0", start: 50, end: 60 }),
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
@@ -952,8 +825,6 @@ describe("Manifest - updatePeriods", () => {
       generateFakePeriod({ id: "p1", start: 60, end: 70 }),
       generateFakePeriod({ id: "p3", start: 80, end: 90 }),
     ];
-    const updatePeriods = (await vi.importActual("../update_periods"))
-      .updatePeriods as typeof IUpatePeriods;
     const res = updatePeriods(oldPeriods, newPeriods);
     expect(res).toEqual({
       addedPeriods: [],
@@ -977,14 +848,14 @@ describe("Manifest - updatePeriods", () => {
     expect(oldPeriods[0].id).toBe("p0");
     expect(oldPeriods[1].id).toBe("p1");
     expect(oldPeriods[2].id).toBe("p3");
-    expect(fakeUpdatePeriodInPlace).toHaveBeenCalledTimes(2);
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenCalledTimes(2);
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       1,
       initialPeriods[1],
       newPeriods[0],
       MANIFEST_UPDATE_TYPE.Partial,
     );
-    expect(fakeUpdatePeriodInPlace).toHaveBeenNthCalledWith(
+    expect(mocks.updatePeriodInPlace).toHaveBeenNthCalledWith(
       2,
       initialPeriods[3],
       newPeriods[1],

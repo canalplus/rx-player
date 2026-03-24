@@ -1,17 +1,24 @@
-import { describe, afterEach, it, expect, vi } from "vitest";
-import type IProbeHDCPPolicy from "../../probers/HDCPPolicy";
+import { describe, afterEach, it, expect, vi, beforeEach } from "vitest";
+import probeHDCPPolicy from "../../probers/HDCPPolicy";
+
+const compatEmeMock = vi.hoisted(() => {
+  return {
+    default: {
+      requestMediaKeySystemAccess: undefined as unknown,
+    },
+  };
+});
+vi.mock("../../../../../compat/eme", () => ({ default: () => compatEmeMock.default }));
 
 describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
-  afterEach(() => {
+  beforeEach(() => {
     vi.resetModules();
+  });
+  afterEach(() => {
+    compatEmeMock.default.requestMediaKeySystemAccess = undefined;
   });
 
   it("should throw if no requestMediaKeySystemAccess", async () => {
-    vi.doMock("../../../../../compat/eme", () => ({
-      default: () => null,
-    }));
-    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
-      .default as typeof IProbeHDCPPolicy;
     await probeHDCPPolicy("1.1").then(
       () => {
         throw new Error("Should not have succeeded");
@@ -31,15 +38,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         createMediaKeys: mockCreateMediaKeys,
       });
     });
-    vi.doMock("../../../../../compat/eme", () => ({
-      default: {
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
-      },
-    }));
-
-    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
-      .default as typeof IProbeHDCPPolicy;
-
+    compatEmeMock.default.requestMediaKeySystemAccess = mockRequestMediaKeySystemAcces;
     await probeHDCPPolicy("1.1").then(
       () => {
         throw new Error("Should not have succeeded");
@@ -59,15 +58,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         createMediaKeys: mockCreateMediaKeys,
       });
     });
-    vi.doMock("../../../../../compat/eme", () => ({
-      default: () => ({
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
-      }),
-    }));
-
-    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
-      .default as typeof IProbeHDCPPolicy;
-
+    compatEmeMock.default.requestMediaKeySystemAccess = mockRequestMediaKeySystemAcces;
     await probeHDCPPolicy("1.1").then(
       () => {
         throw new Error("Should not have succeeded");
@@ -91,15 +82,7 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         createMediaKeys: mockCreateMediaKeys,
       });
     });
-    vi.doMock("../../../../../compat/eme", () => ({
-      default: () => ({
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
-      }),
-    }));
-
-    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
-      .default as typeof IProbeHDCPPolicy;
-
+    compatEmeMock.default.requestMediaKeySystemAccess = mockRequestMediaKeySystemAcces;
     await probeHDCPPolicy("1.1").then((res: string) => {
       expect(res).toEqual("Supported");
       expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);
@@ -118,14 +101,8 @@ describe("MediaCapabilitiesProber probers - HDCPPolicy", () => {
         createMediaKeys: mockCreateMediaKeys,
       });
     });
-    vi.doMock("../../../../../compat/eme", () => ({
-      default: () => ({
-        requestMediaKeySystemAccess: mockRequestMediaKeySystemAcces,
-      }),
-    }));
+    compatEmeMock.default.requestMediaKeySystemAccess = mockRequestMediaKeySystemAcces;
 
-    const probeHDCPPolicy = (await vi.importActual("../../probers/HDCPPolicy"))
-      .default as typeof IProbeHDCPPolicy;
     await probeHDCPPolicy("1.1").then((res: string) => {
       expect(res).toEqual("NotSupported");
       expect(mockCreateMediaKeys).toHaveBeenCalledTimes(1);

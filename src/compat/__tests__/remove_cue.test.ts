@@ -1,18 +1,12 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import log from "../../log";
 import arrayFindIndex from "../../utils/array_find_index";
 import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
 import removeCue from "../remove_cue";
 
-const mocks = vi.hoisted(() => {
-  return {
-    logWarn: vi.fn(),
-  };
+const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
+  /* noop */
 });
-vi.mock("../../log", () => ({
-  default: {
-    warn: mocks.logWarn,
-  },
-}));
 
 describe("compat - removeCue", () => {
   beforeEach(() => {
@@ -20,7 +14,7 @@ describe("compat - removeCue", () => {
   });
   afterEach(() => {
     resetEnvironment();
-    mocks.logWarn.mockReset();
+    logWarn.mockClear();
   });
 
   it("should remove cue from track if not on firefox", () => {
@@ -169,11 +163,8 @@ describe("compat - removeCue", () => {
 
     expect(fakeTrack.cues?.length).toBe(1);
     expect(fakeTrack.mode).toBe("showing");
-    expect(mocks.logWarn).toHaveBeenCalledTimes(1);
-    expect(mocks.logWarn).toHaveBeenCalledWith(
-      "text",
-      "Could not remove cue from text track.",
-    );
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledWith("text", "Could not remove cue from text track.");
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockRemoveCue).toHaveBeenLastCalledWith(fakeCue);
   });
@@ -195,11 +186,8 @@ describe("compat - removeCue", () => {
 
     expect(fakeTrack.cues?.length).toBe(1);
     expect(fakeTrack.mode).toBe("showing");
-    expect(mocks.logWarn).toHaveBeenCalledTimes(1);
-    expect(mocks.logWarn).toHaveBeenCalledWith(
-      "text",
-      "Could not remove cue from text track.",
-    );
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledWith("text", "Could not remove cue from text track.");
     expect(mockRemoveCue).toHaveBeenCalledTimes(1);
     expect(mockRemoveCue).toHaveBeenLastCalledWith({ id: "1" });
   });

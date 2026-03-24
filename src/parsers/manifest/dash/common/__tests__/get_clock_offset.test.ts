@@ -1,48 +1,42 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IGetClockOffset from "../get_clock_offset";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import log from "../../../../../log";
+import getClockOffset from "../get_clock_offset";
+
+const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
+  /* noop */
+});
 
 describe("DASH Parser - getClockOffset", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    logWarn.mockClear();
+  });
 
-  it("should calculate a millisecond offset relatively to the monotonically-raising timestamp", async () => {
-    const mockWarn = vi.fn();
-    vi.doMock("../../../../../log", () => ({
-      default: { warn: mockWarn },
-    }));
-
-    const getClockOffset = (await vi.importActual("../get_clock_offset"))
-      .default as typeof IGetClockOffset;
+  it("should calculate a millisecond offset relatively to the monotonically-raising timestamp", () => {
     const mockDate = vi
       .spyOn(performance, "now")
       .mockReturnValue(Date.parse("2019-03-24T13:00:00Z"));
 
     expect(getClockOffset("2019-03-25T12:00:00Z")).toEqual(82800000);
-    expect(mockWarn).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
     mockDate.mockRestore();
   });
 
-  it("should return undefined and warn if an invalid date is given", async () => {
-    const mockWarn = vi.fn();
-    vi.doMock("../../../../../log", () => ({
-      default: { warn: mockWarn },
-    }));
-    const getClockOffset = (await vi.importActual("../get_clock_offset"))
-      .default as typeof IGetClockOffset;
-
+  it("should return undefined and warn if an invalid date is given", () => {
     expect(getClockOffset("2018/412/13")).toEqual(undefined);
-    expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn).toHaveBeenCalledWith("dash", "Invalid clock received", {
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledWith("dash", "Invalid clock received", {
       clock: "2018/412/13",
     });
-    mockWarn.mockReset();
+    logWarn.mockReset();
 
     expect(getClockOffset("foo")).toEqual(undefined);
-    expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn).toHaveBeenCalledWith("dash", "Invalid clock received", {
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledWith("dash", "Invalid clock received", {
       clock: "foo",
     });
-    mockWarn.mockReset();
+    logWarn.mockReset();
   });
 });

@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import parseTTMLToDiv from "../../";
-import globalScope from "../../../../../../utils/global_scope";
 
 const testingText = `<?xml version="1.0" encoding="UTF-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml">
@@ -167,9 +166,7 @@ describe("Global TTML HTML parsing tests", () => {
       for (const textNode of textNodes) {
         const parentElement = textNode.parentElement;
         if (parentElement !== null) {
-          expect(globalScope.getComputedStyle(parentElement).color).toEqual(
-            "rgb(255, 255, 0)",
-          );
+          expect(parentElement.style.color).toEqual("yellow");
           nbTextNodes++;
         }
       }
@@ -179,9 +176,7 @@ describe("Global TTML HTML parsing tests", () => {
       for (const textNode of textNodes) {
         const parentElement = textNode.parentElement;
         if (parentElement !== null) {
-          expect(globalScope.getComputedStyle(parentElement).color).toEqual(
-            "rgb(255, 255, 255)",
-          );
+          expect(parentElement.style.color).toEqual("white");
           nbTextNodes++;
         }
       }

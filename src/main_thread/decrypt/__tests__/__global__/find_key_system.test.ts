@@ -1,56 +1,72 @@
-import type { MockInstance } from "vitest";
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import * as compat from "../../../../compat/can_rely_on_request_media_key_system_access";
+import getEmeApiImplementation from "../../../../compat/eme";
+import assert from "../../../../utils/assert";
 import { testKeySystem } from "../../find_key_system";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+const mocks = vi.hoisted(() => {
+  return {
+    requestMediaKeySystemAccess: vi.fn(),
+    canRelyOnRequestMediaKeySystemAccess: vi.fn(),
+  };
+});
+
+vi.mock("../../../../compat/can_rely_on_request_media_key_system_access", () => {
+  return {
+    canRelyOnRequestMediaKeySystemAccess: mocks.canRelyOnRequestMediaKeySystemAccess,
+  };
+});
+vi.mock("../../../../compat/eme", () => ({
+  default: () => ({
+    onEncrypted: vi.fn(),
+    requestMediaKeySystemAccess: mocks.requestMediaKeySystemAccess,
+    setMediaKeys: vi.fn(),
+  }),
+  getInitData: vi.fn(),
+  generateKeyRequest: vi.fn(),
+  closeSession: vi.fn(),
+  loadSession: vi.fn(),
+}));
 
 describe("find_key_systems - ", () => {
-  let requestMediaKeySystemAccessMock: MockInstance;
-  let canRelyOnEMEMock: MockInstance;
   const keySystem = "com.microsoft.playready.recommendation";
-  const eme = {
-    implementation: "standard",
-    requestMediaKeySystemAccess: (
-      _type: string,
-      _config: MediaKeySystemConfiguration[],
-    ): Promise<any> => Promise.reject(new Error("Unimplemented")),
-    onEncrypted: () => {
-      /* noop */
-    },
-    setMediaKeys: () => Promise.reject(new Error("Unimplemented")),
-  } as const;
-
   beforeEach(() => {
     vi.resetModules();
     vi.restoreAllMocks();
-    requestMediaKeySystemAccessMock = vi.spyOn(eme, "requestMediaKeySystemAccess");
-    canRelyOnEMEMock = vi.spyOn(compat, "canRelyOnRequestMediaKeySystemAccess");
+    mocks.canRelyOnRequestMediaKeySystemAccess.mockReset();
+    mocks.requestMediaKeySystemAccess.mockReset();
   });
 
   it("should resolve if the keySystem is supported", async () => {
     /* mock implementation of requestMediaKeySystemAccess that support the keySystem */
-    requestMediaKeySystemAccessMock.mockImplementation(() =>
+    mocks.requestMediaKeySystemAccess.mockImplementation(() =>
       Promise.resolve({
         createMediaKeys: () => ({
           createSession: () => ({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            generateRequest: () => {},
+            generateRequest: () => {
+              /* noop */
+            },
+            close: () => {
+              return Promise.resolve();
+            },
           }),
         }),
       }),
     );
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null);
     await expect(testKeySystem(eme, keySystem, [])).resolves.toBeTruthy();
-    expect(requestMediaKeySystemAccessMock).toHaveBeenCalledTimes(1);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
   });
 
   it("should reject if the keySystem is not supported", async () => {
     /* mock implementation of requestMediaKeySystemAccess that does not support the keySystem */
-    requestMediaKeySystemAccessMock.mockImplementation(() => {
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => {
       throw new Error();
     });
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null);
     await expect(testKeySystem(eme, keySystem, [])).rejects.toThrow();
-    expect(requestMediaKeySystemAccessMock).toHaveBeenCalledTimes(1);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
   });
 
   it("should reject if the keySystem seems to be supported but the EME workflow fail", async () => {
@@ -58,8 +74,8 @@ describe("find_key_systems - ", () => {
     but that is failing when performing the usual EME workflow of creating mediaKeys, creating a session
     and generating a request. */
 
-    canRelyOnEMEMock.mockImplementation(() => false);
-    requestMediaKeySystemAccessMock.mockImplementation(() =>
+    mocks.canRelyOnRequestMediaKeySystemAccess.mockImplementation(() => false);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() =>
       Promise.resolve({
         createMediaKeys: () => ({
           createSession: () => ({
@@ -70,7 +86,9 @@ describe("find_key_systems - ", () => {
         }),
       }),
     );
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null);
     await expect(testKeySystem(eme, keySystem, [])).rejects.toThrow();
-    expect(requestMediaKeySystemAccessMock).toHaveBeenCalledTimes(1);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
   });
 });

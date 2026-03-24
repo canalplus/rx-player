@@ -1,13 +1,13 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IMPDIntermediateRepresentation } from "../../node_parser_types";
-import type IGetHTTPUTCTimingURL from "../get_http_utc-timing_url";
+import getHTTPUTCTimingURL from "../get_http_utc-timing_url";
 
 describe("DASH Parser - getHTTPUTCTimingURL", () => {
   beforeEach(() => {
     vi.resetModules();
   });
 
-  it("should return undefined if the given intermediate representation has no UTCTimings element", async () => {
+  it("should return undefined if the given intermediate representation has no UTCTimings element", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         baseURLs: [],
@@ -17,12 +17,10 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = (await vi.importActual("../get_http_utc-timing_url"))
-      .default as typeof IGetHTTPUTCTimingURL;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  it("should return undefined if the given intermediate representation has no http-iso UTCTimings element", async () => {
+  it("should return undefined if the given intermediate representation has no http-iso UTCTimings element", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         baseURLs: [],
@@ -41,12 +39,10 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = (await vi.importActual("../get_http_utc-timing_url"))
-      .default as typeof IGetHTTPUTCTimingURL;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  it("should return undefined if the given intermediate representation has no value for its http-iso UTCTimings element", async () => {
+  it("should return undefined if the given intermediate representation has no value for its http-iso UTCTimings element", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         baseURLs: [],
@@ -67,12 +63,10 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = (await vi.importActual("../get_http_utc-timing_url"))
-      .default as typeof IGetHTTPUTCTimingURL;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual(undefined);
   });
 
-  it("should return the value of a single http-iso UTCTimings element", async () => {
+  it("should return the value of a single http-iso UTCTimings element", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         baseURLs: [],
@@ -87,12 +81,10 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = (await vi.importActual("../get_http_utc-timing_url"))
-      .default as typeof IGetHTTPUTCTimingURL;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 
-  it("should return the first value of multiple http-iso UTCTimings elements", async () => {
+  it("should return the first value of multiple http-iso UTCTimings elements", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         baseURLs: [],
@@ -115,12 +107,10 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = (await vi.importActual("../get_http_utc-timing_url"))
-      .default as typeof IGetHTTPUTCTimingURL;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar1000");
   });
 
-  it("should return the first value of a http-iso UTCTimings element when mixed with other elements", async () => {
+  it("should return the first value of a http-iso UTCTimings element when mixed with other elements", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         baseURLs: [],
@@ -151,8 +141,6 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
       },
       attributes: {},
     };
-    const getHTTPUTCTimingURL = (await vi.importActual("../get_http_utc-timing_url"))
-      .default as typeof IGetHTTPUTCTimingURL;
     expect(getHTTPUTCTimingURL(mpdIR)).toEqual("foobar2000");
   });
 });

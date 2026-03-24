@@ -1,79 +1,94 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IParseWebVTTPlainText from "../parse_webvtt_plain_text";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import parseWebVTT from "../parse_webvtt_plain_text";
+
+const mocks = vi.hoisted(() => {
+  return {
+    getStyleBlocks: vi.fn(),
+    getCueBlocks: vi.fn(),
+    parseStyleBlock: vi.fn(),
+    parseCueBlock: vi.fn(),
+    toHtml: vi.fn(),
+    getFirstLineAfterHeader: vi.fn(),
+  };
+});
+vi.mock("../../get_style_blocks", () => ({
+  default: mocks.getStyleBlocks,
+}));
+vi.mock("../../get_cue_blocks", () => ({
+  default: mocks.getCueBlocks,
+}));
+vi.mock("../../parse_cue_block", () => ({
+  default: mocks.parseCueBlock,
+}));
+vi.mock("../../parse_style_block", () => ({
+  default: mocks.parseStyleBlock,
+}));
+vi.mock("../to_html", () => ({
+  default: mocks.toHtml,
+}));
+vi.mock("../../utils", () => ({
+  getFirstLineAfterHeader: mocks.getFirstLineAfterHeader,
+}));
 
 describe("parsers - webvtt - parseWebVTT", () => {
   beforeEach(() => {
     vi.resetModules();
   });
-
-  it("should throw if text is empty", async () => {
-    const parseWebVTT = (await vi.importActual("../parse_webvtt_plain_text.ts"))
-      .default as typeof IParseWebVTTPlainText;
-    expect(() => parseWebVTT("", 1, 0)).toThrowError("Can't parse WebVTT: Invalid File.");
+  afterEach(() => {
+    mocks.getStyleBlocks.mockReset();
+    mocks.getCueBlocks.mockReset();
+    mocks.parseStyleBlock.mockReset();
+    mocks.parseCueBlock.mockReset();
+    mocks.toHtml.mockReset();
+    mocks.getFirstLineAfterHeader.mockReset();
   });
 
-  it("should throw if file seems to be invalid", async () => {
-    const parseWebVTT = (await vi.importActual("../parse_webvtt_plain_text.ts"))
-      .default as typeof IParseWebVTTPlainText;
-    expect(() => parseWebVTT("WEBWTT\n", 1, 0)).toThrowError(
+  it("should throw if text is empty", () => {
+    expect(() => parseWebVTT("", {}, 0)).toThrowError(
       "Can't parse WebVTT: Invalid File.",
     );
   });
 
-  it("should return cues if inner contains right cues", async () => {
-    const spyGetStyleBlock = vi.fn(() => [
+  it("should throw if file seems to be invalid", () => {
+    expect(() => parseWebVTT("WEBWTT\n", {}, 0)).toThrowError(
+      "Can't parse WebVTT: Invalid File.",
+    );
+  });
+
+  it("should return cues if inner contains right cues", () => {
+    mocks.getStyleBlocks.mockImplementation(() => [
       ["STYLE", ""],
       ["STYLE", ""],
     ]);
-    vi.doMock("../../get_style_blocks", () => ({
-      default: spyGetStyleBlock,
-    }));
 
-    const spyGetCueBlock = vi.fn(() => [
+    mocks.getCueBlocks.mockImplementation(() => [
       ["CUE", ""],
       ["CUE", ""],
     ]);
-    vi.doMock("../../get_cue_blocks", () => ({
-      default: spyGetCueBlock,
-    }));
 
-    const spyParseCueBlock = vi.fn(() => ({
+    mocks.parseCueBlock.mockImplementation(() => ({
       start: 0,
       end: 100,
       payload: "<b>Test</b>Bonjour",
       header: "b",
       settings: {},
     }));
-    vi.doMock("../../parse_cue_block", () => ({
-      default: spyParseCueBlock,
-    }));
 
-    const spyParseStyleBlock = vi.fn(() => ({
+    mocks.parseStyleBlock.mockImplementation(() => ({
       b: {
         styleContent: "color:blue;",
       },
     }));
-    vi.doMock("../../parse_style_block", () => ({
-      default: spyParseStyleBlock,
-    }));
 
-    const spyToHTML = vi.fn(() => ({
+    mocks.toHtml.mockImplementation(() => ({
       start: 0,
       end: 100,
       element: document.createElement("div"),
     }));
-    vi.doMock("../to_html", () => ({
-      default: spyToHTML,
-    }));
 
-    const spyGetFirstLineAfterHeader = vi.fn(() => 1);
-    vi.doMock("../../utils", () => ({
-      getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
-    }));
+    mocks.getFirstLineAfterHeader.mockImplementation(() => 1);
 
-    const parseWebVTT = (await vi.importActual("../parse_webvtt_plain_text.ts"))
-      .default as typeof IParseWebVTTPlainText;
-    expect(parseWebVTT("WEBVTT\n", 1, 0)).toEqual([
+    expect(parseWebVTT("WEBVTT\n", {}, 0)).toEqual([
       {
         element: document.createElement("div"),
         end: 100,
@@ -85,67 +100,47 @@ describe("parsers - webvtt - parseWebVTT", () => {
         start: 0,
       },
     ]);
-    expect(spyGetFirstLineAfterHeader).toHaveBeenCalledTimes(1);
-    expect(spyGetStyleBlock).toHaveBeenCalledTimes(1);
-    expect(spyGetCueBlock).toHaveBeenCalledTimes(1);
-    expect(spyParseStyleBlock).toHaveBeenCalledTimes(1);
-    expect(spyParseCueBlock).toHaveBeenCalledTimes(2);
-    expect(spyToHTML).toHaveBeenCalledTimes(2);
+    expect(mocks.getFirstLineAfterHeader).toHaveBeenCalledTimes(1);
+    expect(mocks.getStyleBlocks).toHaveBeenCalledTimes(1);
+    expect(mocks.getCueBlocks).toHaveBeenCalledTimes(1);
+    expect(mocks.parseStyleBlock).toHaveBeenCalledTimes(1);
+    expect(mocks.parseCueBlock).toHaveBeenCalledTimes(2);
+    expect(mocks.toHtml).toHaveBeenCalledTimes(2);
   });
 
-  it("should return empty array if cue blocks can't be parsed", async () => {
-    const spyGetStyleBlock = vi.fn(() => [
+  it("should return empty array if cue blocks can't be parsed", () => {
+    mocks.getStyleBlocks.mockImplementation(() => [
       ["STYLE", ""],
       ["STYLE", ""],
     ]);
-    vi.doMock("../../get_style_blocks", () => ({
-      default: spyGetStyleBlock,
-    }));
 
-    const spyGetCueBlock = vi.fn(() => [
+    mocks.getCueBlocks.mockImplementation(() => [
       ["CUE", ""],
       ["CUE", ""],
     ]);
-    vi.doMock("../../get_cue_blocks", () => ({
-      default: spyGetCueBlock,
-    }));
 
-    const spyParseCueBlock = vi.fn(() => null);
-    vi.doMock("../../parse_cue_block", () => ({
-      default: spyParseCueBlock,
-    }));
+    mocks.parseCueBlock.mockImplementation(() => null);
 
-    const spyParseStyleBlock = vi.fn(() => ({
+    mocks.parseStyleBlock.mockImplementation(() => ({
       b: {
         styleContent: "color:blue;",
       },
     }));
-    vi.doMock("../../parse_style_block", () => ({
-      default: spyParseStyleBlock,
-    }));
 
-    const spyToHTML = vi.fn(() => ({
+    mocks.toHtml.mockImplementation(() => ({
       start: 0,
       end: 100,
       element: document.createElement("div"),
     }));
-    vi.doMock("../to_html", () => ({
-      default: spyToHTML,
-    }));
 
-    const spyGetFirstLineAfterHeader = vi.fn(() => 1);
-    vi.doMock("../../utils", () => ({
-      getFirstLineAfterHeader: spyGetFirstLineAfterHeader,
-    }));
+    mocks.getFirstLineAfterHeader.mockImplementation(() => 1);
 
-    const parseWebVTT = (await vi.importActual("../parse_webvtt_plain_text.ts"))
-      .default as typeof IParseWebVTTPlainText;
-    expect(parseWebVTT("WEBVTT\n", 1, 0)).toEqual([]);
-    expect(spyGetFirstLineAfterHeader).toHaveBeenCalledTimes(1);
-    expect(spyGetStyleBlock).toHaveBeenCalledTimes(1);
-    expect(spyGetCueBlock).toHaveBeenCalledTimes(1);
-    expect(spyParseStyleBlock).toHaveBeenCalledTimes(1);
-    expect(spyParseCueBlock).toHaveBeenCalledTimes(2);
-    expect(spyToHTML).not.toHaveBeenCalled();
+    expect(parseWebVTT("WEBVTT\n", {}, 0)).toEqual([]);
+    expect(mocks.getFirstLineAfterHeader).toHaveBeenCalledTimes(1);
+    expect(mocks.getStyleBlocks).toHaveBeenCalledTimes(1);
+    expect(mocks.getCueBlocks).toHaveBeenCalledTimes(1);
+    expect(mocks.parseStyleBlock).toHaveBeenCalledTimes(1);
+    expect(mocks.parseCueBlock).toHaveBeenCalledTimes(2);
+    expect(mocks.toHtml).not.toHaveBeenCalled();
   });
 });

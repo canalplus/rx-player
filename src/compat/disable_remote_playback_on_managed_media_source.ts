@@ -1,5 +1,5 @@
 import type { CancellationSignal } from "../utils/task_canceller";
-import { isManagedMediaSource, type IMediaElement } from "./browser_compatibility_types";
+import BROWSER_GLOBALS, { type IMediaElement } from "./browser_compatibility_types";
 
 /**
  * Temporarily disables remote playback on a media element by setting the
@@ -19,7 +19,7 @@ export default function disableRemotePlaybackOnManagedMediaSource(
   mediaElement: IMediaElement,
   cancellationSignal: CancellationSignal,
 ) {
-  if (isManagedMediaSource && "disableRemotePlayback" in mediaElement) {
+  if (BROWSER_GLOBALS.isManagedMediaSource && "disableRemotePlayback" in mediaElement) {
     const disableRemotePlaybackPreviousValue = mediaElement.disableRemotePlayback;
     cancellationSignal.register(() => {
       /**

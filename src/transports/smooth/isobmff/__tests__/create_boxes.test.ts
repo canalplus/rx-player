@@ -1,60 +1,129 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type {
-  createFRMABox as ICreateFRMABox,
-  createFreeBox as ICreateFreeBox,
-  createHDLRBox as ICreateHDLRBox,
-  createMDHDBox as ICreateMDHDBox,
-  createSMHDBox as ICreateSMHDBox,
-  createVMHDBox as ICreateVMHDBox,
+import {
+  createFRMABox,
+  createFreeBox,
+  createHDLRBox,
+  createMDHDBox,
+  createSMHDBox,
+  createVMHDBox,
 } from "../create_boxes";
 
+const mocks = vi.hoisted(() => {
+  return {
+    isobmff: {
+      createBox: vi.fn(),
+    },
+    byteParsing: {
+      itobe2: vi.fn(),
+      itobe4: vi.fn(),
+      itobe8: vi.fn(),
+      le2toi: vi.fn(),
+      be2toi: vi.fn(),
+      be3toi: vi.fn(),
+      be4toi: vi.fn(),
+      be8toi: vi.fn(),
+      concat: vi.fn(),
+      be4toiSigned: vi.fn(),
+    },
+    stringParsing: {
+      strToUtf8: vi.fn(),
+      bytesToHex: vi.fn(),
+      guidToUuid: vi.fn(),
+      utf16LEToStr: vi.fn(),
+      hexToBytes: vi.fn(),
+      readNullTerminatedString: vi.fn(),
+    },
+  };
+});
+vi.mock("../../../../parsers/containers/isobmff", () => ({
+  createBox: mocks.isobmff.createBox,
+}));
+vi.mock("../../../../utils/byte_parsing", () => ({
+  itobe2: mocks.byteParsing.itobe2,
+  itobe4: mocks.byteParsing.itobe4,
+  itobe8: mocks.byteParsing.itobe8,
+  le2toi: mocks.byteParsing.le2toi,
+  be2toi: mocks.byteParsing.be2toi,
+  be3toi: mocks.byteParsing.be3toi,
+  be4toi: mocks.byteParsing.be4toi,
+  be8toi: mocks.byteParsing.be8toi,
+  concat: mocks.byteParsing.concat,
+  be4toiSigned: mocks.byteParsing.be4toiSigned,
+}));
+vi.mock("../../../../utils/string_parsing", () => ({
+  strToUtf8: mocks.stringParsing.strToUtf8,
+  bytesToHex: mocks.stringParsing.bytesToHex,
+  guidToUuid: mocks.stringParsing.guidToUuid,
+  utf16LEToStr: mocks.stringParsing.utf16LEToStr,
+  hexToBytes: mocks.stringParsing.hexToBytes,
+  readNullTerminatedString: mocks.stringParsing.readNullTerminatedString,
+}));
+
 describe("Smooth - ISOBMFF - boxes creation", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetModules();
+
+    const actualIsobmff = await vi.importActual("../../../../parsers/containers/isobmff");
+    const actualByteParsing = await vi.importActual("../../../../utils/byte_parsing");
+    const actualStringParsing = await vi.importActual("../../../../utils/string_parsing");
+
+    const isobmffKeys = Object.keys(mocks.isobmff) as Array<keyof typeof mocks.isobmff>;
+    isobmffKeys.forEach((key: keyof typeof mocks.isobmff) => {
+      mocks.isobmff[key].mockReset();
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+      mocks.isobmff[key].mockImplementation(actualIsobmff[key] as (...args: any) => any);
+    });
+
+    const byteParsingKeys = Object.keys(mocks.byteParsing) as Array<
+      keyof typeof mocks.byteParsing
+    >;
+    byteParsingKeys.forEach((key: keyof typeof mocks.byteParsing) => {
+      mocks.byteParsing[key].mockReset();
+      mocks.byteParsing[key].mockImplementation(
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        actualByteParsing[key] as (...args: any) => any,
+      );
+    });
+
+    const stringParsingKeys = Object.keys(mocks.stringParsing) as Array<
+      keyof typeof mocks.stringParsing
+    >;
+    stringParsingKeys.forEach((key: keyof typeof mocks.stringParsing) => {
+      mocks.stringParsing[key].mockReset();
+      mocks.stringParsing[key].mockImplementation(
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        actualStringParsing[key] as (...args: any) => any,
+      );
+    });
   });
 
   describe("createVMHDBox", () => {
-    it("should create always the same vmhd box", async () => {
+    it("should create always the same vmhd box", () => {
       const vmhdContent = new Uint8Array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createVMHDBox = (await vi.importActual("../create_boxes"))
-        .createVMHDBox as typeof ICreateVMHDBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(createVMHDBox()).toBe(box);
-      expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith("vmhd", vmhdContent);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(1);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith("vmhd", vmhdContent);
     });
   });
 
   describe("createFreeBox", () => {
-    it("should create box full of 0s", async () => {
+    it("should create box full of 0s", () => {
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createFreeBox = (await vi.importActual("../create_boxes"))
-        .createFreeBox as typeof ICreateFreeBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(createFreeBox(8)).toBe(box);
-      expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith("free", new Uint8Array([]));
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(1);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith("free", new Uint8Array([]));
 
       expect(createFreeBox(15)).toBe(box);
-      expect(mockCreateBox).toHaveBeenCalledTimes(2);
-      expect(mockCreateBox).toHaveBeenCalledWith("free", new Uint8Array(7));
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(2);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith("free", new Uint8Array(7));
     });
 
-    it("should throw when given a length below 8", async () => {
+    it("should throw when given a length below 8", () => {
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createFreeBox = (await vi.importActual("../create_boxes"))
-        .createFreeBox as typeof ICreateFreeBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(() => createFreeBox(7)).toThrow();
       expect(() => createFreeBox(6)).toThrow();
       expect(() => createFreeBox(5)).toThrow();
@@ -63,47 +132,32 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       expect(() => createFreeBox(2)).toThrow();
       expect(() => createFreeBox(1)).toThrow();
       expect(() => createFreeBox(0)).toThrow();
-      expect(mockCreateBox).not.toHaveBeenCalled();
+      expect(mocks.isobmff.createBox).not.toHaveBeenCalled();
     });
 
-    it("should throw when given a negative length", async () => {
+    it("should throw when given a negative length", () => {
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createFreeBox = (await vi.importActual("../create_boxes"))
-        .createFreeBox as typeof ICreateFreeBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(() => createFreeBox(-1)).toThrow();
-      expect(mockCreateBox).not.toHaveBeenCalled();
+      expect(mocks.isobmff.createBox).not.toHaveBeenCalled();
     });
 
-    it("should throw when given a non-finite length", async () => {
+    it("should throw when given a non-finite length", () => {
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createFreeBox = (await vi.importActual("../create_boxes"))
-        .createFreeBox as typeof ICreateFreeBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(() => createFreeBox(-Infinity)).toThrow();
       expect(() => createFreeBox(+Infinity)).toThrow();
-      expect(mockCreateBox).not.toHaveBeenCalled();
+      expect(mocks.isobmff.createBox).not.toHaveBeenCalled();
     });
   });
 
   describe("createHDLRBox", () => {
-    it("should always create the same audio box", async () => {
+    it("should always create the same audio box", () => {
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createHDLRBox = (await vi.importActual("../create_boxes"))
-        .createHDLRBox as typeof ICreateHDLRBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(createHDLRBox("audio")).toBe(box);
-      expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith(
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(1);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith(
         "hdlr",
         new Uint8Array([
           0,
@@ -147,17 +201,12 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       );
     });
 
-    it("should always create the same video box", async () => {
+    it("should always create the same video box", () => {
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createHDLRBox = (await vi.importActual("../create_boxes"))
-        .createHDLRBox as typeof ICreateHDLRBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(createHDLRBox("video")).toBe(box);
-      expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith(
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(1);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith(
         "hdlr",
         new Uint8Array([
           0,
@@ -201,17 +250,12 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
       );
     });
 
-    it("should always create the same hint box", async () => {
+    it("should always create the same hint box", () => {
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createHDLRBox = (await vi.importActual("../create_boxes"))
-        .createHDLRBox as typeof ICreateHDLRBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(createHDLRBox("hint")).toBe(box);
-      expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith(
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(1);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith(
         "hdlr",
         new Uint8Array([
           0,
@@ -245,81 +289,60 @@ describe("Smooth - ISOBMFF - boxes creation", () => {
   });
 
   describe("createMDHDBox", () => {
-    it("should just integrate the timescale given", async () => {
+    it("should just integrate the timescale given", () => {
       const translatedTimeScale = new Uint8Array([4, 3, 2, 1]);
       const concatenated = new Uint8Array([9, 10, 11, 12]);
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockItobe4 = vi.fn().mockImplementation(() => translatedTimeScale);
-      const mockConcat = vi.fn().mockImplementation(() => concatenated);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../utils/byte_parsing", () => {
-        return { itobe4: mockItobe4, concat: mockConcat };
-      });
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createMDHDBox = (await vi.importActual("../create_boxes"))
-        .createMDHDBox as typeof ICreateMDHDBox;
+      mocks.byteParsing.itobe4.mockImplementation(() => translatedTimeScale);
+      mocks.byteParsing.concat.mockImplementation(() => concatenated);
+      mocks.isobmff.createBox.mockImplementation(() => box);
 
       expect(createMDHDBox(8)).toBe(box);
 
-      expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith("mdhd", concatenated);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(1);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith("mdhd", concatenated);
 
-      expect(mockItobe4).toHaveBeenCalledTimes(1);
-      expect(mockItobe4).toHaveBeenCalledWith(8);
+      expect(mocks.byteParsing.itobe4).toHaveBeenCalledTimes(1);
+      expect(mocks.byteParsing.itobe4).toHaveBeenCalledWith(8);
 
-      expect(mockConcat).toHaveBeenCalledTimes(1);
-      expect(mockConcat).toHaveBeenCalledWith(12, translatedTimeScale, 8);
+      expect(mocks.byteParsing.concat).toHaveBeenCalledTimes(1);
+      expect(mocks.byteParsing.concat).toHaveBeenCalledWith(12, translatedTimeScale, 8);
 
       expect(createMDHDBox(99)).toBe(box);
 
-      expect(mockCreateBox).toHaveBeenCalledTimes(2);
-      expect(mockCreateBox).toHaveBeenCalledWith("mdhd", concatenated);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(2);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith("mdhd", concatenated);
 
-      expect(mockItobe4).toHaveBeenCalledTimes(2);
-      expect(mockItobe4).toHaveBeenCalledWith(99);
+      expect(mocks.byteParsing.itobe4).toHaveBeenCalledTimes(2);
+      expect(mocks.byteParsing.itobe4).toHaveBeenCalledWith(99);
 
-      expect(mockConcat).toHaveBeenCalledTimes(2);
-      expect(mockConcat).toHaveBeenCalledWith(12, translatedTimeScale, 8);
+      expect(mocks.byteParsing.concat).toHaveBeenCalledTimes(2);
+      expect(mocks.byteParsing.concat).toHaveBeenCalledWith(12, translatedTimeScale, 8);
     });
   });
 
   describe("createSMHDBox", () => {
-    it("should create always the same smhd box", async () => {
+    it("should create always the same smhd box", () => {
       const smhdContent = new Uint8Array(8);
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createSMHDBox = (await vi.importActual("../create_boxes"))
-        .createSMHDBox as typeof ICreateSMHDBox;
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(createSMHDBox()).toBe(box);
-      expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith("smhd", smhdContent);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(1);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith("smhd", smhdContent);
     });
   });
 
   describe("createFRMABox", () => {
-    it("should just integrate the data format", async () => {
+    it("should just integrate the data format", () => {
       const dataFormatToBytes = new Uint8Array([4, 3, 2, 1]);
       const box = new Uint8Array([1, 2, 3, 4]);
-      const mockStrToUtf8 = vi.fn().mockImplementation(() => dataFormatToBytes);
-      const mockCreateBox = vi.fn().mockImplementation(() => box);
-      vi.doMock("../../../../utils/string_parsing", () => {
-        return { strToUtf8: mockStrToUtf8 };
-      });
-      vi.doMock("../../../../parsers/containers/isobmff", () => {
-        return { createBox: mockCreateBox };
-      });
-      const createFRMABox = (await vi.importActual("../create_boxes"))
-        .createFRMABox as typeof ICreateFRMABox;
+      mocks.stringParsing.strToUtf8.mockImplementation(() => dataFormatToBytes);
+      mocks.isobmff.createBox.mockImplementation(() => box);
       expect(createFRMABox("foo")).toBe(box);
-      expect(mockCreateBox).toHaveBeenCalledTimes(1);
-      expect(mockCreateBox).toHaveBeenCalledWith("frma", dataFormatToBytes);
-      expect(mockStrToUtf8).toHaveBeenCalledTimes(1);
-      expect(mockStrToUtf8).toHaveBeenCalledWith("foo");
+      expect(mocks.isobmff.createBox).toHaveBeenCalledTimes(1);
+      expect(mocks.isobmff.createBox).toHaveBeenCalledWith("frma", dataFormatToBytes);
+      expect(mocks.stringParsing.strToUtf8).toHaveBeenCalledTimes(1);
+      expect(mocks.stringParsing.strToUtf8).toHaveBeenCalledWith("foo");
     });
   });
 });

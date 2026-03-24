@@ -1,22 +1,16 @@
-import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import type IResolveStylesInheritance from "../resolve_styles_inheritance";
+import { describe, afterEach, it, expect, vi } from "vitest";
+import log from "../../../../log";
+import resolveStylesInheritance from "../resolve_styles_inheritance";
 
-const logWarnMock = vi.fn();
-let resolveStylesInheritance: typeof IResolveStylesInheritance;
+const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
+  /* noop */
+});
 
 describe("resolve_styles_inheritance", () => {
-  beforeEach(async () => {
-    vi.doMock("../../../../log", () => ({
-      default: {
-        warn: logWarnMock,
-      },
-    }));
-    resolveStylesInheritance = (await vi.importActual("../resolve_styles_inheritance"))
-      .default as typeof IResolveStylesInheritance;
-  });
   afterEach(() => {
     vi.resetModules();
     vi.resetAllMocks();
+    logWarn.mockClear();
   });
 
   it("should not update styles without any inheritance", () => {
@@ -31,7 +25,7 @@ describe("resolve_styles_inheritance", () => {
       { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
       { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ]);
-    expect(logWarnMock).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should resolve simple inheritance", () => {
@@ -65,7 +59,7 @@ describe("resolve_styles_inheritance", () => {
         extendsStyles: [],
       },
     ]);
-    expect(logWarnMock).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should be able to inherit multiple styles at once", () => {
@@ -95,7 +89,7 @@ describe("resolve_styles_inheritance", () => {
       { id: "2", style: { toti: "toti", tati: "totu" }, extendsStyles: [] },
       { id: "3", style: { titu: "totu", tatu: "tatu" }, extendsStyles: [] },
     ]);
-    expect(logWarnMock).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should correctly overwrite inherited properties", () => {
@@ -118,7 +112,7 @@ describe("resolve_styles_inheritance", () => {
       { id: "2", style: { titi: "tito", tata: "titu" }, extendsStyles: [] },
       { id: "3", style: { teti: "teto", tata: "tutu" }, extendsStyles: [] },
     ]);
-    expect(logWarnMock).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should correctly handle multiple levels of inheritance", () => {
@@ -153,7 +147,7 @@ describe("resolve_styles_inheritance", () => {
       { id: "3", style: { teti: "teto", tata: "tutu" }, extendsStyles: [] },
       { id: "4", style: { four: "4", four2: "four2" }, extendsStyles: [] },
     ]);
-    expect(logWarnMock).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should avoid infinite inheritance loops", () => {
@@ -178,13 +172,13 @@ describe("resolve_styles_inheritance", () => {
       },
     ]);
 
-    expect(logWarnMock).toHaveBeenNthCalledWith(
+    expect(logWarn).toHaveBeenNthCalledWith(
       1,
       "ttml",
       "infinite style inheritance loop avoided",
     );
-    expect(logWarnMock).toHaveBeenCalledTimes(1);
-    logWarnMock.mockReset();
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    logWarn.mockReset();
 
     // 2. More complex case
     const initialStyle2 = [
@@ -214,17 +208,17 @@ describe("resolve_styles_inheritance", () => {
         extendsStyles: [],
       },
     ]);
-    expect(logWarnMock).toHaveBeenNthCalledWith(
+    expect(logWarn).toHaveBeenNthCalledWith(
       1,
       "ttml",
       "infinite style inheritance loop avoided",
     );
-    expect(logWarnMock).toHaveBeenNthCalledWith(
+    expect(logWarn).toHaveBeenNthCalledWith(
       2,
       "ttml",
       "infinite style inheritance loop avoided",
     );
-    expect(logWarnMock).toHaveBeenCalledTimes(2);
+    expect(logWarn).toHaveBeenCalledTimes(2);
   });
 
   it("should ignore unknown IDs", () => {
@@ -247,9 +241,9 @@ describe("resolve_styles_inheritance", () => {
       { id: "2", style: { titi: "tito", teta: "tutu" }, extendsStyles: [] },
       { id: "3", style: { tata: "toto", tota: "tutu" }, extendsStyles: [] },
     ]);
-    expect(logWarnMock).toHaveBeenNthCalledWith(1, "ttml", "unknown style inheritance", {
+    expect(logWarn).toHaveBeenNthCalledWith(1, "ttml", "unknown style inheritance", {
       id: "6",
     });
-    expect(logWarnMock).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledTimes(1);
   });
 });

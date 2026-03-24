@@ -18,7 +18,7 @@ import type DummyMediaElement from "../experimental/tools/DummyMediaElement";
 import log from "../log";
 import isNullOrUndefined from "../utils/is_null_or_undefined";
 import isWorker from "../utils/is_worker";
-import { MediaSource_ } from "./browser_compatibility_types";
+import BROWSER_GLOBALS from "./browser_compatibility_types";
 import type { IMediaElement } from "./browser_compatibility_types";
 
 /**
@@ -53,6 +53,7 @@ export default function isCodecSupported(
       mimeType,
     );
   }
+  const { MediaSource_ } = BROWSER_GLOBALS;
   if (isNullOrUndefined(MediaSource_)) {
     if (isWorker) {
       log.error("mse", "Cannot request codec support in a worker without MSE.");

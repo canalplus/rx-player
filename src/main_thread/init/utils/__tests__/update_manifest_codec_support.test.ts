@@ -77,12 +77,22 @@ function generateFakeManifestWithRepresentations(
 beforeAll(() => {
   // Mock MediaSource APIs
   vi.mock("../../../../compat/browser_compatibility_types", () => ({
-    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-    MediaSource_: class {
-      static isTypeSupported(type: string) {
-        // Mocked behavior: return true for all codecs and return false for vp9 codec
-        return type.indexOf("vp9") === -1;
-      }
+    default: {
+      READY_STATES: {
+        HAVE_NOTHING: 0,
+        HAVE_METADATA: 1,
+        HAVE_CURRENT_DATA: 2,
+        HAVE_FUTURE_DATA: 3,
+        HAVE_ENOUGH_DATA: 4,
+      },
+      isManagedMediaSource: false,
+      // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+      MediaSource_: class {
+        static isTypeSupported(type: string) {
+          // Mocked behavior: return true for all codecs and return false for vp9 codec
+          return type.indexOf("vp9") === -1;
+        }
+      },
     },
   }));
 

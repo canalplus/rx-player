@@ -1,4 +1,4 @@
-import { MediaSource_ } from "../../compat/browser_compatibility_types";
+import BROWSER_GLOBALS from "../../compat/browser_compatibility_types";
 import { formatError } from "../../errors";
 import type { ICorePlaybackObservation } from "../../main_thread/init/utils/create_core_playback_observer";
 import { createRepresentationFilterFromFnString } from "../../manifest";
@@ -66,7 +66,7 @@ export function synchronizeSegmentSinksOnObservation(
  * If MSE in worker is not available, the attribute is not set.
  */
 export function updateCodecSupportInWorkerMode(manifestToUpdate: Manifest) {
-  if (isNullOrUndefined(MediaSource_)) {
+  if (isNullOrUndefined(BROWSER_GLOBALS.MediaSource_)) {
     return;
   }
 
@@ -82,7 +82,7 @@ export function updateCodecSupportInWorkerMode(manifestToUpdate: Manifest) {
         if (codecsMap.has(codec)) {
           representation.isCodecSupportedInWebWorker = codecsMap.get(codec);
         } else {
-          const supported = MediaSource_.isTypeSupported(codec);
+          const supported = BROWSER_GLOBALS.MediaSource_.isTypeSupported(codec);
           representation.isCodecSupportedInWebWorker = supported;
           codecsMap.set(codec, supported);
         }

@@ -23,7 +23,9 @@ vi.mock("../../../errors", () => ({
   formatError: mockFormatError,
 }));
 vi.mock("../../../compat/browser_compatibility_types", () => ({
-  MediaSource_: mockMediaSource_,
+  default: {
+    MediaSource_: mockMediaSource_,
+  },
 }));
 vi.mock("../../../manifest", () => ({
   createRepresentationFilterFromFnString: mockCreateRepresentationFilter,

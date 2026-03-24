@@ -1,29 +1,34 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IFormatError from "../format_error";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import formatError from "../format_error";
+import OtherError from "../other_error";
 
+const mocks = vi.hoisted(() => {
+  return {
+    isKnownError: vi.fn(),
+  };
+});
+
+vi.mock("../is_known_error", () => {
+  return {
+    default: mocks.isKnownError,
+  };
+});
 describe("errors - formatError", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    mocks.isKnownError.mockReset();
+  });
 
-  it("should just return the error if it is a Custom Error", async () => {
-    vi.doMock("../is_known_error", () => ({
-      default: () => true,
-    }));
-    const formatError = (await vi.importActual("../format_error"))
-      .default as typeof IFormatError;
+  it("should just return the error if it is a Custom Error", () => {
+    mocks.isKnownError.mockImplementation(() => true);
     const error1 = new Error("Aaaaaa");
     expect(formatError(error1, { defaultCode: "NONE", defaultReason: "a" })).toBe(error1);
   });
 
-  it("should stringify error if it is an Error but not a Custom Error", async () => {
-    vi.doMock("../is_known_error", () => ({
-      default: () => false,
-    }));
-    const OtherError = (await vi.importActual("../other_error"))
-      .default as typeof IFormatError;
-    const formatError = (await vi.importActual("../format_error"))
-      .default as typeof IFormatError;
+  it("should stringify error if it is an Error but not a Custom Error", () => {
+    mocks.isKnownError.mockImplementation(() => false);
     const error1 = new Error("Abcdef");
     const formattedError = formatError(error1, {
       defaultCode: "NONE",
@@ -34,14 +39,8 @@ describe("errors - formatError", () => {
     expect(formattedError.code).toBe("NONE");
   });
 
-  it("should stringify error if it is an Error but not a Custom Error", async () => {
-    vi.doMock("../is_known_error", () => ({
-      default: () => false,
-    }));
-    const OtherError = (await vi.importActual("../other_error"))
-      .default as typeof IFormatError;
-    const formatError = (await vi.importActual("../format_error"))
-      .default as typeof IFormatError;
+  it("should stringify error if it is an Error but not a Custom Error", () => {
+    mocks.isKnownError.mockImplementation(() => false);
     const error1 = {};
     const formattedError = formatError(error1, {
       defaultCode: "NONE",

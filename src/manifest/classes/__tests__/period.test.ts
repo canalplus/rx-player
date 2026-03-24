@@ -2,15 +2,30 @@ import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IParsedAdaptation, IParsedPeriod } from "../../../parsers/manifest";
 import type Adaptation from "../adaptation";
 import CodecSupportCache from "../codec_support_cache";
-import type IPeriod from "../period";
+import Period from "../period";
+
+const mocks = vi.hoisted(() => {
+  const fakeAdaptation = vi.fn();
+  const SUPPORTED_ADAPTATIONS_TYPE: string[] = [];
+  return {
+    fakeAdaptation,
+    SUPPORTED_ADAPTATIONS_TYPE,
+  };
+});
+
+vi.mock("../adaptation", () => ({
+  default: mocks.fakeAdaptation,
+}));
 
 describe("Manifest - Period", () => {
   beforeEach(() => {
+    mocks.fakeAdaptation.mockClear();
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.length = 0;
     vi.resetModules();
   });
 
   it("should throw if no adaptation is given", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation) {
+    mocks.fakeAdaptation.mockImplementation(function (arg: IParsedAdaptation) {
       return {
         ...arg,
         supportStatus: {
@@ -20,14 +35,10 @@ describe("Manifest - Period", () => {
         },
       };
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const args = { id: "12", adaptations: {}, start: 0, thumbnailTracks: [] };
-    let period: IPeriod | null = null;
+    let period: Period | null = null;
     let errorReceived: unknown = null;
     try {
       const codecSupportCache = new CodecSupportCache([]);
@@ -49,11 +60,13 @@ describe("Manifest - Period", () => {
     expect(errorReceived.message).toContain(
       "The manifest has no video nor audio tracks.",
     );
-    expect(mockAdaptation).not.toHaveBeenCalled();
+    expect(mocks.fakeAdaptation).not.toHaveBeenCalled();
   });
 
   it("should throw if no audio nor video adaptation is given", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -63,12 +76,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const fooAda1 = {
       type: "foo",
       id: "54",
@@ -86,7 +95,7 @@ describe("Manifest - Period", () => {
       start: 0,
       thumbnailTracks: [],
     } as unknown as IParsedPeriod;
-    let period: IPeriod | null = null;
+    let period: Period | null = null;
     let errorReceived: unknown = null;
     const codecSupportCache = new CodecSupportCache([]);
     try {
@@ -110,13 +119,25 @@ describe("Manifest - Period", () => {
       "The manifest has no video nor audio tracks.",
     );
 
-    expect(mockAdaptation).toHaveBeenCalledTimes(2);
-    expect(mockAdaptation).toHaveBeenNthCalledWith(1, fooAda1, codecSupportCache, {});
-    expect(mockAdaptation).toHaveBeenNthCalledWith(2, fooAda2, codecSupportCache, {});
+    expect(mocks.fakeAdaptation).toHaveBeenCalledTimes(2);
+    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(
+      1,
+      fooAda1,
+      codecSupportCache,
+      {},
+    );
+    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(
+      2,
+      fooAda2,
+      codecSupportCache,
+      {},
+    );
   });
 
   it("should throw if only empty audio and video adaptations is given", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -126,19 +147,15 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const args = {
       id: "12",
       thumbnailTracks: [],
       adaptations: { video: [], audio: [] },
       start: 0,
     };
-    let period: IPeriod | null = null;
+    let period: Period | null = null;
     let errorReceived: unknown = null;
     try {
       const codecSupportCache = new CodecSupportCache([]);
@@ -162,11 +179,13 @@ describe("Manifest - Period", () => {
       "The manifest has no video nor audio tracks.",
     );
 
-    expect(mockAdaptation).toHaveBeenCalledTimes(0);
+    expect(mocks.fakeAdaptation).toHaveBeenCalledTimes(0);
   });
 
   it("should throw if there is no video nor audio representations in any adaptations.", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -176,12 +195,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -231,7 +246,7 @@ describe("Manifest - Period", () => {
       thumbnailTracks: [],
       start: 0,
     } as unknown as IParsedPeriod;
-    let period: IPeriod | null = null;
+    let period: Period | null = null;
     let errorReceived: unknown = null;
     try {
       const codecSupportCache = new CodecSupportCache([]);
@@ -257,7 +272,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should not throw if there is no video representation but it has an audio representation.", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -267,12 +284,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAdaptation = {
       type: "video",
       id: "54",
@@ -297,7 +310,7 @@ describe("Manifest - Period", () => {
       start: 0,
       thumbnailTracks: [],
     } as unknown as IParsedPeriod;
-    let period: IPeriod | null = null;
+    let period: Period | null = null;
     let errorReceived: unknown = null;
     try {
       const codecSupportCache = new CodecSupportCache([]);
@@ -311,7 +324,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should report that all video adaptations are not supported", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -321,12 +336,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -393,7 +404,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should not set a parsing error if an empty unsupported adaptation is given", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -403,12 +416,7 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text", "foo"],
-    }));
-
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text", "foo"]);
 
     const videoAda1 = {
       type: "video",
@@ -439,13 +447,15 @@ describe("Manifest - Period", () => {
       })),
     });
 
-    expect(mockAdaptation).toHaveBeenCalledTimes(1);
-    expect(mockAdaptation).toHaveBeenCalledWith(videoAda1, codecSupportCache, {});
+    expect(mocks.fakeAdaptation).toHaveBeenCalledTimes(1);
+    expect(mocks.fakeAdaptation).toHaveBeenCalledWith(videoAda1, codecSupportCache, {});
     expect(period.adaptations.audio).toBe(undefined);
   });
 
-  it("should give a representationFilter to the adaptation", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+  it("should give a representationFilter to the adaptation", () => {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -456,12 +466,8 @@ describe("Manifest - Period", () => {
       } as unknown as Adaptation;
     });
     const representationFilter = vi.fn();
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -485,18 +491,30 @@ describe("Manifest - Period", () => {
 
     expect(period.adaptations.video).toHaveLength(2);
 
-    expect(mockAdaptation).toHaveBeenCalledTimes(2);
-    expect(mockAdaptation).toHaveBeenNthCalledWith(1, videoAda1, codecSupportCache, {
-      representationFilter,
-    });
-    expect(mockAdaptation).toHaveBeenNthCalledWith(2, videoAda2, codecSupportCache, {
-      representationFilter,
-    });
+    expect(mocks.fakeAdaptation).toHaveBeenCalledTimes(2);
+    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(
+      1,
+      videoAda1,
+      codecSupportCache,
+      {
+        representationFilter,
+      },
+    );
+    expect(mocks.fakeAdaptation).toHaveBeenNthCalledWith(
+      2,
+      videoAda2,
+      codecSupportCache,
+      {
+        representationFilter,
+      },
+    );
     expect(representationFilter).not.toHaveBeenCalled();
   });
 
   it("should not report if an Adaptation has no Representation", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -506,12 +524,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -548,7 +562,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should set the given start", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -558,12 +574,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -590,7 +602,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should set a given duration", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -600,12 +614,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -638,7 +648,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should infer the end from the start and the duration", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -648,12 +660,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -686,7 +694,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should return every Adaptations combined with `getAdaptations`", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -696,12 +706,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -746,7 +752,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should return every Adaptations from a given type with `getAdaptationsForType`", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -756,12 +764,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -815,7 +819,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should return the first Adaptations with a given Id when calling `getAdaptation`", async () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -825,12 +831,8 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
 
-    const Period = (await vi.importActual("../period")).default as typeof IPeriod;
     const videoAda1 = {
       type: "video",
       id: "54",
@@ -882,7 +884,9 @@ describe("Manifest - Period", () => {
   });
 
   it("should return undefind if no adaptation has the given Id when calling `getAdaptation`", () => {
-    const mockAdaptation = vi.fn(function (arg: IParsedAdaptation): Adaptation {
+    mocks.fakeAdaptation.mockImplementation(function (
+      arg: IParsedAdaptation,
+    ): Adaptation {
       return {
         ...arg,
         supportStatus: {
@@ -892,9 +896,55 @@ describe("Manifest - Period", () => {
         },
       } as unknown as Adaptation;
     });
-    vi.doMock("../adaptation", () => ({
-      default: mockAdaptation,
-      SUPPORTED_ADAPTATIONS_TYPE: ["audio", "video", "text"],
-    }));
+    mocks.SUPPORTED_ADAPTATIONS_TYPE.push(...["audio", "video", "text"]);
+
+    const videoAda1 = {
+      type: "video",
+      id: "54",
+      representations: [{}],
+      toVideoTrack() {
+        return videoAda1;
+      },
+    };
+    const videoAda2 = {
+      type: "video",
+      id: "55",
+      representations: [{}],
+      toVideoTrack() {
+        return videoAda2;
+      },
+    };
+    const videoAda3 = {
+      type: "video",
+      id: "55",
+      representations: [{}],
+      toVideoTrack() {
+        return videoAda3;
+      },
+    };
+    const video = [videoAda1, videoAda2, videoAda3] as unknown as IParsedAdaptation[];
+
+    const audioAda1 = {
+      type: "audio",
+      id: "56",
+      representations: [{}],
+      toAudioTrack() {
+        return audioAda1;
+      },
+    };
+    const audio = [audioAda1] as unknown as IParsedAdaptation[];
+
+    const args = {
+      id: "12",
+      adaptations: { video, audio },
+      thumbnailTracks: [],
+      start: 50,
+      duration: 12,
+    };
+    const unsupportedAdaptations: Adaptation[] = [];
+    const codecSupportCache = new CodecSupportCache([]);
+    const period = new Period(args, codecSupportCache);
+    expect(unsupportedAdaptations).toHaveLength(0);
+    expect(period.getAdaptation("Oh, comely")).toEqual(undefined);
   });
 });

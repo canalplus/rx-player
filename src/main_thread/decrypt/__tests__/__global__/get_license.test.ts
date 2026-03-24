@@ -1,9 +1,10 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
+import getEmeApiImplementation from "../../../../compat/eme";
 import type { IKeySystemOption, IPlayerError } from "../../../../public_types";
 import assert from "../../../../utils/assert";
 import { concat } from "../../../../utils/byte_parsing";
-import type IContentDecryptor from "../../content_decryptor";
-import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
+import ContentDecryptor from "../../content_decryptor";
+import { ContentDecryptorState } from "../../types";
 import {
   formatFakeChallengeFromInitData,
   MediaKeySessionImpl,
@@ -11,13 +12,46 @@ import {
   mockCompat,
 } from "./utils";
 
-/** Default video element used in our tests. */
-const videoElt = document.createElement("video");
+const mocks = vi.hoisted(() => {
+  return {
+    shouldRenewMediaKeySystemAccess: vi.fn(() => false),
+    canReuseMediaKeys: vi.fn(() => true),
+    onEncrypted: vi.fn(),
+    requestMediaKeySystemAccess: vi.fn(),
+    setMediaKeys: vi.fn(),
+    getInitData: vi.fn(),
+    generateKeyRequest: vi.fn(),
+  };
+});
+vi.mock("../../../../compat/should_renew_media_key_system_access", () => ({
+  default: mocks.shouldRenewMediaKeySystemAccess,
+}));
+vi.mock("../../../../compat/can_reuse_media_keys", () => ({
+  default: mocks.canReuseMediaKeys,
+}));
+vi.mock("../../../../compat/eme", () => ({
+  default: () => ({
+    onEncrypted: mocks.onEncrypted,
+    requestMediaKeySystemAccess: mocks.requestMediaKeySystemAccess,
+    setMediaKeys: mocks.setMediaKeys,
+  }),
+  getInitData: mocks.getInitData,
+  generateKeyRequest: mocks.generateKeyRequest,
+  closeSession: vi.fn(),
+  loadSession: vi.fn(),
+}));
 
 describe("decrypt - global tests - getLicense", () => {
   afterEach(() => {
     vi.resetModules();
     vi.restoreAllMocks();
+    mocks.shouldRenewMediaKeySystemAccess.mockReset();
+    mocks.canReuseMediaKeys.mockReset();
+    mocks.onEncrypted.mockReset();
+    mocks.requestMediaKeySystemAccess.mockReset();
+    mocks.setMediaKeys.mockReset();
+    mocks.getInitData.mockReset();
+    mocks.generateKeyRequest.mockReset();
   });
 
   it("should update the session after getLicense resolves with a license", async () => {
@@ -335,12 +369,8 @@ async function checkGetLicense({
     }
     return Promise.reject(new Error("AAAA"));
   });
-  mockCompat();
-  const ContentDecryptorState = (await vi.importActual("../../types"))
-    .ContentDecryptorState as typeof IContentDecryptorState;
-  const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-    .default as typeof IContentDecryptor;
-  const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+  const videoElt = document.createElement("video");
+  mockCompat(mocks);
   return new Promise((res, rej) => {
     // == vars ==
     /** Default keySystems configuration used in our tests. */

@@ -1,6 +1,11 @@
-import { describe, it, expect, vi } from "vitest";
-import type ICleanOldStoredPersistentInfo from "../clean_old_stored_persistent_info";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import log from "../../../../log";
+import cleanOldStoredPersistentInfo from "../clean_old_stored_persistent_info";
 import type PersistentSessionsStore from "../persistent_sessions_store";
+
+const logInfo = vi.spyOn(log, "info").mockImplementation(() => {
+  /* noop */
+});
 
 function createPersistentSessionsStore(): PersistentSessionsStore {
   return {
@@ -31,21 +36,15 @@ const emptyPersistentSessionsStore = {
  * @param {Object} persistentSessionsStore
  * @param {number} limit
  */
-async function checkNothingHappen(
+function checkNothingHappen(
   persistentSessionsStore: PersistentSessionsStore,
   limit: number,
 ) {
+  logInfo.mockClear();
   const mockDeleteLast = vi.spyOn(persistentSessionsStore, "deleteOldSessions");
-  const mockLogInfo = vi.fn();
-  vi.doMock("../../../../log", () => ({
-    default: { info: mockLogInfo },
-  }));
-  const cleanOldStoredPersistentInfo = (
-    await vi.importActual("../clean_old_stored_persistent_info")
-  ).default as typeof ICleanOldStoredPersistentInfo;
   cleanOldStoredPersistentInfo(persistentSessionsStore, limit);
   expect(mockDeleteLast).not.toHaveBeenCalled();
-  expect(mockLogInfo).not.toHaveBeenCalled();
+  expect(logInfo).not.toHaveBeenCalled();
   vi.resetModules();
 }
 
@@ -56,24 +55,18 @@ async function checkNothingHappen(
  * @param {number} limit
  * @param {number} numberToRemove
  */
-async function checkRemoved(
+function checkRemoved(
   persistentSessionsStore: PersistentSessionsStore,
   limit: number,
   numberToRemove: number,
 ) {
+  logInfo.mockClear();
   const mockDeleteLast = vi.spyOn(persistentSessionsStore, "deleteOldSessions");
-  const mockLogInfo = vi.fn();
-  vi.doMock("../../../../log", () => ({
-    default: { info: mockLogInfo },
-  }));
-  const cleanOldStoredPersistentInfo = (
-    await vi.importActual("../clean_old_stored_persistent_info")
-  ).default as typeof ICleanOldStoredPersistentInfo;
   cleanOldStoredPersistentInfo(persistentSessionsStore, limit);
   expect(mockDeleteLast).toHaveBeenCalledTimes(1);
   expect(mockDeleteLast).toHaveBeenCalledWith(numberToRemove);
-  expect(mockLogInfo).toHaveBeenCalledTimes(1);
-  expect(mockLogInfo).toHaveBeenCalledWith(
+  expect(logInfo).toHaveBeenCalledTimes(1);
+  expect(logInfo).toHaveBeenCalledWith(
     "DRM",
     "Too many stored persistent sessions, removing some.",
     {
@@ -85,44 +78,47 @@ async function checkRemoved(
 }
 
 describe("decrypt - cleanOldStoredPersistentInfo", () => {
-  it("should do nothing with a negative limit", async () => {
-    await checkNothingHappen(createPersistentSessionsStore(), -1);
-    await checkNothingHappen(createPersistentSessionsStore(), -20);
-    await checkNothingHappen(emptyPersistentSessionsStore, -20);
+  afterEach(() => {
+    logInfo.mockClear();
+  });
+  it("should do nothing with a negative limit", () => {
+    checkNothingHappen(createPersistentSessionsStore(), -1);
+    checkNothingHappen(createPersistentSessionsStore(), -20);
+    checkNothingHappen(emptyPersistentSessionsStore, -20);
   });
 
-  it("should do nothing with a limit equal to NaN", async () => {
-    await checkNothingHappen(createPersistentSessionsStore(), NaN);
-    await checkNothingHappen(emptyPersistentSessionsStore, NaN);
+  it("should do nothing with a limit equal to NaN", () => {
+    checkNothingHappen(createPersistentSessionsStore(), NaN);
+    checkNothingHappen(emptyPersistentSessionsStore, NaN);
   });
 
-  it("should do nothing with a limit equal to -infinity", async () => {
-    await checkNothingHappen(createPersistentSessionsStore(), -Infinity);
-    await checkNothingHappen(emptyPersistentSessionsStore, -Infinity);
+  it("should do nothing with a limit equal to -infinity", () => {
+    checkNothingHappen(createPersistentSessionsStore(), -Infinity);
+    checkNothingHappen(emptyPersistentSessionsStore, -Infinity);
   });
 
-  it("should do nothing if the limit is superior to the current length", async () => {
-    await checkNothingHappen(createPersistentSessionsStore(), 4);
-    await checkNothingHappen(createPersistentSessionsStore(), 5);
-    await checkNothingHappen(createPersistentSessionsStore(), 6);
-    await checkNothingHappen(createPersistentSessionsStore(), +Infinity);
-    await checkNothingHappen(emptyPersistentSessionsStore, 1);
-    await checkNothingHappen(emptyPersistentSessionsStore, 2);
-    await checkNothingHappen(emptyPersistentSessionsStore, 1000);
-    await checkNothingHappen(emptyPersistentSessionsStore, +Infinity);
+  it("should do nothing if the limit is superior to the current length", () => {
+    checkNothingHappen(createPersistentSessionsStore(), 4);
+    checkNothingHappen(createPersistentSessionsStore(), 5);
+    checkNothingHappen(createPersistentSessionsStore(), 6);
+    checkNothingHappen(createPersistentSessionsStore(), +Infinity);
+    checkNothingHappen(emptyPersistentSessionsStore, 1);
+    checkNothingHappen(emptyPersistentSessionsStore, 2);
+    checkNothingHappen(emptyPersistentSessionsStore, 1000);
+    checkNothingHappen(emptyPersistentSessionsStore, +Infinity);
   });
 
-  it("should do nothing if the limit is equal to the current length", async () => {
-    await checkNothingHappen(createPersistentSessionsStore(), 3);
-    await checkNothingHappen(emptyPersistentSessionsStore, 0);
+  it("should do nothing if the limit is equal to the current length", () => {
+    checkNothingHappen(createPersistentSessionsStore(), 3);
+    checkNothingHappen(emptyPersistentSessionsStore, 0);
   });
 
-  it("should remove some if the limit is inferior to the current length", async () => {
-    await checkRemoved(createPersistentSessionsStore(), 1, 2);
-    await checkRemoved(createPersistentSessionsStore(), 2, 1);
+  it("should remove some if the limit is inferior to the current length", () => {
+    checkRemoved(createPersistentSessionsStore(), 1, 2);
+    checkRemoved(createPersistentSessionsStore(), 2, 1);
   });
 
-  it("should remove all if the limit is equal to 0", async () => {
-    await checkRemoved(createPersistentSessionsStore(), 0, 3);
+  it("should remove all if the limit is equal to 0", () => {
+    checkRemoved(createPersistentSessionsStore(), 0, 3);
   });
 });

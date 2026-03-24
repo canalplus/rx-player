@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../compat/browser_compatibility_types";
 import type { IMediaElement } from "../../../compat/browser_compatibility_types";
+import BROWSER_GLOBALS from "../../../compat/browser_compatibility_types";
 import disableRemotePlaybackOnManagedMediaSource from "../../../compat/disable_remote_playback_on_managed_media_source";
 import resetMediaElement from "../../../compat/reset_media_element";
 import log from "../../../log";
@@ -43,6 +43,7 @@ export default function prepareSourceBuffer(
   cleanUpSignal: CancellationSignal,
 ): Promise<MainSourceBufferInterface> {
   return createCancellablePromise(cleanUpSignal, (resolve, reject) => {
+    const { MediaSource_ } = BROWSER_GLOBALS;
     if (isNullOrUndefined(MediaSource_)) {
       throw new Error("No MediaSource Object was found in the current browser.");
     }

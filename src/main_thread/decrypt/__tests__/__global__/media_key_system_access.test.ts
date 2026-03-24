@@ -1,8 +1,9 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import type { IMediaKeySystemAccess } from "../../../../compat/browser_compatibility_types";
+import getEmeApiImplementation from "../../../../compat/eme";
 import type { IKeySystemOption } from "../../../../public_types";
 import assert from "../../../../utils/assert";
-import type IContentDecryptor from "../../content_decryptor";
+import ContentDecryptor from "../../content_decryptor";
 import {
   defaultKSConfig,
   defaultPRRecommendationKSConfig,
@@ -10,6 +11,40 @@ import {
   mockCompat,
   testContentDecryptorError,
 } from "./utils";
+
+const mocks = vi.hoisted(() => {
+  return {
+    // Used to implement every functions that should never be called.
+    neverCalled: vi.fn(),
+    shouldRenewMediaKeySystemAccess: vi.fn(() => false),
+    canReuseMediaKeys: vi.fn(() => true),
+    onEncrypted: vi.fn(),
+    requestMediaKeySystemAccess: vi.fn(),
+    setMediaKeys: vi.fn(),
+    getInitData: vi.fn(),
+    generateKeyRequest: vi.fn(),
+  };
+});
+vi.mock("../../../../compat/should_renew_media_key_system_access", () => ({
+  default: mocks.shouldRenewMediaKeySystemAccess,
+}));
+vi.mock("../../../../compat/can_reuse_media_keys", () => ({
+  default: mocks.canReuseMediaKeys,
+}));
+vi.mock("../../../../compat/eme", () => ({
+  default: () => ({
+    onEncrypted: mocks.onEncrypted,
+    requestMediaKeySystemAccess: mocks.requestMediaKeySystemAccess,
+    setMediaKeys: mocks.setMediaKeys,
+  }),
+  getInitData: mocks.getInitData,
+  generateKeyRequest: mocks.generateKeyRequest,
+  closeSession: vi.fn(),
+  loadSession: vi.fn(),
+}));
+vi.mock("../../set_server_certificate", () => ({
+  default: mocks.neverCalled,
+}));
 
 function requestMediaKeySystemAccessNoMediaKeys(
   keySystem: string,
@@ -61,9 +96,6 @@ async function checkIncompatibleKeySystemsErrorMessage(
   keySystemsConfigs: IKeySystemOption[],
 ): Promise<void> {
   const mediaElement = document.createElement("video");
-  const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-    .default as typeof IContentDecryptor;
-  const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
 
   const eme = getEmeApiImplementation("auto");
   assert(eme !== null, "Expected to have an EME implementation");
@@ -81,44 +113,41 @@ async function checkIncompatibleKeySystemsErrorMessage(
 }
 
 describe("decrypt - global tests - media key system access", () => {
-  // Used to implement every functions that should never be called.
-  const neverCalledFn = vi.fn();
-
   beforeEach(() => {
     vi.resetModules();
     vi.restoreAllMocks();
-    vi.doMock("../../set_server_certificate", () => ({
-      default: neverCalledFn,
-    }));
   });
 
   afterEach(() => {
-    expect(neverCalledFn).not.toHaveBeenCalled();
+    expect(mocks.neverCalled).not.toHaveBeenCalled();
+    mocks.shouldRenewMediaKeySystemAccess.mockReset();
+    mocks.canReuseMediaKeys.mockReset();
+    mocks.onEncrypted.mockReset();
+    mocks.requestMediaKeySystemAccess.mockReset();
+    mocks.setMediaKeys.mockReset();
+    mocks.getInitData.mockReset();
+    mocks.generateKeyRequest.mockReset();
   });
 
   it("should throw if an empty keySystemsConfigs is given", async () => {
-    mockCompat();
+    mockCompat(mocks);
     await checkIncompatibleKeySystemsErrorMessage([]);
   });
 
   it("should throw if given a single incompatible keySystemsConfigs", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
-    const getLicenseFn = neverCalledFn;
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
+    const getLicenseFn = mocks.neverCalled;
     await checkIncompatibleKeySystemsErrorMessage([
       { type: "foo", getLicense: getLicenseFn },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(defaultKSConfig),
@@ -126,45 +155,41 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should throw if given multiple incompatible keySystemsConfigs", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     const config = [
-      { type: "foo", getLicense: neverCalledFn },
-      { type: "bar", getLicense: neverCalledFn },
-      { type: "baz", getLicense: neverCalledFn },
+      { type: "foo", getLicense: mocks.neverCalled },
+      { type: "bar", getLicense: mocks.neverCalled },
+      { type: "baz", getLicense: mocks.neverCalled },
     ];
     await checkIncompatibleKeySystemsErrorMessage(config);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(6);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(6);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "bar",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "bar",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "baz",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "baz",
       removeCapabiltiesFromConfig(defaultKSConfig),
@@ -172,22 +197,18 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should throw if given a single incompatible keySystemsConfigs", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "foo", getLicense: neverCalledFn },
+      { type: "foo", getLicense: mocks.neverCalled },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(defaultKSConfig),
@@ -195,26 +216,22 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set persistentState value if persistentState is set to "required"', async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "foo", getLicense: neverCalledFn, persistentState: "required" },
+      { type: "foo", getLicense: mocks.neverCalled, persistentState: "required" },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return { ...conf, persistentState: "required" };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -222,30 +239,26 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set persistentState value if persistentState is set to "not-allowed"', async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         persistentState: "not-allowed",
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return { ...conf, persistentState: "not-allowed" };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -253,26 +266,22 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set persistentState value if persistentState is set to "optional"', async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "foo", getLicense: neverCalledFn, persistentState: "optional" },
+      { type: "foo", getLicense: mocks.neverCalled, persistentState: "optional" },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return { ...conf, persistentState: "optional" };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -280,30 +289,26 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set distinctiveIdentifier value if distinctiveIdentifier is set to "required"', async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         distinctiveIdentifier: "required",
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return { ...conf, distinctiveIdentifier: "required" };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -311,30 +316,26 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set distinctiveIdentifier value if distinctiveIdentifier is set to "not-allowed"', async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         distinctiveIdentifier: "not-allowed",
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return { ...conf, distinctiveIdentifier: "not-allowed" };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -342,30 +343,26 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it('should set distinctiveIdentifier value if distinctiveIdentifier is set to "optional"', async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         distinctiveIdentifier: "optional",
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return { ...conf, distinctiveIdentifier: "optional" };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -373,20 +370,16 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should want only persistent sessions if wantedSessionTypes is set to `['persistent-license']`", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         wantedSessionTypes: ["persistent-license"],
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return {
@@ -394,12 +387,12 @@ describe("decrypt - global tests - media key system access", () => {
         sessionTypes: ["persistent-license"],
       };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -407,20 +400,16 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should want only temporary sessions if wantedSessionTypes is set to `['temporary']`", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         wantedSessionTypes: ["temporary"],
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return {
@@ -428,12 +417,12 @@ describe("decrypt - global tests - media key system access", () => {
         sessionTypes: ["temporary"],
       };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -441,20 +430,16 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should want both temporary and persistent sessions if wantedSessionTypes is set to `['persistent-license', 'temporary']`", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         wantedSessionTypes: ["persistent-license", "temporary"],
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return {
@@ -462,12 +447,12 @@ describe("decrypt - global tests - media key system access", () => {
         sessionTypes: ["persistent-license", "temporary"],
       };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -475,12 +460,8 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should want persistent sessions if persistentLicenseConfig is set", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     const persistentLicenseConfig = {
       save() {
         throw new Error("Should not save.");
@@ -490,9 +471,9 @@ describe("decrypt - global tests - media key system access", () => {
       },
     };
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "foo", getLicense: neverCalledFn, persistentLicenseConfig },
+      { type: "foo", getLicense: mocks.neverCalled, persistentLicenseConfig },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return {
@@ -501,12 +482,12 @@ describe("decrypt - global tests - media key system access", () => {
         sessionTypes: ["persistent-license"],
       };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -514,12 +495,8 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should not want persistent sessions if persistentLicenseConfig is set but wantedSessionTypes only wants temporary licenses", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     const persistentLicenseConfig = {
       save() {
         throw new Error("Should not save.");
@@ -531,12 +508,12 @@ describe("decrypt - global tests - media key system access", () => {
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         wantedSessionTypes: ["temporary"],
         persistentLicenseConfig,
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return {
@@ -544,12 +521,12 @@ describe("decrypt - global tests - media key system access", () => {
         sessionTypes: ["temporary"],
       };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -557,12 +534,8 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should properly handle persistentLicenseConfig and wantedSessionTypes set to persistent-license", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     const persistentLicenseConfig = {
       save() {
         throw new Error("Should not save.");
@@ -574,12 +547,12 @@ describe("decrypt - global tests - media key system access", () => {
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         wantedSessionTypes: ["persistent-license"],
         persistentLicenseConfig,
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return {
@@ -588,12 +561,12 @@ describe("decrypt - global tests - media key system access", () => {
         sessionTypes: ["persistent-license"],
       };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -601,12 +574,8 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should properly handle persistentLicenseConfig and wantedSessionTypes set to both temporary and persistent-license", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     const persistentLicenseConfig = {
       save() {
         throw new Error("Should not save.");
@@ -618,12 +587,12 @@ describe("decrypt - global tests - media key system access", () => {
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
         wantedSessionTypes: ["temporary", "persistent-license"],
         persistentLicenseConfig,
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
 
     const expectedConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map((conf) => {
       return {
@@ -632,12 +601,12 @@ describe("decrypt - global tests - media key system access", () => {
         sessionTypes: ["temporary", "persistent-license"],
       };
     });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       expectedConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(expectedConfig),
@@ -645,22 +614,18 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should do nothing if persistentLicenseConfig is set to null", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "foo", getLicense: neverCalledFn },
+      { type: "foo", getLicense: mocks.neverCalled },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(defaultKSConfig),
@@ -668,25 +633,21 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should do nothing if persistentLicenseConfig is set to undefined", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "foo",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
       },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "foo",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "foo",
       removeCapabiltiesFromConfig(defaultKSConfig),
@@ -694,32 +655,28 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a `clearkey` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "clearkey", getLicense: neverCalledFn },
+      { type: "clearkey", getLicense: mocks.neverCalled },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(4);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(4);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "webkit-org.w3.clearkey",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "webkit-org.w3.clearkey",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "org.w3.clearkey",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "org.w3.clearkey",
       removeCapabiltiesFromConfig(defaultKSConfig),
@@ -727,22 +684,18 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a `widevine` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "widevine", getLicense: neverCalledFn },
+      { type: "widevine", getLicense: mocks.neverCalled },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.widevine.alpha",
       defaultWidevineConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.widevine.alpha",
       removeCapabiltiesFromConfig(defaultWidevineConfig),
@@ -750,52 +703,48 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a `playready` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "playready", getLicense: neverCalledFn },
+      { type: "playready", getLicense: mocks.neverCalled },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(8);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(8);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
       defaultPRRecommendationKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
       removeCapabiltiesFromConfig(defaultPRRecommendationKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "com.microsoft.playready",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "com.microsoft.playready",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "com.chromecast.playready",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "com.chromecast.playready",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       7,
       "com.youtube.playready",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       8,
       "com.youtube.playready",
       removeCapabiltiesFromConfig(defaultKSConfig),
@@ -803,84 +752,76 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a `fairplay` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "fairplay", getLicense: neverCalledFn },
+      { type: "fairplay", getLicense: mocks.neverCalled },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledWith(
       "com.apple.fps.1_0",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledWith(
       "com.apple.fps.1_0",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
   });
 
   it("should translate a multiple keySystems at the same time", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
-      { type: "playready", getLicense: neverCalledFn },
-      { type: "clearkey", getLicense: neverCalledFn },
+      { type: "playready", getLicense: mocks.neverCalled },
+      { type: "clearkey", getLicense: mocks.neverCalled },
     ]);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(12);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(12);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
       defaultPRRecommendationKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
       removeCapabiltiesFromConfig(defaultPRRecommendationKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "com.microsoft.playready",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "com.microsoft.playready",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "com.chromecast.playready",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "com.chromecast.playready",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       9,
       "webkit-org.w3.clearkey",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       10,
       "webkit-org.w3.clearkey",
       removeCapabiltiesFromConfig(defaultKSConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       11,
       "org.w3.clearkey",
       defaultKSConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       12,
       "org.w3.clearkey",
       removeCapabiltiesFromConfig(defaultKSConfig),
@@ -888,12 +829,8 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should translate a multiple keySystems at the same time with different configs", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "playready",
@@ -905,12 +842,12 @@ describe("decrypt - global tests - media key system access", () => {
             return [];
           },
         },
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
       },
       {
         type: "clearkey",
         distinctiveIdentifier: "required",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
       },
     ]);
     const expectedPRRecommendationPersistentConfig: MediaKeySystemConfiguration[] =
@@ -935,63 +872,63 @@ describe("decrypt - global tests - media key system access", () => {
         return { ...conf, distinctiveIdentifier: "required" };
       },
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(12);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(12);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
       expectedPRRecommendationPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
       removeCapabiltiesFromConfig(expectedPRRecommendationPersistentConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "com.microsoft.playready",
       expectedPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "com.microsoft.playready",
       removeCapabiltiesFromConfig(expectedPersistentConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "com.chromecast.playready",
       expectedPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "com.chromecast.playready",
       removeCapabiltiesFromConfig(expectedPersistentConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       7,
       "com.youtube.playready",
       expectedPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       8,
       "com.youtube.playready",
       removeCapabiltiesFromConfig(expectedPersistentConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       9,
       "webkit-org.w3.clearkey",
       expectedIdentifierConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       10,
       "webkit-org.w3.clearkey",
       removeCapabiltiesFromConfig(expectedIdentifierConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       11,
       "org.w3.clearkey",
       expectedIdentifierConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       12,
       "org.w3.clearkey",
       removeCapabiltiesFromConfig(expectedIdentifierConfig),
@@ -999,12 +936,8 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should set widevine robustnesses for a `com.widevine.alpha` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "com.widevine.alpha",
@@ -1016,7 +949,7 @@ describe("decrypt - global tests - media key system access", () => {
             return [];
           },
         },
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
       },
     ]);
     const expectedPersistentConfig: MediaKeySystemConfiguration[] =
@@ -1027,13 +960,13 @@ describe("decrypt - global tests - media key system access", () => {
           sessionTypes: ["persistent-license"],
         };
       });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.widevine.alpha",
       expectedPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.widevine.alpha",
       removeCapabiltiesFromConfig(expectedPersistentConfig),
@@ -1041,12 +974,8 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should set playready robustnesses for a `playready` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "playready",
@@ -1058,12 +987,12 @@ describe("decrypt - global tests - media key system access", () => {
             return [];
           },
         },
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
       },
       {
         type: "clearkey",
         distinctiveIdentifier: "required",
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
       },
     ]);
     const expectedPersistentConfig: MediaKeySystemConfiguration[] = defaultKSConfig.map(
@@ -1088,63 +1017,63 @@ describe("decrypt - global tests - media key system access", () => {
         return { ...conf, distinctiveIdentifier: "required" };
       },
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(12);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(12);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
       expectedRecoPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
       removeCapabiltiesFromConfig(expectedRecoPersistentConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       3,
       "com.microsoft.playready",
       expectedPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       4,
       "com.microsoft.playready",
       removeCapabiltiesFromConfig(expectedPersistentConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       5,
       "com.chromecast.playready",
       expectedPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       6,
       "com.chromecast.playready",
       removeCapabiltiesFromConfig(expectedPersistentConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       7,
       "com.youtube.playready",
       expectedPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       8,
       "com.youtube.playready",
       removeCapabiltiesFromConfig(expectedPersistentConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       9,
       "webkit-org.w3.clearkey",
       expectedIdentifierConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       10,
       "webkit-org.w3.clearkey",
       removeCapabiltiesFromConfig(expectedIdentifierConfig),
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       11,
       "org.w3.clearkey",
       expectedIdentifierConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       12,
       "org.w3.clearkey",
       removeCapabiltiesFromConfig(expectedIdentifierConfig),
@@ -1152,12 +1081,8 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should set playready robustnesses for a `com.microsoft.playready.recommendation` keySystem", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation(() => Promise.reject("nope"));
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => Promise.reject("nope"));
     await checkIncompatibleKeySystemsErrorMessage([
       {
         type: "com.microsoft.playready.recommendation",
@@ -1169,7 +1094,7 @@ describe("decrypt - global tests - media key system access", () => {
             return [];
           },
         },
-        getLicense: neverCalledFn,
+        getLicense: mocks.neverCalled,
       },
     ]);
     const expectedRecoPersistentConfig: MediaKeySystemConfiguration[] =
@@ -1180,13 +1105,13 @@ describe("decrypt - global tests - media key system access", () => {
           sessionTypes: ["persistent-license"],
         };
       });
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(2);
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       1,
       "com.microsoft.playready.recommendation",
       expectedRecoPersistentConfig,
     );
-    expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+    expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
       2,
       "com.microsoft.playready.recommendation",
       removeCapabiltiesFromConfig(expectedRecoPersistentConfig),
@@ -1194,19 +1119,14 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should successfully create a MediaKeySystemAccess if given the right configuration", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation((keyType: string, conf: MediaKeySystemConfiguration[]) => {
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(
+      (keyType: string, conf: MediaKeySystemConfiguration[]) => {
         return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
-      });
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+      },
+    );
     return new Promise<void>((res, rej) => {
-      const config = [{ type: "com.widevine.alpha", getLicense: neverCalledFn }];
+      const config = [{ type: "com.widevine.alpha", getLicense: mocks.neverCalled }];
 
       const mediaElement = document.createElement("video");
       const eme = getEmeApiImplementation("auto");
@@ -1216,8 +1136,8 @@ describe("decrypt - global tests - media key system access", () => {
         rej(error);
       });
       setTimeout(() => {
-        expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
-        expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledWith(
+        expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
+        expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledWith(
           "com.widevine.alpha",
           defaultWidevineConfig,
         );
@@ -1227,24 +1147,19 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should successfully create a MediaKeySystemAccess if given multiple configurations where one works", async () => {
-    const mockRequestMediaKeySystemAccess = vi
-      .fn()
-      .mockImplementation((keyType: string, conf: MediaKeySystemConfiguration[]) => {
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(
+      (keyType: string, conf: MediaKeySystemConfiguration[]) => {
         if (keyType === "some-other-working-key-system") {
           return requestMediaKeySystemAccessNoMediaKeys(keyType, conf);
         }
         return Promise.reject("nope");
-      });
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+      },
+    );
     return new Promise<void>((res, rej) => {
       const config = [
-        { type: "com.widevine.alpha", getLicense: neverCalledFn },
-        { type: "some-other-working-key-system", getLicense: neverCalledFn },
+        { type: "com.widevine.alpha", getLicense: mocks.neverCalled },
+        { type: "some-other-working-key-system", getLicense: mocks.neverCalled },
       ];
 
       const mediaElement = document.createElement("video");
@@ -1255,18 +1170,18 @@ describe("decrypt - global tests - media key system access", () => {
         rej(error);
       });
       setTimeout(() => {
-        expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(3);
-        expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+        expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(3);
+        expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
           1,
           "com.widevine.alpha",
           defaultWidevineConfig,
         );
-        expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+        expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
           2,
           "com.widevine.alpha",
           removeCapabiltiesFromConfig(defaultWidevineConfig),
         );
-        expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+        expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
           3,
           "some-other-working-key-system",
           defaultKSConfig,
@@ -1277,28 +1192,23 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should not continue to check if the ContentDecryptor is disposed from", async () => {
-    let contentDecryptor: IContentDecryptor | null = null;
+    mockCompat(mocks);
+    let contentDecryptor: ContentDecryptor | null = null;
     let rmksHasBeenCalled = false;
-    const mockRequestMediaKeySystemAccess = vi.fn().mockImplementation(() => {
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => {
       return Promise.resolve().then(() => {
         rmksHasBeenCalled = true;
         contentDecryptor?.dispose(undefined);
         return Promise.reject("nope");
       });
     });
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 
       const config = [
-        { type: "foo", getLicense: neverCalledFn },
-        { type: "bar", getLicense: neverCalledFn },
-        { type: "baz", getLicense: neverCalledFn },
+        { type: "foo", getLicense: mocks.neverCalled },
+        { type: "bar", getLicense: mocks.neverCalled },
+        { type: "baz", getLicense: mocks.neverCalled },
       ];
       const eme = getEmeApiImplementation("auto");
       assert(eme !== null, "Expected to have an EME implementation");
@@ -1308,8 +1218,8 @@ describe("decrypt - global tests - media key system access", () => {
       });
       setTimeout(() => {
         expect(rmksHasBeenCalled).toEqual(true);
-        expect(mockRequestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
-        expect(mockRequestMediaKeySystemAccess).toHaveBeenNthCalledWith(
+        expect(mocks.requestMediaKeySystemAccess).toHaveBeenCalledTimes(1);
+        expect(mocks.requestMediaKeySystemAccess).toHaveBeenNthCalledWith(
           1,
           "foo",
           defaultKSConfig,
@@ -1320,21 +1230,16 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should trigger error even if requestMediaKeySystemAccess throws", async () => {
+    mockCompat(mocks);
     let rmksHasBeenCalled = false;
-    const mockRequestMediaKeySystemAccess = vi.fn().mockImplementation(() => {
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => {
       rmksHasBeenCalled = true;
       throw new Error("nope");
     });
-    mockCompat({
-      requestMediaKeySystemAccess: mockRequestMediaKeySystemAccess,
-    });
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const mediaElement = document.createElement("video");
 
-      const config = [{ type: "foo", getLicense: neverCalledFn }];
+      const config = [{ type: "foo", getLicense: mocks.neverCalled }];
       const eme = getEmeApiImplementation("auto");
       assert(eme !== null, "Expected to have an EME implementation");
       const contentDecryptor = new ContentDecryptor(eme, mediaElement, config);

@@ -1,64 +1,59 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IIsCodecSupported from "../is_codec_supported";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import isCodecSupported from "../is_codec_supported";
+
+const mocks = vi.hoisted(() => {
+  return {
+    default: {
+      MediaSource_: {} as unknown,
+    },
+  };
+});
+
+vi.mock("../browser_compatibility_types", () => {
+  return mocks;
+});
 
 describe("Compat - isCodecSupported", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    mocks.default.MediaSource_ = {};
+  });
 
-  it("should return false if MediaSource is not supported in the current device", async () => {
-    vi.doMock("../browser_compatibility_types", () => {
-      return {
-        MediaSource_: undefined,
-      };
-    });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
-      .default as typeof IIsCodecSupported;
+  it("should return false if MediaSource is not supported in the current device", () => {
+    mocks.default.MediaSource_ = undefined;
     expect(isCodecSupported(document.createElement("video"), "foo")).toEqual(false);
     expect(isCodecSupported(document.createElement("video"), "")).toEqual(false);
   });
 
-  it("should return true in any case if the MediaSource does not have the right function", async () => {
-    vi.doMock("../browser_compatibility_types", () => {
-      return {
-        MediaSource_: { isTypeSupported: undefined },
-      };
-    });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
-      .default as typeof IIsCodecSupported;
+  it("should return true in any case if the MediaSource does not have the right function", () => {
+    mocks.default.MediaSource_ = { isTypeSupported: undefined };
     expect(isCodecSupported(document.createElement("video"), "foo")).toEqual(true);
     expect(isCodecSupported(document.createElement("video"), "")).toEqual(true);
   });
 
-  it("should return true if MediaSource.isTypeSupported returns true", async () => {
-    vi.doMock("../browser_compatibility_types", () => {
-      return {
-        MediaSource_: {
-          isTypeSupported(_codec: string) {
-            return true;
-          },
-        },
-      };
-    });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
-      .default as typeof IIsCodecSupported;
+  it("should return true if MediaSource.isTypeSupported returns true", () => {
+    mocks.default.MediaSource_ = {
+      isTypeSupported(_codec: string) {
+        return true;
+      },
+    };
     expect(isCodecSupported(document.createElement("video"), "foo")).toEqual(true);
     expect(isCodecSupported(document.createElement("video"), "")).toEqual(true);
   });
 
-  it("should return false if MediaSource.isTypeSupported returns false", async () => {
-    vi.doMock("../browser_compatibility_types", () => {
-      return {
-        MediaSource_: {
-          isTypeSupported(_codec: string) {
-            return false;
-          },
-        },
-      };
-    });
-    const isCodecSupported = (await vi.importActual("../is_codec_supported"))
-      .default as typeof IIsCodecSupported;
-    expect(isCodecSupported(document.createElement("video"), "foo")).toEqual(false);
-    expect(isCodecSupported(document.createElement("video"), "")).toEqual(false);
+  it("should return false if MediaSource.isTypeSupported returns false", () => {
+    mocks.default.MediaSource_ = {
+      isTypeSupported(_codec: string) {
+        return false;
+      },
+    };
+    expect(
+      isCodecSupported(document.createElement("video"), "oohjustlikeweneversaidgoodbye"),
+    ).toEqual(false);
+    expect(
+      isCodecSupported(document.createElement("video"), "ontheinternetwaitingtosayhi"),
+    ).toEqual(false);
   });
 });

@@ -1,24 +1,39 @@
-import type { MockInstance } from "vitest";
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import type { IEmeApiImplementation } from "../../../compat/eme";
 import getEmeApiImplementation from "../../../compat/eme";
+import type { IEmeApiImplementation } from "../../../compat/eme";
 import type { IKeySystemOption } from "../../../public_types";
 import TaskCanceller from "../../../utils/task_canceller";
 import getMediaKeySystemAccess from "../find_key_system";
 import LoadedSessionsStore from "../utils/loaded_sessions_store";
 import mediaKeysAttacher from "../utils/media_keys_attacher";
 
+const mocks = vi.hoisted(() => {
+  return {
+    requestMediaKeySystemAccess: vi.fn(),
+  };
+});
+vi.mock("../../../compat/eme", () => ({
+  default: () => ({
+    onEncrypted: vi.fn(),
+    requestMediaKeySystemAccess: mocks.requestMediaKeySystemAccess,
+    setMediaKeys: vi.fn(() => Promise.resolve()),
+  }),
+  getInitData: vi.fn(),
+  generateKeyRequest: vi.fn(),
+  closeSession: vi.fn(),
+  loadSession: vi.fn(),
+}));
+
 describe("find_key_systems - ", () => {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   const oldRequestMediaKeySystemAccess = navigator.requestMediaKeySystemAccess;
   let eme: IEmeApiImplementation;
-  let requestMediaKeySystemAccessMock: MockInstance;
 
   beforeEach(() => {
     // NOTE: We prefer resetting `navigator.requestMediaKeySystemAccess` as DOM
     // implementations often forget to implement it.
     navigator.requestMediaKeySystemAccess = vi.fn();
-    requestMediaKeySystemAccessMock = vi.spyOn(navigator, "requestMediaKeySystemAccess");
+    mocks.requestMediaKeySystemAccess.mockReset();
     const implem = getEmeApiImplementation("auto");
     if (implem === null) {
       throw new Error("Could not initialize EME implementation");
@@ -30,6 +45,7 @@ describe("find_key_systems - ", () => {
     navigator.requestMediaKeySystemAccess = oldRequestMediaKeySystemAccess;
     vi.resetModules();
     vi.restoreAllMocks();
+    mocks.requestMediaKeySystemAccess.mockReset();
   });
 
   const baseEmeConfiguration: MediaKeySystemConfiguration = {
@@ -164,13 +180,14 @@ describe("find_key_systems - ", () => {
   };
 
   it("should create a media key the first time and then reuse the previous one if it's the same configuration", async () => {
-    requestMediaKeySystemAccessMock.mockImplementation(() => {
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => {
       return {
         keySystem: "com.widevine.alpha",
         createMediaKeys: () => ({
           createSession: () => ({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            generateRequest: () => {},
+            generateRequest: () => {
+              /* noop */
+            },
           }),
         }),
         getConfiguration: () => {
@@ -217,19 +234,20 @@ describe("find_key_systems - ", () => {
   });
 
   it("should create a media key the first time and then create another one if the previous is not compatible.", async () => {
-    requestMediaKeySystemAccessMock.mockImplementation(() => {
-      return {
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => {
+      return Promise.resolve({
         keySystem: "com.widevine.alpha",
         createMediaKeys: () => ({
           createSession: () => ({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            generateRequest: () => {},
+            generateRequest: () => {
+              /* noop */
+            },
           }),
         }),
         getConfiguration: () => {
           return baseEmeConfiguration;
         },
-      };
+      });
     });
     const mediaElement = document.createElement("video");
     const keySystemOptionsA: IKeySystemOption[] = [
@@ -278,19 +296,20 @@ describe("find_key_systems - ", () => {
   });
 
   it("should create a media key the first time and then reuse the previous one if it's a different configuration but it's a compatible configuration.", async () => {
-    requestMediaKeySystemAccessMock.mockImplementation(() => {
-      return {
+    mocks.requestMediaKeySystemAccess.mockImplementation(() => {
+      return Promise.resolve({
         keySystem: "com.widevine.alpha",
         createMediaKeys: () => ({
           createSession: () => ({
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            generateRequest: () => {},
+            generateRequest: () => {
+              /* noop */
+            },
           }),
         }),
         getConfiguration: () => {
           return baseEmeConfiguration;
         },
-      };
+      });
     });
     const mediaElement = document.createElement("video");
     const keySystemOptionsA: IKeySystemOption[] = [

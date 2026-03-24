@@ -1,5 +1,5 @@
 import type { IMediaSource, ISourceBuffer } from "../compat/browser_compatibility_types";
-import { MediaSource_ } from "../compat/browser_compatibility_types";
+import BROWSER_GLOBALS from "../compat/browser_compatibility_types";
 import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
 import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
 import { MediaError, SourceBufferError } from "../errors";
@@ -87,6 +87,7 @@ export default class MainMediaSourceInterface
     this.sourceBuffers = [];
     this._canceller = new TaskCanceller("MainMediaSourceInterface");
 
+    const { MediaSource_ } = BROWSER_GLOBALS;
     if (isNullOrUndefined(MediaSource_)) {
       throw new MediaError(
         "MEDIA_SOURCE_NOT_SUPPORTED",

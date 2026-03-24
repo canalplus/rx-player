@@ -3,7 +3,7 @@ import type { IBufferType } from "../../../core/types";
 import type { IRepresentationMetadata } from "../../../manifest";
 import type { IAudioRepresentation, IVideoRepresentation } from "../../../public_types";
 import TaskCanceller from "../../../utils/task_canceller";
-import type IPublicAPI from "../public_api";
+import PublicAPI from "../public_api";
 import type { IPublicApiContentInfos } from "../public_api";
 
 describe("API - Public API", () => {
@@ -13,17 +13,13 @@ describe("API - Public API", () => {
 
   describe("static properties", () => {
     describe("ErrorTypes", () => {
-      it("should expose static ErrorTypes property", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should expose static ErrorTypes property", () => {
         expect(typeof PublicAPI.ErrorTypes).toBe("object");
       });
     });
 
     describe("ErrorCodes", () => {
-      it("should expose static ErrorCodes property", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should expose static ErrorCodes property", () => {
         expect(typeof PublicAPI.ErrorTypes).toBe("object");
       });
     });
@@ -31,45 +27,35 @@ describe("API - Public API", () => {
 
   describe("public methods", () => {
     describe("getError", () => {
-      it("should have no error by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should have no error by default", () => {
         const player = new PublicAPI();
         expect(player.getError()).toBe(null);
       });
     });
 
     describe("getPlayerState", () => {
-      it('should return "STOPPED" in getPlayerState by default', async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it('should return "STOPPED" in getPlayerState by default', () => {
         const player = new PublicAPI();
         expect(player.getPlayerState()).toBe("STOPPED");
       });
     });
 
     describe("isLive", () => {
-      it("should return false in isLive by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return false in isLive by default", () => {
         const player = new PublicAPI();
         expect(player.isLive()).toBe(false);
       });
     });
 
     describe("getContentUrls", () => {
-      it("should return undefined in getContentUrls by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return undefined in getContentUrls by default", () => {
         const player = new PublicAPI();
         expect(player.getContentUrls()).toBe(undefined);
       });
     });
 
     describe("getMediaDuration", () => {
-      it("should return the video element initial duration in getMediaDuration by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return the video element initial duration in getMediaDuration by default", () => {
         const player = new PublicAPI();
 
         // ! HAHA ! NaN is not === to NaN
@@ -82,59 +68,48 @@ describe("API - Public API", () => {
     });
 
     describe("getCurrentBufferGap", () => {
-      it("should return 0 in getCurrentBufferGap by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return 0 in getCurrentBufferGap by default", () => {
         const player = new PublicAPI();
         expect(player.getCurrentBufferGap()).toBe(0);
       });
     });
 
     describe("getWallClockTime", () => {
-      it("should return 0 in getWallClockTime by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return 0 in getWallClockTime by default", () => {
         const player = new PublicAPI();
         expect(player.getWallClockTime()).toBe(0);
       });
     });
 
     describe("getPosition", () => {
-      it("should return 0 in getPosition by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return 0 in getPosition by default", () => {
         const player = new PublicAPI();
         expect(player.getPosition()).toBe(0);
       });
     });
 
     describe("getPlaybackRate", () => {
-      it("should return 1 in getPlaybackRate by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return 1 in getPlaybackRate by default", () => {
         const player = new PublicAPI();
         expect(player.getPlaybackRate()).toBe(1);
       });
     });
 
     describe("getVolume", () => {
-      it("should return 1 in getVolume by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return 1 in getVolume by default", () => {
         const player = new PublicAPI();
         expect(player.getVolume()).toBe(1);
       });
     });
 
     describe("getVideoRepresentation", () => {
-      let player: IPublicAPI;
+      let player: PublicAPI;
       beforeEach(async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
         player = new PublicAPI();
       });
 
-      it("should return undefined in getVideoRepresentation by default", async () => {
+      it("should return undefined in getVideoRepresentation by default", () => {
+        player = new PublicAPI();
         expect(player.getVideoRepresentation()).toBe(undefined);
       });
 
@@ -163,15 +138,14 @@ describe("API - Public API", () => {
     });
 
     describe("getAudioRepresentation", () => {
-      let player: IPublicAPI;
+      let player: PublicAPI;
 
       beforeEach(async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
         player = new PublicAPI();
       });
 
       it("should return undefined in getAudioRepresentation by default", async () => {
+        player = new PublicAPI();
         expect(player.getAudioRepresentation()).toBe(undefined);
       });
       it("should return the audio representation if available", () => {
@@ -199,36 +173,28 @@ describe("API - Public API", () => {
     });
 
     describe("getWantedBufferAhead", () => {
-      it("should return 30 in getWantedBufferAhead by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return 30 in getWantedBufferAhead by default", () => {
         const player = new PublicAPI();
         expect(player.getWantedBufferAhead()).toBe(30);
       });
     });
 
     describe("getMaxBufferBehind", () => {
-      it("should return Infinity in getMaxBufferBehind by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return Infinity in getMaxBufferBehind by default", () => {
         const player = new PublicAPI();
         expect(player.getMaxBufferBehind()).toBe(Infinity);
       });
     });
 
     describe("getMaxBufferAhead", () => {
-      it("should return Infinity in getMaxBufferAhead by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return Infinity in getMaxBufferAhead by default", () => {
         const player = new PublicAPI();
         expect(player.getMaxBufferAhead()).toBe(Infinity);
       });
     });
 
     describe("getPlaybackRate/setPlaybackRate", () => {
-      it("should allow to change the playback rate through setPlaybackRate", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should allow to change the playback rate through setPlaybackRate", () => {
         const player = new PublicAPI();
         player.setPlaybackRate(4);
         expect(player.getPlaybackRate()).toBe(4);
@@ -251,9 +217,7 @@ describe("API - Public API", () => {
     });
 
     describe("seekTo", () => {
-      it("should throw in seekTo by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should throw in seekTo by default", () => {
         const player = new PublicAPI();
         expect(() => player.seekTo(10)).toThrow();
         expect(() => player.seekTo(54)).toThrow();
@@ -264,16 +228,12 @@ describe("API - Public API", () => {
     });
 
     describe("getVolume/setVolume", () => {
-      it("should throw in setVolume by default if no volume has been given", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should throw in setVolume by default if no volume has been given", () => {
         const player = new PublicAPI();
         expect(() => player.setVolume(5)).toThrow();
       });
 
-      it("should set the volume in setVolume by default if a volume has been given", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should set the volume in setVolume by default if a volume has been given", () => {
         const player = new PublicAPI();
         const videoElement = player.getVideoElement();
         if (videoElement === null) {
@@ -291,9 +251,7 @@ describe("API - Public API", () => {
     });
 
     describe("mute/unMute/isMute", () => {
-      it("should keep the volume yet mute the media element in mute by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should keep the volume yet mute the media element in mute by default", () => {
         const player = new PublicAPI();
         const videoElement = player.getVideoElement();
         if (videoElement === null) {
@@ -316,9 +274,7 @@ describe("API - Public API", () => {
         expect(videoElement.muted).toBe(false);
       });
 
-      it("should unmute without changing the volume in unMute by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should unmute without changing the volume in unMute by default", () => {
         const player = new PublicAPI();
         // back to a "normal" state.
         player.unMute();
@@ -349,16 +305,12 @@ describe("API - Public API", () => {
         expect(videoElement.muted).toBe(false);
       });
 
-      it("should return false in isMute by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return false in isMute by default", () => {
         const player = new PublicAPI();
         expect(player.isMute()).toBe(false);
       });
 
-      it("should not return true in isMute if just the volume is equal to 0", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should not return true in isMute if just the volume is equal to 0", () => {
         const player = new PublicAPI();
 
         expect(player.isMute()).toBe(false);
@@ -369,9 +321,7 @@ describe("API - Public API", () => {
     });
 
     describe("getMaxBufferBehind/setMaxBufferBehind", () => {
-      it("should update the max buffer behind through setMaxBufferBehind by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should update the max buffer behind through setMaxBufferBehind by default", () => {
         const player = new PublicAPI();
         player.setMaxBufferBehind(50);
         expect(player.getMaxBufferBehind()).toBe(50);
@@ -382,9 +332,7 @@ describe("API - Public API", () => {
     });
 
     describe("getMaxBufferAhead/setMaxBufferAhead", () => {
-      it("should update the max buffer behind through setMaxBufferAhead by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should update the max buffer behind through setMaxBufferAhead by default", () => {
         const player = new PublicAPI();
         player.setMaxBufferAhead(50);
         expect(player.getMaxBufferAhead()).toBe(50);
@@ -395,9 +343,7 @@ describe("API - Public API", () => {
     });
 
     describe("getWantedBufferAhead/setWantedBufferAhead", () => {
-      it("should update the buffer goal through setWantedBufferAhead by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should update the buffer goal through setWantedBufferAhead by default", () => {
         const player = new PublicAPI();
         player.setWantedBufferAhead(50);
         expect(player.getWantedBufferAhead()).toBe(50);
@@ -408,63 +354,49 @@ describe("API - Public API", () => {
     });
 
     describe("getAvailableAudioTracks", () => {
-      it("should return an empty array through getAvailableAudioTracks by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return an empty array through getAvailableAudioTracks by default", () => {
         const player = new PublicAPI();
         expect(player.getAvailableAudioTracks()).toEqual([]);
       });
     });
 
     describe("getAvailableTextTracks", () => {
-      it("should return an empty array through getAvailableTextTracks by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return an empty array through getAvailableTextTracks by default", () => {
         const player = new PublicAPI();
         expect(player.getAvailableTextTracks()).toEqual([]);
       });
     });
 
     describe("getAvailableVideoTracks", () => {
-      it("should return an empty array through getAvailableVideoTracks by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return an empty array through getAvailableVideoTracks by default", () => {
         const player = new PublicAPI();
         expect(player.getAvailableVideoTracks()).toEqual([]);
       });
     });
 
     describe("getAudioTrack", () => {
-      it("should return undefined through getAudioTrack by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return undefined through getAudioTrack by default", () => {
         const player = new PublicAPI();
         expect(player.getAudioTrack()).toBe(undefined);
       });
     });
 
     describe("getTextTrack", () => {
-      it("should return undefined through getTextTrack by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return undefined through getTextTrack by default", () => {
         const player = new PublicAPI();
         expect(player.getTextTrack()).toBe(undefined);
       });
     });
 
     describe("getVideoTrack", () => {
-      it("should return undefined through getVideoTrack by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return undefined through getVideoTrack by default", () => {
         const player = new PublicAPI();
         expect(player.getVideoTrack()).toBe(undefined);
       });
     });
 
     describe("setAudioTrack", () => {
-      it("should throw in setAudioTrack by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should throw in setAudioTrack by default", () => {
         const player = new PublicAPI();
         expect(() => player.setAudioTrack("a")).toThrow();
         expect(() => player.setAudioTrack("test")).toThrow();
@@ -472,9 +404,7 @@ describe("API - Public API", () => {
     });
 
     describe("setTextTrack", () => {
-      it("should throw in setTextTrack by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should throw in setTextTrack by default", () => {
         const player = new PublicAPI();
         expect(() => player.setTextTrack("a")).toThrow();
         expect(() => player.setTextTrack("test")).toThrow();
@@ -482,9 +412,7 @@ describe("API - Public API", () => {
     });
 
     describe("setVideoTrack", () => {
-      it("should throw in setVideoTrack by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should throw in setVideoTrack by default", () => {
         const player = new PublicAPI();
         expect(() => player.setVideoTrack("a")).toThrow();
         expect(() => player.setVideoTrack("test")).toThrow();
@@ -492,9 +420,7 @@ describe("API - Public API", () => {
     });
 
     describe("disableTextTrack", () => {
-      it("should disable text tracks in disableTextTrack by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should disable text tracks in disableTextTrack by default", () => {
         const player = new PublicAPI();
         player.disableTextTrack();
         expect(player.getTextTrack()).toBe(undefined);
@@ -502,27 +428,21 @@ describe("API - Public API", () => {
     });
 
     describe("getMinimumPosition", () => {
-      it("should return null in getMinimumPosition by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return null in getMinimumPosition by default", () => {
         const player = new PublicAPI();
         expect(player.getMinimumPosition()).toBe(null);
       });
     });
 
     describe("getMaximumPosition", () => {
-      it("should return null in getMaximumPosition by default", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should return null in getMaximumPosition by default", () => {
         const player = new PublicAPI();
         expect(player.getMinimumPosition()).toBe(null);
       });
     });
 
     describe("Player instantiation", () => {
-      it("should log a warning if creating two players attached to the same video element", async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+      it("should log a warning if creating two players attached to the same video element", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
         const videoElement = document.createElement("video");
         const player1 = new PublicAPI({ videoElement });
@@ -549,9 +469,7 @@ describe("API - Public API", () => {
       });
 
       it(`should not log a warning if creating a player attached to
-        the same video element after the previous one was disposed`, async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
+        the same video element after the previous one was disposed`, () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(vi.fn());
         const videoElement = document.createElement("video");
         const player1 = new PublicAPI({ videoElement });
@@ -575,10 +493,8 @@ describe("API - Public API", () => {
 
   describe("event emitters", () => {
     describe("videoRepresentationChange", () => {
-      let player: IPublicAPI;
+      let player: PublicAPI;
       beforeEach(async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
         player = new PublicAPI();
       });
 
@@ -629,10 +545,8 @@ describe("API - Public API", () => {
     });
 
     describe("audioRepresentationChange", () => {
-      let player: IPublicAPI;
+      let player: PublicAPI;
       beforeEach(async () => {
-        const PublicAPI = (await vi.importActual("../public_api"))
-          .default as typeof IPublicAPI;
         player = new PublicAPI();
       });
 

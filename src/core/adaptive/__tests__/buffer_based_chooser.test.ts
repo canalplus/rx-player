@@ -1,20 +1,25 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IBufferBasedChooser from "../buffer_based_chooser";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import log from "../../../log";
+import BufferBasedChooser from "../buffer_based_chooser";
 import { ScoreConfidenceLevel } from "../utils/representation_score_calculator";
+
+const logDebug = vi.spyOn(log, "debug").mockImplementation(() => {
+  /* noop */
+});
+const logInfo = vi.spyOn(log, "info").mockImplementation(() => {
+  /* noop */
+});
 
 describe("BufferBasedChooser", () => {
   beforeEach(() => {
     vi.resetModules();
   });
+  afterEach(() => {
+    logDebug.mockClear();
+    logInfo.mockClear();
+  });
 
-  it("should return the first bitrate if the current bitrate is undefined", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should return the first bitrate if the current bitrate is undefined", () => {
     let bbc = new BufferBasedChooser([]);
     bbc.onAddedSegment({ bufferGap: 0, speed: 1 });
     expect(bbc.getLastEstimate()).toEqual(undefined);
@@ -69,14 +74,7 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(1);
   });
 
-  it("should log an error and return the first bitrate if the given bitrate does not exist", async () => {
-    const logger = { debug: vi.fn(), info: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should log an error and return the first bitrate if the given bitrate does not exist", () => {
     const bbc = new BufferBasedChooser([10, 20]);
     bbc.onAddedSegment({
       bufferGap: 0,
@@ -85,21 +83,14 @@ describe("BufferBasedChooser", () => {
       currentScore: undefined,
     });
     expect(bbc.getLastEstimate()).toEqual(10);
-    expect(logger.info).toHaveBeenCalledTimes(1);
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logInfo).toHaveBeenCalledTimes(1);
+    expect(logInfo).toHaveBeenCalledWith(
       "ABR",
       "Current Bitrate not found in the calculated levels",
     );
   });
 
-  it("should not go to the next bitrate if we don't have a high enough maintainability score", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should not go to the next bitrate if we don't have a high enough maintainability score", () => {
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
       bufferGap: 16,
@@ -155,14 +146,7 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
-  it("should go to the next bitrate if the current one is maintainable and we have more buffer than the next level", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should go to the next bitrate if the current one is maintainable and we have more buffer than the next level", () => {
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
       bufferGap: 16,
@@ -218,14 +202,7 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(40);
   });
 
-  it("should stay at the current bitrate if it is maintainable but we have a buffer inferior to the next level", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should stay at the current bitrate if it is maintainable but we have a buffer inferior to the next level", () => {
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
       bufferGap: 6,
@@ -272,14 +249,7 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
-  it("should stay at the current bitrate if we are currently at the maximum one", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should stay at the current bitrate if we are currently at the maximum one", () => {
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
       bufferGap: 100000000000,
@@ -305,14 +275,7 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(40);
   });
 
-  it("should stay at the current bitrate if the current one is not maintainable due to the speed", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should stay at the current bitrate if the current one is not maintainable due to the speed", () => {
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
       bufferGap: 15,
@@ -359,14 +322,7 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
-  it("should lower bitrate if the current one is not maintainable due to the speed", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should lower bitrate if the current one is not maintainable due to the speed", () => {
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
       bufferGap: 15,
@@ -413,14 +369,7 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(10);
   });
 
-  it("should not lower bitrate if the current one is not maintainable due to the speed but confidence on the score is low", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should not lower bitrate if the current one is not maintainable due to the speed but confidence on the score is low", () => {
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
       bufferGap: 15,
@@ -476,14 +425,7 @@ describe("BufferBasedChooser", () => {
     expect(bbc.getLastEstimate()).toEqual(20);
   });
 
-  it("should not go to the next bitrate if we do not know if it is maintainable", async () => {
-    const logger = { debug: vi.fn() };
-    vi.doMock("../../../log", () => ({
-      default: logger,
-    }));
-    const BufferBasedChooser = (await vi.importActual("../buffer_based_chooser"))
-      .default as typeof IBufferBasedChooser;
-
+  it("should not go to the next bitrate if we do not know if it is maintainable", () => {
     let bbc = new BufferBasedChooser([10, 20, 40]);
     bbc.onAddedSegment({
       bufferGap: 15,

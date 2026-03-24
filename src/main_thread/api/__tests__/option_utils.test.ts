@@ -1,43 +1,36 @@
-import type { MockInstance } from "vitest";
-import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import { describe, afterEach, it, expect, vi } from "vitest";
 import config from "../../../config";
+import log from "../../../log";
 import type {
   IAudioTrackSwitchingMode,
   IKeySystemOption,
   ILoadVideoOptions,
   IStartAtOption,
 } from "../../../public_types";
-import type {
-  parseConstructorOptions as IParseConstructorOptions,
-  parseLoadVideoOptions as IParseLoadVideoOptions,
-  checkReloadOptions as ICheckReloadOptions,
+import {
+  parseConstructorOptions,
+  parseLoadVideoOptions,
+  checkReloadOptions,
 } from "../option_utils";
 
-let warnOnceMock: MockInstance;
-let logWarnMock: MockInstance;
+const mocks = vi.hoisted(() => {
+  return {
+    warnOnce: vi.fn(),
+  };
+});
+vi.mock("../../../utils/languages");
+vi.mock("../../../utils/warn_once", () => {
+  return { default: mocks.warnOnce };
+});
+const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
+  /* noop */
+});
 
 describe("API - parseConstructorOptions", () => {
-  let parseConstructorOptions: typeof IParseConstructorOptions;
-  beforeEach(async () => {
-    warnOnceMock = vi.fn();
-    logWarnMock = vi.fn();
-    vi.doMock("../../../log", () => {
-      return {
-        default: {
-          warn: logWarnMock,
-        },
-      };
-    });
-    vi.doMock("../../../utils/languages");
-    vi.doMock("../../../utils/warn_once", () => {
-      return { default: warnOnceMock };
-    });
-    parseConstructorOptions = (await vi.importActual("../option_utils"))
-      .parseConstructorOptions as typeof IParseConstructorOptions;
-  });
-
   afterEach(() => {
     vi.resetModules();
+    logWarn.mockClear();
+    mocks.warnOnce.mockReset();
   });
 
   const videoElement = document.createElement("video");
@@ -255,27 +248,10 @@ describe("API - parseConstructorOptions", () => {
 });
 
 describe("API - parseLoadVideoOptions", () => {
-  let parseLoadVideoOptions: typeof IParseLoadVideoOptions;
-  beforeEach(async () => {
-    warnOnceMock = vi.fn();
-    logWarnMock = vi.fn();
-    vi.doMock("../../../log", () => {
-      return {
-        default: {
-          warn: logWarnMock,
-        },
-      };
-    });
-    vi.doMock("../../../utils/languages");
-    vi.doMock("../../../utils/warn_once", () => {
-      return { default: warnOnceMock };
-    });
-    parseLoadVideoOptions = (await vi.importActual("../option_utils"))
-      .parseLoadVideoOptions as typeof IParseLoadVideoOptions;
-  });
-
   afterEach(() => {
     vi.resetModules();
+    logWarn.mockClear();
+    mocks.warnOnce.mockReset();
   });
 
   const defaultLoadVideoOptions = {
@@ -727,7 +703,7 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should set an 'undefined' defaultAudioTrackSwitchingMode mode when the parameter is invalid or not specified", () => {
-    logWarnMock.mockReturnValue(undefined);
+    logWarn.mockReturnValue(undefined);
     expect(
       parseLoadVideoOptions({
         defaultAudioTrackSwitchingMode: "foo-bar" as unknown as IAudioTrackSwitchingMode,
@@ -740,8 +716,8 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       defaultAudioTrackSwitchingMode: undefined,
     });
-    expect(logWarnMock).toHaveBeenCalledTimes(1);
-    expect(logWarnMock).toHaveBeenCalledWith(
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledWith(
       "API",
       "The `defaultAudioTrackSwitchingMode` loadVideo option must match one of " +
         `the following strategy name:
@@ -749,8 +725,8 @@ describe("API - parseLoadVideoOptions", () => {
 - \`direct\`
 - \`reload\``,
     );
-    logWarnMock.mockReset();
-    logWarnMock.mockReturnValue(undefined);
+    logWarn.mockClear();
+    logWarn.mockReturnValue(undefined);
 
     expect(
       parseLoadVideoOptions({
@@ -763,7 +739,7 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       defaultAudioTrackSwitchingMode: undefined,
     });
-    expect(logWarnMock).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should authorize setting a valid onCodecSwitch option", () => {
@@ -795,7 +771,7 @@ describe("API - parseLoadVideoOptions", () => {
   });
 
   it("should set a 'continue' onCodecSwitch when the parameter is invalid or not specified", () => {
-    logWarnMock.mockReturnValue(undefined);
+    logWarn.mockReturnValue(undefined);
     expect(
       parseLoadVideoOptions({
         onCodecSwitch: "foo-bar" as unknown as "continue",
@@ -808,8 +784,8 @@ describe("API - parseLoadVideoOptions", () => {
       transport: "bar",
       onCodecSwitch: "continue",
     });
-    expect(logWarnMock).toHaveBeenCalledTimes(1);
-    expect(logWarnMock).toHaveBeenCalledWith(
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledWith(
       "API",
       "The `onCodecSwitch` loadVideo option must match one " +
         `of the following string:
@@ -817,8 +793,8 @@ describe("API - parseLoadVideoOptions", () => {
 - \`reload\`
 If badly set, continue will be used as default`,
     );
-    logWarnMock.mockReset();
-    logWarnMock.mockReturnValue(undefined);
+    logWarn.mockClear();
+    logWarn.mockReturnValue(undefined);
 
     expect(
       parseLoadVideoOptions({
@@ -831,7 +807,7 @@ If badly set, continue will be used as default`,
       transport: "bar",
       onCodecSwitch: "continue",
     });
-    expect(logWarnMock).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
   it("should authorize setting a valid enableFastSwitching option", () => {
@@ -1197,7 +1173,7 @@ If badly set, continue will be used as default`,
   });
 
   it("should warn when setting a textTrackElement with a `native` textTrackMode", () => {
-    logWarnMock.mockReturnValue(undefined);
+    logWarn.mockReturnValue(undefined);
     const textTrackElement = document.createElement("div");
 
     parseLoadVideoOptions({
@@ -1205,7 +1181,7 @@ If badly set, continue will be used as default`,
       url: "foo",
       transport: "bar",
     });
-    expect(logWarnMock).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
 
     expect(
       parseLoadVideoOptions({
@@ -1221,8 +1197,8 @@ If badly set, continue will be used as default`,
       textTrackMode: "native",
     });
 
-    expect(logWarnMock).toHaveBeenCalledTimes(1);
-    expect(logWarnMock).toHaveBeenCalledWith(
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledWith(
       "API",
       "You have set a textTrackElement " +
         'without being in an "html" textTrackMode. It will be ignored.',
@@ -1231,11 +1207,6 @@ If badly set, continue will be used as default`,
 });
 
 describe("API - checkReloadOptions", () => {
-  let checkReloadOptions: typeof ICheckReloadOptions;
-  beforeEach(async () => {
-    checkReloadOptions = (await vi.importActual("../option_utils"))
-      .checkReloadOptions as typeof ICheckReloadOptions;
-  });
   it("Should valid undefined options", () => {
     const options = undefined;
     expect(() => checkReloadOptions(options)).not.toThrow();

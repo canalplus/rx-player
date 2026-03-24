@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../../compat/browser_compatibility_types";
+import BROWSER_GLOBALS from "../../../../compat/browser_compatibility_types";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 import type { IMediaConfiguration } from "../types";
 
@@ -25,6 +25,7 @@ import type { IMediaConfiguration } from "../types";
 export default function probeContentType(
   config: IMediaConfiguration,
 ): "NotSupported" | "Supported" {
+  const { MediaSource_ } = BROWSER_GLOBALS;
   if (isNullOrUndefined(MediaSource_)) {
     throw new Error("MediaSource API not available");
   }

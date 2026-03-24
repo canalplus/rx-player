@@ -1,9 +1,9 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
+import globalScope from "../../../../../utils/global_scope";
 import probeDecodingInfos from "../../probers/decodingInfo";
 import type { IMediaConfiguration } from "../../types";
 
-const origMediaCapabilities = navigator.mediaCapabilities;
+const oldNavigator = globalScope.navigator;
 
 /**
  * Stub decodingInfo API to resolve.
@@ -23,22 +23,34 @@ function stubDecodingInfo(isSupported: boolean, mustReject?: boolean) {
 
   const mockMediaCapabilities = {
     decodingInfo: decodingInfoStub,
-  };
+  } as unknown as MediaCapabilities;
 
-  // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
-  // now, we're going through JSDom through so that's OK.
-  navigator.mediaCapabilities = mockMediaCapabilities;
+  Object.defineProperty(navigator, "mediaCapabilities", {
+    get() {
+      return mockMediaCapabilities;
+    },
+  });
   return decodingInfoStub;
 }
 
 describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   beforeEach(() => {
     vi.resetModules();
+
+    // Ugly trick to authorize the resetting of the `navigator` property:
+    //   1. We redefine what window.navigator points to so it can be modified.
+    //      We don't care about its value here.
+    //   2. We're now able to remove it from `window`.
+    //   3. We now redefine it as an empty object.
+    Object.defineProperty(globalScope, "navigator", {});
+    // @ts-expect-error: part of the aforementioned trick
+    delete globalScope.navigator;
+    // @ts-expect-error: part of the aforementioned trick
+    globalScope.navigator = {};
   });
+
   afterEach(() => {
-    // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
-    // now, we're going through JSDom through so that's OK.
-    navigator.mediaCapabilities = origMediaCapabilities;
+    globalScope.navigator = oldNavigator;
   });
 
   it("should throw if no video and audio config", async () => {
@@ -99,6 +111,10 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
       expect(decodingInfoStub).not.toHaveBeenCalled();
     }
     expect(thrownException).toEqual(true);
+    return probeDecodingInfos(configuration).catch(({ message }: { message: string }) => {
+      expect(message).toEqual("Not enough arguments for calling mediaCapabilites.");
+      expect(decodingInfoStub).not.toHaveBeenCalled();
+    });
   });
 
   it("should throw if no type in config", async () => {
@@ -137,42 +153,19 @@ describe("MediaCapabilitiesProber probers - decodingInfo", () => {
   });
 
   it("should throw if API mediaCapabilities not available", async () => {
-    // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
-    // now, we're going through JSDom through so that's OK.
-    delete navigator.mediaCapabilities;
-    return probeDecodingInfos({}).then(
-      () => {
-        throw new Error("Should not succeed");
-      },
-      (err: Error) => {
-        expect(err).toBeInstanceOf(Error);
-        expect(err.message).toEqual(
-          "navigator.mediaCapabilites.decodingInfo is not available",
-        );
-      },
+    await expect(probeDecodingInfos({})).rejects.toThrowError(
+      "navigator.mediaCapabilites.decodingInfo is not available",
     );
   });
 
   it("should throw if API decodingInfo not available", async () => {
-    if (!isNullOrUndefined(navigator.mediaCapabilities)) {
-      // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
-      // now, we're going through JSDom through so that's OK.
-      delete navigator.mediaCapabilities.decodingInfo;
-    } else {
-      // @ts-expect-error: `navigator.mediaCapabilities` is read-only normally, for
-      // now, we're going through JSDom through so that's OK.
-      navigator.mediaCapabilities = {};
-    }
-    return probeDecodingInfos({}).then(
-      () => {
-        throw new Error("Should not succeed");
+    Object.defineProperty(navigator, "mediaCapabilities", {
+      get() {
+        return {};
       },
-      (err: Error) => {
-        expect(err).toBeInstanceOf(Error);
-        expect(err.message).toEqual(
-          "navigator.mediaCapabilites.decodingInfo is not available",
-        );
-      },
+    });
+    await expect(probeDecodingInfos({})).rejects.toThrowError(
+      "navigator.mediaCapabilites.decodingInfo is not available",
     );
   });
 

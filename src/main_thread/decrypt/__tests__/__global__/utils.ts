@@ -1,7 +1,7 @@
-import type { MockInstance } from "vitest";
+import type { Mock, MockInstance } from "vitest";
 import { vi } from "vitest";
 import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
-import type { IEmeApiImplementation, IEncryptedEventData } from "../../../../compat/eme";
+import type { IEncryptedEventData, IEmeApiImplementation } from "../../../../compat/eme";
 import type { IKeySystemOption } from "../../../../public_types";
 import { base64ToBytes, bytesToBase64 } from "../../../../utils/base64";
 import EventEmitter from "../../../../utils/event_emitter";
@@ -276,15 +276,15 @@ class MockedDecryptorEventEmitter extends EventEmitter<{
 /**
  * Mock functions coming from the compat directory.
  */
-export function mockCompat(
-  presets: {
-    canReuseMediaKeys?: MockInstance;
-    shouldRenewMediaKeySystemAccess?: MockInstance;
-    onEncrypted?: MockInstance;
-    requestMediaKeySystemAccess?: MockInstance;
-    setMediaKeys?: MockInstance;
-  } = {},
-) {
+export function mockCompat(mocks: {
+  canReuseMediaKeys: Mock;
+  shouldRenewMediaKeySystemAccess: Mock;
+  onEncrypted: Mock;
+  requestMediaKeySystemAccess: Mock;
+  setMediaKeys: Mock;
+  getInitData: Mock;
+  generateKeyRequest: Mock;
+}) {
   const ee = new MockedDecryptorEventEmitter();
   const mockEvents: Record<string, MockInstance> = {
     onKeyMessage: vi
@@ -349,80 +349,44 @@ export function mockCompat(
       ),
   };
 
-  const mockOnEncrypted =
-    presets.onEncrypted ??
-    vi
-      .fn()
-      .mockImplementation(
-        (elt: IMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
-          elt.addEventListener("encrypted", fn);
-          signal.register(() => {
-            elt.removeEventListener("encrypted", fn);
-          });
-          ee.addEventListener(
-            "encrypted",
-            (evt) => {
-              if (evt.elt === elt) {
-                fn(evt.value);
-              }
-            },
-            signal,
-          );
-        },
-      );
-  const mockRmksa =
-    presets.requestMediaKeySystemAccess ??
-    vi.fn().mockImplementation(requestMediaKeySystemAccessImpl);
-  const mockSetMediaKeys =
-    presets.setMediaKeys ?? vi.fn().mockImplementation(() => Promise.resolve());
-  const mockGenerateKeyRequest = vi
+  const mockOnEncrypted = vi
     .fn()
     .mockImplementation(
-      (
-        mks: MediaKeySessionImpl,
-        initializationDataType: string,
-        initializationData: BufferSource,
-      ) => {
-        return mks.generateRequest(initializationDataType, initializationData);
+      (elt: IMediaElement, fn: (x: unknown) => void, signal: CancellationSignal) => {
+        elt.addEventListener("encrypted", fn);
+        signal.register(() => {
+          elt.removeEventListener("encrypted", fn);
+        });
+        ee.addEventListener(
+          "encrypted",
+          (evt) => {
+            if (evt.elt === elt) {
+              fn(evt.value);
+            }
+          },
+          signal,
+        );
       },
     );
+  const mockRmksa = requestMediaKeySystemAccessImpl;
+  const mockSetMediaKeys = () => Promise.resolve();
+  const mockGenerateKeyRequest = (
+    mks: MediaKeySessionImpl,
+    initializationDataType: string,
+    initializationData: BufferSource,
+  ) => {
+    return mks.generateRequest(initializationDataType, initializationData);
+  };
 
-  const mockGetInitData = vi
-    .fn()
-    .mockImplementation((encryptedEvent: IEncryptedEventData) => {
-      return encryptedEvent;
-    });
+  const mockGetInitData = (encryptedEvent: IEncryptedEventData) => {
+    return encryptedEvent;
+  };
 
-  if (presets.shouldRenewMediaKeySystemAccess === undefined) {
-    vi.doMock("../../../../compat/should_renew_media_key_system_access", () => ({
-      default: vi.fn().mockImplementation(() => false),
-    }));
-  } else {
-    vi.doMock("../../../../compat/should_renew_media_key_system_access", () => ({
-      default: presets.shouldRenewMediaKeySystemAccess,
-    }));
-  }
-  if (presets.canReuseMediaKeys === undefined) {
-    vi.doMock("../../../../compat/can_reuse_media_keys", () => ({
-      default: vi.fn().mockImplementation(() => true),
-    }));
-  } else {
-    vi.doMock("../../../../compat/can_reuse_media_keys", () => ({
-      default: presets.canReuseMediaKeys,
-    }));
-  }
-
-  const emeImplementation = {
-    onEncrypted: mockOnEncrypted,
-    requestMediaKeySystemAccess: mockRmksa,
-    setMediaKeys: mockSetMediaKeys,
-  } as unknown as IEmeApiImplementation;
-
-  vi.doMock("../../../../compat/eme", () => ({
-    default: () => emeImplementation,
-    getInitData: mockGetInitData,
-    generateKeyRequest: mockGenerateKeyRequest,
-  }));
+  mocks.onEncrypted.mockImplementation(mockOnEncrypted);
+  mocks.requestMediaKeySystemAccess.mockImplementation(mockRmksa);
+  mocks.setMediaKeys.mockImplementation(mockSetMediaKeys);
+  mocks.getInitData.mockImplementation(mockGetInitData);
+  mocks.generateKeyRequest.mockImplementation(mockGenerateKeyRequest);
 
   return {
     mockEvents,
@@ -440,10 +404,6 @@ export function mockCompat(
         ee.triggerKeyStatusesChange(session, value);
       },
     },
-    mockRequestMediaKeySystemAccess: mockRmksa,
-    mockGetInitData,
-    mockSetMediaKeys,
-    mockGenerateKeyRequest,
   };
 }
 

@@ -1,8 +1,16 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import log from "../../log";
 import globalScope from "../../utils/global_scope";
-import type IMakeCue from "../make_vtt_cue";
+import makeCue from "../make_vtt_cue";
+
+const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
+  /* noop */
+});
 
 describe("Compat - makeVTTCue", () => {
+  afterEach(() => {
+    logWarn.mockClear();
+  });
   class MockVTTCue {
     public startTime: number;
     public endTime: number;
@@ -27,14 +35,9 @@ describe("Compat - makeVTTCue", () => {
     gs.TextTrackCue = ogTextTrackCue;
   });
 
-  it("should throw if nor VTTCue nor TextTrackCue is available", async () => {
-    const mockLog = { warn: vi.fn() };
+  it("should throw if nor VTTCue nor TextTrackCue is available", () => {
     gs.VTTCue = undefined;
     gs.TextTrackCue = undefined;
-    vi.doMock("../../log", () => ({
-      default: mockLog,
-    }));
-    const makeCue = (await vi.importActual("../make_vtt_cue")).default as typeof IMakeCue;
     let result: unknown;
     let error: unknown;
     try {
@@ -45,38 +48,24 @@ describe("Compat - makeVTTCue", () => {
     expect(error).toBeInstanceOf(Error);
     expect((error as Error).message).toEqual("VTT cues not supported in your target");
     expect(result).toBe(undefined);
-    expect(mockLog.warn).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 
-  it("should warn and not create anything if start time is after end time", async () => {
-    const mockLog = { warn: vi.fn() };
+  it("should warn and not create anything if start time is after end time", () => {
     gs.VTTCue = MockVTTCue;
-    vi.doMock("../../log", () => ({
-      default: mockLog,
-    }));
-    const makeCue = (await vi.importActual("../make_vtt_cue")).default as typeof IMakeCue;
     const result = makeCue(12, 10, "toto");
     expect(result).toBeNull();
-    expect(mockLog.warn).toHaveBeenCalledTimes(1);
-    expect(mockLog.warn).toHaveBeenCalledWith(
-      "text",
-      "Invalid cue times: start after end.",
-      {
-        endTime: 10,
-        startTime: 12,
-      },
-    );
+    expect(logWarn).toHaveBeenCalledTimes(1);
+    expect(logWarn).toHaveBeenCalledWith("text", "Invalid cue times: start after end.", {
+      endTime: 10,
+      startTime: 12,
+    });
   });
 
-  it("should create a new VTT Cue in other cases", async () => {
-    const mockLog = { warn: vi.fn() };
+  it("should create a new VTT Cue in other cases", () => {
     gs.VTTCue = MockVTTCue;
-    vi.doMock("../../log", () => ({
-      default: mockLog,
-    }));
-    const makeCue = (await vi.importActual("../make_vtt_cue")).default as typeof IMakeCue;
     const result = makeCue(10, 12, "toto");
     expect(result).toEqual(new MockVTTCue(10, 12, "toto"));
-    expect(mockLog.warn).not.toHaveBeenCalled();
+    expect(logWarn).not.toHaveBeenCalled();
   });
 });

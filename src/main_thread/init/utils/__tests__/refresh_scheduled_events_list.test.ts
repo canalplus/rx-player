@@ -1,15 +1,15 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import type { IManifest } from "../../../../manifest";
 import type { IParsedStreamEventData } from "../../../../parsers/manifest";
 import type { IStreamEventData } from "../../../../public_types";
-import type IRefreshScheduledEventsList from "../stream_events_emitter/refresh_scheduled_events_list";
+import refreshScheduledEventsList from "../stream_events_emitter/refresh_scheduled_events_list";
 import type {
   INonFiniteStreamEventPayload,
   IStreamEventPayload,
 } from "../stream_events_emitter/types";
 
 describe("init - refreshScheduledEventsList", () => {
-  it("should correctly refresh scheduled events", async () => {
+  it("should correctly refresh scheduled events", () => {
     function generateInputEventData(): IParsedStreamEventData {
       return {
         type: "dash-event-stream",
@@ -81,9 +81,6 @@ describe("init - refreshScheduledEventsList", () => {
           },
         },
       ];
-    const refreshScheduledEventsList = (
-      await vi.importActual("../stream_events_emitter/refresh_scheduled_events_list.ts")
-    ).default as typeof IRefreshScheduledEventsList;
 
     const scheduledEvents = refreshScheduledEventsList(oldScheduledEvents, manifest);
     expect(scheduledEvents).toEqual([

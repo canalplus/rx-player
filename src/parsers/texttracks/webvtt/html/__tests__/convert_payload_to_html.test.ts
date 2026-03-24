@@ -1,16 +1,26 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import globalScope from "../../../../../utils/global_scope";
-import type IConvertPayloadToHTML from "../convert_payload_to_html";
+import convertPayloadToHTML from "../convert_payload_to_html";
+
+const mocks = vi.hoisted(() => {
+  return {
+    createStyledElement: vi.fn(),
+  };
+});
+vi.mock("../create_styled_element", () => ({
+  default: mocks.createStyledElement,
+}));
 
 describe("parsers - webvtt - convertPayloadToHTML", () => {
   beforeEach(() => {
     vi.resetModules();
+    mocks.createStyledElement.mockReset();
   });
 
   const gs = globalScope as {
     DOMParser: unknown;
   };
-  it("should return empty payload when input text is empty", async () => {
+  it("should return empty payload when input text is empty", () => {
     const spyParseFromString = vi.fn(() => {
       return {
         body: {
@@ -26,20 +36,13 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
       }
     };
 
-    const spy = vi.fn();
-    vi.doMock("../create_styled_element", () => ({
-      default: spy,
-    }));
-
-    const convertPayloadToHTML = (await vi.importActual("../convert_payload_to_html"))
-      .default as typeof IConvertPayloadToHTML;
     expect(convertPayloadToHTML("", {})).toEqual([]);
     expect(spyParseFromString).toHaveBeenCalledTimes(1);
-    expect(spy).not.toHaveBeenCalled();
+    expect(mocks.createStyledElement).not.toHaveBeenCalled();
     gs.DOMParser = origDOMParser;
   });
 
-  it("should convert normal input text with no style", async () => {
+  it("should convert normal input text with no style", () => {
     const innerText = "<b></b>Hello";
     const bNode = document.createElement("b");
     const textNode = document.createTextNode("Hello");
@@ -53,16 +56,13 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
 
     const span = document.createElement("span");
     span.textContent = "Hello";
-    const spyCreateStyledElement = vi.fn((input: Node) => {
+    mocks.createStyledElement.mockImplementation((input: Node) => {
       if (input.nodeName === bNode.nodeName) {
         return bNode;
       } else if (input.nodeName === textNode.nodeName) {
         return span;
       }
     });
-    vi.doMock("../create_styled_element", () => ({
-      default: spyCreateStyledElement,
-    }));
 
     const origDOMParser = gs.DOMParser;
     gs.DOMParser = class MockDOMParser {
@@ -71,11 +71,9 @@ describe("parsers - webvtt - convertPayloadToHTML", () => {
       }
     };
 
-    const convertPayloadToHTML = (await vi.importActual("../convert_payload_to_html"))
-      .default as typeof IConvertPayloadToHTML;
     expect(convertPayloadToHTML(innerText, {})).toEqual([bNode, span]);
     expect(spyParseFromString).toHaveBeenCalledTimes(1);
-    expect(spyCreateStyledElement).toHaveBeenCalledTimes(2);
+    expect(mocks.createStyledElement).toHaveBeenCalledTimes(2);
     gs.DOMParser = origDOMParser;
   });
 });

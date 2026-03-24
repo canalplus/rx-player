@@ -1,8 +1,9 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import getEmeApiImplementation from "../../../../compat/eme";
 import type { IKeySystemOption } from "../../../../public_types";
 import assert from "../../../../utils/assert";
-import type IContentDecryptor from "../../content_decryptor";
-import type { ContentDecryptorState as IContentDecryptorState } from "../../types";
+import ContentDecryptor from "../../content_decryptor";
+import { ContentDecryptorState } from "../../types";
 import {
   MediaKeysImpl,
   MediaKeySystemAccessImpl,
@@ -10,36 +11,70 @@ import {
   testContentDecryptorError,
 } from "./utils";
 
-describe("decrypt - global tests - media key system access", () => {
-  /** Used to implement every functions that should never be called. */
-  const neverCalledFn = vi.fn();
+const mocks = vi.hoisted(() => {
+  return {
+    // Used to implement every functions that should never be called.
+    neverCalled: vi.fn(),
+    shouldRenewMediaKeySystemAccess: vi.fn(() => false),
+    canReuseMediaKeys: vi.fn(() => true),
+    onEncrypted: vi.fn(),
+    requestMediaKeySystemAccess: vi.fn(),
+    setMediaKeys: vi.fn(),
+    getInitData: vi.fn(),
+    generateKeyRequest: vi.fn(),
+  };
+});
+vi.mock("../../../../compat/should_renew_media_key_system_access", () => ({
+  default: mocks.shouldRenewMediaKeySystemAccess,
+}));
+vi.mock("../../../../compat/can_reuse_media_keys", () => ({
+  default: mocks.canReuseMediaKeys,
+}));
+vi.mock("../../../../compat/eme", () => ({
+  default: () => ({
+    onEncrypted: mocks.onEncrypted,
+    requestMediaKeySystemAccess: mocks.requestMediaKeySystemAccess,
+    setMediaKeys: mocks.setMediaKeys,
+  }),
+  getInitData: mocks.getInitData,
+  generateKeyRequest: mocks.generateKeyRequest,
+  closeSession: vi.fn(),
+  loadSession: vi.fn(),
+}));
+vi.mock("../../set_server_certificate", () => ({
+  default: mocks.neverCalled,
+}));
 
+describe("decrypt - global tests - media key system access", () => {
   /** Default video element used in our tests. */
   const videoElt = document.createElement("video");
 
   /** Default keySystems configuration used in our tests. */
   const ksConfig: IKeySystemOption[] = [
-    { type: "com.widevine.alpha", getLicense: neverCalledFn },
+    { type: "com.widevine.alpha", getLicense: mocks.neverCalled },
   ];
 
   beforeEach(() => {
     vi.resetModules();
     vi.restoreAllMocks();
-    vi.doMock("../../set_server_certificate", () => ({
-      default: neverCalledFn,
-    }));
   });
 
   afterEach(() => {
-    expect(neverCalledFn).not.toHaveBeenCalled();
+    expect(mocks.neverCalled).not.toHaveBeenCalled();
+    mocks.shouldRenewMediaKeySystemAccess.mockReset();
+    mocks.canReuseMediaKeys.mockReset();
+    mocks.onEncrypted.mockReset();
+    mocks.requestMediaKeySystemAccess.mockReset();
+    mocks.setMediaKeys.mockReset();
+    mocks.getInitData.mockReset();
+    mocks.generateKeyRequest.mockReset();
   });
 
   it("should throw if createMediaKeys throws", async () => {
-    // == mocks ==
     function requestMediaKeySystemAccessBadMediaKeys(
       keySystem: string,
       conf: MediaKeySystemConfiguration[],
-    ) {
+    ): Promise<unknown> {
       return Promise.resolve({
         keySystem,
         getConfiguration() {
@@ -50,14 +85,12 @@ describe("decrypt - global tests - media key system access", () => {
         },
       });
     }
-    mockCompat({
-      requestMediaKeySystemAccess: vi.fn(requestMediaKeySystemAccessBadMediaKeys),
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(
+      requestMediaKeySystemAccessBadMediaKeys,
+    );
 
     // == test ==
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     const eme = getEmeApiImplementation("auto");
     assert(eme !== null, "Expected to have an EME implementation");
     const error = await testContentDecryptorError(
@@ -75,7 +108,6 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should throw if createMediaKeys rejects", async () => {
-    // == mocks ==
     function requestMediaKeySystemAccessRejMediaKeys(
       keySystem: string,
       conf: MediaKeySystemConfiguration[],
@@ -86,14 +118,12 @@ describe("decrypt - global tests - media key system access", () => {
         createMediaKeys: () => Promise.reject(new Error("No non no")),
       });
     }
-    mockCompat({
-      requestMediaKeySystemAccess: vi.fn(requestMediaKeySystemAccessRejMediaKeys),
-    });
+    mockCompat(mocks);
+    mocks.requestMediaKeySystemAccess.mockImplementation(
+      requestMediaKeySystemAccessRejMediaKeys,
+    );
 
     // == test ==
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     const eme = getEmeApiImplementation("auto");
     assert(eme !== null, "Expected to have an EME implementation");
     const error = await testContentDecryptorError(
@@ -111,16 +141,11 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should go into the WaitingForAttachment state if createMediaKeys resolves", async () => {
-    mockCompat();
+    mockCompat(mocks);
     const mockCreateMediaKeys = vi.spyOn(
       MediaKeySystemAccessImpl.prototype,
       "createMediaKeys",
     );
-    const ContentDecryptorState = (await vi.importActual("../../types"))
-      .ContentDecryptorState as typeof IContentDecryptorState;
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     const eme = getEmeApiImplementation("auto");
     assert(eme !== null, "Expected to have an EME implementation");
     return new Promise<void>((res, rej) => {
@@ -151,16 +176,11 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should not call createMediaKeys again if previous one is compatible", async () => {
-    mockCompat();
+    mockCompat(mocks);
     const mockCreateMediaKeys = vi.spyOn(
       MediaKeySystemAccessImpl.prototype,
       "createMediaKeys",
     );
-    const ContentDecryptorState = (await vi.importActual("../../types"))
-      .ContentDecryptorState as typeof IContentDecryptorState;
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     const eme = getEmeApiImplementation("auto");
     assert(eme !== null, "Expected to have an EME implementation");
     return new Promise<void>((res, rej) => {
@@ -219,18 +239,12 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should call createMediaKeys again if the platform needs re-creation of the MediaKeys", async () => {
-    mockCompat({
-      canReuseMediaKeys: vi.fn(() => false),
-    });
+    mockCompat(mocks);
+    mocks.canReuseMediaKeys.mockImplementation(() => false);
     const mockCreateMediaKeys = vi.spyOn(
       MediaKeySystemAccessImpl.prototype,
       "createMediaKeys",
     );
-    const ContentDecryptorState = (await vi.importActual("../../types"))
-      .ContentDecryptorState as typeof IContentDecryptorState;
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     return new Promise<void>((res, rej) => {
       const eme = getEmeApiImplementation("auto");
       assert(eme !== null, "Expected to have an EME implementation");
@@ -289,18 +303,12 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should not call createMediaKeys again if the platform needs MediaKeySystemAccess renewal", async () => {
-    mockCompat({
-      shouldRenewMediaKeySystemAccess: vi.fn(() => true),
-    });
+    mockCompat(mocks);
+    mocks.shouldRenewMediaKeySystemAccess.mockImplementation(() => true);
     const mockCreateMediaKeys = vi.spyOn(
       MediaKeySystemAccessImpl.prototype,
       "createMediaKeys",
     );
-    const ContentDecryptorState = (await vi.importActual("../../types"))
-      .ContentDecryptorState as typeof IContentDecryptorState;
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     const eme = getEmeApiImplementation("auto");
     assert(eme !== null, "Expected to have an EME implementation");
     return new Promise<void>((res, rej) => {
@@ -359,17 +367,13 @@ describe("decrypt - global tests - media key system access", () => {
   });
 
   it("should not create any session if no encrypted event was received", async () => {
-    // == mocks ==
-    const mockSetMediaKeys = vi.fn(() => Promise.resolve());
-    mockCompat({ setMediaKeys: mockSetMediaKeys });
+    mockCompat(mocks);
+    mocks.setMediaKeys.mockImplementation(() => {
+      /* noop */
+    });
     const mockCreateSession = vi.spyOn(MediaKeysImpl.prototype, "createSession");
 
     // == test ==
-    const ContentDecryptorState = (await vi.importActual("../../types"))
-      .ContentDecryptorState as typeof IContentDecryptorState;
-    const ContentDecryptor = (await vi.importActual("../../content_decryptor"))
-      .default as typeof IContentDecryptor;
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
     const eme = getEmeApiImplementation("auto");
     assert(eme !== null, "Expected to have an EME implementation");
     const contentDecryptor = new ContentDecryptor(eme, videoElt, ksConfig);
@@ -379,8 +383,11 @@ describe("decrypt - global tests - media key system access", () => {
           contentDecryptor.removeEventListener("stateChange");
           contentDecryptor.attach();
           setTimeout(() => {
-            expect(mockSetMediaKeys).toHaveBeenCalledTimes(1);
-            expect(mockSetMediaKeys).toHaveBeenCalledWith(videoElt, new MediaKeysImpl());
+            expect(mocks.setMediaKeys).toHaveBeenCalledTimes(1);
+            expect(mocks.setMediaKeys).toHaveBeenCalledWith(
+              videoElt,
+              new MediaKeysImpl(),
+            );
             expect(mockCreateSession).not.toHaveBeenCalled();
             res();
           }, 5);

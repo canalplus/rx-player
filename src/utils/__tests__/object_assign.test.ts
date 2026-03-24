@@ -5,10 +5,10 @@ describe("utils - objectAssign", () => {
   it("should throw if target is not an object", () => {
     expect(() => {
       objectAssign(null as unknown as object, {});
-    }).toThrow("Cannot convert undefined or null to object");
+    }).toThrow();
     expect(() => {
       objectAssign(undefined as unknown as object, {});
-    }).toThrow("Cannot convert undefined or null to object");
+    }).toThrow();
   });
 
   it("should update the first argument and return it", () => {

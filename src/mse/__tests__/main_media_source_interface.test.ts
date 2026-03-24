@@ -177,7 +177,9 @@ const {
 
 vi.mock("../../compat/browser_compatibility_types", () => {
   return {
-    MediaSource_: MockMediaSource,
+    default: {
+      MediaSource_: MockMediaSource,
+    },
   };
 });
 

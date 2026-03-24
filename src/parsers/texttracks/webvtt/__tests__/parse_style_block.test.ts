@@ -1,29 +1,32 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IParseStyleBlock from "../parse_style_block";
+import parseStyleBlock from "../parse_style_block";
+
+const mocks = vi.hoisted(() => {
+  return {
+    createDefaultStyleElements: vi.fn(),
+  };
+});
+vi.mock("../create_default_style_elements", () => ({
+  default: mocks.createDefaultStyleElements,
+}));
 
 describe("parsers - webvtt - parseStyleBlock", () => {
   beforeEach(() => {
     vi.resetModules();
+    mocks.createDefaultStyleElements.mockReset();
   });
 
-  it("should correctly handle empty style blocks", async () => {
+  it("should correctly handle empty style blocks", () => {
     const webvttStyle = [["STYLE"], []];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global: "",
     });
   });
 
-  it("should parse global style", async () => {
+  it("should parse global style", () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -33,15 +36,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         "}",
       ],
     ];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global:
@@ -50,17 +46,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should parse class style", async () => {
+  it("should parse class style", () => {
     const webvttStyle = [["STYLE", "::cue(b) {", "  color: peachpuff;", "}"]];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;",
@@ -69,7 +58,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should parse both global and class style", async () => {
+  it("should parse both global and class style", () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -80,15 +69,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       ],
       ["STYLE", "::cue(b) {", "  color: peachpuff;", "}"],
     ];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       global:
         "background-image: linear-gradient(to bottom, dimgray, lightgray);" +
@@ -99,20 +81,13 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should not parse unformed styles", async () => {
+  it("should not parse unformed styles", () => {
     const webvttStyle = [
       ["BAD STYLE"],
       ["STYLE", "::cue(b) {", "  color: peachpuff;", "}"],
     ];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;",
@@ -121,20 +96,13 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should not override styles if class if declared several times", async () => {
+  it("should not override styles if class if declared several times", () => {
     const webvttStyle = [
       ["STYLE", "::cue(b) {", "  color: peachpuff;", "}"],
       ["STYLE", "::cue(b) {", "  background-color: dark;", "}"],
     ];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  color: peachpuff;  background-color: dark;",
@@ -143,7 +111,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should take into account all cues declared in one style block", async () => {
+  it("should take into account all cues declared in one style block", () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -155,15 +123,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
         "}",
       ],
     ];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;",
@@ -172,7 +133,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should consider a cue declared in multi-cue and mono-cue style blocks", async () => {
+  it("should consider a cue declared in multi-cue and mono-cue style blocks", () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -185,15 +146,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       ],
       ["STYLE", "::cue(b) {", "  color: salmon;", "}"],
     ];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;  color: salmon;",
@@ -201,7 +155,7 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       global: "  color: peachpuff;",
     });
   });
-  it("should consider a cue declared in multi-cue and mono-cue style blocks", async () => {
+  it("should consider a cue declared in multi-cue and mono-cue style blocks", () => {
     const webvttStyle = [
       [
         "STYLE",
@@ -214,15 +168,8 @@ describe("parsers - webvtt - parseStyleBlock", () => {
       ],
       ["STYLE", "::cue(b) {", "  color: salmon;", "}"],
     ];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;  color: salmon;",
@@ -231,20 +178,13 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should consider multiple class declaration for one stylesheet", async () => {
+  it("should consider multiple class declaration for one stylesheet", () => {
     const webvttStyle = [
       ["STYLE", "::cue(c),", "::cue(d),", "::cue(b) {", "  background-color: dark;", "}"],
       ["STYLE", "::cue(c) {", "  color: salmon;", "}"],
     ];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {
         b: "  background-color: dark;",
@@ -255,17 +195,10 @@ describe("parsers - webvtt - parseStyleBlock", () => {
     });
   });
 
-  it("should return empty style if no style block", async () => {
+  it("should return empty style if no style block", () => {
     const webvttStyle: string[][] = [];
+    mocks.createDefaultStyleElements.mockImplementation(() => ({}));
 
-    const mockCreateDefaultStyleElements = vi.fn(() => ({}));
-    vi.doMock("../create_default_style_elements", () => ({
-      default: () => {
-        return mockCreateDefaultStyleElements();
-      },
-    }));
-    const parseStyleBlock = (await vi.importActual("../parse_style_block"))
-      .default as typeof IParseStyleBlock;
     expect(parseStyleBlock(webvttStyle)).toEqual({
       classes: {},
       global: "",

@@ -479,4 +479,11 @@ export type {
   ICompatVTTCue,
   ICompatVTTCueConstructor,
 };
-export { MediaSource_, isManagedMediaSource, READY_STATES };
+
+/** Various globals in an object so they are easier to mock. */
+const BROWSER_GLOBALS = {
+  MediaSource_,
+  isManagedMediaSource,
+  READY_STATES,
+};
+export default BROWSER_GLOBALS;

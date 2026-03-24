@@ -1,5 +1,16 @@
-import { describe, beforeEach, it, expect, vi } from "vitest";
-import type IParseCueBlock from "../parse_cue_block";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import parseCueBlock from "../parse_cue_block";
+import type parseTimestamp from "../parse_timestamp";
+
+const mocks = vi.hoisted(() => {
+  return {
+    parseTimestamp: vi.fn(),
+  };
+});
+
+vi.mock("../parse_timestamp", () => ({
+  default: mocks.parseTimestamp,
+}));
 
 const cueBlock1 = [
   "112",
@@ -35,13 +46,17 @@ const notCueBlock6 = ["aa:18:31.080 --> 00:18:32.200", "TOTO", "TATA"];
 const notCueBlock7 = ["00:18:31.080 --> bb:18:32.200", "TOTO", "TATA"];
 
 describe("parsers - srt - parseCueBlocks", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetModules();
+    const actualParseTimestamp = (await vi.importActual("../parse_timestamp"))
+      .default as typeof parseTimestamp;
+    mocks.parseTimestamp.mockImplementation(actualParseTimestamp);
+  });
+  afterEach(() => {
+    mocks.parseTimestamp.mockReset();
   });
 
-  it("should correctly parse regular cue blocks", async () => {
-    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
-      .default as typeof IParseCueBlock;
+  it("should correctly parse regular cue blocks", () => {
     expect(parseCueBlock(cueBlock1, 0)).toEqual({
       start: 31.08,
       end: 452.2,
@@ -87,9 +102,7 @@ describe("parsers - srt - parseCueBlocks", () => {
     });
   });
 
-  it("should add timeOffset in seconds", async () => {
-    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
-      .default as typeof IParseCueBlock;
+  it("should add timeOffset in seconds", () => {
     expect(parseCueBlock(cueBlock1, 10.1)).toEqual({
       start: 41.18,
       end: 462.3,
@@ -146,9 +159,7 @@ describe("parsers - srt - parseCueBlocks", () => {
     });
   });
 
-  it("should return null for invalid cue blocks", async () => {
-    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
-      .default as typeof IParseCueBlock;
+  it("should return null for invalid cue blocks", () => {
     expect(parseCueBlock(notCueBlock1, 0)).toEqual(null);
     expect(parseCueBlock(notCueBlock1, 5)).toEqual(null);
     expect(parseCueBlock(notCueBlock2, 0)).toEqual(null);
@@ -161,27 +172,19 @@ describe("parsers - srt - parseCueBlocks", () => {
     expect(parseCueBlock(notCueBlock7, 0)).toEqual(null);
   });
 
-  it("should return null if parseTimestamp returns undefined either for the starting timestamp", async () => {
-    const parseTimestamp = vi.fn((arg) => (arg === "00:00:31.080" ? undefined : 10));
-    vi.doMock("../parse_timestamp", () => ({
-      default: parseTimestamp,
-    }));
-    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
-      .default as typeof IParseCueBlock;
-
+  it("should return null if parseTimestamp returns undefined either for the starting timestamp", () => {
+    mocks.parseTimestamp.mockImplementation((arg) =>
+      arg === "00:00:31.080" ? undefined : 10,
+    );
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
-    expect(parseTimestamp).toHaveBeenCalledTimes(2);
+    expect(mocks.parseTimestamp).toHaveBeenCalledTimes(2);
   });
 
-  it("should return null if parseTimestamp returns undefined either for the ending timestamp", async () => {
-    const parseTimestamp = vi.fn((arg) => (arg === "00:07:32.200" ? undefined : 10));
-    vi.doMock("../parse_timestamp", () => ({
-      default: parseTimestamp,
-    }));
-    const parseCueBlock = (await vi.importActual("../parse_cue_block"))
-      .default as typeof IParseCueBlock;
-
+  it("should return null if parseTimestamp returns undefined either for the ending timestamp", () => {
+    mocks.parseTimestamp.mockImplementation((arg) =>
+      arg === "00:07:32.200" ? undefined : 10,
+    );
     expect(parseCueBlock(cueBlock1, 0)).toEqual(null);
-    expect(parseTimestamp).toHaveBeenCalledTimes(2);
+    expect(mocks.parseTimestamp).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,12 +1,26 @@
-import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
+import { describe, beforeEach, it, expect, vi } from "vitest";
 import type { IParsedAdaptation, IParsedRepresentation } from "../../../parsers/manifest";
 import type {
   IRepresentationContext,
   IRepresentationFilterRepresentation,
 } from "../../../public_types";
-import type IAdaptation from "../adaptation";
+import Adaptation from "../adaptation";
 import CodecSupportCache from "../codec_support_cache";
 import type { IRepresentationIndex } from "../representation_index";
+
+const mocks = vi.hoisted(() => {
+  return {
+    fakeRepresentation: vi.fn(),
+    normalize: vi.fn(),
+  };
+});
+
+vi.mock("../representation", () => ({
+  default: mocks.fakeRepresentation,
+}));
+vi.mock("../../../utils/languages", () => ({
+  default: mocks.normalize,
+}));
 
 const minimalRepresentationIndex: IRepresentationIndex = {
   getInitSegment() {
@@ -61,7 +75,7 @@ const minimalRepresentationIndex: IRepresentationIndex = {
     /* noop */
   },
 };
-const mockDefaultRepresentationImpl = vi.fn(function (arg: IParsedRepresentation) {
+const mockDefaultRepresentationImpl = function (arg: IParsedRepresentation) {
   return {
     bitrate: arg.bitrate,
     id: arg.id,
@@ -71,23 +85,18 @@ const mockDefaultRepresentationImpl = vi.fn(function (arg: IParsedRepresentation
     },
     index: arg.index,
   };
-});
+};
 
 describe("Manifest - Adaptation", () => {
   beforeEach(() => {
     vi.resetModules();
-  });
-  afterEach(() => {
-    mockDefaultRepresentationImpl.mockClear();
+    mocks.fakeRepresentation.mockReset();
+    mocks.normalize.mockReset();
   });
 
-  it("should be able to create a minimal Adaptation", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
+  it("should be able to create a minimal Adaptation", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
 
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
     const args: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation = new Adaptation(args, codecSupportCache);
@@ -101,20 +110,13 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.manuallyAdded).toBe(false);
     expect(adaptation.getRepresentation("")).toBe(undefined);
 
-    expect(mockDefaultRepresentationImpl).not.toHaveBeenCalled();
+    expect(mocks.fakeRepresentation).not.toHaveBeenCalled();
   });
 
-  it("should normalize a given language", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
-    const mockNormalize = vi.fn((lang: string) => lang + "foo");
-    vi.doMock("../../../utils/languages", () => ({
-      default: mockNormalize,
-    }));
+  it("should normalize a given language", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
+    mocks.normalize.mockImplementation((lang: string) => lang + "foo");
 
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
     const args1: IParsedAdaptation = {
       id: "12",
       representations: [],
@@ -125,9 +127,9 @@ describe("Manifest - Adaptation", () => {
     const adaptation1 = new Adaptation(args1, codecSupportCache);
     expect(adaptation1.language).toBe("fr");
     expect(adaptation1.normalizedLanguage).toBe("frfoo");
-    expect(mockNormalize).toHaveBeenCalledTimes(1);
-    expect(mockNormalize).toHaveBeenCalledWith("fr");
-    mockNormalize.mockClear();
+    expect(mocks.normalize).toHaveBeenCalledTimes(1);
+    expect(mocks.normalize).toHaveBeenCalledWith("fr");
+    mocks.normalize.mockClear();
 
     const args2: IParsedAdaptation = {
       id: "12",
@@ -138,36 +140,25 @@ describe("Manifest - Adaptation", () => {
     const adaptation2 = new Adaptation(args2, codecSupportCache);
     expect(adaptation2.language).toBe("toto");
     expect(adaptation2.normalizedLanguage).toBe("totofoo");
-    expect(mockNormalize).toHaveBeenCalledTimes(1);
-    expect(mockNormalize).toHaveBeenCalledWith("toto");
+    expect(mocks.normalize).toHaveBeenCalledTimes(1);
+    expect(mocks.normalize).toHaveBeenCalledWith("toto");
   });
 
-  it("should not call normalize if no language is given", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
-    const mockNormalize = vi.fn((lang: string) => lang + "foo");
-    vi.doMock("../../../utils/languages", () => ({
-      default: mockNormalize,
-    }));
+  it("should not call normalize if no language is given", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
+    mocks.normalize.mockImplementation((lang: string) => lang + "foo");
 
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
     const args1: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation1 = new Adaptation(args1, codecSupportCache);
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
   });
 
-  it("should create and sort the corresponding Representations", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
+  it("should create and sort the corresponding Representations", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
 
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
     const rep1 = {
       bitrate: 10,
       id: "rep1",
@@ -192,20 +183,20 @@ describe("Manifest - Adaptation", () => {
     const codecSupportCache = new CodecSupportCache([]);
     const adaptation = new Adaptation(args, codecSupportCache);
     const parsedRepresentations = adaptation.representations;
-    expect(mockDefaultRepresentationImpl).toHaveBeenCalledTimes(3);
-    expect(mockDefaultRepresentationImpl).toHaveBeenNthCalledWith(
+    expect(mocks.fakeRepresentation).toHaveBeenCalledTimes(3);
+    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(
       1,
       rep1,
       "text",
       codecSupportCache,
     );
-    expect(mockDefaultRepresentationImpl).toHaveBeenNthCalledWith(
+    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(
       2,
       rep2,
       "text",
       codecSupportCache,
     );
-    expect(mockDefaultRepresentationImpl).toHaveBeenNthCalledWith(
+    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(
       3,
       rep3,
       "text",
@@ -220,8 +211,8 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getRepresentation("rep2")?.bitrate).toEqual(30);
   });
 
-  it("should execute the representationFilter if given", async () => {
-    const mockRepresentation = vi.fn(function (arg: IParsedRepresentation) {
+  it("should execute the representationFilter if given", () => {
+    mocks.fakeRepresentation.mockImplementation(function (arg: IParsedRepresentation) {
       return {
         bitrate: arg.bitrate,
         id: arg.id,
@@ -233,12 +224,6 @@ describe("Manifest - Adaptation", () => {
       };
     });
 
-    vi.doMock("../representation", () => ({
-      default: mockRepresentation,
-    }));
-
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
     const rep1 = {
       bitrate: 10,
       id: "rep1",
@@ -313,17 +298,9 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getRepresentation("rep4")?.id).toEqual("rep4");
   });
 
-  it("should set an isDub value if one", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
-    const mockNormalize = vi.fn((lang: string) => lang + "foo");
-    vi.doMock("../../../utils/languages", () => ({
-      default: mockNormalize,
-    }));
-
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
+  it("should set an isDub value if one", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
+    mocks.normalize.mockImplementation((lang: string) => lang + "foo");
 
     const args1: IParsedAdaptation = {
       id: "12",
@@ -336,7 +313,7 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isDub).toEqual(false);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
 
     const args2: IParsedAdaptation = {
       id: "12",
@@ -348,20 +325,12 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isDub).toEqual(true);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
   });
 
-  it("should set an isClosedCaption value if one", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
-    const mockNormalize = vi.fn((lang: string) => lang + "foo");
-    vi.doMock("../../../utils/languages", () => ({
-      default: mockNormalize,
-    }));
-
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
+  it("should set an isClosedCaption value if one", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
+    mocks.normalize.mockImplementation((lang: string) => lang + "foo");
 
     const args1: IParsedAdaptation = {
       id: "12",
@@ -374,7 +343,7 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isClosedCaption).toEqual(false);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
 
     const args2: IParsedAdaptation = {
       id: "12",
@@ -386,21 +355,12 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isClosedCaption).toEqual(true);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
   });
 
-  it("should set an isAudioDescription value if one", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
-    const mockNormalize = vi.fn((lang: string) => lang + "foo");
-
-    vi.doMock("../../../utils/languages", () => ({
-      default: mockNormalize,
-    }));
-
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
+  it("should set an isAudioDescription value if one", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
+    mocks.normalize.mockImplementation((lang: string) => lang + "foo");
 
     const args1: IParsedAdaptation = {
       id: "12",
@@ -413,7 +373,7 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isAudioDescription).toEqual(false);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
 
     const args2: IParsedAdaptation = {
       id: "12",
@@ -425,20 +385,12 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isAudioDescription).toEqual(true);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
   });
 
-  it("should set a manuallyAdded value if one", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
-    const mockNormalize = vi.fn((lang: string) => lang + "foo");
-    vi.doMock("../../../utils/languages", () => ({
-      default: mockNormalize,
-    }));
-
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
+  it("should set a manuallyAdded value if one", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
+    mocks.normalize.mockImplementation((lang: string) => lang + "foo");
 
     const args1: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
@@ -448,7 +400,7 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.manuallyAdded).toEqual(false);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
 
     const args2: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const adaptation2 = new Adaptation(args2, codecSupportCache, {
@@ -457,16 +409,12 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.manuallyAdded).toEqual(true);
-    expect(mockNormalize).not.toHaveBeenCalled();
+    expect(mocks.normalize).not.toHaveBeenCalled();
   });
 
-  it("should return the first Representation with the given Id with `getRepresentation`", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
+  it("should return the first Representation with the given Id with `getRepresentation`", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
 
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
     const rep1 = {
       bitrate: 10,
       id: "rep1",
@@ -494,13 +442,9 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.getRepresentation("rep2")?.bitrate).toEqual(20);
   });
 
-  it("should return undefined in `getRepresentation` if no representation is found with this Id", async () => {
-    vi.doMock("../representation", () => ({
-      default: mockDefaultRepresentationImpl,
-    }));
+  it("should return undefined in `getRepresentation` if no representation is found with this Id", () => {
+    mocks.fakeRepresentation.mockImplementation(mockDefaultRepresentationImpl);
 
-    const Adaptation = (await vi.importActual("../adaptation"))
-      .default as typeof IAdaptation;
     const rep1 = {
       bitrate: 10,
       id: "rep1",

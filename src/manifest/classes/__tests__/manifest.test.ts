@@ -6,8 +6,45 @@ import type {
 } from "../../../parsers/manifest";
 import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
 import CodecSupportCache from "../codec_support_cache";
-import type IManifest from "../manifest";
+import Manifest from "../manifest";
 import type IPeriod from "../period";
+
+const mocks = vi.hoisted(() => {
+  const fakeGenerateNewId = vi.fn(() => "fakeId");
+  const fakeIdGenerator = vi.fn(() => fakeGenerateNewId);
+  const fakePeriod = vi.fn();
+  const fakeReplacePeriods = vi.fn();
+  const fakeLogger = {
+    warn: vi.fn(() => undefined),
+    info: vi.fn(() => undefined),
+  };
+  return {
+    fakeLogger,
+    fakeGenerateNewId,
+    fakeIdGenerator,
+    fakePeriod,
+    fakeReplacePeriods,
+  };
+});
+
+vi.mock("../../../log", () => {
+  return {
+    default: mocks.fakeLogger,
+  };
+});
+vi.mock("../../../utils/id_generator", () => ({
+  default: mocks.fakeIdGenerator,
+}));
+vi.mock("../period", () => ({
+  default: mocks.fakePeriod,
+}));
+vi.mock("../update_periods", async () => {
+  const updatePeriods = (await vi.importActual("../update_periods")).updatePeriods;
+  return {
+    replacePeriods: mocks.fakeReplacePeriods,
+    updatePeriods,
+  };
+});
 
 function generateParsedPeriod(
   id: string,
@@ -37,28 +74,19 @@ function generateParsedRepresentation(id: string): IParsedRepresentation {
 }
 
 describe("Manifest - Manifest", () => {
-  const fakeLogger = {
-    warn: vi.fn(() => undefined),
-    info: vi.fn(() => undefined),
-  };
-  const fakeGenerateNewId = vi.fn(() => "fakeId");
-  const fakeIdGenerator = vi.fn(() => fakeGenerateNewId);
-
   beforeEach(() => {
     vi.resetModules();
-    fakeLogger.warn.mockClear();
-    fakeLogger.info.mockClear();
-    vi.doMock("../../../log", () => ({
-      default: fakeLogger,
-    }));
-    fakeGenerateNewId.mockClear();
-    fakeIdGenerator.mockClear();
-    vi.doMock("../../../utils/id_generator", () => ({
-      default: fakeIdGenerator,
-    }));
+    mocks.fakeLogger.warn.mockReset();
+    mocks.fakeLogger.info.mockReset();
+    mocks.fakeGenerateNewId.mockReset();
+    mocks.fakeIdGenerator.mockReset();
+    mocks.fakePeriod.mockReset();
+    mocks.fakeReplacePeriods.mockReset();
+    mocks.fakeGenerateNewId.mockImplementation(() => "fakeId");
+    mocks.fakeIdGenerator.mockImplementation(() => mocks.fakeGenerateNewId);
   });
 
-  it("should create a normalized Manifest structure", async () => {
+  it("should create a normalized Manifest structure", () => {
     const simpleFakeManifest = {
       id: "man",
       transportType: "dash",
@@ -79,7 +107,6 @@ describe("Manifest - Manifest", () => {
       periods: [],
     };
 
-    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const manifest = new Manifest(simpleFakeManifest, {});
 
     expect(manifest.adaptations).toEqual({});
@@ -94,13 +121,12 @@ describe("Manifest - Manifest", () => {
     expect(manifest.suggestedPresentationDelay).toEqual(undefined);
     expect(manifest.uris).toEqual([]);
 
-    expect(fakeIdGenerator).toHaveBeenCalled();
-    expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
-    expect(fakeLogger.info).not.toHaveBeenCalled();
-    expect(fakeLogger.warn).not.toHaveBeenCalled();
+    expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
+    expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
+    expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should create a Period for each manifest.periods given", async () => {
+  it("should create a Period for each manifest.periods given", () => {
     const period1 = generateParsedPeriod("0", 4, undefined);
     const period2 = generateParsedPeriod("1", 12, undefined);
     const simpleFakeManifest = {
@@ -123,22 +149,18 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = vi.fn(function (period: IPeriod) {
+    mocks.fakePeriod.mockImplementation(function (period: IPeriod) {
       return { id: `foo${period.id}`, adaptations: period.adaptations };
     });
-    vi.doMock("../period", () => ({
-      default: fakePeriod,
-    }));
 
-    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const manifest = new Manifest(simpleFakeManifest, {});
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(
+    expect(mocks.fakePeriod).toHaveBeenCalledTimes(2);
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(
       period1,
       new CodecSupportCache([]),
       undefined,
     );
-    expect(fakePeriod).toHaveBeenCalledWith(
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(
       period2,
       new CodecSupportCache([]),
       undefined,
@@ -150,13 +172,12 @@ describe("Manifest - Manifest", () => {
     ]);
     expect(manifest.adaptations).toEqual(period1.adaptations);
 
-    expect(fakeIdGenerator).toHaveBeenCalled();
-    expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
-    expect(fakeLogger.info).not.toHaveBeenCalled();
-    expect(fakeLogger.warn).not.toHaveBeenCalled();
+    expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
+    expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
+    expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should pass a `representationFilter` to the Period if given", async () => {
+  it("should pass a `representationFilter` to the Period if given", () => {
     const period1 = generateParsedPeriod("0", 4, undefined);
     const period2 = generateParsedPeriod("1", 12, undefined);
     const simpleFakeManifest = {
@@ -183,37 +204,32 @@ describe("Manifest - Manifest", () => {
       return false;
     };
 
-    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
+    mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
       return { id: `foo${period.id}` } as IPeriod;
     });
-    vi.doMock("../period", () => ({
-      default: fakePeriod,
-    }));
-    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
 
     const manifest = new Manifest(simpleFakeManifest, {
       representationFilter,
     });
     expect(manifest).not.toBe(null);
 
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(
+    expect(mocks.fakePeriod).toHaveBeenCalledTimes(2);
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(
       period1,
       new CodecSupportCache([]),
       representationFilter,
     );
-    expect(fakePeriod).toHaveBeenCalledWith(
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(
       period2,
       new CodecSupportCache([]),
       representationFilter,
     );
-    expect(fakeIdGenerator).toHaveBeenCalled();
-    expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
-    expect(fakeLogger.info).not.toHaveBeenCalled();
-    expect(fakeLogger.warn).not.toHaveBeenCalled();
+    expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
+    expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
+    expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should expose the adaptations of the first period if set", async () => {
+  it("should expose the adaptations of the first period if set", () => {
     const adapP1 = {};
     const adapP2 = {};
     const period1 = { id: "0", start: 4, adaptations: adapP1, thumbnailTracks: [] };
@@ -238,22 +254,18 @@ describe("Manifest - Manifest", () => {
       periods: [period1, period2],
     };
 
-    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
+    mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
-    vi.doMock("../period", () => ({
-      default: fakePeriod,
-    }));
-    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
 
     const manifest = new Manifest(simpleFakeManifest, {});
-    expect(fakePeriod).toHaveBeenCalledTimes(2);
-    expect(fakePeriod).toHaveBeenCalledWith(
+    expect(mocks.fakePeriod).toHaveBeenCalledTimes(2);
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(
       period1,
       new CodecSupportCache([]),
       undefined,
     );
-    expect(fakePeriod).toHaveBeenCalledWith(
+    expect(mocks.fakePeriod).toHaveBeenCalledWith(
       period2,
       new CodecSupportCache([]),
       undefined,
@@ -265,10 +277,9 @@ describe("Manifest - Manifest", () => {
     ]);
     expect(manifest.adaptations).toBe(adapP1);
 
-    expect(fakeIdGenerator).toHaveBeenCalled();
-    expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
-    expect(fakeLogger.info).not.toHaveBeenCalled();
-    expect(fakeLogger.warn).not.toHaveBeenCalled();
+    expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
+    expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
+    expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
   });
 
   it("should correctly parse every manifest information given", async () => {
@@ -299,13 +310,9 @@ describe("Manifest - Manifest", () => {
       uris: ["url1", "url2"],
     };
 
-    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
+    mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
-    vi.doMock("../period", () => ({
-      default: fakePeriod,
-    }));
-    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const manifest = new Manifest(oldManifestArgs, {});
 
     expect(manifest.adaptations).toEqual(oldPeriod1.adaptations);
@@ -335,20 +342,15 @@ describe("Manifest - Manifest", () => {
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
     expect(manifest.uris).toEqual(["url1", "url2"]);
-    expect(fakeIdGenerator).toHaveBeenCalled();
-    expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
-    expect(fakeLogger.info).not.toHaveBeenCalled();
-    expect(fakeLogger.warn).not.toHaveBeenCalled();
+    expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
+    expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
+    expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
   });
 
   it("should return all URLs given with `getContentUrls`", async () => {
-    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
+    mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
-    vi.doMock("../period", () => ({
-      default: fakePeriod,
-    }));
-    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
 
     const oldPeriod1 = generateParsedPeriod("0", 4, undefined);
     const oldPeriod2 = generateParsedPeriod("1", 12, undefined);
@@ -410,7 +412,7 @@ describe("Manifest - Manifest", () => {
   });
 
   it("should replace with a new Manifest when calling `replace`", async () => {
-    const fakePeriod = vi.fn(function (period: IParsedPeriod): IPeriod {
+    mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
     const fakeReplacePeriodsRes = {
@@ -418,14 +420,7 @@ describe("Manifest - Manifest", () => {
       addedPeriods: [],
       removedPeriods: [],
     };
-    const fakeReplacePeriods = vi.fn(() => fakeReplacePeriodsRes);
-    vi.doMock("../period", () => ({
-      default: fakePeriod,
-    }));
-    vi.doMock("../update_periods", () => ({
-      replacePeriods: fakeReplacePeriods,
-    }));
-
+    mocks.fakeReplacePeriods.mockImplementation(() => fakeReplacePeriodsRes);
     const oldPeriod1 = generateParsedPeriod("0", 4, undefined);
     const oldPeriod2 = generateParsedPeriod("1", 12, undefined);
     const oldManifestArgs = {
@@ -452,12 +447,11 @@ describe("Manifest - Manifest", () => {
       uris: ["url1", "url2"],
     };
 
-    const Manifest = (await vi.importActual("../manifest")).default as typeof IManifest;
     const manifest = new Manifest(oldManifestArgs, {});
 
     const mockTrigger = vi
       .spyOn(
-        manifest as IManifest & {
+        manifest as Manifest & {
           trigger: (eventName: string, payload: unknown) => void;
         },
         "trigger",
@@ -495,20 +489,19 @@ describe("Manifest - Manifest", () => {
       },
       periods: [newPeriod1, newPeriod2],
       uris: ["url3", "url4"],
-    } as unknown as IManifest;
+    } as unknown as Manifest;
 
     manifest.replace(newManifest);
-    expect(fakeReplacePeriods).toHaveBeenCalledTimes(1);
-    expect(fakeReplacePeriods).toHaveBeenCalledWith(
+    expect(mocks.fakeReplacePeriods).toHaveBeenCalledTimes(1);
+    expect(mocks.fakeReplacePeriods).toHaveBeenCalledWith(
       manifest.periods,
       newManifest.periods,
     );
     expect(mockTrigger).toHaveBeenCalledTimes(1);
     expect(mockTrigger).toHaveBeenCalledWith("manifestUpdate", fakeReplacePeriodsRes);
-    expect(fakeIdGenerator).toHaveBeenCalled();
-    expect(fakeGenerateNewId).toHaveBeenCalledTimes(1);
-    expect(fakeLogger.info).not.toHaveBeenCalled();
-    expect(fakeLogger.warn).not.toHaveBeenCalled();
+    expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
+    expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
+    expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
     mockTrigger.mockRestore();
   });
 });

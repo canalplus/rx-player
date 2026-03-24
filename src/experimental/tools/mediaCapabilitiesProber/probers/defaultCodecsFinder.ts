@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MediaSource_ } from "../../../../compat/browser_compatibility_types";
+import BROWSER_GLOBALS from "../../../../compat/browser_compatibility_types";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
 
 /**
@@ -30,6 +30,7 @@ export function findDefaultVideoCodec(): string {
     'video/mp4;codecs="hvc1.1.6.L93.B0"',
     'video/webm;codecs="vp8"',
   ];
+  const { MediaSource_ } = BROWSER_GLOBALS;
   if (
     isNullOrUndefined(MediaSource_) ||
     typeof MediaSource_.isTypeSupported !== "function"
@@ -52,6 +53,7 @@ export function findDefaultVideoCodec(): string {
  */
 export function findDefaultAudioCodec(): string {
   const audioCodecs = ['audio/mp4;codecs="mp4a.40.2"', 'audio/webm;codecs="opus"'];
+  const { MediaSource_ } = BROWSER_GLOBALS;
   if (
     isNullOrUndefined(MediaSource_) ||
     typeof MediaSource_.isTypeSupported !== "function"
