@@ -19,6 +19,7 @@ import {
   getSegmentsFromSidx,
   takePSSHOut,
 } from "../../parsers/containers/isobmff";
+import { injectFreeBoxes } from "../../parsers/containers/isobmff/insert_free_boxes";
 import {
   getKeyIdFromInitSegment,
   parseEmsgBoxes,
@@ -84,7 +85,7 @@ export default function generateAudioVideoSegmentParser({
       };
     }
 
-    const chunkData = toUint8Array(data);
+    let chunkData = toUint8Array(data);
 
     const containerType = inferSegmentContainer(context.type, context.mimeType);
 
@@ -163,6 +164,7 @@ export default function generateAudioVideoSegmentParser({
     if (containerType === "webm") {
       segmentList = getSegmentsFromCues(chunkData, 0);
     } else if (seemsToBeMP4) {
+      chunkData = injectFreeBoxes(chunkData);
       segmentList = getSegmentsFromSidx(
         chunkData,
         Array.isArray(indexRange) ? indexRange[0] : 0,
