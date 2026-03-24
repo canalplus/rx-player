@@ -112,8 +112,8 @@ export default function launchEventInterruptionTests(
   }) {
     let shouldNowBeStopped = false;
     let hasStoppedProperly = false;
-    let stateChanges = [];
-    let eventContext = {}; // For storing event-specific state (e.g., counters)
+    const stateChanges = [];
+    const eventContext = {}; // For storing event-specific state (e.g., counters)
 
     listenToAllEvents(player, (evtName, payload) => {
       if (shouldNowBeStopped) {
@@ -123,6 +123,7 @@ export default function launchEventInterruptionTests(
         }
         // We shouldn't receive events after stopping
         hasStoppedProperly = false;
+        /* eslint-disable-next-line no-console */
         console.error("Failing test: unexpected event", evtName, payload);
         throw new Error("Received unexpected event: " + evtName);
       }
