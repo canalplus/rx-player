@@ -390,20 +390,6 @@ const rulesTs = {
   "@typescript-eslint/unified-signatures": "error",
 };
 
-// globalIgnores([
-// "**/node_modules",
-// "**/*.log",
-// "**/*.keys",
-// "demo/bundle.js",
-// "demo/lib.js",
-// "tools/tests/coverage/",
-// "dist/*",
-// "!dist/rx-player.js",
-// "!dist/rx-player.min.js",
-// "**/test-output.xml",
-// "src/__GENERATED_CODE",
-// ]),
-
 //   jsLint.configs.recommended,
 // tsLint.configs.recommended,
 export default defineConfig([
@@ -421,6 +407,7 @@ export default defineConfig([
     "doc/generated",
     "tests/performance/current.js",
     "tests/performance/previous.js",
+    "tests/worker_bundle.js",
   ]),
   {
     files: ["scripts/**/*.js", "scripts/**/*.mjs"],
