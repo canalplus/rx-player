@@ -199,6 +199,9 @@ class Representation implements IRepresentationMetadata {
           isEncrypted,
         );
         if (foundSupportedCodec === true) {
+          log.debug("manifest", "supplementalCodec is supported as per the cache", {
+            codec: args.supplementalCodecs,
+          });
           this.chosenCodec = args.supplementalCodecs;
         }
       }
@@ -215,6 +218,9 @@ class Representation implements IRepresentationMetadata {
         );
         // Put the generic codec as a fallback anyway if supplemental ones
         // aren't present or supported.
+        log.debug("manifest", "codec is supported as per the cache", {
+          codec: args.codecs,
+        });
         this.chosenCodec = args.codecs;
       }
       this.isSupported = foundSupportedCodec;
@@ -255,6 +261,7 @@ class Representation implements IRepresentationMetadata {
     for (const codec of codecs) {
       isSupported = cachedCodecSupport.isSupported(mimeType, codec, isEncrypted);
       if (isSupported === true) {
+        log.debug("manifest", "codec is found to be supported", { codec });
         this.chosenCodec = codec;
         break;
       }
