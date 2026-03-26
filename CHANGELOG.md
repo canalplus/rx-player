@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.5.0-dev.2026031700
+## Current dev build: v4.5.0-dev.2026032600
 
 ### Features
 
@@ -21,6 +21,8 @@
   [#1812]
 - CMCD: fix the `headers` CMCD `communicationType` [#1809]
 - Thumbnails: Fix thumbnail request sometimes being wrongly cancelled [#1810]
+- Compat: To fix an issue with some older LG TV when playing retro-compatible Dolby Vision
+  contents, patch out some Dolby Vision-related ISOBMFF boxes in some conditions [#1818]
 
 ### Other improvements
 
