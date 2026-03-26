@@ -36,10 +36,12 @@ export function getCodecsWithUnknownSupport(
       }
       for (const representation of adaptation.representations) {
         if (representation.isSupported === undefined) {
-          codecsWithUnknownSupport.push({
-            mimeType: representation.mimeType ?? "",
-            codec: representation.codecs?.[0] ?? "",
-          });
+          for (const codec of representation.baseCodecs ?? []) {
+            codecsWithUnknownSupport.push({
+              mimeType: representation.mimeType ?? "",
+              codec,
+            });
+          }
         }
       }
     }
@@ -151,7 +153,7 @@ export function updateManifestCodecSupport(
 
         const isEncrypted = representation.contentProtections !== undefined;
         const mimeType = representation.mimeType ?? "";
-        let codecs = representation.codecs ?? [];
+        let codecs = representation.baseCodecs ?? [];
         if (codecs.length === 0) {
           codecs = [""];
         }
@@ -169,7 +171,7 @@ export function updateManifestCodecSupport(
             hasCodecWithUndefinedSupport = true;
           } else if (representation.isSupported) {
             hasSupportedCodec = true;
-            representation.codecs = [codec];
+            representation.chosenCodec = codec; // we found the first compatible codec
 
             // Don't test subsequent codecs for that Representation
             break;

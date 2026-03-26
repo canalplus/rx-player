@@ -175,7 +175,7 @@ function constructRepresentationInfo(content: {
     isSignInterpreted,
     type: bufferType,
   } = content.adaptation;
-  const { id, height, width, bitrate, codecs, hdrInfo } = content.representation;
+  const { id, height, width, bitrate, chosenCodec, hdrInfo } = content.representation;
   let representationInfo = `"${id}" `;
   if (height !== undefined && width !== undefined) {
     representationInfo += `${width}x${height} `;
@@ -183,8 +183,8 @@ function constructRepresentationInfo(content: {
   if (bitrate !== undefined) {
     representationInfo += `(${(bitrate / 1000).toFixed(0)}kbps) `;
   }
-  if (codecs !== undefined && codecs.length > 0) {
-    representationInfo += `c:"${codecs.join(" / ")}" `;
+  if (chosenCodec !== undefined) {
+    representationInfo += `c:"${chosenCodec}" `;
   }
   if (language !== undefined) {
     representationInfo += `l:"${language}" `;

@@ -44,4 +44,20 @@ function getFirefoxVersion(): number | null {
   return result;
 }
 
-export { getFirefoxVersion };
+function getChromeVersion(): number | null {
+  // TODO: Better Chrome detection?
+  if (EnvDetector.browser !== EnvDetector.BROWSERS.Other) {
+    log.warn(
+      "utils",
+      "getChromeVersion: Can't access Chrome version. Not a Chrome browser.",
+    );
+    return null;
+  }
+  const match = navigator.userAgent.match(/Chrome\/(\d+)/);
+  if (match !== null) {
+    return parseInt(match[1], 10);
+  }
+  return null;
+}
+
+export { getFirefoxVersion, getChromeVersion };

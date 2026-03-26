@@ -165,7 +165,8 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
       periodStart: period.start,
       periodEnd: period.end,
       mimeType: representation.mimeType,
-      codecs: representation.codecs[0],
+      baseCodecs: representation.baseCodecs,
+      chosenCodec: representation.chosenCodec,
       manifestPublishTime: manifest.publishTime,
     };
 

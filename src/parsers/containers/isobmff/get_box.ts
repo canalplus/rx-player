@@ -223,6 +223,22 @@ function getUuidContent<T extends ArrayBufferLike>(
 }
 
 /**
+ * When parsed, the "box type", which announce the name of the box, are in the
+ * RxPlayer encoded as unsigned 32 bit integers.
+ *
+ * When debugging or in logs, the textual fourCC format (e.g. `moov`, `mdat`,
+ * `pssh` etc.) is much more readable. Thus this function allows to convert
+ * between the two.
+ * @param {number} n - The box type as a "number" (32 bit unsigned integer).
+ * @returns {string} - its fourCC ASCII correspondance
+ */
+function boxTypeToFourCC(n: number): string {
+  return [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff]
+    .map((b) => String.fromCharCode(b))
+    .join("");
+}
+
+/**
  * For the next encountered box, return byte offsets corresponding to:
  *   1. the starting byte offset for the next box (should always be equal to
  *       `0`).
@@ -277,6 +293,7 @@ function getNextBoxOffsets(
 }
 
 export {
+  boxTypeToFourCC,
   getBox,
   getBoxContent,
   getBoxesContent,

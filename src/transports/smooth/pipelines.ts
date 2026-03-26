@@ -269,7 +269,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
     ):
       | ISegmentParserParsedInitChunk<null>
       | ISegmentParserParsedMediaChunk<ITextTrackSegmentData | null> {
-      const { segment, language, mimeType = "", codecs = "" } = context;
+      const { segment, language, mimeType = "", chosenCodec = "" } = context;
       const isMP4 = isMP4EmbeddedTrack(context.mimeType);
       const { data, isChunked } = loadedSegment;
       let chunkSize: number | undefined;
@@ -339,7 +339,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
               : segment.end;
         }
 
-        const lcCodec = codecs.toLowerCase();
+        const lcCodec = chosenCodec.toLowerCase();
         if (
           mimeType === "application/ttml+xml+mp4" ||
           lcCodec === "stpp" ||
@@ -382,7 +382,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
         }
 
         if (_sdType === undefined) {
-          const lcCodec = codecs.toLowerCase();
+          const lcCodec = chosenCodec.toLowerCase();
           if (lcCodec === "srt") {
             _sdType = "srt";
           } else {

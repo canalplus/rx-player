@@ -136,11 +136,13 @@ describe("updateCodecSupportInWorkerMode", () => {
       mimeType: "video/mp4",
       codecs: ["avc1.42E01E"],
       isCodecSupportedInWebWorker: undefined,
+      getMimeTypeString: () => `video/mp4;codecs="avc1.42E01E"`,
     };
     const audioRep = {
       mimeType: "audio/mp4",
       codecs: ["mp4a.40.2"],
       isCodecSupportedInWebWorker: undefined,
+      getMimeTypeString: () => `audio/mp4;codecs="mp4a.40.2"`,
     };
 
     const manifest = {
@@ -167,11 +169,13 @@ describe("updateCodecSupportInWorkerMode", () => {
       mimeType: "video/mp4",
       codecs: ["avc1.42E01E"],
       isCodecSupportedInWebWorker: undefined,
+      getMimeTypeString: () => `video/mp4;codecs="avc1.42E01E"`,
     };
     const rep2 = {
       mimeType: "video/mp4",
       codecs: ["avc1.42E01E"],
       isCodecSupportedInWebWorker: undefined,
+      getMimeTypeString: () => `video/mp4;codecs="avc1.42E01E"`,
     };
 
     const manifest = {

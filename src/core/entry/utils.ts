@@ -78,7 +78,7 @@ export function updateCodecSupportInWorkerMode(manifestToUpdate: Manifest) {
     ];
     for (const adaptation of checkedAdaptations) {
       for (const representation of adaptation.representations) {
-        const codec = `${representation.mimeType};codecs="${representation.codecs[0]}"`;
+        const codec = representation.getMimeTypeString();
         if (codecsMap.has(codec)) {
           representation.isCodecSupportedInWebWorker = codecsMap.get(codec);
         } else {
