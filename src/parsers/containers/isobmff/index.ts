@@ -15,9 +15,9 @@
  */
 
 import extractCompleteChunks, { extractInitSegment } from "./extract_complete_chunks";
+import extractPssh, { getPsshSystemID } from "./extract_pssh";
 import findCompleteBox from "./find_complete_box";
 import removeDolbyVisionConfigData from "./remove_dolby_vision_config_data";
-import takePSSHOut, { getPsshSystemID } from "./take_pssh_out";
 
 export { extractInitSegment };
 export { createBox, createBoxWithChildren } from "./create_box";
@@ -44,5 +44,5 @@ export {
   findCompleteBox,
   getPsshSystemID,
   removeDolbyVisionConfigData,
-  takePSSHOut,
+  extractPssh,
 };

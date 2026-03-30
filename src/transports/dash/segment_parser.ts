@@ -19,7 +19,7 @@ import logger from "../../log";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
-  takePSSHOut,
+  extractPssh,
   removeDolbyVisionConfigData,
 } from "../../parsers/containers/isobmff";
 import {
@@ -96,7 +96,7 @@ export default function generateAudioVideoSegmentParser({
 
     const protectionData: IProtectionDataInfo[] = [];
     if (seemsToBeMP4) {
-      const psshInfo = takePSSHOut(chunkData);
+      const psshInfo = extractPssh(chunkData);
       let keyId;
       if (segment.isInit) {
         keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;

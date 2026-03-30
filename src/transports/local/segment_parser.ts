@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getMDHDTimescale, takePSSHOut } from "../../parsers/containers/isobmff";
+import { getMDHDTimescale, extractPssh } from "../../parsers/containers/isobmff";
 import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils";
 import { getTimeCodeScale } from "../../parsers/containers/matroska";
 import type {
@@ -68,7 +68,7 @@ export default function segmentParser(
   const seemsToBeMP4 = containerType === "mp4" || containerType === undefined;
   const protectionData: IProtectionDataInfo[] = [];
   if (seemsToBeMP4) {
-    const psshInfo = takePSSHOut(chunkData);
+    const psshInfo = extractPssh(chunkData);
     let keyId;
     if (segment.isInit) {
       keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;
