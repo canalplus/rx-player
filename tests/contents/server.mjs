@@ -27,14 +27,6 @@ const DEFAULT_PACKAGED_LIVE_OS_PATH = path.join(
   "live",
 );
 
-// NOTE: Handling both windows-style `\` path separators alongside posix-like `/``
-// in bash is a nightmare.
-// Because of this, when communicating paths to BASH, I always do it posix-style
-const DEFAULT_PACKAGED_LIVE_UNIX_PATH = path.posix.join(
-  path.posix.dirname(__filename),
-  "../../tmp/testcontents/live/",
-);
-
 // Transform `urls` array into an Object where the key is the url of each
 // element.
 const routeObj = urls.reduce((acc, elt) => {
@@ -300,9 +292,9 @@ async function handleStartPackager(res) {
       packagingProcessInfo = null;
     }
 
-    const scriptPath = path.join(__dirname, "../../scripts/package_live_content.sh");
+    const scriptPath = path.join(__dirname, "../../scripts/package_live_content.mjs");
     const proc = spawn(
-      "bash",
+      process.execPath,
       [
         scriptPath,
         "--no-confirmation",
@@ -313,7 +305,7 @@ async function handleStartPackager(res) {
         "--base-port",
         "35951",
         "--output-dir",
-        DEFAULT_PACKAGED_LIVE_UNIX_PATH,
+        DEFAULT_PACKAGED_LIVE_OS_PATH,
       ],
       {
         stdio: ["ignore", "pipe", "pipe"], // Don't inherit stdio, capture output
