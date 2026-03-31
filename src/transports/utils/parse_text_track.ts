@@ -87,9 +87,16 @@ export function getISOBMFFEmbeddedTextTrackData(
     language,
     codecs,
   }: {
+    /** The segment containing that subtitles data. */
     segment: ISegment;
-    codecs?: string | undefined;
-    language?: string | undefined;
+    /** The wanted subtitles "codecs" as announced by the packager/encoder. */
+    codecs: string | undefined;
+    /**
+     * The wanted language to display.
+     * Some subtitles format embed several different subtitles group for
+     * different languages. This allows to select the right one.
+     */
+    language: string | undefined;
   },
   chunkBytes: Uint8Array<ArrayBuffer>,
   initTimescale: number | undefined,

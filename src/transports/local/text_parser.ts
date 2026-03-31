@@ -76,7 +76,11 @@ function parseISOBMFFEmbeddedTextTrack(
   }
   const chunkInfos = getISOBMFFTimingInfos(chunkBytes, isChunked, segment, initTimescale);
   const chunkData = getISOBMFFEmbeddedTextTrackData(
-    context,
+    {
+      segment: context.segment,
+      codecs: context.chosenCodec,
+      language: context.language,
+    },
     chunkBytes,
     initTimescale,
     chunkInfos,
