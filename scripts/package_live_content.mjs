@@ -18,16 +18,22 @@ import { existsSync, mkdirSync, readdirSync, unlinkSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 
-const NB_PORTS_USED = 6;
+const MAX_NB_PORTS_USED = 7;
 const DEFAULT_KID = "0123456789abcdef0123456789abcdef";
 const DEFAULT_KEY = "fedcba9876543210fedcba9876543210";
 const DEFAULT_SEGMENT_DURATION = 3;
 const DEFAULT_FRAME_RATE = 30;
 const DEFAULT_TIMESHIFT_BUFFER_DEPTH = 180;
 const DEFAULT_BASE_PORT = 8881;
+const TEXT_TRACK_LANGUAGE = "en";
+const TEXT_TRACK_LABEL = "generated-live-subtitles";
+const TEXT_TRACK_SEGMENT_PREFIX = "text_en";
+const TEXT_TRACK_CUE_SPACING = 4;
+const TEXT_TRACK_CUE_DURATION = 2;
+const TEXT_TRACK_INITIAL_AHEAD_DURATION = 4;
 
 // Timeout (ms) waiting for shaka-packager to start listening on UDP ports.
-const SHAKA_STARTUP_TIMEOUT_MS = 15_000;
+const SHAKA_STARTUP_TIMEOUT_MS = 15000;
 const SHAKA_STARTUP_POLL_INTERVAL_MS = 300;
 
 const RESET = "\x1b[0m";
@@ -46,6 +52,8 @@ const ARTIFACT_PATTERNS = [
   /^.+_init\.mp4$/,
   /^.+_\d+\.m4s$/,
   /^.+_\d+\.mp4$/,
+  /^source_subtitles\.(vtt|ttml)$/,
+  /^live_subtitles\.vtt$/,
 ];
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -62,12 +70,14 @@ const DEFAULT_CONFIG = {
   outputDir: "",
   keyId: "",
   key: "",
+  hasTextTrack: false,
 };
 
 // Module-level process handles and state — kept here so signal handlers and
 // cleanup() can always reach them regardless of call site.
 let ffmpegProc = null;
 let shakaProc = null;
+const textWriterProcs = [];
 let cleanupDone = false;
 
 /**
@@ -108,7 +118,6 @@ async function packageLiveContent(config) {
       throw new Error("KEY must be a 32-character hexadecimal string.");
     }
   }
-
   const { ok: portRangeOk, conflictDetected: portConflictDetected } = checkPortRange(
     config.basePort,
   );
@@ -142,10 +151,11 @@ async function packageLiveContent(config) {
     p720: config.basePort,
     p480: config.basePort + 1,
     p360: config.basePort + 2,
-    // audio streams: eng=+3, fra=+4, arm=+5 (arm is `last`, i.e. basePort + NB_PORTS_USED - 1)
+    // audio streams: eng=+3, fra=+4, arm=+5 (arm is `last`, i.e. basePort + MAX_NB_PORTS_USED - 1)
     audio1: config.basePort + 3,
     audio2: config.basePort + 4,
-    last: config.basePort + NB_PORTS_USED - 1,
+    audio3: config.basePort + 5,
+    text: config.basePort + 6,
   };
 
   await showConfigAndConfirm(config, shakaCmd, ports, portConflictDetected);
@@ -162,6 +172,7 @@ async function packageLiveContent(config) {
 
   const gop = config.frameRate * config.segmentDuration;
   const out = config.outputDir;
+  const textTrackAssets = config.hasTextTrack ? createTextTrackAssets(ports) : [];
 
   const shakaArgs = [
     `in=udp://127.0.0.1:${ports.p720},stream=video,init_segment=${out}/h264_720p_init.mp4,segment_template=${out}/h264_720p_$Number$.m4s`,
@@ -169,7 +180,7 @@ async function packageLiveContent(config) {
     `in=udp://127.0.0.1:${ports.p360},stream=video,init_segment=${out}/h264_360p_init.mp4,segment_template=${out}/h264_360p_$Number$.m4s`,
     `in=udp://127.0.0.1:${ports.audio1},stream=audio,init_segment=${out}/audio_eng_init.mp4,segment_template=${out}/audio_eng_$Number$.m4s`,
     `in=udp://127.0.0.1:${ports.audio2},stream=audio,init_segment=${out}/audio_fra_init.mp4,segment_template=${out}/audio_fra_$Number$.m4s`,
-    `in=udp://127.0.0.1:${ports.last},stream=audio,init_segment=${out}/audio_arm_init.mp4,segment_template=${out}/audio_arm_$Number$.m4s`,
+    `in=udp://127.0.0.1:${ports.audio3},stream=audio,init_segment=${out}/audio_arm_init.mp4,segment_template=${out}/audio_arm_$Number$.m4s`,
     "--time_shift_buffer_depth",
     String(config.timeshiftBufferDepth),
     "--minimum_update_period",
@@ -182,6 +193,14 @@ async function packageLiveContent(config) {
     `${out}/manifest.mpd`,
   ];
 
+  if (textTrackAssets.length > 0) {
+    for (const textTrackAsset of textTrackAssets.reverse()) {
+      shakaArgs.unshift(
+        `in=${textTrackAsset.sourcePath},stream=text,input_format=${textTrackAsset.inputFormat},language=${TEXT_TRACK_LANGUAGE},init_segment=${out}/${textTrackAsset.segmentPrefix}_init.mp4,segment_template=${out}/${textTrackAsset.segmentPrefix}_$Number$.m4s`,
+      );
+    }
+  }
+
   if (config.keyId) {
     shakaArgs.push(
       "--keys",
@@ -193,6 +212,9 @@ async function packageLiveContent(config) {
     );
   }
 
+  if (textTrackAssets.length > 0) {
+    startLiveTextTrackWriters(textTrackAssets, config.segmentDuration);
+  }
   console.log(`Starting shaka-packager with command: ${shakaCmd}`);
   shakaProc = spawn(shakaCmd, shakaArgs, { stdio: "inherit" });
   console.log(`shaka-packager started with PID: ${shakaProc.pid}`);
@@ -205,8 +227,12 @@ async function packageLiveContent(config) {
       ports.p360,
       ports.audio1,
       ports.audio2,
-      ports.last,
+      ports.audio3,
+      ...(config.hasTextTrack ? [ports.text] : []),
     ]);
+    if (textTrackAssets.length > 0) {
+      await waitForTextTracksReady(out, textTrackAssets);
+    }
   } catch (err) {
     cleanup(out);
     throw err;
@@ -345,7 +371,7 @@ async function packageLiveContent(config) {
     "language=arm",
     "-f",
     "mpegts",
-    `udp://127.0.0.1:${ports.last}`,
+    `udp://127.0.0.1:${ports.audio3}`,
   ];
 
   ffmpegProc = spawn("ffmpeg", ffmpegArgs, { stdio: "inherit" });
@@ -411,6 +437,114 @@ async function waitForShakaReady(portList) {
   );
 }
 
+async function waitForTextTracksReady(outputDir, textTrackAssets) {
+  const deadline = Date.now() + SHAKA_STARTUP_TIMEOUT_MS;
+  const expectedFiles = textTrackAssets.map((asset) =>
+    resolve(outputDir, `${asset.segmentPrefix}_init.mp4`),
+  );
+
+  while (Date.now() < deadline) {
+    if (expectedFiles.every((filePath) => existsSync(filePath))) {
+      return;
+    }
+    await new Promise((r) => setTimeout(r, SHAKA_STARTUP_POLL_INTERVAL_MS));
+  }
+
+  throw new Error(
+    `Timed out waiting for text track initialization segments: ${expectedFiles.join(", ")}`,
+  );
+}
+
+function createTextTrackAssets(ports) {
+  const sourcePath = `udp://127.0.0.1:${ports.text}`;
+  return [
+    {
+      sourcePath,
+      segmentPrefix: TEXT_TRACK_SEGMENT_PREFIX,
+      inputFormat: "webvtt",
+      liveWriterMode: "webvtt",
+      port: ports.text,
+    },
+  ];
+}
+
+function startLiveTextTrackWriters(textTrackAssets, segmentDuration) {
+  for (const textTrackAsset of textTrackAssets) {
+    if (textTrackAsset.liveWriterMode === "webvtt") {
+      textWriterProcs.push(
+        spawn(
+          process.execPath,
+          [
+            "-e",
+            getLiveWebVttWriterScript(
+              textTrackAsset.port,
+              segmentDuration,
+              TEXT_TRACK_CUE_SPACING,
+              TEXT_TRACK_CUE_DURATION,
+            ),
+          ],
+          { stdio: "inherit" },
+        ),
+      );
+    }
+  }
+}
+
+function getLiveWebVttWriterScript(port, segmentDuration, cueSpacing, cueDuration) {
+  return `
+const dgram = require("dgram");
+const socket = dgram.createSocket("udp4");
+const PORT = ${port};
+const HOST = "127.0.0.1";
+
+let cueIndex = 0;
+let nextCueStart = 0;
+
+function formatTimestamp(totalSeconds) {
+  const totalMs = Math.round(totalSeconds * 1000);
+  const ms = totalMs % 1000;
+  const s = Math.floor(totalMs / 1000) % 60;
+  const m = Math.floor(totalMs / 60000) % 60;
+  const h = Math.floor(totalMs / 3600000);
+  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+"."+String(ms).padStart(3,"0");
+}
+
+function sendCue() {
+  const cueEnd = nextCueStart + Math.min(${cueDuration}, ${segmentDuration});
+  const cue = formatTimestamp(nextCueStart) + " --> " + formatTimestamp(cueEnd) + "\\n" +
+    ${JSON.stringify(TEXT_TRACK_LABEL)} + " live cue " + cueIndex + "\\n\\n";
+  const buf = Buffer.from(cue, "utf8");
+  socket.send(buf, 0, buf.length, PORT, HOST);
+  cueIndex++;
+  nextCueStart += ${cueSpacing};
+}
+
+// Send header first
+const header = Buffer.from("WEBVTT\\n\\n", "utf8");
+socket.send(header, 0, header.length, PORT, HOST);
+
+// Send initial ahead buffer
+while (nextCueStart < ${TEXT_TRACK_INITIAL_AHEAD_DURATION}) {
+  sendCue();
+}
+
+// Keep sending one cue every cueSpacing seconds
+const intervalId = setInterval(sendCue, ${cueSpacing * 1000});
+
+function stop() {
+  clearInterval(intervalId);
+  socket.close();
+  process.exit(0);
+}
+process.on("SIGINT", stop);
+process.on("SIGTERM", stop);
+socket.on("error", (err) => {
+  console.error("Live WebVTT UDP writer error:", err);
+  process.exit(1);
+});
+`;
+}
+
 /**
  * Strip trailing slashes (unless root) and resolve to absolute.
  * @param {string} p - The initial path
@@ -439,7 +573,7 @@ function commandExists(cmd) {
  * @returns {{ ok: boolean, conflictDetected: boolean }}
  */
 function checkPortRange(basePort) {
-  const endPort = basePort + NB_PORTS_USED - 1;
+  const endPort = basePort + MAX_NB_PORTS_USED - 1;
 
   if (endPort > 65535) {
     return { ok: false, conflictDetected: false };
@@ -667,12 +801,16 @@ async function showConfigAndConfirm(config, shakaCmd, ports, portConflictDetecte
   tableRow("Shaka-packager command", shakaCmd, BLUE);
 
   const portLabel = portConflictDetected
-    ? `${ports.base}-${ports.last} (UDP) - Conflict detected`
-    : `${ports.base}-${ports.last} (UDP)`;
+    ? `${ports.base}-${ports.audio3} (UDP) - Conflict detected`
+    : `${ports.base}-${ports.audio3} (UDP)`;
   tableRow("Encoding Ports", portLabel, portConflictDetected ? RED : MAGENTA);
   tableSep();
   tableRow("Output Directory", config.outputDir, GREEN);
   tableRow("Output Manifest", `${config.outputDir}/manifest.mpd`, GREEN);
+  if (config.hasTextTrack) {
+    tableRow("Text Track Language", TEXT_TRACK_LANGUAGE, GREEN);
+    tableRow("Text Cue Label", TEXT_TRACK_LABEL, GREEN);
+  }
   tableSep();
 
   if (!config.keyId) {
@@ -714,6 +852,7 @@ function cleanup(outputDir) {
   for (const [name, proc] of [
     ["ffmpeg", ffmpegProc],
     ["shaka-packager", shakaProc],
+    ...textWriterProcs.map((p) => ["text-writer", p]),
   ]) {
     if (!proc) {
       continue;
@@ -744,6 +883,15 @@ for (const sig of ["SIGINT", "SIGTERM"]) {
 process.on("exit", () => {
   // Force-kill any lingering children on exit
   for (const proc of [ffmpegProc, shakaProc]) {
+    if (proc) {
+      try {
+        proc.kill("SIGKILL");
+      } catch {
+        /* gone */
+      }
+    }
+  }
+  for (const proc of textWriterProcs) {
     if (proc) {
       try {
         proc.kill("SIGKILL");
@@ -841,6 +989,10 @@ if (
         configObj.keyId = DEFAULT_KID;
         configObj.key = DEFAULT_KEY;
         break;
+      case "--enable-text-track": {
+        configObj.hasTextTrack = true;
+        break;
+      }
       case "--help":
         displayHelp();
         process.exit(0);
@@ -943,10 +1095,13 @@ Options:
                                         key_id = ${DEFAULT_KID}
                                         key    = ${DEFAULT_KEY}
 
+  --enable-text-track                 Add text track AdaptationSet to the content with placeholder cues.
+                                      Disabled by default.
+
   --base-port <port>                  Base UDP port number where media encoded by ffmpeg will
                                       be communicated to the shaka-packager.
-                                      ${NB_PORTS_USED} consecutive ports starting from this number will be used.
-                                      Defaults to ${DEFAULT_BASE_PORT} (ports ${DEFAULT_BASE_PORT}-${DEFAULT_BASE_PORT + NB_PORTS_USED - 1}).
+                                      ${MAX_NB_PORTS_USED} consecutive ports starting from this number will be used.
+                                      Defaults to ${DEFAULT_BASE_PORT} (ports ${DEFAULT_BASE_PORT}-${DEFAULT_BASE_PORT + MAX_NB_PORTS_USED - 1}).
 
   --shaka-path <path>                 Path to the shaka-packager binary. If not specified,
                                       the script will search common locations and, as a last

@@ -47,6 +47,8 @@ let packagingProcessInfo = null;
  */
 export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT } = {}) {
   const server = createServer(function (req, res) {
+    const requestUrl = new URL(req.url, "http://127.0.0.1");
+
     if (req.url === "/") {
       if (req.method.toUpperCase() === "OPTIONS") {
         answerWithCORS(res, 200);
@@ -107,7 +109,7 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
       return;
     }
 
-    if (req.url === "/start_packager") {
+    if (requestUrl.pathname === "/start_packager") {
       if (req.method.toUpperCase() === "OPTIONS") {
         answerWithCORS(res, 200);
         res.end();
@@ -119,11 +121,12 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
         return;
       }
 
-      handleStartPackager(res);
+      const textTrackQs = requestUrl.searchParams.get("enableTextTrack");
+      handleStartPackager(res, textTrackQs === "1");
       return;
     }
 
-    if (req.url === "/packager_status") {
+    if (requestUrl.pathname === "/packager_status") {
       if (req.method.toUpperCase() === "OPTIONS") {
         answerWithCORS(res, 200);
         res.end();
@@ -148,13 +151,14 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
                 mpdPath: packagingProcessInfo.mpdPath,
                 timeShiftBufferDepth: packagingProcessInfo.timeShiftBufferDepth,
                 segmentDuration: packagingProcessInfo.segmentDuration,
+                hasTextTrack: packagingProcessInfo.hasTextTrack,
               },
             };
       answerWithCORS(res, 200, JSON.stringify(jsonResponse));
       return;
     }
 
-    if (req.url === "/stop_packager") {
+    if (requestUrl.pathname === "/stop_packager") {
       if (req.method.toUpperCase() === "OPTIONS") {
         answerWithCORS(res, 200);
         res.end();
@@ -240,6 +244,9 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
       );
       console.log("      Only one content packaging at a time is supported.\n");
       console.log(
+        "      A text track can be added by adding enableTextTrack=1 to its query string.\n",
+      );
+      console.log(
         "      Stop packaging operations by POSTing to:\n      /stop_packager\n",
       );
       console.log(
@@ -261,9 +268,13 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
       if (packagingProcessInfo && !packagingProcessInfo.process.killed) {
         packagingProcessInfo.process.kill("SIGINT");
         setTimeout(() => {
-          // Use a negative PID to target the process group
-          process.kill(-packagingProcessInfo.process.pid);
-          packagingProcessInfo = null;
+          try {
+            // Use a negative PID to target the process group
+            process.kill(-packagingProcessInfo.process.pid);
+            packagingProcessInfo = null;
+          } catch (_err) {
+            /* previous process already exited */
+          }
         }, 5000);
       }
       const wasOpen = server.listening;
@@ -279,16 +290,21 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
  * Handle the /start_packager endpoint
  * @param {Response} res
  */
-async function handleStartPackager(res) {
+async function handleStartPackager(res, hasTextTrack) {
   try {
     if (packagingProcessInfo && !packagingProcessInfo.process.killed) {
+      const previousProcess = packagingProcessInfo.process;
       if (ACTIVATE_PACKAGER_LOGS) {
         console.log("Stopping existing content packaging process...");
       }
-      packagingProcessInfo.process.kill("SIGINT");
+      previousProcess.kill("SIGINT");
       await new Promise((resolve) => setTimeout(resolve, 5000));
       // Use a negative PID to target the process group
-      process.kill(-packagingProcessInfo.process.pid);
+      try {
+        process.kill(-previousProcess.pid);
+      } catch (_err) {
+        /* previous process already exited */
+      }
       packagingProcessInfo = null;
     }
 
@@ -298,6 +314,7 @@ async function handleStartPackager(res) {
       [
         scriptPath,
         "--no-confirmation",
+        ...(hasTextTrack ? ["--enable-text-track"] : []),
         "--segment-duration",
         "2",
         "--timeshift-buffer-depth",
@@ -318,6 +335,7 @@ async function handleStartPackager(res) {
       timeShiftBufferDepth: 40,
       segmentDuration: 2,
       mpdPath: "/live/manifest.mpd",
+      hasTextTrack,
     };
 
     packagingProcessInfo.process.on("error", (error) => {
@@ -363,6 +381,7 @@ async function handleStartPackager(res) {
           mpdPath: packagingProcessInfo.mpdPath,
           timeShiftBufferDepth: packagingProcessInfo.timeShiftBufferDepth,
           segmentDuration: packagingProcessInfo.segmentDuration,
+          hasTextTrack: packagingProcessInfo.hasTextTrack,
         },
       }),
     );

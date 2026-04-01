@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import RxPlayer from "../../../dist/es2017";
+import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
@@ -24,46 +25,120 @@ const PACKAGER_STATUS_URL =
   __TEST_CONTENT_SERVER__.PORT +
   "/packager_status";
 
+const TEXT_TRACK_CYCLE_DURATION = 4;
+const TEXT_TRACK_VISIBLE_OFFSET = 1;
+const TEXT_TRACK_GAP_OFFSET = 3;
+
+function createTextTrackElement() {
+  const element = document.createElement("div");
+  element.style.width = "640px";
+  element.style.height = "360px";
+  element.style.position = "absolute";
+  element.style.left = "0";
+  element.style.top = "0";
+  document.body.appendChild(element);
+  return element;
+}
+
+function getFirstPositionInCycle(start, cycleOffset) {
+  const cycleIndex = Math.floor(start / TEXT_TRACK_CYCLE_DURATION);
+  let candidate = cycleIndex * TEXT_TRACK_CYCLE_DURATION + cycleOffset;
+  if (candidate < start) {
+    candidate += TEXT_TRACK_CYCLE_DURATION;
+  }
+  return candidate;
+}
+
+function getSubtitleWindowPositions(minimumPosition, maximumPosition) {
+  const visiblePosition = getFirstPositionInCycle(
+    minimumPosition + 0.25,
+    TEXT_TRACK_VISIBLE_OFFSET,
+  );
+  const gapPosition = getFirstPositionInCycle(visiblePosition + 1, TEXT_TRACK_GAP_OFFSET);
+  if (gapPosition >= maximumPosition - 1) {
+    throw new Error(
+      `Could not find subtitle validation window in live range [${minimumPosition}, ${maximumPosition}]`,
+    );
+  }
+  return { visiblePosition, gapPosition };
+}
+
+async function waitForPlayerToReachPosition(player, wantedPosition) {
+  player.seekTo(wantedPosition);
+  await checkAfterSleepWithBackoff({ maxTimeMs: 5000, stepMs: 100 }, () => {
+    expect(Math.abs(player.getPosition() - wantedPosition)).toBeLessThanOrEqual(0.75);
+  });
+}
+
+async function waitForRenderedTextTrack(textTrackElement) {
+  await checkAfterSleepWithBackoff({ maxTimeMs: 4000, stepMs: 100 }, () => {
+    expect(textTrackElement.childElementCount).toBeGreaterThan(0);
+    expect(textTrackElement.getElementsByTagName("div").length).toBeGreaterThan(0);
+    expect(textTrackElement.textContent.trim()).toContain("live cue");
+  });
+}
+
+async function waitForNoRenderedTextTrack(textTrackElement) {
+  await checkAfterSleepWithBackoff({ maxTimeMs: 4000, stepMs: 100 }, () => {
+    expect(textTrackElement.childElementCount).toEqual(0);
+    expect(textTrackElement.textContent.trim()).toEqual("");
+  });
+}
+
+async function waitForPackagerReady() {
+  let localMpdUrl;
+  let localSegmentDuration;
+  let localTimeShiftBufferDepth;
+  let localHasTextTrack;
+  while (true) {
+    await sleep(1500);
+    const statusRes = await fetch(PACKAGER_STATUS_URL);
+    const status = await statusRes.json();
+    if (!status.active) {
+      throw new Error(
+        "Live Packager failed to generate content.\n" +
+          "Activate live packager logs for more info.",
+      );
+    }
+    const mpdPath = status.info.mpdPath;
+    localMpdUrl = `http://${__TEST_CONTENT_SERVER__.URL}:${__TEST_CONTENT_SERVER__.PORT}${mpdPath}`;
+    localSegmentDuration = status.info.segmentDuration;
+    localTimeShiftBufferDepth = status.info.timeShiftBufferDepth;
+    localHasTextTrack = status.info.hasTextTrack;
+    const res = await fetch(localMpdUrl);
+    if (res.status >= 400) {
+      if (res.status !== 404) {
+        throw new Error(
+          "Error while requesting generated MPD\n" +
+            "Activate live packager logs for more info.",
+        );
+      }
+    } else {
+      break;
+    }
+  }
+  await sleep((localTimeShiftBufferDepth ?? 1) * 1000);
+  return {
+    mpdUrl: localMpdUrl,
+    segmentDuration: localSegmentDuration,
+    hasTextTrack: localHasTextTrack,
+  };
+}
+
 describe("DASH live packaged content", function () {
   let player;
   let mpdUrl;
   let segmentDuration;
+  let textTrackElement;
 
   beforeAll(
     async () => {
-      await fetch(START_PACKAGER_URL, {
+      await fetch(`${START_PACKAGER_URL}?enableTextTrack=1`, {
         method: "POST",
       });
-
-      let timeShiftBufferDepth;
-      while (true) {
-        // Poll MPD and start `timeShiftBufferDepth` timer when it has been generated
-        await sleep(1500);
-        const statusRes = await fetch(PACKAGER_STATUS_URL);
-        const status = await statusRes.json();
-        if (!status.active) {
-          throw new Error(
-            "Live Packager failed to generate content.\n" +
-              "Activate live packager logs for more info.",
-          );
-        }
-        const mpdPath = status.info.mpdPath;
-        mpdUrl = `http://${__TEST_CONTENT_SERVER__.URL}:${__TEST_CONTENT_SERVER__.PORT}${mpdPath}`;
-        segmentDuration = status.info.segmentDuration;
-        timeShiftBufferDepth = status.info.timeShiftBufferDepth;
-        const res = await fetch(mpdUrl);
-        if (res.status >= 400) {
-          if (res.status !== 404) {
-            throw new Error(
-              "Error while requesting generated MPD\n" +
-                "Activate live packager logs for more info.",
-            );
-          }
-        } else {
-          break;
-        }
-      }
-      await sleep((timeShiftBufferDepth ?? 1) * 1000);
+      const readyInfos = await waitForPackagerReady();
+      mpdUrl = readyInfos.mpdUrl;
+      segmentDuration = readyInfos.segmentDuration;
     },
 
     (3600 / 2) * 1000,
@@ -78,10 +153,15 @@ describe("DASH live packaged content", function () {
 
   beforeEach(() => {
     player = new RxPlayer();
+    textTrackElement = null;
   });
 
   afterEach(() => {
     player.dispose();
+    if (textTrackElement !== null) {
+      textTrackElement.remove();
+      textTrackElement = null;
+    }
   });
 
   it(
@@ -196,7 +276,15 @@ describe("DASH live packaged content", function () {
           expect(segmentLoaderLoaderCalledTimes).toEqual(0);
           const periodId = p[0].id;
           expect(player.getTextTrack(periodId)).toEqual(null);
-          expect(player.getAvailableTextTracks(periodId)).toEqual([]);
+          expect(player.getAvailableTextTracks(periodId)).toEqual([
+            {
+              active: false,
+              closedCaption: false,
+              id: "0",
+              language: "en",
+              normalized: "eng",
+            },
+          ]);
           expect(player.getVideoTrack(periodId)).not.toEqual(null);
           expect(player.getAvailableVideoTracks(periodId).length).toBeGreaterThan(0);
           expect(player.getAudioTrack(periodId)).not.toEqual(null);
@@ -210,4 +298,66 @@ describe("DASH live packaged content", function () {
       player.addEventListener("error", rej);
     });
   });
+
+  it(
+    "should render subtitles only when enabled and clear them when disabled",
+    {
+      timeout: 60000,
+    },
+    async function () {
+      const readyInfos = await waitForPackagerReady();
+      expect(readyInfos.hasTextTrack).toEqual(true);
+      textTrackElement = createTextTrackElement();
+
+      player.loadVideo({
+        url: readyInfos.mpdUrl,
+        autoPlay: true,
+        transport: "dash",
+        textTrackMode: "html",
+        textTrackElement,
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+
+      let periodId;
+      let textTrack;
+      await checkAfterSleepWithBackoff({ maxTimeMs: 5000, stepMs: 100 }, () => {
+        const periods = player.getAvailablePeriods();
+        expect(periods.length).toBeGreaterThan(0);
+        periodId = periods[0].id;
+        const textTracks = player.getAvailableTextTracks(periodId);
+        expect(textTracks.length).toBeGreaterThan(0);
+        textTrack = textTracks[0];
+      });
+
+      expect(player.getTextTrack(periodId)).toEqual(null);
+      await waitForNoRenderedTextTrack(textTrackElement);
+
+      player.setTextTrack({
+        trackId: textTrack.id,
+        periodId,
+      });
+      await checkAfterSleepWithBackoff({ maxTimeMs: 5000, stepMs: 100 }, () => {
+        expect(player.getTextTrack(periodId)?.id).toEqual(textTrack.id);
+      });
+
+      const { visiblePosition, gapPosition } = getSubtitleWindowPositions(
+        player.getMinimumPosition(),
+        player.getMaximumPosition(),
+      );
+      await waitForPlayerToReachPosition(player, visiblePosition);
+      await waitForRenderedTextTrack(textTrackElement);
+
+      await waitForPlayerToReachPosition(player, gapPosition);
+      await waitForNoRenderedTextTrack(textTrackElement);
+
+      await waitForPlayerToReachPosition(player, visiblePosition);
+      await waitForRenderedTextTrack(textTrackElement);
+
+      player.disableTextTrack(periodId);
+      await checkAfterSleepWithBackoff({ maxTimeMs: 5000, stepMs: 100 }, () => {
+        expect(player.getTextTrack(periodId)).toEqual(null);
+      });
+      await waitForNoRenderedTextTrack(textTrackElement);
+    },
+  );
 });
