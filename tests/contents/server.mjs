@@ -7,10 +7,10 @@ import { spawn } from "child_process";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import * as fs from "fs";
-import urls from "./urls.mjs";
+import urls from "./static/urls.mjs";
 
 /** To activate if you're having content packaging issues. */
-const ACTIVATE_PACKAGER_LOGS = false;
+const ACTIVATE_PACKAGER_LOGS = true;
 
 /** Path of the current file. */
 const __filename = fileURLToPath(import.meta.url);
@@ -308,7 +308,7 @@ async function handleStartPackager(res, hasTextTrack) {
       packagingProcessInfo = null;
     }
 
-    const scriptPath = path.join(__dirname, "../../scripts/package_live_content.mjs");
+    const scriptPath = path.join(__dirname, "./packager/main.mjs");
     const proc = spawn(
       process.execPath,
       [
