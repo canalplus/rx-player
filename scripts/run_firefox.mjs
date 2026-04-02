@@ -9,6 +9,8 @@
  * the latter.
  */
 
+// @ts-check
+
 import { spawn } from "child_process";
 import { pathToFileURL } from "url";
 import * as fs from "fs/promises";
@@ -29,22 +31,25 @@ const HEADLESS_OPTIONS = ["-headless"];
  * Run the Firefox browser on the given URL and return its process.
  * @param {string} url - The URL to run on Firefox
  * @param {Object} [params={}] - Launched Firefox's configuration
- * @param {boolean|undefined} params.headless - If `true`, the browser will
+ * @param {boolean|undefined} [params.headless] - If `true`, the browser will
  * be launched in headless mode.
- * @param {boolean|undefined} params.enableAutoPlay - If `true`, the browser
+ * @param {boolean|undefined} [params.enableAutoPlay] - If `true`, the browser
  * will be launched with specific flags to disable auto-play blocking.
  * Useful for tests.
- * @param {boolean|undefined} params.verbose - If `true`, the browser will
+ * @param {boolean|undefined} [params.verbose] - If `true`, the browser will
  * output to stdout. If not set or set to `false`, it will stay silent.
  * Can be used to debug issues.
- * @returns {Promise.<ChildProcess>}
+ * @returns {Promise.<import("child_process").ChildProcess>}
  */
 export default async function runFirefox(
   url,
   { headless, enableAutoPlay, verbose } = {},
 ) {
   const firefoxCmd = await getFirefoxCmd();
-  const flags = FIREFOX_OPTIONS;
+  if (firefoxCmd === null) {
+    throw new Error("Could not find Firefox executable on the current environment.");
+  }
+  const flags = [...FIREFOX_OPTIONS];
   if (headless) {
     flags.push(...HEADLESS_OPTIONS);
   }
@@ -53,7 +58,11 @@ export default async function runFirefox(
     const spawned = spawnProc(
       firefoxCmd,
       [...FIREFOX_OPTIONS, "-profile", profileDir, url],
-      { verbose, parseError: (code) => "Failed to run Firefox. Code = " + code },
+      {
+        verbose,
+        /** @param {number|undefined} code */
+        parseError: (code) => "Failed to run Firefox. Code = " + code,
+      },
     );
     spawned.child.on("exit", async () => {
       try {
@@ -64,7 +73,7 @@ export default async function runFirefox(
     });
     return spawned.child;
   } catch (err) {
-    throw new Error("Could not launch page on Firefox: " + err.toString());
+    throw new Error("Could not launch page on Firefox: " + String(err));
   }
 }
 
@@ -76,10 +85,12 @@ export default async function runFirefox(
  * output to stdout. If not set or set to `false`, it will stay silent.
  * Can be used to debug issues.
  * @param {Function|undefined} [params.parseError]
- * @returns {Object}
+ * @returns {{promise: Promise.<void>; child: import("child_process").ChildProcess}}
  */
 function spawnProc(command, args, { parseError, verbose } = {}) {
+  /** @type {import("child_process").ChildProcess | undefined} */
   let child;
+  /** @type {Promise.<void>} */
   const prom = new Promise((res, rej) => {
     child = spawn(command, args, { stdio: verbose ? "inherit" : undefined });
     child.on("close", (code) => {
@@ -94,6 +105,9 @@ function spawnProc(command, args, { parseError, verbose } = {}) {
       res();
     });
   });
+  if (child === undefined) {
+    throw new Error("Could not start Firefox process");
+  }
   return {
     promise: prom,
     child,
@@ -105,9 +119,9 @@ function spawnProc(command, args, { parseError, verbose } = {}) {
  * policies etc.
  * This util function does just that and return the temporary path created.
  * @param {Object} [params={}] - Launched Firefox's configuration
- * @param {boolean|undefined} params.headless - If `true`, the browser will
+ * @param {boolean|undefined} [params.headless] - If `true`, the browser will
  * be launched in headless mode.
- * @param {boolean|undefined} params.enableAutoPlay - If `true`, the browser
+ * @param {boolean|undefined} [params.enableAutoPlay] - If `true`, the browser
  * will be launched with specific flags to disable auto-play blocking.
  * Useful for tests.
  * @returns {Promise.<string>}

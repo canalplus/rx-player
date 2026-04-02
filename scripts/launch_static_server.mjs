@@ -7,13 +7,49 @@
  * path and a key path have been given) static file server.
  */
 
-import { access, createReadStream, readFile, existsSync } from "fs";
+// @ts-check
+
+import { access, createReadStream, existsSync } from "fs";
+import { readFile } from "fs/promises";
 import { join, extname, normalize } from "path";
 import { pathToFileURL } from "url";
 import { promisify } from "util";
 import http from "http";
 import https from "https";
 import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
+
+/** @typedef {keyof typeof MIME_TYPES} MimeTypeExtension */
+/**
+ * @typedef {{
+ *   httpPort: number;
+ *   httpsPort?: number;
+ *   verbose?: boolean;
+ *   certificatePath?: string;
+ *   keyPath?: string;
+ * }} LaunchStaticServerConfig
+ *
+ * Static server configuration.
+ * @property {number} httpPort - Port on which the server will listen for HTTP
+ * traffic.
+ * @property {number} [httpsPort] - Port on which the server will listen for
+ * HTTPS traffic. If not defined, the server won't listen for HTTPS traffic.
+ * @property {boolean} [verbose] - If set to `true`, the server outputs when it
+ * starts listening and when startup fails.
+ * @property {string} [certificatePath] - Path to the TLS certificate used for
+ * HTTPS connections. If not defined, the server won't listen for HTTPS traffic.
+ * @property {string} [keyPath] - Path to the private key used for HTTPS
+ * connections. If not defined, the server won't listen for HTTPS traffic.
+ */
+/**
+ * @typedef {{
+ *   ext: string;
+ *   stream: import("fs").ReadStream;
+ * }} PreparedFile
+ *
+ * Prepared file response returned by `prepareFile`.
+ * @property {string} ext - Lower-cased file extension without the leading dot.
+ * @property {import("fs").ReadStream} stream - Stream reading the file content.
+ */
 
 const MIME_TYPES = {
   default: "application/octet-stream",
@@ -180,13 +216,19 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   }
 
   try {
-    const { listeningPromise } = launchStaticServer(normalizedPath, {
-      certificatePath: certificateFile,
-      keyPath: keyFile,
+    /** @type {LaunchStaticServerConfig} */
+    const launchConfig = {
       verbose: true,
       httpPort: httpPort ?? 8000,
       httpsPort: httpsPort ?? 8443,
-    });
+    };
+    if (certificateFile !== undefined) {
+      launchConfig.certificatePath = certificateFile;
+    }
+    if (keyFile !== undefined) {
+      launchConfig.keyPath = keyFile;
+    }
+    const { listeningPromise } = launchStaticServer(normalizedPath, launchConfig);
     listeningPromise.catch((err) => {
       console.error(`ERROR: ${err}\n`);
       process.exit(1);
@@ -200,21 +242,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 /**
  * Launch the static server and begin to serve on the configured port.
  * @param {string} path - Root path that will be served by the static server.
- * @param {Object} config - Associated configuration.
- * @param {number} config.httpPort - Port on which the server will be listening
- * for HTTP traffic.
- * @param {number} [config.httpsPort] - Port on which the server will be
- * listening for HTTPS traffic.
- * If not defined, the server won't listen for HTTPS traffic.
- * @param {boolean} [config.verbose] - If set to `true` the server will output
- * when the server start listening and when anything failed.
- * @param {string} [config.certificatePath] - Path to the TLS certificate that
- * will be used in HTTPS connections.
- * If not defined, the server won't listen for HTTPS traffic.
- * @param {string} [config.keyPath] - Path to the public key allowing to encrypt
- * the HTTPS connection.
- * If not defined, the server won't listen for HTTPS traffic.
- * @returns {Object} Object with two properties:
+ * @param {LaunchStaticServerConfig} config - Associated configuration.
+ * @returns {{listeningPromise:Promise.<*>;close: () => void}} Object with two properties:
  *   - `listeningPromise` (Promise.<Object>): This promise rejects if the HTTP
  *     server could not start but resolves in any other case (listening to HTTP
  *     alone or both HTTP and HTTPS), even if the asked HTTPS server could not
@@ -235,12 +264,16 @@ export default function launchStaticServer(path, config) {
     config.certificatePath !== undefined &&
     config.keyPath !== undefined;
 
+  /** @type {string|null} */
   let httpServerStatus = null;
+  /** @type {string|null} */
   let httpsServerStatus = null;
+  /** @type {Array<http.Server | https.Server>} */
   const servers = [];
   const listeningPromise = new Promise((res, rej) => {
     const httpServer = http.createServer(onRequest);
     servers.push(httpServer);
+    httpServer.once("error", onHttpConnectionError);
     httpServer.listen(config.httpPort, onHttpConnection);
 
     if (!shouldStartHttps) {
@@ -248,15 +281,15 @@ export default function launchStaticServer(path, config) {
       return;
     }
 
+    const certificatePath = /** @type {string} */ (config.certificatePath);
+    const keyPath = /** @type {string} */ (config.keyPath);
+    /** @type {import("https").Server|undefined} */
     let httpsServer;
-    Promise.all([
-      promisify(readFile)(config.certificatePath),
-      promisify(readFile)(config.keyPath),
-    ])
+    Promise.all([readFile(certificatePath), readFile(keyPath)])
       .then(([certFile, keyFile]) => {
         if (certFile == null || keyFile == null) {
           const err = new Error("Impossible to load the certificate and/or key file");
-          onHttpsConnection(err);
+          onHttpsConnectionError(err);
           return;
         }
         httpsServer = https.createServer(
@@ -267,40 +300,24 @@ export default function launchStaticServer(path, config) {
           onRequest,
         );
         servers.push(httpsServer);
+        httpsServer.once("error", onHttpsConnectionError);
         httpsServer.listen(config.httpsPort, onHttpsConnection);
       })
       .catch((err) => {
         httpsServerStatus = "error";
-        if (err.code === "ENOENT") {
-          const err = new Error(
+        if (err instanceof Error && "code" in err && err.code === "ENOENT") {
+          const fileError = new Error(
             "Certificate not generated.\n" +
               "(You can run `npm run certificate` to generate a certificate.)",
           );
-          onHttpsConnection(err);
+          onHttpsConnectionError(fileError);
         } else {
-          const err = new Error("Could not read key and certificate file.");
-          onHttpsConnection(err);
+          const fileError = new Error("Could not read key and certificate file.");
+          onHttpsConnectionError(fileError);
         }
       });
 
-    function onHttpConnection(err) {
-      if (err) {
-        if (config.verbose) {
-          console.error(
-            `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
-              "Could not start static HTTP server:",
-            err.toString(),
-          );
-        }
-        httpServerStatus = "error";
-        if (httpsServerStatus === "success") {
-          res({ http: false, https: true });
-        } else if (httpsServerStatus === "error" || httpsServerStatus === "disabled") {
-          rej(err);
-        }
-        httpServer.close();
-        return;
-      }
+    function onHttpConnection() {
       httpServerStatus = "success";
       if (config.verbose) {
         console.log(
@@ -313,24 +330,27 @@ export default function launchStaticServer(path, config) {
       }
     }
 
-    function onHttpsConnection(err) {
-      if (err) {
-        if (config.verbose) {
-          console.error(
-            `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
-              "Could not start static HTTPS server:",
-            err.toString(),
-          );
-        }
-        if (httpServerStatus === "success") {
-          res({ http: true, https: false });
-        } else if (httpServerStatus === "error") {
-          rej(err);
-        }
-        httpsServerStatus = "error";
-        httpsServer?.close();
-        return;
+    /**
+     * @param {Error} err
+     */
+    function onHttpConnectionError(err) {
+      if (config.verbose) {
+        console.error(
+          `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
+            "Could not start static HTTP server:",
+          err.toString(),
+        );
       }
+      httpServerStatus = "error";
+      if (httpsServerStatus === "success") {
+        res({ http: false, https: true });
+      } else if (httpsServerStatus === "error" || httpsServerStatus === "disabled") {
+        rej(err);
+      }
+      httpServer.close();
+    }
+
+    function onHttpsConnection() {
       httpsServerStatus = "success";
       if (config.verbose) {
         console.log(
@@ -342,6 +362,26 @@ export default function launchStaticServer(path, config) {
         res({ https: true, http: httpServerStatus === "success" });
       }
     }
+
+    /**
+     * @param {Error} err
+     */
+    function onHttpsConnectionError(err) {
+      if (config.verbose) {
+        console.error(
+          `\x1b[31m[${getHumanReadableHours()}]\x1b[0m ` +
+            "Could not start static HTTPS server:",
+          err.toString(),
+        );
+      }
+      if (httpServerStatus === "success") {
+        res({ http: true, https: false });
+      } else if (httpServerStatus === "error") {
+        rej(err);
+      }
+      httpsServerStatus = "error";
+      httpsServer?.close();
+    }
   });
 
   return {
@@ -351,19 +391,31 @@ export default function launchStaticServer(path, config) {
     },
   };
 
+  /**
+   * @param {import("http").IncomingMessage} request
+   * @param {import("http").ServerResponse} response
+   */
   async function onRequest(request, response) {
-    const file = await prepareFile(path, request.url);
+    const file = await prepareFile(path, request.url ?? "/");
     if (file === null) {
       response.writeHead(404);
       response.end();
       return;
     }
-    const mimeType = MIME_TYPES[file.ext] || MIME_TYPES.default;
+    const mimeType =
+      file.ext in MIME_TYPES
+        ? MIME_TYPES[/** @type {MimeTypeExtension} */ (file.ext)]
+        : MIME_TYPES.default;
     response.writeHead(200, { "Content-Type": mimeType });
     file.stream.pipe(response);
   }
 }
 
+/**
+ * @param {string} baseDirectory
+ * @param {string} url
+ * @returns {Promise<PreparedFile | null>}
+ */
 async function prepareFile(baseDirectory, url) {
   let filePath = join(baseDirectory, url);
   if (url.endsWith("/")) {

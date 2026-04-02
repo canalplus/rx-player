@@ -9,6 +9,8 @@
  * the latter.
  */
 
+// @ts-check
+
 import { spawn } from "child_process";
 import { pathToFileURL } from "url";
 import getChromeCmd from "../scripts/get_chrome_cmd.mjs";
@@ -52,25 +54,28 @@ const MEMORY_OPTIONS = ["--enable-precise-memory-info", "--js-flags=--expose-gc"
  * Run the Chrome browser on the given URL and return its process.
  * @param {string} url - The URL to run on Chrome
  * @param {Object} [params={}] - Launched Chrome's configuration
- * @param {boolean|undefined} params.headless - If `true`, the browser will
+ * @param {boolean|undefined} [params.headless] - If `true`, the browser will
  * be launched in headless mode.
- * @param {boolean|undefined} params.enableAutoPlay - If `true`, the browser
+ * @param {boolean|undefined} [params.enableAutoPlay] - If `true`, the browser
  * will be launched with specific flags to disable auto-play blocking.
  * Useful for tests.
- * @param {boolean|undefined} params.memoryTools - If `true`, the browser
+ * @param {boolean|undefined} [params.memoryTools] - If `true`, the browser
  * will be launched with specific flags to enable precise memory info and the
  * possibility to trigger JS heap GC by calling `window.gc`
- * @param {boolean|undefined} params.verbose - If `true`, the browser will
+ * @param {boolean|undefined} [params.verbose] - If `true`, the browser will
  * output to stdout. If not set or set to `false`, it will stay silent.
  * Can be used to debug issues.
- * @returns {Promise.<ChildProcess>}
+ * @returns {Promise.<import("child_process").ChildProcess>}
  */
 export default async function runChrome(
   url,
   { headless, enableAutoPlay, memoryTools, verbose } = {},
 ) {
   const chromeCmd = await getChromeCmd();
-  const flags = CHROME_OPTIONS;
+  if (chromeCmd === null) {
+    throw new Error("Could not find Chrome executable on the current environment.");
+  }
+  const flags = [...CHROME_OPTIONS];
   if (headless) {
     flags.push(...HEADLESS_OPTIONS);
   }
@@ -83,11 +88,12 @@ export default async function runChrome(
   try {
     const spawned = spawnProc(chromeCmd, [...flags, url], {
       verbose,
+      /** @param {number|undefined} code */
       parseError: (code) => "Failed to run Chrome. Code = " + code,
     });
     return spawned.child;
   } catch (err) {
-    throw new Error("Could not launch page on Chrome: " + err.toString());
+    throw new Error("Could not launch page on Chrome: " + String(err));
   }
 }
 
@@ -96,10 +102,13 @@ export default async function runChrome(
  * @param {Array.<string>} args
  * @param {Object} [params]
  * @param {Function|undefined} [params.parseError]
- * @returns {Object}
+ * @param {boolean|undefined} [params.verbose]
+ * @returns {{promise: Promise.<void>; child: import("child_process").ChildProcess}}
  */
 function spawnProc(command, args, { parseError, verbose } = {}) {
+  /** @type {import("child_process").ChildProcess | undefined} */
   let child;
+  /** @type {Promise.<void>} */
   const prom = new Promise((res, rej) => {
     child = spawn(command, args, { stdio: verbose ? "inherit" : undefined });
     child.on("close", (code) => {
@@ -114,6 +123,9 @@ function spawnProc(command, args, { parseError, verbose } = {}) {
       res();
     });
   });
+  if (child === undefined) {
+    throw new Error("Could not start Chrome process");
+  }
   return {
     promise: prom,
     child,

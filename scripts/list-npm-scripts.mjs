@@ -10,10 +10,19 @@
  * scripts for very different matters are present.
  */
 
+// @ts-check
+
 import { existsSync, readFileSync } from "fs";
 import readline from "readline";
 import { join } from "path";
 import { execSync } from "child_process";
+
+/**
+ * @typedef {string | ScriptsListGroup} ScriptsListEntry
+ * @typedef {{ [key: string]: ScriptsListEntry }} ScriptsListGroup
+ * @typedef {{ "scripts-list"?: ScriptsListGroup }} PackageJsonContent
+ */
+
 readline.emitKeypressEvents(process.stdin);
 
 run();
@@ -27,6 +36,10 @@ async function run() {
 
   // Display groups
   const scriptsList = pkg["scripts-list"];
+  if (scriptsList === undefined) {
+    console.log('No "scripts-list" key in the `package.json` file.');
+    process.exit(0);
+  }
   const groupNames = Object.keys(scriptsList).filter((k) => {
     return typeof scriptsList[k] === "object" && scriptsList[k] !== null;
   });
@@ -50,6 +63,10 @@ async function run() {
   console.log(`\x1b[34m>>>> ${wantedGroupName}\x1b[37m`);
   console.log("");
   const subGroup = scriptsList[wantedGroupName];
+  if (typeof subGroup !== "object" || subGroup === null) {
+    console.error("Invalid scripts-list group.");
+    process.exit(1);
+  }
   const subGroupEntries = Object.entries(subGroup);
   if (subGroupEntries.length === 0) {
     console.log("Nothing found in in the chosen category.");
@@ -59,6 +76,7 @@ async function run() {
   // Display commands
   {
     let currCommandNb = 1;
+    /** @type {string[]} */
     const commandArray = [];
     recusivelyDiplayGroupCommands(subGroupEntries);
     const cmdChoiceNum = await getChoice(commandArray.length);
@@ -69,6 +87,10 @@ async function run() {
     // Ensure script is terminated here
     process.exit(0);
 
+    /**
+     * @param {[string, ScriptsListEntry][]} groupEntries
+     * @param {string} [indentation]
+     */
     function recusivelyDiplayGroupCommands(groupEntries, indentation = "") {
       groupEntries.forEach(([name, val]) => {
         if (typeof val === "string") {
@@ -157,11 +179,11 @@ function executeNpmScript(script) {
   console.log(`Executing: ${emphasizedCmdStr}`);
   try {
     execSync(`npm run ${script}`, {
-      shell: true,
       stdio: ["inherit", "inherit", "inherit"],
     });
   } catch (err) {
-    process.exit(err.status);
+    const status = err instanceof Error && "status" in err ? err.status : 1;
+    process.exit(typeof status === "number" ? status : 1);
   }
 }
 
@@ -203,6 +225,7 @@ function getSingleCharChoice() {
     process.stdin.setRawMode(true);
     process.stdout.write("Your choice (leave empty to exit): ");
     process.stdin.on("keypress", onKeyPress);
+    /** @param {string} char */
     function onKeyPress(char) {
       process.stdin.setRawMode(false);
       process.stdin.off("keypress", onKeyPress);
@@ -217,12 +240,12 @@ function getSingleCharChoice() {
  *
  * Throws if no `package.json` exists in the current directory.
  *
- * @returns {Object}
+ * @returns {PackageJsonContent}
  */
 function getPackageJSONContent() {
   const filename = join(process.cwd(), "package.json");
   if (!existsSync(filename)) {
     throw new Error("`package.json` was not found in the current working directory.");
   }
-  return JSON.parse(readFileSync(filename, "utf8"));
+  return /** @type {PackageJsonContent} */ (JSON.parse(readFileSync(filename, "utf8")));
 }

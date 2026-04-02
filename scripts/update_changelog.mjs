@@ -15,6 +15,8 @@
  * right options.
  */
 
+// @ts-check
+
 import * as fs from "fs";
 import readline from "readline";
 import { dirname, join } from "path";
@@ -112,7 +114,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
  * @param {string} arg.version - The version you want to add to the changelog
  * @param {boolean} arg.isDevRelease - If `true`, this is only a dev release. It
  * will have a special syntax in the changelog.
- * @returns {Promise}
+ * @param {string|undefined} [arg.changelogPath]
+ * @returns {Promise.<void>}
  */
 export default async function updateChangelog({
   version,
@@ -374,6 +377,7 @@ async function checkUpdateTypeWithUser(previousTopH2, newTopH2, defaultBehaviour
 }
 
 /**
+ * @param {Object} args
  * @param {string} args.changelogPath - Absolute path for the changelog file.
  * @param {fs.ReadStream} args.readStream - The `ReadStream` used to read the
  * changelog file.
@@ -389,7 +393,7 @@ async function checkUpdateTypeWithUser(previousTopH2, newTopH2, defaultBehaviour
  * and `baseOffset + replacingLength` offsets (in terms of JS Strings.
  * You want to set this value if you want to replace text from the previous
  * changelog.
- * @returns {Promise}
+ * @returns {Promise.<void>}
  */
 async function writeChangelogFile({
   changelogPath,

@@ -204,8 +204,9 @@
     "test:performance": "node ./tests/performance/run.mjs",
     "test:unit": "vitest --config vitest.config.unit.mjs",
     "types": "tsc --noEmit --project .",
-    "types:all": "npm run types && npm run types:demo && npm run types:unit_tests",
+    "types:all": "npm run types && npm run types:demo && npm run types:unit_tests && npm run types:scripts",
     "types:demo": "tsc --noEmit --project demo/",
+    "types:scripts": "tsc --project ./scripts",
     "types:unit_tests": "tsc --noEmit --project ./tsconfig.unit-tests.json",
     "update-version": "bash ./scripts/update-version-number.sh"
   },
@@ -249,6 +250,7 @@
       "demo": "Build the demo in demo/bundle.js.\nUse `--help` option (`-- --help` when using `npm run`) to list options.",
       "check:demo": "Check the validity of the demo directory by running the type checker and linter on it",
       "types:demo": "Check TypeScript types in demo files",
+      "types:scripts": "Check types in scripts/",
       "lint:demo": "Run linter on demo files",
       "certificate": "Generate a certificate to be able to use HTTPS locally for the demo pages (`npm run start` will then listen to HTTPS requests through a communicated port)",
       "releases:demo": "Publish current demo as the GitHub's pages new demo page (\"stable\" branch only)"

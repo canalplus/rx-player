@@ -14,6 +14,8 @@
  * you can provide.
  */
 
+// @ts-check
+
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -35,11 +37,11 @@ const WORKER_IN_FILE = path.join(ROOT_DIR, "src/worker_entry_point.ts");
 const WORKER_OUT_FILE = path.join(ROOT_DIR, "dist/worker.js");
 
 /**
- * @param {Object|undefined} [options]
+ * @param {Object} [options]
  * @param {boolean|undefined} [options.devMode]
  * @param {boolean|undefined} [options.noCheck]
  * @param {boolean|undefined} [options.noWasm]
- * @returns {Promise}
+ * @returns {Promise.<void>}
  */
 export default async function generateBuild(options = {}) {
   try {
@@ -60,6 +62,7 @@ export default async function generateBuild(options = {}) {
         console.log(" 🏭 Generating WebAssembly file...");
         await spawnShellProm(
           "npm run --silent " + (devMode ? "build:wasm:debug" : "build:wasm:release"),
+          /** @param {number|null} code */
           (code) => new Error(`WebAssembly compilation process exited with code ${code}`),
         );
       } else {
@@ -95,7 +98,7 @@ export default async function generateBuild(options = {}) {
 
 /**
  * Remove directories and files from a previously built RxPlayer.
- * @returns {Promise}
+ * @returns {Promise.<void>}
  */
 async function removePreviousBuildArtefacts() {
   await Promise.all(
@@ -111,7 +114,7 @@ async function removePreviousBuildArtefacts() {
  * @param {Object} opts
  * @param {boolean} opts.devMode
  * @param {boolean} opts.noCheck
- * @returns {Promise}
+ * @returns {Promise.<void>}
  */
 async function compile(opts) {
   // Sadly TypeScript compiler API seems to be sub-par.
@@ -123,6 +126,7 @@ async function compile(opts) {
     "npx tsc -p " +
       path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json") +
       (opts.noCheck ? " --noCheck" : ""),
+    /** @param {number|null} code */
     (code) => new Error(`es2017 compilation process exited with code ${code}`),
   );
   const commonJsBuild = spawnShellProm(
@@ -132,6 +136,7 @@ async function compile(opts) {
         opts.devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
       ) +
       (opts.noCheck ? " --noCheck" : ""),
+    /** @param {number|null} code */
     (code) => new Error(`CommonJS compilation process exited with code ${code}`),
   );
 
@@ -144,10 +149,10 @@ async function compile(opts) {
  * Return a Promise that resolves if the command exited with the exit code `0`
  * or rejects if the exit code is not zero.
  * @param {string} command
- * @param {Array.<string>} args
  * @param {Function} errorOnCode - Callback which will be called if the command
  * has an exit code different than `0`, with the exit code in argument. The
  * value returned by that callback will be the value rejected by the Promise.
+ * @returns {Promise.<void>}
  */
 function spawnShellProm(command, errorOnCode) {
   return new Promise((res, rej) => {

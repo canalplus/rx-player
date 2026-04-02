@@ -32,16 +32,32 @@
  *      all the right links.
  */
 
+// @ts-check
+
 import { exec } from "child_process";
-import { lstat, readdir, exists, writeFile } from "fs/promises";
+import { lstat, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { encode } from "html-entities";
 import { pathToFileURL } from "url";
+import * as semver from "semver";
 
 import sortVersions from "./utils/sort_versions.mjs";
 
 const INITIAL_PATH = "./versions";
 const TARGET_BRANCH = "gh-pages";
+
+/**
+ * @param {string} path
+ * @returns {Promise<boolean>}
+ */
+async function exists(path) {
+  try {
+    await lstat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export default async function generateDemoList() {
   const currentBranch = (
@@ -141,8 +157,11 @@ function executeCommand(cmd) {
       cmd,
       {
         encoding: "utf8",
-        shell: true,
       },
+      /**
+       * @param {import("child_process").ExecException|null} error
+       * @param {string} stdout
+       */
       (error, stdout) => {
         if (error) {
           reject(error);
@@ -154,10 +173,19 @@ function executeCommand(cmd) {
   });
 }
 
+/**
+ * @param {string} source
+ * @returns {Promise.<boolean>}
+ */
 async function isDirectory(source) {
   return (await lstat(source)).isDirectory();
 }
 
+/**
+ * @param {string} initialPath
+ * @param {string} version
+ * @returns {{demoUrl: string; docUrl: string; releaseNoteUrl: string;}}
+ */
 export function getUrlsForVersion(initialPath, version) {
   const demoUrl = `${initialPath}/${version}/demo/index.html`;
 

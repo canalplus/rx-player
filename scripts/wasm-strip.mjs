@@ -42,6 +42,8 @@
  * painful to exploit than I first expected, but I hope it turned out OK.
  */
 
+// @ts-check
+
 import { createReadStream, createWriteStream, renameSync, unlinkSync } from "fs";
 
 // Promise versions will be easier to work with here
@@ -58,10 +60,28 @@ const WASM_MAGIC_NUMBER = 0x0061736d;
  */
 const CUSTOM_SECTION_ID = 0;
 
+/**
+ * @typedef {{
+ *   sectionType: number;
+ *   offset: number;
+ *   contentSize: number;
+ *   length: number;
+ * }} WasmSectionInfo
+ */
+/**
+ * @typedef {{
+ *   keptSections: WasmSectionInfo[];
+ *   removedSections: WasmSectionInfo[];
+ * }} StripResult
+ */
+
 run();
 
 async function run() {
-  let fileName, tmpName;
+  /** @type {string} */
+  let fileName;
+  /** @type {string} */
+  let tmpName;
 
   try {
     fileName = extractFileNameFromArgs();
@@ -84,9 +104,12 @@ async function run() {
   }
   console.log("A temporary file will be created:", tmpName);
 
+  /** @type {import("fs").ReadStream} */
   const readStream = createReadStream(fileName);
+  /** @type {import("fs").WriteStream} */
   const writeStream = createWriteStream(tmpName);
 
+  /** @type {StripResult} */
   let result;
   try {
     result = await readAndStripWasm(readStream, writeStream);
@@ -148,6 +171,11 @@ async function run() {
   process.exit(0);
 }
 
+/**
+ * @param {*} err
+ * @param {string|undefined} [tmpName]
+ * @returns {never}
+ */
 function onFatalError(err, tmpName) {
   console.error("Error:", err?.message ?? "Unknown");
   if (tmpName !== undefined) {
@@ -160,6 +188,10 @@ function onFatalError(err, tmpName) {
   process.exit(1);
 }
 
+/**
+ * @param {import("fs").WriteStream} writeStream
+ * @returns {Promise.<void>}
+ */
 function waitForWriteStreamFinish(writeStream) {
   return new Promise((res, rej) => {
     writeStream.on("finish", () => {
@@ -174,16 +206,20 @@ function waitForWriteStreamFinish(writeStream) {
  * TODO exploit writeStream.write "drain" response?
  * TODO add writeStream.write callback? (Maybe a wrapper might be the easiest
  * way to do both)
- * @param {fs.ReadStream} readStream
- * @param {fs.WriteStream} writeStream
- * @returns {Promise.<Object>}
+ * @param {import("fs").ReadStream} readStream
+ * @param {import("fs").WriteStream} writeStream
+ * @returns {Promise<StripResult>}
  */
 function readAndStripWasm(readStream, writeStream) {
   return new Promise((res, rej) => {
+    /** @type {StripResult} */
     const result = {
+      /** @type {WasmSectionInfo[]} */
       keptSections: [],
+      /** @type {WasmSectionInfo[]} */
       removedSections: [],
     };
+    /** @type {ArrayBufferLike|null} */
     let prevBuffered = null;
     let checkedMagicAndVersion = false;
     let currOffset = 0;
@@ -204,6 +240,9 @@ function readAndStripWasm(readStream, writeStream) {
     });
 
     readStream.on("data", (chunk) => {
+      if (typeof chunk === "string") {
+        throw new Error("Expected ArrayBuffer chunks");
+      }
       const buff =
         prevBuffered === null
           ? chunk.buffer
@@ -211,6 +250,7 @@ function readAndStripWasm(readStream, writeStream) {
       onNext(buff);
     });
 
+    /** @param {ArrayBufferLike} buff */
     function onNext(buff) {
       maxOffsetInChunk = currOffset + buff.byteLength;
       const chunkBaseOffset = currOffset;
@@ -271,6 +311,7 @@ function readAndStripWasm(readStream, writeStream) {
   });
 }
 
+/** @param {ArrayBufferLike} buff */
 function checkMagicNumberAndVersion(buff) {
   if (buff.byteLength < 8) {
     throw new Error("Error: Not a valid WebAssembly file: file too short");
@@ -281,18 +322,18 @@ function checkMagicNumberAndVersion(buff) {
   }
   if (dataView.getUint32(4, true) !== 1) {
     throw new Error(
-      "Error: Unsupported WebAssembly version: ",
-      dataView.getUint32(4, true),
+      "Error: Unsupported WebAssembly version: " + dataView.getUint32(4, true),
     );
   }
 }
 
+/** @param {...ArrayBufferLike} buffers */
 function concatArrayBuffers(...buffers) {
   const ret = new Uint8Array(buffers.reduce((acc, buff) => acc + buff.byteLength, 0));
   let currOffset = 0;
   for (let i = 0; i < buffers.length; i++) {
     const buffer = buffers[i];
-    ret.set(buffer, currOffset);
+    ret.set(new Uint8Array(buffer), currOffset);
     currOffset += buffer.byteLength;
   }
   return ret.buffer;
@@ -355,14 +396,13 @@ async function getTmpName(fileName) {
       );
     }
 
-    let tmpFileName;
+    const tmpFileName = fileName + ".tmp" + (i === 1 ? "" : `_${i}`);
     try {
-      tmpFileName = fileName + ".tmp" + (i === 1 ? "" : `_${i}`);
       await access(tmpFileName);
-      i++;
     } catch (_e) {
       return tmpFileName;
     }
+    i++;
   }
 }
 

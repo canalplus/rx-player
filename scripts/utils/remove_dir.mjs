@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 import { pathToFileURL } from "url";
 import * as fs from "fs";
 
@@ -13,13 +14,15 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 
 /**
  * @param {string} fileName
- * @returns {Promise}
+ * @returns {Promise<void>}
  */
 export default function removeDir(fileName) {
   return new Promise((res, rej) => {
+    /** @param {NodeJS.ErrnoException | null} err */
     fs.rm(fileName, { recursive: true, force: true }, (err) => {
       if (err) {
         rej(err);
+        return;
       }
       res();
     });
