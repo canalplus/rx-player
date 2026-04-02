@@ -8,13 +8,13 @@ import {
   notStartingAt0ManifestInfos,
   segmentTemplateInheritanceASRep,
   segmentTemplateInheritancePeriodAS,
-} from "../../contents/DASH_static_SegmentTimeline";
-import brokenCencManifestInfos from "../../contents/DASH_static_broken_cenc_in_MPD";
+} from "../../contents/static/DASH_static_SegmentTimeline";
+import brokenCencManifestInfos from "../../contents/static/DASH_static_broken_cenc_in_MPD";
 import {
   brokenSidxManifestInfos,
   multiCodecsManifestInfos as segmentBaseMultiCodecsInfos,
-} from "../../contents/DASH_static_SegmentBase";
-import { manifestInfos as numberBasedTimelineManifestInfos } from "../../contents/DASH_static_number_based_SegmentTimeline";
+} from "../../contents/static/DASH_static_SegmentBase";
+import { manifestInfos as numberBasedTimelineManifestInfos } from "../../contents/static/DASH_static_number_based_SegmentTimeline";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 describe("DASH non-linear content (SegmentTimeline)", function () {

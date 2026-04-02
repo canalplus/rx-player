@@ -3,7 +3,7 @@ import RxPlayer from "../../../dist/es2017";
 import {
   manifestInfos,
   noTimeShiftBufferDepthManifestInfos,
-} from "../../contents/DASH_dynamic_SegmentTemplate";
+} from "../../contents/static/DASH_dynamic_SegmentTemplate";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 import sleep from "../../utils/sleep.js";
 

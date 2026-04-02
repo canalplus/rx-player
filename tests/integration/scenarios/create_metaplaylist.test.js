@@ -4,7 +4,7 @@ import {
   manifestURL2,
   manifestURL3,
   manifestURL4,
-} from "../../contents/static_manifests_for_metaplaylist";
+} from "../../contents/static/static_manifests_for_metaplaylist";
 import createMetaplaylist from "../../../dist/es2017/experimental/tools/createMetaplaylist";
 
 describe("createMetaplaylist", () => {

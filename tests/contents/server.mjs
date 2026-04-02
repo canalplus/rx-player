@@ -10,7 +10,7 @@ import * as fs from "fs";
 import urls from "./static/urls.mjs";
 
 /** To activate if you're having content packaging issues. */
-const ACTIVATE_PACKAGER_LOGS = true;
+const ACTIVATE_PACKAGER_LOGS = false;
 
 /** Path of the current file. */
 const __filename = fileURLToPath(import.meta.url);
@@ -42,7 +42,8 @@ let packagingProcessInfo = null;
 /**
  * Create simple HTTP server specifically designed to serve the contents defined
  * in this directory.
- * @param {number} port
+ * @param {Object} params
+ * @param {number} params.port
  * @returns {Object}
  */
 export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT } = {}) {
@@ -308,7 +309,14 @@ async function handleStartPackager(res, hasTextTrack) {
       packagingProcessInfo = null;
     }
 
-    const scriptPath = path.join(__dirname, "./packager/main.mjs");
+    const scriptPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "scripts",
+      "packager",
+      "main.mjs",
+    );
     const proc = spawn(
       process.execPath,
       [

@@ -1,15 +1,12 @@
+// @ts-check
+
 import { spawn } from "child_process";
-import { existsSync } from "fs";
-import { resolve } from "path";
 import {
-  TEXT_TRACK_LANGUAGE,
   TEXT_TRACK_LABEL,
   TEXT_TRACK_SEGMENT_PREFIX,
   TEXT_TRACK_CUE_SPACING,
   TEXT_TRACK_CUE_DURATION,
   TEXT_TRACK_INITIAL_AHEAD_DURATION,
-  SHAKA_STARTUP_TIMEOUT_MS,
-  SHAKA_STARTUP_POLL_INTERVAL_MS,
 } from "./constants.mjs";
 
 /**
@@ -59,49 +56,6 @@ export function startLiveTextTrackWriters(textTrackAssets, segmentDuration) {
         { stdio: "inherit" },
       ),
     );
-}
-
-/**
- * Wait until each text-track's init segment has been written to disk, or
- * reject after the standard shaka startup timeout.
- *
- * @param {string} outputDir
- * @param {ReturnType<typeof createTextTrackAssets>} textTrackAssets
- * @returns {Promise<void>}
- */
-export async function waitForTextTracksReady(outputDir, textTrackAssets) {
-  const expectedFiles = textTrackAssets.map((asset) =>
-    resolve(outputDir, `${asset.segmentPrefix}_init.mp4`),
-  );
-
-  const deadline = Date.now() + SHAKA_STARTUP_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    if (expectedFiles.every(existsSync)) {
-      return;
-    }
-    await new Promise((r) => setTimeout(r, SHAKA_STARTUP_POLL_INTERVAL_MS));
-  }
-
-  throw new Error(
-    `Timed out waiting for text track initialization segments: ${expectedFiles.join(", ")}`,
-  );
-}
-
-/**
- * Build the shaka-packager input descriptors for a set of text-track assets.
- *
- * @param {ReturnType<typeof createTextTrackAssets>} textTrackAssets
- * @param {string} outputDir
- * @returns {string[]}  One descriptor string per asset.
- */
-export function buildTextTrackShakaArgs(textTrackAssets, outputDir) {
-  return textTrackAssets.map(
-    (asset) =>
-      `in=${asset.sourcePath},stream=text,input_format=${asset.inputFormat},` +
-      `language=${TEXT_TRACK_LANGUAGE},` +
-      `init_segment=${outputDir}/${asset.segmentPrefix}_init.mp4,` +
-      `segment_template=${outputDir}/${asset.segmentPrefix}_$Number$.m4s`,
-  );
 }
 
 /**

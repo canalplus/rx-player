@@ -1,3 +1,5 @@
+// @ts-check
+
 import { cleanupMediaFiles } from "./utils.mjs";
 
 /** @type {import("child_process").ChildProcess | null} */
@@ -40,10 +42,17 @@ export function cleanup(outputDir) {
 
   console.log("Cleaning up processes and files...");
 
+  /** @type {Array.<[string, import("child_process").ChildProcess|null]>} */
   const namedProcs = [
     ["ffmpeg", ffmpegProc],
     ["shaka-packager", shakaProc],
-    ...textWriterProcs.map((p) => ["text-writer", p]),
+    ...textWriterProcs.map(
+      /**
+       * @param {import("child_process").ChildProcess|null} p
+       * @return {[string, import("child_process").ChildProcess|null]}
+       */
+      (p) => ["text-writer", p],
+    ),
   ];
 
   for (const [name, proc] of namedProcs) {

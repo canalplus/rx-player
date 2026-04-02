@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import { manifestInfos } from "../../contents/DASH_DRM_static_SegmentTemplate";
+import { manifestInfos } from "../../contents/static/DASH_DRM_static_SegmentTemplate";
 import DummyMediaElement from "../../../dist/es2017/experimental/tools/DummyMediaElement";
 import RxPlayer from "../../../dist/es2017";
 import waitForPlayerState, {

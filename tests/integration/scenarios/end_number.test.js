@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
-import { manifestInfosEndNumber as numberBasedManifestInfos } from "../../contents/DASH_static_number_based_SegmentTimeline";
-import { endNumberManifestInfos as templateManifestinfos } from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
-import { segmentTimelineEndNumber as timeBasedManifestInfos } from "../../contents/DASH_static_SegmentTimeline";
+import { manifestInfosEndNumber as numberBasedManifestInfos } from "../../contents/static/DASH_static_number_based_SegmentTimeline";
+import { endNumberManifestInfos as templateManifestinfos } from "../../contents/static/DASH_static_SegmentTemplate_Multi_Periods";
+import { segmentTimelineEndNumber as timeBasedManifestInfos } from "../../contents/static/DASH_static_SegmentTimeline";
 import RxPlayer from "../../../dist/es2017";
 import waitForState, {
   waitForLoadedStateAfterLoadVideo,

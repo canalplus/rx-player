@@ -1,3 +1,5 @@
+// @ts-check
+
 // Port / timing limits
 
 export const MAX_NB_PORTS_USED = 7;
@@ -25,7 +27,7 @@ export const TEXT_TRACK_INITIAL_AHEAD_DURATION = 4;
 
 // Shaka startup polling
 
-export const SHAKA_STARTUP_TIMEOUT_MS = 15_000;
+export const SHAKA_STARTUP_TIMEOUT_MS = 15000;
 export const SHAKA_STARTUP_POLL_INTERVAL_MS = 300;
 
 // ANSI colour codes

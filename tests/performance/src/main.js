@@ -1,7 +1,7 @@
 import RxPlayer from "rx-player";
 import { MULTI_THREAD } from "rx-player/experimental/features";
 import { EMBEDDED_WORKER } from "rx-player/experimental/features/embeds";
-import { multiAdaptationSetsInfos } from "../../contents/DASH_static_SegmentTimeline";
+import { multiAdaptationSetsInfos } from "../../contents/static/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,

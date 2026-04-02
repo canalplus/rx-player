@@ -1,3 +1,5 @@
+// @ts-check
+
 import { execSync } from "child_process";
 import { existsSync } from "fs";
 import { resolve } from "path";

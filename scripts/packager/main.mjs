@@ -12,23 +12,27 @@
  * Run with --help to see all available options.
  */
 
+// @ts-check
+
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { existsSync } from "fs";
 
-import { DEFAULT_CONFIG, DEFAULT_KID, DEFAULT_KEY } from "./constants.mjs";
+import {
+  DEFAULT_CONFIG,
+  DEFAULT_KID,
+  DEFAULT_KEY,
+  DEFAULT_SEGMENT_DURATION,
+  DEFAULT_FRAME_RATE,
+  DEFAULT_TIMESHIFT_BUFFER_DEPTH,
+  DEFAULT_BASE_PORT,
+  MAX_NB_PORTS_USED,
+} from "./constants.mjs";
 import { isPositiveInteger, isValidPort, sanitizeDirPath } from "./utils.mjs";
 import { packageLiveContent } from "./live_packager.mjs";
 import { cleanup, registerSignalHandlers } from "./cleanup.mjs";
-import { displayHelp } from "./ui.mjs";
 
-const SCRIPT_DIR = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-  "scripts",
-);
+const SCRIPT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TMP_DIR = resolve(SCRIPT_DIR, "..", "tmp");
 
 const configObj = {
@@ -165,9 +169,63 @@ packageLiveContent(configObj).catch((err) => {
   process.exit(1);
 });
 
-/** Print `message` to stderr and exit with code 1. */
+/**
+ * Print `message` to stderr and exit with code 1.
+ * @param {string} message
+ */
 function panic(message) {
   process.stderr.write(`ERROR: ${message}\n`);
   cleanup(configObj.outputDir);
   process.exit(1);
+}
+
+function displayHelp() {
+  console.log(`
+content_packager.mjs
+------------------------
+
+This script creates and packages a live DASH content from scratch by relying on
+\`ffmpeg\` (which has to be installed locally) and the shaka-packager (which
+will be downloaded if not found locally in a directory called \`tmp\`).
+
+Usage: node main.mjs <OPTIONS>
+
+Options:
+
+  --segment-duration <duration>       Duration a single segment will have, in seconds.
+                                      Defaults to ${DEFAULT_SEGMENT_DURATION} (seconds).
+
+  --fragment-duration <duration>      Duration of a single fragment, in seconds.
+                                      Defaults to match --segment-duration if not set.
+
+  --frame-rate <fps>                  Frame-rate of video representations, in fps.
+                                      Defaults to ${DEFAULT_FRAME_RATE}.
+
+  --timeshift-buffer-depth <depth>    Depth of retained segments behind the last generated
+                                      segment, in seconds.
+                                      Defaults to ${DEFAULT_TIMESHIFT_BUFFER_DEPTH} (${Math.floor(DEFAULT_TIMESHIFT_BUFFER_DEPTH / 60)} minutes).
+
+  --output-dir <directory>            Output directory for the generated content. Can be an
+                                      absolute or a relative path.
+                                      Defaults to '<repo-root>/tmp/testcontents/live'.
+
+  --no-confirmation                   Never ask for confirmation; validate all prompts.
+                                      Intended for automated scripts.
+
+  --encrypted                         Encrypt all video and audio with the same key.
+                                        key_id = ${DEFAULT_KID}
+                                        key    = ${DEFAULT_KEY}
+
+  --enable-text-track                 Add text track AdaptationSet to the content with placeholder cues.
+                                      Disabled by default.
+
+  --base-port <port>                  Base UDP port number where media encoded by ffmpeg will
+                                      be communicated to the shaka-packager.
+                                      ${MAX_NB_PORTS_USED} consecutive ports starting from this number will be used.
+                                      Defaults to ${DEFAULT_BASE_PORT} (ports ${DEFAULT_BASE_PORT}-${DEFAULT_BASE_PORT + MAX_NB_PORTS_USED - 1}).
+
+  --shaka-path <path>                 Path to the shaka-packager binary. If not specified,
+                                      the script will search common locations and, as a last
+                                      resort, try to download it (you will be asked to confirm).
+`);
 }

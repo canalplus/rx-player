@@ -1,3 +1,5 @@
+// @ts-check
+
 import { spawn } from "child_process";
 
 /**
@@ -17,6 +19,11 @@ import { spawn } from "child_process";
 export function buildFfmpegArgs({ frameRate, segmentDuration, ports }) {
   const gop = frameRate * segmentDuration;
 
+  /**
+   * @param {string} size
+   * @param {number} rate
+   * @returns {Array.<string>}
+   */
   const videoInput = (size, rate) => [
     "-f",
     "lavfi",
@@ -24,6 +31,10 @@ export function buildFfmpegArgs({ frameRate, segmentDuration, ports }) {
     `testsrc2=size=${size}:rate=${rate}`,
   ];
 
+  /**
+   * @param {number} freq
+   * @returns {Array.<string>}
+   */
   const audioInput = (freq) => [
     "-f",
     "lavfi",
@@ -31,6 +42,13 @@ export function buildFfmpegArgs({ frameRate, segmentDuration, ports }) {
     `sine=frequency=${freq}:sample_rate=48000`,
   ];
 
+  /**
+   * @param {number} mapIdx
+   * @param {string} bitrate
+   * @param {string} size
+   * @param {number} port
+   * @returns {Array.<string>}
+   */
   const videoOutput = (mapIdx, bitrate, size, port) => [
     "-map",
     `${mapIdx}:v`,
@@ -55,6 +73,12 @@ export function buildFfmpegArgs({ frameRate, segmentDuration, ports }) {
     `udp://127.0.0.1:${port}`,
   ];
 
+  /**
+   * @param {number} mapIdx
+   * @param {string} lang
+   * @param {number} port
+   * @returns {Array.<string>}
+   */
   const audioOutput = (mapIdx, lang, port) => [
     "-map",
     `${mapIdx}:a`,

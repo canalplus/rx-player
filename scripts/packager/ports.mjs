@@ -1,3 +1,5 @@
+// @ts-check
+
 import { execSync } from "child_process";
 import { MAX_NB_PORTS_USED } from "./constants.mjs";
 import { commandExists } from "./utils.mjs";

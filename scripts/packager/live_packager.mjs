@@ -1,5 +1,7 @@
+// @ts-check
+
 import { spawn } from "child_process";
-import { mkdirSync } from "fs";
+import { existsSync, mkdirSync } from "fs";
 import { resolve } from "path";
 import {
   isValidHexKey,
@@ -9,12 +11,7 @@ import {
 } from "./utils.mjs";
 import { checkPortRange, buildPortMap } from "./ports.mjs";
 import { resolveShakaBinary, waitForShakaReady } from "./shaka_packager.mjs";
-import {
-  createTextTrackAssets,
-  startLiveTextTrackWriters,
-  waitForTextTracksReady,
-  buildTextTrackShakaArgs,
-} from "./text_track.mjs";
+import { createTextTrackAssets, startLiveTextTrackWriters } from "./text_track.mjs";
 import { buildFfmpegArgs, spawnFfmpeg } from "./ffmpeg.mjs";
 import { showConfigAndConfirm, askConfirmation } from "./ui.mjs";
 import {
@@ -24,6 +21,11 @@ import {
   cleanup,
   createChildExitPromise,
 } from "./cleanup.mjs";
+import {
+  SHAKA_STARTUP_POLL_INTERVAL_MS,
+  SHAKA_STARTUP_TIMEOUT_MS,
+  TEXT_TRACK_LANGUAGE,
+} from "./constants.mjs";
 
 /**
  * @typedef {object} PackageConfig
@@ -135,6 +137,9 @@ export async function packageLiveContent(config) {
   await Promise.race([ffmpegExited, shakaExited]);
 }
 
+/**
+ * @param {PackageConfig} config
+ */
 function validateEncryptionKeys(config) {
   if (config.keyId) {
     config.keyId = config.keyId.toLowerCase();
@@ -150,6 +155,9 @@ function validateEncryptionKeys(config) {
   }
 }
 
+/**
+ * @param {PackageConfig} config
+ */
 function ensureOutputDir(config) {
   try {
     mkdirSync(config.outputDir, { recursive: true });
@@ -159,6 +167,11 @@ function ensureOutputDir(config) {
   }
 }
 
+/**
+ * @param {string} outputDir
+ * @param {boolean} noConfirm
+ * @returns {Promise.<void>}
+ */
 async function checkIfOutputContainsMediaFiles(outputDir, noConfirm) {
   if (!outputDirHasMediaFiles(outputDir)) {
     return;
@@ -224,4 +237,47 @@ function buildShakaArgs(config, ports, textTrackAssets) {
     : [];
 
   return [...textArgs, ...streamArgs, ...baseArgs, ...encryptionArgs];
+}
+
+/**
+ * Wait until each text-track's init segment has been written to disk, or
+ * reject after the standard shaka startup timeout.
+ *
+ * @param {string} outputDir
+ * @param {ReturnType<import("./text_track.mjs").createTextTrackAssets>} textTrackAssets
+ * @returns {Promise<void>}
+ */
+export async function waitForTextTracksReady(outputDir, textTrackAssets) {
+  const expectedFiles = textTrackAssets.map((asset) =>
+    resolve(outputDir, `${asset.segmentPrefix}_init.mp4`),
+  );
+
+  const deadline = Date.now() + SHAKA_STARTUP_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    if (expectedFiles.every(existsSync)) {
+      return;
+    }
+    await new Promise((r) => setTimeout(r, SHAKA_STARTUP_POLL_INTERVAL_MS));
+  }
+
+  throw new Error(
+    `Timed out waiting for text track initialization segments: ${expectedFiles.join(", ")}`,
+  );
+}
+
+/**
+ * Build the shaka-packager input descriptors for a set of text-track assets.
+ *
+ * @param {ReturnType<import("./text_track.mjs").createTextTrackAssets>} textTrackAssets
+ * @param {string} outputDir
+ * @returns {string[]}  One descriptor string per asset.
+ */
+export function buildTextTrackShakaArgs(textTrackAssets, outputDir) {
+  return textTrackAssets.map(
+    (asset) =>
+      `in=${asset.sourcePath},stream=text,input_format=${asset.inputFormat},` +
+      `language=${TEXT_TRACK_LANGUAGE},` +
+      `init_segment=${outputDir}/${asset.segmentPrefix}_init.mp4,` +
+      `segment_template=${outputDir}/${asset.segmentPrefix}_$Number$.m4s`,
+  );
 }

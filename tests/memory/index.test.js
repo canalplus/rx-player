@@ -4,7 +4,10 @@ import RxPlayer from "../../src";
 import VideoThumbnailLoader, {
   DASH_LOADER,
 } from "../../src/experimental/tools/VideoThumbnailLoader";
-import { manifestInfos, trickModeInfos } from "../contents/DASH_static_SegmentTimeline";
+import {
+  manifestInfos,
+  trickModeInfos,
+} from "../contents/static/DASH_static_SegmentTimeline";
 import sleep from "../utils/sleep.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
