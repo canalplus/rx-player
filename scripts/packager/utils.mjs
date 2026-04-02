@@ -1,6 +1,6 @@
 // @ts-check
 
-import { execSync } from "child_process";
+import { spawnSync } from "child_process";
 import { resolve } from "path";
 import { existsSync, readdirSync, unlinkSync } from "fs";
 import { ARTIFACT_PATTERNS } from "./constants.mjs";
@@ -51,8 +51,9 @@ export function sanitizeDirPath(p) {
  */
 export function commandExists(cmd) {
   try {
-    execSync(`command -v ${cmd}`, { stdio: "ignore" });
-    return true;
+    const lookupCmd = process.platform === "win32" ? "where" : "which";
+    const res = spawnSync(lookupCmd, [cmd], { stdio: "ignore" });
+    return res.status === 0;
   } catch {
     return false;
   }

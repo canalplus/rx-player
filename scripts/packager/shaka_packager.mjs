@@ -1,7 +1,7 @@
 // @ts-check
 
-import { execSync } from "child_process";
-import { existsSync } from "fs";
+import { execFileSync, spawnSync } from "child_process";
+import { existsSync, renameSync } from "fs";
 import { resolve } from "path";
 import {
   SHAKA_STARTUP_TIMEOUT_MS,
@@ -24,9 +24,9 @@ import { commandExists } from "./utils.mjs";
  * @returns {Promise<string>}    - Resolves with the command / path to use.
  */
 export async function resolveShakaBinary(tmpDir, scriptDir, noConfirm) {
-  const inTmp = resolve(tmpDir, "shaka-packager");
-  if (existsSync(inTmp)) {
-    return inTmp;
+  const cachedBinary = normalizeDownloadedShakaBinaryPath(tmpDir);
+  if (cachedBinary !== null) {
+    return cachedBinary;
   }
 
   if (commandExists("shaka-packager")) {
@@ -41,7 +41,11 @@ export async function resolveShakaBinary(tmpDir, scriptDir, noConfirm) {
   if (!(await downloadShaka(tmpDir, scriptDir, noConfirm))) {
     throw new Error("Failed to install shaka-packager");
   }
-  return inTmp;
+  const downloadedBinary = normalizeDownloadedShakaBinaryPath(tmpDir);
+  if (downloadedBinary === null) {
+    throw new Error("Failed to resolve installed shaka-packager binary");
+  }
+  return downloadedBinary;
 }
 
 /**
@@ -99,9 +103,11 @@ function allPortsListening(ports) {
   let output = "";
   try {
     if (commandExists("ss")) {
-      output = execSync("ss -uln 2>/dev/null", { encoding: "utf8" });
+      output = execFileSync("ss", ["-uln"], { encoding: "utf8" });
     } else {
-      output = execSync("netstat -uln 2>/dev/null", { encoding: "utf8" });
+      const netstatArgs =
+        process.platform === "win32" ? ["-a", "-n", "-p", "UDP"] : ["-uln"];
+      output = execFileSync("netstat", netstatArgs, { encoding: "utf8" });
     }
   } catch {
     return false;
@@ -118,7 +124,8 @@ function allPortsListening(ports) {
  */
 function isShakaPackager(cmd) {
   try {
-    const out = execSync(`${cmd} --help 2>/dev/null | head -1`, { encoding: "utf8" });
+    const res = spawnSync(cmd, ["--help"], { encoding: "utf8" });
+    const out = `${res.stdout ?? ""}\n${res.stderr ?? ""}`;
     return out.includes("shaka-packager");
   } catch {
     return false;
@@ -142,23 +149,41 @@ async function downloadShaka(tmpDir, scriptDir, noConfirm) {
       `install_shaka_packager.sh not found at ${installScript}. Cannot install shaka-packager automatically.`,
     );
   }
-
   console.log(
     `We will load the shaka-packager binary locally in the "${tmpDir}" directory`,
   );
 
   const args = noConfirm ? ["--no-confirmation"] : [];
   try {
-    execSync([installScript, ...args].join(" "), { stdio: "inherit" });
+    execFileSync("bash", [installScript, ...args], { stdio: "inherit" });
   } catch {
     return false;
   }
 
-  const binary = resolve(tmpDir, "shaka-packager");
-  if (!existsSync(binary)) {
+  if (normalizeDownloadedShakaBinaryPath(tmpDir) === null) {
     console.error("ERROR: shaka-packager binary was not successfully installed\n");
     return false;
   }
 
   return true;
+}
+
+/**
+ * @param {string} tmpDir
+ * @returns {string | null}
+ */
+function normalizeDownloadedShakaBinaryPath(tmpDir) {
+  const binary = resolve(tmpDir, "shaka-packager");
+  const binaryExe = resolve(tmpDir, "shaka-packager.exe");
+  if (existsSync(binaryExe)) {
+    return binaryExe;
+  }
+  if (!existsSync(binary)) {
+    return null;
+  }
+  if (process.platform !== "win32") {
+    return binary;
+  }
+  renameSync(binary, binaryExe);
+  return binaryExe;
 }
