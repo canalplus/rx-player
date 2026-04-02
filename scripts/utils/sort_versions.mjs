@@ -1,3 +1,5 @@
+// @ts-check
+
 import * as semver from "semver";
 
 /**
@@ -20,3 +22,5 @@ export function sortVersions(versions) {
     })
     .sort((a, b) => (semver.gt(a, b) ? -1 : 1));
 }
+
+export default sortVersions;

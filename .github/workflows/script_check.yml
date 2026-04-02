@@ -24,5 +24,7 @@ jobs:
           cache: "npm"
       - name: Install JS dependencies
         run: npm ci
+      - name: Typecheck files in the scripts directory
+        run: npm run types:scripts
       - name: Lint files in the scripts directory
         run: npm run lint:scripts

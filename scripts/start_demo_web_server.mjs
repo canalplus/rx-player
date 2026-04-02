@@ -14,6 +14,8 @@
  * You can also import this file through ES6 imports.
  */
 
+// @ts-check
+
 import { join } from "path";
 import { pathToFileURL } from "url";
 import buildDemo from "./build_demo.mjs";
@@ -23,8 +25,8 @@ import launchStaticServer from "./launch_static_server.mjs";
 /**
  * Build the RxPlayer's demo (alongside the RxPlayer's code) and serve it
  * through the configured ports.
- * @param {Object|undefined} [opts] - Various options to configure the build,
- * the launched HTTP/HTTPS server, or both.
+ * @param {Object} [opts={}] - Various options to configure the build, the
+ * launched HTTP/HTTPS server, or both.
  * Provide defaults if not specified (see below).
  * @param {boolean|undefined} [opts.verbose] - If `true` logs will be outputed
  * to stdout/stderr indicate the current status of build and server.
@@ -54,7 +56,7 @@ import launchStaticServer from "./launch_static_server.mjs";
  * @param {string|undefined} [opts.certificatePath] - The path to the
  * certificate file you want to use for the HTTPS connection.
  * Defaults to `<PROJECT_ROOT>/localhost.crt`.
- * @returns {Promise}
+ * @returns {Promise.<unknown>}
  */
 export default function startDemoWebServer({
   verbose,

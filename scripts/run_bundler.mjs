@@ -11,6 +11,8 @@
  * right options.
  */
 
+// @ts-check
+
 import * as fs from "fs";
 import * as path from "path";
 import { pathToFileURL } from "url";
@@ -19,25 +21,39 @@ import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 import PROJECT_ROOT_DIRECTORY from "./utils/project_root_directory.mjs";
 
 /**
+ * @typedef {{
+ *   name?: string;
+ *   minify?: boolean;
+ *   globalScope?: boolean;
+ *   production?: boolean;
+ *   watch?: boolean;
+ *   silent?: boolean;
+ *   outfile?: string;
+ *   globals?: Record<string, string>;
+ * }} RunBundlerOptions
+ *
+ * Bundler options.
+ * @property {string} [name] - The "name" associated to your bundle, used in
+ * logs if `silent` is not set to `true`.
+ * @property {boolean} [minify] - If `true`, the output is minified.
+ * @property {boolean} [globalScope] - If `true`, enable global scope mode so
+ * the `__GLOBAL_SCOPE__` symbol is set to `true` in the bundle.
+ * @property {boolean} [production] - If `false`, compile in development mode,
+ * which keeps supplementary assertions enabled.
+ * @property {boolean} [watch] - If `true`, rebuild each time one of the
+ * RxPlayer source files used by that bundle changes.
+ * @property {boolean} [silent] - If `true`, don't output logs.
+ * @property {string} [outfile] - Destination of the produced ES2017 bundle.
+ * @property {Record<string, string>} [globals] - Optional globally-defined
+ * identifiers, as a key-value object. If you want to replace an identifier
+ * with a string literal, wrap it with `JSON.stringify`.
+ */
+
+/**
  * Run bundler with the given options.
  * @param {string} inputFile
- * @param {Object} options
- * @param {boolean} [options.name] - The "name" associated to your bundle, will
- * be used in logs if `options.silent` is set to `false`.
- * @param {boolean} [options.minify] - If `true`, the output will be minified.
- * @param {boolean} [options.globalScope] - If `true`, enable global scope mode
- * (the `__GLOBAL_SCOPE__` global symbol will be set to `true` in the bundle).
- * @param {boolean} [options.production] - If `false`, the code will be compiled
- * in "development" mode, which has supplementary assertions.
- * @param {boolean} [options.watch] - If `true`, the RxPlayer's files involve
- * will be watched and the code re-built each time one of them changes.
- * @param {boolean} [options.silent] - If `true`, we won't output logs.
- * @param {string} [options.outfile] - Destination of the produced es2017
- * bundle. To ignore to skip ES2017 bundle generation.
- * @param {Object} [options.globals] - Optional globally-defined identifiers, as
- * a key-value objects, where the object is a string (trick: if you want to
- * replace an identifier with a string, call `JSON.stringify` on it).
- * @returns {Promise}
+ * @param {RunBundlerOptions} options
+ * @returns {Promise.<void>}
  */
 export default async function runBundler(inputFile, options) {
   const name = options.name;
@@ -49,9 +65,7 @@ export default async function runBundler(inputFile, options) {
   const globals = options.globals;
   const relativeInFile = path.relative(PROJECT_ROOT_DIRECTORY, inputFile);
   const relativeOutfile =
-    outfile === undefined
-      ? undefined
-      : path.relative(PROJECT_ROOT_DIRECTORY, options.outfile);
+    outfile === undefined ? undefined : path.relative(PROJECT_ROOT_DIRECTORY, outfile);
   const globalScope = !!options.globalScope;
 
   if (outfile === undefined) {
@@ -60,6 +74,7 @@ export default async function runBundler(inputFile, options) {
 
   const esbuildStepsPlugin = {
     name: "bundler-steps",
+    /** @param {import("esbuild").PluginBuild} build */
     setup(build) {
       build.onStart(() => {
         if (name != null) {
@@ -88,11 +103,8 @@ export default async function runBundler(inputFile, options) {
     },
   };
 
-  const meth = watch ? "context" : "build";
-
-  // Create a context for incremental builds
   try {
-    const context = await esbuild[meth]({
+    const buildOptions = {
       entryPoints: [inputFile],
       bundle: true,
       target: "es2017",
@@ -109,29 +121,34 @@ export default async function runBundler(inputFile, options) {
         }),
         __LOGGER_LEVEL__: JSON.stringify({ CURRENT_LEVEL: isDevMode ? "INFO" : "NONE" }),
         __GLOBAL_SCOPE__: JSON.stringify(globalScope),
-        ...globals,
+        ...(globals ?? {}),
       },
-    });
+    };
     if (watch) {
+      const context = await esbuild.context(buildOptions);
       return context.watch();
     }
+    await esbuild.build(buildOptions);
   } catch (err) {
-    logError(`Bundling failed for "${name ?? inputFile}":`, err);
+    logError(`Bundling failed for "${name ?? inputFile}": ${String(err)}`);
     throw err;
   }
 
+  /** @param {string} msg */
   function logSuccess(msg) {
     if (!isSilent) {
       console.log(`\x1b[32m[${getHumanReadableHours()}]\x1b[0m`, msg);
     }
   }
 
+  /** @param {string} msg */
   function logWarning(msg) {
     if (!isSilent) {
       console.log(`\x1b[33m[${getHumanReadableHours()}]\x1b[0m`, msg);
     }
   }
 
+  /** @param {string} msg */
   function logError(msg) {
     if (!isSilent) {
       console.log(`\x1b[31m[${getHumanReadableHours()}]\x1b[0m`, msg);
@@ -242,15 +259,19 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   }
 
   try {
-    runBundler(normalizedPath, {
+    /** @type {RunBundlerOptions} */
+    const runOptions = {
       watch: shouldWatch,
       minify: shouldMinify,
       production,
       globalScope,
       silent,
       outfile: outputFile,
-      name,
-    }).catch((err) => {
+    };
+    if (name !== undefined) {
+      runOptions.name = name;
+    }
+    runBundler(normalizedPath, runOptions).catch((err) => {
       console.error(`ERROR: ${err}\n`);
       process.exit(1);
     });

@@ -31,8 +31,10 @@
  *      generated with all the right links.
  */
 
+// @ts-check
+
 import { exec } from "child_process";
-import { lstat, readdir, exists, writeFile } from "fs/promises";
+import { lstat, readdir, writeFile } from "fs/promises";
 import { join } from "path";
 import { encode } from "html-entities";
 import { pathToFileURL } from "url";
@@ -42,6 +44,19 @@ import { getUrlsForVersion } from "./generate_demo_list.mjs";
 
 const INITIAL_PATH = "./versions";
 const TARGET_BRANCH = "gh-pages";
+
+/**
+ * @param {string} path
+ * @returns {Promise<boolean>}
+ */
+async function exists(path) {
+  try {
+    await lstat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export default async function generateDocumentationList() {
   const currentBranch = (
@@ -133,7 +148,7 @@ a:hover { color: #076; }
 /**
  * Execute the given shell command and return the output.
  * @param {string} cmd
- * @returns {Promise<string>}
+ * @returns {Promise.<string>}
  */
 function executeCommand(cmd) {
   return new Promise((resolve, reject) => {
@@ -141,8 +156,11 @@ function executeCommand(cmd) {
       cmd,
       {
         encoding: "utf8",
-        shell: true,
       },
+      /**
+       * @param {import("child_process").ExecException|null} error
+       * @param {string} stdout
+       */
       (error, stdout) => {
         if (error) {
           reject(error);
@@ -154,6 +172,10 @@ function executeCommand(cmd) {
   });
 }
 
+/**
+ * @param {string} source
+ * @returns {Promise<boolean>}
+ */
 async function isDirectory(source) {
   return (await lstat(source)).isDirectory();
 }

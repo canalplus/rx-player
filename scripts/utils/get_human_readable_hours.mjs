@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * Return the current date into a more readable `HH:mm:ss.fff`
  * (hours:minutes:seconds.milliseconds) format.

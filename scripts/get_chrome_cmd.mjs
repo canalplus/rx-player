@@ -8,6 +8,8 @@
  * It can be imported or called directly.
  */
 
+// @ts-check
+
 import { execFile } from "child_process";
 import * as fsProm from "fs/promises";
 import * as path from "path";

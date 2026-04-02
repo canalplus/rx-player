@@ -18,6 +18,8 @@
  * by requiring it as a node module.
  */
 
+// @ts-check
+
 import esbuild from "esbuild";
 import fs from "fs";
 import path from "path";
@@ -32,11 +34,17 @@ const EMBEDDED_RESULT_WORKER_PATH = path.join(
   "embedded_worker_bundle.js",
 );
 
+/**
+ * @returns {Promise.<void>}
+ */
 export default async function buildTestWorker() {
   await bundleTestWorker();
   await writeWorkerEmbed();
 }
 
+/**
+ * @returns {Promise.<void>}
+ */
 async function bundleTestWorker() {
   await esbuild.build({
     entryPoints: [INPUT_WORKER_FILE],
@@ -52,6 +60,9 @@ async function bundleTestWorker() {
   });
 }
 
+/**
+ * @returns {Promise.<void>}
+ */
 async function writeWorkerEmbed() {
   const workerData = await readFile(RESULT_WORKER_PATH, "utf-8");
   const workerEmbedCode =
@@ -66,19 +77,27 @@ export default blob;`;
 /**
  * Simple promisified `fs.readFile` API.
  * @param {string} filePath
- * @param {string|null} encoding
+ * @param {BufferEncoding} encoding
  * @returns {*} - Read data, the type depends on the `encoding` parameters (see
  * `fs.readFile` documentation).
  */
 function readFile(filePath, encoding) {
   return new Promise((res, rej) => {
-    fs.readFile(filePath, { encoding }, function (err, data) {
-      if (err) {
-        rej(err);
-      } else {
-        res(data);
-      }
-    });
+    fs.readFile(
+      filePath,
+      { encoding },
+      /**
+       * @param {NodeJS.ErrnoException|null} err
+       * @param {string} data
+       */
+      function (err, data) {
+        if (err) {
+          rej(err);
+        } else {
+          res(data);
+        }
+      },
+    );
   });
 }
 
@@ -86,7 +105,7 @@ function readFile(filePath, encoding) {
  * Simple promisified `fs.writeFile` API.
  * @param {string} filePath
  * @param {string} content
- * @returns {Promise}
+ * @returns {Promise.<void>}
  */
 function writeFile(filePath, content) {
   return new Promise((res, rej) => {

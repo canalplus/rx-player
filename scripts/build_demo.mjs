@@ -10,6 +10,8 @@
  * right options.
  */
 
+// @ts-check
+
 import { stat } from "fs";
 import { join } from "path";
 import { pathToFileURL } from "url";
@@ -38,8 +40,8 @@ const WASM_FILE_DEPENDENCY = join(rootDirectory, "dist/mpd-parser.wasm");
  * @param {boolean} [options.includeWasmParser] - If `true`, the WebAssembly MPD
  * parser of the RxPlayer will be used (if it can be requested).
  * Defaults to `false`.
- * @returns {Promise} - Promise which resolves when the intial build is done or
- * rejects with an error when it cannot be done.
+ * @returns {Promise.<unknown>} - Promise which resolves when the intial build is
+ * done or rejects with an error when it cannot be done.
  */
 export default function buildDemo(options = {}) {
   const verbose = !options.silent;

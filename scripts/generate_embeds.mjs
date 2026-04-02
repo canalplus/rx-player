@@ -44,6 +44,8 @@
  * with the right `"application/javascript"` Content-Type.
  */
 
+// @ts-check
+
 import * as fs from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
@@ -98,8 +100,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
  * embed.
  * @param {boolean} [param0.noWorker] - If set to `true`, skip the Worker
  * embed.
- * @returns {Promise} - Promise resolving when the embed generation is done and
- * rejecting with an `Error` if anything failed while doing it.
+ * @returns {Promise.<void>} - Promise resolving when the embed generation is
+ * done and rejecting with an `Error` if anything failed while doing it.
  */
 export default async function generateEmbeds({ noWasm, noWorker } = {}) {
   if (noWasm && noWorker) {
@@ -143,6 +145,12 @@ export default blob;`;
   await writeFile(workerEmbedPath, workerEmbedCode);
 }
 
+/**
+ * @param {Object} [params]
+ * @param {boolean|undefined} [params.noWasm]
+ * @param {boolean|undefined} [params.noWorker]
+ * @returns {Promise.<void>}
+ */
 async function writeIndexCode({ noWasm, noWorker } = {}) {
   // Hardcode the code declaring and exporting the embedded URL:
   const indexCode =
@@ -154,9 +162,9 @@ async function writeIndexCode({ noWasm, noWorker } = {}) {
 /**
  * Simple promisified `fs.readFile` API.
  * @param {string} filePath
- * @param {string|null} encoding
- * @returns {*} - Read data, the type depends on the `encoding` parameters (see
- * `fs.readFile` documentation).
+ * @param {BufferEncoding|null} encoding
+ * @returns {Promise.<*>} - Read data, the type depends on the `encoding`
+ * parameters (see `fs.readFile` documentation).
  */
 function readFile(filePath, encoding) {
   return new Promise((res, rej) => {
@@ -173,7 +181,7 @@ function readFile(filePath, encoding) {
  * Simple promisified `fs.writeFile` API.
  * @param {string} filePath
  * @param {string} content
- * @returns {Promise}
+ * @returns {Promise.<void>}
  */
 function writeFile(filePath, content) {
   return new Promise((res, rej) => {
