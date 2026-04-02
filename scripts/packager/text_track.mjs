@@ -88,7 +88,7 @@ function formatTimestamp(totalSeconds) {
 
 function sendCue() {
   const cueEnd = nextCueStart + Math.min(${cueDuration}, ${segmentDuration});
-  const cue = formatTimestamp(nextCueStart) + " --> " + formatTimestamp(cueEnd) + "\\n" +
+  const cue = formatTimestamp(nextCueStart) + " --> " + formatTimestamp(cueEnd) + " align:center line:85% \\n" +
     ${JSON.stringify(TEXT_TRACK_LABEL)} + " live cue " + cueIndex + "\\n\\n";
   const buf = Buffer.from(cue, "utf8");
   socket.send(buf, 0, buf.length, PORT, HOST);
