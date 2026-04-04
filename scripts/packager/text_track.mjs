@@ -1,6 +1,8 @@
 // @ts-check
 
 import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import {
   TEXT_TRACK_LABEL,
   TEXT_TRACK_SEGMENT_PREFIX,
@@ -9,112 +11,62 @@ import {
   TEXT_TRACK_INITIAL_AHEAD_DURATION,
 } from "./constants.mjs";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 /**
  * Build the list of text-track asset descriptors.
  *
- * Currently produces a single English WebVTT track delivered over UDP.
+ * Produces one English WebVTT track and one English TTML track, both
+ * delivered over UDP.
  *
- * @param {{ text: number }} ports
+ * @param {{ text1: number, text2: number }} ports
  * @returns {Array<{ sourcePath: string, segmentPrefix: string,
  *                   inputFormat: string, liveWriterMode: string, port: number }>}
  */
 export function createTextTrackAssets(ports) {
   return [
     {
-      sourcePath: `udp://127.0.0.1:${ports.text}`,
-      segmentPrefix: TEXT_TRACK_SEGMENT_PREFIX,
+      sourcePath: `udp://127.0.0.1:${ports.text1}`,
+      segmentPrefix: TEXT_TRACK_SEGMENT_PREFIX + "_vtt",
       inputFormat: "webvtt",
       liveWriterMode: "webvtt",
-      port: ports.text,
+      port: ports.text1,
+    },
+    {
+      sourcePath: `udp://127.0.0.1:${ports.text2}`,
+      segmentPrefix: TEXT_TRACK_SEGMENT_PREFIX + "_ttml",
+      inputFormat: "ttml",
+      liveWriterMode: "ttml",
+      port: ports.text2,
     },
   ];
 }
 
 /**
- * Spawn a UDP writer process for each text-track asset that uses the "webvtt"
- * live-writer mode.
+ * Spawn a UDP writer process for each text-track asset.
+ * Each writer runs as a separate Node.js script file, receiving its
+ * configuration through environment variables — no inline script strings.
  *
  * @param {ReturnType<typeof createTextTrackAssets>} textTrackAssets
  * @param {number} segmentDuration
  * @returns {import("child_process").ChildProcess[]}
  */
 export function startLiveTextTrackWriters(textTrackAssets, segmentDuration) {
-  return textTrackAssets
-    .filter((a) => a.liveWriterMode === "webvtt")
-    .map((asset) =>
-      spawn(
-        process.execPath,
-        [
-          "-e",
-          buildLiveWebVttWriterScript(
-            asset.port,
-            segmentDuration,
-            TEXT_TRACK_CUE_SPACING,
-            TEXT_TRACK_CUE_DURATION,
-          ),
-        ],
-        { stdio: "inherit" },
-      ),
-    );
-}
+  /** @type {Record<string, string>} */
+  const sharedEnv = {
+    ...process.env,
+    TT_LABEL: TEXT_TRACK_LABEL,
+    TT_CUE_SPACING: String(TEXT_TRACK_CUE_SPACING),
+    TT_CUE_DURATION: String(TEXT_TRACK_CUE_DURATION),
+    TT_INITIAL_AHEAD: String(TEXT_TRACK_INITIAL_AHEAD_DURATION),
+    TT_SEGMENT_DURATION: String(segmentDuration),
+  };
 
-/**
- * Generate the Node.js source code for a self-contained UDP WebVTT writer.
- *
- * @param {number} port
- * @param {number} segmentDuration
- * @param {number} cueSpacing
- * @param {number} cueDuration
- * @returns {string}
- */
-function buildLiveWebVttWriterScript(port, segmentDuration, cueSpacing, cueDuration) {
-  return `
-const dgram = require("dgram");
-const socket = dgram.createSocket("udp4");
-const PORT = ${port};
-const HOST = "127.0.0.1";
-
-let cueIndex = 0;
-let nextCueStart = 0;
-
-function formatTimestamp(totalSeconds) {
-  const totalMs = Math.round(totalSeconds * 1000);
-  const ms = totalMs % 1000;
-  const s = Math.floor(totalMs / 1000) % 60;
-  const m = Math.floor(totalMs / 60000) % 60;
-  const h = Math.floor(totalMs / 3600000);
-  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+"."+String(ms).padStart(3,"0");
-}
-
-function sendCue() {
-  const cueEnd = nextCueStart + Math.min(${cueDuration}, ${segmentDuration});
-  const cue = formatTimestamp(nextCueStart) + " --> " + formatTimestamp(cueEnd) + " align:center line:85% \\n" +
-    ${JSON.stringify(TEXT_TRACK_LABEL)} + " live cue " + cueIndex + "\\n\\n";
-  const buf = Buffer.from(cue, "utf8");
-  socket.send(buf, 0, buf.length, PORT, HOST);
-  cueIndex++;
-  nextCueStart += ${cueSpacing};
-}
-
-const header = Buffer.from("WEBVTT\\n\\n", "utf8");
-socket.send(header, 0, header.length, PORT, HOST);
-
-while (nextCueStart < ${TEXT_TRACK_INITIAL_AHEAD_DURATION}) {
-  sendCue();
-}
-
-const intervalId = setInterval(sendCue, ${cueSpacing * 1000});
-
-function stop() {
-  clearInterval(intervalId);
-  socket.close();
-  process.exit(0);
-}
-process.on("SIGINT", stop);
-process.on("SIGTERM", stop);
-socket.on("error", (err) => {
-  console.error("Live WebVTT UDP writer error:", err);
-  process.exit(1);
-});
-`.trim();
+  return textTrackAssets.map((asset) => {
+    const workerScript = join(__dirname, `live_${asset.liveWriterMode}_writer.mjs`);
+    return spawn(process.execPath, [workerScript], {
+      stdio: "inherit",
+      env: { ...sharedEnv, TT_PORT: String(asset.port) },
+    });
+  });
 }

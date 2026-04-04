@@ -9,7 +9,8 @@ import { commandExists } from "./utils.mjs";
  *
  * @param {number} basePort
  * @returns {{ base: number, p720: number, p480: number, p360: number,
- *             audio1: number, audio2: number, audio3: number, text: number }}
+ *             audio1: number, audio2: number, audio3: number,
+ *             text1: number, text2: number }}
  */
 export function buildPortMap(basePort) {
   return {
@@ -20,7 +21,8 @@ export function buildPortMap(basePort) {
     audio1: basePort + 3,
     audio2: basePort + 4,
     audio3: basePort + 5,
-    text: basePort + 6,
+    text1: basePort + 6,
+    text2: basePort + 7,
   };
 }
 

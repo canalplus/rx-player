@@ -84,8 +84,8 @@ export async function showConfigAndConfirm(
 
   // TODO: Only text if enabled?
   const portLabel = portConflictDetected
-    ? `${ports.base}-${ports.text} (UDP) - Conflict detected`
-    : `${ports.base}-${ports.text} (UDP)`;
+    ? `${ports.base}-${ports.text1} (UDP) - Conflict detected`
+    : `${ports.base}-${ports.text1} (UDP)`;
   tableRow("Encoding Ports", portLabel, portConflictDetected ? RED : MAGENTA);
   tableSep();
 

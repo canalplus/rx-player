@@ -2,7 +2,7 @@
 
 // Port / timing limits
 
-export const MAX_NB_PORTS_USED = 7;
+export const MAX_NB_PORTS_USED = 9;
 
 // Encryption defaults
 
