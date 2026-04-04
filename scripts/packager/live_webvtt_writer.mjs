@@ -13,7 +13,7 @@
 
 import dgram from "dgram";
 
-const PORT = Number(process.env.TT_PORT);
+const PORT = Number(process.env.TT_PORT) || 1738;
 const HOST = "127.0.0.1";
 const LABEL = process.env.TT_LABEL ?? "Subtitle";
 const CUE_SPACING = Number(process.env.TT_CUE_SPACING);
