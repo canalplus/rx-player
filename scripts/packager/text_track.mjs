@@ -16,10 +16,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 /**
  * Build the list of text-track asset descriptors.
  *
- * Produces one English WebVTT track and one English TTML track, both
- * delivered over UDP.
+ * Produces one English WebVTT track delivered over UDP.
  *
- * @param {{ text1: number, text2: number }} ports
+ * @param {{ text1: number }} ports
  * @returns {Array<{ sourcePath: string, segmentPrefix: string,
  *                   inputFormat: string, liveWriterMode: string, port: number }>}
  */
@@ -31,13 +30,6 @@ export function createTextTrackAssets(ports) {
       inputFormat: "webvtt",
       liveWriterMode: "webvtt",
       port: ports.text1,
-    },
-    {
-      sourcePath: `udp://127.0.0.1:${ports.text2}`,
-      segmentPrefix: TEXT_TRACK_SEGMENT_PREFIX + "_ttml",
-      inputFormat: "ttml",
-      liveWriterMode: "ttml",
-      port: ports.text2,
     },
   ];
 }

@@ -112,7 +112,7 @@ export async function packageLiveContent(config) {
       ports.audio1,
       ports.audio2,
       ports.audio3,
-      ...(config.hasTextTrack ? [ports.text1, ports.text2] : []),
+      ...(config.hasTextTrack ? [ports.text1] : []),
     ];
     await waitForShakaReady(portsToWait);
 
