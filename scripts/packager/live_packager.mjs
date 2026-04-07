@@ -93,16 +93,13 @@ export async function packageLiveContent(config) {
 
   const shakaArgs = buildShakaArgs(config, ports, textTrackAssets);
 
-  if (textTrackAssets.length > 0) {
-    const writers = startLiveTextTrackWriters(textTrackAssets, config.segmentDuration);
-    addTextWriterProcs(writers);
-  }
-
   console.log(`Starting shaka-packager with command: ${shakaCmd}`);
   const shaka = spawn(shakaCmd, shakaArgs, { stdio: "inherit" });
   setShakaProc(shaka);
   console.log(`shaka-packager started with PID: ${shaka.pid}`);
   const shakaExited = createChildExitPromise("shaka-packager", shaka, config.outputDir);
+  /** @type {Promise<void>[]} */
+  let textWriterExited = [];
 
   try {
     const portsToWait = [
@@ -117,7 +114,15 @@ export async function packageLiveContent(config) {
     await waitForShakaReady(portsToWait);
 
     if (textTrackAssets.length > 0) {
-      await waitForTextTracksReady(config.outputDir, textTrackAssets);
+      const writers = startLiveTextTrackWriters(textTrackAssets, config.segmentDuration);
+      addTextWriterProcs(writers);
+      textWriterExited = writers.map((writer, index) =>
+        createChildExitPromise(`text-writer-${index + 1}`, writer, config.outputDir),
+      );
+      await Promise.race([
+        waitForTextTracksReady(config.outputDir, textTrackAssets),
+        ...textWriterExited,
+      ]);
     }
   } catch (err) {
     cleanup(config.outputDir);
@@ -134,7 +139,7 @@ export async function packageLiveContent(config) {
   const ffmpegExited = createChildExitPromise("ffmpeg", ffmpeg, config.outputDir);
 
   // Run until interrupted or one child crashes.
-  await Promise.race([ffmpegExited, shakaExited]);
+  await Promise.race([ffmpegExited, shakaExited, ...textWriterExited]);
 }
 
 /**

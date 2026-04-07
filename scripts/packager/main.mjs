@@ -26,9 +26,9 @@ import {
   DEFAULT_FRAME_RATE,
   DEFAULT_TIMESHIFT_BUFFER_DEPTH,
   DEFAULT_BASE_PORT,
-  MAX_NB_PORTS_USED,
 } from "./constants.mjs";
 import { isPositiveInteger, isValidPort, sanitizeDirPath } from "./utils.mjs";
+import { getMaxNbPortsUsed } from "./ports.mjs";
 import { packageLiveContent } from "./live_packager.mjs";
 import { cleanup, registerSignalHandlers } from "./cleanup.mjs";
 
@@ -180,6 +180,7 @@ function panic(message) {
 }
 
 function displayHelp() {
+  const maxNbPortsUsed = getMaxNbPortsUsed();
   console.log(`
 content_packager.mjs
 ------------------------
@@ -221,8 +222,8 @@ Options:
 
   --base-port <port>                  Base UDP port number where media encoded by ffmpeg will
                                       be communicated to the shaka-packager.
-                                      ${MAX_NB_PORTS_USED} consecutive ports starting from this number will be used.
-                                      Defaults to ${DEFAULT_BASE_PORT} (ports ${DEFAULT_BASE_PORT}-${DEFAULT_BASE_PORT + MAX_NB_PORTS_USED - 1}).
+                                      Up to ${maxNbPortsUsed} consecutive ports starting from this number will be used.
+                                      Defaults to ${DEFAULT_BASE_PORT} (ports ${DEFAULT_BASE_PORT}-${DEFAULT_BASE_PORT + maxNbPortsUsed - 1}).
 
   --shaka-path <path>                 Path to the shaka-packager binary. If not specified,
                                       the script will search common locations and, as a last

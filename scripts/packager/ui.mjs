@@ -13,6 +13,7 @@ import {
   TEXT_TRACK_LANGUAGE,
   TEXT_TRACK_LABEL,
 } from "./constants.mjs";
+import { getLastUsedPort } from "./ports.mjs";
 
 const COL_WIDTH = 40;
 
@@ -82,10 +83,10 @@ export async function showConfigAndConfirm(
   tableSep();
   tableRow("Shaka-packager command", shakaCmd, BLUE);
 
-  // TODO: Only text if enabled?
+  const lastUsedPort = getLastUsedPort(ports, config.hasTextTrack);
   const portLabel = portConflictDetected
-    ? `${ports.base}-${ports.text1} (UDP) - Conflict detected`
-    : `${ports.base}-${ports.text1} (UDP)`;
+    ? `${ports.base}-${lastUsedPort} (UDP) - Conflict detected`
+    : `${ports.base}-${lastUsedPort} (UDP)`;
   tableRow("Encoding Ports", portLabel, portConflictDetected ? RED : MAGENTA);
   tableSep();
 

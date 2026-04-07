@@ -1,8 +1,17 @@
 // @ts-check
 
 import { execSync } from "child_process";
-import { MAX_NB_PORTS_USED } from "./constants.mjs";
 import { commandExists } from "./utils.mjs";
+
+const PORT_OFFSETS = {
+  p720: 0,
+  p480: 1,
+  p360: 2,
+  audio1: 3,
+  audio2: 4,
+  audio3: 5,
+  text1: 6,
+};
 
 /**
  * Build the port map used throughout the pipeline.
@@ -15,14 +24,30 @@ import { commandExists } from "./utils.mjs";
 export function buildPortMap(basePort) {
   return {
     base: basePort,
-    p720: basePort,
-    p480: basePort + 1,
-    p360: basePort + 2,
-    audio1: basePort + 3,
-    audio2: basePort + 4,
-    audio3: basePort + 5,
-    text1: basePort + 6,
+    p720: basePort + PORT_OFFSETS.p720,
+    p480: basePort + PORT_OFFSETS.p480,
+    p360: basePort + PORT_OFFSETS.p360,
+    audio1: basePort + PORT_OFFSETS.audio1,
+    audio2: basePort + PORT_OFFSETS.audio2,
+    audio3: basePort + PORT_OFFSETS.audio3,
+    text1: basePort + PORT_OFFSETS.text1,
   };
+}
+
+/**
+ * @returns {number}
+ */
+export function getMaxNbPortsUsed() {
+  return Math.max(...Object.values(PORT_OFFSETS)) + 1;
+}
+
+/**
+ * @param {ReturnType<typeof buildPortMap>} ports
+ * @param {boolean} hasTextTrack
+ * @returns {number}
+ */
+export function getLastUsedPort(ports, hasTextTrack) {
+  return hasTextTrack ? ports.text1 : ports.audio3;
 }
 
 /**
@@ -33,7 +58,7 @@ export function buildPortMap(basePort) {
  * @returns {{ ok: boolean, conflictDetected: boolean }}
  */
 export function checkPortRange(basePort) {
-  const endPort = basePort + MAX_NB_PORTS_USED - 1;
+  const endPort = basePort + getMaxNbPortsUsed() - 1;
 
   if (endPort > 65535) {
     return { ok: false, conflictDetected: false };

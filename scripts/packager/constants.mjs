@@ -1,9 +1,5 @@
 // @ts-check
 
-// Port / timing limits
-
-export const MAX_NB_PORTS_USED = 9;
-
 // Encryption defaults
 
 export const DEFAULT_KID = "0123456789abcdef0123456789abcdef";
