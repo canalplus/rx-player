@@ -190,7 +190,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       manifest: null,
       mediaSourceInfo: null,
       rebufferingController: null,
-      streamEventsEmitter: null,
       initialTime: undefined,
       autoPlay: undefined,
       initialPlayPerformed: null,
@@ -2077,13 +2076,6 @@ export interface IMediaSourceContentInitializerContentInfos {
    * `null` if none is currently created for the content.
    */
   rebufferingController: RebufferingController | null;
-  /**
-   * Current `StreamEventsEmitter` linked to the content, allowing to
-   * send events found in the Manifest.
-   *
-   * `null` if none is currently created for the content.
-   */
-  streamEventsEmitter: StreamEventsEmitter | null;
   /**
    * The initial position to seek to in seconds once the content is loadeed.
    * `undefined` if unknown yet.
