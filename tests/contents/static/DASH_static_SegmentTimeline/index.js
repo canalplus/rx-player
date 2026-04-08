@@ -10,6 +10,7 @@ import segmentTemplateInheritancePeriodAS from "./segment_template_inheritance_p
 import segmentTimelineEndNumber from "./segment_timeline_end_number";
 import streamEventsInfos from "./event-stream";
 import trickModeInfos from "./trickmode.js";
+import thumbnailInfos from "./thumbnails.js";
 
 export {
   manifestInfos,
@@ -24,4 +25,5 @@ export {
   segmentTimelineEndNumber,
   streamEventsInfos,
   trickModeInfos,
+  thumbnailInfos,
 };

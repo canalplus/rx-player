@@ -161,6 +161,7 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
 
     const urlObj = routeObj[req.url];
     let data;
+    let responseBody;
     if (typeof urlObj.path === "string") {
       try {
         data = fs.readFileSync(urlObj.path);
@@ -193,7 +194,15 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
     if (typeof urlObj.contentType === "string") {
       res.setHeader("Content-Type", urlObj.contentType);
     }
-    answerWithCORS(res, isPartial ? 206 : 200, Buffer.from(data));
+    responseBody = Buffer.from(data);
+    const delayMs = typeof urlObj.delayMs === "number" ? urlObj.delayMs : 0;
+    if (delayMs > 0) {
+      setTimeout(() => {
+        answerWithCORS(res, isPartial ? 206 : 200, responseBody);
+      }, delayMs);
+      return;
+    }
+    answerWithCORS(res, isPartial ? 206 : 200, responseBody);
   });
 
   const listeningPromise = new Promise((res) => {
@@ -294,6 +303,7 @@ function handlePackagedLiveRequest(res, req, basePath) {
     },
   );
 }
+
 /**
  * Handle the /start_packager endpoint
  * @param {Response} res
