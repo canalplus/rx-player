@@ -177,6 +177,12 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    * will be triggered immediately.
    */
   public updateContentUrls(urls: string[] | undefined, refreshNow: boolean): void {
+    // Keep track of the application-provided content URLs.
+    this._manifestUrls = urls;
+    // Indicate that we want to prioritize for the next refresh.
+    // Once a refreshed Manifest has been parsed we still let the Manifest's own
+    // URL list drive subsequent refreshes (e.g. if the transport/parser updated
+    // it on purpose).
     this._prioritizedContentUrl = urls?.[0] ?? undefined;
     if (refreshNow) {
       this.scheduleManualRefresh({
@@ -608,10 +614,16 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     let fullRefresh: boolean;
     let refreshURL: string | undefined;
     if (this._prioritizedContentUrl !== null) {
+      // `updateContentUrls` explicitly requested that the next refresh uses that
+      // URL. This override is one-shot on purpose.
       fullRefresh = true;
       refreshURL = this._prioritizedContentUrl;
       this._prioritizedContentUrl = null;
     } else {
+      // Outside of that explicit one-shot override, prefer the URLs currently
+      // exposed by the Manifest itself. This allows parser/content-level URL
+      // updates (e.g. redirects or manifest-provided alternatives) to stay the
+      // source of truth after the refresh completed.
       fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
       refreshURL = fullRefresh ? manifest.getUrls()[0] : manifestUpdateUrl;
     }

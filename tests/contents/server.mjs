@@ -68,45 +68,12 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
     }
 
     if (req.url.startsWith("/live/")) {
-      if (req.method.toUpperCase() === "OPTIONS") {
-        answerWithCORS(res, 200);
-        res.end();
-        return;
-      }
-      if (req.method.toUpperCase() !== "GET") {
-        res.setHeader("Content-Type", "text/plain");
-        answerWithCORS(res, 405, "405 Method Not Allowed");
-        return;
-      }
+      handlePackagedLiveRequest(res, req, "/live/");
+      return;
+    }
 
-      const baseDir = DEFAULT_PACKAGED_LIVE_OS_PATH;
-      prepareStaticFile(baseDir, req.url.substring("/live/".length)).then(
-        (file) => {
-          if (file === null) {
-            answerWithCORS(res, 404, "404 Not Found");
-            return;
-          }
-          const mimeType =
-            file.ext === "mpd" ? "application/dash+xml" : "application/octet-stream";
-          res.writeHead(200, {
-            "Content-Type": mimeType,
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Credentials": true,
-            "Access-Control-Allow-Methods": "GET, OPTIONS",
-          });
-          file.stream.pipe(res);
-        },
-        (err) => {
-          res.setHeader("Content-Type", "text/plain");
-          answerWithCORS(
-            res,
-            500,
-            "Error: " + (err instanceof Error ? err.toString() : "Unknown Error"),
-          );
-          return;
-        },
-      );
+    if (req.url.startsWith("/live-alt/")) {
+      handlePackagedLiveRequest(res, req, "/live-alt/");
       return;
     }
 
