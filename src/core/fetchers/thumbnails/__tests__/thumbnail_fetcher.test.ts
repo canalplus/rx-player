@@ -277,6 +277,76 @@ describe("createThumbnailFetcher", () => {
       // p1 should reject
       await expect(p1).rejects.toBeInstanceOf(CancellationError);
     });
+
+    it("does not pass the first caller's cancellation signal to the shared loader", async () => {
+      let loadSignal: CancellationSignal | undefined;
+      let resolveRequest!: (v: IRequestedData<ArrayBuffer>) => void;
+      const pipeline = makePipeline(
+        (
+          _cdnMetadata,
+          _segment,
+          _options,
+          cancellationSignal: CancellationSignal,
+        ): Promise<IRequestedData<ArrayBuffer>> => {
+          loadSignal = cancellationSignal;
+          return new Promise((res) => {
+            resolveRequest = res;
+          });
+        },
+      );
+
+      mockScheduleRequestWithCdns.mockImplementation(
+        (
+          cdns: ICdnMetadata[] | null,
+          _cdnPrioritizer: CdnPrioritizer | null,
+          performRequest: (
+            cdn: ICdnMetadata | null,
+            cancellationSignal: CancellationSignal,
+          ) => Promise<IRequestedData<ArrayBuffer>>,
+          _options: IBackoffSettings,
+          globalCancellationSignal: CancellationSignal,
+        ): Promise<IRequestedData<ArrayBuffer>> => {
+          return performRequest(cdns?.[0] ?? null, globalCancellationSignal);
+        },
+      );
+
+      const fetcher = createThumbnailFetcher(pipeline, null);
+      const canceller1 = new TaskCanceller("test1");
+      const canceller2 = new TaskCanceller("test2");
+      const ctx = makeThumbnailContext();
+
+      const p1 = fetcher(ctx, canceller1.signal);
+      const p2 = fetcher(ctx, canceller2.signal);
+
+      expect(mockScheduleRequestWithCdns).toHaveBeenCalledTimes(1);
+      expect(loadSignal).not.toBe(canceller1.signal);
+      expect(loadSignal).not.toBe(canceller2.signal);
+
+      canceller1.cancel("only first cancels");
+      expect(loadSignal?.isCancelled()).toBe(false);
+
+      resolveRequest({
+        responseData: new Uint8Array([4, 7, 7]).buffer,
+        size: 3,
+        requestDuration: 500,
+      });
+
+      await expect(p1).rejects.toBeInstanceOf(CancellationError);
+      await expect(p2).resolves.toEqual({
+        data: new Uint8Array([4, 7, 7]).buffer,
+        mimeType: "image/png",
+        thumbnails: [
+          {
+            height: 720,
+            width: 1280,
+            offsetX: 0,
+            offsetY: 0,
+            start: 0,
+            end: Number.MAX_SAFE_INTEGER,
+          },
+        ],
+      });
+    });
   });
 
   describe("error handling", () => {

@@ -243,7 +243,7 @@ export default function createThumbnailFetcher(
         cdnMetadata,
         thumbnail,
         pipelineRequestOptions,
-        cancellationSignal,
+        requestCanceller.signal,
       );
     }
 
