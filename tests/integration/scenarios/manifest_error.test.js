@@ -2,7 +2,7 @@ import sleep from "../../utils/sleep.js";
 
 import RxPlayer from "../../../dist/es2017";
 
-import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTimeline";
+import { manifestInfos } from "../../contents/static/DASH_dynamic_SegmentTimeline";
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 
 /**

@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import RxPlayer from "../../../dist/es2017";
-import { manifestInfos } from "../../contents/DASH_dynamic_SegmentTemplate_Multi_Periods";
+import { manifestInfos } from "../../contents/static/DASH_dynamic_SegmentTemplate_Multi_Periods";
 
 /**
  *  Workaround to provide a "real" sleep function, which does not depend on

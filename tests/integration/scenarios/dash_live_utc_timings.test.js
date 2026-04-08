@@ -5,7 +5,7 @@ import {
   WithDirectAndHTTP,
   WithHTTP,
   WithoutTimings,
-} from "../../contents/DASH_dynamic_UTCTimings";
+} from "../../contents/static/DASH_dynamic_UTCTimings";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
 
 describe("DASH live - UTCTimings", () => {

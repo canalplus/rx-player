@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
-import { forcedSubtitles } from "../../contents/DASH_static_SegmentTimeline";
+import { forcedSubtitles } from "../../contents/static/DASH_static_SegmentTimeline";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
 describe("DASH forced-subtitles content (SegmentTimeline)", function () {

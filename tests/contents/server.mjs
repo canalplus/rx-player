@@ -7,7 +7,7 @@ import { spawn } from "child_process";
 import * as path from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import * as fs from "fs";
-import urls from "./urls.mjs";
+import urls from "./static/urls.mjs";
 
 /** To activate if you're having content packaging issues. */
 const ACTIVATE_PACKAGER_LOGS = false;
@@ -27,14 +27,6 @@ const DEFAULT_PACKAGED_LIVE_OS_PATH = path.join(
   "live",
 );
 
-// NOTE: Handling both windows-style `\` path separators alongside posix-like `/``
-// in bash is a nightmare.
-// Because of this, when communicating paths to BASH, I always do it posix-style
-const DEFAULT_PACKAGED_LIVE_UNIX_PATH = path.posix.join(
-  path.posix.dirname(__filename),
-  "../../tmp/testcontents/live/",
-);
-
 // Transform `urls` array into an Object where the key is the url of each
 // element.
 const routeObj = urls.reduce((acc, elt) => {
@@ -50,11 +42,14 @@ let packagingProcessInfo = null;
 /**
  * Create simple HTTP server specifically designed to serve the contents defined
  * in this directory.
- * @param {number} port
+ * @param {Object} params
+ * @param {number} params.port
  * @returns {Object}
  */
 export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT } = {}) {
   const server = createServer(function (req, res) {
+    const requestUrl = new URL(req.url, "http://127.0.0.1");
+
     if (req.url === "/") {
       if (req.method.toUpperCase() === "OPTIONS") {
         answerWithCORS(res, 200);
@@ -115,7 +110,7 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
       return;
     }
 
-    if (req.url === "/start_packager") {
+    if (requestUrl.pathname === "/start_packager") {
       if (req.method.toUpperCase() === "OPTIONS") {
         answerWithCORS(res, 200);
         res.end();
@@ -127,11 +122,12 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
         return;
       }
 
-      handleStartPackager(res);
+      const textTrackQs = requestUrl.searchParams.get("enableTextTrack");
+      handleStartPackager(res, textTrackQs === "1");
       return;
     }
 
-    if (req.url === "/packager_status") {
+    if (requestUrl.pathname === "/packager_status") {
       if (req.method.toUpperCase() === "OPTIONS") {
         answerWithCORS(res, 200);
         res.end();
@@ -156,13 +152,14 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
                 mpdPath: packagingProcessInfo.mpdPath,
                 timeShiftBufferDepth: packagingProcessInfo.timeShiftBufferDepth,
                 segmentDuration: packagingProcessInfo.segmentDuration,
+                hasTextTrack: packagingProcessInfo.hasTextTrack,
               },
             };
       answerWithCORS(res, 200, JSON.stringify(jsonResponse));
       return;
     }
 
-    if (req.url === "/stop_packager") {
+    if (requestUrl.pathname === "/stop_packager") {
       if (req.method.toUpperCase() === "OPTIONS") {
         answerWithCORS(res, 200);
         res.end();
@@ -248,6 +245,9 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
       );
       console.log("      Only one content packaging at a time is supported.\n");
       console.log(
+        "      A text track can be added by adding enableTextTrack=1 to its query string.\n",
+      );
+      console.log(
         "      Stop packaging operations by POSTing to:\n      /stop_packager\n",
       );
       console.log(
@@ -269,9 +269,13 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
       if (packagingProcessInfo && !packagingProcessInfo.process.killed) {
         packagingProcessInfo.process.kill("SIGINT");
         setTimeout(() => {
-          // Use a negative PID to target the process group
-          process.kill(-packagingProcessInfo.process.pid);
-          packagingProcessInfo = null;
+          try {
+            // Use a negative PID to target the process group
+            process.kill(-packagingProcessInfo.process.pid);
+            packagingProcessInfo = null;
+          } catch (_err) {
+            /* previous process already exited */
+          }
         }, 5000);
       }
       const wasOpen = server.listening;
@@ -287,25 +291,38 @@ export default function createContentServer({ port = DEFAULT_CONTENT_SERVER_PORT
  * Handle the /start_packager endpoint
  * @param {Response} res
  */
-async function handleStartPackager(res) {
+async function handleStartPackager(res, hasTextTrack) {
   try {
     if (packagingProcessInfo && !packagingProcessInfo.process.killed) {
+      const previousProcess = packagingProcessInfo.process;
       if (ACTIVATE_PACKAGER_LOGS) {
         console.log("Stopping existing content packaging process...");
       }
-      packagingProcessInfo.process.kill("SIGINT");
+      previousProcess.kill("SIGINT");
       await new Promise((resolve) => setTimeout(resolve, 5000));
       // Use a negative PID to target the process group
-      process.kill(-packagingProcessInfo.process.pid);
+      try {
+        process.kill(-previousProcess.pid);
+      } catch (_err) {
+        /* previous process already exited */
+      }
       packagingProcessInfo = null;
     }
 
-    const scriptPath = path.join(__dirname, "../../scripts/package_live_content.sh");
+    const scriptPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "scripts",
+      "packager",
+      "main.mjs",
+    );
     const proc = spawn(
-      "bash",
+      process.execPath,
       [
         scriptPath,
         "--no-confirmation",
+        ...(hasTextTrack ? ["--enable-text-track"] : []),
         "--segment-duration",
         "2",
         "--timeshift-buffer-depth",
@@ -313,7 +330,7 @@ async function handleStartPackager(res) {
         "--base-port",
         "35951",
         "--output-dir",
-        DEFAULT_PACKAGED_LIVE_UNIX_PATH,
+        DEFAULT_PACKAGED_LIVE_OS_PATH,
       ],
       {
         stdio: ["ignore", "pipe", "pipe"], // Don't inherit stdio, capture output
@@ -326,6 +343,7 @@ async function handleStartPackager(res) {
       timeShiftBufferDepth: 40,
       segmentDuration: 2,
       mpdPath: "/live/manifest.mpd",
+      hasTextTrack,
     };
 
     packagingProcessInfo.process.on("error", (error) => {
@@ -371,6 +389,7 @@ async function handleStartPackager(res) {
           mpdPath: packagingProcessInfo.mpdPath,
           timeShiftBufferDepth: packagingProcessInfo.timeShiftBufferDepth,
           segmentDuration: packagingProcessInfo.segmentDuration,
+          hasTextTrack: packagingProcessInfo.hasTextTrack,
         },
       }),
     );

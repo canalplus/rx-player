@@ -5,7 +5,7 @@ import VideoThumbnailLoader, {
 import {
   manifestInfos,
   trickModeInfos,
-} from "../../contents/DASH_static_SegmentTimeline";
+} from "../../contents/static/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep";
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";

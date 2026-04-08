@@ -1,4 +1,4 @@
-import canalBifInfo from "../../contents/imagetracks/infos.js";
+import canalBifInfo from "../../contents/static/imagetracks/infos.js";
 import { parseBifThumbnails } from "../../../dist/es2017/tools";
 import { describe, it, expect } from "vitest";
 

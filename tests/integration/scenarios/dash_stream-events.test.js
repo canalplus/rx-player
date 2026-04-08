@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
-import { streamEventsInfos } from "../../contents/DASH_static_SegmentTimeline";
+import { streamEventsInfos } from "../../contents/static/DASH_static_SegmentTimeline";
 import sleep from "../../utils/sleep.js";
 import {
   /* waitForPlayerState, */ waitForLoadedStateAfterLoadVideo,

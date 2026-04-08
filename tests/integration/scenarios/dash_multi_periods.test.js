@@ -1,10 +1,10 @@
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
-import { manifestInfos } from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
+import { manifestInfos } from "../../contents/static/DASH_static_SegmentTemplate_Multi_Periods";
 import {
   multiPeriodDifferentChoicesInfos,
   multiPeriodSameChoicesInfos,
-} from "../../contents/DASH_static_SegmentTimeline";
+} from "../../contents/static/DASH_static_SegmentTimeline";
 import launchTestsForContent from "../utils/launch_tests_for_content.js";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,

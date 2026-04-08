@@ -5,7 +5,7 @@ import {
   EmptyTextTrack,
   NotStartingAt0,
   Regular,
-} from "../../contents/Smooth_static";
+} from "../../contents/static/Smooth_static";
 
 const { manifestInfos: emptyTextTrackManifestInfos } = EmptyTextTrack;
 const { manifestInfos: NotStartingAt0ManifestInfos } = NotStartingAt0;

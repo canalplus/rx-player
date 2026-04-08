@@ -5,11 +5,11 @@ import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState
 import {
   discontinuitiesBetweenPeriodsInfos,
   differentTypesDiscontinuitiesInfos,
-} from "../../contents/DASH_static_SegmentTemplate_Multi_Periods";
+} from "../../contents/static/DASH_static_SegmentTemplate_Multi_Periods";
 import {
   discontinuityInfos,
   notStartingAt0ManifestInfos,
-} from "../../contents/DASH_static_SegmentTimeline";
+} from "../../contents/static/DASH_static_SegmentTimeline";
 
 let player;
 

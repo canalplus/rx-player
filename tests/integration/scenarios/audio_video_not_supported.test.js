@@ -3,7 +3,7 @@ import {
   manifestInfos,
   manifestAudioOnlyInfos,
   manifestVideoNotSupportedInfos,
-} from "../../contents/DASH_dynamic_SegmentTemplate_UnsupportedAudio";
+} from "../../contents/static/DASH_dynamic_SegmentTemplate_UnsupportedAudio";
 import RxPlayer from "../../../dist/es2017";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff";
 import waitForState from "../../utils/waitForPlayerState";
