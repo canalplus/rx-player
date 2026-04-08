@@ -20,7 +20,6 @@ import type { ICdnMetadata } from "../../../parsers/manifest";
 import cancellableSleep from "../../../utils/cancellable_sleep";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
 import getTimestamp from "../../../utils/monotonic_timestamp";
-import noop from "../../../utils/noop";
 import { RequestError } from "../../../utils/request";
 import type { CancellationSignal } from "../../../utils/task_canceller";
 import TaskCanceller from "../../../utils/task_canceller";
@@ -315,7 +314,7 @@ export async function scheduleRequestWithCdns<T>(
         () => {
           const updatedPrioritaryCdn = getCdnToRequest();
           if (cancellationSignal.isCancelled()) {
-            throw cancellationSignal.cancellationError;
+            return;
           }
           if (updatedPrioritaryCdn === undefined) {
             return cleanAndReject(prevRequestError);
@@ -333,7 +332,10 @@ export async function scheduleRequestWithCdns<T>(
 
       cancellableSleep(blockedFor, canceller.signal).then(
         () => requestCdn(nextWantedCdn).then(cleanAndResolve, cleanAndReject),
-        noop,
+        (err) =>
+          cleanAndReject(
+            cancellationSignal.isCancelled() ? cancellationSignal.cancellationError : err,
+          ),
       );
 
       function cleanAndResolve(response: T) {
