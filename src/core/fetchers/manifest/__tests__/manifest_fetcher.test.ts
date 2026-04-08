@@ -96,7 +96,7 @@ function makeLoadResponse(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe.skip("ManifestFetcher", () => {
+describe("ManifestFetcher", () => {
   beforeEach(() => {
     mockConfigGetCurrent.mockReturnValue(DEFAULT_CONFIG);
     mockFormatError.mockImplementation((e: unknown) => e);
@@ -488,6 +488,51 @@ describe.skip("ManifestFetcher", () => {
         expect.anything(),
       );
     });
+
+    it("updates the stored manifest URLs", async () => {
+      const manifest = new MockManifest();
+      const fetcher = new ManifestFetcher(
+        ["http://example.com/manifest"],
+        makePipelines(),
+        makeSettings({ initialManifest: manifest }),
+      );
+      fetcher.start();
+      await flushPromises();
+
+      fetcher.updateContentUrls(["http://new.com/manifest"], false);
+
+      expect(fetcher).toHaveProperty("_manifestUrls", ["http://new.com/manifest"]);
+    });
+
+    it("uses the new URL once for the next full refresh even when refreshNow is false", async () => {
+      const manifest = new MockManifest();
+      mockLoadManifest.mockResolvedValue(makeLoadResponse());
+      mockParseManifest.mockReturnValue({ manifest: new MockManifest() });
+
+      const fetcher = new ManifestFetcher(
+        ["http://example.com/manifest"],
+        makePipelines(),
+        makeSettings({ initialManifest: manifest }),
+      );
+      fetcher.start();
+      await flushPromises();
+
+      fetcher.updateContentUrls(["http://new.com/manifest"], false);
+      fetcher.scheduleManualRefresh({
+        enablePartialRefresh: false,
+        delay: 0,
+        canUseUnsafeMode: false,
+      });
+      await sleep(0);
+      await flushPromises();
+
+      expect(mockLoadManifest).toHaveBeenCalledTimes(1);
+      expect(mockLoadManifest).toHaveBeenLastCalledWith(
+        "http://new.com/manifest",
+        expect.anything(),
+        expect.anything(),
+      );
+    });
   });
 
   describe("automatic refresh scheduling", () => {
@@ -694,7 +739,9 @@ describe.skip("ManifestFetcher", () => {
       });
 
       const refreshManifest = new MockManifest();
-      mockLoadManifest.mockResolvedValue(makeLoadResponse());
+      mockLoadManifest.mockResolvedValue(
+        makeLoadResponse({ sendingTime: undefined, receivedTime: undefined }),
+      );
       mockParseManifest.mockReturnValue({ manifest: refreshManifest });
 
       const fetcher = new ManifestFetcher(
@@ -715,7 +762,9 @@ describe.skip("ManifestFetcher", () => {
       await flushPromises();
 
       // Fallback full refresh fires after FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY
-      vi.advanceTimersByTime(DEFAULT_CONFIG.FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY);
+      vi.advanceTimersByTime(
+        DEFAULT_CONFIG.FAILED_PARTIAL_UPDATE_MANIFEST_REFRESH_DELAY + 1,
+      );
       await vi.waitFor(noop, { timeout: 0 }); // real delay
       await flushPromises();
 

@@ -128,6 +128,7 @@ async function waitForPackagerReady() {
 describe("DASH live packaged content", function () {
   let player;
   let mpdUrl;
+  let alternateMpdUrl;
   let segmentDuration;
   let textTrackElement;
 
@@ -138,6 +139,7 @@ describe("DASH live packaged content", function () {
       });
       const readyInfos = await waitForPackagerReady();
       mpdUrl = readyInfos.mpdUrl;
+      alternateMpdUrl = readyInfos.mpdUrl.replace("/live/", "/live-alt/");
       segmentDuration = readyInfos.segmentDuration;
     },
 
@@ -163,6 +165,56 @@ describe("DASH live packaged content", function () {
       textTrackElement = null;
     }
   });
+
+  it(
+    "should use updated content URLs for the immediate and later manifest refreshes",
+    {
+      timeout: 30000,
+    },
+    async function () {
+      const manifestRequestUrls = [];
+      let playerError = null;
+      const manifestLoader = (manifestInfo, callbacks) => {
+        manifestRequestUrls.push(manifestInfo.url);
+        callbacks.fallback();
+      };
+
+      player.addEventListener("error", (err) => {
+        playerError = err;
+      });
+
+      player.loadVideo({
+        url: mpdUrl,
+        autoPlay: true,
+        transport: "dash",
+        minimumManifestUpdateInterval: 0,
+        manifestLoader,
+      });
+
+      await waitForLoadedStateAfterLoadVideo(player);
+      expect(manifestRequestUrls.length).toBeGreaterThan(0);
+      expect(manifestRequestUrls[0]).toBe(mpdUrl);
+
+      player.updateContentUrls([alternateMpdUrl], { refresh: true });
+
+      await checkAfterSleepWithBackoff({ maxTimeMs: 7000, stepMs: 100 }, () => {
+        expect(playerError).toBe(null);
+        expect(manifestRequestUrls).toContain(alternateMpdUrl);
+      });
+
+      const firstAlternateIndex = manifestRequestUrls.indexOf(alternateMpdUrl);
+
+      await checkAfterSleepWithBackoff({ maxTimeMs: 8000, stepMs: 200 }, () => {
+        expect(playerError).toBe(null);
+        expect(manifestRequestUrls.length).toBeGreaterThan(firstAlternateIndex + 1);
+        expect(manifestRequestUrls[manifestRequestUrls.length - 1]).toBe(alternateMpdUrl);
+      });
+
+      expect(playerError).toBe(null);
+      expect(player.isLive()).toBe(true);
+      expect(player.getMaximumPosition() - player.getPosition()).toBeGreaterThan(0);
+    },
+  );
 
   // it(
   //   "should fetch, update and play the Manifest",
