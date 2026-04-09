@@ -5,7 +5,6 @@ import { EMBEDDED_DASH_WASM } from "../../../dist/es2017/__GENERATED_CODE/index.
 import thumbnailInfos from "../../contents/static/DASH_static_SegmentTimeline/thumbnails.js";
 import TestWorkerEmbed from "../../embedded_worker_bundle";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
-import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
 function createContainer() {
@@ -156,11 +155,6 @@ function runDashRenderThumbnailTests({ multithread } = {}) {
         container: container2,
         time: 0.5,
       });
-
-      // In worker mode, let both renderThumbnail calls cross the worker
-      // boundary before aborting the first container's request.
-      await sleep(0);
-
       const replacementPromise = player.renderThumbnail({
         container: container1,
         time: 12,

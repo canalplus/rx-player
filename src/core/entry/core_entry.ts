@@ -1221,6 +1221,10 @@ function sendThumbnailData(
     msg.value.time,
   ).then(
     (result) => {
+      // Multiple thumbnail requests can share the same fetched payload.
+      // Transfer a copy here so replying to one request does not detach the
+      // ArrayBuffer that still has to be sent to another requester.
+      const data = result.data.slice(0);
       sendMessage(
         {
           type: CoreMessageType.ThumbnailDataResponse,
@@ -1228,10 +1232,10 @@ function sendThumbnailData(
           value: {
             status: "success",
             requestId: msg.value.requestId,
-            data: result,
+            data: { ...result, data },
           },
         },
-        [result.data],
+        [data],
       );
     },
     (err) => {
