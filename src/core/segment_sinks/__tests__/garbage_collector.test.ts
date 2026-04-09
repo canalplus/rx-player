@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { __PLAYBACK_OBSERVER_MOCKS } from "../../../playback_observer";
+import {
+  makeReadyOnlyPlaybackObserver,
+  DummyObservationPosition,
+} from "../../../playback_observer/__tests__/mocks";
 import type { IRange } from "../../../utils/ranges";
 import SharedReference from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
@@ -16,10 +19,10 @@ const mockLog = vi.hoisted(() => ({
 vi.mock("../../../log", () => ({ default: mockLog }));
 
 describe("BufferGarbageCollector", () => {
-  const mockedPlaybackObserver = __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<
+  const mockedPlaybackObserver = makeReadyOnlyPlaybackObserver<
     Pick<IStreamOrchestratorPlaybackObservation, "position" | "buffered">
   >({
-    position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+    position: new DummyObservationPosition({
       getWanted: vi.fn(() => 0),
     }),
     buffered: { video: null, audio: null, text: null },
@@ -28,7 +31,7 @@ describe("BufferGarbageCollector", () => {
 
   function emitObservation(position: number, videoBuffered: IRange[] | null) {
     mockedPlaybackObserver.emit({
-      position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+      position: new DummyObservationPosition({
         getWanted: () => position,
       }),
       buffered: { video: videoBuffered, audio: null, text: null },

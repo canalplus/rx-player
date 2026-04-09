@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import configHandler from "../../../config";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../manifest/classes";
-import { __PLAYBACK_OBSERVER_MOCKS } from "../../../playback_observer";
+import {
+  DummyAdaptation,
+  DummyPeriod,
+  DummyRepresentation,
+  DummyManifest,
+  createSegment,
+} from "../../../manifest/classes/__tests__/mocks";
+import { DummyObservationPosition } from "../../../playback_observer/__tests__/mocks";
 import { makeMockedClass } from "../../../utils/test-utils";
 import type { IPlaybackConditionsInfo } from "../network_analyzer";
 import NetworkAnalyzer, { estimateRequestBandwidth } from "../network_analyzer";
@@ -26,15 +32,15 @@ function createMockRequest(
 ): IRequestInfo {
   return {
     content: {
-      segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+      segment: createSegment({
         time: segmentTime,
         duration: segmentDuration,
         complete,
       }),
-      adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
-      period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-      representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
-      manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
+      adaptation: new DummyAdaptation(),
+      period: new DummyPeriod(),
+      representation: new DummyRepresentation(),
+      manifest: new DummyManifest(),
     },
     requestTimestamp,
     progress: progress.map((p) => {
@@ -58,7 +64,7 @@ function createMockPlaybackInfo(
 ): IPlaybackConditionsInfo {
   return {
     bufferGap,
-    position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+    position: new DummyObservationPosition({
       getWanted: () => position,
       getPolled: () => position,
     }),
@@ -345,7 +351,7 @@ describe("NetworkAnalyzer", () => {
     it("should return false when bitrate is higher than current representation", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(5, 0);
-      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+      const currentRepresentation = new DummyRepresentation({
         bitrate: 1000000,
       });
 
@@ -357,7 +363,7 @@ describe("NetworkAnalyzer", () => {
     it("should return true in low latency mode when switching to lower bitrate", () => {
       const analyzer = new NetworkAnalyzer(1000000, true);
       const playbackInfo = createMockPlaybackInfo(5, 0);
-      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+      const currentRepresentation = new DummyRepresentation({
         bitrate: 2000000,
       });
 
@@ -369,7 +375,7 @@ describe("NetworkAnalyzer", () => {
     it("should return true when no pending requests for lower bitrate", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(5, 10);
-      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+      const currentRepresentation = new DummyRepresentation({
         bitrate: 2000000,
       });
 
@@ -383,7 +389,7 @@ describe("NetworkAnalyzer", () => {
       // eslint-disable-next-line no-restricted-properties
       const now = performance.now();
       const playbackInfo = createMockPlaybackInfo(2, 10);
-      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+      const currentRepresentation = new DummyRepresentation({
         bitrate: 2000000,
       });
 
@@ -408,7 +414,7 @@ describe("NetworkAnalyzer", () => {
     it("should handle requests with zero duration segments", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(5, 10);
-      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+      const currentRepresentation = new DummyRepresentation({
         bitrate: 2000000,
       });
 
@@ -428,7 +434,7 @@ describe("NetworkAnalyzer", () => {
     it("should handle infinite buffer gap in urgency check", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(Infinity, 10);
-      const currentRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+      const currentRepresentation = new DummyRepresentation({
         bitrate: 2000000,
       });
 
@@ -457,7 +463,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(1.5, 20),
         bandwidthEstimator,
-        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 1600000 }),
+        new DummyRepresentation({ bitrate: 1600000 }),
         [],
         result.bitrateChosen,
       );
@@ -467,7 +473,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(4, 30),
         bandwidthEstimator,
-        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 1440000 }),
+        new DummyRepresentation({ bitrate: 1440000 }),
         [],
         result.bitrateChosen,
       );
@@ -493,7 +499,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(5, 10),
         estimator,
-        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 2400000 }),
+        new DummyRepresentation({ bitrate: 2400000 }),
         [],
         result.bitrateChosen,
       );
@@ -504,7 +510,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(5, 20),
         estimator,
-        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 800000 }),
+        new DummyRepresentation({ bitrate: 800000 }),
         [],
         result.bitrateChosen,
       );
@@ -529,7 +535,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(5, 10, 2),
         estimator,
-        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: normalBitrate }),
+        new DummyRepresentation({ bitrate: normalBitrate }),
         [],
         result.bitrateChosen,
       );
@@ -539,7 +545,7 @@ describe("NetworkAnalyzer", () => {
       result = analyzer.getBandwidthEstimate(
         createMockPlaybackInfo(5, 20, 0.5),
         estimator,
-        new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: normalBitrate }),
+        new DummyRepresentation({ bitrate: normalBitrate }),
         [],
         result.bitrateChosen,
       );

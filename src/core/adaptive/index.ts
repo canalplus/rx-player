@@ -45,6 +45,3 @@ export type {
   IRequestEndCallbackPayload,
   IResolutionInfo,
 };
-
-// NOTE: Reserved for tests
-export * as __ADAPTIVE_MOCKS from "./__tests__/mocks";

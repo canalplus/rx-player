@@ -1,17 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import configHandler from "../../../../../config";
+import { type Adaptation, type Period } from "../../../../../manifest/classes";
 import {
-  __MANIFEST_CLASSES_MOCKS,
-  type Adaptation,
-  type Period,
-} from "../../../../../manifest/classes";
-import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../../playback_observer";
+  DummyPeriod,
+  DummyAdaptation,
+  createSegment,
+  DummyRepresentation,
+} from "../../../../../manifest/classes/__tests__/mocks";
+import {
+  makeReadyOnlyPlaybackObserver,
+  DummyObservationPosition,
+} from "../../../../../playback_observer/__tests__/mocks";
 import type { IBufferedChunk, SegmentSink } from "../../../../segment_sinks";
-import {
-  __SEGMENT_SINKS_MOCKS,
-  ChunkStatus,
-  SegmentSinkOperation,
-} from "../../../../segment_sinks";
+import { ChunkStatus, SegmentSinkOperation } from "../../../../segment_sinks";
+import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
 import type { IPeriodStreamPlaybackObservation } from "../../types";
 import getAdaptationSwitchStrategy from "../get_adaptation_switch_strategy";
 
@@ -20,23 +22,21 @@ describe("getAdaptationSwitchStrategy", () => {
   let mockPeriod: Period;
   let mockAdaptation: Adaptation;
   const mockedPlaybackObserver =
-    __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>(
-      {
-        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
-          getPolled: () => 15,
-        }),
-        readyState: 3,
-        paused: {
-          last: false,
-          pending: undefined,
-        },
-        duration: NaN,
-        speed: 1,
-        maximumPosition: Number.MAX_SAFE_INTEGER,
-        buffered: { video: null, audio: null, text: null },
-        canStream: true,
+    makeReadyOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>({
+      position: new DummyObservationPosition({
+        getPolled: () => 15,
+      }),
+      readyState: 3,
+      paused: {
+        last: false,
+        pending: undefined,
       },
-    );
+      duration: NaN,
+      speed: 1,
+      maximumPosition: Number.MAX_SAFE_INTEGER,
+      buffered: { video: null, audio: null, text: null },
+      canStream: true,
+    });
   beforeEach(() => {
     const originalConfig = configHandler.getCurrent();
     vi.spyOn(configHandler, "getCurrent").mockReturnValue({
@@ -47,16 +47,16 @@ describe("getAdaptationSwitchStrategy", () => {
         text: { before: 0, after: 0 },
       },
     });
-    mockSegmentSink = new __SEGMENT_SINKS_MOCKS.DummySegmentSink({
+    mockSegmentSink = new DummySegmentSink({
       getLastKnownInventory: () => [],
       getPendingOperations: () => [],
     });
-    mockPeriod = new __MANIFEST_CLASSES_MOCKS.DummyPeriod({
+    mockPeriod = new DummyPeriod({
       id: "period-1",
       start: 10,
       end: 20,
     });
-    mockAdaptation = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+    mockAdaptation = new DummyAdaptation({
       id: "adaptation-1",
       type: "video",
     });
@@ -94,16 +94,16 @@ describe("getAdaptationSwitchStrategy", () => {
   }): IBufferedChunk {
     return {
       infos: {
-        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({
+        period: new DummyPeriod({
           id: periodId,
           start: periodStart,
           end: periodEnd,
         }),
-        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ id: adaptationId }),
-        representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        adaptation: new DummyAdaptation({ id: adaptationId }),
+        representation: new DummyRepresentation({
           id: representationId,
         }),
-        segment: __MANIFEST_CLASSES_MOCKS.createSegment({ time: start, end }),
+        segment: createSegment({ time: start, end }),
       },
       bufferedStart,
       bufferedEnd,
@@ -121,11 +121,11 @@ describe("getAdaptationSwitchStrategy", () => {
   describe("codec compatibility", () => {
     it("should return needs-reload when codec is incompatible and onCodecSwitch is reload", () => {
       mockSegmentSink.codec = "avc1.64001f";
-      const currMockAdap = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+      const currMockAdap = new DummyAdaptation({
         id: "adaptation-1",
         type: "video",
         representations: [
-          new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+          new DummyRepresentation({
             isPlayable: () => true,
             getMimeTypeString: () => "video/mp4; codecs=hev1.1.6.L93.B0",
           }),
@@ -146,11 +146,11 @@ describe("getAdaptationSwitchStrategy", () => {
 
     it("should continue when codec is compatible", () => {
       mockSegmentSink.codec = "video/mp4;codecs=avc1.64001f";
-      const currMockAdap = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+      const currMockAdap = new DummyAdaptation({
         id: "adaptation-1",
         type: "video",
         representations: [
-          new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+          new DummyRepresentation({
             isPlayable: () => true,
             getMimeTypeString: () => "video/mp4;codecs=avc1.65001f",
           }),
@@ -171,11 +171,11 @@ describe("getAdaptationSwitchStrategy", () => {
 
     it("should continue when onCodecSwitch is continue regardless of codec", () => {
       mockSegmentSink.codec = "avc1.64001f";
-      const currMockAdap = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+      const currMockAdap = new DummyAdaptation({
         id: "adaptation-1",
         type: "video",
         representations: [
-          new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+          new DummyRepresentation({
             isPlayable: () => true,
             getMimeTypeString: () => "video/mp4; codecs=hev1.1.6.L93.B0",
           }),
@@ -303,11 +303,11 @@ describe("getAdaptationSwitchStrategy", () => {
           value: {
             inventoryInfos: {
               period: mockPeriod,
-              adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+              adaptation: new DummyAdaptation({
                 id: "adaptation-2",
               }),
-              representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
-              segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+              representation: new DummyRepresentation(),
+              segment: createSegment({
                 time: 12,
                 duration: 3,
               }),
@@ -348,8 +348,8 @@ describe("getAdaptationSwitchStrategy", () => {
           value: {
             adaptation: mockAdaptation,
             period: mockPeriod,
-            representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
-            segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+            representation: new DummyRepresentation(),
+            segment: createSegment(),
           },
         },
       ]);
@@ -426,7 +426,7 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should clean-buffer for direct mode with text adaptation", () => {
-      const currMockAdap = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+      const currMockAdap = new DummyAdaptation({
         id: "adaptation-1",
         type: "text",
       });

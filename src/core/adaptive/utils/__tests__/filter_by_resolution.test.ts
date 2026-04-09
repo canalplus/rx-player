@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
 import filterByResolution from "../filter_by_resolution";
 
 describe("ABR - filterByResolution", () => {
   const fakeReps = [
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ height: 80, width: 100 }),
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ height: 800, width: 1000 }),
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ height: 8000, width: 10000 }),
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ height: 80000, width: 100000 }),
+    new DummyRepresentation({ height: 80, width: 100 }),
+    new DummyRepresentation({ height: 800, width: 1000 }),
+    new DummyRepresentation({ height: 8000, width: 10000 }),
+    new DummyRepresentation({ height: 80000, width: 100000 }),
   ];
 
   describe("filterByResolution", () => {

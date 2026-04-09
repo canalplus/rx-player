@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import configHandler from "../../../../config";
 import logger from "../../../../log";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
+import {
+  DummyAdaptation,
+  DummyPeriod,
+  DummyRepresentation,
+  createSegment,
+} from "../../../../manifest/classes/__tests__/mocks";
 import BufferedHistory from "../buffered_history";
 import SegmentInventory, { ChunkStatus } from "../segment_inventory";
 import type { IInsertedChunkInfos } from "../segment_inventory";
@@ -13,9 +18,6 @@ const { mockGetMonotonicTimeStamp } = vi.hoisted(() => {
 vi.mock("../../../../utils/monotonic_timestamp", () => ({
   default: mockGetMonotonicTimeStamp,
 }));
-
-const { DummyAdaptation, DummyPeriod, DummyRepresentation, createSegment } =
-  __MANIFEST_CLASSES_MOCKS;
 
 function makeChunkInfos(
   overrides: Partial<IInsertedChunkInfos> = {},

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { IRepresentation } from "../../../../manifest";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
 import RepresentationScoreCalculator, {
   ScoreConfidenceLevel,
 } from "../representation_score_calculator";
@@ -41,12 +41,12 @@ describe("RepresentationScoreCalculator", () => {
   beforeEach(() => {
     calculator = new RepresentationScoreCalculator();
 
-    mockRepresentation1 = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+    mockRepresentation1 = new DummyRepresentation({
       id: "rep1",
       bitrate: 1000000,
     });
 
-    mockRepresentation2 = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+    mockRepresentation2 = new DummyRepresentation({
       id: "rep2",
       bitrate: 2000000,
     });

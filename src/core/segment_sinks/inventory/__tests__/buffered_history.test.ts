@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
+import {
+  DummyAdaptation,
+  DummyRepresentation,
+  DummyPeriod,
+  createSegment,
+} from "../../../../manifest/classes/__tests__/mocks";
 import BufferedHistory from "../buffered_history";
 import type { IChunkContext } from "../types";
 
@@ -16,10 +21,10 @@ vi.mock("../../../../utils/monotonic_timestamp", () => ({
 }));
 
 const makeContext = (id: string): IChunkContext => ({
-  adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ id }),
-  representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ id }),
-  period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({ id }),
-  segment: __MANIFEST_CLASSES_MOCKS.createSegment({ id }),
+  adaptation: new DummyAdaptation({ id }),
+  representation: new DummyRepresentation({ id }),
+  period: new DummyPeriod({ id }),
+  segment: createSegment({ id }),
 });
 
 describe("BufferedHistory", () => {

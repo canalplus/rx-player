@@ -6,13 +6,23 @@ import {
   type Period,
   type Representation,
   type ISegment,
-  __MANIFEST_CLASSES_MOCKS,
 } from "../../../../../manifest/classes";
-import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../../playback_observer";
+import {
+  DummyAdaptation,
+  DummyPeriod,
+  DummyManifest,
+  DummyRepresentation,
+  createSegment,
+} from "../../../../../manifest/classes/__tests__/mocks";
+import {
+  makeReadyOnlyPlaybackObserver,
+  DummyObservationPosition,
+} from "../../../../../playback_observer/__tests__/mocks";
 import type { IRange } from "../../../../../utils/ranges";
 import SharedReference from "../../../../../utils/reference";
 import TaskCanceller from "../../../../../utils/task_canceller";
-import { __SEGMENT_SINKS_MOCKS, type SegmentSink } from "../../../../segment_sinks";
+import { type SegmentSink } from "../../../../segment_sinks";
+import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
 import type { IRepresentationStreamPlaybackObservation } from "../../types";
 import type appendSegmentToBuffer from "../append_segment_to_buffer";
 import pushInitSegment from "../push_init_segment";
@@ -27,19 +37,17 @@ vi.mock("../append_segment_to_buffer", () => ({
 
 describe("pushInitSegment", () => {
   const mockedPlaybackObserver =
-    __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>(
-      {
-        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
-          getWanted: vi.fn(() => 10),
-        }),
-        paused: {
-          last: false,
-          pending: undefined,
-        },
-        speed: 1,
-        canStream: true,
+    makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>({
+      position: new DummyObservationPosition({
+        getWanted: vi.fn(() => 10),
+      }),
+      paused: {
+        last: false,
+        pending: undefined,
       },
-    );
+      speed: 1,
+      canStream: true,
+    });
   let mockSegmentSink: SegmentSink;
   let mockBufferGoal: SharedReference<number>;
   let mockCanceller: TaskCanceller;
@@ -54,21 +62,21 @@ describe("pushInitSegment", () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
-    mockSegmentSink = new __SEGMENT_SINKS_MOCKS.DummySegmentSink();
+    mockSegmentSink = new DummySegmentSink();
     mockBufferGoal = new SharedReference<number>(30);
     mockCanceller = new TaskCanceller("pushInitSegment tests");
     mockContent = {
-      adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ id: "adaptation-1" }),
-      manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest({ id: "manifest-1" }),
-      period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({ id: "period-1" }),
-      representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+      adaptation: new DummyAdaptation({ id: "adaptation-1" }),
+      manifest: new DummyManifest({ id: "manifest-1" }),
+      period: new DummyPeriod({ id: "period-1" }),
+      representation: new DummyRepresentation({
         id: "rep-1",
       }),
     };
     mockContent.representation.getMimeTypeString = vi
       .fn()
       .mockReturnValue('video/mp4; codecs="avc1.42E01E"');
-    mockSegment = __MANIFEST_CLASSES_MOCKS.createSegment({
+    mockSegment = createSegment({
       id: "init-segment",
       isInit: true,
       time: 0,

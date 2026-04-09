@@ -1,7 +1,16 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import type { IAdaptation, IManifest, IRepresentation, IPeriod } from "../../../manifest";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../manifest/classes";
-import { __PLAYBACK_OBSERVER_MOCKS } from "../../../playback_observer";
+import {
+  DummyManifest,
+  DummyPeriod,
+  DummyAdaptation,
+  DummyRepresentation,
+  createSegment,
+} from "../../../manifest/classes/__tests__/mocks";
+import {
+  makeReadyOnlyPlaybackObserver,
+  DummyObservationPosition,
+} from "../../../playback_observer/__tests__/mocks";
 import SharedReference from "../../../utils/reference";
 import TaskCanceller from "../../../utils/task_canceller";
 import type { IBufferType } from "../../segment_sinks";
@@ -24,15 +33,13 @@ vi.mock("../../../log", () => ({
 
 /** Dummy object that will be used as the `PlaybackObserver` instance */
 const mockedPlaybackObserver =
-  __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>(
-    {
-      bufferGap: 10,
-      position: makeObservationPosition(0),
-      speed: 1,
-      duration: 10000,
-      maximumPosition: 10000,
-    },
-  );
+  makeReadyOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>({
+    bufferGap: 10,
+    position: makeObservationPosition(0),
+    speed: 1,
+    duration: 10000,
+    maximumPosition: 10000,
+  });
 
 /**
  * Create a dummy `context` argument as taken by an
@@ -47,15 +54,15 @@ function makeContext(
   period: IPeriod;
 } {
   return {
-    manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest({ isDynamic }),
-    period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-    adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ type: bufferType }),
+    manifest: new DummyManifest({ isDynamic }),
+    period: new DummyPeriod(),
+    adaptation: new DummyAdaptation({ type: bufferType }),
   };
 }
 
 /** Simple util to make a `Representation` with a specific `id` and/or bitrate. */
 function makeRepresentation(id: string = "foo", bitrate: number = 1000): IRepresentation {
-  return new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+  return new DummyRepresentation({
     id,
     bitrate,
   });
@@ -92,7 +99,7 @@ function emitObservation(
 
 /** Create the `position` attribute for a playback observation. */
 function makeObservationPosition(wanted: number) {
-  return new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+  return new DummyObservationPosition({
     getWanted: () => wanted,
   });
 }
@@ -153,11 +160,11 @@ describe("createAdaptiveRepresentationSelector", () => {
       size: 50000,
       segmentDuration: 4,
       content: {
-        manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
-        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ type: "video" }),
+        manifest: new DummyManifest(),
+        period: new DummyPeriod(),
+        adaptation: new DummyAdaptation({ type: "video" }),
         representation: rep,
-        segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+        segment: createSegment({
           isInit: false,
           complete: true,
           duration: 4,
@@ -209,11 +216,11 @@ describe("createAdaptiveRepresentationSelector", () => {
       size: 50000,
       segmentDuration: 4,
       content: {
-        manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
-        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ type: "video" }),
+        manifest: new DummyManifest(),
+        period: new DummyPeriod(),
+        adaptation: new DummyAdaptation({ type: "video" }),
         representation: rep,
-        segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+        segment: createSegment({
           isInit: false,
           complete: true,
           duration: 4,
@@ -514,16 +521,16 @@ describe("createAdaptiveRepresentationSelector", () => {
         size: 50000,
         segmentDuration: 4,
         content: {
-          representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+          representation: new DummyRepresentation({
             id: "r",
             bitrate: 500,
           }),
-          segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+          segment: createSegment({
             isInit: false,
             complete: true,
             duration: 4,
           }),
-          adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
+          adaptation: new DummyAdaptation(),
         },
       });
       expect(mockAddSample).toHaveBeenCalledWith(200, 50000);
@@ -542,8 +549,8 @@ describe("createAdaptiveRepresentationSelector", () => {
         segmentDuration: undefined,
         content: {
           representation: makeRepresentation("r", 500),
-          adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
-          segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+          adaptation: new DummyAdaptation(),
+          segment: createSegment({
             isInit: true,
             complete: false,
             duration: 0,
@@ -567,8 +574,8 @@ describe("createAdaptiveRepresentationSelector", () => {
         segmentDuration: 4,
         content: {
           representation: rep,
-          adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({}),
-          segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+          adaptation: new DummyAdaptation({}),
+          segment: createSegment({
             isInit: false,
             complete: true,
             duration: 4,
@@ -589,7 +596,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         content: {
           ...makeContext(),
           representation: makeRepresentation(),
-          segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+          segment: createSegment(),
         },
       };
       callbacks.requestBegin(payload);
@@ -610,7 +617,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         content: {
           ...makeContext(),
           representation: makeRepresentation(),
-          segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+          segment: createSegment(),
         },
       };
       const payloadProgress = {
@@ -636,7 +643,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         content: {
           ...makeContext(),
           representation: makeRepresentation(),
-          segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+          segment: createSegment(),
         },
       };
       callbacks.requestBegin(payloadAdd);

@@ -64,6 +64,3 @@ export {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
 };
-
-// NOTE: Reserved for tests
-export * as __SEGMENT_SINKS_MOCKS from "./__tests__/mocks";

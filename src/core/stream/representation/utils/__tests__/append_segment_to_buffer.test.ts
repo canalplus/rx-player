@@ -1,7 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MediaError, SourceBufferError } from "../../../../../errors";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../../manifest/classes";
-import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../../playback_observer";
+import {
+  DummyRepresentation,
+  DummyAdaptation,
+  DummyPeriod,
+  createSegment,
+} from "../../../../../manifest/classes/__tests__/mocks";
+import {
+  makeReadyOnlyPlaybackObserver,
+  DummyObservationPosition,
+} from "../../../../../playback_observer/__tests__/mocks";
 import SharedReference from "../../../../../utils/reference";
 import TaskCanceller, { CancellationError } from "../../../../../utils/task_canceller";
 import type {
@@ -25,19 +33,17 @@ vi.mock("../../../../../utils/sleep", () => ({
 
 describe("appendSegmentToBuffer", () => {
   const mockedPlaybackObserver =
-    __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>(
-      {
-        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
-          getWanted: vi.fn(() => 10),
-        }),
-        paused: {
-          last: false,
-          pending: undefined,
-        },
-        speed: 1,
-        canStream: true,
+    makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>({
+      position: new DummyObservationPosition({
+        getWanted: vi.fn(() => 10),
+      }),
+      paused: {
+        last: false,
+        pending: undefined,
       },
-    );
+      speed: 1,
+      canStream: true,
+    });
   let mockDataInfos: IPushChunkInfos<unknown> & { inventoryInfos: IInsertedChunkInfos };
   let mockBufferGoal: SharedReference<number>;
   let mockTaskCanceller: TaskCanceller;
@@ -58,14 +64,14 @@ describe("appendSegmentToBuffer", () => {
 
     mockDataInfos = {
       inventoryInfos: {
-        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+        adaptation: new DummyAdaptation({
           id: "test-adaptation",
           type: "video",
           representations: [],
         }),
-        representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
-        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-        segment: __MANIFEST_CLASSES_MOCKS.createSegment(),
+        representation: new DummyRepresentation(),
+        period: new DummyPeriod(),
+        segment: createSegment(),
         chunkSize: 1024,
         start: 0,
         end: 2,
@@ -188,7 +194,7 @@ describe("appendSegmentToBuffer", () => {
         .mockResolvedValueOnce([{ start: 0, end: 10 }]);
 
       mockedPlaybackObserver.emit({
-        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+        position: new DummyObservationPosition({
           getWanted: vi.fn(() => 3),
         }),
         paused: {

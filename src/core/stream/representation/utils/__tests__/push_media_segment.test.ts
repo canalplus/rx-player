@@ -1,11 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import configHandler from "../../../../../config";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../../manifest/classes";
-import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../../playback_observer";
+import {
+  DummyRepresentation,
+  DummyManifest,
+  DummyPeriod,
+  DummyAdaptation,
+  createSegment,
+} from "../../../../../manifest/classes/__tests__/mocks";
+import {
+  DummyObservationPosition,
+  makeReadyOnlyPlaybackObserver,
+} from "../../../../../playback_observer/__tests__/mocks";
 import type { IRange } from "../../../../../utils/ranges";
 import SharedReference from "../../../../../utils/reference";
 import TaskCanceller from "../../../../../utils/task_canceller";
-import { __SEGMENT_SINKS_MOCKS } from "../../../../segment_sinks";
+import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
 import type { IRepresentationStreamPlaybackObservation } from "../../types";
 import pushMediaSegment from "../push_media_segment";
 
@@ -18,35 +27,33 @@ vi.mock("../append_segment_to_buffer.ts", () => ({
 
 describe("pushMediaSegment", () => {
   const mockedPlaybackObserver =
-    __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>(
-      {
-        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
-          getWanted: vi.fn(() => 10),
-        }),
-        paused: {
-          last: false,
-          pending: undefined,
-        },
-        speed: 1,
-        canStream: true,
+    makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>({
+      position: new DummyObservationPosition({
+        getWanted: vi.fn(() => 10),
+      }),
+      paused: {
+        last: false,
+        pending: undefined,
       },
-    );
+      speed: 1,
+      canStream: true,
+    });
   const mockGetCurrent = vi.spyOn(configHandler, "getCurrent");
 
   let mockBufferGoal: SharedReference<number>;
   let mockCanceller: TaskCanceller;
-  const mockSegmentSink = new __SEGMENT_SINKS_MOCKS.DummySegmentSink();
+  const mockSegmentSink = new DummySegmentSink();
 
   const mockContent = {
-    adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
-    manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
-    period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-    representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+    adaptation: new DummyAdaptation(),
+    manifest: new DummyManifest(),
+    period: new DummyPeriod(),
+    representation: new DummyRepresentation({
       getMimeTypeString: vi.fn(() => 'video/mp4; codecs="avc1.42E01E"'),
     }),
   };
 
-  const mockSegment = __MANIFEST_CLASSES_MOCKS.createSegment({
+  const mockSegment = createSegment({
     time: 10,
     duration: 5,
     end: 15,

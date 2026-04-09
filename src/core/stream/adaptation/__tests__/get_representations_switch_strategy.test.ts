@@ -1,17 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import configHandler from "../../../../config";
 import type { IAdaptation, IPeriod } from "../../../../manifest";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
-import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../playback_observer";
-import { makeReadyOnlyPlaybackObserver } from "../../../../playback_observer/__tests__/mocks";
+import {
+  DummyPeriod,
+  DummyAdaptation,
+  DummyRepresentation,
+  createSegment,
+} from "../../../../manifest/classes/__tests__/mocks";
+import {
+  makeReadyOnlyPlaybackObserver,
+  DummyObservationPosition,
+} from "../../../../playback_observer/__tests__/mocks";
 import SharedReference from "../../../../utils/reference";
 import {
-  __SEGMENT_SINKS_MOCKS,
   ChunkStatus,
   SegmentSinkOperation,
   type IBufferedChunk,
   type SegmentSink,
 } from "../../../segment_sinks";
+import { DummySegmentSink } from "../../../segment_sinks/__tests__/mocks";
 import type { IRepresentationStreamPlaybackObservation } from "../../representation";
 import getRepresentationsSwitchingStrategy from "../get_representations_switch_strategy";
 
@@ -21,7 +28,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
   let mockSegmentSink: SegmentSink;
   const mockedPlaybackObserver =
     makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>({
-      position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+      position: new DummyObservationPosition({
         getPolled: () => 10,
       }),
       paused: {
@@ -62,12 +69,12 @@ describe("getRepresentationsSwitchingStrategy", () => {
   }): IBufferedChunk {
     return {
       infos: {
-        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({ id: periodId }),
-        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ id: adaptationId }),
-        representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+        period: new DummyPeriod({ id: periodId }),
+        adaptation: new DummyAdaptation({ id: adaptationId }),
+        representation: new DummyRepresentation({
           id: representationId,
         }),
-        segment: __MANIFEST_CLASSES_MOCKS.createSegment({ time: start, end }),
+        segment: createSegment({ time: start, end }),
       },
       bufferedStart,
       bufferedEnd,
@@ -83,16 +90,16 @@ describe("getRepresentationsSwitchingStrategy", () => {
   }
 
   beforeEach(() => {
-    mockPeriod = new __MANIFEST_CLASSES_MOCKS.DummyPeriod({
+    mockPeriod = new DummyPeriod({
       id: "period-1",
       start: 0,
       end: 100,
     });
-    mockAdaptation = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+    mockAdaptation = new DummyAdaptation({
       id: "adaptation-1",
       type: "video",
     });
-    mockSegmentSink = new __SEGMENT_SINKS_MOCKS.DummySegmentSink({
+    mockSegmentSink = new DummySegmentSink({
       getLastKnownInventory: () => [],
       getPendingOperations: () => [],
     });
@@ -228,14 +235,14 @@ describe("getRepresentationsSwitchingStrategy", () => {
             type: SegmentSinkOperation.Push,
             value: {
               inventoryInfos: {
-                period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({ id: "period-1" }),
-                adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+                period: new DummyPeriod({ id: "period-1" }),
+                adaptation: new DummyAdaptation({
                   id: "adaptation-1",
                 }),
-                representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+                representation: new DummyRepresentation({
                   id: "rep-1",
                 }),
-                segment: __MANIFEST_CLASSES_MOCKS.createSegment({ time: 5, duration: 5 }),
+                segment: createSegment({ time: 5, duration: 5 }),
                 chunkSize: 1024,
                 start: 0,
                 end: 1000,
@@ -395,7 +402,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
       );
       vi.spyOn(mockedPlaybackObserver.observer, "getReference").mockImplementation(() => {
         return new SharedReference({
-          position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+          position: new DummyObservationPosition({
             getPolled: getPolledMock,
           }),
           paused: {

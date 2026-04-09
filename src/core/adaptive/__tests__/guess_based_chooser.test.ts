@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { IRepresentation } from "../../../manifest";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../manifest/classes";
+import {
+  DummyRepresentation,
+  DummyAdaptation,
+  DummyPeriod,
+  DummyManifest,
+  createSegment,
+} from "../../../manifest/classes/__tests__/mocks";
 import noop from "../../../utils/noop";
 import { makeMockedClass } from "../../../utils/test-utils";
 import GuessBasedChooser from "../guess_based_chooser";
@@ -30,7 +36,7 @@ vi.mock("../network_analyzer", () => ({
 }));
 
 function createRepresentation(id: string, bitrate: number): IRepresentation {
-  return new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+  return new DummyRepresentation({
     id,
     bitrate,
   });
@@ -51,16 +57,16 @@ function createRequest(
 ): IRequestInfo {
   return {
     content: {
-      representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+      representation: new DummyRepresentation({
         id: representationId,
       }),
-      segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+      segment: createSegment({
         duration: segmentDuration,
         isInit,
       }),
-      adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
-      period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-      manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
+      adaptation: new DummyAdaptation(),
+      period: new DummyPeriod(),
+      manifest: new DummyManifest(),
     },
     requestTimestamp,
     progress: [],

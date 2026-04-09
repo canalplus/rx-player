@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
 import filterByBitrate from "../filter_by_bitrate";
 
 describe("ABR - filterByBitrate", () => {
   const fakeReps = [
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 100 }),
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 100 }),
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 1000 }),
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 10000 }),
-    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ bitrate: 100000 }),
+    new DummyRepresentation({ bitrate: 100 }),
+    new DummyRepresentation({ bitrate: 100 }),
+    new DummyRepresentation({ bitrate: 1000 }),
+    new DummyRepresentation({ bitrate: 10000 }),
+    new DummyRepresentation({ bitrate: 100000 }),
   ];
 
   describe("filterByBitrate", () => {

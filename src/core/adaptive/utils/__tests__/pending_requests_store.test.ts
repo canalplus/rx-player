@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
+import {
+  DummyManifest,
+  DummyPeriod,
+  DummyAdaptation,
+  DummyRepresentation,
+  createSegment,
+} from "../../../../manifest/classes/__tests__/mocks";
 import PendingRequestsStore from "../pending_requests_store";
 import type {
   IPendingRequestStoreBegin,
@@ -21,11 +27,11 @@ describe("PendingRequestsStore", () => {
   let store: PendingRequestsStore;
 
   const createMockContent = (segmentTime: number = 0) => ({
-    manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
-    period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-    adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
-    representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
-    segment: __MANIFEST_CLASSES_MOCKS.createSegment({ time: segmentTime }),
+    manifest: new DummyManifest(),
+    period: new DummyPeriod(),
+    adaptation: new DummyAdaptation(),
+    representation: new DummyRepresentation(),
+    segment: createSegment({ time: segmentTime }),
   });
 
   const createMockRequest = (

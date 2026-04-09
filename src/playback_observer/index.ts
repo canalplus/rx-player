@@ -10,6 +10,3 @@ export type {
 } from "./types";
 export type IMediaElementPlaybackObserver = MediaElementPlaybackObserver;
 export { ObservationPosition };
-
-// NOTE: Reserved for tests
-export * as __PLAYBACK_OBSERVER_MOCKS from "./__tests__/mocks";

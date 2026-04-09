@@ -1,10 +1,10 @@
 import type { Mock } from "vitest";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  __MANIFEST_CLASSES_MOCKS,
   type IRepresentationProtectionData,
   type Representation,
 } from "../../../../manifest/classes";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
 import type { IProtectionDataInfo } from "../../../../transports";
 import EncryptionDataNotifier from "../encryption_data_notifier";
 
@@ -19,7 +19,7 @@ describe("EncryptionDataNotifier", () => {
   beforeEach(() => {
     mockNotify = vi.fn();
 
-    dummyRepresentation = new __MANIFEST_CLASSES_MOCKS.DummyRepresentation();
+    dummyRepresentation = new DummyRepresentation();
     mockGetEncryptionData = vi
       .spyOn(dummyRepresentation, "getEncryptionData")
       .mockReturnValue([]);

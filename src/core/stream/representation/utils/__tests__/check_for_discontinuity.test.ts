@@ -1,11 +1,17 @@
 import { describe, it, expect, vi } from "vitest";
 import {
-  __MANIFEST_CLASSES_MOCKS,
   type Adaptation,
   type Period,
   type Representation,
 } from "../../../../../manifest/classes";
 import type Manifest from "../../../../../manifest/classes";
+import {
+  DummyPeriod,
+  DummyManifest,
+  DummyAdaptation,
+  createSegment,
+  DummyRepresentation,
+} from "../../../../../manifest/classes/__tests__/mocks";
 import { ChunkStatus, type IBufferedChunk } from "../../../../segment_sinks";
 import checkForDiscontinuity from "../check_for_discontinuity";
 
@@ -16,10 +22,10 @@ describe("checkForDiscontinuity", () => {
     period: Period;
     representation: Representation;
   } => ({
-    adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ type: "video" }),
-    manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
-    period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-    representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
+    adaptation: new DummyAdaptation({ type: "video" }),
+    manifest: new DummyManifest(),
+    period: new DummyPeriod(),
+    representation: new DummyRepresentation(),
   });
 
   function makeBufferedChunk({
@@ -39,10 +45,10 @@ describe("checkForDiscontinuity", () => {
   }): IBufferedChunk {
     return {
       infos: {
-        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
-        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
-        representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation(),
-        segment: __MANIFEST_CLASSES_MOCKS.createSegment({
+        period: new DummyPeriod(),
+        adaptation: new DummyAdaptation(),
+        representation: new DummyRepresentation(),
+        segment: createSegment({
           time: segmentTime,
           end: segmentEnd,
         }),
