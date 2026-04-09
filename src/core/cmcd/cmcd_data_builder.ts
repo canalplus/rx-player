@@ -300,7 +300,10 @@ export default class CmcdDataBuilder {
     }
 
     const precizeDeadlineMs =
-      precizeBufferLengthMs === undefined || lastObservation === undefined
+      precizeBufferLengthMs === undefined ||
+      lastObservation === undefined ||
+      !isFinite(lastObservation.speed) ||
+      lastObservation.speed <= 0
         ? undefined
         : precizeBufferLengthMs / lastObservation.speed;
 
@@ -396,7 +399,7 @@ export default class CmcdDataBuilder {
     ): void => {
       const val = props[prop];
       if (val !== undefined) {
-        const formatted = `"${val.replace("\\", "\\\\").replace('"', '\\"')}"`;
+        const formatted = `"${val.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
         const toAdd = `${prop}=${formatted},`;
         addPayload(toAdd, headerName);
       }
