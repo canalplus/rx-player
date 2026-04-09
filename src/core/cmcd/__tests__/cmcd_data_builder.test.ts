@@ -358,9 +358,7 @@ describe("CmcdDataBuilder", () => {
         speed: 1,
         rebuffering: null,
       });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForSegmentRequest(makeSegmentInfo());
       const requestHeader = payload.value["CMCD-Request"];
@@ -371,9 +369,7 @@ describe("CmcdDataBuilder", () => {
     it("includes pr when playback speed is not 1", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ speed: 2, rebuffering: null });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
       const sessionHeader = payload.value["CMCD-Session"];
@@ -383,9 +379,7 @@ describe("CmcdDataBuilder", () => {
     it("does not include pr when speed is 1", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ speed: 1, rebuffering: null });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
       const sessionHeader = payload.value["CMCD-Session"];
@@ -395,9 +389,7 @@ describe("CmcdDataBuilder", () => {
     it("does not include pr when playback speed is negative", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ speed: -1, rebuffering: null });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
       const sessionHeader = payload.value["CMCD-Session"];
@@ -407,9 +399,7 @@ describe("CmcdDataBuilder", () => {
     it("includes su when rebuffering is active", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ rebuffering: { timestamp: 0 }, speed: 1 });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
       const requestHeader = payload.value["CMCD-Request"];
@@ -427,9 +417,7 @@ describe("CmcdDataBuilder", () => {
         speed: 0,
         rebuffering: null,
       });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForSegmentRequest(makeSegmentInfo());
       const requestHeader = payload.value["CMCD-Request"];
@@ -444,9 +432,7 @@ describe("CmcdDataBuilder", () => {
     it("clears the playback observer so subsequent calls work without observation data", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ speed: 2, rebuffering: null });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
       builder.stopMonitoringPlayback();
 
       const payload: any = builder.getCmcdDataForManifest("dash");
