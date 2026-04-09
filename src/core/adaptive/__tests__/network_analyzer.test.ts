@@ -111,6 +111,23 @@ afterEach(() => {
   vi.resetAllMocks();
 });
 
+function createProgressEvents(
+  baseTime: number,
+  totalSize: number,
+  stepSize: number,
+  stepDurationMs: number,
+): Array<{ size: number; timestamp: number; totalSize: number }> {
+  const progress = [{ size: 0, timestamp: baseTime, totalSize }];
+  let size = 0;
+  let timestamp = baseTime;
+  while (size < totalSize) {
+    size = Math.min(size + stepSize, totalSize);
+    timestamp += stepDurationMs;
+    progress.push({ size, timestamp, totalSize });
+  }
+  return progress;
+}
+
 describe("estimateRequestBandwidth", () => {
   it("should return undefined if progress events are less than 5", () => {
     // eslint-disable-next-line no-restricted-properties
@@ -301,6 +318,41 @@ describe("NetworkAnalyzer", () => {
 
       // Should exit starvation mode and use regular factor
       expect(result.bitrateChosen).toBe(2000000 * 0.8);
+    });
+
+    it("should allow emergency estimate before 12s for short segments", () => {
+      const analyzer = new NetworkAnalyzer(1000000, false);
+      const bandwidthEstimator = createMockBandwidthEstimator(undefined);
+      const resetSpy = vi.spyOn(bandwidthEstimator, "reset");
+      const requestStart = 1000;
+      const now = 7000;
+      const performanceNowSpy = vi.spyOn(performance, "now").mockReturnValue(now);
+      const currentRepresentation = new DummyRepresentation({
+        bitrate: 1_200_000,
+      });
+      const currentRequests = [
+        createMockRequest(
+          10,
+          2,
+          requestStart,
+          createProgressEvents(requestStart, 1_000_000, 100_000, 100),
+          true,
+        ),
+      ];
+
+      const result = analyzer.getBandwidthEstimate(
+        createMockPlaybackInfo(1, 9),
+        bandwidthEstimator,
+        currentRepresentation,
+        currentRequests,
+        1_100_000,
+      );
+
+      expect(result.bandwidthEstimate).toBeDefined();
+      expect(result.bitrateChosen).toBeLessThan(currentRepresentation.bitrate);
+      expect(resetSpy).toHaveBeenCalled();
+      performanceNowSpy.mockRestore();
+      resetSpy.mockRestore();
     });
 
     it("should handle infinite buffer gap", () => {
