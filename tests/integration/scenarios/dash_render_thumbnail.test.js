@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import RxPlayer from "../../../dist/es2017";
+import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
+import { EMBEDDED_DASH_WASM } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import thumbnailInfos from "../../contents/static/DASH_static_SegmentTimeline/thumbnails.js";
+import TestWorkerEmbed from "../../embedded_worker_bundle";
 import { checkAfterSleepWithBackoff } from "../../utils/checkAfterSleepWithBackoff.js";
+import sleep from "../../utils/sleep.js";
 import { waitForLoadedStateAfterLoadVideo } from "../../utils/waitForPlayerState";
 
 function createContainer() {
@@ -21,129 +25,155 @@ function expectRenderedThumbnail(container) {
   expect(container.firstElementChild.height).toBe(180);
 }
 
-describe("DASH renderThumbnail", () => {
-  let player;
-  let container1;
-  let container2;
+runDashRenderThumbnailTests();
+runDashRenderThumbnailTests({ multithread: true });
 
-  beforeEach(() => {
-    player = new RxPlayer();
-    container1 = createContainer();
-    container2 = createContainer();
-  });
+function runDashRenderThumbnailTests({ multithread } = {}) {
+  let title = "DASH renderThumbnail";
+  if (multithread === true) {
+    RxPlayer.addFeatures([MULTI_THREAD]);
+    title = "DASH renderThumbnail with worker";
+  }
 
-  afterEach(() => {
-    player.dispose();
-    container1.remove();
-    container2.remove();
-  });
+  describe(title, () => {
+    let player;
+    let container1;
+    let container2;
 
-  it("should fetch and render DASH thumbnails", async () => {
-    player.loadVideo({
-      url: thumbnailInfos.url,
-      transport: "dash",
-    });
-    await waitForLoadedStateAfterLoadVideo(player);
-
-    expect(player.getAvailableThumbnailTracks({ time: 0.5 })).toEqual([
-      {
-        id: "thumbnails_320x180",
-        width: 320,
-        height: 180,
-        mimeType: "image/jpeg",
-      },
-    ]);
-
-    await player.renderThumbnail({
-      container: container1,
-      time: 0.5,
+    beforeEach(() => {
+      player = new RxPlayer();
+      if (multithread === true) {
+        player.attachWorker({
+          workerUrl: TestWorkerEmbed,
+          dashWasmUrl: EMBEDDED_DASH_WASM,
+        });
+      }
+      container1 = createContainer();
+      container2 = createContainer();
     });
 
-    expectRenderedThumbnail(container1);
-  });
-
-  it("should abort the previous render when requesting another thumbnail on the same container", async () => {
-    player.loadVideo({
-      url: thumbnailInfos.url,
-      transport: "dash",
-    });
-    await waitForLoadedStateAfterLoadVideo(player);
-
-    const firstPromise = player.renderThumbnail({
-      container: container1,
-      time: 0.5,
-    });
-    const secondPromise = player.renderThumbnail({
-      container: container1,
-      time: 12,
+    afterEach(() => {
+      player.dispose();
+      container1.remove();
+      container2.remove();
     });
 
-    await expect(firstPromise).rejects.toMatchObject({ code: "ABORTED" });
-    await expect(secondPromise).resolves.toBeUndefined();
+    it("should fetch and render DASH thumbnails", async () => {
+      player.loadVideo({
+        url: thumbnailInfos.url,
+        transport: "dash",
+        mode: multithread === true ? "multithread" : "main",
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
 
-    await checkAfterSleepWithBackoff({ maxTimeMs: 1000, stepMs: 50 }, () => {
+      expect(player.getAvailableThumbnailTracks({ time: 0.5 })).toEqual([
+        {
+          id: "thumbnails_320x180",
+          width: 320,
+          height: 180,
+          mimeType: "image/jpeg",
+        },
+      ]);
+
+      await player.renderThumbnail({
+        container: container1,
+        time: 0.5,
+      });
+
       expectRenderedThumbnail(container1);
     });
-  });
 
-  it("should keep or clear the previous thumbnail on error depending on keepPreviousThumbnailOnError", async () => {
-    player.loadVideo({
-      url: thumbnailInfos.url,
-      transport: "dash",
-    });
-    await waitForLoadedStateAfterLoadVideo(player);
+    it("should abort the previous render when requesting another thumbnail on the same container", async () => {
+      player.loadVideo({
+        url: thumbnailInfos.url,
+        transport: "dash",
+        mode: multithread === true ? "multithread" : "main",
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
 
-    await player.renderThumbnail({
-      container: container1,
-      time: 0.5,
-    });
-    expectRenderedThumbnail(container1);
-
-    await expect(
-      player.renderThumbnail({
+      const firstPromise = player.renderThumbnail({
         container: container1,
-        time: 200,
-        keepPreviousThumbnailOnError: true,
-      }),
-    ).rejects.toMatchObject({ code: "NO_THUMBNAIL" });
-    expectRenderedThumbnail(container1);
-
-    await expect(
-      player.renderThumbnail({
+        time: 0.5,
+      });
+      const secondPromise = player.renderThumbnail({
         container: container1,
-        time: 200,
-      }),
-    ).rejects.toMatchObject({ code: "NO_THUMBNAIL" });
-    expect(container1.childElementCount).toBe(0);
-  });
+        time: 12,
+      });
 
-  it("should not cancel a shared thumbnail request when aborting only one container", async () => {
-    player.loadVideo({
-      url: thumbnailInfos.url,
-      transport: "dash",
-    });
-    await waitForLoadedStateAfterLoadVideo(player);
+      await expect(firstPromise).rejects.toMatchObject({ code: "ABORTED" });
+      await expect(secondPromise).resolves.toBeUndefined();
 
-    const firstPromise = player.renderThumbnail({
-      container: container1,
-      time: 0.5,
-    });
-    const secondPromise = player.renderThumbnail({
-      container: container2,
-      time: 0.5,
-    });
-    const replacementPromise = player.renderThumbnail({
-      container: container1,
-      time: 12,
+      await checkAfterSleepWithBackoff({ maxTimeMs: 1000, stepMs: 50 }, () => {
+        expectRenderedThumbnail(container1);
+      });
     });
 
-    await expect(firstPromise).rejects.toMatchObject({ code: "ABORTED" });
-    await expect(secondPromise).resolves.toBeUndefined();
-    await expect(replacementPromise).resolves.toBeUndefined();
+    it("should keep or clear the previous thumbnail on error depending on keepPreviousThumbnailOnError", async () => {
+      player.loadVideo({
+        url: thumbnailInfos.url,
+        transport: "dash",
+        mode: multithread === true ? "multithread" : "main",
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
 
-    await checkAfterSleepWithBackoff({ maxTimeMs: 1000, stepMs: 50 }, () => {
+      await player.renderThumbnail({
+        container: container1,
+        time: 0.5,
+      });
       expectRenderedThumbnail(container1);
-      expectRenderedThumbnail(container2);
+
+      await expect(
+        player.renderThumbnail({
+          container: container1,
+          time: 200,
+          keepPreviousThumbnailOnError: true,
+        }),
+      ).rejects.toMatchObject({ code: "NO_THUMBNAIL" });
+      expectRenderedThumbnail(container1);
+
+      await expect(
+        player.renderThumbnail({
+          container: container1,
+          time: 200,
+        }),
+      ).rejects.toMatchObject({ code: "NO_THUMBNAIL" });
+      expect(container1.childElementCount).toBe(0);
+    });
+
+    it("should not cancel a shared thumbnail request when aborting only one container", async () => {
+      player.loadVideo({
+        url: thumbnailInfos.url,
+        transport: "dash",
+        mode: multithread === true ? "multithread" : "main",
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+
+      const firstPromise = player.renderThumbnail({
+        container: container1,
+        time: 0.5,
+      });
+      const secondPromise = player.renderThumbnail({
+        container: container2,
+        time: 0.5,
+      });
+
+      // In worker mode, let both renderThumbnail calls cross the worker
+      // boundary before aborting the first container's request.
+      await sleep(0);
+
+      const replacementPromise = player.renderThumbnail({
+        container: container1,
+        time: 12,
+      });
+
+      await expect(firstPromise).rejects.toMatchObject({ code: "ABORTED" });
+      await expect(secondPromise).resolves.toBeUndefined();
+      await expect(replacementPromise).resolves.toBeUndefined();
+
+      await checkAfterSleepWithBackoff({ maxTimeMs: 1000, stepMs: 50 }, () => {
+        expectRenderedThumbnail(container1);
+        expectRenderedThumbnail(container2);
+      });
     });
   });
-});
+}
