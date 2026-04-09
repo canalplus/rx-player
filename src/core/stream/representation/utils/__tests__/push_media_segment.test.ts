@@ -1,84 +1,97 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { CancellationSignal } from "../../../../../utils/task_canceller";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import configHandler from "../../../../../config";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../../../manifest/classes";
+import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../../playback_observer";
+import type { IRange } from "../../../../../utils/ranges";
+import SharedReference from "../../../../../utils/reference";
+import TaskCanceller from "../../../../../utils/task_canceller";
+import { __SEGMENT_SINKS_MOCKS } from "../../../../segment_sinks";
+import type { IRepresentationStreamPlaybackObservation } from "../../types";
 import pushMediaSegment from "../push_media_segment";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-// Mock dependencies with vi.hoisted
-const mockGetCurrent = vi.hoisted(() => vi.fn());
-const mockObjectAssign = vi.hoisted(() => vi.fn());
-const mockAppendSegmentToBuffer = vi.hoisted(() => vi.fn());
-
-vi.mock("../../../../../config", () => ({
-  default: {
-    getCurrent: mockGetCurrent,
-  },
-}));
-
-vi.mock("../../../../../utils/object_assign", () => ({
-  default: mockObjectAssign,
-}));
-
+const mockAppendSegmentToBuffer = vi.hoisted(() =>
+  vi.fn((): Promise<IRange[]> => Promise.resolve([])),
+);
 vi.mock("../append_segment_to_buffer.ts", () => ({
   default: mockAppendSegmentToBuffer,
 }));
 
 describe("pushMediaSegment", () => {
-  const mockPlaybackObserver = {} as any;
-  const mockBufferGoal = { getValue: () => 30 } as any;
-  const mockCancelSignal = {} as CancellationSignal;
-  const mockSegmentSink = {} as any;
+  const mockedPlaybackObserver =
+    __PLAYBACK_OBSERVER_MOCKS.makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>(
+      {
+        position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+          getWanted: vi.fn(() => 10),
+        }),
+        paused: {
+          last: false,
+          pending: undefined,
+        },
+        speed: 1,
+        canStream: true,
+      },
+    );
+  const mockGetCurrent = vi.spyOn(configHandler, "getCurrent");
+
+  let mockBufferGoal: SharedReference<number>;
+  let mockCanceller: TaskCanceller;
+  const mockSegmentSink = new __SEGMENT_SINKS_MOCKS.DummySegmentSink();
 
   const mockContent = {
-    adaptation: {} as any,
-    manifest: {} as any,
-    period: {} as any,
-    representation: {
+    adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation(),
+    manifest: new __MANIFEST_CLASSES_MOCKS.DummyManifest(),
+    period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod(),
+    representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
       getMimeTypeString: vi.fn(() => 'video/mp4; codecs="avc1.42E01E"'),
-    } as any,
+    }),
   };
 
-  const mockSegment = {
+  const mockSegment = __MANIFEST_CLASSES_MOCKS.createSegment({
     time: 10,
     duration: 5,
-  } as any;
+    end: 15,
+  });
 
   beforeEach(() => {
     vi.resetAllMocks();
+    mockBufferGoal = new SharedReference<number>(30);
+    mockCanceller = new TaskCanceller("pushInitSegment tests");
     mockGetCurrent.mockReturnValue({
+      ...configHandler.getCurrent(),
       APPEND_WINDOW_SECURITIES: {
         START: 0.1,
         END: 0.2,
       },
     });
-    mockObjectAssign.mockImplementation((target, ...sources) =>
-      // eslint-disable-next-line no-restricted-properties
-      Object.assign(target, ...sources),
-    );
+  });
+
+  afterEach(() => {
+    mockedPlaybackObserver.reset();
+    mockBufferGoal.finish();
+    mockCanceller.cancel("test end");
+    vi.resetModules();
   });
 
   it("should return null when chunkData is null", async () => {
-    const parsedSegment: any = {
-      chunkData: null,
-      chunkInfos: null,
-      chunkOffset: 0,
-      chunkSize: 0,
-      appendWindow: [undefined, undefined] as [number | undefined, number | undefined],
-    };
-
     const result = await pushMediaSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         bufferGoal: mockBufferGoal,
         content: mockContent,
         initSegmentUniqueId: "init-123",
-        parsedSegment,
+        parsedSegment: {
+          chunkData: null,
+          chunkInfos: null,
+          chunkOffset: 0,
+          chunkSize: 0,
+          appendWindow: [undefined, undefined],
+          segmentType: "media",
+          protectionData: [],
+        },
         segment: mockSegment,
         segmentSink: mockSegmentSink,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(result).toBeNull();
@@ -87,32 +100,33 @@ describe("pushMediaSegment", () => {
 
   it("should append segment with basic data when chunkData is present", async () => {
     const mockChunkData = new Uint8Array([1, 2, 3]);
-    const parsedSegment: any = {
-      chunkData: mockChunkData,
-      chunkInfos: null,
-      chunkOffset: 2.5,
-      chunkSize: 1024,
-      appendWindow: [undefined, undefined] as [number | undefined, number | undefined],
-    };
 
     const mockBuffered = [{ start: 10, end: 15 }];
     mockAppendSegmentToBuffer.mockResolvedValue(mockBuffered);
 
     const result = await pushMediaSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         bufferGoal: mockBufferGoal,
         content: mockContent,
         initSegmentUniqueId: "init-123",
-        parsedSegment,
+        parsedSegment: {
+          chunkData: mockChunkData,
+          chunkInfos: null,
+          chunkOffset: 2.5,
+          chunkSize: 1024,
+          appendWindow: [undefined, undefined],
+          segmentType: "media",
+          protectionData: [],
+        },
         segment: mockSegment,
         segmentSink: mockSegmentSink,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(mockAppendSegmentToBuffer).toHaveBeenCalledWith(
-      mockPlaybackObserver,
+      mockedPlaybackObserver.observer,
       mockSegmentSink,
       {
         data: {
@@ -122,15 +136,16 @@ describe("pushMediaSegment", () => {
           appendWindow: [undefined, undefined],
           codec: 'video/mp4; codecs="avc1.42E01E"',
         },
-        inventoryInfos: expect.objectContaining({
+        inventoryInfos: {
+          ...mockContent,
           segment: mockSegment,
           chunkSize: 1024,
-          start: 10,
-          end: 15,
-        }),
+          start: mockSegment.time,
+          end: mockSegment.end,
+        },
       },
       mockBufferGoal,
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(result).toEqual({
@@ -142,202 +157,246 @@ describe("pushMediaSegment", () => {
 
   it("should use chunkInfos for time calculations when available", async () => {
     const mockChunkData = new Uint8Array([1, 2, 3]);
-    const parsedSegment: any = {
-      chunkData: mockChunkData,
-      chunkInfos: { time: 20, duration: 8 },
-      chunkOffset: 0,
-      chunkSize: 2048,
-      appendWindow: [undefined, undefined] as [number | undefined, number | undefined],
-    };
-
     mockAppendSegmentToBuffer.mockResolvedValue([]);
 
     await pushMediaSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         bufferGoal: mockBufferGoal,
         content: mockContent,
         initSegmentUniqueId: null,
-        parsedSegment,
+        parsedSegment: {
+          chunkData: mockChunkData,
+          chunkInfos: { time: 20, duration: 8 },
+          chunkOffset: 0,
+          chunkSize: 2048,
+          appendWindow: [undefined, undefined],
+          segmentType: "media",
+          protectionData: [],
+        },
         segment: mockSegment,
         segmentSink: mockSegmentSink,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(mockAppendSegmentToBuffer).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      expect.objectContaining({
-        inventoryInfos: expect.objectContaining({
+      mockedPlaybackObserver.observer,
+      mockSegmentSink,
+      {
+        data: {
+          appendWindow: [undefined, undefined],
+          chunk: mockChunkData,
+          codec: 'video/mp4; codecs="avc1.42E01E"',
+          initSegmentUniqueId: null,
+          timestampOffset: 0,
+        },
+        inventoryInfos: {
+          ...mockContent,
+          segment: mockSegment,
           start: 20,
           end: 28,
-        }),
-      }),
-      expect.anything(),
-      expect.anything(),
+          chunkSize: 2048,
+        },
+      },
+      mockBufferGoal,
+      mockCanceller.signal,
     );
   });
 
   it("should apply append window securities to start window", async () => {
     const mockChunkData = new Uint8Array([1, 2, 3]);
-    const parsedSegment: any = {
-      chunkData: mockChunkData,
-      chunkInfos: null,
-      chunkOffset: 0,
-      chunkSize: 1024,
-      appendWindow: [5, undefined] as [number | undefined, number | undefined],
-    };
-
     mockAppendSegmentToBuffer.mockResolvedValue([]);
-
     await pushMediaSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         bufferGoal: mockBufferGoal,
         content: mockContent,
         initSegmentUniqueId: "init-123",
-        parsedSegment,
+        parsedSegment: {
+          chunkData: mockChunkData,
+          chunkInfos: null,
+          chunkOffset: 0,
+          chunkSize: 1024,
+          appendWindow: [5, undefined],
+          segmentType: "media",
+          protectionData: [],
+        },
         segment: mockSegment,
         segmentSink: mockSegmentSink,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(mockAppendSegmentToBuffer).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      expect.objectContaining({
-        data: expect.objectContaining({
+      {},
+      mockSegmentSink,
+      {
+        data: {
+          chunk: mockChunkData,
+          initSegmentUniqueId: "init-123",
+          timestampOffset: 0,
           appendWindow: [4.9, undefined], // 5 - 0.1
-        }),
-        inventoryInfos: expect.objectContaining({
+          codec: 'video/mp4; codecs="avc1.42E01E"',
+        },
+        inventoryInfos: {
+          ...mockContent,
           start: 10, // max(10, 4.9)
-        }),
-      }),
-      expect.anything(),
-      expect.anything(),
+          end: mockSegment.end,
+          chunkSize: 1024,
+          segment: mockSegment,
+        },
+      },
+      mockBufferGoal,
+      mockCanceller.signal,
     );
   });
 
   it("should apply append window securities to end window", async () => {
     const mockChunkData = new Uint8Array([1, 2, 3]);
-    const parsedSegment: any = {
-      chunkData: mockChunkData,
-      chunkInfos: null,
-      chunkOffset: 0,
-      chunkSize: 1024,
-      appendWindow: [undefined, 20] as [number | undefined, number | undefined],
-    };
-
     mockAppendSegmentToBuffer.mockResolvedValue([]);
 
     await pushMediaSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         bufferGoal: mockBufferGoal,
         content: mockContent,
         initSegmentUniqueId: "init-123",
-        parsedSegment,
+        parsedSegment: {
+          chunkData: mockChunkData,
+          chunkInfos: null,
+          chunkOffset: 0,
+          chunkSize: 1024,
+          appendWindow: [undefined, 20],
+          segmentType: "media",
+          protectionData: [],
+        },
         segment: mockSegment,
         segmentSink: mockSegmentSink,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(mockAppendSegmentToBuffer).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      expect.objectContaining({
-        data: expect.objectContaining({
+      mockedPlaybackObserver.observer,
+      mockSegmentSink,
+      {
+        data: {
+          initSegmentUniqueId: "init-123",
+          chunk: mockChunkData,
+          timestampOffset: 0,
+          codec: 'video/mp4; codecs="avc1.42E01E"',
           appendWindow: [undefined, 20.2], // 20 + 0.2
-        }),
-        inventoryInfos: expect.objectContaining({
+        },
+        inventoryInfos: {
+          ...mockContent,
+          segment: mockSegment,
           end: 15, // min(15, 20.2)
-        }),
-      }),
-      expect.anything(),
-      expect.anything(),
+          chunkSize: 1024,
+          start: mockSegment.time,
+        },
+      },
+      mockBufferGoal,
+      mockCanceller.signal,
     );
   });
 
   it("should apply both start and end append windows", async () => {
     const mockChunkData = new Uint8Array([1, 2, 3]);
-    const parsedSegment: any = {
-      chunkData: mockChunkData,
-      chunkInfos: { time: 8, duration: 4 },
-      chunkOffset: 0,
-      chunkSize: 1024,
-      appendWindow: [9, 11] as [number | undefined, number | undefined],
-    };
-
     mockAppendSegmentToBuffer.mockResolvedValue([]);
 
     await pushMediaSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         bufferGoal: mockBufferGoal,
         content: mockContent,
         initSegmentUniqueId: "init-123",
-        parsedSegment,
+        parsedSegment: {
+          chunkData: mockChunkData,
+          chunkInfos: { time: 8, duration: 4 },
+          chunkOffset: 0,
+          chunkSize: 1024,
+          appendWindow: [9, 11],
+          segmentType: "media",
+          protectionData: [],
+        },
         segment: mockSegment,
         segmentSink: mockSegmentSink,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(mockAppendSegmentToBuffer).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      expect.objectContaining({
-        data: expect.objectContaining({
+      mockedPlaybackObserver.observer,
+      mockSegmentSink,
+      {
+        data: {
           appendWindow: [8.9, 11.2], // [9 - 0.1, 11 + 0.2]
-        }),
-        inventoryInfos: expect.objectContaining({
+          initSegmentUniqueId: "init-123",
+          chunk: mockChunkData,
+          timestampOffset: 0,
+          codec: 'video/mp4; codecs="avc1.42E01E"',
+        },
+        inventoryInfos: {
           start: 8.9, // max(8, 8.9)
           end: 11.2, // min(12, 11.2)
-        }),
-      }),
-      expect.anything(),
-      expect.anything(),
+          ...mockContent,
+          segment: mockSegment,
+          chunkSize: 1024,
+        },
+      },
+      mockBufferGoal,
+      mockCanceller.signal,
     );
   });
 
   it("should not go below 0 for start append window", async () => {
     const mockChunkData = new Uint8Array([1, 2, 3]);
-    const parsedSegment: any = {
-      chunkData: mockChunkData,
-      chunkInfos: null,
-      chunkOffset: 0,
-      chunkSize: 1024,
-      appendWindow: [0.05, undefined] as [number | undefined, number | undefined],
-    };
-
     mockAppendSegmentToBuffer.mockResolvedValue([]);
 
     await pushMediaSegment(
       {
-        playbackObserver: mockPlaybackObserver,
+        playbackObserver: mockedPlaybackObserver.observer,
         bufferGoal: mockBufferGoal,
         content: mockContent,
         initSegmentUniqueId: "init-123",
-        parsedSegment,
+        parsedSegment: {
+          chunkData: mockChunkData,
+          chunkInfos: null,
+          chunkOffset: 0,
+          chunkSize: 1024,
+          appendWindow: [0.05, undefined],
+          segmentType: "media",
+          protectionData: [],
+        },
         segment: mockSegment,
         segmentSink: mockSegmentSink,
       },
-      mockCancelSignal,
+      mockCanceller.signal,
     );
 
     expect(mockAppendSegmentToBuffer).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      expect.objectContaining({
-        data: expect.objectContaining({
+      mockedPlaybackObserver.observer,
+      mockSegmentSink,
+      {
+        data: {
           appendWindow: [0, undefined], // max(0, 0.05 - 0.1)
-        }),
-      }),
-      expect.anything(),
-      expect.anything(),
+
+          initSegmentUniqueId: "init-123",
+          chunk: mockChunkData,
+          timestampOffset: 0,
+          codec: 'video/mp4; codecs="avc1.42E01E"',
+        },
+        inventoryInfos: {
+          ...mockContent,
+          segment: mockSegment,
+          chunkSize: 1024,
+          start: mockSegment.time,
+          end: mockSegment.end,
+        },
+      },
+      mockBufferGoal,
+      mockCanceller.signal,
     );
   });
 });

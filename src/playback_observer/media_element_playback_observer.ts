@@ -1106,7 +1106,7 @@ function getInitialObservation(mediaElement: IMediaElement | null): IPlaybackObs
   });
 }
 
-interface IPendingSeekInformation {
+export interface IPendingSeekInformation {
   /** Position to seek to. */
   position: number;
   /** If `true`, the seek was performed by the RxPlayer's internal logic. */

@@ -1,19 +1,19 @@
 import { describe, it, expect } from "vitest";
-import type { IRepresentation } from "../../../../manifest";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
 import filterByResolution from "../filter_by_resolution";
 
 describe("ABR - filterByResolution", () => {
   const fakeReps = [
-    { height: 80, width: 100 },
-    { height: 800, width: 1000 },
-    { height: 8000, width: 10000 },
-    { height: 80000, width: 100000 },
+    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ height: 80, width: 100 }),
+    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ height: 800, width: 1000 }),
+    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ height: 8000, width: 10000 }),
+    new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({ height: 80000, width: 100000 }),
   ];
 
   describe("filterByResolution", () => {
     it("should do nothing for a given `undefined` height", () => {
       expect(
-        filterByResolution(fakeReps as IRepresentation[], {
+        filterByResolution(fakeReps, {
           height: undefined,
           width: 10,
           pixelRatio: 1,
@@ -22,7 +22,7 @@ describe("ABR - filterByResolution", () => {
     });
     it("should do nothing for a given `undefined` width", () => {
       expect(
-        filterByResolution(fakeReps as IRepresentation[], {
+        filterByResolution(fakeReps, {
           height: undefined,
           width: 10,
           pixelRatio: 1,
@@ -32,7 +32,7 @@ describe("ABR - filterByResolution", () => {
 
     it("should properly filter until a set resolution", () => {
       expect(
-        filterByResolution(fakeReps as IRepresentation[], {
+        filterByResolution(fakeReps, {
           height: 8000,
           width: 10000,
           pixelRatio: 1,
@@ -42,7 +42,7 @@ describe("ABR - filterByResolution", () => {
 
     it("should include the immediately superior resolution if nothing equal exist", () => {
       expect(
-        filterByResolution(fakeReps as IRepresentation[], {
+        filterByResolution(fakeReps, {
           height: 700,
           width: 900,
           pixelRatio: 1,
@@ -52,7 +52,7 @@ describe("ABR - filterByResolution", () => {
 
     it("should take into account the pixel ratio", () => {
       expect(
-        filterByResolution(fakeReps as IRepresentation[], {
+        filterByResolution(fakeReps, {
           height: 70,
           width: 90,
           pixelRatio: 10,
@@ -62,7 +62,7 @@ describe("ABR - filterByResolution", () => {
 
     it("should take higher resolution if just the height is lower", () => {
       expect(
-        filterByResolution(fakeReps as IRepresentation[], {
+        filterByResolution(fakeReps, {
           height: 801,
           width: 900,
           pixelRatio: 1,
@@ -72,7 +72,7 @@ describe("ABR - filterByResolution", () => {
 
     it("should take higher resolution if just the width is lower", () => {
       expect(
-        filterByResolution(fakeReps as IRepresentation[], {
+        filterByResolution(fakeReps, {
           height: 799,
           width: 1001,
           pixelRatio: 1,

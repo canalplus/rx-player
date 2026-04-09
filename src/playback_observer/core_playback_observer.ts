@@ -93,15 +93,15 @@ export default class CorePlaybackObserver
     this._cancelSignal = cancellationSignal;
   }
 
-  public getCurrentTime(): number | undefined {
+  public getCurrentTime(): undefined {
     return undefined;
   }
 
-  public getReadyState(): number | undefined {
+  public getReadyState(): undefined {
     return undefined;
   }
 
-  public getIsPaused(): boolean | undefined {
+  public getIsPaused(): undefined {
     return undefined;
   }
 
@@ -117,7 +117,7 @@ export default class CorePlaybackObserver
     });
   }
 
-  public getPlaybackRate(): number | undefined {
+  public getPlaybackRate(): undefined {
     return undefined;
   }
 

@@ -1,225 +1,219 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import configHandler from "../../../../config";
 import type { IAdaptation, IPeriod } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
-import type { SegmentSink } from "../../../segment_sinks";
-import { SegmentSinkOperation } from "../../../segment_sinks";
+import { __MANIFEST_CLASSES_MOCKS } from "../../../../manifest/classes";
+import { __PLAYBACK_OBSERVER_MOCKS } from "../../../../playback_observer";
+import { makeReadyOnlyPlaybackObserver } from "../../../../playback_observer/__tests__/mocks";
+import SharedReference from "../../../../utils/reference";
+import {
+  __SEGMENT_SINKS_MOCKS,
+  ChunkStatus,
+  SegmentSinkOperation,
+  type IBufferedChunk,
+  type SegmentSink,
+} from "../../../segment_sinks";
+import type { IRepresentationStreamPlaybackObservation } from "../../representation";
 import getRepresentationsSwitchingStrategy from "../get_representations_switch_strategy";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
-// Mock dependencies
-vi.mock("../../../config", () => ({
-  default: {
-    getCurrent: vi.fn(() => ({
+describe("getRepresentationsSwitchingStrategy", () => {
+  let mockPeriod: IPeriod;
+  let mockAdaptation: IAdaptation;
+  let mockSegmentSink: SegmentSink;
+  const mockedPlaybackObserver =
+    makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>({
+      position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
+        getPolled: () => 10,
+      }),
+      paused: {
+        last: false,
+        pending: undefined,
+      },
+      speed: 1,
+      canStream: true,
+    });
+  const originalConfig = configHandler.getCurrent();
+  vi.spyOn(configHandler, "getCurrent").mockImplementation(() => {
+    return {
+      ...originalConfig,
       ADAP_REP_SWITCH_BUFFER_PADDINGS: {
         video: { before: 0.5, after: 0.5 },
         audio: { before: 0.5, after: 0.5 },
         text: { before: 0, after: 0 },
       },
-    })),
-  },
-}));
+    };
+  });
 
-describe("getRepresentationsSwitchingStrategy", () => {
-  let mockPeriod: IPeriod;
-  let mockAdaptation: IAdaptation;
-  let mockSegmentSink: any;
-  let mockPlaybackObserver: any;
+  function makeBufferedChunk({
+    bufferedStart,
+    bufferedEnd,
+    start,
+    end,
+    periodId = "period-1",
+    adaptationId = "adaptation-1",
+    representationId = "rep-1",
+  }: {
+    bufferedStart: number | undefined;
+    bufferedEnd: number | undefined;
+    start: number;
+    end: number;
+    periodId?: string;
+    adaptationId?: string;
+    representationId?: string;
+  }): IBufferedChunk {
+    return {
+      infos: {
+        period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({ id: periodId }),
+        adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({ id: adaptationId }),
+        representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+          id: representationId,
+        }),
+        segment: __MANIFEST_CLASSES_MOCKS.createSegment({ time: start, end }),
+      },
+      bufferedStart,
+      bufferedEnd,
+      start,
+      end,
+      insertionTs: 0,
+      chunkSize: 1024,
+      precizeStart: true,
+      precizeEnd: true,
+      status: ChunkStatus.FullyLoaded,
+      splitted: false,
+    };
+  }
 
   beforeEach(() => {
-    mockPeriod = {
+    mockPeriod = new __MANIFEST_CLASSES_MOCKS.DummyPeriod({
       id: "period-1",
       start: 0,
       end: 100,
-    } as IPeriod;
-
-    mockAdaptation = {
+    });
+    mockAdaptation = new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
       id: "adaptation-1",
       type: "video",
-    } as IAdaptation;
-
-    mockSegmentSink = {
-      getLastKnownInventory: vi.fn(() => []),
-      getPendingOperations: vi.fn(() => []),
-    } as unknown as SegmentSink;
-
-    mockPlaybackObserver = {
-      getReadyState: vi.fn(() => 4),
-      getCurrentTime: vi.fn(() => 10),
-      getReference: vi.fn(() => ({
-        getValue: () => ({
-          position: {
-            getPolled: () => 10,
-          },
-        }),
-      })),
-    } as unknown as IReadOnlyPlaybackObserver<any>;
+    });
+    mockSegmentSink = new __SEGMENT_SINKS_MOCKS.DummySegmentSink({
+      getLastKnownInventory: () => [],
+      getPendingOperations: () => [],
+    });
+    vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+      () => 4,
+    );
+    vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockImplementation(
+      () => 10,
+    );
   });
   afterEach(() => {
+    mockedPlaybackObserver.reset();
     vi.resetAllMocks();
   });
 
   describe("lazy switching mode", () => {
     it("should return continue when switching mode is lazy", () => {
-      const settings = {
-        switchingMode: "lazy" as const,
-        representationIds: ["rep-1"],
-      };
-
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "lazy", representationIds: ["rep-1"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
-
       expect(result).toEqual({ type: "continue", value: undefined });
     });
   });
 
   describe("no unwanted segments", () => {
     it("should return continue when inventory is empty", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-1"],
-      };
-
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-1"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
-
       expect(result).toEqual({ type: "continue", value: undefined });
     });
 
     it("should return continue when all segments match current representation", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-1"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
-
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({ start: 0, end: 10, bufferedStart: 0, bufferedEnd: 10 }),
+        ];
+      });
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-1"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
-
       expect(result).toEqual({ type: "continue", value: undefined });
     });
   });
 
   describe("unwanted segments in inventory", () => {
     it("should identify unwanted segments from different representation", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" }, // Different representation
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
-
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({
+            start: 0,
+            end: 10,
+            bufferedStart: 0,
+            bufferedEnd: 10,
+            representationId: "rep-1",
+          }),
+        ];
+      });
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
-
       expect(result.type).toBe("flush-buffer");
     });
 
     it("should identify unwanted segments from different adaptation", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-1"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-2" }, // Different adaptation
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
-
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({
+            start: 0,
+            end: 10,
+            bufferedStart: 0,
+            bufferedEnd: 10,
+            adaptationId: "adaptation-2",
+          }),
+        ];
+      });
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-1"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
-
       expect(result.type).toBe("flush-buffer");
     });
 
     it("should ignore segments from different periods", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-2" }, // Different period
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({
+            start: 0,
+            end: 10,
+            bufferedStart: 0,
+            bufferedEnd: 10,
+            periodId: "period-2",
+          }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result).toEqual({ type: "continue", value: undefined });
@@ -228,159 +222,127 @@ describe("getRepresentationsSwitchingStrategy", () => {
 
   describe("pending operations", () => {
     it("should identify unwanted segments in pending push operations", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockSegmentSink.getPendingOperations = vi.fn(() => [
-        {
-          type: SegmentSinkOperation.Push,
-          value: {
-            inventoryInfos: {
-              period: { id: "period-1" },
-              adaptation: { id: "adaptation-1" },
-              representation: { id: "rep-1" }, // Different representation
-              segment: {
-                time: 5,
-                duration: 5,
+      vi.spyOn(mockSegmentSink, "getPendingOperations").mockImplementation(() => {
+        return [
+          {
+            type: SegmentSinkOperation.Push,
+            value: {
+              inventoryInfos: {
+                period: new __MANIFEST_CLASSES_MOCKS.DummyPeriod({ id: "period-1" }),
+                adaptation: new __MANIFEST_CLASSES_MOCKS.DummyAdaptation({
+                  id: "adaptation-1",
+                }),
+                representation: new __MANIFEST_CLASSES_MOCKS.DummyRepresentation({
+                  id: "rep-1",
+                }),
+                segment: __MANIFEST_CLASSES_MOCKS.createSegment({ time: 5, duration: 5 }),
+                chunkSize: 1024,
+                start: 0,
+                end: 1000,
+              },
+              data: {
+                initSegmentUniqueId: "4",
+                codec: "5",
+                timestampOffset: 0,
+                appendWindow: [undefined, undefined],
+                chunk: new Uint8Array([0, 1, 2, 3]),
               },
             },
           },
-        },
-      ]);
-
+        ];
+      });
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
-
       expect(result.type).toBe("flush-buffer");
     });
 
     it("should ignore non-push pending operations", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockSegmentSink.getPendingOperations = vi.fn(() => [
-        {
-          type: "remove",
-          value: {},
-        },
-      ]);
-
+      vi.spyOn(mockSegmentSink, "getPendingOperations").mockImplementation(() => {
+        return [
+          {
+            type: SegmentSinkOperation.Remove,
+            value: {
+              start: 0,
+              end: 100000,
+            },
+          },
+        ];
+      });
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
-
       expect(result).toEqual({ type: "continue", value: undefined });
     });
   });
 
   describe("reload switching mode", () => {
     it("should return needs-reload when readyState > 1 and mode is reload", () => {
-      const settings = {
-        switchingMode: "reload" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockPlaybackObserver.getReadyState = vi.fn(() => 4);
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
+      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+        () => 4,
+      );
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({ start: 0, end: 10, bufferedStart: 0, bufferedEnd: 10 }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "reload", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result).toEqual({ type: "needs-reload", value: undefined });
     });
 
     it("should reload when readyState is undefined", () => {
-      const settings = {
-        switchingMode: "reload" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockPlaybackObserver.getReadyState = vi.fn(() => undefined);
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
+      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+        () => undefined,
+      );
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({ start: 0, end: 10, bufferedStart: 0, bufferedEnd: 10 }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "reload", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result.type).toBe("needs-reload");
     });
 
     it("should not reload when readyState <= 1", () => {
-      const settings = {
-        switchingMode: "reload" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockPlaybackObserver.getReadyState = vi.fn(() => 1);
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
+      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+        () => 1,
+      );
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({ start: 0, end: 10, bufferedStart: 0, bufferedEnd: 10 }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "reload", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result.type).not.toBe("needs-reload");
@@ -389,62 +351,36 @@ describe("getRepresentationsSwitchingStrategy", () => {
 
   describe("direct vs clean-buffer mode", () => {
     it("should return flush-buffer when mode is direct", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({ start: 0, end: 10, bufferedStart: 0, bufferedEnd: 10 }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result.type).toBe("flush-buffer");
     });
 
     it("should return clean-buffer when mode is not direct or reload", () => {
-      const settings = {
-        switchingMode: "seamless" as any,
-        representationIds: ["rep-2"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({ start: 0, end: 10, bufferedStart: 0, bufferedEnd: 10 }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "seamless", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result.type).toBe("clean-buffer");
@@ -453,41 +389,35 @@ describe("getRepresentationsSwitchingStrategy", () => {
 
   describe("getCurrentTime fallback", () => {
     it("should use getPolled when getCurrentTime returns undefined", () => {
-      const settings = {
-        switchingMode: "seamless" as any,
-        representationIds: ["rep-2"],
-      };
-
       const getPolledMock = vi.fn(() => 15);
-      mockPlaybackObserver.getCurrentTime = vi.fn(() => undefined);
-      mockPlaybackObserver.getReference = vi.fn(() => ({
-        getValue: () => ({
-          position: {
+      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockImplementation(
+        () => undefined,
+      );
+      vi.spyOn(mockedPlaybackObserver.observer, "getReference").mockImplementation(() => {
+        return new SharedReference({
+          position: new __PLAYBACK_OBSERVER_MOCKS.DummyObservationPosition({
             getPolled: getPolledMock,
+          }),
+          paused: {
+            last: false,
+            pending: undefined,
           },
-        }),
-      }));
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
+          speed: 1,
+          canStream: true,
+        });
+      });
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({ start: 0, end: 10, bufferedStart: 0, bufferedEnd: 10 }),
+        ];
+      });
 
       getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "seamless", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(getPolledMock).toHaveBeenCalled();
@@ -496,62 +426,41 @@ describe("getRepresentationsSwitchingStrategy", () => {
 
   describe("segment buffered time handling", () => {
     it("should use bufferedStart/bufferedEnd when available", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: 5,
-          bufferedEnd: 15,
-          start: 0,
-          end: 20,
-        },
-      ]);
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({ start: 0, end: 20, bufferedStart: 5, bufferedEnd: 15 }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result.type).toBe("flush-buffer");
     });
 
     it("should fallback to start/end when bufferedStart/bufferedEnd is undefined", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-2"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-1" },
-          },
-          bufferedStart: undefined,
-          bufferedEnd: undefined,
-          start: 0,
-          end: 10,
-        },
-      ]);
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({
+            start: 0,
+            end: 10,
+            bufferedStart: undefined,
+            bufferedEnd: undefined,
+          }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result.type).toBe("flush-buffer");
@@ -560,31 +469,24 @@ describe("getRepresentationsSwitchingStrategy", () => {
 
   describe("multiple representation IDs", () => {
     it("should not mark segments as unwanted if they match any of the representation IDs", () => {
-      const settings = {
-        switchingMode: "direct" as const,
-        representationIds: ["rep-1", "rep-2", "rep-3"],
-      };
-
-      mockSegmentSink.getLastKnownInventory = vi.fn(() => [
-        {
-          infos: {
-            period: { id: "period-1" },
-            adaptation: { id: "adaptation-1" },
-            representation: { id: "rep-2" },
-          },
-          bufferedStart: 0,
-          bufferedEnd: 10,
-          start: 0,
-          end: 10,
-        },
-      ]);
+      vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
+        return [
+          makeBufferedChunk({
+            start: 0,
+            end: 10,
+            bufferedStart: 0,
+            bufferedEnd: 10,
+            representationId: "rep-2",
+          }),
+        ];
+      });
 
       const result = getRepresentationsSwitchingStrategy(
         mockPeriod,
         mockAdaptation,
-        settings,
+        { switchingMode: "direct", representationIds: ["rep-1", "rep-2", "rep-3"] },
         mockSegmentSink,
-        mockPlaybackObserver,
+        mockedPlaybackObserver.observer,
       );
 
       expect(result).toEqual({ type: "continue", value: undefined });

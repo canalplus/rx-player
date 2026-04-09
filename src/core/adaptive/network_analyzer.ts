@@ -29,7 +29,7 @@ import type {
 } from "./utils/pending_requests_store";
 
 /** Object describing the current playback conditions. */
-type IPlaybackConditionsInfo = Pick<
+export type IPlaybackConditionsInfo = Pick<
   IRepresentationEstimatorPlaybackObservation,
   "bufferGap" | "position" | "speed" | "duration"
 >;

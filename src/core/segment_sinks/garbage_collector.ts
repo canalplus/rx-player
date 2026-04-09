@@ -47,8 +47,6 @@ export interface IGarbageCollectorArgument {
  *
  * @param {Object} opt
  * @param {Object} cancellationSignal
- *
- * TODO Move to main thread?
  */
 export default function BufferGarbageCollector(
   {
@@ -90,7 +88,6 @@ export default function BufferGarbageCollector(
   }
   maxBufferBehind.onUpdate(clean, { clearSignal: cancellationSignal });
   maxBufferAhead.onUpdate(clean, { clearSignal: cancellationSignal });
-  clean();
 }
 
 /**
