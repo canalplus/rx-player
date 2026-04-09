@@ -392,6 +392,18 @@ describe("CmcdDataBuilder", () => {
       expect(sessionHeader).not.toContain("pr=");
     });
 
+    it("does not include pr when playback speed is negative", () => {
+      const builder = new CmcdDataBuilder({ communicationType: "headers" });
+      const observer = makePlaybackObserver({ speed: -1, rebuffering: null });
+      builder.startMonitoringPlayback(
+        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
+      );
+
+      const payload: any = builder.getCmcdDataForManifest("dash");
+      const sessionHeader = payload.value["CMCD-Session"];
+      expect(sessionHeader).not.toContain("pr=");
+    });
+
     it("includes su when rebuffering is active", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ rebuffering: { timestamp: 0 }, speed: 1 });

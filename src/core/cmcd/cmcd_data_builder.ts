@@ -186,7 +186,10 @@ export default class CmcdDataBuilder {
 
     const lastObservation = this._playbackObserver?.getReference().getValue();
     props.pr =
-      lastObservation === undefined || lastObservation.speed === 1
+      lastObservation === undefined ||
+      !isFinite(lastObservation.speed) ||
+      lastObservation.speed < 0 ||
+      lastObservation.speed === 1
         ? undefined
         : lastObservation.speed;
     if (lastObservation !== undefined) {
