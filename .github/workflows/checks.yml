@@ -47,8 +47,12 @@ jobs:
         run: npm run types
       - name: Lint files in src
         run: npm run lint
+      - name: Check that unit tests mirror src
+        run: node scripts/verify_unit_tests_location.mjs
       - name: Check unit tests typescript types
         run: npm run types:unit_tests
+      - name: Lint test files
+        run: npm run lint:tests
 
   unit_tests:
     runs-on: ubuntu-latest
