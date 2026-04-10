@@ -400,7 +400,7 @@ export class GetLicenseTimeoutError extends Error {
   constructor(message: string) {
     super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
-    Object.setPrototypeOf(this, BlacklistedSessionError.prototype);
+    Object.setPrototypeOf(this, GetLicenseTimeoutError.prototype);
     this.message = message;
   }
 }

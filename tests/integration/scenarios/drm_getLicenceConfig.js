@@ -217,7 +217,7 @@ describe("DRM: getLicenseConfig", () => {
     expect(askedKeyIds).toEqual({});
     const error = player.getError();
     expect(error).not.toBeNull();
-    expect(error.code).to.equal("KEY_LOAD_ERROR");
+    expect(error.code).to.equal("KEY_LOAD_TIMEOUT");
     expect(error.name).to.equal("EncryptedMediaError");
     expect(error.type).to.equal("ENCRYPTED_MEDIA_ERROR");
   });
