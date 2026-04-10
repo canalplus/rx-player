@@ -162,11 +162,11 @@ export default function StreamOrchestrator(
      */
     let enableOutOfBoundsCheck = false;
 
-    /** Cancels currently created `PeriodStream`s. */
-    let currentCanceller = new TaskCanceller(
+    /** Cancels all currently created `PeriodStream`s. */
+    let allStreamsCanceller = new TaskCanceller(
       "StreamOrchestrator Streams for " + bufferType,
     );
-    currentCanceller.linkToSignal(orchestratorCancelSignal);
+    allStreamsCanceller.linkToSignal(orchestratorCancelSignal);
 
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
@@ -198,11 +198,11 @@ export default function StreamOrchestrator(
           periodList.removeElement(period);
           callbacks.periodStreamCleared({ type: bufferType, manifest, period });
         }
-        currentCanceller.cancel("PeriodStream is out of bounds");
-        currentCanceller = new TaskCanceller(
+        allStreamsCanceller.cancel("PeriodStream is out of bounds");
+        allStreamsCanceller = new TaskCanceller(
           "StreamOrchestrator Streams for " + bufferType,
         );
-        currentCanceller.linkToSignal(orchestratorCancelSignal);
+        allStreamsCanceller.linkToSignal(orchestratorCancelSignal);
 
         // As previous callbacks may have performed unknown side-effects, just
         // re-compute the next Period now.
@@ -227,7 +227,7 @@ export default function StreamOrchestrator(
           if (orchestratorCancelSignal.isCancelled()) {
             return;
           }
-          currentCanceller.cancel("decipherabilityUpdate event");
+          allStreamsCanceller.cancel("decipherabilityUpdate event");
           callbacks.error(err);
         });
       },
@@ -269,7 +269,7 @@ export default function StreamOrchestrator(
           callbacks.periodStreamCleared(payload);
         },
         error(err: unknown): void {
-          currentCanceller.cancel("PeriodStream err callback");
+          allStreamsCanceller.cancel("PeriodStream err callback");
           callbacks.error(err);
         },
       };
@@ -277,7 +277,7 @@ export default function StreamOrchestrator(
         bufferType,
         period,
         consecutivePeriodStreamCb,
-        currentCanceller.signal,
+        allStreamsCanceller.signal,
       );
     }
 
@@ -301,7 +301,7 @@ export default function StreamOrchestrator(
     }
 
     /**
-     * React to a Manifest's decipherability updates.
+     * React to a Manifest's `decipherabilityUpdate` event.
      * @param {Array.<Object>} updates
      * @returns {Promise}
      */
@@ -353,32 +353,36 @@ export default function StreamOrchestrator(
 
       // First close all Stream currently active so they don't continue to
       // load and push segments.
-      enableOutOfBoundsCheck = false;
-
       log.info("Stream", "Destroying all PeriodStreams for decipherability matters", {
         bufferType,
       });
+      enableOutOfBoundsCheck = false;
       while (periodList.length() > 0) {
         const period = periodList.get(periodList.length() - 1);
         periodList.removeElement(period);
         callbacks.periodStreamCleared({ type: bufferType, manifest, period });
       }
 
-      currentCanceller.cancel("decipherability update");
-      currentCanceller = new TaskCanceller(
+      allStreamsCanceller.cancel("decipherability update");
+      allStreamsCanceller = new TaskCanceller(
         "StreamOrchestrator Streams for " + bufferType,
       );
-      currentCanceller.linkToSignal(orchestratorCancelSignal);
+      allStreamsCanceller.linkToSignal(orchestratorCancelSignal);
+
+      /**
+       * Re-capture of this new `allStreamsCanceller` in a local context, to be
+       * able to re-check specifically it after asynchronous tasks or side-effects
+       */
+      const restartCanceller = allStreamsCanceller;
 
       /** Remove from the `SegmentSink` all the concerned time ranges. */
       for (const { start, end } of [...undecipherableRanges, ...rangesToRemove]) {
-        if (orchestratorCancelSignal.isCancelled()) {
+        // NOTE: This check is **voluntarily** inside the loop, as side-effects
+        // might happen during it
+        if (restartCanceller.isUsed()) {
           return;
         }
         if (start < end) {
-          if (orchestratorCancelSignal.isCancelled()) {
-            return;
-          }
           await segmentSink.removeBuffer(start, end);
         }
       }
@@ -387,19 +391,19 @@ export default function StreamOrchestrator(
       // to reduce the risk of race conditions where the next observation
       // was going to be emitted synchronously.
       queueMicrotask(() => {
-        if (orchestratorCancelSignal.isCancelled()) {
+        if (restartCanceller.signal.isCancelled()) {
           return;
         }
         const observation = playbackObserver.getReference().getValue();
         if (needsFlushingAfterClean(observation, undecipherableRanges)) {
           // Bind to Period start and end
           callbacks.needsDecipherabilityFlush();
-          if (orchestratorCancelSignal.isCancelled()) {
+          if (restartCanceller.isUsed()) {
             return;
           }
         } else if (needsFlushingAfterClean(observation, rangesToRemove)) {
           callbacks.needsBufferFlush();
-          if (orchestratorCancelSignal.isCancelled()) {
+          if (restartCanceller.isUsed()) {
             return;
           }
         }
