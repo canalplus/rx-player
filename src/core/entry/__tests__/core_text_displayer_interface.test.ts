@@ -78,6 +78,16 @@ describe("CoreTextDisplayerInterface", () => {
       cdi.onPushedTrackError(error);
       await expect(promise).rejects.toThrow("push failed");
     });
+
+    it("should resolve even if the sender synchronously responds", async () => {
+      const ranges = [{ start: 0, end: 10 }];
+      messageSender = vi.fn(() => {
+        cdi.onPushedTrackSuccess(ranges);
+      });
+      cdi = new CoreTextDisplayerInterface(CONTENT_ID, messageSender);
+
+      await expect(cdi.pushTextData({} as any)).resolves.toEqual(ranges);
+    });
   });
 
   describe("remove", () => {
@@ -108,6 +118,16 @@ describe("CoreTextDisplayerInterface", () => {
       const promise = cdi.remove(5, 20);
       cdi.onRemoveError(error);
       await expect(promise).rejects.toThrow("remove failed");
+    });
+
+    it("should resolve even if the sender synchronously responds", async () => {
+      const ranges = [{ start: 5, end: 20 }];
+      messageSender = vi.fn(() => {
+        cdi.onRemoveSuccess(ranges);
+      });
+      cdi = new CoreTextDisplayerInterface(CONTENT_ID, messageSender);
+
+      await expect(cdi.remove(5, 20)).resolves.toEqual(ranges);
     });
   });
 
