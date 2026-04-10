@@ -1,0 +1,357 @@
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import type {
+  IMediaElement,
+  IMediaSourceClass,
+} from "../../../../../../src/compat/browser_compatibility_types.ts";
+import ContentDecryptor from "../../../../../../src/main_thread/decrypt/index.ts";
+import { updateManifestCodecSupport } from "../../../../../../src/main_thread/init/utils/update_manifest_codec_support.ts";
+import type {
+  IManifestMetadata,
+  IPeriodMetadata,
+  IAdaptationMetadata,
+  IRepresentationMetadata,
+} from "../../../../../../src/manifest/index.ts";
+import { ManifestMetadataFormat } from "../../../../../../src/manifest/index.ts";
+
+import type { IContentProtections } from "../../../../../../src/parsers/manifest/index.ts";
+import assert from "../../../../../../src/utils/assert.ts";
+import sleep from "../../../../../../src/utils/sleep.ts";
+
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+const FakeMediaSourceClass = class {
+  constructor() {
+    throw new Error("Should not create a MediaSource instance");
+  }
+  static isTypeSupported(type: string): boolean {
+    // Mocked behavior: return true for all codecs and return false for vp9 codec
+    return type.indexOf("vp9") === -1;
+  }
+} as IMediaSourceClass;
+
+function generateFakeManifestWithRepresentations(
+  videoRepresentations: IRepresentationMetadata[],
+  audioRepresentations: IRepresentationMetadata[],
+): IManifestMetadata {
+  const videoAdaptation: IAdaptationMetadata = {
+    id: "adaptation1",
+    representations: videoRepresentations,
+    type: "video",
+    supportStatus: {
+      isDecipherable: true,
+      hasSupportedCodec: undefined,
+      hasCodecWithUndefinedSupport: true,
+    },
+  };
+
+  const audioAdaptation: IAdaptationMetadata = {
+    id: "adaptation2",
+    representations: audioRepresentations,
+    type: "audio",
+    supportStatus: {
+      isDecipherable: true,
+      hasSupportedCodec: undefined,
+      hasCodecWithUndefinedSupport: true,
+    },
+  };
+
+  const period: IPeriodMetadata = {
+    adaptations: {
+      video: [videoAdaptation],
+      audio: [audioAdaptation],
+    },
+    id: "period1",
+    start: 0,
+    streamEvents: [],
+    thumbnailTracks: [],
+  };
+
+  const manifest: IManifestMetadata = {
+    id: "manifest1",
+    isDynamic: false,
+    isLive: false,
+    timeBounds: {
+      minimumSafePosition: 0,
+      timeshiftDepth: null,
+      maximumTimeData: {
+        isLinear: false,
+        livePosition: 0,
+        maximumSafePosition: 10,
+        time: 10,
+      },
+    },
+    periods: [period],
+    availabilityStartTime: 0,
+    isLastPeriodKnown: true,
+    manifestFormat: ManifestMetadataFormat.MetadataObject,
+    uris: [],
+  };
+
+  return manifest;
+}
+beforeAll(() => {
+  // Mock EME APIs
+  vi.mock("../../../../../../src/compat/eme/eme-api-implementation", () => ({
+    default: () => ({
+      requestMediaKeySystemAccess(
+        keyType: string,
+        config: MediaKeySystemConfiguration[],
+      ) {
+        return {
+          keySystem: keyType,
+          getConfiguration: () => ({
+            ...config[0],
+            videoCapabilities: [
+              // Notice that all other codecs such as hevc are not listed in the videoCapabilities
+              // meanings that the EME implementation does not support them.
+              {
+                contentType: 'video/mp4;codecs="avc1.4d401e"',
+                robustness: "HW_SECURE_ALL",
+              },
+            ],
+            audioCapabilities: [
+              // Notice that all other codecs such as ec-3 are not listed in the audioCapabilities
+              // meanings that the EME implementation does not support them.
+              {
+                contentType: 'audio/mp4;codecs="mp4a.40.2"',
+                robustness: "HW_SECURE_ALL",
+              },
+            ],
+          }),
+          createMediaKeys: () => Promise.resolve({}),
+        };
+      },
+      onEncrypted: (
+        _target: unknown,
+        _listener: (evt: unknown) => void,
+        _cancelSignal: unknown,
+      ) => {
+        return;
+      },
+      setMediaKeys: (
+        _mediaElement: IMediaElement,
+        _mediaKeys: unknown,
+      ): Promise<unknown> => {
+        return Promise.resolve();
+      },
+    }),
+  }));
+});
+describe("init - utils - updateManifestCodecSupport", () => {
+  it("should return the codecs with result true/false if it's supported by the device", async () => {
+    const representationAVC: IRepresentationMetadata = {
+      bitrate: 1000,
+      id: "representation1",
+      uniqueId: "representation1",
+      baseCodecs: ["avc1.4d401e"],
+      chosenCodec: "avc1.4d401e",
+      mimeType: "video/mp4",
+      isSupported: undefined,
+    };
+
+    const representationHEVC: IRepresentationMetadata = {
+      bitrate: 2000,
+      id: "representation2",
+      uniqueId: "representation2",
+      baseCodecs: ["hvc1.2.4.L153.B0"],
+      chosenCodec: "hvc1.2.4.L153.B0",
+      mimeType: "video/mp4",
+      isSupported: undefined,
+    };
+
+    const representationVP9: IRepresentationMetadata = {
+      bitrate: 3000,
+      id: "representation3",
+      uniqueId: "representation3",
+      baseCodecs: ["vp9"],
+      chosenCodec: "vp9",
+      mimeType: "video/mp4",
+      isSupported: undefined,
+    };
+
+    const representationMP4A: IRepresentationMetadata = {
+      bitrate: 1000,
+      id: "representation4",
+      uniqueId: "representation4",
+      baseCodecs: ["mp4a.40.2"],
+      chosenCodec: "mp4a.40.2",
+      mimeType: "audio/mp4",
+      isSupported: undefined,
+    };
+
+    const representationEC3: IRepresentationMetadata = {
+      bitrate: 2000,
+      id: "representation5",
+      uniqueId: "representation5",
+      baseCodecs: ["ec-3"],
+      chosenCodec: "ec-3",
+      mimeType: "audio/mp4",
+      isSupported: undefined,
+    };
+
+    const manifest = generateFakeManifestWithRepresentations(
+      [representationAVC, representationHEVC, representationVP9],
+      [representationMP4A, representationEC3],
+    );
+
+    const video = document.createElement("video");
+    const keySystem1 = {
+      type: "com.widevine.alpha",
+      getLicense: () => {
+        return new Uint8Array([]);
+      },
+    };
+    const getEmeApiImplementation = (
+      await import("../../../../../../src/compat/eme/index.ts")
+    ).default;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
+    const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
+    updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
+    expect(representationAVC.isSupported).toBe(true);
+    expect(representationHEVC.isSupported).toBe(true);
+    expect(representationVP9.isSupported).toBe(false); // Not Supported by MSE
+    expect(representationMP4A.isSupported).toBe(true);
+    expect(representationEC3.isSupported).toBe(true);
+  });
+
+  it("should take into consideration the supported codecs by the CDM", async () => {
+    /**
+     * While HEVC codec is supported by the browser, in this example the CDM
+     * does not support it. Overral the codec should be considered as unsupported.
+     */
+    const fakeContentProtection: IContentProtections = {
+      keyIds: [new Uint8Array([1, 2, 3])],
+      initData: [],
+    };
+    const encryptedRepresentationAVC: IRepresentationMetadata = {
+      bitrate: 1000,
+      id: "representation1",
+      uniqueId: "representation1",
+      baseCodecs: ["avc1.4d401e"],
+      chosenCodec: "avc1.4d401e",
+      mimeType: "video/mp4",
+      contentProtections: fakeContentProtection,
+    };
+
+    const encryptedRepresentationHEVC: IRepresentationMetadata = {
+      bitrate: 2000,
+      id: "representation2",
+      uniqueId: "representation2",
+      baseCodecs: ["hvc1.2.4.L153.B0"],
+      chosenCodec: "hvc1.2.4.L153.B0",
+      mimeType: "video/mp4",
+      contentProtections: fakeContentProtection,
+    };
+
+    const encryptedRepresentationVP9: IRepresentationMetadata = {
+      bitrate: 2000,
+      id: "representation3",
+      uniqueId: "representation3",
+      baseCodecs: ["vp9"],
+      chosenCodec: "vp9",
+      mimeType: "video/mp4",
+      contentProtections: fakeContentProtection,
+    };
+
+    const encryptedRepresentationMP4A: IRepresentationMetadata = {
+      bitrate: 1000,
+      id: "representation4",
+      uniqueId: "representation4",
+      baseCodecs: ["mp4a.40.2"],
+      chosenCodec: "mp4a.40.2",
+      mimeType: "audio/mp4",
+      contentProtections: fakeContentProtection,
+    };
+
+    const encryptedRepresentationEC3: IRepresentationMetadata = {
+      bitrate: 2000,
+      id: "representation5",
+      uniqueId: "representation5",
+      baseCodecs: ["ec-3"],
+      chosenCodec: "ec-3",
+      mimeType: "audio/mp4",
+      contentProtections: fakeContentProtection,
+    };
+
+    const manifest = generateFakeManifestWithRepresentations(
+      [
+        encryptedRepresentationAVC,
+        encryptedRepresentationHEVC,
+        encryptedRepresentationVP9,
+      ],
+      [encryptedRepresentationMP4A, encryptedRepresentationEC3],
+    );
+
+    const keySystem1 = {
+      type: "com.widevine.alpha",
+      getLicense: () => {
+        return new Uint8Array([]);
+      },
+    };
+    const video = document.createElement("video");
+    const getEmeApiImplementation = (
+      await import("../../../../../../src/compat/eme/index.ts")
+    ).default;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
+    const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
+    await sleep(100);
+    contentDecryptor.attach();
+    updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
+    expect(encryptedRepresentationAVC.isSupported).toBe(true);
+    expect(encryptedRepresentationHEVC.isSupported).toBe(false); // Not supported by EME
+    expect(encryptedRepresentationVP9.isSupported).toBe(false); // Not supported by MSE
+    expect(encryptedRepresentationMP4A.isSupported).toBe(true);
+    expect(encryptedRepresentationEC3.isSupported).toBe(false); // Not supported by EME
+  });
+
+  it("should update to false if the codec is not usable with MSE in worker", async () => {
+    const representationAVC: IRepresentationMetadata = {
+      bitrate: 1000,
+      id: "representation1",
+      uniqueId: "representation1",
+      baseCodecs: ["avc1.4d401e"],
+      chosenCodec: "avc1.4d401e",
+      mimeType: "video/mp4",
+      isSupported: undefined,
+      isCodecSupportedInWebWorker: undefined,
+    };
+    const representationHEVC: IRepresentationMetadata = {
+      bitrate: 2000,
+      id: "representation2",
+      uniqueId: "representation2",
+      baseCodecs: ["hvc1.2.4.L153.B0"],
+      chosenCodec: "hvc1.2.4.L153.B0",
+      mimeType: "video/mp4",
+      isSupported: undefined,
+      isCodecSupportedInWebWorker: false,
+    };
+
+    const representationMP4A: IRepresentationMetadata = {
+      bitrate: 1000,
+      id: "representation4",
+      uniqueId: "representation4",
+      baseCodecs: ["mp4a.40.2"],
+      chosenCodec: "mp4a.40.2",
+      mimeType: "audio/mp4",
+      isSupported: undefined,
+      isCodecSupportedInWebWorker: true,
+    };
+    const manifest = generateFakeManifestWithRepresentations(
+      [representationAVC, representationHEVC],
+      [representationMP4A],
+    );
+
+    const video = document.createElement("video");
+    const getEmeApiImplementation = (
+      await import("../../../../../../src/compat/eme/index.ts")
+    ).default;
+    const emeImplem = getEmeApiImplementation("auto");
+    assert(emeImplem !== null);
+    const contentDecryptor = new ContentDecryptor(emeImplem, video, []);
+    updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
+    expect(representationAVC.isSupported).toBe(true);
+    expect(representationHEVC.isSupported).toBe(false); // not supported with MSE in worker
+    expect(representationMP4A.isSupported).toBe(true);
+  });
+});

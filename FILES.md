@@ -137,24 +137,6 @@ exported in the index.js file at the root of this directory.
 This directory contains general helpers which are used in different parts of the rx-player
 code.
 
-## `src/**/__tests__`: Unit tests
-
-You will find multiple directories named `__tests__` in the RxPlayer. Those contain unit
-tests and are put in the same directory than the code it tests.
-
-Most unit tests files contain only tests for a single source file. Those will be put
-directly at the root of `__tests__` under the name `<ORIGINAL_SRC_FILE>.test.ts` (where
-`<ORIGINAL_SRC_FILE>` is the filename of the tested file).
-
-`__tests__` directories can also contain files defining tests for multiple files contained
-in the tested directory. Those can be quicker to write and easier to maintain at the
-expense of being less thorough.
-
-Those type of "global" unit tests are put in a special `__global__` directory, itself
-directly at the root of the corresponding `__tests__` directory. Their filename don't
-follow the same convention than single-source unit tests but should still be suffixed by
-`.test.ts`.
-
 ## `tests/`: The RxPlayer's general tests
 
 This directory contains most testing code for the RxPlayer.
@@ -175,7 +157,23 @@ The rx-player contains multiple type of tests:
 - unit tests: test specific parts of the code. The main goal here is to check the
   implementation of smaller units of code.
 
-  They are written alongside the code, in `__tests__` directories.
+  They are written in the `tests/unit` directory.
+
+  That directory is again splitted into multiple sub-directories:
+  - `tests/unit/src`: test a single source file, whose directory path is mirrored there
+    with the file having name `<ORIGINAL_SRC_FILE>.test.ts`.
+
+  - `tests/unit/global`: tests for multiple files yet not the whole RxPlayer (else they
+    would have been integration tests). Examples are tests for particular parsers, or for
+    large and coherent modules (such as the one handling content decryption). Those can be
+    quicker to write and easier to maintain than unit tests.
+
+    They also should be suffixed by `.test.ts`.
+
+  - `tests/unit/mocks`: Mocks that can be relied on by tests to simplify their writing.
+
+    Those should implement in a type-sound way modules and utils that unit tests often
+    rely on.
 
 - memory tests: test the memory usage of the player.
 
