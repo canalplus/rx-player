@@ -257,11 +257,6 @@ export default class ContentPreparer {
       manifestFetcher.addEventListener(
         "error",
         (err: unknown) => {
-          sendMessage({
-            type: CoreMessageType.Error,
-            contentId,
-            value: formatErrorForSender(err),
-          });
           rej(err);
         },
         contentCanceller.signal,
