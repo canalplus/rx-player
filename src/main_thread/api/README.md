@@ -20,13 +20,12 @@ As such, its main roles are to:
 
 To facilitate those actions, the API relies on multiple building blocks:
 
-- **the `PlaybackObserver` (./playback_observer.ts)**
-
-  Provide multiple methods allowing to monitor the current playback conditions (e.g. the
-  current position and/or the current playback rate). Many RxPlayer modules rely on this
-  PlaybackObserver.
-
 - **the `option utils` (./option_utils.ts)**
 
   Parse options given to some RxPlayer API calls, to add default parameters and provide
   inteligible warnings/errors
+
+- **the `debug` directory (./debug/)**
+
+  Contains the logic for the debug overlay API, (e.g. that can be rendered through the
+  `createDebugElement` RxPlayer API)
