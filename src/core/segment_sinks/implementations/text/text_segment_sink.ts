@@ -128,9 +128,9 @@ export default class TextSegmentSink extends SegmentSink {
     return this._pendingOperations.map((p) => p.operation);
   }
 
-  public dispose(): void {
+  public dispose(reason: string | undefined): void {
     log.debug("Stream", "Disposing TextSegmentSink");
-    this._sender.reset();
+    this._sender.stop(reason);
   }
 
   private _addToOperationQueue(
