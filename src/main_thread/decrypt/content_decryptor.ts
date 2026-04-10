@@ -309,6 +309,11 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
           );
           if (resSsc.type === "error") {
             this.trigger("warning", resSsc.value);
+          } else if (resSsc.type === "not-supported") {
+            log.warn(
+              "DRM",
+              "Server certificate is not supported by the current MediaKeys.",
+            );
           }
         }
 

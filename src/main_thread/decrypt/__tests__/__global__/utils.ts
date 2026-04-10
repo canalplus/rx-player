@@ -222,7 +222,7 @@ export class MediaKeysImpl {
     return new MediaKeySessionImpl();
   }
 
-  setServerCertificate(_serverCertificate: BufferSource): Promise<true> {
+  setServerCertificate(_serverCertificate: BufferSource): Promise<boolean> {
     return Promise.resolve(true);
   }
 }

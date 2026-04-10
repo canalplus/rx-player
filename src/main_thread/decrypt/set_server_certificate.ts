@@ -84,6 +84,7 @@ export default async function trySettingServerCertificate(
 ): Promise<
   | { type: "success"; value: unknown }
   | { type: "already-has-one" }
+  | { type: "not-supported" }
   | { type: "method-not-implemented" }
   | { type: "error"; value: IPlayerError }
 > {
@@ -112,6 +113,10 @@ export default async function trySettingServerCertificate(
       serverCertificate,
       mediaKeySystemAccess,
     );
+    if (result === false) {
+      log.warn("DRM", "MediaKeys ignored the server certificate. Continuing without it.");
+      return { type: "not-supported" };
+    }
     ServerCertificateStore.set(mediaKeys, serverCertificate);
     return { type: "success", value: result };
   } catch (error) {

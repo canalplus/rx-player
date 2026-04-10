@@ -291,4 +291,48 @@ describe("decrypt - global tests - server certificate", () => {
       }, 10);
     });
   });
+
+  it("should continue if setServerCertificate resolves to false and retry later", () => {
+    const videoElt = document.createElement("video");
+    mockCompat(mocks);
+    const mockSetServerCertificate = vi
+      .spyOn(MediaKeysImpl.prototype, "setServerCertificate")
+      .mockImplementationOnce((_serverCertificate: BufferSource): Promise<false> => {
+        return Promise.resolve(false);
+      })
+      .mockImplementationOnce((_serverCertificate: BufferSource): Promise<true> => {
+        return Promise.resolve(true);
+      });
+
+    const eme = getEmeApiImplementation("auto");
+    assert(eme !== null, "Expected to have an EME implementation");
+    const firstDecryptor = new ContentDecryptor(eme, videoElt, ksConfigCert);
+
+    return new Promise<void>((res) => {
+      firstDecryptor.addEventListener("stateChange", (state) => {
+        if (state === ContentDecryptorState.WaitingForAttachment) {
+          firstDecryptor.removeEventListener("stateChange");
+          firstDecryptor.attach();
+        }
+      });
+
+      setTimeout(() => {
+        firstDecryptor.dispose(undefined);
+
+        const secondDecryptor = new ContentDecryptor(eme, videoElt, ksConfigCert);
+        secondDecryptor.addEventListener("stateChange", (state) => {
+          if (state === ContentDecryptorState.WaitingForAttachment) {
+            secondDecryptor.removeEventListener("stateChange");
+            secondDecryptor.attach();
+          }
+        });
+
+        setTimeout(() => {
+          secondDecryptor.dispose(undefined);
+          expect(mockSetServerCertificate).toHaveBeenCalledTimes(2);
+          res();
+        }, 10);
+      }, 10);
+    });
+  });
 });
