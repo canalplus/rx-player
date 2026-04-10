@@ -331,6 +331,7 @@ export default class ContentPreparer {
       return Promise.reject(new Error("CP: No content anymore"));
     }
     this._currentContent.trackChoiceSetter.reset();
+    this._currentContent.coreTextSender?.stop("ContentPreparer MediaSource reload");
     this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
 
     const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
