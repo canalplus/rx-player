@@ -235,7 +235,7 @@ describe("BufferGarbageCollector", () => {
     const maxBufferBehind = new SharedReference<number>(10);
     const maxBufferAhead = new SharedReference<number>(10);
     const mbbUpdate = vi.spyOn(maxBufferBehind, "onUpdate");
-    const mbaUpdate = vi.spyOn(maxBufferBehind, "onUpdate");
+    const mbaUpdate = vi.spyOn(maxBufferAhead, "onUpdate");
 
     BufferGarbageCollector(
       {
