@@ -585,7 +585,7 @@ export default function AdaptationStream(
       // When `wba` is equal to `Infinity`, dividing it will still make it equal
       // to `Infinity`. To make the `bufferGoalRatio` still have an effect, we
       // just starts from a `wba` set to the high value of 5 minutes.
-      return 5 * 60 * 1000 * bufferGoalRatio;
+      return 5 * 60 * bufferGoalRatio;
     }
     return wba * bufferGoalRatio;
   }
