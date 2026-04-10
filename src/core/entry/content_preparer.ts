@@ -333,6 +333,7 @@ export default class ContentPreparer {
     this._currentContent.trackChoiceSetter.reset();
     this._currentContent.coreTextSender?.stop("ContentPreparer MediaSource reload");
     this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
+    this._currentMediaSourceCanceller.linkToSignal(this._contentCanceller.signal);
 
     const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
