@@ -187,15 +187,13 @@ export default function AdaptationStream(
         newRepIds,
       );
       representationsList.setValueIfChanged(newRepresentations);
-      cancelCurrentStreams = new TaskCanceller(
+      const currentStreamCanceller = new TaskCanceller(
         "AdaptationStream: RepresentationStream Group " + adaptation.type,
       );
-      cancelCurrentStreams.linkToSignal(adapStreamCanceller.signal);
-      onRepresentationsChoiceChange(val, cancelCurrentStreams.signal).catch((err) => {
-        if (
-          cancelCurrentStreams?.isUsed() === true &&
-          TaskCanceller.isCancellationError(err)
-        ) {
+      cancelCurrentStreams = currentStreamCanceller;
+      currentStreamCanceller.linkToSignal(adapStreamCanceller.signal);
+      onRepresentationsChoiceChange(val, currentStreamCanceller.signal).catch((err) => {
+        if (currentStreamCanceller.isUsed() && TaskCanceller.isCancellationError(err)) {
           return;
         }
         adapStreamCanceller.cancel("RepresentationStream err");
