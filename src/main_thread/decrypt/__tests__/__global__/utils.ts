@@ -121,7 +121,7 @@ export class MediaKeyStatusMapImpl {
     ) => void,
     thisArg?: unknown,
   ): void {
-    this._map.forEach((value, key) => callbackfn.bind(thisArg, value, key, this));
+    this._map.forEach((value, key) => callbackfn.call(thisArg, value, key, this));
   }
 
   public _setKeyStatus(keyId: BufferSource, value: MediaKeyStatus | undefined): void {

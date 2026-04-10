@@ -654,7 +654,7 @@ export default class ContentDecryptor extends EventEmitter<IContentDecryptorEven
             this._lockInitDataQueue();
             const indexOf = this._currentSessions.indexOf(sessionInfo);
             if (indexOf >= 0) {
-              this._currentSessions.splice(indexOf);
+              this._currentSessions.splice(indexOf, 1);
             }
             if (initializationData.content !== undefined) {
               this.trigger("keyIdsCompatibilityUpdate", {
