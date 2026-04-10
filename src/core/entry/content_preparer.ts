@@ -1,13 +1,10 @@
 import features from "../../features";
 import log from "../../log";
 import type { IContentInitializationData } from "../../main_thread/types";
-import type { IManifest } from "../../manifest";
+import type { IManifest, IPeriodsUpdateResult } from "../../manifest";
 import type { IMediaSourceInterface } from "../../mse";
-import MainMediaSourceInterface from "../../mse/main_media_source_interface";
-import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface";
 import type { IPlayerError } from "../../public_types";
-import idGenerator from "../../utils/id_generator";
-import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
+import type { CancellationError } from "../../utils/task_canceller";
 import TaskCanceller from "../../utils/task_canceller";
 import type { IRepresentationEstimator } from "../adaptive";
 import createAdaptiveRepresentationSelector from "../adaptive";
@@ -18,21 +15,15 @@ import { ManifestFetcher, SegmentQueueCreator } from "../fetchers";
 import CdnPrioritizer from "../fetchers/cdn_prioritizer";
 import createThumbnailFetcher from "../fetchers/thumbnails/thumbnail_fetcher";
 import type { IThumbnailFetcher } from "../fetchers/thumbnails/thumbnail_fetcher";
-import SegmentSinksStore from "../segment_sinks";
-import type { IAttachMediaSourceCoreMessagePayload, ICoreMessage } from "../types";
-import { CoreMessageType } from "../types";
-import CoreTextDisplayerInterface from "./core_text_displayer_interface";
+import type SegmentSinksStore from "../segment_sinks";
+import type CoreTextDisplayerInterface from "./core_text_displayer_interface";
 import FreezeResolver from "./FreezeResolver";
 import TrackChoiceSetter from "./track_choice_setter";
 import type { ICorePlugins } from "./utils";
 import {
   extractExternalPlugins,
-  formatErrorForSender,
   updateCodecSupportInWorkerMode,
 } from "./utils";
-
-/** Function allowing to associate a unique identifier to all created `MediaSource` */
-const generateMediaSourceId = idGenerator();
 
 /**
  * Class facilitating the workflows behind loading a new content for the
@@ -54,6 +45,8 @@ const generateMediaSourceId = idGenerator();
  * @class ContentPreparer
  */
 export default class ContentPreparer {
+  /** Bridge used to interact with the rest of the core entry runtime. */
+  private _callbacks: IContentPreparerCallbacks;
   /**
    * Information on the content linked to that `ContentPreparer` through its
    * `initializeNewContent` method.
@@ -84,10 +77,14 @@ export default class ContentPreparer {
    * Typically this boolean is `true` for `<video>` HTMLElement and `false` for
    * `<audio>` HTMLElement.
    */
-  constructor({ hasVideo }: { hasVideo: boolean }) {
+  constructor(
+    { hasVideo }: { hasVideo: boolean },
+    callbacks: IContentPreparerCallbacks,
+  ) {
     this._currentContent = null;
     this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
     this._hasVideo = hasVideo;
+    this._callbacks = callbacks;
     const contentCanceller = new TaskCanceller("ContentPreparer");
     this._contentCanceller = contentCanceller;
   }
@@ -107,7 +104,6 @@ export default class ContentPreparer {
    * @returns {Promise.<Object>}
    */
   public initializeNewContent(
-    sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
     /** Allows to filter which Representations can be choosen. */
     throttlers: IRepresentationEstimatorThrottlers,
@@ -186,20 +182,18 @@ export default class ContentPreparer {
         transportPipelines.thumbnails,
         cdnPrioritizer,
       );
+      const callbacks = this._callbacks;
 
       const trackChoiceSetter = new TrackChoiceSetter();
 
       const [mediaSource, segmentSinksStore, coreTextSender] =
-        createMediaSourceInterfaceAndSegmentSinksStore(
-          sendMessage,
+        this._callbacks.createMediaSourceAndSegmentSinksStore({
           contentId,
-          {
-            useMseInWorker,
-            hasVideo: this._hasVideo,
-            hasText,
-          },
-          currentMediaSourceCanceller.signal,
-        );
+          useMseInWorker,
+          hasVideo: this._hasVideo,
+          hasText,
+          cancelSignal: currentMediaSourceCanceller.signal,
+        });
       const freezeResolver = new FreezeResolver(segmentSinksStore);
       this._currentContent = {
         cmcdDataBuilder,
@@ -231,11 +225,7 @@ export default class ContentPreparer {
       manifestFetcher.addEventListener(
         "warning",
         (err: IPlayerError) => {
-          sendMessage({
-            type: CoreMessageType.Warning,
-            contentId,
-            value: formatErrorForSender(err),
-          });
+          callbacks.onManifestWarning(contentId, err);
         },
         contentCanceller.signal,
       );
@@ -279,11 +269,7 @@ export default class ContentPreparer {
               // TODO log warn?
               return;
             }
-            sendMessage({
-              type: CoreMessageType.ManifestUpdate,
-              contentId,
-              value: { manifest, updates },
-            });
+            callbacks.onManifestUpdate(contentId, manifest, updates);
           },
           contentCanceller.signal,
         );
@@ -324,7 +310,6 @@ export default class ContentPreparer {
    * @returns {Promise}
    */
   public reloadMediaSource(
-    sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   ): Promise<void> {
     this._currentMediaSourceCanceller.cancel("ContentPreparer MediaSource reload");
     if (this._currentContent === null) {
@@ -336,16 +321,13 @@ export default class ContentPreparer {
     this._currentMediaSourceCanceller.linkToSignal(this._contentCanceller.signal);
 
     const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
-      createMediaSourceInterfaceAndSegmentSinksStore(
-        sendMessage,
-        this._currentContent.contentId,
-        {
-          useMseInWorker: this._currentContent.useMseInWorker,
-          hasVideo: this._hasVideo,
-          hasText: this._currentContent.coreTextSender !== null,
-        },
-        this._currentMediaSourceCanceller.signal,
-      );
+      this._callbacks.createMediaSourceAndSegmentSinksStore({
+        contentId: this._currentContent.contentId,
+        useMseInWorker: this._currentContent.useMseInWorker,
+        hasVideo: this._hasVideo,
+        hasText: this._currentContent.coreTextSender !== null,
+        cancelSignal: this._currentMediaSourceCanceller.signal,
+      });
     this._currentContent.mediaSource = mediaSourceInterface;
     this._currentContent.segmentSinksStore = segmentSinksStore;
     this._currentContent.freezeResolver = new FreezeResolver(segmentSinksStore);
@@ -456,74 +438,22 @@ export interface IPreparedContentData {
   useMseInWorker: boolean;
 }
 
-/**
- * @param {Function} sendMessage
- * @param {string} contentId
- * @param {Object} capabilities
- * @param {boolean} capabilities.useMseInWorker
- * @param {boolean} capabilities.hasVideo
- * @param {boolean} capabilities.hasText
- * @param {Object} cancelSignal
- * @returns {Array.<Object>}
- */
-function createMediaSourceInterfaceAndSegmentSinksStore(
-  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
-  contentId: string,
-  capabilities: {
-    useMseInWorker: boolean;
-    hasVideo: boolean;
-    hasText: boolean;
-  },
-  cancelSignal: CancellationSignal,
-): [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null] {
-  let mediaSourceInterface: IMediaSourceInterface;
-  if (capabilities.useMseInWorker) {
-    const mainMediaSource = new MainMediaSourceInterface(generateMediaSourceId());
-    mediaSourceInterface = mainMediaSource;
+export interface IContentPreparerCallbacks {
+  createMediaSourceAndSegmentSinksStore: (
+    args: ICreateMediaSourceAndSegmentSinksStoreArgs,
+  ) => [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null];
+  onManifestWarning: (contentId: string, err: IPlayerError) => void;
+  onManifestUpdate: (
+    contentId: string,
+    manifest: IManifest,
+    updates: IPeriodsUpdateResult,
+  ) => void;
+}
 
-    let sentMediaSourceLink: IAttachMediaSourceCoreMessagePayload;
-    const handle = mainMediaSource.handle;
-    if (handle.type === "handle") {
-      sentMediaSourceLink = { type: "handle" as const, value: handle.value };
-    } else {
-      const url = URL.createObjectURL(handle.value);
-      sentMediaSourceLink = { type: "url" as const, value: url };
-      cancelSignal.register(() => {
-        URL.revokeObjectURL(url);
-      });
-    }
-
-    sendMessage(
-      {
-        type: CoreMessageType.AttachMediaSource,
-        contentId,
-        value: sentMediaSourceLink,
-        mediaSourceId: mediaSourceInterface.id,
-      },
-      [handle.value as unknown as Transferable],
-    );
-  } else {
-    mediaSourceInterface = new WorkerMediaSourceInterface(
-      generateMediaSourceId(),
-      contentId,
-      sendMessage,
-    );
-  }
-
-  const textSender = capabilities.hasText
-    ? new CoreTextDisplayerInterface(contentId, sendMessage)
-    : null;
-  const { hasVideo } = capabilities;
-  const segmentSinksStore = new SegmentSinksStore(
-    mediaSourceInterface,
-    hasVideo,
-    textSender,
-  );
-  cancelSignal.register((err) => {
-    segmentSinksStore.disposeAll(err.reason);
-    textSender?.stop(err.reason);
-    mediaSourceInterface.dispose(err.reason);
-  });
-
-  return [mediaSourceInterface, segmentSinksStore, textSender];
+export interface ICreateMediaSourceAndSegmentSinksStoreArgs {
+  cancelSignal: TaskCanceller["signal"];
+  contentId: string;
+  hasText: boolean;
+  hasVideo: boolean;
+  useMseInWorker: boolean;
 }

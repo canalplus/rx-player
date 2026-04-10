@@ -10,12 +10,16 @@ import type {
 } from "../../main_thread/types";
 import { MainThreadMessageType } from "../../main_thread/types";
 import Manifest, { Adaptation, Period, Representation } from "../../manifest/classes";
+import type { IMediaSourceInterface } from "../../mse";
+import MainMediaSourceInterface from "../../mse/main_media_source_interface";
+import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface";
 import { ObservationPosition } from "../../playback_observer";
 import type { ICorePlaybackObservation } from "../../playback_observer/core_playback_observer";
 import CorePlaybackObserver from "../../playback_observer/core_playback_observer";
 import type { IPlayerError, ITrackType } from "../../public_types";
 import arrayFind from "../../utils/array_find";
 import assert, { assertUnreachable } from "../../utils/assert";
+import idGenerator from "../../utils/id_generator";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import type { ILogFormat, ILoggerLevel } from "../../utils/logger";
 import { scaleTimestamp } from "../../utils/monotonic_timestamp";
@@ -23,6 +27,7 @@ import objectAssign from "../../utils/object_assign";
 import type { IReadOnlySharedReference } from "../../utils/reference";
 import SharedReference from "../../utils/reference";
 import TaskCanceller from "../../utils/task_canceller";
+import SegmentSinksStore from "../segment_sinks";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
@@ -31,11 +36,17 @@ import type {
 import StreamOrchestrator from "../stream";
 import type {
   ICoreMessage,
+  IAttachMediaSourceCoreMessagePayload,
   IDiscontinuityUpdateCoreMessagePayload,
   IResolutionInfo,
 } from "../types";
 import { CoreMessageType } from "../types";
 import ContentPreparer from "./content_preparer";
+import type {
+  IContentPreparerCallbacks,
+  ICreateMediaSourceAndSegmentSinksStoreArgs,
+} from "./content_preparer";
+import CoreTextDisplayerInterface from "./core_text_displayer_interface";
 import createContentTimeBoundariesObserver from "./create_content_time_boundaries_observer";
 import type { IFreezeResolution } from "./FreezeResolver";
 import getBufferedDataPerMediaBuffer from "./get_buffered_data_per_media_buffer";
@@ -44,6 +55,9 @@ import type { ICorePlugins } from "./utils";
 import { formatErrorForSender, synchronizeSegmentSinksOnObservation } from "./utils";
 
 export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => void;
+
+/** Function allowing to associate a unique identifier to all created `MediaSource` */
+const generateMediaSourceId = idGenerator();
 
 /**
  * Initialize a `CoreEntry`, which is the part of the RxPlayer acting as an
@@ -83,6 +97,25 @@ export default function initializeCoreEntry(
     throttleVideoBitrate: new SharedReference(Infinity),
   };
 
+  const contentPreparerCallbacks: IContentPreparerCallbacks = {
+    createMediaSourceAndSegmentSinksStore: (args) =>
+      createMediaSourceAndSegmentSinksStore(sendMessage, args),
+    onManifestWarning: (contentId, err) => {
+      sendMessage({
+        type: CoreMessageType.Warning,
+        contentId,
+        value: formatErrorForSender(err),
+      });
+    },
+    onManifestUpdate: (contentId, manifest, updates) => {
+      sendMessage({
+        type: CoreMessageType.ManifestUpdate,
+        contentId,
+        value: { manifest, updates },
+      });
+    },
+  };
+
   /**
    * `true` once the CoreEntry has been initialized.
    * Allow to enforce the fact that it is only initialized once.
@@ -94,7 +127,10 @@ export default function initializeCoreEntry(
    *
    * Creating a default one which may change on initialization.
    */
-  let contentPreparer = new ContentPreparer({ hasVideo: true });
+  let contentPreparer = new ContentPreparer(
+    { hasVideo: true },
+    contentPreparerCallbacks,
+  );
   /**
    * Object allowing to control the lifecycle of the current content (stop/reload etc.).
    * `null` if there's no content loaded currently.
@@ -144,7 +180,10 @@ export default function initializeCoreEntry(
 
           if (!msg.value.hasVideo) {
             contentPreparer.disposeCurrentContent("Received Init msg");
-            contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
+            contentPreparer = new ContentPreparer(
+              { hasVideo: msg.value.hasVideo },
+              contentPreparerCallbacks,
+            );
           }
 
           sendMessage({ type: CoreMessageType.InitSuccess, value: null });
@@ -503,7 +542,6 @@ function prepareNewContent(
 ): void {
   contentPreparer
     .initializeNewContent(
-      sendMessage,
       contentInitData,
       {
         limitResolution: { video: refs.limitVideoResolution },
@@ -552,6 +590,66 @@ function updateCoreReference(msg: IReferenceUpdateMessage, refs: ICoreReferences
     default:
       assertUnreachable(msg.value);
   }
+}
+
+function createMediaSourceAndSegmentSinksStore(
+  sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
+  args: ICreateMediaSourceAndSegmentSinksStoreArgs,
+): [
+  IMediaSourceInterface,
+  SegmentSinksStore,
+  CoreTextDisplayerInterface | null,
+] {
+  const { cancelSignal, contentId, hasText, hasVideo, useMseInWorker } = args;
+  let mediaSourceInterface: IMediaSourceInterface;
+  if (useMseInWorker) {
+    const mainMediaSource = new MainMediaSourceInterface(generateMediaSourceId());
+    mediaSourceInterface = mainMediaSource;
+
+    let sentMediaSourceLink: IAttachMediaSourceCoreMessagePayload;
+    const handle = mainMediaSource.handle;
+    if (handle.type === "handle") {
+      sentMediaSourceLink = { type: "handle" as const, value: handle.value };
+    } else {
+      const url = URL.createObjectURL(handle.value);
+      sentMediaSourceLink = { type: "url" as const, value: url };
+      cancelSignal.register(() => {
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    sendMessage(
+      {
+        type: CoreMessageType.AttachMediaSource,
+        contentId,
+        value: sentMediaSourceLink,
+        mediaSourceId: mediaSourceInterface.id,
+      },
+      [handle.value as unknown as Transferable],
+    );
+  } else {
+    mediaSourceInterface = new WorkerMediaSourceInterface(
+      generateMediaSourceId(),
+      contentId,
+      sendMessage,
+    );
+  }
+
+  const textSender = hasText
+    ? new CoreTextDisplayerInterface(contentId, sendMessage)
+    : null;
+  const segmentSinksStore = new SegmentSinksStore(
+    mediaSourceInterface,
+    hasVideo,
+    textSender,
+  );
+  cancelSignal.register((err) => {
+    segmentSinksStore.disposeAll(err.reason);
+    textSender?.stop(err.reason);
+    mediaSourceInterface.dispose(err.reason);
+  });
+
+  return [mediaSourceInterface, segmentSinksStore, textSender];
 }
 
 interface ILoadingContentParameters {
@@ -1035,7 +1133,7 @@ function loadPreparedContent(
       currentLoadCanceller = null;
     }
     const contentId = contentPreparer.getCurrentContent()?.contentId;
-    contentPreparer.reloadMediaSource(sendMessage).then(
+    contentPreparer.reloadMediaSource().then(
       () => {
         log.info("Core", "MediaSource Reloaded, loading content again", {
           newInitialTime,
