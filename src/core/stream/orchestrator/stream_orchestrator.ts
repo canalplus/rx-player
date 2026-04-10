@@ -675,30 +675,21 @@ export default function StreamOrchestrator(
             }
           }
 
-          if (updates.addedPeriods.length > 0) {
-            // If the next period changed, cancel the next created one if one
-            if (nextStreamInfo !== null) {
-              const newNextPeriod = manifest.getPeriodAfter(basePeriod);
-              if (
-                newNextPeriod === null ||
-                nextStreamInfo.period.id !== newNextPeriod.id
-              ) {
-                log.warn(
-                  "Stream",
-                  "Destroying next PeriodStream due to new one being added",
-                  {
-                    bufferType,
-                    nextPeriodStart: nextStreamInfo.period.start,
-                  },
-                );
-                consecutivePeriodStreamCb.periodStreamCleared({
-                  type: bufferType,
-                  manifest,
-                  period: nextStreamInfo.period,
-                });
-                nextStreamInfo.canceller.cancel("Next Period changed");
-                nextStreamInfo = null;
-              }
+          // If the next period changed, cancel the next created one if one
+          if (nextStreamInfo !== null) {
+            const newNextPeriod = manifest.getPeriodAfter(basePeriod);
+            if (newNextPeriod === null || nextStreamInfo.period.id !== newNextPeriod.id) {
+              log.warn("Stream", "Destroying next PeriodStream due to manifest update", {
+                bufferType,
+                nextPeriodStart: nextStreamInfo.period.start,
+              });
+              consecutivePeriodStreamCb.periodStreamCleared({
+                type: bufferType,
+                manifest,
+                period: nextStreamInfo.period,
+              });
+              nextStreamInfo.canceller.cancel("Next Period changed");
+              nextStreamInfo = null;
             }
           }
         },
