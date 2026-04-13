@@ -119,7 +119,7 @@ describe("RepresentationScoreCalculator", () => {
       expect(estimate).toBeUndefined();
     });
 
-    it("should return LOW confidence when less than 5 segments loaded", () => {
+    it("should return LOW confidence when less than 6 segments loaded", () => {
       calculator.addSample(mockRepresentation1, 2, 4);
       calculator.addSample(mockRepresentation1, 2, 4);
 
@@ -128,8 +128,8 @@ describe("RepresentationScoreCalculator", () => {
     });
 
     it("should return LOW confidence when loaded duration is less than 10 seconds", () => {
-      // Add 5 segments but with short duration
-      for (let i = 0; i < 5; i++) {
+      // Add 6 segments but with short duration
+      for (let i = 0; i < 6; i++) {
         calculator.addSample(mockRepresentation1, 1, 1);
       }
 
@@ -137,8 +137,7 @@ describe("RepresentationScoreCalculator", () => {
       expect(estimate?.confidenceLevel).toBe(ScoreConfidenceLevel.LOW);
     });
 
-    it("should return HIGH confidence when > 5 segments and >= 10 seconds loaded", () => {
-      // Add 5 segments with 2 seconds each (total 10 seconds)
+    it("should return HIGH confidence when 6 segments and >= 10 seconds loaded", () => {
       for (let i = 0; i < 6; i++) {
         calculator.addSample(mockRepresentation1, 1, 2);
       }
@@ -147,8 +146,8 @@ describe("RepresentationScoreCalculator", () => {
       expect(estimate?.confidenceLevel).toBe(ScoreConfidenceLevel.HIGH);
     });
 
-    it("should return HIGH confidence when > 5 segments and > 10 seconds loaded", () => {
-      // Add 5 segments with 3 seconds each (total 15 seconds)
+    it("should return HIGH confidence when > 6 segments and > 10 seconds loaded", () => {
+      // Add 6 segments with 3 seconds each (total 15 seconds)
       for (let i = 0; i < 6; i++) {
         calculator.addSample(mockRepresentation1, 1, 3);
       }

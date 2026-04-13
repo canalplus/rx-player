@@ -110,7 +110,7 @@ export default class RepresentationScoreCalculator {
         representation,
         ewma: currentEWMA,
         loadedDuration: segmentDuration,
-        loadedSegments: 0,
+        loadedSegments: 1,
       };
     }
 
@@ -143,7 +143,7 @@ export default class RepresentationScoreCalculator {
     const { ewma, loadedSegments, loadedDuration } = this._currentRepresentationData;
     const estimate = ewma.getEstimate();
     const confidenceLevel =
-      loadedSegments >= 5 && loadedDuration >= 10
+      loadedSegments >= 6 && loadedDuration >= 10
         ? ScoreConfidenceLevel.HIGH
         : ScoreConfidenceLevel.LOW;
 
