@@ -218,6 +218,10 @@ export default async function renderThumbnail(
       );
       throw error;
     }
+    if (srcError instanceof ThumbnailRenderingError) {
+      onFinished();
+      throw srcError;
+    }
     const formattedErr = formatError(srcError, {
       defaultCode: "NONE",
       defaultReason: "Unknown error",

@@ -13,6 +13,12 @@ import { fileURLToPath } from "url";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const BASE_URL = "/DASH_static_SegmentTimeline/media/";
+const THUMBNAIL_SOURCE_PATH = path.join(
+  currentDirectory,
+  "media",
+  "dash",
+  "thumbnails_320x180-tile_1.jpg",
+);
 
 const audioSegments = [
   0, 177341, 353469, 530621, 706749, 883901, 1060029, 1236157, 1413309, 1589437, 1766589,
@@ -67,6 +73,16 @@ const videoQualities = flatMap([400000, 795000, 1193000, 1996000], (quality) => 
   return segments;
 });
 
+const thumbnailSegments = Array.from({ length: 11 }, (_, idx) => {
+  const number = idx + 1;
+  return {
+    url: BASE_URL + `dash/thumbnails_320x180/tile_${number}.jpg`,
+    path: THUMBNAIL_SOURCE_PATH,
+    contentType: "image/jpeg",
+    delayMs: 75,
+  };
+});
+
 export default [
   // Manifest
   {
@@ -77,6 +93,11 @@ export default [
   {
     url: BASE_URL + "ateam-trickmode.mpd",
     path: path.join(currentDirectory, "media/ateam-trickmode.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
+    url: BASE_URL + "ateam-thumbnails.mpd",
+    path: path.join(currentDirectory, "media/ateam-thumbnails.mpd"),
     contentType: "application/dash+xml",
   },
   {
@@ -138,4 +159,5 @@ export default [
   ...audioSegments, // remaining audio segments
   ...textSegments, // every text segments
   ...videoQualities, // every video segments
+  ...thumbnailSegments,
 ];
