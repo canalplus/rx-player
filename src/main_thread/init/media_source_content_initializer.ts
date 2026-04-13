@@ -353,21 +353,30 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     }
 
     let textDisplayer: ITextDisplayer | null = null;
-    if (
-      this._settings.textTrackOptions.textTrackMode === "html" &&
-      features.htmlTextDisplayer !== null
-    ) {
-      assert(this._hasTextBufferFeature());
-      textDisplayer = new features.htmlTextDisplayer(
-        mediaElement,
-        this._settings.textTrackOptions.textTrackElement,
+    try {
+      if (
+        this._settings.textTrackOptions.textTrackMode === "html" &&
+        features.htmlTextDisplayer !== null
+      ) {
+        assert(this._hasTextBufferFeature());
+        textDisplayer = new features.htmlTextDisplayer(
+          mediaElement,
+          this._settings.textTrackOptions.textTrackElement,
+        );
+      } else if (features.nativeTextDisplayer !== null) {
+        assert(this._hasTextBufferFeature());
+        textDisplayer = new features.nativeTextDisplayer(mediaElement);
+      } else {
+        assert(!this._hasTextBufferFeature());
+      }
+    } catch (err) {
+      log.error(
+        "Init",
+        "failed to initialize text displayer",
+        err instanceof Error ? err : "Unknown Error",
       );
-    } else if (features.nativeTextDisplayer !== null) {
-      assert(this._hasTextBufferFeature());
-      textDisplayer = new features.nativeTextDisplayer(mediaElement);
-    } else {
-      assert(!this._hasTextBufferFeature());
     }
+
     this._initCanceller.signal.register((err) => {
       textDisplayer?.stop(err.reason);
     });
