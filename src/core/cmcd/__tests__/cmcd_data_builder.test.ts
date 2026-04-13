@@ -358,9 +358,7 @@ describe("CmcdDataBuilder", () => {
         speed: 1,
         rebuffering: null,
       });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForSegmentRequest(makeSegmentInfo());
       const requestHeader = payload.value["CMCD-Request"];
@@ -371,9 +369,7 @@ describe("CmcdDataBuilder", () => {
     it("includes pr when playback speed is not 1", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ speed: 2, rebuffering: null });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
       const sessionHeader = payload.value["CMCD-Session"];
@@ -383,9 +379,17 @@ describe("CmcdDataBuilder", () => {
     it("does not include pr when speed is 1", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ speed: 1, rebuffering: null });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
+
+      const payload: any = builder.getCmcdDataForManifest("dash");
+      const sessionHeader = payload.value["CMCD-Session"];
+      expect(sessionHeader).not.toContain("pr=");
+    });
+
+    it("does not include pr when playback speed is negative", () => {
+      const builder = new CmcdDataBuilder({ communicationType: "headers" });
+      const observer = makePlaybackObserver({ speed: -1, rebuffering: null });
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
       const sessionHeader = payload.value["CMCD-Session"];
@@ -395,13 +399,32 @@ describe("CmcdDataBuilder", () => {
     it("includes su when rebuffering is active", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ rebuffering: { timestamp: 0 }, speed: 1 });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
       const requestHeader = payload.value["CMCD-Request"];
       expect(requestHeader).toContain("su");
+    });
+
+    it("does not include dl or rtp when playback speed is 0", () => {
+      const builder = new CmcdDataBuilder({ communicationType: "headers" });
+      const observer = makePlaybackObserver({
+        buffered: {
+          video: [{ start: 5, end: 20 }],
+          audio: null,
+          text: null,
+        },
+        speed: 0,
+        rebuffering: null,
+      });
+      builder.startMonitoringPlayback(observer);
+
+      const payload: any = builder.getCmcdDataForSegmentRequest(makeSegmentInfo());
+      const requestHeader = payload.value["CMCD-Request"];
+      const statusHeader = payload.value["CMCD-Status"];
+      expect(requestHeader).toContain("bl=10000");
+      expect(requestHeader).not.toContain("dl=");
+      expect(statusHeader).not.toContain("rtp=");
     });
   });
 
@@ -409,9 +432,7 @@ describe("CmcdDataBuilder", () => {
     it("clears the playback observer so subsequent calls work without observation data", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
       const observer = makePlaybackObserver({ speed: 2, rebuffering: null });
-      builder.startMonitoringPlayback(
-        observer as Parameters<typeof builder.startMonitoringPlayback>[0],
-      );
+      builder.startMonitoringPlayback(observer);
       builder.stopMonitoringPlayback();
 
       const payload: any = builder.getCmcdDataForManifest("dash");
@@ -459,6 +480,30 @@ describe("CmcdDataBuilder", () => {
           expect(val[val.length - 1]).not.toBe(",");
         }
       }
+    });
+
+    it("escapes all backslashes and quotes in header strings", () => {
+      const builder = new CmcdDataBuilder({
+        sessionId: 's\\"id\\tail',
+        contentId: 'c\\"id\\tail',
+        communicationType: "headers",
+      });
+      const payload: any = builder.getCmcdDataForManifest("dash");
+      const sessionHeader = payload.value["CMCD-Session"];
+      expect(sessionHeader).toContain('cid="c\\\\\\"id\\\\tail"');
+      expect(sessionHeader).toContain('sid="s\\\\\\"id\\\\tail"');
+    });
+
+    it("preserves all backslashes and quotes after query decoding", () => {
+      const builder = new CmcdDataBuilder({
+        sessionId: 's\\"id\\tail',
+        contentId: 'c\\"id\\tail',
+        communicationType: "query",
+      });
+      const payload: any = builder.getCmcdDataForManifest("dash");
+      const qs = decodeURIComponent(payload.value[0][1]);
+      expect(qs).toContain('cid="c\\\\\\"id\\\\tail"');
+      expect(qs).toContain('sid="s\\\\\\"id\\\\tail"');
     });
   });
 });

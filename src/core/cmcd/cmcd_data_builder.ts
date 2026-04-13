@@ -186,7 +186,10 @@ export default class CmcdDataBuilder {
 
     const lastObservation = this._playbackObserver?.getReference().getValue();
     props.pr =
-      lastObservation === undefined || lastObservation.speed === 1
+      lastObservation === undefined ||
+      !isFinite(lastObservation.speed) ||
+      lastObservation.speed < 0 ||
+      lastObservation.speed === 1
         ? undefined
         : lastObservation.speed;
     if (lastObservation !== undefined) {
@@ -300,7 +303,10 @@ export default class CmcdDataBuilder {
     }
 
     const precizeDeadlineMs =
-      precizeBufferLengthMs === undefined || lastObservation === undefined
+      precizeBufferLengthMs === undefined ||
+      lastObservation === undefined ||
+      !isFinite(lastObservation.speed) ||
+      lastObservation.speed <= 0
         ? undefined
         : precizeBufferLengthMs / lastObservation.speed;
 
@@ -396,7 +402,7 @@ export default class CmcdDataBuilder {
     ): void => {
       const val = props[prop];
       if (val !== undefined) {
-        const formatted = `"${val.replace("\\", "\\\\").replace('"', '\\"')}"`;
+        const formatted = `"${val.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
         const toAdd = `${prop}=${formatted},`;
         addPayload(toAdd, headerName);
       }
