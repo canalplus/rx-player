@@ -80,6 +80,8 @@ const DEVICES = {
   Xbox: 109,
   /** Another device that does not match with the others defined here. */
   Other: 110,
+  /** DSTtv's Streama STB MPD1001S, which is known to have some quirks. */
+  StreamaMdp1001S: 111,
 } as const;
 
 /** Interface giving information on the current environment where the RxPlayer runs. */
@@ -200,6 +202,8 @@ function resetEnvironment(): void {
     EnvDetector.device = DEVICES.PlayStation4;
   } else if (navigator.userAgent.indexOf("PlayStation 5") !== -1) {
     EnvDetector.device = DEVICES.PlayStation5;
+  } else if (navigator.userAgent.indexOf("DStv Streama, MDMP1001S") !== -1) {
+    EnvDetector.device = DEVICES.StreamaMdp1001S;
   } else if (/Tizen/.test(navigator.userAgent)) {
     EnvDetector.device = DEVICES.Tizen;
 

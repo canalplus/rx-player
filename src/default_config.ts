@@ -1263,6 +1263,12 @@ const DEFAULT_CONFIG = {
   // Compatibility toggles:
 
   /**
+   * If set to `true`, we will not patch out a `pssh` box if found in an
+   * ISOBMFF segment.
+   */
+  PREVENT_PSSH_PATCHING: false,
+
+  /**
    * If set to `true`, we'll always try to check thoroughly that a
    * `MediaKeySystemAccess` can be relied on.
    */
