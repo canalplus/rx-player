@@ -3213,7 +3213,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       "audioRepresentationChange",
       isNullOrUndefined(audioRepresentation)
         ? audioRepresentation
-        : toVideoRepresentation(audioRepresentation),
+        : toAudioRepresentation(audioRepresentation),
       cancelSignal,
     );
     const videoRepresentation = this.__priv_getCurrentRepresentations()?.video ?? null;
