@@ -627,6 +627,7 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           const newAudioTracks = createAudioTracks(this._nativeAudioTracks);
           if (areTrackArraysDifferent(this._audioTracks, newAudioTracks)) {
             this._audioTracks = newAudioTracks;
+            this._setPreviouslyLockedAudioTrack();
             this.trigger("availableAudioTracksChange", this.getAvailableAudioTracks());
             const chosenAudioTrack = this._getCurrentAudioTrack();
             if (chosenAudioTrack?.nativeTrack !== this._lastEmittedNativeAudioTrack) {
