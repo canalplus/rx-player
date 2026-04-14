@@ -1153,7 +1153,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
    * Period.
    *
    * Returns `null` is the the current audio track is disabled or not
-   * set yet.a pas bcp de marge de manoeuvre j'ai l'impression
+   * set yet.
    *
    * Returns `undefined` if the given Period's id is not currently found in the
    * `TracksStore`. The cause being most probably that the corresponding
