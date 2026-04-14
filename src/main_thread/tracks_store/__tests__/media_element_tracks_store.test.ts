@@ -3,24 +3,27 @@ import type { IMediaElement } from "../../../compat/browser_compatibility_types"
 import assert from "../../../utils/assert";
 import MediaElementTracksStore from "../media_element_tracks_store";
 
-const fakeMediaElement = {
-  audioTracks: [
-    { language: "en", enabled: false },
-    { language: "fr", enabled: true },
-    { language: "el", enabled: false },
-    { language: "pt-BR", enabled: false },
-  ],
-  textTracks: [
-    { language: "en", mode: "hidden" },
-    { language: "fr", mode: "showing" },
-    { language: "el", mode: "hidden" },
-    { language: "pt-BR", mode: "hidden" },
-  ],
-  videoTracks: [{ language: "", selected: true }],
-} as unknown as IMediaElement;
+function createFakeMediaElement(): IMediaElement {
+  return {
+    audioTracks: [
+      { language: "en", enabled: false },
+      { language: "fr", enabled: true },
+      { language: "el", enabled: false },
+      { language: "pt-BR", enabled: false },
+    ],
+    textTracks: [
+      { language: "en", mode: "hidden" },
+      { language: "fr", mode: "showing" },
+      { language: "el", mode: "hidden" },
+      { language: "pt-BR", mode: "hidden" },
+    ],
+    videoTracks: [{ language: "", selected: true }],
+  } as unknown as IMediaElement;
+}
 
 describe("API - MediaElementTracksStore", () => {
   it("should returns correct results for getter", () => {
+    const fakeMediaElement = createFakeMediaElement();
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
     const audioTracks = trackManager.getAvailableAudioTracks();
     const textTracks = trackManager.getAvailableTextTracks();
@@ -54,6 +57,7 @@ describe("API - MediaElementTracksStore", () => {
     });
   });
   it("should returns correct results for setters", () => {
+    const fakeMediaElement = createFakeMediaElement();
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
     trackManager.setAudioTrackById("gen_audio_en_1");
@@ -80,6 +84,7 @@ describe("API - MediaElementTracksStore", () => {
     });
   });
   it("should emit available tracks change when changing text contents", () => {
+    const fakeMediaElement = createFakeMediaElement();
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
     return new Promise<void>((res) => {
@@ -107,6 +112,7 @@ describe("API - MediaElementTracksStore", () => {
   });
 
   it("should emit available tracks change when changing video contents", () => {
+    const fakeMediaElement = createFakeMediaElement();
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
     return new Promise<void>((res) => {
       trackManager.addEventListener("availableVideoTracksChange", (tracks) => {
@@ -129,6 +135,7 @@ describe("API - MediaElementTracksStore", () => {
   });
 
   it("should emit available tracks change when changing audio contents", () => {
+    const fakeMediaElement = createFakeMediaElement();
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
     return new Promise<void>((res) => {
       trackManager.addEventListener("availableAudioTracksChange", (tracks) => {
@@ -154,18 +161,18 @@ describe("API - MediaElementTracksStore", () => {
   });
 
   it("should emit chosen track when changing text content", () => {
+    const fakeMediaElement = createFakeMediaElement();
     const trackManager = new MediaElementTracksStore(fakeMediaElement);
 
     return new Promise<void>((res) => {
       trackManager.addEventListener("textTrackChange", (chosenTrack) => {
-        expect(chosenTrack?.id).toBe("gen_text_fr_1");
+        expect(chosenTrack?.id).toBe("gen_text_en_1");
         res();
       });
 
-      trackManager.setTextTrackById("gen_text_fr_1");
+      trackManager.setTextTrackById("gen_text_en_1");
 
       // Fake browser behavior
-      fakeMediaElement.textTracks[0].mode = "hidden";
       (
         fakeMediaElement.textTracks as {
           onchange: ((arg: Event) => void) | undefined;
