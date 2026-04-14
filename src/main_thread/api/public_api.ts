@@ -3029,6 +3029,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     contentInfos: IPublicApiContentInfos,
     updates: IPeriodsUpdateResult,
   ): void {
+    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+      return; // Event for another content
+    }
     if (this._priv_contentInfos === null || this._priv_contentInfos.manifest === null) {
       return;
     }
@@ -3747,6 +3750,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    * to the content for which the error was received.
    */
   private _priv_onFatalError(err: unknown, contentInfos: IPublicApiContentInfos): void {
+    if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
+      return; // Event for another content
+    }
     const formattedError = formatError(err, {
       defaultCode: "NONE",
       defaultReason: "An unknown error stopped content playback.",
