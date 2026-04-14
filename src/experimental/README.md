@@ -15,5 +15,5 @@ is mainly to confine the "library path" of that feature to the
 `rx-player/experimental/features` subdirectory.
 
 Note that tools NEED to be declared in their own directory inside a `./tools/<TOOL_NAME>`
-directory, with their inner `index.js` file exporting them, as that's a requirement from
+directory, with their inner `index.ts` file exporting them, as that's a requirement from
 our exporting strategy.

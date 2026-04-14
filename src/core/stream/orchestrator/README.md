@@ -1,4 +1,4 @@
-# StreamOchestrator
+# StreamOrchestrator
 
 | Consideration           | Status                            |
 | ----------------------- | --------------------------------- |
@@ -27,7 +27,7 @@ Basically, the _StreamOrchestrator_:
 
 ## Multiple types handling
 
-More often than not, content are divised into multiple "types": "audio", "video" and
+More often than not, content are divided into multiple "types": "audio", "video" and
 "text" segments, for example. They are often completely distinct in a Manifest and as
 such, have to be downloaded and decoded separately.
 
@@ -189,7 +189,7 @@ previous one. Thus, multiple _PeriodStreams_ might be active at the same time:
 
 ### Multi-Period management
 
-The creation/destruction of _PeriodStreams_ is actually done in a very precize and optimal
+The creation/destruction of _PeriodStreams_ is actually done in a very precise and optimal
 way, which gives a higher priority to immediate content.
 
 To better grasp how it works, let's imagine a regular use-case, with two periods for a
@@ -267,7 +267,7 @@ When the current position go ahead of a _PeriodStream_ (here ahead of P1):
         ^
 ```
 
-This _PeriodStream_ is destroyed to free up ressources:
+This _PeriodStream_ is destroyed to free up resources:
 
 ```
           P2

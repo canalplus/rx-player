@@ -8,8 +8,8 @@ There are different types of tests in the RxPlayer:
 
 - unit tests: they test specific and sensitive parts of the Player.
 
-  They are written in directories named `__test__` alongside the corresponding tested code
-  (in `src`).
+  They are written in directories named `__tests__` alongside the corresponding tested
+  code (in `src`).
 
 - integration tests: they test the player globally, by simulating different "scenarios"
   (like playing a content and seeking to an un-buffered part).
@@ -20,11 +20,11 @@ There are different types of tests in the RxPlayer:
 
   They are written here in the `memory` directory.
 
-- performance tests: check the time taken to perform some key operations: loading a
+- performance tests: they check the time taken to perform some key operations: loading a
   content, seeking etc.
 
-  The intent is to limit the possibility that future improvements leads to higher delays
-  in those operations.
+  The intent is to limit the possibility that future improvements lead to higher delays in
+  those operations.
 
   They are written here in the `performance` directory.
 
@@ -47,8 +47,8 @@ There are different types of tests in the RxPlayer:
 - The `utils` directory exports helper functions useful for the `integration` and `memory`
   tests.
 
-- `globalSetup.mjs` is a file intended to be run through node.js by test runners before
-  actually running tests. It set up the environment and a content server.
+- `globalSetup.mjs` is a file intended to be run through Node.js by test runners before
+  actually running tests. It sets up the environment and a content server.
 
 - `worker_file.mjs` is a "RxPlayer Worker" file intended for tests relying on advanced
   Multithreading behavior. It defines worker-side logic that might then be exploited by

@@ -19,8 +19,8 @@ As such, most network request needed by the player are directly performed by the
 `transports` code.
 
 Note: the only HTTP request which might be done elsewhere would be the request for a
-`directfile` content. That request is not done explicely with a JavaScript API but
-implicitely by the browser (inclusion of an `src` attribute).
+`directfile` content. That request is not done explicitly with a JavaScript API but
+implicitly by the browser (through the `src` attribute).
 
 ## Implementation
 
@@ -184,7 +184,7 @@ It receives information linked to the segment you want to download:
 - The `Representation` it is linked to
 - The `Segment` object it is linked to
 
-It then return a Promise resolving when the segment is loaded.
+It then returns a Promise resolving when the segment is loaded.
 
 ```
   INPUT:                              OUTPUT:
@@ -226,8 +226,8 @@ way.
 A segment parser is a function whose role is to extract some information from the
 segment's data:
 
-- what its precize start time and duration is
-- whether the segment should be offseted when decoded and by what amount
+- what its precise start time and duration is
+- whether the segment should be offset when decoded and by what amount
 - the decodable data (which can be wrapped in a container e.g. subtitles in an ISOBMFF
   container).
 - the attached protection information and data to be able to decrypt that segment.

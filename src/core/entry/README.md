@@ -1,4 +1,4 @@
-# Core Main
+# Core Entry
 
 | Consideration           | Status                                     |
 | ----------------------- | ------------------------------------------ |
@@ -11,7 +11,7 @@ any file may be directly imported.
 
 ## Overview
 
-The Core Main serves as the entry point of the `core` code, which may optionally run in a
+The Core Entry serves as the entry point of the `core` code, which may optionally run in a
 WebWorker.
 
 When in monothreading mode, files declared here may be imported directly to make the link

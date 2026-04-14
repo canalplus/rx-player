@@ -7,7 +7,7 @@ the default JS-based one, especially on very large (multiple megabytes) MPDs.
 
 ### How Manifest parsing works in the RxPlayer
 
-In the RxPlayer every Manifest parser output the same final Manifest format which follow
+In the RxPlayer every Manifest parser outputs the same final Manifest format which follows
 the same structure regardless of the transport protocol used (e.g. DASH, Smooth etc.).
 
 For the MPD (DASH's Manifest format), this transformation (from an XML to that final
@@ -30,7 +30,7 @@ XML format in JavaScript.
 Before the DASH-WASM parser, we only had the JavaScript parser, which relied on the
 browser's DOM APIs (e.g. `DOMParser`).
 
-This parser works fine but we found that its performance was really poor when encoutering
+This parser works fine but we found that its performance was really poor when encountering
 huge MPDs (several MBs), that we're dealing with at Canal+ on a regular basis. Usually
 those problematic MPDs have several gigantic `<SegmentTimeline>` elements that takes a lot
 of time to parse.
@@ -39,11 +39,11 @@ After multiple tests, profiling and improvements, it appeared that the issue had
 with XML parsing and the DOM APIs (regarding the speed of the parsing operation, but also
 some stability issues most likely related to garbage collection pressure).
 
-Moreover, on some embedded devices, this operation could take several seconds. This leaded
-us to try to implement a parser running in a WebWorker (to avoid blocking the main thread,
+Moreover, on some embedded devices, this operation could take several seconds. This led us
+to try to implement a parser running in a WebWorker (to avoid blocking the main thread,
 which is also handling the user interface).
 
-As no DOM API are available in a WebWorker, we had to re-define the XML parsing APIs. We
+As no DOM APIs are available in a WebWorker, we had to re-define the XML parsing APIs. We
 first opted for a JavaScript library, yet found performance in our initial tests to be
 subpar. We ended up trying with WebAssembly instead.
 
@@ -82,7 +82,7 @@ In the context of the RxPlayer, we only use it for optimization reasons, when we
 that switching the DASH MPD parser to WebAssembly has a high impact in terms of
 performance when compared to the equivalent JavaScript code.
 
-### Where does the DASH-WASM parser fits into this
+### Where does the DASH-WASM parser fit into this
 
 The DASH-WASM MPD parser only does the first step of transforming the initial XML format
 into the "intermediate representation", by using WebAssembly.
@@ -111,7 +111,7 @@ This logic was written as such because:
 
 ### Directories
 
-The DASH-WASM parser comes into part:
+The DASH-WASM parser comes in two parts:
 
 - the Rust part, written in the `rs` directory, that browses the XML and convert values to
   the right format.
@@ -142,7 +142,7 @@ Currently, the DASH-WASM parser parses in one go the XML.
    If the XML element encountered is recognized, it will call a JavaScript callback with
    the right number, to signal that this element has been encountered.
 
-4. This callback, registered by the TypeScript code, begin to create the object
+4. This callback, registered by the TypeScript code, begins to create the object
    corresponding to that element and update some callbacks called by Rust so that new
    elements and attributes are considered as part of this element.
 
@@ -181,7 +181,7 @@ preferable for any reason, don't hesitate to propose a change (through an issue 
 
 ### Details on FFI
 
-Technically, some data and function calls needs to cross the language boundaries between
+Technically, some data and function calls need to cross the language boundaries between
 the compiled JavaScript and WebAssembly code.
 
 On the JavaScript/TypeScript-side, everything stays relatively simple, with few

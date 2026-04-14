@@ -16,7 +16,7 @@ can optionally run in a WebWorker environment.
 
 Those modules are:
 
-- **the `Core Main` (\_./main)**
+- **the `Core Entry` (\_./entry)**
 
   Make the link between the "main thread" part of the code and the core.
 

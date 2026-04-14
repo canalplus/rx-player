@@ -23,7 +23,7 @@ To facilitate those actions, the API relies on multiple building blocks:
 - **the `option utils` (./option_utils.ts)**
 
   Parse options given to some RxPlayer API calls, to add default parameters and provide
-  inteligible warnings/errors
+  intelligible warnings/errors
 
 - **the `debug` directory (./debug/)**
 

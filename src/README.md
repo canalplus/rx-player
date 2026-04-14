@@ -81,8 +81,8 @@ it:
  │ CMCD data builder │   │                           ▼                │ Internet
  │  (./core/cmcd)    │   │        ┌────────────────────┐              │ `
  │                   │   │        │                    │   request    │ `  ╭───╮
- └───────────────────┘   │        │      transport     │──────────────┼─`~>│CDN│
- Perform data collection │        │    (./transport)   │              │ `  ╰───╯
+ └───────────────────┘   │        │     transports     │──────────────┼─`~>│CDN│
+ Perform data collection │        │   (./transports)   │              │ `  ╰───╯
  for the "Common Media   │        │                    │<────────┐    │ `
  Client Data" (CMCD)     │        └────────────────────┘         │    │
  scheme.                 │        Abstract the streaming         │    │
@@ -158,7 +158,7 @@ Stream (./core/stream)   │                                       │    └─
                     ┌───────────────────────┐ ┌─────────────────────────┐    │
   Actually pushes   │      MediaSource      │ │      TextDisplayer      │    │
   audio and video   │       Interface       │ │      Message sender     │────┘
-  data to the right │        (./mse)        │ │      (./core/enry)      │
+  data to the right │        (./mse)        │ │      (./core/entry)     │
   low-level buffers └───────────────────────┘ └─────────────────────────┘
                                               Small interface
                                               facilitating communication
@@ -168,7 +168,7 @@ Stream (./core/stream)   │                                       │    └─
 
 For the subdirectories and files in this directory not represented in that schema:
 
-- `Compat` (_./compat_): Regroups every functions related to improving compatibility with
+- `compat` (_./compat_): Regroups every function related to improving compatibility with
   browsers / environments.
 
 - `errors` (_./errors_): Defines error subclasses, most of all for the API.
@@ -190,8 +190,8 @@ For the subdirectories and files in this directory not represented in that schem
 
 - `tools` (_./tools_): Defines "tools", APIs which are not part of the RxPlayer class.
 
-- `utils` (_./utils_): Define utils function, small functions which can be used in several
-  part of the RxPlayer's code.
+- `utils` (_./utils_): Defines utility functions, small functions which can be used in
+  several parts of the RxPlayer's code.
 
 - `config.ts` (_./config.ts_): Exports an interface allowing to update the RxPlayer's
   config.
@@ -253,5 +253,5 @@ When playing such content, the code path is slightly different and simpler:
 As you can see, everything runs in main thread, a specialized module called the
 `DirectfileContentInitializer` is called by the API to start-up such contents and a
 specialized `MediaElementTracksStore` is handling tracks specifically for directfile
-contents (as they are handled differently than for other code paths, here trough API
+contents (as they are handled differently than for other code paths, here through APIs
 exposed by the browser).

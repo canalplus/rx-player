@@ -50,15 +50,15 @@ To illustrate, it kind of goes like this:
 |                | ---------------------------------------> |              |
 |                |                                          |              |
 |                | <--------------------------------------- |              |
-|                |  4. Gives segment infos asked (offseted) |              |
+|                |  4. Gives segment infos asked (offset)   |              |
 |                |                                          |              |
 |      CORE      |                                          | METAPLAYLIST |
 |                |                                          |    WRAPPER   |
-|                | 5. Ask to download segment (offseted)    |              |
+|                | 5. Ask to download segment (offset)      |              |
 |                | ---------------------------------------> |              |
 |                |                                          |              |
 |                | <--------------------------------------- |              |
-+----------------+              8. Gives segment (offseted) +--------------+
++----------------+               8. Gives segment (offset)  +--------------+
                                                              | ^     |  ^
                                                              | |     |  |
                                                              | |     |  |
@@ -73,7 +73,7 @@ To illustrate, it kind of goes like this:
    | |  HSS  |  |                                                    |  |
    | |       |  |                                                    |  |
    | +-------+  |                                                    |  |
-   | +-------+  |  6. Ask to download non-offseted (normal) segments |  |
+   | +-------+  |   6. Ask to download non-offset (normal) segments  |  |
    | |       |  | <--------------------------------------------------+  |
    | |  ...  |  |                                                       |
    | |       |  |  7. Gives normal segment                              |

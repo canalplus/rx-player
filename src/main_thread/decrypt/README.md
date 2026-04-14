@@ -12,11 +12,11 @@ imported by outside code).
 ## Overview
 
 This directory exports the `ContentDecryptor`, which allows to easily interface with the
-browser APIs for decrypting an encrypted content, it follows the
-[Encrypted Media Extensions recommandations](https://www.w3.org/TR/encrypted-media/).
+browser APIs for decrypting encrypted content. It follows the
+[Encrypted Media Extensions recommendations](https://www.w3.org/TR/encrypted-media/).
 
-The `ContentDecryptor` is a module isolated from the rest of the player taking a form of a
-class. It starts initializing decryption capabilities as soon as it is instanciated and
+The `ContentDecryptor` is a module isolated from the rest of the player taking the form of
+a class. It starts initializing decryption capabilities as soon as it is instantiated and
 emits various events to communicate with external code.
 
 A central concept of the `ContentDecryptor` is its states. As decryption initialization
