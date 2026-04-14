@@ -1244,31 +1244,31 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           ) {
             log.warn(
               "API",
-              "You only set a representationFilter function in a mulithreaded mode, ignoring it...",
+              "You set a `representationFilter` function without a `workerId` while loading in multithread mode. That function cannot run in the worker, so it will be ignored.",
             );
           }
         }
         if (
           transportOptions.manifestLoader !== undefined &&
-          !isNullOrUndefined(transportOptions.manifestLoader.workerId)
+          !isNullOrUndefined(transportOptions.manifestLoader.fn)
         ) {
           transportOptions.manifestLoader.fn = undefined;
-          if (isNullOrUndefined(transportOptions.manifestLoader.fn)) {
+          if (isNullOrUndefined(transportOptions.manifestLoader.workerId)) {
             log.warn(
               "API",
-              "You only set a manifestLoader function in a mulithreaded mode, ignoring it...",
+              "You set a `manifestLoader` function without a `workerId` while loading in multithread mode. That function cannot run in the worker, so it will be ignored.",
             );
           }
         }
         if (
           transportOptions.segmentLoader !== undefined &&
-          !isNullOrUndefined(transportOptions.segmentLoader.workerId)
+          !isNullOrUndefined(transportOptions.segmentLoader.fn)
         ) {
           transportOptions.segmentLoader.fn = undefined;
-          if (isNullOrUndefined(transportOptions.segmentLoader.fn)) {
+          if (isNullOrUndefined(transportOptions.segmentLoader.workerId)) {
             log.warn(
               "API",
-              "You only set a segmentLoader function in a mulithreaded mode, ignoring it...",
+              "You set a `segmentLoader` function without a `workerId` while loading in multithread mode. That function cannot run in the worker, so it will be ignored.",
             );
           }
         }
