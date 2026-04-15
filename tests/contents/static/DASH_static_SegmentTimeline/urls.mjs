@@ -121,6 +121,11 @@ export default [
     contentType: "application/dash+xml",
   },
   {
+    url: BASE_URL + "event-streams_audio_codec_switch.mpd",
+    path: path.join(currentDirectory, "media/event-streams_audio_codec_switch.mpd"),
+    contentType: "application/dash+xml",
+  },
+  {
     url: BASE_URL + "segment_template_inheritance_period_as.mpd",
     path: path.join(currentDirectory, "media/segment_template_inheritance_period_as.mpd"),
     contentType: "application/dash+xml",

@@ -16,11 +16,11 @@
 
 import config from "../../../../config";
 import type { IManifestMetadata } from "../../../../manifest";
-import { SeekingState } from "../../../../playback_observer";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
 } from "../../../../playback_observer";
+import { SeekingState } from "../../../../playback_observer";
 import EventEmitter from "../../../../utils/event_emitter";
 import SharedReference from "../../../../utils/reference";
 import type { CancellationSignal } from "../../../../utils/task_canceller";
@@ -42,27 +42,34 @@ interface IStreamEventsEmitterEvent {
  * Get events from manifest and emit each time an event has to be emitted
  */
 export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitterEvent> {
-  private _manifest: IManifestMetadata;
+  /** Regularly emit playback metrics such as the position. */
   private _playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>;
+  /** Current stream events tracked for the whole content. */
   private _scheduledEventsRef: SharedReference<
     Array<IStreamEventPayload | INonFiniteStreamEventPayload>
   >;
+  /** Events currently considered active, to only emit their enter/exit once. */
   private _eventsBeingPlayed: WeakMap<
     IStreamEventPayload | INonFiniteStreamEventPayload,
     true
   >;
+  /** Whether event evaluation is temporarily suspended, e.g. during a reload. */
+  private _isPaused: boolean;
+  /** Last observation used as comparison point for the next event check. */
+  private _previousObservation: {
+    /** Media position that is being played. */
+    currentTime: number;
+    /** If `true`, we're currently seeking in the media. */
+    isSeeking: boolean;
+  } | null;
+  /** Cancels the current emitter lifecycle. */
   private _canceller: TaskCanceller | null;
 
   /**
-   * @param {Object} manifest
    * @param {Object} playbackObserver
    */
-  constructor(
-    manifest: IManifestMetadata,
-    playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>,
-  ) {
+  constructor(playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>) {
     super();
-    this._manifest = manifest;
     this._playbackObserver = playbackObserver;
     this._canceller = null;
     this._scheduledEventsRef = new SharedReference<
@@ -72,22 +79,36 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
       IStreamEventPayload | INonFiniteStreamEventPayload,
       true
     >();
+    this._isPaused = true;
+    this._previousObservation = null;
   }
 
-  public start(): void {
+  /**
+   * Initialize the emitter for the given content manifest.
+   *
+   * The emitter starts in a paused state so the caller can resume it only once
+   * the corresponding media instance is actually ready.
+   * @param {Object} manifest
+   */
+  public start(manifest: IManifestMetadata): void {
     if (this._canceller !== null) {
       return;
     }
     this._canceller = new TaskCanceller("StreamEventsEmitter");
 
     const cancelSignal = this._canceller.signal;
-    const playbackObserver = this._playbackObserver;
+    this._isPaused = true;
+    this._previousObservation = null;
+    this._eventsBeingPlayed = new WeakMap<
+      IStreamEventPayload | INonFiniteStreamEventPayload,
+      true
+    >();
 
     let isPollingEvents = false;
     let cancelCurrentPolling = new TaskCanceller("StreamEventsEmitter Polling");
     cancelCurrentPolling.linkToSignal(cancelSignal);
 
-    this._scheduledEventsRef.setValue(refreshScheduledEventsList([], this._manifest));
+    this._scheduledEventsRef.setValue(refreshScheduledEventsList([], manifest));
 
     this._scheduledEventsRef.onUpdate(
       ({ length: scheduledEventsLength }) => {
@@ -103,16 +124,22 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
           return;
         }
         isPollingEvents = true;
-        let oldObservation = constructObservation();
         const checkStreamEvents = () => {
-          const newObservation = constructObservation();
+          if (this._isPaused) {
+            return;
+          }
+          const newObservation = this._constructObservation();
+          if (this._previousObservation === null) {
+            this._previousObservation = newObservation;
+            return;
+          }
           this._emitStreamEvents(
             this._scheduledEventsRef.getValue(),
-            oldObservation,
+            this._previousObservation,
             newObservation,
             cancelCurrentPolling.signal,
           );
-          oldObservation = newObservation;
+          this._previousObservation = newObservation;
         };
 
         const { STREAM_EVENT_EMITTER_POLL_INTERVAL } = config.getCurrent();
@@ -120,7 +147,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
           checkStreamEvents,
           STREAM_EVENT_EMITTER_POLL_INTERVAL,
         );
-        playbackObserver.listen(checkStreamEvents, {
+        this._playbackObserver.listen(checkStreamEvents, {
           includeLastObservation: false,
           clearSignal: cancelCurrentPolling.signal,
         });
@@ -128,20 +155,34 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
         cancelCurrentPolling.signal.register(() => {
           clearInterval(intervalId);
         });
-
-        function constructObservation() {
-          const lastObservation = playbackObserver.getReference().getValue();
-          const currentTime =
-            playbackObserver.getCurrentTime() ??
-            playbackObserver.getReference().getValue().position.getPolled();
-          const isSeeking = lastObservation.seeking !== SeekingState.None;
-          return { currentTime, isSeeking };
-        }
       },
       { emitCurrentValue: true, clearSignal: cancelSignal },
     );
   }
 
+  /**
+   * Suspend event evaluation until `resume` has been called.
+   *
+   * To use when playback metrics should be temporarily ignored, for example
+   * while reloading a content.
+   */
+  public pause(): void {
+    this._isPaused = true;
+    this._previousObservation = null;
+  }
+
+  /**
+   * Resume event evaluation from the current playback state.
+   */
+  public resume(): void {
+    this._isPaused = false;
+
+    // Take a snapshot right now to avoid comparing a post-reload position
+    // with a stale pre-reload observation.
+    this._previousObservation = this._constructObservation();
+  }
+
+  /** Refresh the tracked stream-event list after a manifest update. */
   public onManifestUpdate(man: IManifestMetadata) {
     const prev = this._scheduledEventsRef.getValue();
     this._scheduledEventsRef.setValue(refreshScheduledEventsList(prev, man));
@@ -156,12 +197,35 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     if (this._canceller !== null) {
       this._canceller.cancel(reason ?? "StreamEventsEmitter stop");
       this._canceller = null;
+      this._previousObservation = null;
+      this._eventsBeingPlayed = new WeakMap<
+        IStreamEventPayload | INonFiniteStreamEventPayload,
+        true
+      >();
     }
   }
 
   /**
+   * Construct observation object relied on by the `StreamEventsEmitted` by
+   * generating it from this instance's `PlaybackObserver`.
+   */
+  private _constructObservation(): {
+    /** Current media position that is being played. */
+    currentTime: number;
+    /** If `true`, we're currently seeking in the media. */
+    isSeeking: boolean;
+  } {
+    const lastObservation = this._playbackObserver.getReference().getValue();
+    const currentTime =
+      this._playbackObserver.getCurrentTime() ??
+      this._playbackObserver.getReference().getValue().position.getPolled();
+    const isSeeking = lastObservation.seeking !== SeekingState.None;
+    return { currentTime, isSeeking };
+  }
+
+  /**
    * Examine playback situation from playback observations to emit stream events and
-   * prepare set onExit callbacks if needed.
+   * prepare `onExit` callbacks if needed.
    * @param {Array.<Object>} scheduledEvents
    * @param {Object} oldObservation
    * @param {Object} newObservation

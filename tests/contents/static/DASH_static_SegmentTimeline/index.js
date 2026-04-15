@@ -9,6 +9,7 @@ import segmentTemplateInheritanceASRep from "./segment_template_inheritance_as_r
 import segmentTemplateInheritancePeriodAS from "./segment_template_inheritance_period_as";
 import segmentTimelineEndNumber from "./segment_timeline_end_number";
 import streamEventsInfos from "./event-stream";
+import streamEventsAudioCodecSwitchInfos from "./event-stream-audio-codec-switch";
 import trickModeInfos from "./trickmode.js";
 import thumbnailInfos from "./thumbnails.js";
 
@@ -24,6 +25,7 @@ export {
   segmentTemplateInheritancePeriodAS,
   segmentTimelineEndNumber,
   streamEventsInfos,
+  streamEventsAudioCodecSwitchInfos,
   trickModeInfos,
   thumbnailInfos,
 };
