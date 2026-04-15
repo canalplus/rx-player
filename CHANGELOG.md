@@ -1,17 +1,21 @@
 # Changelog
 
-## Current dev build: v4.5.0-dev.2026033100
+## Current dev build: v4.5.0-dev.2026041500
 
 ### Features
 
 - `MULTI_THREAD`: Allow applications to define their own `representationFilter`,
   `segmentLoader` and `manifestLoader` callbacks worker-side [#1719]
-- `MULTI_THREAD`: Enable adding most transport feature worker-side (`DASH`, `DASH_WASM`,
-  `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`) [#1783]
+- `MULTI_THREAD`: Enable adding most transport features worker-side (`DASH`, `DASH_WASM`,
+  `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`) to play them in `"multithreading"` mode
+  [#1783]
 
 ### Bug fixes
 
-- Fix memory leaks linked to quality changes [#1781]
+- Fix memory leak linked to quality changes [#1781]
+- DRM: When a license request times out, now send a `KEY_LOAD_TIMEOUT` error instead of
+  `KEY_LOAD_ERROR`
+- DRM: Fix `"close-session"` handling that could unnecessarily close other DRM sessions
 - On Safari when beginning at `0`, seek explicitly to `0` because their native HLS player
   would else start at live position [#1803]
 - Fix `startAt.wallClockTime` on safari HLS live playlists [#1799]
@@ -19,15 +23,28 @@
   until the end-of-stream [#1801]
 - TTML: Do not apply percentage line heights anymore as they are sometimes subtly broken
   [#1812]
-- CMCD: fix the `headers` CMCD `communicationType` [#1809]
+- Thumbnails: Fix shared thumbnail requests (through multiple `HTMLElement` for the same
+  data) in `MULTI_THREAD` mode [#1830]
 - Thumbnails: Fix thumbnail request sometimes being wrongly cancelled [#1810]
+- API: Fix incomplete format in the initial `audioRepresentationChange` event
+- CMCD: fix the `headers` CMCD `communicationType` [#1809]
 - Compat: To fix an issue with some older LG TV when playing retro-compatible Dolby Vision
   contents, patch out some Dolby Vision-related ISOBMFF boxes in some conditions [#1818]
+- Do not send two times a `streamEvent` after temporarily switching to the `RELOADING`
+  state while playing it [#1828]
+- Compat/DRM: Preserve `pssh` boxes in encrypted initialization segments on some DStv
+  set-top boxes to fix playback of encrypted playback on them [#1822]
+- Text: Continue playback if subtitle initialization fails instead of remaining stuck in
+  `LOADING` [#1827]
 
 ### Other improvements
 
+- Adaptive bitrate: React faster to sudden bandwidth drops when playback is close to
+  starving [#1831]
 - Add `getMaximumPosition` and `getMinimumPosition` support when using directfile with HLS
   playlist on safari [#1800]
+- CMCD: Avoid sending invalid CMCD values when playback rate is `0` or negative, and
+  better escape string values [#1833]
 - Fix ordering of a PeriodChange/AdaptationChange couple that may have previously led to
   unnecessary duplicate events [#1764]
 - Text track id can only be string [#1785]
