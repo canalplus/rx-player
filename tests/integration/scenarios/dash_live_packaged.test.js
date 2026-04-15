@@ -129,7 +129,7 @@ describe("DASH live packaged content", function () {
   let player;
   let mpdUrl;
   let alternateMpdUrl;
-  let segmentDuration;
+  // let segmentDuration;
   let textTrackElement;
 
   beforeAll(
@@ -140,7 +140,7 @@ describe("DASH live packaged content", function () {
       const readyInfos = await waitForPackagerReady();
       mpdUrl = readyInfos.mpdUrl;
       alternateMpdUrl = readyInfos.mpdUrl.replace("/live/", "/live-alt/");
-      segmentDuration = readyInfos.segmentDuration;
+      // segmentDuration = readyInfos.segmentDuration;
     },
 
     (3600 / 2) * 1000,
