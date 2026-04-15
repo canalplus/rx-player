@@ -48,7 +48,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x]
+        node-version: [24.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -99,7 +99,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x]
+        node-version: [24.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -121,7 +121,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22.x]
+        node-version: [24.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -161,7 +161,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x]
+        node-version: [24.x]
 
     steps:
       - uses: actions/checkout@v4
@@ -171,7 +171,7 @@ jobs:
         with:
           # Use the latest available patch in the current major line instead of
           # mutating the bundled npm in-place during publishing.
-          node-version: 22
+          node-version: 24
           check-latest: true
           package-manager-cache: false
           registry-url: "https://registry.npmjs.org"
@@ -241,7 +241,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x]
+        node-version: [24.x]
 
     steps:
       - uses: actions/checkout@v4
@@ -252,8 +252,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           # Avoid relying on a cached lts/* alias and let setup-node resolve the
-          # newest available Node 22 patch for the release.
-          node-version: 22
+          # newest available Node 24 patch for the release.
+          node-version: 24
           check-latest: true
           package-manager-cache: false
           registry-url: "https://registry.npmjs.org"
