@@ -2292,10 +2292,20 @@ function formatCoreError(sentError: ISentError): IPlayerError {
         ),
       );
     case "MediaError":
+      if (sentError.timeInfo !== undefined) {
+        // eslint-disable-next-line
+        return new MediaError(sentError.code as any, sentError.reason, {
+          timeInfo: sentError.timeInfo,
+        });
+      }
+      if (sentError.tracks !== undefined) {
+        // eslint-disable-next-line
+        return new MediaError(sentError.code as any, sentError.reason, {
+          tracks: sentError.tracks,
+        });
+      }
       // eslint-disable-next-line
-      return new MediaError(sentError.code as any, sentError.reason, {
-        tracks: sentError.tracks,
-      });
+      return new MediaError(sentError.code as any, sentError.reason);
     case "EncryptedMediaError":
       // We assume that everything have already been checked Worker-side here
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

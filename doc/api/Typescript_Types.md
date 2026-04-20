@@ -548,3 +548,49 @@ function logKeyStatuses(keyStatuses: IEncryptedMediaErrorKeyStatusObject): void 
   console.log(keyStatuses);
 }
 ```
+
+### MediaError's `timeInfo` property
+
+Some `MediaError` values thrown by the RxPlayer may have a `timeInfo` property set. This
+property is set on `MEDIA_TIME_BEFORE_MANIFEST` and `MEDIA_TIME_AFTER_MANIFEST` errors.
+
+That property has the following shape:
+
+```ts
+interface IMediaErrorTimeInfo {
+  position: number;
+  minPosition: number;
+  maxPosition: number;
+}
+```
+
+This property gives access to the out-of-bounds position and to the corresponding manifest
+bounds:
+
+```ts
+// the type wanted
+import { IPlayerError } from "rx-player/types";
+
+rxPlayer.addEventListener("warning", (err: Error | IPlayerError) => {
+  if (
+    err.type === "MEDIA_ERROR" &&
+    (err.code === "MEDIA_TIME_BEFORE_MANIFEST" ||
+      err.code === "MEDIA_TIME_AFTER_MANIFEST") &&
+    err.timeInfo !== undefined
+  ) {
+    handleOutOfBoundsPosition(err.timeInfo);
+  }
+});
+
+function handleOutOfBoundsPosition(timeInfo: {
+  position: number;
+  minPosition: number;
+  maxPosition: number;
+}): void {
+  if (timeInfo.position < timeInfo.minPosition) {
+    // Application-specific handling
+  } else if (timeInfo.position > timeInfo.maxPosition) {
+    // Application-specific handling
+  }
+}
+```

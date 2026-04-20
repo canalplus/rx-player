@@ -143,6 +143,11 @@ describe("ContentTimeBoundariesObserver", () => {
       expect(mockTrigger).toHaveBeenCalledWith("warning", expect.any(Object));
       const warning = mockTrigger.mock.calls[0][1];
       expect(warning.code).toBe("MEDIA_TIME_BEFORE_MANIFEST");
+      expect(warning.timeInfo).toEqual({
+        position: 5,
+        minPosition: 10,
+        maxPosition: 100,
+      });
     });
 
     it("should trigger warning when position is after manifest maximum", async () => {

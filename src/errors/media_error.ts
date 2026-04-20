@@ -25,6 +25,16 @@ type ICodeWithAdaptationType =
   | "NO_PLAYABLE_REPRESENTATION"
   | "MANIFEST_INCOMPATIBLE_CODECS_ERROR";
 
+type ICodeWithManifestPositionError =
+  | "MEDIA_TIME_BEFORE_MANIFEST"
+  | "MEDIA_TIME_AFTER_MANIFEST";
+
+interface ITimeInfo {
+  position: number;
+  minPosition: number;
+  maxPosition: number;
+}
+
 /**
  * Error linked to the media Playback.
  *
@@ -36,6 +46,7 @@ export default class MediaError extends Error {
   public readonly type: "MEDIA_ERROR";
   public readonly code: IMediaErrorCode;
   public readonly tracksInfo: ITaggedTrack[] | undefined;
+  public readonly timeInfo: ITimeInfo | undefined;
   public fatal: boolean;
   private _originalMessage: string;
 
@@ -52,13 +63,18 @@ export default class MediaError extends Error {
     },
   );
   constructor(
-    code: Exclude<IMediaErrorCode, ICodeWithAdaptationType>,
+    code: ICodeWithManifestPositionError,
     reason: string,
-    context?:
-      | {
-          tracks?: undefined;
-        }
-      | undefined,
+    context: {
+      timeInfo: ITimeInfo;
+    },
+  );
+  constructor(
+    code: Exclude<
+      IMediaErrorCode,
+      ICodeWithAdaptationType | ICodeWithManifestPositionError
+    >,
+    reason: string,
   );
   constructor(
     code: IMediaErrorCode,
@@ -66,6 +82,7 @@ export default class MediaError extends Error {
     context?:
       | {
           tracks?: ITaggedTrack[] | undefined;
+          timeInfo?: ITimeInfo;
         }
       | undefined,
   ) {
@@ -82,6 +99,9 @@ export default class MediaError extends Error {
     if (context?.tracks !== undefined && context?.tracks.length > 0) {
       this.tracksInfo = context.tracks;
     }
+    if (context?.timeInfo !== undefined) {
+      this.timeInfo = context.timeInfo;
+    }
   }
 
   /**
@@ -97,6 +117,7 @@ export default class MediaError extends Error {
       code: this.code,
       reason: this._originalMessage,
       tracks: this.tracksInfo,
+      timeInfo: this.timeInfo,
     };
   }
 }
@@ -108,4 +129,5 @@ export interface ISerializedMediaError {
   code: IMediaErrorCode;
   reason: string;
   tracks: ITaggedTrack[] | undefined;
+  timeInfo?: ITimeInfo | undefined;
 }
