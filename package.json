@@ -280,7 +280,7 @@
       },
       "Unit tests (test particular functions)": {
         "test:unit": "Launch unit tests",
-        "test:unit:watch": "Launch unit tests and restart them each one of its file changes"
+        "test:unit -- --watch": "Launch unit tests and restart them each one of its file changes"
       },
       "Memory tests (test memory usage to avoid memory leaks, call the `build` script BEFORE running them)": {
         "test:memory": "Launch memory tests",
