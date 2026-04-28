@@ -95,8 +95,8 @@ supplementary `tracksInfo` property, describing the track(s) related to the issu
 format of that property is decribed in the chapter below listed codes, and the codes for
 which it is set are indicated in the corresponding code's description below.
 
-Depending on its `code` property, a `MEDIA_ERROR` may also have a supplementary
-`timeInfo` property, describing the position-related bounds linked to the issue.
+Depending on its `code` property, a `MEDIA_ERROR` may also have a supplementary `timeInfo`
+property, describing the position-related bounds linked to the issue.
 
 #### codes
 
