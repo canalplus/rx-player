@@ -253,7 +253,8 @@ That property is set for:
 
 When present, `timeInfo` is an object with the following properties:
 
-- `position` (`number`): The current media position that triggered the warning or error.
+- `position` (`number`): The considered playback position that triggered the warning or
+  error.
 
 - `minPosition` (`number`): The minimum safe position currently known by the player for
   that content.

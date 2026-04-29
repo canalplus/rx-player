@@ -22,7 +22,7 @@ import { ErrorCodes, ErrorTypes, NetworkErrorTypes } from "./error_codes";
 import formatError from "./format_error";
 import isKnownError from "./is_known_error";
 import type { ISerializedMediaError } from "./media_error";
-import MediaError from "./media_error";
+import MediaError, { deserializeMediaError } from "./media_error";
 import type { ISerializedNetworkError } from "./network_error";
 import NetworkError from "./network_error";
 import type { ISerializedOtherError } from "./other_error";
@@ -46,6 +46,7 @@ export {
   ErrorTypes,
   formatError,
   MediaError,
+  deserializeMediaError,
   NetworkError,
   OtherError,
   NetworkErrorTypes,

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import MediaError from "../media_error";
+import type { ISerializedMediaError } from "../media_error";
+import MediaError, { deserializeMediaError } from "../media_error";
 
 describe("errors - MediaError", () => {
   it("should format a MediaError", () => {
@@ -67,5 +68,75 @@ describe("errors - MediaError", () => {
         maxPosition: 20,
       },
     });
+  });
+
+  it("should deserialize a serialized MediaError with timeInfo", () => {
+    const serializedError: ISerializedMediaError = {
+      isSerializedError: true,
+      name: "MediaError",
+      code: "MEDIA_TIME_BEFORE_MANIFEST",
+      reason: "test",
+      tracks: undefined,
+      timeInfo: {
+        position: 3,
+        minPosition: 10,
+        maxPosition: 20,
+      },
+    };
+
+    const mediaError = deserializeMediaError(serializedError);
+
+    expect(mediaError).toBeInstanceOf(MediaError);
+    expect(mediaError.code).toBe("MEDIA_TIME_BEFORE_MANIFEST");
+    expect(mediaError.message).toBe("MEDIA_TIME_BEFORE_MANIFEST: test");
+    expect(mediaError.timeInfo).toEqual(serializedError.timeInfo);
+  });
+
+  it("should deserialize a serialized MediaError with tracks", () => {
+    const serializedError: ISerializedMediaError = {
+      isSerializedError: true,
+      name: "MediaError",
+      code: "BUFFER_APPEND_ERROR",
+      reason: "test",
+      tracks: [
+        {
+          type: "audio",
+          track: {
+            id: "fra1",
+            audioDescription: false,
+            language: "fra",
+            normalized: "fra",
+            representations: [],
+          },
+        },
+      ],
+      timeInfo: undefined,
+    };
+
+    const mediaError = deserializeMediaError(serializedError);
+
+    expect(mediaError).toBeInstanceOf(MediaError);
+    expect(mediaError.code).toBe("BUFFER_APPEND_ERROR");
+    expect(mediaError.message).toBe("BUFFER_APPEND_ERROR: test");
+    expect(mediaError.tracksInfo).toEqual(serializedError.tracks);
+  });
+
+  it("should deserialize a serialized MediaError without metadata", () => {
+    const serializedError = {
+      isSerializedError: true as const,
+      name: "MediaError" as const,
+      code: "MEDIA_ERR_NETWORK" as const,
+      reason: "test",
+      tracks: undefined,
+      timeInfo: undefined,
+    };
+
+    const mediaError = deserializeMediaError(serializedError);
+
+    expect(mediaError).toBeInstanceOf(MediaError);
+    expect(mediaError.code).toBe("MEDIA_ERR_NETWORK");
+    expect(mediaError.message).toBe("MEDIA_ERR_NETWORK: test");
+    expect(mediaError.timeInfo).toBeUndefined();
+    expect(mediaError.tracksInfo).toBeUndefined();
   });
 });

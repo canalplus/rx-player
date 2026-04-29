@@ -19,13 +19,13 @@ import type { IMediaErrorCode } from "./error_codes";
 import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
 
-type ICodeWithAdaptationType =
+export type ICodeWithAdaptationType =
   | "BUFFER_APPEND_ERROR"
   | "BUFFER_FULL_ERROR"
   | "NO_PLAYABLE_REPRESENTATION"
   | "MANIFEST_INCOMPATIBLE_CODECS_ERROR";
 
-type ICodeWithManifestPositionError =
+export type ICodeWithManifestPositionError =
   | "MEDIA_TIME_BEFORE_MANIFEST"
   | "MEDIA_TIME_AFTER_MANIFEST";
 
@@ -120,6 +120,41 @@ export default class MediaError extends Error {
       timeInfo: this.timeInfo,
     };
   }
+}
+
+/**
+ * Re-create a `MediaError` from a serialized representation.
+ * @param {Object} serializedMediaError
+ * @returns {MediaError}
+ */
+export function deserializeMediaError(
+  serializedMediaError: ISerializedMediaError,
+): MediaError {
+  if (serializedMediaError.timeInfo !== undefined) {
+    return new MediaError(
+      serializedMediaError.code as ICodeWithManifestPositionError,
+      serializedMediaError.reason,
+      {
+        timeInfo: serializedMediaError.timeInfo,
+      },
+    );
+  }
+  if (serializedMediaError.tracks !== undefined) {
+    return new MediaError(
+      serializedMediaError.code as ICodeWithAdaptationType,
+      serializedMediaError.reason,
+      {
+        tracks: serializedMediaError.tracks,
+      },
+    );
+  }
+  return new MediaError(
+    serializedMediaError.code as Exclude<
+      IMediaErrorCode,
+      ICodeWithAdaptationType | ICodeWithManifestPositionError
+    >,
+    serializedMediaError.reason,
+  );
 }
 
 /** Serializable object which allows to create a `MediaError` later. */

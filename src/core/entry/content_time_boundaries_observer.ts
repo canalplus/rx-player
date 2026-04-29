@@ -114,7 +114,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
         ({ position }) => {
           const wantedPosition = position.getWanted();
           const minimumPosition = manifest.getMinimumSafePosition();
-          const maximumPosition = manifest.getMaximumSafePosition();
+          const maximumPosition = maximumPositionCalculator.getMaximumAvailablePosition();
           if (wantedPosition < minimumPosition) {
             const warning = new MediaError(
               "MEDIA_TIME_BEFORE_MANIFEST",
@@ -129,9 +129,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
               },
             );
             this.trigger("warning", warning);
-          } else if (
-            wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
-          ) {
+          } else if (wantedPosition > maximumPosition) {
             const warning = new MediaError(
               "MEDIA_TIME_AFTER_MANIFEST",
               "The current position is after the latest " +
