@@ -15,6 +15,7 @@
  */
 
 import type { ITaggedTrack } from "../manifest";
+import assert from "../utils/assert";
 import type { IMediaErrorCode } from "./error_codes";
 import { ErrorTypes } from "./error_codes";
 import errorMessage from "./error_message";
@@ -130,31 +131,29 @@ export default class MediaError extends Error {
 export function deserializeMediaError(
   serializedMediaError: ISerializedMediaError,
 ): MediaError {
-  if (serializedMediaError.timeInfo !== undefined) {
-    return new MediaError(
-      serializedMediaError.code as ICodeWithManifestPositionError,
-      serializedMediaError.reason,
-      {
-        timeInfo: serializedMediaError.timeInfo,
-      },
+  if (
+    serializedMediaError.code === "MEDIA_TIME_BEFORE_MANIFEST" ||
+    serializedMediaError.code === "MEDIA_TIME_AFTER_MANIFEST"
+  ) {
+    assert(
+      serializedMediaError.timeInfo !== undefined,
+      `The MediaError with code ${serializedMediaError.code} does not provide "timeinfo"`,
     );
+    return new MediaError(serializedMediaError.code, serializedMediaError.reason, {
+      timeInfo: serializedMediaError.timeInfo,
+    });
   }
-  if (serializedMediaError.tracks !== undefined) {
-    return new MediaError(
-      serializedMediaError.code as ICodeWithAdaptationType,
-      serializedMediaError.reason,
-      {
-        tracks: serializedMediaError.tracks,
-      },
-    );
+  if (
+    serializedMediaError.code === "BUFFER_APPEND_ERROR" ||
+    serializedMediaError.code === "BUFFER_FULL_ERROR" ||
+    serializedMediaError.code === "NO_PLAYABLE_REPRESENTATION" ||
+    serializedMediaError.code === "MANIFEST_INCOMPATIBLE_CODECS_ERROR"
+  ) {
+    return new MediaError(serializedMediaError.code, serializedMediaError.reason, {
+      tracks: serializedMediaError.tracks,
+    });
   }
-  return new MediaError(
-    serializedMediaError.code as Exclude<
-      IMediaErrorCode,
-      ICodeWithAdaptationType | ICodeWithManifestPositionError
-    >,
-    serializedMediaError.reason,
-  );
+  return new MediaError(serializedMediaError.code, serializedMediaError.reason);
 }
 
 /** Serializable object which allows to create a `MediaError` later. */
