@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.5.0-dev.2026041501
+## Current dev build: v4.5.0-dev.2026043000
 
 ### Features
 
@@ -9,6 +9,9 @@
 - `MULTI_THREAD`: Enable adding most transport features worker-side (`DASH`, `DASH_WASM`,
   `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`) to play them in `"multithreading"` mode
   [#1783]
+- `MediaError` with the code `MEDIA_TIME_BEFORE_MANIFEST` and `MEDIA_TIME_AFTER_MANIFEST`
+  now have a `timeInfo` property to explicit the exact boundaries and present position
+  linked to the issue [#1838]
 
 ### Bug fixes
 
