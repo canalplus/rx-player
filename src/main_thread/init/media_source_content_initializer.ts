@@ -15,9 +15,10 @@ import type {
   ISentLogValue,
 } from "../../core/types";
 import { CoreMessageType } from "../../core/types";
+import type { MediaError } from "../../errors";
 import {
+  deserializeMediaError,
   EncryptedMediaError,
-  MediaError,
   NetworkError,
   OtherError,
   SourceBufferError,
@@ -2292,10 +2293,7 @@ function formatCoreError(sentError: ISentError): IPlayerError {
         ),
       );
     case "MediaError":
-      // eslint-disable-next-line
-      return new MediaError(sentError.code as any, sentError.reason, {
-        tracks: sentError.tracks,
-      });
+      return deserializeMediaError(sentError);
     case "EncryptedMediaError":
       // We assume that everything have already been checked Worker-side here
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

@@ -95,6 +95,9 @@ supplementary `tracksInfo` property, describing the track(s) related to the issu
 format of that property is decribed in the chapter below listed codes, and the codes for
 which it is set are indicated in the corresponding code's description below.
 
+Depending on its `code` property, a `MEDIA_ERROR` may also have a supplementary `timeInfo`
+property, describing the position-related bounds linked to the issue.
+
 #### codes
 
 An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
@@ -172,10 +175,16 @@ An error of `type` `MEDIA_ERROR` can have the following codes (`code` property):
   lead to stalling indefinitely as the player won't be able to download new segments
   arround the current time.
 
+  For those errors, the `timeInfo` property is set. It indicates which position was
+  considered too low and the corresponding manifest bounds.
+
 - `"MEDIA_TIME_AFTER_MANIFEST"`: The current time in the media is after what is currently
   declared in the [Manifest](../Getting_Started/Glossary.md#manifest). This can lead to
   stalling indefinitely as the player won't be able to download new segments arround the
   current time.
+
+  For those errors, the `timeInfo` property is set. It indicates which position was
+  considered too high and the corresponding manifest bounds.
 
 - `"DISCONTINUITY_ENCOUNTERED"`: A discontinuity (i.e. a hole in the media buffer) has
   been encontered and seeked over.
@@ -231,6 +240,27 @@ Each object has two sub-properties:
 
 - `track`: Characteristics of the track. Its format depends on the `type` property and is
   described below.
+
+#### `timeInfo` property
+
+As described in the corresponding code's documentation, a supplementary `timeInfo`
+property may be set on `MEDIA_ERROR` for some time-related errors.
+
+That property is set for:
+
+- `"MEDIA_TIME_BEFORE_MANIFEST"`
+- `"MEDIA_TIME_AFTER_MANIFEST"`
+
+When present, `timeInfo` is an object with the following properties:
+
+- `position` (`number`): The considered playback position that triggered the warning or
+  error.
+
+- `minPosition` (`number`): The minimum safe position currently known by the player for
+  that content.
+
+- `maxPosition` (`number`): The maximum safe position currently known by the player for
+  that content.
 
 ##### For video tracks
 

@@ -113,20 +113,34 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
       playbackObserver.listen(
         ({ position }) => {
           const wantedPosition = position.getWanted();
-          if (wantedPosition < manifest.getMinimumSafePosition()) {
+          const minimumPosition = manifest.getMinimumSafePosition();
+          const maximumPosition = maximumPositionCalculator.getMaximumAvailablePosition();
+          if (wantedPosition < minimumPosition) {
             const warning = new MediaError(
               "MEDIA_TIME_BEFORE_MANIFEST",
               "The current position is behind the " +
                 "earliest time announced in the Manifest.",
+              {
+                timeInfo: {
+                  position: wantedPosition,
+                  minPosition: minimumPosition,
+                  maxPosition: maximumPosition,
+                },
+              },
             );
             this.trigger("warning", warning);
-          } else if (
-            wantedPosition > maximumPositionCalculator.getMaximumAvailablePosition()
-          ) {
+          } else if (wantedPosition > maximumPosition) {
             const warning = new MediaError(
               "MEDIA_TIME_AFTER_MANIFEST",
               "The current position is after the latest " +
                 "time announced in the Manifest.",
+              {
+                timeInfo: {
+                  position: wantedPosition,
+                  minPosition: minimumPosition,
+                  maxPosition: maximumPosition,
+                },
+              },
             );
             this.trigger("warning", warning);
           }
