@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../is_non_empty_string";
-import isNullOrUndefined from "../is_null_or_undefined";
-import ISO_MAP_1_TO_3 from "./ISO_639-1_to_ISO_639-3";
-import ISO_MAP_2_TO_3 from "./ISO_639-2_to_ISO_639-3";
+import isNonEmptyString from "../is_non_empty_string.ts";
+import isNullOrUndefined from "../is_null_or_undefined.ts";
+import ISO_MAP_1_TO_3 from "./ISO_639-1_to_ISO_639-3.ts";
+import ISO_MAP_2_TO_3 from "./ISO_639-2_to_ISO_639-3.ts";
 
 interface IMinimalAudioTrackObject {
   language: string;

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import type { IMediaKeySession } from "../../compat/browser_compatibility_types";
-import log from "../../log";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import type { IProcessedProtectionData, IMediaKeySessionStores } from "./types";
-import { MediaKeySessionLoadingType } from "./types";
-import isSessionUsable from "./utils/is_session_usable";
-import type KeySessionRecord from "./utils/key_session_record";
-import type LoadedSessionsStore from "./utils/loaded_sessions_store";
-import type PersistentSessionsStore from "./utils/persistent_sessions_store";
+import type { IMediaKeySession } from "../../compat/browser_compatibility_types.ts";
+import log from "../../log.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import type { IProcessedProtectionData, IMediaKeySessionStores } from "./types.ts";
+import { MediaKeySessionLoadingType } from "./types.ts";
+import isSessionUsable from "./utils/is_session_usable.ts";
+import type KeySessionRecord from "./utils/key_session_record.ts";
+import type LoadedSessionsStore from "./utils/loaded_sessions_store.ts";
+import type PersistentSessionsStore from "./utils/persistent_sessions_store.ts";
 
 /**
  * Create a new Session or load a persistent one on the given MediaKeys,

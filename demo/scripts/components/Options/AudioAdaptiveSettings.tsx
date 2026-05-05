@@ -1,6 +1,6 @@
 import * as React from "react";
-import { IAudioRepresentationsSwitchingMode } from "../../../../src/public_types";
-import Select from "../Select";
+import { IAudioRepresentationsSwitchingMode } from "../../../../src/public_types.ts";
+import Select from "../Select.tsx";
 
 /**
  * @param {Object} props

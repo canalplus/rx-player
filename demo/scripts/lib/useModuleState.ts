@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Module } from "./declareModule";
+import type { Module } from "./declareModule.ts";
 
 export default function useModuleState<
   TStateObject extends object,

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IMediaKeySession } from "../../../compat/browser_compatibility_types";
-import log from "../../../log";
-import arrayIncludes from "../../../utils/array_includes";
+import type { IMediaKeySession } from "../../../compat/browser_compatibility_types.ts";
+import log from "../../../log.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
 
 /**
  * If all key statuses attached to session are valid (either not

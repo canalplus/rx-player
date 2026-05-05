@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { base64ToBytes, bytesToBase64 } from "../../../utils/base64";
+import { base64ToBytes, bytesToBase64 } from "../../../utils/base64.ts";
 
 /** Wrap byte-based data and allow serialization of it into base64. */
 export default class SerializableBytes {

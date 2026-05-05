@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import initializeCoreEntry from "../../core/entry";
-import type { IFeaturesObject } from "../../features/types";
-import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
-import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
-import local from "../../transports/local";
+import initializeCoreEntry from "../../core/entry/index.ts";
+import type { IFeaturesObject } from "../../features/types.ts";
+import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread.ts";
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer.ts";
+import local from "../../transports/local/index.ts";
 
 function addLocalManifestFeature(features: IFeaturesObject): void {
   features.transports.local = local;

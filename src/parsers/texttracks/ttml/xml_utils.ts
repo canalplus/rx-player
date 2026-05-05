@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
 
 /**
  * Returns the parent elements which have the given tagName, by order of

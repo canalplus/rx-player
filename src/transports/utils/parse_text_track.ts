@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import type { ISegment } from "../../manifest";
-import { getMDAT } from "../../parsers/containers/isobmff";
-import startsWith from "../../utils/starts_with";
-import { utf8ToStr } from "../../utils/string_parsing";
-import type { IChunkTimeInfo, ISegmentContext, ITextTrackSegmentData } from "../types";
+import log from "../../log.ts";
+import type { ISegment } from "../../manifest/index.ts";
+import { getMDAT } from "../../parsers/containers/isobmff/index.ts";
+import startsWith from "../../utils/starts_with.ts";
+import { utf8ToStr } from "../../utils/string_parsing.ts";
+import type { IChunkTimeInfo, ISegmentContext, ITextTrackSegmentData } from "../types.ts";
 
 /**
  * Returns the a string expliciting the format of a text track when that text

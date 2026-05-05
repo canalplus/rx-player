@@ -1,10 +1,13 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type { IBufferType } from "../../../core/types";
-import type { IRepresentationMetadata } from "../../../manifest";
-import type { IAudioRepresentation, IVideoRepresentation } from "../../../public_types";
-import TaskCanceller from "../../../utils/task_canceller";
-import PublicAPI from "../public_api";
-import type { IPublicApiContentInfos } from "../public_api";
+import type { IBufferType } from "../../../core/types.ts";
+import type { IRepresentationMetadata } from "../../../manifest/index.ts";
+import type {
+  IAudioRepresentation,
+  IVideoRepresentation,
+} from "../../../public_types.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import PublicAPI from "../public_api.ts";
+import type { IPublicApiContentInfos } from "../public_api.ts";
 
 describe("API - Public API", () => {
   beforeEach(() => {

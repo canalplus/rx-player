@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
 
 /**
  * Returns the first line that is not apart of the given cue block.

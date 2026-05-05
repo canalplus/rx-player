@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import { toUint8Array } from "../../../utils/byte_parsing";
-import EventEmitter from "../../../utils/event_emitter";
-import noop from "../../../utils/noop";
-import startsWith from "../../../utils/starts_with";
-import wrapInPromise from "../../../utils/wrapInPromise";
+import { toUint8Array } from "../../../utils/byte_parsing.ts";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import noop from "../../../utils/noop.ts";
+import startsWith from "../../../utils/starts_with.ts";
+import wrapInPromise from "../../../utils/wrapInPromise.ts";
 import type {
   IMediaElement,
   IMediaKeySession,
   IMediaKeys,
-} from "../../browser_compatibility_types";
-import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata";
-import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor";
-import getWebKitMediaKeysConstructor from "./webkit_media_keys_constructor";
+} from "../../browser_compatibility_types.ts";
+import getWebKitFairplayInitData from "../get_webkit_fairplay_initdata.ts";
+import type { IWebKitMediaKeys } from "./webkit_media_keys_constructor.ts";
+import getWebKitMediaKeysConstructor from "./webkit_media_keys_constructor.ts";
 
 /**
  * Check if keyType is for fairplay DRM

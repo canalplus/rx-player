@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "./is_non_empty_string";
-import startsWith from "./starts_with";
+import isNonEmptyString from "./is_non_empty_string.ts";
+import startsWith from "./starts_with.ts";
 
 // Scheme part of an url (e.g. "http://").
 const schemeRe = /^(?:[a-z]+:)?\/\//i;

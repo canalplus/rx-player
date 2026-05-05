@@ -14,4 +14,4 @@
  * limitations under the License.
  */
 
-export { generateRootChildrenParser } from "./root";
+export { generateRootChildrenParser } from "./root.ts";

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import globalScope from "../../utils/global_scope";
-import isVTTCue from "../is_vtt_cue";
+import globalScope from "../../utils/global_scope.ts";
+import isVTTCue from "../is_vtt_cue.ts";
 
 describe("Compat - isVTTCue", () => {
   interface IFakeWindow {

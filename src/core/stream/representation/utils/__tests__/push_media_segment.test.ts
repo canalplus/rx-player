@@ -1,22 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import configHandler from "../../../../../config";
+import configHandler from "../../../../../config.ts";
 import {
   DummyRepresentation,
   DummyManifest,
   DummyPeriod,
   DummyAdaptation,
   createSegment,
-} from "../../../../../manifest/classes/__tests__/mocks";
+} from "../../../../../manifest/classes/__tests__/mocks.ts";
 import {
   DummyObservationPosition,
   makeReadyOnlyPlaybackObserver,
-} from "../../../../../playback_observer/__tests__/mocks";
-import type { IRange } from "../../../../../utils/ranges";
-import SharedReference from "../../../../../utils/reference";
-import TaskCanceller from "../../../../../utils/task_canceller";
-import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
-import type { IRepresentationStreamPlaybackObservation } from "../../types";
-import pushMediaSegment from "../push_media_segment";
+} from "../../../../../playback_observer/__tests__/mocks.ts";
+import type { IRange } from "../../../../../utils/ranges.ts";
+import SharedReference from "../../../../../utils/reference.ts";
+import TaskCanceller from "../../../../../utils/task_canceller.ts";
+import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks.ts";
+import type { IRepresentationStreamPlaybackObservation } from "../../types.ts";
+import pushMediaSegment from "../push_media_segment.ts";
 
 const mockAppendSegmentToBuffer = vi.hoisted(() =>
   vi.fn((): Promise<IRange[]> => Promise.resolve([])),

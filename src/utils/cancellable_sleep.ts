@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import createCancellablePromise from "./create_cancellable_promise";
-import type { CancellationSignal } from "./task_canceller";
+import createCancellablePromise from "./create_cancellable_promise.ts";
+import type { CancellationSignal } from "./task_canceller.ts";
 
 /**
  * Wait the given `delay`, resolving the Promise when finished.

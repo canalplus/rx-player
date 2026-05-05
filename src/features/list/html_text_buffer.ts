@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
-import type { IFeaturesObject } from "../types";
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html/index.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to display text tracks in an HTML textrack mode.

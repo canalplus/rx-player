@@ -1,16 +1,16 @@
-import type { IUpdatePlaybackRateCoreMessage } from "../core/types";
-import { CoreMessageType } from "../core/types";
-import type { ITrackType } from "../public_types";
-import type { IRange } from "../utils/ranges";
-import type { IReadOnlySharedReference } from "../utils/reference";
-import type { CancellationSignal } from "../utils/task_canceller";
+import type { IUpdatePlaybackRateCoreMessage } from "../core/types.ts";
+import { CoreMessageType } from "../core/types.ts";
+import type { ITrackType } from "../public_types.ts";
+import type { IRange } from "../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../utils/reference.ts";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
 import type {
   IFreezingStatus,
   IReadOnlyPlaybackObserver,
   IRebufferingStatus,
-} from "./types";
-import generateReadOnlyObserver from "./utils/generate_read_only_observer";
-import type ObservationPosition from "./utils/observation_position";
+} from "./types.ts";
+import generateReadOnlyObserver from "./utils/generate_read_only_observer.ts";
+import type ObservationPosition from "./utils/observation_position.ts";
 
 export interface ICorePlaybackObservation {
   /**

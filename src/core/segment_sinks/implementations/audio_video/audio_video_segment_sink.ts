@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import { getLoggableSegmentId } from "../../../../manifest";
+import log from "../../../../log.ts";
+import { getLoggableSegmentId } from "../../../../manifest/index.ts";
 import type {
   IMediaSourceInterface,
   ISourceBufferInterface,
   SourceBufferType,
-} from "../../../../mse";
-import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
-import type { IRange } from "../../../../utils/ranges";
+} from "../../../../mse/index.ts";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
+import type { IRange } from "../../../../utils/ranges.ts";
 import type {
   ICompleteSegmentInfo,
   IPushChunkInfos,
   IPushedChunkData,
   ISBOperation,
-} from "../types";
-import { SegmentSink, SegmentSinkOperation } from "../types";
+} from "../types.ts";
+import { SegmentSink, SegmentSinkOperation } from "../types.ts";
 
 /**
  * Allows to push and remove new segments to a SourceBuffer while keeping an

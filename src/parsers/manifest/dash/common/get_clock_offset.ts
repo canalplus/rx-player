@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
+import log from "../../../../log.ts";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
 
 /**
  * Get difference between the server's clock, in milliseconds, and the

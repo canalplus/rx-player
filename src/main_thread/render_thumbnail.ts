@@ -1,12 +1,12 @@
-import { formatError } from "../errors";
-import errorMessage from "../errors/error_message";
-import { getPeriodForTime } from "../manifest";
-import type { IThumbnailRenderingOptions } from "../public_types";
-import type { IThumbnailResponse } from "../transports";
-import arrayFind from "../utils/array_find";
-import arrayFindIndex from "../utils/array_find_index";
-import TaskCanceller from "../utils/task_canceller";
-import type { IPublicApiContentInfos } from "./api/public_api";
+import errorMessage from "../errors/error_message.ts";
+import { formatError } from "../errors/index.ts";
+import { getPeriodForTime } from "../manifest/index.ts";
+import type { IThumbnailRenderingOptions } from "../public_types.ts";
+import type { IThumbnailResponse } from "../transports/index.ts";
+import arrayFind from "../utils/array_find.ts";
+import arrayFindIndex from "../utils/array_find_index.ts";
+import TaskCanceller from "../utils/task_canceller.ts";
+import type { IPublicApiContentInfos } from "./api/public_api.ts";
 
 /**
  * Render thumbnail available at `time` in the given `container` (in place of

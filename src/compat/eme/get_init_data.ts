@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import { getPsshSystemID } from "../../parsers/containers/isobmff";
-import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import { be4toi } from "../../utils/byte_parsing";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { IMediaEncryptedEvent } from "../browser_compatibility_types";
-import { PSSH_TO_INTEGER } from "./constants";
+import log from "../../log.ts";
+import { getPsshSystemID } from "../../parsers/containers/isobmff/index.ts";
+import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal.ts";
+import { be4toi } from "../../utils/byte_parsing.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { IMediaEncryptedEvent } from "../browser_compatibility_types.ts";
+import { PSSH_TO_INTEGER } from "./constants.ts";
 
 /** Data recuperated from parsing the payload of an `encrypted` event. */
 export interface IEncryptedEventData {

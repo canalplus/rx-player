@@ -2,11 +2,11 @@ import type {
   IMediaElementEventMap,
   IMediaSourceEventMap,
   ISourceBufferEventMap,
-} from "../../../compat/browser_compatibility_types";
-import { insertInto, keepRangeIntersection } from "../../../utils/ranges";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import type { DummyMediaElement } from "./html5";
-import type { DummyMediaSource, DummySourceBuffer } from "./mse";
+} from "../../../compat/browser_compatibility_types.ts";
+import { insertInto, keepRangeIntersection } from "../../../utils/ranges.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import type { DummyMediaElement } from "./html5.ts";
+import type { DummyMediaSource, DummySourceBuffer } from "./mse.ts";
 
 interface IDummySourceBufferEventObject {
   resolve: () => void;

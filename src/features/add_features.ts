@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-import features from "./features_object";
-import type { IFeature } from "./types";
+import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
+import features from "./features_object.ts";
+import type { IFeature } from "./types.ts";
 
 /**
  * @param {Array.<Object>} featureFuncList

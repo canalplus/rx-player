@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import type { ISegmentTemplateIntermediateRepresentation } from "../../../node_parser_types";
-import type { IAttributeParser } from "../parsers_stack";
-import { AttributeName } from "../types";
-import { parseString } from "../utils";
+import type { ISegmentTemplateIntermediateRepresentation } from "../../../node_parser_types.ts";
+import type { IAttributeParser } from "../parsers_stack.ts";
+import { AttributeName } from "../types.ts";
+import { parseString } from "../utils.ts";
 
 export function generateSegmentTemplateAttrParser(
   segmentTemplateAttrs: ISegmentTemplateIntermediateRepresentation,

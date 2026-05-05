@@ -19,7 +19,7 @@
  * This is the class used from a regular build.
  */
 
-import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer";
+import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer.ts";
 import {
   DASH,
   DIRECTFILE,
@@ -33,9 +33,9 @@ import {
   NATIVE_TTML_PARSER,
   NATIVE_VTT_PARSER,
   SMOOTH,
-} from "./features/list";
-import Player from "./main_thread/api";
-import globalScope from "./utils/global_scope";
+} from "./features/list/index.ts";
+import Player from "./main_thread/api/index.ts";
+import globalScope from "./utils/global_scope.ts";
 
 patchWebkitSourceBuffer();
 

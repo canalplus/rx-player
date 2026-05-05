@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
-import arrayIncludes from "../../../../utils/array_includes";
-import isNonEmptyString from "../../../../utils/is_non_empty_string";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types.ts";
+import arrayIncludes from "../../../../utils/array_includes.ts";
+import isNonEmptyString from "../../../../utils/is_non_empty_string.ts";
 
 /**
  * Add the corresponding settings on the given cue.

@@ -5,24 +5,24 @@ import type {
   IPausedPlaybackObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
-} from "../core/types";
-import type { IDefaultConfig } from "../default_config";
-import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
-import type { SourceBufferType } from "../mse";
-import type { IFreezingStatus, IRebufferingStatus } from "../playback_observer";
+} from "../core/types.ts";
+import type { IDefaultConfig } from "../default_config.ts";
+import type { ISerializedSourceBufferError } from "../errors/source_buffer_error.ts";
+import type { SourceBufferType } from "../mse/index.ts";
+import type { IFreezingStatus, IRebufferingStatus } from "../playback_observer/index.ts";
 import type {
   ICmcdOptions,
   IManifestLoader,
   IRepresentationFilter,
   ISegmentLoader,
   ITrackType,
-} from "../public_types";
-import type { ITransportOptions } from "../transports";
-import type { ILogFormat, ILoggerLevel } from "../utils/logger";
-import type { IRange } from "../utils/ranges";
-import type RxPlayer from "./api";
-import type { IContentProtection, IProcessedProtectionData } from "./decrypt";
-import type { ITextDisplayer, ITextDisplayerData } from "./text_displayer";
+} from "../public_types.ts";
+import type { ITransportOptions } from "../transports/index.ts";
+import type { ILogFormat, ILoggerLevel } from "../utils/logger.ts";
+import type { IRange } from "../utils/ranges.ts";
+import type RxPlayer from "./api/index.ts";
+import type { IContentProtection, IProcessedProtectionData } from "./decrypt/index.ts";
+import type { ITextDisplayer, ITextDisplayerData } from "./text_displayer/index.ts";
 
 export type IRxPlayer = RxPlayer;
 

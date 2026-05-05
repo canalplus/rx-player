@@ -1,5 +1,5 @@
 import * as React from "react";
-import Button from "../Button";
+import Button from "../Button.tsx";
 
 /**
  * Creates an input text box for a number-formatted player option.

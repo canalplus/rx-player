@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import type { ISegmentPipeline, ITransportPipelines } from "../../../transports";
-import type SharedReference from "../../../utils/reference";
-import type CmcdDataBuilder from "../../cmcd";
-import type { IBufferType } from "../../segment_sinks";
-import type CdnPrioritizer from "../cdn_prioritizer";
-import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher";
-import type { ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher";
-import createSegmentFetcher, { getSegmentFetcherRequestOptions } from "./segment_fetcher";
-import SegmentQueue from "./segment_queue";
-import TaskPrioritizer from "./task_prioritizer";
+import config from "../../../config.ts";
+import type { ISegmentPipeline, ITransportPipelines } from "../../../transports/index.ts";
+import type SharedReference from "../../../utils/reference.ts";
+import type CmcdDataBuilder from "../../cmcd/index.ts";
+import type { IBufferType } from "../../segment_sinks/index.ts";
+import type CdnPrioritizer from "../cdn_prioritizer.ts";
+import applyPrioritizerToSegmentFetcher from "./prioritized_segment_fetcher.ts";
+import type { ISegmentFetcherLifecycleCallbacks } from "./segment_fetcher.ts";
+import createSegmentFetcher, {
+  getSegmentFetcherRequestOptions,
+} from "./segment_fetcher.ts";
+import SegmentQueue from "./segment_queue.ts";
+import TaskPrioritizer from "./task_prioritizer.ts";
 
 /**
  * Interact with the transport pipelines to download segments with the right

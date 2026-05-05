@@ -1,4 +1,4 @@
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
 
 /**
  * Maximum history of the buffer size that will be displayed, in milliseconds.

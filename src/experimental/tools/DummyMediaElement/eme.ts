@@ -2,20 +2,20 @@ import type {
   IMediaKeySession,
   IMediaKeySystemAccess,
   IMediaKeys,
-} from "../../../compat/browser_compatibility_types";
-import EnvDetector from "../../../compat/env_detector";
-import { getBoxOffsets } from "../../../parsers/containers/isobmff";
-import arrayIncludes from "../../../utils/array_includes";
-import assert from "../../../utils/assert";
-import { base64ToBytes, bytesToBase64 } from "../../../utils/base64";
-import { be4toi, le2toi, toUint8Array } from "../../../utils/byte_parsing";
-import createUuid from "../../../utils/create_uuid";
-import EventEmitter from "../../../utils/event_emitter";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import noop from "../../../utils/noop";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference from "../../../utils/reference";
-import sliceUint8array from "../../../utils/slice_uint8array";
+} from "../../../compat/browser_compatibility_types.ts";
+import EnvDetector from "../../../compat/env_detector.ts";
+import { getBoxOffsets } from "../../../parsers/containers/isobmff/index.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import assert from "../../../utils/assert.ts";
+import { base64ToBytes, bytesToBase64 } from "../../../utils/base64.ts";
+import { be4toi, le2toi, toUint8Array } from "../../../utils/byte_parsing.ts";
+import createUuid from "../../../utils/create_uuid.ts";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import noop from "../../../utils/noop.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import SharedReference from "../../../utils/reference.ts";
+import sliceUint8array from "../../../utils/slice_uint8array.ts";
 import {
   bytesToHex,
   guidToUuid,
@@ -23,7 +23,7 @@ import {
   strToUtf8,
   utf16LEToStr,
   utf8ToStr,
-} from "../../../utils/string_parsing";
+} from "../../../utils/string_parsing.ts";
 
 export interface IRequestMediaKeySystemAccessConfig {
   /**

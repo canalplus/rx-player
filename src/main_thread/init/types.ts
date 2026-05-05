@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store";
-import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store.ts";
+import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types.ts";
 import type {
   IPeriodsUpdateResult,
   IAdaptationMetadata,
@@ -24,16 +24,16 @@ import type {
   IPeriodMetadata,
   IRepresentationMetadata,
   IDecipherabilityStatusChangedElement,
-} from "../../manifest";
-import type { IMediaElementPlaybackObserver } from "../../playback_observer";
-import type { IPlayerError } from "../../public_types";
-import type { IThumbnailResponse } from "../../transports";
-import EventEmitter from "../../utils/event_emitter";
-import type SharedReference from "../../utils/reference";
+} from "../../manifest/index.ts";
+import type { IMediaElementPlaybackObserver } from "../../playback_observer/index.ts";
+import type { IPlayerError } from "../../public_types.ts";
+import type { IThumbnailResponse } from "../../transports/index.ts";
+import EventEmitter from "../../utils/event_emitter.ts";
+import type SharedReference from "../../utils/reference.ts";
 import type {
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
-} from "./utils/stream_events_emitter";
+} from "./utils/stream_events_emitter/index.ts";
 
 /**
  * Class allowing to start playing a content on an `HTMLMediaElement`.

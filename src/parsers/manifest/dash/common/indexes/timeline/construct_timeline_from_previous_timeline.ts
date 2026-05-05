@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import log from "../../../../../../log";
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import type { IIndexSegment } from "../../../../utils/index_helpers";
-import constructTimelineFromElements from "./construct_timeline_from_elements";
-import convertElementToIndexSegment from "./convert_element_to_index_segment";
-import findFirstCommonStartTime from "./find_first_common_start_time";
-import type { IParsedS } from "./parse_s_element";
-import { parseSElementNode } from "./parse_s_element";
+import log from "../../../../../../log.ts";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import type { IIndexSegment } from "../../../../utils/index_helpers.ts";
+import constructTimelineFromElements from "./construct_timeline_from_elements.ts";
+import convertElementToIndexSegment from "./convert_element_to_index_segment.ts";
+import findFirstCommonStartTime from "./find_first_common_start_time.ts";
+import type { IParsedS } from "./parse_s_element.ts";
+import { parseSElementNode } from "./parse_s_element.ts";
 
 export default function constructTimelineFromPreviousTimeline(
   newElements: ITNode[],

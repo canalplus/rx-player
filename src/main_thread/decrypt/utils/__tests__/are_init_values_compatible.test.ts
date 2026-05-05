@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import areInitializationValuesCompatible from "../are_init_values_compatible";
+import areInitializationValuesCompatible from "../are_init_values_compatible.ts";
 
 describe("decrypt - utils - areInitializationValuesCompatible", () => {
   it("should return false if either initialization data is empty", () => {

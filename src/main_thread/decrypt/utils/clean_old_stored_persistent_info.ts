@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type PersistentSessionsStore from "./persistent_sessions_store";
+import log from "../../../log.ts";
+import type PersistentSessionsStore from "./persistent_sessions_store.ts";
 
 /**
  * Remove old information from a PersistentSessionsStore so that it respects the

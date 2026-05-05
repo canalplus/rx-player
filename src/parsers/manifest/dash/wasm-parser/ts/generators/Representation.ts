@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import noop from "../../../../../../utils/noop";
+import noop from "../../../../../../utils/noop.ts";
 import type {
   IRepresentationAttributes,
   IRepresentationChildren,
   ISegmentListIntermediateRepresentation,
-} from "../../../node_parser_types";
-import type { IAttributeParser, IChildrenParser } from "../parsers_stack";
-import type ParsersStack from "../parsers_stack";
-import { AttributeName, TagName } from "../types";
-import { parseString } from "../utils";
-import { generateBaseUrlAttrParser } from "./BaseURL";
-import { generateContentProtectionAttrParser } from "./ContentProtection";
-import { generateSchemeAttrParser } from "./Scheme";
-import { generateSegmentBaseAttrParser } from "./SegmentBase";
-import { generateSegmentListChildrenParser } from "./SegmentList";
-import { generateSegmentTemplateAttrParser } from "./SegmentTemplate";
+} from "../../../node_parser_types.ts";
+import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
+import type ParsersStack from "../parsers_stack.ts";
+import { AttributeName, TagName } from "../types.ts";
+import { parseString } from "../utils.ts";
+import { generateBaseUrlAttrParser } from "./BaseURL.ts";
+import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
+import { generateSchemeAttrParser } from "./Scheme.ts";
+import { generateSegmentBaseAttrParser } from "./SegmentBase.ts";
+import { generateSegmentListChildrenParser } from "./SegmentList.ts";
+import { generateSegmentTemplateAttrParser } from "./SegmentTemplate.ts";
 
 /**
  * Generate a "children parser" once inside a `Representation` node.

@@ -1,26 +1,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import configHandler from "../../../../config";
-import type { IAdaptation, IPeriod } from "../../../../manifest";
+import configHandler from "../../../../config.ts";
 import {
   DummyPeriod,
   DummyAdaptation,
   DummyRepresentation,
   createSegment,
-} from "../../../../manifest/classes/__tests__/mocks";
+} from "../../../../manifest/classes/__tests__/mocks.ts";
+import type { IAdaptation, IPeriod } from "../../../../manifest/index.ts";
 import {
   makeReadyOnlyPlaybackObserver,
   DummyObservationPosition,
-} from "../../../../playback_observer/__tests__/mocks";
-import SharedReference from "../../../../utils/reference";
+} from "../../../../playback_observer/__tests__/mocks.ts";
+import SharedReference from "../../../../utils/reference.ts";
+import { DummySegmentSink } from "../../../segment_sinks/__tests__/mocks.ts";
 import {
   ChunkStatus,
   SegmentSinkOperation,
   type IBufferedChunk,
   type SegmentSink,
-} from "../../../segment_sinks";
-import { DummySegmentSink } from "../../../segment_sinks/__tests__/mocks";
-import type { IRepresentationStreamPlaybackObservation } from "../../representation";
-import getRepresentationsSwitchingStrategy from "../get_representations_switch_strategy";
+} from "../../../segment_sinks/index.ts";
+import type { IRepresentationStreamPlaybackObservation } from "../../representation/index.ts";
+import getRepresentationsSwitchingStrategy from "../get_representations_switch_strategy.ts";
 
 describe("getRepresentationsSwitchingStrategy", () => {
   let mockPeriod: IPeriod;

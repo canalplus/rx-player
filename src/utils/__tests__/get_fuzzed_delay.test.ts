@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import getFuzzedDelay from "../get_fuzzed_delay";
+import getFuzzedDelay from "../get_fuzzed_delay.ts";
 
 describe("utils - getFuzzedDelay", () => {
   it("should return the delay given multiplied by [0.3, 0.7]", () => {

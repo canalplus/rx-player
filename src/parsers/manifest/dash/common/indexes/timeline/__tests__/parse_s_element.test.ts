@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import log from "../../../../../../../log";
-import type { ITNode } from "../../../../../../../utils/xml-parser";
-import { parseXml } from "../../../../../../../utils/xml-parser";
-import { parseSElementNode } from "../parse_s_element";
+import log from "../../../../../../../log.ts";
+import type { ITNode } from "../../../../../../../utils/xml-parser.ts";
+import { parseXml } from "../../../../../../../utils/xml-parser.ts";
+import { parseSElementNode } from "../parse_s_element.ts";
 
 function testNumberAttribute(attributeName: string, variableName?: string): void {
   const _variableName = variableName ?? attributeName;

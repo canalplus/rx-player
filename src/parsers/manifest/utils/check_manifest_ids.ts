@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import arrayIncludes from "../../../utils/array_includes";
-import type { IParsedAdaptationType, IParsedManifest } from "../types";
+import log from "../../../log.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import type { IParsedAdaptationType, IParsedManifest } from "../types.ts";
 
 /**
  * Ensure that no two periods, adaptations from the same period and

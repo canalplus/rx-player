@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
-import cleanOldLoadedSessions from "../clean_old_loaded_sessions";
-import type LoadedSessionsStore from "../loaded_sessions_store";
+import cleanOldLoadedSessions from "../clean_old_loaded_sessions.ts";
+import type LoadedSessionsStore from "../loaded_sessions_store.ts";
 
 const entry1 = {
   initializationData: { data: new Uint8Array([1, 6, 9]), type: "test" },

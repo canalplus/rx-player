@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import type { ITNode } from "../../../utils/xml-parser";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import type { ITNode } from "../../../utils/xml-parser.ts";
 
 interface IHSSManifestSegment {
   start: number;

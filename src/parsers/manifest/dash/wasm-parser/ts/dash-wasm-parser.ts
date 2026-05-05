@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-import hasWebassembly from "../../../../../compat/has_webassembly";
-import log from "../../../../../log";
-import { assertUnreachable } from "../../../../../utils/assert";
-import globalScope from "../../../../../utils/global_scope";
-import noop from "../../../../../utils/noop";
-import type { IIrParserResponse, ILoadedXlinkData } from "../../common";
-import parseMpdIr from "../../common";
+import hasWebassembly from "../../../../../compat/has_webassembly.ts";
+import log from "../../../../../log.ts";
+import { assertUnreachable } from "../../../../../utils/assert.ts";
+import globalScope from "../../../../../utils/global_scope.ts";
+import noop from "../../../../../utils/noop.ts";
+import type { IIrParserResponse, ILoadedXlinkData } from "../../common/index.ts";
+import parseMpdIr from "../../common/index.ts";
 import type {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
-} from "../../node_parser_types";
+} from "../../node_parser_types.ts";
 import type {
   IDashParserResponse,
   ILoadedResource,
   IMPDParserArguments,
-} from "../../parsers_types";
-import { generateRootChildrenParser } from "./generators";
-import { generateXLinkChildrenParser } from "./generators/XLink";
-import ParsersStack from "./parsers_stack";
-import type { AttributeName, TagName } from "./types";
-import { CustomEventType } from "./types";
+} from "../../parsers_types.ts";
+import { generateRootChildrenParser } from "./generators/index.ts";
+import { generateXLinkChildrenParser } from "./generators/XLink.ts";
+import ParsersStack from "./parsers_stack.ts";
+import type { AttributeName, TagName } from "./types.ts";
+import { CustomEventType } from "./types.ts";
 
 const MAX_READ_SIZE = 15e3;
 

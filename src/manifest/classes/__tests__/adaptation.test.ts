@@ -1,12 +1,15 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type { IParsedAdaptation, IParsedRepresentation } from "../../../parsers/manifest";
+import type {
+  IParsedAdaptation,
+  IParsedRepresentation,
+} from "../../../parsers/manifest/index.ts";
 import type {
   IRepresentationContext,
   IRepresentationFilterRepresentation,
-} from "../../../public_types";
-import Adaptation from "../adaptation";
-import CodecSupportCache from "../codec_support_cache";
-import type { IRepresentationIndex } from "../representation_index";
+} from "../../../public_types.ts";
+import Adaptation from "../adaptation.ts";
+import CodecSupportCache from "../codec_support_cache.ts";
+import type { IRepresentationIndex } from "../representation_index/index.ts";
 
 const mocks = vi.hoisted(() => {
   return {

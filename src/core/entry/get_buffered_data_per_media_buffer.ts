@@ -1,9 +1,9 @@
-import type { ITextDisplayer } from "../../main_thread/types";
-import type { IMediaSourceInterface } from "../../mse";
-import { SourceBufferType } from "../../mse";
-import type { ITrackType } from "../../public_types";
-import arrayFind from "../../utils/array_find";
-import type { IRange } from "../../utils/ranges";
+import type { ITextDisplayer } from "../../main_thread/types.ts";
+import type { IMediaSourceInterface } from "../../mse/index.ts";
+import { SourceBufferType } from "../../mse/index.ts";
+import type { ITrackType } from "../../public_types.ts";
+import arrayFind from "../../utils/array_find.ts";
+import type { IRange } from "../../utils/ranges.ts";
 
 /**
  * Returns a JS object where keys are the type of buffers (e.g. "audio",

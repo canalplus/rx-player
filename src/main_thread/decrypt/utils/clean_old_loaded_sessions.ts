@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type LoadedSessionsStore from "./loaded_sessions_store";
+import log from "../../../log.ts";
+import type LoadedSessionsStore from "./loaded_sessions_store.ts";
 
 /**
  * Close sessions from the loadedSessionsStore to allow at maximum `limit`

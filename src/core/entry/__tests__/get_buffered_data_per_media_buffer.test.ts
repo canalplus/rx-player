@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SourceBufferType } from "../../../mse";
+import { SourceBufferType } from "../../../mse/index.ts";
 
 const mockArrayFind = vi.hoisted(() => vi.fn());
 
@@ -7,7 +7,7 @@ vi.mock("../../../utils/array_find", () => ({
   default: mockArrayFind,
 }));
 
-import getBufferedDataPerMediaBuffer from "../get_buffered_data_per_media_buffer";
+import getBufferedDataPerMediaBuffer from "../get_buffered_data_per_media_buffer.ts";
 
 describe("getBufferedDataPerMediaBuffer", () => {
   beforeEach(() => {

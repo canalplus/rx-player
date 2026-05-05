@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fromIndexTime, getTimescaledRange, toIndexTime } from "../index_helpers";
+import { fromIndexTime, getTimescaledRange, toIndexTime } from "../index_helpers.ts";
 
 describe("Manifest parser index helpers", () => {
   describe("fromIndexTime", () => {

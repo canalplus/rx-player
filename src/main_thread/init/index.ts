@@ -18,5 +18,5 @@ export type {
   IContentInitializerEvents,
   IAdaptationChangeEventPayload,
   IStallingSituation,
-} from "./types";
-export { ContentInitializer } from "./types";
+} from "./types.ts";
+export { ContentInitializer } from "./types.ts";

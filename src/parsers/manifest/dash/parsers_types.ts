@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IParsedManifest } from "../types";
+import type { IParsedManifest } from "../types.ts";
 
-export type { IMPDParserArguments } from "./common";
+export type { IMPDParserArguments } from "./common/index.ts";
 
 /** Response returned by a DASH MPD parser. */
 export type IDashParserResponse<T extends string | ArrayBuffer> =

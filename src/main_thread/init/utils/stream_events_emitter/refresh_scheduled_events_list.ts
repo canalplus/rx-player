@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IManifestMetadata } from "../../../../manifest";
-import areSameStreamEvents from "./are_same_stream_events";
-import type { INonFiniteStreamEventPayload, IStreamEventPayload } from "./types";
+import type { IManifestMetadata } from "../../../../manifest/index.ts";
+import areSameStreamEvents from "./are_same_stream_events.ts";
+import type { INonFiniteStreamEventPayload, IStreamEventPayload } from "./types.ts";
 
 /**
  * Refresh local scheduled events list

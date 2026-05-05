@@ -19,8 +19,8 @@
  * It always should be imported through the `features` object.
  */
 
-import { le2toi, le4toi } from "../../utils/byte_parsing";
-import { utf8ToStr } from "../../utils/string_parsing";
+import { le2toi, le4toi } from "../../utils/byte_parsing.ts";
+import { utf8ToStr } from "../../utils/string_parsing.ts";
 
 export interface IBifThumbnail {
   index: number;

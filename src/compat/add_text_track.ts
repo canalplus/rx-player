@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { ICompatTextTrack, IMediaElement } from "./browser_compatibility_types";
-import EnvDetector from "./env_detector";
+import type { ICompatTextTrack, IMediaElement } from "./browser_compatibility_types.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * Add text track to the given media element.

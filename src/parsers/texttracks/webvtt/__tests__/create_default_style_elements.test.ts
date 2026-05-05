@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import createDefaultStyleElements from "../create_default_style_elements";
+import createDefaultStyleElements from "../create_default_style_elements.ts";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

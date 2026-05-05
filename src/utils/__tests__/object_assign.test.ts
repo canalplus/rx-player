@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import objectAssign from "../object_assign";
+import objectAssign from "../object_assign.ts";
 
 describe("utils - objectAssign", () => {
   it("should throw if target is not an object", () => {

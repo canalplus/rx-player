@@ -2,7 +2,7 @@ import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
 import {
   findDefaultVideoCodec,
   findDefaultAudioCodec,
-} from "../../probers/defaultCodecsFinder";
+} from "../../probers/defaultCodecsFinder.ts";
 
 type IMockedMediaSource = {
   isTypeSupported?: ((codec: string) => boolean) | undefined;

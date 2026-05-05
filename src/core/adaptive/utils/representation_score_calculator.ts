@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type { IRepresentation } from "../../../manifest";
-import EWMA from "./ewma";
+import log from "../../../log.ts";
+import type { IRepresentation } from "../../../manifest/index.ts";
+import EWMA from "./ewma.ts";
 
 /**
  * Object representing a maintainability score as calculated by the

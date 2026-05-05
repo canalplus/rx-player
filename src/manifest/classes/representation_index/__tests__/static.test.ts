@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
-import log from "../../../../log";
-import StaticRepresentationIndex from "../static";
+import log from "../../../../log.ts";
+import StaticRepresentationIndex from "../static.ts";
 
 describe("manifest - StaticRepresentationIndex", () => {
   it("should return no init segment", () => {

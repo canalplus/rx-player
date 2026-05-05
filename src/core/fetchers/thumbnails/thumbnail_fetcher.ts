@@ -1,23 +1,23 @@
-import config from "../../../config";
-import { formatError } from "../../../errors";
-import log from "../../../log";
-import type { ISegment, IThumbnailTrack } from "../../../manifest";
-import type { ICdnMetadata } from "../../../parsers/manifest";
-import type { IPeriod } from "../../../public_types";
+import config from "../../../config.ts";
+import { formatError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { ISegment, IThumbnailTrack } from "../../../manifest/index.ts";
+import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
+import type { IPeriod } from "../../../public_types.ts";
 import type {
   IRequestedData,
   IThumbnailLoader,
   IThumbnailLoaderOptions,
   IThumbnailPipeline,
   IThumbnailResponse,
-} from "../../../transports";
-import arrayFind from "../../../utils/array_find";
-import objectAssign from "../../../utils/object_assign";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
-import type CdnPrioritizer from "../cdn_prioritizer";
-import errorSelector from "../utils/error_selector";
-import { scheduleRequestWithCdns } from "../utils/schedule_request";
+} from "../../../transports/index.ts";
+import arrayFind from "../../../utils/array_find.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller, { CancellationError } from "../../../utils/task_canceller.ts";
+import type CdnPrioritizer from "../cdn_prioritizer.ts";
+import errorSelector from "../utils/error_selector.ts";
+import { scheduleRequestWithCdns } from "../utils/schedule_request.ts";
 
 /**
  * Create an `IThumbnailFetcher` object which will allow to easily fetch and parse

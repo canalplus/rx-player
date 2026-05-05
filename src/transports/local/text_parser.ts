@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-import { getMDHDTimescale } from "../../parsers/containers/isobmff";
-import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
+import { getMDHDTimescale } from "../../parsers/containers/isobmff/index.ts";
+import { strToUtf8, utf8ToStr } from "../../utils/string_parsing.ts";
 import type {
   ILoadedTextSegmentFormat,
   ISegmentContext,
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
   ITextTrackSegmentData,
-} from "../types";
-import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
-import inferSegmentContainer from "../utils/infer_segment_container";
+} from "../types.ts";
+import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos.ts";
+import inferSegmentContainer from "../utils/infer_segment_container.ts";
 import {
   getISOBMFFEmbeddedTextTrackData,
   getPlainTextTrackData,
-} from "../utils/parse_text_track";
+} from "../utils/parse_text_track.ts";
 
 /**
  * Parse TextTrack data when it is embedded in an ISOBMFF file.

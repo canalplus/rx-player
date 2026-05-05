@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import shouldValidateMetadata from "../../../compat/should_validate_metadata";
-import shouldWaitForDataBeforeLoaded from "../../../compat/should_wait_for_data_before_loaded";
-import shouldWaitForHaveEnoughData from "../../../compat/should_wait_for_have_enough_data";
+import shouldValidateMetadata from "../../../compat/should_validate_metadata.ts";
+import shouldWaitForDataBeforeLoaded from "../../../compat/should_wait_for_data_before_loaded.ts";
+import shouldWaitForHaveEnoughData from "../../../compat/should_wait_for_have_enough_data.ts";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
-} from "../../../playback_observer";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference from "../../../utils/reference";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller from "../../../utils/task_canceller";
+} from "../../../playback_observer/index.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import SharedReference from "../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
 
 /**
  * Returns an `IReadOnlySharedReference` that switches to `true` once the

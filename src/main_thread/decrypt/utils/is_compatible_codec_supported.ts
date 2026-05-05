@@ -1,5 +1,5 @@
-import areCodecsCompatible from "../../../utils/are_codecs_compatible";
-import type { ICodecSupportList } from "../find_key_system";
+import areCodecsCompatible from "../../../utils/are_codecs_compatible.ts";
+import type { ICodecSupportList } from "../find_key_system.ts";
 
 /**
  * Find the first codec in the provided codec list that is compatible with the given mimeType and codec.

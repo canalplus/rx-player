@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import config from "../config";
+import config from "../config.ts";
 
 /**
  * Returns true if we have to reload the MediaSource due to an update in the

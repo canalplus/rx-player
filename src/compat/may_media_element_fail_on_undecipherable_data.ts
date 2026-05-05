@@ -1,5 +1,5 @@
-import config from "../config";
-import EnvDetector from "./env_detector";
+import config from "../config.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * We noticed that the PlayStation 5 may have the HTMLMediaElement on which the

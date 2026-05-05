@@ -1,6 +1,6 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-import canReuseMediaKeys from "../can_reuse_media_keys";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
+import canReuseMediaKeys from "../can_reuse_media_keys.ts";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
 
 describe("Compat - canReuseMediaKeys", () => {
   afterEach(() => {

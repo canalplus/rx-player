@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import WeakMapMemory from "../weak_map_memory";
+import WeakMapMemory from "../weak_map_memory.ts";
 
 describe("utils - WeakMapMemory", () => {
   it("should call the given function when `get` is first called", () => {

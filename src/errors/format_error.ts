@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IPlayerError } from "../public_types";
-import isKnownError from "./is_known_error";
-import OtherError from "./other_error";
+import type { IPlayerError } from "../public_types.ts";
+import isKnownError from "./is_known_error.ts";
+import OtherError from "./other_error.ts";
 
 /*
  * Format an unknown error into an API-defined error.

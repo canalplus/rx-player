@@ -18,15 +18,18 @@ import {
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
   SMOOTH,
-} from "../../../../src/features/list";
-import { METAPLAYLIST, MULTI_THREAD } from "../../../../src/experimental/features";
-import RxPlayer from "../../../../src/minimal";
-import { linkPlayerEventsToState } from "./events";
+} from "../../../../src/features/list/index.ts";
+import {
+  METAPLAYLIST,
+  MULTI_THREAD,
+} from "../../../../src/experimental/features/index.ts";
+import RxPlayer from "../../../../src/minimal.ts";
+import { linkPlayerEventsToState } from "./events.ts";
 import VideoThumbnailLoader, {
   DASH_LOADER,
-} from "../../../../src/experimental/tools/VideoThumbnailLoader";
-import CatchUpModeController from "./catchUp";
-import { declareModule } from "../../lib/declareModule";
+} from "../../../../src/experimental/tools/VideoThumbnailLoader/index.ts";
+import CatchUpModeController from "./catchUp.ts";
+import { declareModule } from "../../lib/declareModule.ts";
 import type {
   IAudioRepresentation,
   IAudioTrack,
@@ -41,7 +44,7 @@ import type {
   IVideoRepresentation,
   IVideoTrack,
   IThumbnailTrackInfo,
-} from "../../../../src/public_types";
+} from "../../../../src/public_types.ts";
 
 RxPlayer.addFeatures([
   DASH,

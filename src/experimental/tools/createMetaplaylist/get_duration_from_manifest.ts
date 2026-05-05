@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import type { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import request from "../../../utils/request/xhr";
-import TaskCanceller from "../../../utils/task_canceller";
+import config from "../../../config.ts";
+import type { IMetaPlaylist } from "../../../parsers/manifest/metaplaylist/index.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import request from "../../../utils/request/xhr.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
 
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;

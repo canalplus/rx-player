@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { IMediaKeys } from "../../../compat/browser_compatibility_types";
-import hashBuffer from "../../../utils/hash_buffer";
+import type { IMediaKeys } from "../../../compat/browser_compatibility_types.ts";
+import hashBuffer from "../../../utils/hash_buffer.ts";
 
 /**
  * Keep track of server certificate which have been set for a MediaKeys.

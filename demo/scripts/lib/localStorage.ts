@@ -1,4 +1,4 @@
-import { IDrmInfo } from "../contents";
+import { IDrmInfo } from "../contents.ts";
 
 const { localStorage } = window;
 export const hasLocalStorage = !!localStorage;

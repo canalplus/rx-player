@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { IManifest } from "../../../../../manifest";
-import parseFromString from "../parse_from_xml_string";
+import type { IManifest } from "../../../../../manifest/index.ts";
+import parseFromString from "../parse_from_xml_string.ts";
 
 describe("parseFromString", () => {
   it("throws root if not MPD", function () {

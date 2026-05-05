@@ -1,16 +1,16 @@
 import type { Mock } from "vitest";
 import { describe, it, expect, vi, afterEach } from "vitest";
-import type { ICdnMetadata } from "../../../../parsers/manifest";
+import type { ICdnMetadata } from "../../../../parsers/manifest/index.ts";
 import type {
   IRequestedData,
   IThumbnailLoader,
   IThumbnailParser,
-} from "../../../../transports";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import TaskCanceller, { CancellationError } from "../../../../utils/task_canceller";
-import type CdnPrioritizer from "../../cdn_prioritizer";
-import type { IBackoffSettings } from "../../utils/schedule_request";
-import createThumbnailFetcher from "../thumbnail_fetcher";
+} from "../../../../transports/index.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import TaskCanceller, { CancellationError } from "../../../../utils/task_canceller.ts";
+import type CdnPrioritizer from "../../cdn_prioritizer.ts";
+import type { IBackoffSettings } from "../../utils/schedule_request.ts";
+import createThumbnailFetcher from "../thumbnail_fetcher.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

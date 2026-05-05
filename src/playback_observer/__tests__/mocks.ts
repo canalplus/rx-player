@@ -1,10 +1,10 @@
-import SharedReference from "../../utils/reference";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import { makeMockedClass } from "../../utils/test-utils";
-import type CorePlaybackObserver from "../core_playback_observer";
-import type MediaElementPlaybackObserver from "../media_element_playback_observer";
-import type { IReadOnlyPlaybackObserver } from "../types";
-import type ObservationPosition from "../utils/observation_position";
+import SharedReference from "../../utils/reference.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import { makeMockedClass } from "../../utils/test-utils.ts";
+import type CorePlaybackObserver from "../core_playback_observer.ts";
+import type MediaElementPlaybackObserver from "../media_element_playback_observer.ts";
+import type { IReadOnlyPlaybackObserver } from "../types.ts";
+import type ObservationPosition from "../utils/observation_position.ts";
 
 /**
  * Construct a class implementing the `MediaElementPlaybackObserver` interface.

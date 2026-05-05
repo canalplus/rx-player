@@ -1,8 +1,11 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type { IParsedAdaptation, IParsedPeriod } from "../../../parsers/manifest";
-import type Adaptation from "../adaptation";
-import CodecSupportCache from "../codec_support_cache";
-import Period from "../period";
+import type {
+  IParsedAdaptation,
+  IParsedPeriod,
+} from "../../../parsers/manifest/index.ts";
+import type Adaptation from "../adaptation.ts";
+import CodecSupportCache from "../codec_support_cache.ts";
+import Period from "../period.ts";
 
 const mocks = vi.hoisted(() => {
   const fakeAdaptation = vi.fn();

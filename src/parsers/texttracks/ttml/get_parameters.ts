@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
+import log from "../../../log.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
 
 const CELL_RESOLUTION_REGEXP = /(\d+) (\d+)/;
 

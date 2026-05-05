@@ -1,13 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { IAdaptationChoice } from "../../../core/types";
-import type {
-  IAdaptationMetadata,
-  IManifestMetadata,
-  IPeriodMetadata,
-} from "../../../manifest";
-import SharedReference from "../../../utils/reference";
-import TracksStore from "../tracks_store";
+import type { IAdaptationChoice } from "../../../core/types.ts";
+import {
+  DummyAdaptation,
+  DummyManifest,
+  DummyPeriod,
+  DummyRepresentation,
+} from "../../../manifest/classes/__tests__/mocks.ts";
+import type { Adaptation, Period } from "../../../manifest/classes/index.js";
+import SharedReference from "../../../utils/reference.ts";
+import TracksStore from "../tracks_store.ts";
 
 describe("API - TracksStore", () => {
   it("should advertise an audio-only period when video and text are not handled", () => {
@@ -28,16 +30,16 @@ describe("API - TracksStore", () => {
     const onNewAvailablePeriods = vi.fn();
     tracksStore.addEventListener("newAvailablePeriods", onNewAvailablePeriods);
 
-    const period = createPeriodMetadata({
+    const period = createPeriod({
       id: "period-1",
-      adaptations: {
-        audio: [createAdaptation("audio", "audio-adaptation")],
-      },
+      adaptations: [createAdaptation("audio", "audio-adaptation")],
     });
 
-    tracksStore.onManifestUpdate({
-      periods: [period],
-    } as unknown as IManifestMetadata);
+    tracksStore.onManifestUpdate(
+      new DummyManifest({
+        periods: [period],
+      }),
+    );
 
     expect(onNewAvailablePeriods).not.toHaveBeenCalled();
 
@@ -54,38 +56,42 @@ describe("API - TracksStore", () => {
   });
 });
 
-function createAdaptation(
-  type: "audio" | "video" | "text",
-  id: string,
-): IAdaptationMetadata {
-  return {
+function createAdaptation(type: "audio" | "video" | "text", id: string): Adaptation {
+  return new DummyAdaptation({
     id,
     type,
-    normalizedLanguage: undefined,
     isForcedSubtitles: false,
     representations: [
-      {
+      new DummyRepresentation({
         id: `${id}-repr`,
         decipherable: true,
         isSupported: true,
-      },
+      }),
     ],
     supportStatus: {
       hasSupportedCodec: true,
       hasCodecWithUndefinedSupport: false,
       isDecipherable: true,
     },
-  } as unknown as IAdaptationMetadata;
+  });
 }
 
-function createPeriodMetadata(args: {
-  id: string;
-  adaptations: Partial<IPeriodMetadata["adaptations"]>;
-}): IPeriodMetadata {
-  return {
+function createPeriod(args: { id: string; adaptations: Adaptation[] }): Period {
+  return new DummyPeriod({
     id: args.id,
     start: 0,
     end: 10,
-    adaptations: args.adaptations,
-  } as unknown as IPeriodMetadata;
+    adaptations: args.adaptations.reduce<typeof Period.prototype.adaptations>(
+      (acc, curr) => {
+        const forType = acc[curr.type];
+        if (forType === undefined) {
+          acc[curr.type] = [curr];
+        } else {
+          forType.push(curr);
+        }
+        return acc;
+      },
+      {},
+    ),
+  });
 }

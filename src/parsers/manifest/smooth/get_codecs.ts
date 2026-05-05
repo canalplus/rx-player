@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
 
 /**
  * @param {string} codecPrivateData

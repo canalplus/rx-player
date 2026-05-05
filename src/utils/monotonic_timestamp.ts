@@ -1,4 +1,4 @@
-import SharedReference from "./reference";
+import SharedReference from "./reference.ts";
 
 /**
  * Time difference of the monotonic clock indicated by `performance.now` with

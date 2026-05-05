@@ -18,8 +18,8 @@ import type {
   IMetaPlaylist,
   IMetaPlaylistTextTrack,
   IParserResponse,
-} from "./metaplaylist_parser";
-import parseMetaPlaylist from "./metaplaylist_parser";
+} from "./metaplaylist_parser.ts";
+import parseMetaPlaylist from "./metaplaylist_parser.ts";
 
 export default parseMetaPlaylist;
 export type { IMetaPlaylist, IMetaPlaylistTextTrack, IParserResponse };

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import AdaptationStream from "./adaptation_stream";
-export type * from "./types";
+import AdaptationStream from "./adaptation_stream.ts";
+export type * from "./types.ts";
 
 export default AdaptationStream;

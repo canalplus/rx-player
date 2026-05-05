@@ -17,10 +17,10 @@
 import type {
   ISegmentFetcher,
   ISegmentLoaderContent,
-} from "../../../core/fetchers/segment/segment_fetcher";
-import log from "../../../log";
-import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
-import type { CancellationSignal } from "../../../utils/task_canceller";
+} from "../../../core/fetchers/segment/segment_fetcher.ts";
+import log from "../../../log.ts";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
 
 /**
  * @param {Object} segmentInfo

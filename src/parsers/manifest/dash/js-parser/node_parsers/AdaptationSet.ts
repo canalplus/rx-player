@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { ITNode } from "../../../../../utils/xml-parser";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
   IAdaptationSetAttributes,
   IAdaptationSetChildren,
   IAdaptationSetIntermediateRepresentation,
-} from "../../node_parser_types";
-import parseBaseURL from "./BaseURL";
-import parseContentComponent from "./ContentComponent";
-import parseContentProtection from "./ContentProtection";
-import { createRepresentationIntermediateRepresentation } from "./Representation";
-import parseSegmentBase from "./SegmentBase";
-import parseSegmentList from "./SegmentList";
-import parseSegmentTemplate from "./SegmentTemplate";
+} from "../../node_parser_types.ts";
+import parseBaseURL from "./BaseURL.ts";
+import parseContentComponent from "./ContentComponent.ts";
+import parseContentProtection from "./ContentProtection.ts";
+import { createRepresentationIntermediateRepresentation } from "./Representation.ts";
+import parseSegmentBase from "./SegmentBase.ts";
+import parseSegmentList from "./SegmentList.ts";
+import parseSegmentTemplate from "./SegmentTemplate.ts";
 import {
   parseBoolean,
   parseIntOrBoolean,
@@ -37,7 +37,7 @@ import {
   parseScheme,
   textContent,
   ValueParser,
-} from "./utils";
+} from "./utils.ts";
 
 /**
  * Parse child nodes from an AdaptationSet.

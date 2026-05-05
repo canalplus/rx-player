@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import type { ISegmentUrlIntermediateRepresentation } from "../../../node_parser_types";
-import type { IAttributeParser } from "../parsers_stack";
-import { AttributeName } from "../types";
-import { parseString } from "../utils";
+import type { ISegmentUrlIntermediateRepresentation } from "../../../node_parser_types.ts";
+import type { IAttributeParser } from "../parsers_stack.ts";
+import { AttributeName } from "../types.ts";
+import { parseString } from "../utils.ts";
 
 /**
  * Generate "attribute parser" for an encountered `SegmentURL` opening

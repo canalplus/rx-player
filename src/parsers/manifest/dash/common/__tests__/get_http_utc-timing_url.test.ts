@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import type { IMPDIntermediateRepresentation } from "../../node_parser_types";
-import getHTTPUTCTimingURL from "../get_http_utc-timing_url";
+import type { IMPDIntermediateRepresentation } from "../../node_parser_types.ts";
+import getHTTPUTCTimingURL from "../get_http_utc-timing_url.ts";
 
 describe("DASH Parser - getHTTPUTCTimingURL", () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
-import shouldRenewMediaKeySystemAccess from "../should_renew_media_key_system_access";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
+import shouldRenewMediaKeySystemAccess from "../should_renew_media_key_system_access.ts";
 
 describe("compat - shouldRenewMediaKeySystemAccess", () => {
   beforeEach(() => {

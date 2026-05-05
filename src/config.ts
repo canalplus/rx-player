@@ -6,10 +6,10 @@
  * __NOT__ part of the RxPlayer API.
  */
 
-import type { IDefaultConfig } from "./default_config";
-import DEFAULT_CONFIG from "./default_config";
-import deepMerge from "./utils/deep_merge";
-import EventEmitter from "./utils/event_emitter";
+import type { IDefaultConfig } from "./default_config.ts";
+import DEFAULT_CONFIG from "./default_config.ts";
+import deepMerge from "./utils/deep_merge.ts";
+import EventEmitter from "./utils/event_emitter.ts";
 
 interface IConfigHandlerEvents {
   update: Partial<IDefaultConfig>;

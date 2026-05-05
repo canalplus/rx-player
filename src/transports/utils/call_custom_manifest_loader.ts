@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-import { CustomLoaderError } from "../../errors";
-import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types";
-import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
-import type { IManifestLoaderOptions, IRequestedData } from "../types";
+import { CustomLoaderError } from "../../errors/index.ts";
+import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types.ts";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp.ts";
+import type {
+  CancellationError,
+  CancellationSignal,
+} from "../../utils/task_canceller.ts";
+import type { IManifestLoaderOptions, IRequestedData } from "../types.ts";
 
 export default function callCustomManifestLoader(
   customManifestLoader: IManifestLoader,

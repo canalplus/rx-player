@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import areArraysOfNumbersEqual from "../are_arrays_of_numbers_equal";
+import areArraysOfNumbersEqual from "../are_arrays_of_numbers_equal.ts";
 
 describe("are_arrays_of_numbers_equal", () => {
   it("should return true for two empty arrays", () => {

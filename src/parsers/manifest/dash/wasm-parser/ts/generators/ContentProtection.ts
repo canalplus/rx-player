@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { base64ToBytes } from "../../../../../../utils/base64";
-import { hexToBytes } from "../../../../../../utils/string_parsing";
-import type { IContentProtectionIntermediateRepresentation } from "../../../node_parser_types";
-import type { IAttributeParser } from "../parsers_stack";
-import { AttributeName } from "../types";
-import { parseString } from "../utils";
+import { base64ToBytes } from "../../../../../../utils/base64.ts";
+import { hexToBytes } from "../../../../../../utils/string_parsing.ts";
+import type { IContentProtectionIntermediateRepresentation } from "../../../node_parser_types.ts";
+import type { IAttributeParser } from "../parsers_stack.ts";
+import { AttributeName } from "../types.ts";
+import { parseString } from "../utils.ts";
 
 /**
  * @param {Object} cp

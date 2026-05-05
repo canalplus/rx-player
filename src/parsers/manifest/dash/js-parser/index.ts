@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-import parseFromString from "./parse_from_xml_string";
+import parseFromString from "./parse_from_xml_string.ts";
 export default parseFromString;

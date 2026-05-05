@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import generateCSSTextOutline from "../generate_css_test_outline";
+import generateCSSTextOutline from "../generate_css_test_outline.ts";
 
 describe("generateCSSTextOutline", () => {
   it("should return a fake outline on a text-shadow basis", () => {

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import arrayFind from "./array_find";
-import startsWith from "./starts_with";
+import arrayFind from "./array_find.ts";
+import startsWith from "./starts_with.ts";
 
 /**
  * This function is a shortcut that helps differentiate two codecs

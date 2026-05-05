@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import addFeatures from "../add_features";
-import type { IFeature } from "../types";
+import addFeatures from "../add_features.ts";
+import type { IFeature } from "../types.ts";
 
 vi.mock("../features_object", () => {
   return {

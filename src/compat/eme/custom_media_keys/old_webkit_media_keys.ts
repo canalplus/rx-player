@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-import { base64ToBytes } from "../../../utils/base64";
-import { toUint8Array } from "../../../utils/byte_parsing";
-import EventEmitter from "../../../utils/event_emitter";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import noop from "../../../utils/noop";
-import { utf8ToStr } from "../../../utils/string_parsing";
-import wrapInPromise from "../../../utils/wrapInPromise";
+import { base64ToBytes } from "../../../utils/base64.ts";
+import { toUint8Array } from "../../../utils/byte_parsing.ts";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import noop from "../../../utils/noop.ts";
+import { utf8ToStr } from "../../../utils/string_parsing.ts";
+import wrapInPromise from "../../../utils/wrapInPromise.ts";
 import type {
   IMediaElement,
   IMediaKeySession,
   IMediaKeys,
-} from "../../browser_compatibility_types";
+} from "../../browser_compatibility_types.ts";
 
 export interface IOldWebkitHTMLMediaElement extends HTMLVideoElement {
   webkitGenerateKeyRequest: (keyType: string, initData: ArrayBuffer) => void;

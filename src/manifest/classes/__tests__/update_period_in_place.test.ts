@@ -1,9 +1,9 @@
 import type { MockInstance } from "vitest";
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import log from "../../../log";
-import type Period from "../period";
-import { MANIFEST_UPDATE_TYPE } from "../types";
-import updatePeriodInPlace from "../update_period_in_place";
+import log from "../../../log.ts";
+import type Period from "../period.ts";
+import { MANIFEST_UPDATE_TYPE } from "../types.ts";
+import updatePeriodInPlace from "../update_period_in_place.ts";
 
 const oldVideoRepresentation1 = {
   id: "rep-video-1",

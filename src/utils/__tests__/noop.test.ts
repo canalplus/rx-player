@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import noop from "../noop";
+import noop from "../noop.ts";
 
 describe("utils - noop", () => {
   it("should do nothing at all", () => {

@@ -1,8 +1,8 @@
 import * as React from "react";
-import ChartDataModule, { IChartModule } from "../../modules/ChartData";
-import { IPlayerModule } from "../../modules/player/index";
-import BufferContentChart from "./BufferContent";
-import BufferSizeChart from "./BufferSize";
+import ChartDataModule, { IChartModule } from "../../modules/ChartData.ts";
+import { IPlayerModule } from "../../modules/player/index.ts";
+import BufferContentChart from "./BufferContent.tsx";
+import BufferSizeChart from "./BufferSize.tsx";
 
 const { useEffect, useState } = React;
 

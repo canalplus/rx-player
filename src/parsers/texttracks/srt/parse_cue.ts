@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import parseTimestamp from "./parse_timestamp";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import parseTimestamp from "./parse_timestamp.ts";
 
 export interface ISRTCueObject {
   start: number;

@@ -1,4 +1,4 @@
-import errorMessage from "./error_message";
+import errorMessage from "./error_message.ts";
 
 type IWorkerInitializationErrorCode =
   | "UNKNOWN_ERROR"

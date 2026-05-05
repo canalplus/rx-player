@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
 
-import log from "../log";
+import log from "../log.ts";
 
 /*
 // This constant can also be computed with the following algorithm:

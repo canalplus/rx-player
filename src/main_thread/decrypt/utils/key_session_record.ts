@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
-import type { IProcessedProtectionData } from "../types";
-import { areAllKeyIdsContainedIn } from "./key_id_comparison";
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal.ts";
+import type { IProcessedProtectionData } from "../types.ts";
+import { areAllKeyIdsContainedIn } from "./key_id_comparison.ts";
 
 /**
  * Class storing key-related information linked to a created `MediaKeySession`.

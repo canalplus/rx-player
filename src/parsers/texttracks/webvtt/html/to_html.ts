@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import type { IStyleElements } from "../parse_style_block";
-import convertPayloadToHTML from "./convert_payload_to_html";
-import createStyleAttribute from "./create_style_attribute";
+import isNonEmptyString from "../../../../utils/is_non_empty_string.ts";
+import type { IStyleElements } from "../parse_style_block.ts";
+import convertPayloadToHTML from "./convert_payload_to_html.ts";
+import createStyleAttribute from "./create_style_attribute.ts";
 
 export interface IVTTHTMLCue {
   start: number;

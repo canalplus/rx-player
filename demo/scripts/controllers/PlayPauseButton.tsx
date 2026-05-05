@@ -1,7 +1,7 @@
 import * as React from "react";
-import Button from "../components/Button";
-import useModuleState from "../lib/useModuleState";
-import type { IPlayerModule } from "../modules/player/index";
+import Button from "../components/Button.tsx";
+import useModuleState from "../lib/useModuleState.ts";
+import type { IPlayerModule } from "../modules/player/index.ts";
 
 /**
  * Play/Pause button.

@@ -15,7 +15,10 @@ import { describe, it, expect } from "vitest";
  * limitations under the License.
  */
 
-import normalizeLanguage, { normalizeAudioTrack, normalizeTextTrack } from "../normalize";
+import normalizeLanguage, {
+  normalizeAudioTrack,
+  normalizeTextTrack,
+} from "../normalize.ts";
 
 describe("utils - normalizeLanguage", () => {
   it("should translate an empty string to an undetermined code", () => {

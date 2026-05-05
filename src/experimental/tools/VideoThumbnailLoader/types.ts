@@ -14,8 +14,13 @@
  * limitations under the License.
  */
 
-import type { IManifest, IAdaptation, IPeriod, IRepresentation } from "../../../manifest";
-import type { ISegmentParser, ITransportPipelines } from "../../../transports";
+import type {
+  IManifest,
+  IAdaptation,
+  IPeriod,
+  IRepresentation,
+} from "../../../manifest/index.ts";
+import type { ISegmentParser, ITransportPipelines } from "../../../transports/index.ts";
 
 export interface IContentInfo {
   manifest: IManifest;

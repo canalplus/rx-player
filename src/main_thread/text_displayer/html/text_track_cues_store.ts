@@ -1,12 +1,12 @@
-import assert from "../../../utils/assert";
-import type { IHTMLCue, ICuesGroup } from "./utils";
+import assert from "../../../utils/assert.ts";
+import type { IHTMLCue, ICuesGroup } from "./utils.ts";
 import {
   areNearlyEqual,
   getCuesAfter,
   getCuesBefore,
   removeCuesInfosBetween,
   areCuesStartNearlyEqual,
-} from "./utils";
+} from "./utils.ts";
 
 /**
  * first or last IHTMLCue in a group can have a slighlty different start

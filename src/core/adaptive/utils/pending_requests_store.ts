@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
+import log from "../../../log.ts";
 import type {
   IManifest,
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
-} from "../../../manifest";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import objectValues from "../../../utils/object_values";
+} from "../../../manifest/index.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import objectValues from "../../../utils/object_values.ts";
 
 /**
  * Store information about pending requests, like information about:

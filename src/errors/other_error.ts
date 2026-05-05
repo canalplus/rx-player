@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IOtherErrorCode } from "./error_codes";
-import { ErrorTypes } from "./error_codes";
-import errorMessage from "./error_message";
+import type { IOtherErrorCode } from "./error_codes.ts";
+import { ErrorTypes } from "./error_codes.ts";
+import errorMessage from "./error_message.ts";
 
 /**
  * @class OtherError

@@ -1,16 +1,16 @@
-import BROWSER_GLOBALS from "../../compat/browser_compatibility_types";
-import { formatError } from "../../errors";
-import type { ICorePlaybackObservation } from "../../main_thread/init/utils/create_core_playback_observer";
-import { createRepresentationFilterFromFnString } from "../../manifest";
-import type Manifest from "../../manifest/classes";
+import BROWSER_GLOBALS from "../../compat/browser_compatibility_types.ts";
+import { formatError } from "../../errors/index.ts";
+import type { ICorePlaybackObservation } from "../../main_thread/init/utils/create_core_playback_observer.ts";
+import type Manifest from "../../manifest/classes/index.ts";
+import { createRepresentationFilterFromFnString } from "../../manifest/index.ts";
 import type {
   IManifestLoader,
   IRepresentationFilter,
   ISegmentLoader,
-} from "../../public_types";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type SegmentSinksStore from "../segment_sinks";
-import type { ISentError } from "../types";
+} from "../../public_types.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type SegmentSinksStore from "../segment_sinks/index.ts";
+import type { ISentError } from "../types.ts";
 
 /**
  * "Plugins" are a specific kind of API where an application can define complex

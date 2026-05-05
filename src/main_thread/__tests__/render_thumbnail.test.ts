@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import TaskCanceller from "../../utils/task_canceller";
-import type { IPublicApiContentInfos } from "../api/public_api";
-import renderThumbnail from "../render_thumbnail";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import type { IPublicApiContentInfos } from "../api/public_api.ts";
+import renderThumbnail from "../render_thumbnail.ts";
 
 const { mockFormatError, mockGetPeriodForTime } = vi.hoisted(() => {
   return {

@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import config from "../config";
-import log from "../log";
-import type { IEventEmitter } from "../utils/event_emitter";
-import globalScope from "../utils/global_scope";
-import isNonEmptyString from "../utils/is_non_empty_string";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-import noop from "../utils/noop";
-import type { IReadOnlySharedReference } from "../utils/reference";
-import SharedReference from "../utils/reference";
-import type { CancellationSignal } from "../utils/task_canceller";
+import config from "../config.ts";
+import log from "../log.ts";
+import type { IEventEmitter } from "../utils/event_emitter.ts";
+import globalScope from "../utils/global_scope.ts";
+import isNonEmptyString from "../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
+import noop from "../utils/noop.ts";
+import type { IReadOnlySharedReference } from "../utils/reference.ts";
+import SharedReference from "../utils/reference.ts";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
 import type {
   ICompatDocument,
   ICompatPictureInPictureWindow,
   IEventTarget,
   IMediaElement,
   IMediaEncryptedEvent,
-} from "./browser_compatibility_types";
+} from "./browser_compatibility_types.ts";
 
 const BROWSER_PREFIXES = ["", "webkit", "moz", "ms"];
 

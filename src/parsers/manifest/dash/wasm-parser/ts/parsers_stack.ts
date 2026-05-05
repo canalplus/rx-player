@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import noop from "../../../../../utils/noop";
+import noop from "../../../../../utils/noop.ts";
 
 /** Type of the function called when a Node opening is encountered. */
 export type IChildrenParser = (node: number) => void;

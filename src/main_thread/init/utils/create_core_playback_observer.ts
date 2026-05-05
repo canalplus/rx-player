@@ -15,11 +15,11 @@
  */
 
 // TODO: move that file somewhere else
-import getBufferedDataPerMediaBuffer from "../../../core/entry/get_buffered_data_per_media_buffer";
-import type { IPausedPlaybackObservation } from "../../../core/types";
-import type { IManifestMetadata } from "../../../manifest";
-import { getMaximumSafePosition } from "../../../manifest";
-import type { IMediaSourceInterface } from "../../../mse";
+import getBufferedDataPerMediaBuffer from "../../../core/entry/get_buffered_data_per_media_buffer.ts";
+import type { IPausedPlaybackObservation } from "../../../core/types.ts";
+import type { IManifestMetadata } from "../../../manifest/index.ts";
+import { getMaximumSafePosition } from "../../../manifest/index.ts";
+import type { IMediaSourceInterface } from "../../../mse/index.ts";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
@@ -27,14 +27,14 @@ import type {
   ObservationPosition,
   IRebufferingStatus,
   IFreezingStatus,
-} from "../../../playback_observer";
-import type { ITrackType } from "../../../public_types";
-import type { IRange } from "../../../utils/ranges";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference from "../../../utils/reference";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller from "../../../utils/task_canceller";
-import type { ITextDisplayer } from "../../text_displayer";
+} from "../../../playback_observer/index.ts";
+import type { ITrackType } from "../../../public_types.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import SharedReference from "../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import type { ITextDisplayer } from "../../text_displayer/index.ts";
 
 /** Arguments needed to create the core's version of the PlaybackObserver. */
 export interface ICorePlaybackObserverArguments {

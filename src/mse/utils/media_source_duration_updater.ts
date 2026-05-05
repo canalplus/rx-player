@@ -17,14 +17,18 @@
 import type {
   IMediaSource,
   ISourceBufferList,
-} from "../../compat/browser_compatibility_types";
-import { onSourceOpen, onSourceEnded, onSourceClose } from "../../compat/event_listeners";
-import hasIssuesWithHighMediaSourceDuration from "../../compat/has_issues_with_high_media_source_duration";
-import log from "../../log";
-import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import TaskCanceller from "../../utils/task_canceller";
+} from "../../compat/browser_compatibility_types.ts";
+import {
+  onSourceOpen,
+  onSourceEnded,
+  onSourceClose,
+} from "../../compat/event_listeners.ts";
+import hasIssuesWithHighMediaSourceDuration from "../../compat/has_issues_with_high_media_source_duration.ts";
+import log from "../../log.ts";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import SharedReference from "../../utils/reference.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
 
 /** Number of seconds in a regular year. */
 const YEAR_IN_SECONDS = 365 * 24 * 3600;

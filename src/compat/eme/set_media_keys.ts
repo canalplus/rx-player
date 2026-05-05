@@ -1,8 +1,8 @@
-import log from "../../log";
-import sleep from "../../utils/sleep";
-import type { IMediaElement, IMediaKeys } from "../browser_compatibility_types";
-import shouldAwaitSetMediaKeys from "../should_await_set_media_keys";
-import type { IEmeApiImplementation } from "./eme-api-implementation";
+import log from "../../log.ts";
+import sleep from "../../utils/sleep.ts";
+import type { IMediaElement, IMediaKeys } from "../browser_compatibility_types.ts";
+import shouldAwaitSetMediaKeys from "../should_await_set_media_keys.ts";
+import type { IEmeApiImplementation } from "./eme-api-implementation.ts";
 
 /**
  * @param {Object} emeImplementation

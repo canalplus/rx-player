@@ -19,8 +19,8 @@ import type {
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
-} from "./stream_orchestrator";
-import StreamOrchestrator from "./stream_orchestrator";
+} from "./stream_orchestrator.ts";
+import StreamOrchestrator from "./stream_orchestrator.ts";
 
 export default StreamOrchestrator;
 export type {

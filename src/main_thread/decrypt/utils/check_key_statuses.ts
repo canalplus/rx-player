@@ -17,17 +17,17 @@
 import type {
   IMediaKeySession,
   IMediaKeySystemAccess,
-} from "../../../compat/browser_compatibility_types";
-import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid";
-import { EncryptedMediaError } from "../../../errors";
-import log from "../../../log";
+} from "../../../compat/browser_compatibility_types.ts";
+import getUUIDKidFromKeyStatusKID from "../../../compat/eme/get_uuid_kid_from_keystatus_kid.ts";
+import { EncryptedMediaError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
 import type {
   IEncryptedMediaErrorKeyStatusObject,
   IKeySystemOption,
   IPlayerError,
-} from "../../../public_types";
-import { assertUnreachable } from "../../../utils/assert";
-import { bytesToHex } from "../../../utils/string_parsing";
+} from "../../../public_types.ts";
+import { assertUnreachable } from "../../../utils/assert.ts";
+import { bytesToHex } from "../../../utils/string_parsing.ts";
 
 /**
  * Error thrown when the MediaKeySession has to be closed due to a trigger

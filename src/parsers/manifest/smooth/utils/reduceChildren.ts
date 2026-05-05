@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ITNode } from "../../../../utils/xml-parser";
+import type { ITNode } from "../../../../utils/xml-parser.ts";
 
 /**
  * Reduce implementation for the children of the given element.

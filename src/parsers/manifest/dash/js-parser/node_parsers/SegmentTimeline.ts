@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { ITNode } from "../../../../../utils/xml-parser";
-import type { ITimelineParser } from "../../node_parser_types";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
+import type { ITimelineParser } from "../../node_parser_types.ts";
 
 /**
  * @param {Object} root

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import assert from "../../../utils/assert";
+import log from "../../../log.ts";
+import assert from "../../../utils/assert.ts";
 import {
   be2toi,
   be3toi,
@@ -25,14 +25,14 @@ import {
   concat,
   itobe4,
   itobe8,
-} from "../../../utils/byte_parsing";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import { hexToBytes, readNullTerminatedString } from "../../../utils/string_parsing";
-import { MAX_32_BIT_INT } from "./constants";
-import { createBox } from "./create_box";
-import { getPlayReadyKIDFromPrivateData } from "./drm";
-import { getBoxContent, getBoxOffsets, getChildBox } from "./get_box";
-import { getEMSG, getMDIA, getTRAF, getTRAFs } from "./read";
+} from "../../../utils/byte_parsing.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import { hexToBytes, readNullTerminatedString } from "../../../utils/string_parsing.ts";
+import { MAX_32_BIT_INT } from "./constants.ts";
+import { createBox } from "./create_box.ts";
+import { getPlayReadyKIDFromPrivateData } from "./drm/index.ts";
+import { getBoxContent, getBoxOffsets, getChildBox } from "./get_box.ts";
+import { getEMSG, getMDIA, getTRAF, getTRAFs } from "./read.ts";
 
 /** Information related to a PSSH box. */
 export interface IISOBMFFPSSHInfo {

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../../../../../log";
-import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
-import type { IIndexSegment } from "../../../../utils/index_helpers";
+import log from "../../../../../../log.ts";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined.ts";
+import type { IIndexSegment } from "../../../../utils/index_helpers.ts";
 
 /**
  * Translate parsed `S` node into Segment compatible with this index:

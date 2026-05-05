@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IIndexSegment } from "./index_helpers";
+import type { IIndexSegment } from "./index_helpers.ts";
 
 /**
  * Remove segments which starts before the given `firstAvailablePosition` from

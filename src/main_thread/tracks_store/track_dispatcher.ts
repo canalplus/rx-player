@@ -2,19 +2,22 @@ import type {
   IAdaptationChoice,
   IRepresentationsChoice,
   ITrackSwitchingMode,
-} from "../../core/types";
-import type { IAdaptationMetadata, IRepresentationMetadata } from "../../manifest";
-import { isRepresentationPlayable } from "../../manifest";
+} from "../../core/types.ts";
+import type {
+  IAdaptationMetadata,
+  IRepresentationMetadata,
+} from "../../manifest/index.ts";
+import { isRepresentationPlayable } from "../../manifest/index.ts";
 import type {
   IAudioRepresentationsSwitchingMode,
   IVideoRepresentationsSwitchingMode,
-} from "../../public_types";
-import arrayIncludes from "../../utils/array_includes";
-import EventEmitter from "../../utils/event_emitter";
-import noop from "../../utils/noop";
-import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
-import TaskCanceller from "../../utils/task_canceller";
+} from "../../public_types.ts";
+import arrayIncludes from "../../utils/array_includes.ts";
+import EventEmitter from "../../utils/event_emitter.ts";
+import noop from "../../utils/noop.ts";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import SharedReference from "../../utils/reference.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
 
 /**
  * Class handling track changes and quality locking for a single Period and

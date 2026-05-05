@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import canPatchISOBMFFSegment from "../../../compat/can_patch_isobmff";
+import canPatchISOBMFFSegment from "../../../compat/can_patch_isobmff.ts";
 import {
   createBoxWithChildren,
   getBox,
@@ -22,10 +22,10 @@ import {
   getBoxOffsets,
   getUuidContent,
   updateBoxLength,
-} from "../../../parsers/containers/isobmff";
-import { itobe4 } from "../../../utils/byte_parsing";
-import { createFreeBox, createTfdtBox } from "./create_boxes";
-import createTrafBox from "./create_traf_box";
+} from "../../../parsers/containers/isobmff/index.ts";
+import { itobe4 } from "../../../utils/byte_parsing.ts";
+import { createFreeBox, createTfdtBox } from "./create_boxes.ts";
+import createTrafBox from "./create_traf_box.ts";
 
 /**
  * Update ISOBMFF Segment downloaded in Smooth Streaming so it is playable on

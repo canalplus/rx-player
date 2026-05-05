@@ -1,6 +1,6 @@
 import type { MockInstance } from "vitest";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import Logger from "../logger";
+import Logger from "../logger.ts";
 
 /**
  * This file contains functions helping with TimeRanges management.

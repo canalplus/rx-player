@@ -3,6 +3,7 @@
   "author": "Canal+",
   "version": "4.5.0",
   "description": "Canal+ HTML5 Video Player",
+  "type": "module",
   "main": "./dist/commonjs/index.js",
   "module": "./dist/es2017/index.js",
   "browser": "./dist/es2017/index.js",

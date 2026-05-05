@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import * as strUtils from "../string_parsing";
+import * as strUtils from "../string_parsing.ts";
 
 function checkUint8ArrayEquality(arr1: Uint8Array, arr2: Uint8Array): string | null {
   if (arr1.length !== arr2.length) {

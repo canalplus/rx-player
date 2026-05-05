@@ -1,8 +1,8 @@
 // Distance from live edge we try to reach when the catching up button
 
 import type { IPlayerModuleState } from ".";
-import type RxPlayer from "../../../../src";
-import type { IStateUpdater } from "../../lib/declareModule";
+import type RxPlayer from "../../../../src/index.ts";
+import type { IStateUpdater } from "../../lib/declareModule.ts";
 
 // is enabled.
 const LIVE_GAP_GOAL_WHEN_CATCHING_UP = 3.5;

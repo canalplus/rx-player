@@ -1,4 +1,4 @@
-import LANGUAGE_CODES from "../../assets/languages";
+import LANGUAGE_CODES from "../../assets/languages.ts";
 
 export default function translateLanguageCode(
   langCode: string | undefined | null,

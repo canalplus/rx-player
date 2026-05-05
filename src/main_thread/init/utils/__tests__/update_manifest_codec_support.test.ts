@@ -1,18 +1,18 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
+import type { IMediaElement } from "../../../../compat/browser_compatibility_types.ts";
 import type {
   IManifestMetadata,
   IPeriodMetadata,
   IAdaptationMetadata,
   IRepresentationMetadata,
-} from "../../../../manifest";
-import { ManifestMetadataFormat } from "../../../../manifest";
+} from "../../../../manifest/index.ts";
+import { ManifestMetadataFormat } from "../../../../manifest/index.ts";
 
-import type { IContentProtections } from "../../../../parsers/manifest";
-import assert from "../../../../utils/assert";
-import sleep from "../../../../utils/sleep";
-import ContentDecryptor from "../../../decrypt";
-import { updateManifestCodecSupport } from "../update_manifest_codec_support";
+import type { IContentProtections } from "../../../../parsers/manifest/index.ts";
+import assert from "../../../../utils/assert.ts";
+import sleep from "../../../../utils/sleep.ts";
+import ContentDecryptor from "../../../decrypt/index.ts";
+import { updateManifestCodecSupport } from "../update_manifest_codec_support.ts";
 
 function generateFakeManifestWithRepresentations(
   videoRepresentations: IRepresentationMetadata[],
@@ -207,7 +207,8 @@ describe("init - utils - updateManifestCodecSupport", () => {
         return new Uint8Array([]);
       },
     };
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme/index.ts"))
+      .default;
     const emeImplem = getEmeApiImplementation("auto");
     assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
@@ -299,7 +300,8 @@ describe("init - utils - updateManifestCodecSupport", () => {
       },
     };
     const video = document.createElement("video");
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme/index.ts"))
+      .default;
     const emeImplem = getEmeApiImplementation("auto");
     assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
@@ -356,7 +358,8 @@ describe("init - utils - updateManifestCodecSupport", () => {
     );
 
     const video = document.createElement("video");
-    const getEmeApiImplementation = (await import("../../../../compat/eme")).default;
+    const getEmeApiImplementation = (await import("../../../../compat/eme/index.ts"))
+      .default;
     const emeImplem = getEmeApiImplementation("auto");
     assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, []);

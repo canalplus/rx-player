@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import canPatchISOBMFFSegment from "../can_patch_isobmff";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
+import canPatchISOBMFFSegment from "../can_patch_isobmff.ts";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
 
 describe("compat - canPatchISOBMFFSegment", () => {
   beforeEach(() => {

@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-import CdnPrioritizer from "./cdn_prioritizer";
+import CdnPrioritizer from "./cdn_prioritizer.ts";
 import type {
   IManifestFetcherSettings,
   IManifestFetcherEvent,
   IManifestRefreshSettings,
-} from "./manifest";
-import ManifestFetcher from "./manifest";
-import type { SegmentQueue, ISegmentQueueCreatorBackoffOptions } from "./segment";
-import SegmentQueueCreator from "./segment";
-import createThumbnailFetcher from "./thumbnails";
-import type { IThumbnailFetcher } from "./thumbnails";
+} from "./manifest/index.ts";
+import ManifestFetcher from "./manifest/index.ts";
+import type {
+  SegmentQueue,
+  ISegmentQueueCreatorBackoffOptions,
+} from "./segment/index.ts";
+import SegmentQueueCreator from "./segment/index.ts";
+import createThumbnailFetcher from "./thumbnails/index.ts";
+import type { IThumbnailFetcher } from "./thumbnails/index.ts";
 
 export type {
   IManifestFetcherSettings,

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import type SegmentSinksStore from "../../segment_sinks";
-import type { IBufferedChunk } from "../../segment_sinks";
-import FreezeResolver from "../FreezeResolver";
-import type { IFreezeResolverObservation } from "../FreezeResolver";
+import type SegmentSinksStore from "../../segment_sinks/index.ts";
+import type { IBufferedChunk } from "../../segment_sinks/index.ts";
+import FreezeResolver from "../FreezeResolver.ts";
+import type { IFreezeResolverObservation } from "../FreezeResolver.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */

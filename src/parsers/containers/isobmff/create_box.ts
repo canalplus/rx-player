@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { concat, itobe4, itobe8 } from "../../../utils/byte_parsing";
-import { strToUtf8 } from "../../../utils/string_parsing";
-import { MAX_32_BIT_INT } from "./constants";
+import { concat, itobe4, itobe8 } from "../../../utils/byte_parsing.ts";
+import { strToUtf8 } from "../../../utils/string_parsing.ts";
+import { MAX_32_BIT_INT } from "./constants.ts";
 
 /**
  * Speed up string to bytes conversion by memorizing the result

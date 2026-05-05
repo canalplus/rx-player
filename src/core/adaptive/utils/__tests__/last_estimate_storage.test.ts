@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
-import LastEstimateStorage, { ABRAlgorithmType } from "../last_estimate_storage";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks.ts";
+import LastEstimateStorage, { ABRAlgorithmType } from "../last_estimate_storage.ts";
 
 describe("LastEstimateStorage", () => {
   let storage: LastEstimateStorage;

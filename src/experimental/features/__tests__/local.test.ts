@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import initializeCoreEntry from "../../../core/entry";
-import type { IFeaturesObject } from "../../../features/types";
-import { MonoThreadCoreInterface } from "../../../main_thread/core_interface/monothread";
-import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer";
-import local from "../../../transports/local";
-import addLocalManifestFeature from "../local";
+import initializeCoreEntry from "../../../core/entry/index.ts";
+import type { IFeaturesObject } from "../../../features/types.ts";
+import { MonoThreadCoreInterface } from "../../../main_thread/core_interface/monothread.ts";
+import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer.ts";
+import local from "../../../transports/local/index.ts";
+import addLocalManifestFeature from "../local.ts";
 
 describe("Features list - LOCAL_MANIFEST", () => {
   it("should add LOCAL_MANIFEST in the current features", () => {

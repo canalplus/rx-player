@@ -1,5 +1,5 @@
-import isNode from "./is_node";
-import isWorker from "./is_worker";
+import isNode from "./is_node.ts";
+import isWorker from "./is_worker.ts";
 
 declare const global: typeof self;
 

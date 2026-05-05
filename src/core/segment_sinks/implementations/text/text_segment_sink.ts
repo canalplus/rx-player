@@ -1,14 +1,14 @@
-import log from "../../../../log";
-import type { ITextDisplayer } from "../../../../main_thread/types";
+import log from "../../../../log.ts";
+import type { ITextDisplayer } from "../../../../main_thread/types.ts";
 import type {
   ISupportedTextTrackFormat,
   ITextTrackSegmentData,
-} from "../../../../transports";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
-import type { IRange } from "../../../../utils/ranges";
-import type { ICompleteSegmentInfo, IPushChunkInfos, ISBOperation } from "../types";
-import { SegmentSink, SegmentSinkOperation } from "../types";
+} from "../../../../transports/index.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
+import type { IRange } from "../../../../utils/ranges.ts";
+import type { ICompleteSegmentInfo, IPushChunkInfos, ISBOperation } from "../types.ts";
+import { SegmentSink, SegmentSinkOperation } from "../types.ts";
 
 /**
  * SegmentSink implementation to add text data, most likely subtitles.

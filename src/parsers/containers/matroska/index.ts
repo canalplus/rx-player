@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-export type { ICuesSegment } from "./utils";
-export { getSegmentsFromCues, getTimeCodeScale } from "./utils";
+export type { ICuesSegment } from "./utils.ts";
+export { getSegmentsFromCues, getTimeCodeScale } from "./utils.ts";

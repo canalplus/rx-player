@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import config from "../config";
-import { getWebKitMediaKeysConstructor } from "./eme/custom_media_keys";
-import EnvDetector from "./env_detector";
+import config from "../config.ts";
+import { getWebKitMediaKeysConstructor } from "./eme/custom_media_keys/index.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * On Safari 12.1, it seems that since fairplay CDM implementation

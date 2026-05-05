@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-export { METAPLAYLIST } from "./metaplaylist";
-export { LOCAL_MANIFEST } from "./local";
-export { MULTI_THREAD } from "./multi_thread";
+export { METAPLAYLIST } from "./metaplaylist.ts";
+export { LOCAL_MANIFEST } from "./local.ts";
+export { MULTI_THREAD } from "./multi_thread.ts";

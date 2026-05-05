@@ -1,5 +1,5 @@
 import { describe, afterEach, it, expect, vi, beforeEach } from "vitest";
-import probeHDCPPolicy from "../../probers/HDCPPolicy";
+import probeHDCPPolicy from "../../probers/HDCPPolicy.ts";
 
 type IRequestMediaKeySystemAccess =
   | ((...args: unknown[]) => Promise<unknown>)

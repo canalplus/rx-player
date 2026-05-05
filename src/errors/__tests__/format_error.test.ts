@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import formatError from "../format_error";
-import OtherError from "../other_error";
+import formatError from "../format_error.ts";
+import OtherError from "../other_error.ts";
 
 const mocks = vi.hoisted(() => {
   return {

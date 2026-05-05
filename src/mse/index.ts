@@ -2,5 +2,5 @@ export type {
   IMediaSourceInterface,
   ISourceBufferInterface,
   ISourceBufferInterfaceAppendBufferParameters,
-} from "./types";
-export { SourceBufferType } from "./types";
+} from "./types.ts";
+export { SourceBufferType } from "./types.ts";

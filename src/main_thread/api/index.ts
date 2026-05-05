@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-import Player from "./public_api";
+import Player from "./public_api.ts";
 export default Player;

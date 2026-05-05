@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { ITNode } from "../../../../../utils/xml-parser";
-import type { IContentComponentAttributes } from "../../node_parser_types";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
+import type { IContentComponentAttributes } from "../../node_parser_types.ts";
 
 /**
  * Parse a "ContentComponent" Element in a DASH MPD.

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import createStyledElement from "../create_styled_element";
+import createStyledElement from "../create_styled_element.ts";
 
 describe("parsers - webvtt - createStyledElement", () => {
   it("should apply style for authorized elements", () => {

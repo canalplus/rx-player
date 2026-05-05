@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import EWMA from "../ewma";
+import EWMA from "../ewma.ts";
 
 describe("ABR - EWMA", () => {
   it("should return the last bitrate if half-life is at 0", () => {

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
-import arrayFind from "../../../../utils/array_find";
-import arrayIncludes from "../../../../utils/array_includes";
-import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import log from "../../../../log.ts";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest/index.ts";
+import arrayFind from "../../../../utils/array_find.ts";
+import arrayIncludes from "../../../../utils/array_includes.ts";
+import isNonEmptyString from "../../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
-} from "../node_parser_types";
+} from "../node_parser_types.ts";
 
 /** Different "type" a parsed Adaptation can be. */
 type IAdaptationType = "audio" | "video" | "text";

@@ -19,5 +19,5 @@
  * It always should be imported through the `features` object.
  */
 
-import DASHPipelines from "./pipelines";
+import DASHPipelines from "./pipelines.ts";
 export default DASHPipelines;

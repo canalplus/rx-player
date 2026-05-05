@@ -1,9 +1,9 @@
 import * as React from "react";
-import type { IVideoRepresentation } from "../../../src/public_types";
-import capitalizeFirstLetter from "../lib/capitalizeFirstLetter";
-import shuffleArray from "../lib/shuffleArray";
-import ToolTip from "./ToolTip";
-import { IBufferedData } from "../modules/player";
+import type { IVideoRepresentation } from "../../../src/public_types.ts";
+import capitalizeFirstLetter from "../lib/capitalizeFirstLetter.ts";
+import shuffleArray from "../lib/shuffleArray.ts";
+import ToolTip from "./ToolTip.tsx";
+import { IBufferedData } from "../modules/player/index.ts";
 
 const { useEffect, useMemo, useRef, useState } = React;
 

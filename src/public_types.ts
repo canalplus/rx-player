@@ -3,18 +3,23 @@
  * Those types are considered as part of the API.
  */
 
-import type { IPreferredEmeApiType } from "./compat/eme";
-import type { EncryptedMediaError, MediaError, NetworkError, OtherError } from "./errors";
+import type { IPreferredEmeApiType } from "./compat/eme/index.ts";
+import type {
+  EncryptedMediaError,
+  MediaError,
+  NetworkError,
+  OtherError,
+} from "./errors/index.ts";
 import type {
   IPersistentSessionInfoV0,
   IPersistentSessionInfoV1,
   IPersistentSessionInfoV2,
   IPersistentSessionInfoV3,
   IPersistentSessionInfoV4,
-} from "./main_thread/decrypt";
-import type { IManifest, ITaggedTrack } from "./manifest";
-import type { ILocalManifest } from "./parsers/manifest/local";
-import type { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser";
+} from "./main_thread/decrypt/index.ts";
+import type { IManifest, ITaggedTrack } from "./manifest/index.ts";
+import type { ILocalManifest } from "./parsers/manifest/local/index.ts";
+import type { IMetaPlaylist } from "./parsers/manifest/metaplaylist/metaplaylist_parser.ts";
 
 export type { ITaggedTrack as IMediaErrorTrackContext };
 

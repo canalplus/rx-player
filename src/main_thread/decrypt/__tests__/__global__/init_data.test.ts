@@ -1,14 +1,14 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-import getEmeApiImplementation from "../../../../compat/eme";
-import assert from "../../../../utils/assert";
-import ContentDecryptor from "../../content_decryptor";
-import { ContentDecryptorState } from "../../types";
+import getEmeApiImplementation from "../../../../compat/eme/index.ts";
+import assert from "../../../../utils/assert.ts";
+import ContentDecryptor from "../../content_decryptor.ts";
+import { ContentDecryptorState } from "../../types.ts";
 import {
   formatFakeChallengeFromInitData,
   MediaKeySessionImpl,
   MediaKeysImpl,
   mockCompat,
-} from "./utils";
+} from "./utils.ts";
 
 const mocks = vi.hoisted(() => {
   return {

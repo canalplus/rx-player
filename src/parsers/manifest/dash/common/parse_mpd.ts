@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 
-import config from "../../../../config";
-import log from "../../../../log";
-import type { IManifest } from "../../../../manifest";
-import arrayFind from "../../../../utils/array_find";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
-import { getFilenameIndexInUrl } from "../../../../utils/url-utils";
-import type { IParsedManifest } from "../../types";
+import config from "../../../../config.ts";
+import log from "../../../../log.ts";
+import type { IManifest } from "../../../../manifest/index.ts";
+import arrayFind from "../../../../utils/array_find.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
+import { getFilenameIndexInUrl } from "../../../../utils/url-utils.ts";
+import type { IParsedManifest } from "../../types.ts";
 import type {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
-} from "../node_parser_types";
-import type { IResponseData } from "../parsers_types";
-import ContentProtectionParser from "./content_protection_parser";
-import getClockOffset from "./get_clock_offset";
-import getHTTPUTCTimingURL from "./get_http_utc-timing_url";
-import getMinimumAndMaximumPositions from "./get_minimum_and_maximum_positions";
-import ManifestBoundsCalculator from "./manifest_bounds_calculator";
-import parseAvailabilityStartTime from "./parse_availability_start_time";
-import type { IXLinkInfos } from "./parse_periods";
-import parsePeriods from "./parse_periods";
-import type { IResolvedBaseUrl } from "./resolve_base_urls";
-import resolveBaseURLs from "./resolve_base_urls";
+} from "../node_parser_types.ts";
+import type { IResponseData } from "../parsers_types.ts";
+import ContentProtectionParser from "./content_protection_parser.ts";
+import getClockOffset from "./get_clock_offset.ts";
+import getHTTPUTCTimingURL from "./get_http_utc-timing_url.ts";
+import getMinimumAndMaximumPositions from "./get_minimum_and_maximum_positions.ts";
+import ManifestBoundsCalculator from "./manifest_bounds_calculator.ts";
+import parseAvailabilityStartTime from "./parse_availability_start_time.ts";
+import type { IXLinkInfos } from "./parse_periods.ts";
+import parsePeriods from "./parse_periods.ts";
+import type { IResolvedBaseUrl } from "./resolve_base_urls.ts";
+import resolveBaseURLs from "./resolve_base_urls.ts";
 
 /** Possible options for `parseMPD`.  */
 export interface IMPDParserArguments {

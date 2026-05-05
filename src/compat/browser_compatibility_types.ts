@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IListener } from "../utils/event_emitter";
-import globalScope from "../utils/global_scope";
-import type { IEmeApiImplementation } from "./eme";
+import type { IListener } from "../utils/event_emitter.ts";
+import globalScope from "../utils/global_scope.ts";
+import type { IEmeApiImplementation } from "./eme/index.ts";
 
 /**
  * Browser implementation of a VTTCue constructor.

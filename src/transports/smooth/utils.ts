@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { ISegment, IRepresentation } from "../../manifest";
-import type { ICdnMetadata } from "../../parsers/manifest";
-import { resolveURL } from "../../utils/url-utils";
+import type { ISegment, IRepresentation } from "../../manifest/index.ts";
+import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
+import { resolveURL } from "../../utils/url-utils.ts";
 
 /**
  * Returns `true` if the given Representation refers to segments in an MP4

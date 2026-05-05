@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import shouldPerformInitialSeekToZero from "../../../compat/should_seek_at_zero";
-import shouldValidateMetadata from "../../../compat/should_validate_metadata";
-import { MediaError } from "../../../errors";
-import log from "../../../log";
-import type { IMediaElementPlaybackObserver } from "../../../playback_observer";
-import { SeekingState } from "../../../playback_observer";
-import type { IPlayerError } from "../../../public_types";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference from "../../../utils/reference";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
+import shouldPerformInitialSeekToZero from "../../../compat/should_seek_at_zero.ts";
+import shouldValidateMetadata from "../../../compat/should_validate_metadata.ts";
+import { MediaError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { IMediaElementPlaybackObserver } from "../../../playback_observer/index.ts";
+import { SeekingState } from "../../../playback_observer/index.ts";
+import type { IPlayerError } from "../../../public_types.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import SharedReference from "../../../utils/reference.ts";
 import type {
   CancellationError,
   CancellationSignal,
-} from "../../../utils/task_canceller";
+} from "../../../utils/task_canceller.ts";
 
 /** Event emitted when trying to perform the initial `play`. */
 export type IInitialPlayEvent =

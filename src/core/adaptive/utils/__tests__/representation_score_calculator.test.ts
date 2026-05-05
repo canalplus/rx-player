@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { IRepresentation } from "../../../../manifest";
-import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks.ts";
+import type { IRepresentation } from "../../../../manifest/index.ts";
 import RepresentationScoreCalculator, {
   ScoreConfidenceLevel,
-} from "../representation_score_calculator";
+} from "../representation_score_calculator.ts";
 
 vi.mock("../../../../log", () => ({
   default: {

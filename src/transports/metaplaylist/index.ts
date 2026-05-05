@@ -19,5 +19,5 @@
  * It always should be imported through the `features` object.
  */
 
-import MetaPlaylistPipelines from "./pipelines";
+import MetaPlaylistPipelines from "./pipelines.ts";
 export default MetaPlaylistPipelines;

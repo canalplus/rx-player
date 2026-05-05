@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../log";
-import type { IEventEmitter } from "../utils/event_emitter";
+import log from "../log.ts";
+import type { IEventEmitter } from "../utils/event_emitter.ts";
 
 interface ICompatSourceBufferEvents {
   updatestart: Event | undefined;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IMPDIntermediateRepresentation } from "../node_parser_types";
+import type { IMPDIntermediateRepresentation } from "../node_parser_types.ts";
 
 type ISupportedHttpUtcTimingScheme =
   | {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import log from "../../log";
-import type { ISourceBuffer } from "../browser_compatibility_types";
-import tryToChangeSourceBufferType from "../change_source_buffer_type";
+import log from "../../log.ts";
+import type { ISourceBuffer } from "../browser_compatibility_types.ts";
+import tryToChangeSourceBufferType from "../change_source_buffer_type.ts";
 
 describe("Compat - tryToChangeSourceBufferType", () => {
   it("should just return false if the SourceBuffer provided does not have a changeType method", () => {

@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-export { DASH } from "./dash";
-export { DASH_WASM } from "./dash_wasm";
-export { DEBUG_ELEMENT } from "./debug_element";
-export { DIRECTFILE } from "./directfile";
-export { EME } from "./eme";
-export { HTML_SAMI_PARSER } from "./html_sami_parser";
-export { HTML_SRT_PARSER } from "./html_srt_parser";
-export { HTML_TEXT_BUFFER } from "./html_text_buffer";
-export { HTML_TTML_PARSER } from "./html_ttml_parser";
-export { HTML_VTT_PARSER } from "./html_vtt_parser";
-export { MEDIA_SOURCE_MAIN } from "./media_source_main";
-export { NATIVE_SAMI_PARSER } from "./native_sami_parser";
-export { NATIVE_SRT_PARSER } from "./native_srt_parser";
-export { NATIVE_TEXT_BUFFER } from "./native_text_buffer";
-export { NATIVE_TTML_PARSER } from "./native_ttml_parser";
-export { NATIVE_VTT_PARSER } from "./native_vtt_parser";
-export { SMOOTH } from "./smooth";
+export { DASH } from "./dash.ts";
+export { DASH_WASM } from "./dash_wasm.ts";
+export { DEBUG_ELEMENT } from "./debug_element.ts";
+export { DIRECTFILE } from "./directfile.ts";
+export { EME } from "./eme.ts";
+export { HTML_SAMI_PARSER } from "./html_sami_parser.ts";
+export { HTML_SRT_PARSER } from "./html_srt_parser.ts";
+export { HTML_TEXT_BUFFER } from "./html_text_buffer.ts";
+export { HTML_TTML_PARSER } from "./html_ttml_parser.ts";
+export { HTML_VTT_PARSER } from "./html_vtt_parser.ts";
+export { MEDIA_SOURCE_MAIN } from "./media_source_main.ts";
+export { NATIVE_SAMI_PARSER } from "./native_sami_parser.ts";
+export { NATIVE_SRT_PARSER } from "./native_srt_parser.ts";
+export { NATIVE_TEXT_BUFFER } from "./native_text_buffer.ts";
+export { NATIVE_TTML_PARSER } from "./native_ttml_parser.ts";
+export { NATIVE_VTT_PARSER } from "./native_vtt_parser.ts";
+export { SMOOTH } from "./smooth.ts";

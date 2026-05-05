@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import parseTimestamp from "../parse_timestamp";
+import parseTimestamp from "../parse_timestamp.ts";
 
 const time1 = "00:00:31.080";
 const time2 = "00:18:01";

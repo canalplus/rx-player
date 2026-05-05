@@ -1,3 +1,3 @@
-import renderDebugElement from "./render";
+import renderDebugElement from "./render.ts";
 
 export default renderDebugElement;

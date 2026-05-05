@@ -1,7 +1,7 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import getEmeApiImplementation from "../../../../compat/eme";
-import assert from "../../../../utils/assert";
-import { testKeySystem } from "../../find_key_system";
+import getEmeApiImplementation from "../../../../compat/eme/index.ts";
+import assert from "../../../../utils/assert.ts";
+import { testKeySystem } from "../../find_key_system.ts";
 
 const mocks = vi.hoisted(() => {
   return {

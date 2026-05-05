@@ -1,11 +1,11 @@
-import { OtherError } from "../../errors";
-import type { ILoadedManifestFormat } from "../../public_types";
-import globalScope from "../../utils/global_scope";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import TaskCanceller from "../../utils/task_canceller";
-import type { ISegmentLoader, ITransportManifestPipeline } from "../types";
-import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
-import inferSegmentContainer from "../utils/infer_segment_container";
+import { OtherError } from "../../errors/index.ts";
+import type { ILoadedManifestFormat } from "../../public_types.ts";
+import globalScope from "../../utils/global_scope.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import type { ISegmentLoader, ITransportManifestPipeline } from "../types.ts";
+import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity.ts";
+import inferSegmentContainer from "../utils/infer_segment_container.ts";
 
 /**
  * Add multiple checks on the response given by the `segmentLoader` in argument.

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import parseTTMLToDiv from "../../";
+import parseTTMLToDiv from "../..//index.ts";
 
 const testingText = `<?xml version="1.0" encoding="UTF-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml">

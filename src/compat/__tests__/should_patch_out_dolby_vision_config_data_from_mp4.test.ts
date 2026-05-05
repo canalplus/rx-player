@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import shouldPatchOutDolbyVisionConfigDataFromMp4 from "../should_patch_out_dolby_vision_config_data_from_mp4";
+import shouldPatchOutDolbyVisionConfigDataFromMp4 from "../should_patch_out_dolby_vision_config_data_from_mp4.ts";
 
 const mockGetChromeVersion = vi.hoisted(() => vi.fn());
 vi.mock("../browser_version", () => ({

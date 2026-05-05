@@ -18,14 +18,14 @@ import type {
   IMediaElement,
   IMediaKeys,
   IMediaKeySystemAccess,
-} from "../../../compat/browser_compatibility_types";
-import type { IEmeApiImplementation } from "../../../compat/eme";
-import { setMediaKeys } from "../../../compat/eme/set_media_keys";
-import { EncryptedMediaError } from "../../../errors";
-import log from "../../../log";
-import type { IKeySystemOption } from "../../../public_types";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type LoadedSessionsStore from "./loaded_sessions_store";
+} from "../../../compat/browser_compatibility_types.ts";
+import type { IEmeApiImplementation } from "../../../compat/eme/index.ts";
+import { setMediaKeys } from "../../../compat/eme/set_media_keys.ts";
+import { EncryptedMediaError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { IKeySystemOption } from "../../../public_types.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import type LoadedSessionsStore from "./loaded_sessions_store.ts";
 
 /** DRM-related state that can be associated to a single HTMLMediaElement. */
 export interface IMediaElementMediaKeysInfos {

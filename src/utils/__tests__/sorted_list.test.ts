@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import SortedList from "../sorted_list";
+import SortedList from "../sorted_list.ts";
 
 describe("utils - SortedList", () => {
   it("should authorize adding multiple times the same item", () => {

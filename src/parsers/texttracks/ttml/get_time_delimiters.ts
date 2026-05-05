@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type { ITTParameters } from "./get_parameters";
-import parseTime from "./time_parsing";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import type { ITTParameters } from "./get_parameters.ts";
+import parseTime from "./time_parsing.ts";
 
 /**
  * Get start and end time of an element.

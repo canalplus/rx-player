@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Logger from "./utils/logger";
+import Logger from "./utils/logger.ts";
 
 // create a logger specifically for the RxPlayer.
 const logger = new Logger();

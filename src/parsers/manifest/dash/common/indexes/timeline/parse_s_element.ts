@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../../../../../log";
-import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
-import type { ITNode } from "../../../../../../utils/xml-parser";
+import log from "../../../../../../log.ts";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined.ts";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
 
 /** SegmentTimeline `S` element once parsed. */
 export interface IParsedS {

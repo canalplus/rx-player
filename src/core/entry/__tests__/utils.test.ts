@@ -4,7 +4,7 @@ import {
   synchronizeSegmentSinksOnObservation,
   updateCodecSupportInWorkerMode,
   extractExternalPlugins,
-} from "../utils";
+} from "../utils.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

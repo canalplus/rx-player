@@ -1,25 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { MediaError, SourceBufferError } from "../../../../../errors";
+import { MediaError, SourceBufferError } from "../../../../../errors/index.ts";
 import {
   DummyRepresentation,
   DummyAdaptation,
   DummyPeriod,
   createSegment,
-} from "../../../../../manifest/classes/__tests__/mocks";
+} from "../../../../../manifest/classes/__tests__/mocks.ts";
 import {
   makeReadyOnlyPlaybackObserver,
   DummyObservationPosition,
-} from "../../../../../playback_observer/__tests__/mocks";
-import SharedReference from "../../../../../utils/reference";
-import TaskCanceller, { CancellationError } from "../../../../../utils/task_canceller";
+} from "../../../../../playback_observer/__tests__/mocks.ts";
+import SharedReference from "../../../../../utils/reference.ts";
+import TaskCanceller, { CancellationError } from "../../../../../utils/task_canceller.ts";
+import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks.ts";
 import type {
   IInsertedChunkInfos,
   IPushChunkInfos,
   SegmentSink,
-} from "../../../../segment_sinks";
-import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
-import type { IRepresentationStreamPlaybackObservation } from "../../types";
-import appendSegmentToBuffer from "../append_segment_to_buffer";
+} from "../../../../segment_sinks/index.ts";
+import type { IRepresentationStreamPlaybackObservation } from "../../types.ts";
+import appendSegmentToBuffer from "../append_segment_to_buffer.ts";
 
 vi.mock("../../../../../log", () => ({
   default: {

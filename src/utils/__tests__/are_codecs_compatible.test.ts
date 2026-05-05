@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import areCodecsCompatible, { parseCodec } from "../are_codecs_compatible";
+import areCodecsCompatible, { parseCodec } from "../are_codecs_compatible.ts";
 
 describe("parseCodec", () => {
   it("should return audio/mp4 and mp4a.42.2", () => {

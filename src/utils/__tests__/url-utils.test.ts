@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getFilenameIndexInUrl, getRelativeUrl, resolveURL } from "../url-utils";
+import { getFilenameIndexInUrl, getRelativeUrl, resolveURL } from "../url-utils.ts";
 
 describe(`utils - resolveURL ${resolveURL.name}`, () => {
   it("should return an empty string if no argument is given", () => {

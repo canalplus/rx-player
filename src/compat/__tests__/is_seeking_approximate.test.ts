@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
-import isSeekingApproximate from "../is_seeking_approximate";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
+import isSeekingApproximate from "../is_seeking_approximate.ts";
 
 describe("isSeekingApproximate", () => {
   beforeEach(() => {

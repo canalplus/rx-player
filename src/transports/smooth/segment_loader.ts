@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-import { CustomLoaderError } from "../../errors";
-import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
-import assert from "../../utils/assert";
-import request from "../../utils/request";
-import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
+import { CustomLoaderError } from "../../errors/index.ts";
+import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types.ts";
+import assert from "../../utils/assert.ts";
+import request from "../../utils/request/index.ts";
+import type {
+  CancellationError,
+  CancellationSignal,
+} from "../../utils/task_canceller.ts";
 import type {
   ISegmentContext,
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
-} from "../types";
-import addQueryString from "../utils/add_query_string";
-import byteRange from "../utils/byte_range";
-import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
-import isMP4EmbeddedTrack from "./is_mp4_embedded_track";
-import { createAudioInitSegment, createVideoInitSegment } from "./isobmff";
+} from "../types.ts";
+import addQueryString from "../utils/add_query_string.ts";
+import byteRange from "../utils/byte_range.ts";
+import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity.ts";
+import isMP4EmbeddedTrack from "./is_mp4_embedded_track.ts";
+import { createAudioInitSegment, createVideoInitSegment } from "./isobmff/index.ts";
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.

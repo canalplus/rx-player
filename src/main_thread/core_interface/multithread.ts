@@ -1,6 +1,6 @@
-import log from "../../log";
-import type { IMainThreadMessage } from "../types";
-import CoreInterface from "./base";
+import log from "../../log.ts";
+import type { IMainThreadMessage } from "../types.ts";
+import CoreInterface from "./base.ts";
 
 /**
  * `CoreInterface` implementation for when the core will run in a WebWorker.

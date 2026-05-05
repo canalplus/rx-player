@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import globalScope from "../../../../../utils/global_scope";
-import probeDecodingInfos from "../../probers/decodingInfo";
-import type { IMediaConfiguration } from "../../types";
+import globalScope from "../../../../../utils/global_scope.ts";
+import probeDecodingInfos from "../../probers/decodingInfo.ts";
+import type { IMediaConfiguration } from "../../types.ts";
 
 const oldNavigator = globalScope.navigator;
 

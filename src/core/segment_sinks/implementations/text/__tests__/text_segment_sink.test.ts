@@ -1,16 +1,16 @@
 import { describe, it, expect, vi } from "vitest";
-import type { ITextDisplayerData } from "../../../../../main_thread/text_displayer/types";
+import type { ITextDisplayerData } from "../../../../../main_thread/text_displayer/types.ts";
 import {
   DummyAdaptation,
   DummyPeriod,
   DummyRepresentation,
   createSegment,
-} from "../../../../../manifest/classes/__tests__/mocks";
-import type { IRange } from "../../../../../utils/ranges";
-import SegmentInventory from "../../../inventory";
-import type { IPushChunkInfos } from "../../types";
-import { SegmentSinkOperation } from "../../types";
-import TextSegmentSink, { type ITextDisplayerInterface } from "../text_segment_sink";
+} from "../../../../../manifest/classes/__tests__/mocks.ts";
+import type { IRange } from "../../../../../utils/ranges.ts";
+import SegmentInventory from "../../../inventory/index.ts";
+import type { IPushChunkInfos } from "../../types.ts";
+import { SegmentSinkOperation } from "../../types.ts";
+import TextSegmentSink, { type ITextDisplayerInterface } from "../text_segment_sink.ts";
 
 function createSender() {
   const pushTextData = vi.fn<(infos: ITextDisplayerData) => Promise<IRange[]>>();

@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-import noop from "../../../../../../utils/noop";
+import noop from "../../../../../../utils/noop.ts";
 import type {
   IEventStreamIntermediateRepresentation,
   IPeriodAttributes,
   IPeriodChildren,
-} from "../../../node_parser_types";
-import type { IAttributeParser, IChildrenParser } from "../parsers_stack";
-import type ParsersStack from "../parsers_stack";
-import { AttributeName, TagName } from "../types";
-import { parseString } from "../utils";
+} from "../../../node_parser_types.ts";
+import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
+import type ParsersStack from "../parsers_stack.ts";
+import { AttributeName, TagName } from "../types.ts";
+import { parseString } from "../utils.ts";
 import {
   generateAdaptationSetAttrParser,
   generateAdaptationSetChildrenParser,
-} from "./AdaptationSet";
-import { generateBaseUrlAttrParser } from "./BaseURL";
-import { generateContentProtectionAttrParser } from "./ContentProtection";
+} from "./AdaptationSet.ts";
+import { generateBaseUrlAttrParser } from "./BaseURL.ts";
+import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
 import {
   generateEventStreamAttrParser,
   generateEventStreamChildrenParser,
-} from "./EventStream";
-import { generateSegmentTemplateAttrParser } from "./SegmentTemplate";
+} from "./EventStream.ts";
+import { generateSegmentTemplateAttrParser } from "./SegmentTemplate.ts";
 
 /**
  * Generate a "children parser" once inside a `Perod` node.

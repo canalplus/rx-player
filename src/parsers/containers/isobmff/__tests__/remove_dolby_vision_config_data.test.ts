@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import removeDolbyVisionConfigData from "../remove_dolby_vision_config_data";
+import removeDolbyVisionConfigData from "../remove_dolby_vision_config_data.ts";
 
 /** Write a big-endian uint32 into a DataView */
 function writeU32(view: DataView, offset: number, value: number): void {

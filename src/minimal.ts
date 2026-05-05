@@ -21,8 +21,8 @@
  * import only features that is needed.
  */
 
-import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer";
-import Player from "./main_thread/api";
+import patchWebkitSourceBuffer from "./compat/patch_webkit_source_buffer.ts";
+import Player from "./main_thread/api/index.ts";
 
 patchWebkitSourceBuffer();
 

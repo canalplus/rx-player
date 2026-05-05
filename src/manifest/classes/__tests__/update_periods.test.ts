@@ -1,8 +1,8 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import type { IManifestStreamEvent } from "../../../parsers/manifest";
-import type { IPeriod, IPeriodMetadata } from "../../index";
-import type { IManifestAdaptations, IThumbnailTrack } from "../period";
-import { replacePeriods, updatePeriods } from "../update_periods";
+import type { IManifestStreamEvent } from "../../../parsers/manifest/index.ts";
+import type { IPeriod, IPeriodMetadata } from "../../index.ts";
+import type { IManifestAdaptations, IThumbnailTrack } from "../period.ts";
+import { replacePeriods, updatePeriods } from "../update_periods.ts";
 
 const mocks = vi.hoisted(() => {
   return {

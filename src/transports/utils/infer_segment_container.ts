@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ITrackType } from "../../public_types";
+import type { ITrackType } from "../../public_types.ts";
 
 /**
  * Guess the type of container a segment is in based on Manifest information.

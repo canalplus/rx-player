@@ -1,7 +1,7 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import configHandler from "../../config";
-import canPatchOutPssh from "../can_patch_out_pssh";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
+import configHandler from "../../config.ts";
+import canPatchOutPssh from "../can_patch_out_pssh.ts";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
 
 describe("compat - canPatchOutPssh", () => {
   beforeEach(() => {

@@ -1,31 +1,31 @@
 import type { Mock } from "vitest";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type Manifest from "../../../../../manifest/classes";
-import {
-  type Adaptation,
-  type Period,
-  type Representation,
-  type ISegment,
-} from "../../../../../manifest/classes";
 import {
   DummyAdaptation,
   DummyPeriod,
   DummyManifest,
   DummyRepresentation,
   createSegment,
-} from "../../../../../manifest/classes/__tests__/mocks";
+} from "../../../../../manifest/classes/__tests__/mocks.ts";
+import type Manifest from "../../../../../manifest/classes/index.ts";
+import {
+  type Adaptation,
+  type Period,
+  type Representation,
+  type ISegment,
+} from "../../../../../manifest/classes/index.ts";
 import {
   makeReadyOnlyPlaybackObserver,
   DummyObservationPosition,
-} from "../../../../../playback_observer/__tests__/mocks";
-import type { IRange } from "../../../../../utils/ranges";
-import SharedReference from "../../../../../utils/reference";
-import TaskCanceller from "../../../../../utils/task_canceller";
-import { type SegmentSink } from "../../../../segment_sinks";
-import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
-import type { IRepresentationStreamPlaybackObservation } from "../../types";
-import type appendSegmentToBuffer from "../append_segment_to_buffer";
-import pushInitSegment from "../push_init_segment";
+} from "../../../../../playback_observer/__tests__/mocks.ts";
+import type { IRange } from "../../../../../utils/ranges.ts";
+import SharedReference from "../../../../../utils/reference.ts";
+import TaskCanceller from "../../../../../utils/task_canceller.ts";
+import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks.ts";
+import { type SegmentSink } from "../../../../segment_sinks/index.ts";
+import type { IRepresentationStreamPlaybackObservation } from "../../types.ts";
+import type appendSegmentToBuffer from "../append_segment_to_buffer.ts";
+import pushInitSegment from "../push_init_segment.ts";
 
 const mockAppendSegmentToBuffer = vi.hoisted(
   (): Mock<typeof appendSegmentToBuffer> =>

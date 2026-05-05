@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import initializeCoreEntry from "../../core/entry";
-import type { IFeaturesObject } from "../../features/types";
-import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
-import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
-import metaplaylist from "../../transports/metaplaylist";
+import initializeCoreEntry from "../../core/entry/index.ts";
+import type { IFeaturesObject } from "../../features/types.ts";
+import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread.ts";
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer.ts";
+import metaplaylist from "../../transports/metaplaylist/index.ts";
 
 function addMetaPlaylistFeature(features: IFeaturesObject): void {
   features.transports.metaplaylist = metaplaylist;

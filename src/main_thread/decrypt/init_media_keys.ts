@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import type { IEmeApiImplementation } from "../../compat/eme";
-import log from "../../log";
-import type { IKeySystemOption } from "../../public_types";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import type { IMediaKeysInfos } from "./get_media_keys";
-import getMediaKeysInfos from "./get_media_keys";
-import MediaKeysAttacher from "./utils/media_keys_attacher";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import type { IEmeApiImplementation } from "../../compat/eme/index.ts";
+import log from "../../log.ts";
+import type { IKeySystemOption } from "../../public_types.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import type { IMediaKeysInfos } from "./get_media_keys.ts";
+import getMediaKeysInfos from "./get_media_keys.ts";
+import MediaKeysAttacher from "./utils/media_keys_attacher.ts";
 
 /**
  * Get media keys infos from key system configs then attach media keys to media element.

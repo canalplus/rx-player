@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
-import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
+import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME.ts";
 
 const mocks = vi.hoisted(() => {
   return {

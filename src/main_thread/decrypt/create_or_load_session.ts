@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import type { IMediaKeySession } from "../../compat/browser_compatibility_types";
-import log from "../../log";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import createSession from "./create_session";
-import type { IProcessedProtectionData, IMediaKeySessionStores } from "./types";
-import { MediaKeySessionLoadingType } from "./types";
-import cleanOldLoadedSessions from "./utils/clean_old_loaded_sessions";
-import isSessionUsable from "./utils/is_session_usable";
-import type KeySessionRecord from "./utils/key_session_record";
+import type { IMediaKeySession } from "../../compat/browser_compatibility_types.ts";
+import log from "../../log.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import createSession from "./create_session.ts";
+import type { IProcessedProtectionData, IMediaKeySessionStores } from "./types.ts";
+import { MediaKeySessionLoadingType } from "./types.ts";
+import cleanOldLoadedSessions from "./utils/clean_old_loaded_sessions.ts";
+import isSessionUsable from "./utils/is_session_usable.ts";
+import type KeySessionRecord from "./utils/key_session_record.ts";
 
 /**
  * Handle MediaEncryptedEvents sent by a HTMLMediaElement:

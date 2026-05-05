@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../compat/browser_compatibility_types";
-import isSeekingApproximate from "../compat/is_seeking_approximate";
-import config from "../config";
-import ManualTimeRanges from "../core/segment_sinks/implementations/utils/manual_time_ranges";
-import log from "../log";
-import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
-import noop from "../utils/noop";
-import objectAssign from "../utils/object_assign";
-import { getBufferedTimeRange } from "../utils/ranges";
-import type { IReadOnlySharedReference } from "../utils/reference";
-import SharedReference from "../utils/reference";
-import type { CancellationSignal } from "../utils/task_canceller";
-import TaskCanceller from "../utils/task_canceller";
+import type { IMediaElement } from "../compat/browser_compatibility_types.ts";
+import isSeekingApproximate from "../compat/is_seeking_approximate.ts";
+import config from "../config.ts";
+import ManualTimeRanges from "../core/segment_sinks/implementations/utils/manual_time_ranges.ts";
+import log from "../log.ts";
+import getMonotonicTimeStamp from "../utils/monotonic_timestamp.ts";
+import noop from "../utils/noop.ts";
+import objectAssign from "../utils/object_assign.ts";
+import { getBufferedTimeRange } from "../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../utils/reference.ts";
+import SharedReference from "../utils/reference.ts";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
+import TaskCanceller from "../utils/task_canceller.ts";
 import type {
   IMediaInfos,
   IPlaybackObservation,
@@ -34,10 +34,10 @@ import type {
   IReadOnlyPlaybackObserver,
   IRebufferingStatus,
   IFreezingStatus,
-} from "./types";
-import { SeekingState } from "./types";
-import generateReadOnlyObserver from "./utils/generate_read_only_observer";
-import ObservationPosition from "./utils/observation_position";
+} from "./types.ts";
+import { SeekingState } from "./types.ts";
+import generateReadOnlyObserver from "./utils/generate_read_only_observer.ts";
+import ObservationPosition from "./utils/observation_position.ts";
 
 /**
  * HTMLMediaElement Events for which playback observations are calculated and

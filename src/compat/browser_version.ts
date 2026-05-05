@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../log";
-import EnvDetector from "./env_detector";
+import log from "../log.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * Returns either :

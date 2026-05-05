@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
+import log from "../../../log.ts";
 import type {
   IAdaptationMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
-} from "../../../manifest";
-import { insertInto, type IRange } from "../../../utils/ranges";
-import { SegmentSinkOperation, type SegmentSink } from "../../segment_sinks";
+} from "../../../manifest/index.ts";
+import { insertInto, type IRange } from "../../../utils/ranges.ts";
+import { SegmentSinkOperation, type SegmentSink } from "../../segment_sinks/index.ts";
 
 /**
  * Returns the buffered ranges which hold the given content.

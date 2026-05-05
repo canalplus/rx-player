@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import shouldUnsetMediaKeys from "../../compat/should_unset_media_keys";
-import log from "../../log";
-import disposeDecryptionResources from "./dispose_decryption_resources";
-import MediaKeysAttacher from "./utils/media_keys_attacher";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import shouldUnsetMediaKeys from "../../compat/should_unset_media_keys.ts";
+import log from "../../log.ts";
+import disposeDecryptionResources from "./dispose_decryption_resources.ts";
+import MediaKeysAttacher from "./utils/media_keys_attacher.ts";
 
 /**
  * Clear DRM-related resources that should be cleared when the current content

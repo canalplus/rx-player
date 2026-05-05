@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import log from "../../../../../log";
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import { hexToBytes } from "../../../../../utils/string_parsing";
-import type { ITNode } from "../../../../../utils/xml-parser";
+import log from "../../../../../log.ts";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import { hexToBytes } from "../../../../../utils/string_parsing.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
   IContentProtectionAttributes,
   IContentProtectionChildren,
   IContentProtectionIntermediateRepresentation,
-} from "../../node_parser_types";
-import { parseBase64, textContent } from "./utils";
+} from "../../node_parser_types.ts";
+import { parseBase64, textContent } from "./utils.ts";
 
 /**
  * @param {Array.<Object | string>} contentProtectionChildren

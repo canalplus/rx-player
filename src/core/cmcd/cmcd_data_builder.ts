@@ -1,22 +1,22 @@
-import log from "../../log";
+import log from "../../log.ts";
 import type {
   IAdaptation,
   IManifest,
   IPeriod,
   IRepresentation,
   ISegment,
-} from "../../manifest";
+} from "../../manifest/index.ts";
 import type {
   IReadOnlyPlaybackObserver,
   IRebufferingStatus,
   ObservationPosition,
-} from "../../playback_observer";
-import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types";
-import createUuid from "../../utils/create_uuid";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { IRange } from "../../utils/ranges";
-import TaskCanceller from "../../utils/task_canceller";
-import { getRelativeUrl } from "../../utils/url-utils";
+} from "../../playback_observer/index.ts";
+import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types.ts";
+import createUuid from "../../utils/create_uuid.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { IRange } from "../../utils/ranges.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import { getRelativeUrl } from "../../utils/url-utils.ts";
 
 /**
  * `rtp`, for "REQUESTED_MAXIMUM_THROUGHPUT", indicates the maximum throughput

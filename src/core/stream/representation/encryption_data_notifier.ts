@@ -1,8 +1,8 @@
 import type {
   Representation,
   IRepresentationProtectionData,
-} from "../../../manifest/classes";
-import type { IProtectionDataInfo } from "../../../transports";
+} from "../../../manifest/classes/index.ts";
+import type { IProtectionDataInfo } from "../../../transports/index.ts";
 
 /**
  * Manages the one-time notification of encryption/DRM data for a Representation.

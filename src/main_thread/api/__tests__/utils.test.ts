@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import config from "../../../config";
-import { getLoadedContentState } from "../utils";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
+import config from "../../../config.ts";
+import { getLoadedContentState } from "../utils.ts";
 
 describe("API - getLoadedContentState", () => {
   it("should always return ENDED if mediaElement.ended is true", () => {

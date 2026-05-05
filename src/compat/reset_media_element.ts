@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../log";
-import type { IMediaElement } from "./browser_compatibility_types";
-import clearElementSrc from "./clear_element_src";
+import log from "../log.ts";
+import type { IMediaElement } from "./browser_compatibility_types.ts";
+import clearElementSrc from "./clear_element_src.ts";
 
 /**
  * Dispose of ressources taken by the MediaSource:

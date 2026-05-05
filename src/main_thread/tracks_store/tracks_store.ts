@@ -19,22 +19,22 @@
  * switching for an easier API management.
  */
 
-import config from "../../config";
-import type { IAdaptationChoice, IRepresentationsChoice } from "../../core/types";
-import { MediaError } from "../../errors";
-import log from "../../log";
+import config from "../../config.ts";
+import type { IAdaptationChoice, IRepresentationsChoice } from "../../core/types.ts";
+import { MediaError } from "../../errors/index.ts";
+import log from "../../log.ts";
 import type {
   IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
-} from "../../manifest";
+} from "../../manifest/index.ts";
 import {
   getSupportedAdaptations,
   isRepresentationPlayable,
   toAudioTrack,
   toTextTrack,
   toVideoTrack,
-} from "../../manifest";
+} from "../../manifest/index.ts";
 import type {
   IAudioRepresentationsSwitchingMode,
   IAudioTrack,
@@ -52,14 +52,14 @@ import type {
   IPlayerError,
   ITrackType,
   INoPlayableTrackEventPayload,
-} from "../../public_types";
-import arrayFind from "../../utils/array_find";
-import assert, { assertUnreachable } from "../../utils/assert";
-import EventEmitter from "../../utils/event_emitter";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import objectAssign from "../../utils/object_assign";
-import SharedReference from "../../utils/reference";
-import TrackDispatcher from "./track_dispatcher";
+} from "../../public_types.ts";
+import arrayFind from "../../utils/array_find.ts";
+import assert, { assertUnreachable } from "../../utils/assert.ts";
+import EventEmitter from "../../utils/event_emitter.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../utils/object_assign.ts";
+import SharedReference from "../../utils/reference.ts";
+import TrackDispatcher from "./track_dispatcher.ts";
 
 /**
  * Class helping with the management of the audio, video and text tracks and

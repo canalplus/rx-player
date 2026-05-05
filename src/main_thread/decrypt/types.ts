@@ -19,11 +19,11 @@ import type {
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
-} from "../../manifest";
-import type { IPlayerError } from "../../public_types";
-import type InitDataValuesContainer from "./utils/init_data_values_container";
-import type LoadedSessionsStore from "./utils/loaded_sessions_store";
-import type PersistentSessionsStore from "./utils/persistent_sessions_store";
+} from "../../manifest/index.ts";
+import type { IPlayerError } from "../../public_types.ts";
+import type InitDataValuesContainer from "./utils/init_data_values_container.ts";
+import type LoadedSessionsStore from "./utils/loaded_sessions_store.ts";
+import type PersistentSessionsStore from "./utils/persistent_sessions_store.ts";
 
 /** Events sent by the `ContentDecryptor`, in a `{ event: payload }` format. */
 export interface IContentDecryptorEvent {

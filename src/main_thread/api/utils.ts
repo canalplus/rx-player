@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import canPreloadBeforePlay from "../../compat/can_preload_before_play";
-import config from "../../config";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import canPreloadBeforePlay from "../../compat/can_preload_before_play.ts";
+import config from "../../config.ts";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
-} from "../../playback_observer";
-import { SeekingState } from "../../playback_observer";
-import type { IPlayerState } from "../../public_types";
-import arrayIncludes from "../../utils/array_includes";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import type { ContentInitializer, IStallingSituation } from "../init";
+} from "../../playback_observer/index.ts";
+import { SeekingState } from "../../playback_observer/index.ts";
+import type { IPlayerState } from "../../public_types.ts";
+import arrayIncludes from "../../utils/array_includes.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import SharedReference from "../../utils/reference.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import type { ContentInitializer, IStallingSituation } from "../init/index.ts";
 
 /**
  * @param {Object} playbackObserver - Observes playback conditions on

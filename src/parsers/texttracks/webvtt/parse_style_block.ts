@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import createDefaultStyleElements from "./create_default_style_elements";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import createDefaultStyleElements from "./create_default_style_elements.ts";
 
 export interface IStyleElements {
   [className: string]: string;

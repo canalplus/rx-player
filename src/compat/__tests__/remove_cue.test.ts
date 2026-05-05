@@ -1,8 +1,8 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import log from "../../log";
-import arrayFindIndex from "../../utils/array_find_index";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
-import removeCue from "../remove_cue";
+import log from "../../log.ts";
+import arrayFindIndex from "../../utils/array_find_index.ts";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
+import removeCue from "../remove_cue.ts";
 
 const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
   /* noop */

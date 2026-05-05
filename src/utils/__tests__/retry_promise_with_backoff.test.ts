@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getRetryDelay } from "../retry_promise_with_backoff";
+import { getRetryDelay } from "../retry_promise_with_backoff.ts";
 
 describe("utils - RetryPromiseWithBackoff", () => {
   it("retry delay should increase at each retry", () => {

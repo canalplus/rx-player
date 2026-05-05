@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type { IRepresentationIndex, ISegment } from "../../../manifest";
-import type { ILocalIndex, ILocalIndexSegment } from "./types";
+import log from "../../../log.ts";
+import type { IRepresentationIndex, ISegment } from "../../../manifest/index.ts";
+import type { ILocalIndex, ILocalIndexSegment } from "./types.ts";
 
 export default class LocalRepresentationIndex implements IRepresentationIndex {
   private _index: ILocalIndex;

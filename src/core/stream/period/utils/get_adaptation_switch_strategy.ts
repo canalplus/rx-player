@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import config from "../../../../config";
-import type { IAdaptation, IPeriod } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
-import areCodecsCompatible from "../../../../utils/are_codecs_compatible";
-import type { IRange } from "../../../../utils/ranges";
-import { excludeFromRanges, insertInto } from "../../../../utils/ranges";
-import type { SegmentSink } from "../../../segment_sinks";
+import config from "../../../../config.ts";
+import type { IAdaptation, IPeriod } from "../../../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer/index.ts";
+import areCodecsCompatible from "../../../../utils/are_codecs_compatible.ts";
+import type { IRange } from "../../../../utils/ranges.ts";
+import { excludeFromRanges, insertInto } from "../../../../utils/ranges.ts";
+import type { SegmentSink } from "../../../segment_sinks/index.ts";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
   SegmentSinkOperation,
-} from "../../../segment_sinks";
-import type { ITrackSwitchingMode } from "../../adaptation";
-import type { IPeriodStreamPlaybackObservation } from "../types";
+} from "../../../segment_sinks/index.ts";
+import type { ITrackSwitchingMode } from "../../adaptation/index.ts";
+import type { IPeriodStreamPlaybackObservation } from "../types.ts";
 
 export type IAdaptationSwitchStrategy =
   /** Do nothing special. */

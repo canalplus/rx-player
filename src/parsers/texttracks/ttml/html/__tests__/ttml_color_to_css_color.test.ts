@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import ttmlColorToCSSColor from "../ttml_color_to_css_color";
+import ttmlColorToCSSColor from "../ttml_color_to_css_color.ts";
 
 describe("ttmlColorToCSSColor", () => {
   it("should return the given color if unrecognized", () => {

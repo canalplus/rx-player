@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import type { IFetchedDataObject, IFetchedStreamComplete } from "./fetch";
-import fetchRequest, { fetchIsSupported } from "./fetch";
-import type { ISerializedRequestError, IRequestErrorType } from "./request_error";
-import RequestError, { RequestErrorTypes } from "./request_error";
-import type { IRequestOptions, IProgressInfo, IRequestResponse } from "./xhr";
-import xhr from "./xhr";
+import type { IFetchedDataObject, IFetchedStreamComplete } from "./fetch.ts";
+import fetchRequest, { fetchIsSupported } from "./fetch.ts";
+import type { ISerializedRequestError, IRequestErrorType } from "./request_error.ts";
+import RequestError, { RequestErrorTypes } from "./request_error.ts";
+import type { IRequestOptions, IProgressInfo, IRequestResponse } from "./xhr.ts";
+import xhr from "./xhr.ts";
 
 export default xhr;
 export type {

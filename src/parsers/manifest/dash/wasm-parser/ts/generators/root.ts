@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import noop from "../../../../../../utils/noop";
-import type { IMPDIntermediateRepresentation } from "../../../node_parser_types";
-import type ParsersStack from "../parsers_stack";
-import { TagName } from "../types";
-import { generateMPDAttrParser, generateMPDChildrenParser } from "./MPD";
+import noop from "../../../../../../utils/noop.ts";
+import type { IMPDIntermediateRepresentation } from "../../../node_parser_types.ts";
+import type ParsersStack from "../parsers_stack.ts";
+import { TagName } from "../types.ts";
+import { generateMPDAttrParser, generateMPDChildrenParser } from "./MPD.ts";
 
 /**
  * @param {Object} rootObj

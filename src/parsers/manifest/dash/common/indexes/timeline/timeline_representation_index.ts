@@ -14,37 +14,37 @@
  * limitations under the License.
  */
 
-import config from "../../../../../../config";
-import { NetworkError } from "../../../../../../errors";
-import log from "../../../../../../log";
+import config from "../../../../../../config.ts";
+import { NetworkError } from "../../../../../../errors/index.ts";
+import log from "../../../../../../log.ts";
 import type {
   IRepresentationIndex,
   ISegment,
   IRepresentation,
-} from "../../../../../../manifest";
-import type { IPlayerError } from "../../../../../../public_types";
-import assert from "../../../../../../utils/assert";
-import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../../../../../utils/monotonic_timestamp";
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import type { IEMSG } from "../../../../../containers/isobmff";
-import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position";
-import type { IIndexSegment } from "../../../../utils/index_helpers";
+} from "../../../../../../manifest/index.ts";
+import type { IPlayerError } from "../../../../../../public_types.ts";
+import assert from "../../../../../../utils/assert.ts";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../../../../../utils/monotonic_timestamp.ts";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import type { IEMSG } from "../../../../../containers/isobmff/index.ts";
+import clearTimelineFromPosition from "../../../../utils/clear_timeline_from_position.ts";
+import type { IIndexSegment } from "../../../../utils/index_helpers.ts";
 import {
   checkDiscontinuity,
   fromIndexTime,
   getIndexSegmentEnd,
   toIndexTime,
-} from "../../../../utils/index_helpers";
-import updateSegmentTimeline from "../../../../utils/update_segment_timeline";
-import type { ISegmentTimelineElement } from "../../../node_parser_types";
-import type ManifestBoundsCalculator from "../../manifest_bounds_calculator";
-import getInitSegment from "../get_init_segment";
-import getSegmentsFromTimeline from "../get_segments_from_timeline";
-import { constructRepresentationUrl } from "../tokens";
-import { getSegmentTimeRoundingError } from "../utils";
-import constructTimelineFromElements from "./construct_timeline_from_elements";
-import constructTimelineFromPreviousTimeline from "./construct_timeline_from_previous_timeline";
+} from "../../../../utils/index_helpers.ts";
+import updateSegmentTimeline from "../../../../utils/update_segment_timeline.ts";
+import type { ISegmentTimelineElement } from "../../../node_parser_types.ts";
+import type ManifestBoundsCalculator from "../../manifest_bounds_calculator.ts";
+import getInitSegment from "../get_init_segment.ts";
+import getSegmentsFromTimeline from "../get_segments_from_timeline.ts";
+import { constructRepresentationUrl } from "../tokens.ts";
+import { getSegmentTimeRoundingError } from "../utils.ts";
+import constructTimelineFromElements from "./construct_timeline_from_elements.ts";
+import constructTimelineFromPreviousTimeline from "./construct_timeline_from_previous_timeline.ts";
 
 /**
  * Index property defined for a SegmentTimeline RepresentationIndex

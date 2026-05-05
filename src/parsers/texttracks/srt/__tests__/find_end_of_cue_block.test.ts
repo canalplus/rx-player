@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import findEndOfCueBlock from "../find_end_of_cue_block";
+import findEndOfCueBlock from "../find_end_of_cue_block.ts";
 
 const srt1 = [
   "112", // 0

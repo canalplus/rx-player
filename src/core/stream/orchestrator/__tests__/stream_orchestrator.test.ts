@@ -1,49 +1,49 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type {
-  IManifest,
-  IPeriod,
-  IUpdatedRepresentationInfo,
-} from "../../../../manifest";
 import {
   DummyAdaptation,
   DummyManifest,
   DummyPeriod,
   DummyRepresentation,
   createSegment,
-} from "../../../../manifest/classes/__tests__/mocks";
-import type { IManifestEvents } from "../../../../manifest/classes/manifest";
-import type { IPeriodsUpdateResult } from "../../../../manifest/classes/update_periods";
+} from "../../../../manifest/classes/__tests__/mocks.ts";
+import type { IManifestEvents } from "../../../../manifest/classes/manifest.ts";
+import type { IPeriodsUpdateResult } from "../../../../manifest/classes/update_periods.ts";
+import type {
+  IManifest,
+  IPeriod,
+  IUpdatedRepresentationInfo,
+} from "../../../../manifest/index.ts";
 import {
   DummyObservationPosition,
   makeReadyOnlyPlaybackObserver,
-} from "../../../../playback_observer/__tests__/mocks";
-import EventEmitter from "../../../../utils/event_emitter";
-import SharedReference from "../../../../utils/reference";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import TaskCanceller from "../../../../utils/task_canceller";
-import { makeMockedClass } from "../../../../utils/test-utils";
-import type { IRepresentationEstimator } from "../../../adaptive";
-import type { SegmentQueueCreator } from "../../../fetchers";
-import { ChunkStatus } from "../../../segment_sinks";
-import type { IBufferedChunk, SegmentSink } from "../../../segment_sinks";
-import type SegmentSinksStore from "../../../segment_sinks";
-import { DummySegmentSink } from "../../../segment_sinks/__tests__/mocks";
+} from "../../../../playback_observer/__tests__/mocks.ts";
+import EventEmitter from "../../../../utils/event_emitter.ts";
+import SharedReference from "../../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../../utils/task_canceller.ts";
+import { makeMockedClass } from "../../../../utils/test-utils.ts";
+import type { IRepresentationEstimator } from "../../../adaptive/index.ts";
+import type { SegmentQueueCreator } from "../../../fetchers/index.ts";
+import { DummySegmentSink } from "../../../segment_sinks/__tests__/mocks.ts";
+import { ChunkStatus } from "../../../segment_sinks/index.ts";
+import type { IBufferedChunk, SegmentSink } from "../../../segment_sinks/index.ts";
+import type SegmentSinksStore from "../../../segment_sinks/index.ts";
 import type {
   IAdaptationChoice,
   IWaitingMediaSourceReloadPayload,
-} from "../../adaptation";
+} from "../../adaptation/index.ts";
 import type {
   IPeriodStreamArguments,
   IPeriodStreamCallbacks,
   IPeriodStreamReadyPayload,
-} from "../../period";
-import type { IStreamStatusPayload } from "../../representation";
-import StreamOrchestrator from "../stream_orchestrator";
+} from "../../period/index.ts";
+import type { IStreamStatusPayload } from "../../representation/index.ts";
+import StreamOrchestrator from "../stream_orchestrator.ts";
 import type {
   IPeriodStreamClearedPayload,
   IStreamOrchestratorCallbacks,
   IStreamOrchestratorPlaybackObservation,
-} from "../stream_orchestrator";
+} from "../stream_orchestrator.ts";
 
 type IPeriodStreamFunction = (
   args: IPeriodStreamArguments,

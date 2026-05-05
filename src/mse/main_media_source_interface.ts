@@ -1,16 +1,19 @@
-import type { IMediaSource, ISourceBuffer } from "../compat/browser_compatibility_types";
-import BROWSER_GLOBALS from "../compat/browser_compatibility_types";
-import tryToChangeSourceBufferType from "../compat/change_source_buffer_type";
-import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners";
-import { MediaError, SourceBufferError } from "../errors";
-import log from "../log";
-import { concat } from "../utils/byte_parsing";
-import EventEmitter from "../utils/event_emitter";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-import objectAssign from "../utils/object_assign";
-import type { IRange } from "../utils/ranges";
-import { convertToRanges } from "../utils/ranges";
-import TaskCanceller, { CancellationError } from "../utils/task_canceller";
+import type {
+  IMediaSource,
+  ISourceBuffer,
+} from "../compat/browser_compatibility_types.ts";
+import BROWSER_GLOBALS from "../compat/browser_compatibility_types.ts";
+import tryToChangeSourceBufferType from "../compat/change_source_buffer_type.ts";
+import { onSourceClose, onSourceEnded, onSourceOpen } from "../compat/event_listeners.ts";
+import { MediaError, SourceBufferError } from "../errors/index.ts";
+import log from "../log.ts";
+import { concat } from "../utils/byte_parsing.ts";
+import EventEmitter from "../utils/event_emitter.ts";
+import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
+import objectAssign from "../utils/object_assign.ts";
+import type { IRange } from "../utils/ranges.ts";
+import { convertToRanges } from "../utils/ranges.ts";
+import TaskCanceller, { CancellationError } from "../utils/task_canceller.ts";
 import type {
   IMediaSourceHandle,
   IMediaSourceInterface,
@@ -18,9 +21,9 @@ import type {
   ISourceBufferInterface,
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
-} from "./types";
-import { maintainEndOfStream } from "./utils/end_of_stream";
-import MediaSourceDurationUpdater from "./utils/media_source_duration_updater";
+} from "./types.ts";
+import { maintainEndOfStream } from "./utils/end_of_stream.ts";
+import MediaSourceDurationUpdater from "./utils/media_source_duration_updater.ts";
 
 /**
  * `IMediaSourceInterface` object for when the MSE API are directly available.

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import BandwidthEstimator from "../bandwidth_estimator";
+import BandwidthEstimator from "../bandwidth_estimator.ts";
 
 describe("ABR - BandwidthEstimator", () => {
   it("should return undefined if no sample has been added yet", () => {

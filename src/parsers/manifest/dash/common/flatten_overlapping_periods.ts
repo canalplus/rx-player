@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import type { IParsedPeriod } from "../../types";
+import log from "../../../../log.ts";
+import type { IParsedPeriod } from "../../types.ts";
 
 /**
  * Avoid periods to overlap.

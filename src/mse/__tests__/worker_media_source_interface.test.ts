@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { CoreMessageType } from "../../core/types";
-import { SourceBufferError } from "../../errors";
-import { CancellationError } from "../../utils/task_canceller";
-import { SourceBufferType } from "../types";
+import { CoreMessageType } from "../../core/types.ts";
+import { SourceBufferError } from "../../errors/index.ts";
+import { CancellationError } from "../../utils/task_canceller.ts";
+import { SourceBufferType } from "../types.ts";
 import WorkerMediaSourceInterface, {
   WorkerSourceBufferInterface,
-} from "../worker_media_source_interface";
+} from "../worker_media_source_interface.ts";
 
 const { mockLog } = vi.hoisted(() => {
   return {

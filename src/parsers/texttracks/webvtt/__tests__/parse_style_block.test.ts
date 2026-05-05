@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import parseStyleBlock from "../parse_style_block";
+import parseStyleBlock from "../parse_style_block.ts";
 
 const mocks = vi.hoisted(() => {
   return {

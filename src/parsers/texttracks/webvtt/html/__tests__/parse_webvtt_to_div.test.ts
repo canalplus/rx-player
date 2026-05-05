@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import parseWebVTT from "../parse_webvtt_plain_text";
+import parseWebVTT from "../parse_webvtt_plain_text.ts";
 
 const mocks = vi.hoisted(() => {
   return {

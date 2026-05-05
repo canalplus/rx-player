@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import globalScope from "../global_scope";
-import isNullOrUndefined from "../is_null_or_undefined";
-import getMonotonicTimeStamp from "../monotonic_timestamp";
-import type { CancellationError, CancellationSignal } from "../task_canceller";
-import RequestError, { RequestErrorTypes } from "./request_error";
+import log from "../../log.ts";
+import globalScope from "../global_scope.ts";
+import isNullOrUndefined from "../is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../monotonic_timestamp.ts";
+import type { CancellationError, CancellationSignal } from "../task_canceller.ts";
+import RequestError, { RequestErrorTypes } from "./request_error.ts";
 
 /** Object returned by `fetchRequest` after the fetch operation succeeded. */
 export interface IFetchedStreamComplete {

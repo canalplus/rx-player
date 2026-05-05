@@ -21,4 +21,4 @@ export {
   strToUtf16LE,
   strToUtf8,
   utf8ToStr,
-} from "../../utils/string_parsing";
+} from "../../utils/string_parsing.ts";

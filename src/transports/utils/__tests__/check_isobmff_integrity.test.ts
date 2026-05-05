@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import { OtherError } from "../../../errors";
-import checkISOBMFFIntegrity from "../check_isobmff_integrity";
+import { OtherError } from "../../../errors/index.ts";
+import checkISOBMFFIntegrity from "../check_isobmff_integrity.ts";
 
 const mocks = vi.hoisted(() => {
   return {

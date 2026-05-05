@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import RepresentationStream from "./representation_stream";
-export type * from "./types";
+import RepresentationStream from "./representation_stream.ts";
+export type * from "./types.ts";
 
 export default RepresentationStream;

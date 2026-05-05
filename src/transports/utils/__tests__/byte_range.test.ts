@@ -15,7 +15,7 @@ import { describe, it, expect } from "vitest";
  * limitations under the License.
  */
 
-import byteRange from "../byte_range";
+import byteRange from "../byte_range.ts";
 
 describe("transports utils - byteRange", () => {
   it("should construct a ByteRange string", () => {

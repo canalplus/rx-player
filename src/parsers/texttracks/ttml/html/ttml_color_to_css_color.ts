@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 import {
   REGXP_4_HEX_COLOR,
   REGXP_8_HEX_COLOR,
   REGXP_RGBA_COLOR,
   REGXP_RGB_COLOR,
-} from "../regexps";
+} from "../regexps.ts";
 
 /**
  * Translate a color indicated in TTML-style to a CSS-style color.

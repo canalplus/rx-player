@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../log";
-import assert from "./assert";
-import noop from "./noop";
+import log from "../log.ts";
+import assert from "./assert.ts";
+import noop from "./noop.ts";
 
 /**
  * Class facilitating asynchronous task cancellation.

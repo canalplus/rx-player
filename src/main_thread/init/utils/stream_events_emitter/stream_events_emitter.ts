@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-import config from "../../../../config";
-import type { IManifestMetadata } from "../../../../manifest";
+import config from "../../../../config.ts";
+import type { IManifestMetadata } from "../../../../manifest/index.ts";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
-} from "../../../../playback_observer";
-import { SeekingState } from "../../../../playback_observer";
-import EventEmitter from "../../../../utils/event_emitter";
-import SharedReference from "../../../../utils/reference";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import TaskCanceller from "../../../../utils/task_canceller";
-import refreshScheduledEventsList from "./refresh_scheduled_events_list";
+} from "../../../../playback_observer/index.ts";
+import { SeekingState } from "../../../../playback_observer/index.ts";
+import EventEmitter from "../../../../utils/event_emitter.ts";
+import SharedReference from "../../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../../utils/task_canceller.ts";
+import refreshScheduledEventsList from "./refresh_scheduled_events_list.ts";
 import type {
   INonFiniteStreamEventPayload,
   IPublicNonFiniteStreamEvent,
   IPublicStreamEvent,
   IStreamEventPayload,
-} from "./types";
+} from "./types.ts";
 
 interface IStreamEventsEmitterEvent {
   event: IPublicStreamEvent | IPublicNonFiniteStreamEvent;

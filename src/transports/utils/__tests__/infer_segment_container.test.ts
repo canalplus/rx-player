@@ -15,7 +15,7 @@ import { describe, it, expect } from "vitest";
  * limitations under the License.
  */
 
-import inferSegmentContainer from "../infer_segment_container";
+import inferSegmentContainer from "../infer_segment_container.ts";
 
 describe("Transport utils - inferSegmentContainer", () => {
   it('should return "mp4" for audio and video tracks with a specific mime-type', () => {

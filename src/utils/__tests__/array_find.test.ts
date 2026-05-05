@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import arrayFind from "../array_find";
+import arrayFind from "../array_find.ts";
 
 // eslint-disable-next-line no-restricted-properties
 const initialArrayFind = Array.prototype.find;

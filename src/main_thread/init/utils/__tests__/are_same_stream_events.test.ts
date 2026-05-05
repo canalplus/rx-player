@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import areSameStreamEvents from "../stream_events_emitter/are_same_stream_events";
+import areSameStreamEvents from "../stream_events_emitter/are_same_stream_events.ts";
 
 describe("init - areSameStreamEvents", () => {
   it("should consider two events to be the same with defined ends", () => {

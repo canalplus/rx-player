@@ -19,5 +19,5 @@
  * It always should be imported through the `features` object.
  */
 
-import parseTTMLStringToDIV from "./parse_ttml_to_div";
+import parseTTMLStringToDIV from "./parse_ttml_to_div.ts";
 export default parseTTMLStringToDIV;

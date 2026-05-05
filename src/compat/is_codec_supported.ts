@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import type DummyMediaElement from "../experimental/tools/DummyMediaElement";
-import log from "../log";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-import isWorker from "../utils/is_worker";
-import BROWSER_GLOBALS from "./browser_compatibility_types";
-import type { IMediaElement } from "./browser_compatibility_types";
+import type DummyMediaElement from "../experimental/tools/DummyMediaElement/index.ts";
+import log from "../log.ts";
+import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
+import isWorker from "../utils/is_worker.ts";
+import BROWSER_GLOBALS from "./browser_compatibility_types.ts";
+import type { IMediaElement } from "./browser_compatibility_types.ts";
 
 /**
  * Setting this value limit the number of entries in the support map

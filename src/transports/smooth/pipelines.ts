@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import Manifest from "../../manifest/classes";
-import { getMDAT } from "../../parsers/containers/isobmff";
-import type { ICdnMetadata } from "../../parsers/manifest";
-import createSmoothManifestParser from "../../parsers/manifest/smooth";
-import globalScope from "../../utils/global_scope";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import request from "../../utils/request";
-import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import log from "../../log.ts";
+import Manifest from "../../manifest/classes/index.ts";
+import { getMDAT } from "../../parsers/containers/isobmff/index.ts";
+import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
+import createSmoothManifestParser from "../../parsers/manifest/smooth/index.ts";
+import globalScope from "../../utils/global_scope.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import request from "../../utils/request/index.ts";
+import { strToUtf8, utf8ToStr } from "../../utils/string_parsing.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   IChunkTimeInfo,
   ILoadedAudioVideoSegmentFormat,
@@ -42,15 +42,15 @@ import type {
   ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
-} from "../types";
-import addQueryString from "../utils/add_query_string";
-import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity";
-import generateManifestLoader from "../utils/generate_manifest_loader";
-import extractTimingsInfos from "./extract_timings_infos";
-import isMP4EmbeddedTrack from "./is_mp4_embedded_track";
-import { patchSegment } from "./isobmff";
-import generateSegmentLoader from "./segment_loader";
-import { constructSegmentUrl } from "./utils";
+} from "../types.ts";
+import addQueryString from "../utils/add_query_string.ts";
+import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity.ts";
+import generateManifestLoader from "../utils/generate_manifest_loader.ts";
+import extractTimingsInfos from "./extract_timings_infos.ts";
+import isMP4EmbeddedTrack from "./is_mp4_embedded_track.ts";
+import { patchSegment } from "./isobmff/index.ts";
+import generateSegmentLoader from "./segment_loader.ts";
+import { constructSegmentUrl } from "./utils.ts";
 
 export default function (transportOptions: ITransportOptions): ITransportPipelines {
   const smoothManifestParser = createSmoothManifestParser(transportOptions);

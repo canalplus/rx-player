@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import AudioVideoSegmentSink from "./audio_video";
-import type { ITextDisplayerInterface } from "./text";
-export * from "./types";
+import AudioVideoSegmentSink from "./audio_video/index.ts";
+import type { ITextDisplayerInterface } from "./text/index.ts";
+export * from "./types.ts";
 
 export type { ITextDisplayerInterface };
 export { AudioVideoSegmentSink };

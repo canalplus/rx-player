@@ -1,15 +1,15 @@
 import * as React from "react";
-import Button from "../components/Button";
-import PositionInfos from "../components/PositionInfos";
-import LivePosition from "../components/LivePosition";
-import StickToLiveEdgeButton from "../components/StickToLiveEdgeButton";
-import PlayPauseButton from "./PlayPauseButton";
-import FullscreenButton from "./FullScreenButton";
-import ProgressBar from "./ProgressBar";
-import VolumeButton from "./VolumeButton";
-import VolumeBar from "./VolumeBar";
-import type { IPlayerModule } from "../modules/player/index";
-import useModuleState from "../lib/useModuleState";
+import Button from "../components/Button.tsx";
+import PositionInfos from "../components/PositionInfos.tsx";
+import LivePosition from "../components/LivePosition.tsx";
+import StickToLiveEdgeButton from "../components/StickToLiveEdgeButton.tsx";
+import PlayPauseButton from "./PlayPauseButton.tsx";
+import FullscreenButton from "./FullScreenButton.tsx";
+import ProgressBar from "./ProgressBar.tsx";
+import VolumeButton from "./VolumeButton.tsx";
+import VolumeBar from "./VolumeBar.tsx";
+import type { IPlayerModule } from "../modules/player/index.ts";
+import useModuleState from "../lib/useModuleState.ts";
 
 const { useCallback, useMemo } = React;
 

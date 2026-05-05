@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { base64ToBytes } from "../../../utils/base64";
-import { concat } from "../../../utils/byte_parsing";
-import { hexToBytes } from "../../../utils/string_parsing";
-import type { ITNode } from "../../../utils/xml-parser";
-import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff";
+import { base64ToBytes } from "../../../utils/base64.ts";
+import { concat } from "../../../utils/byte_parsing.ts";
+import { hexToBytes } from "../../../utils/string_parsing.ts";
+import type { ITNode } from "../../../utils/xml-parser.ts";
+import { getPlayReadyKIDFromPrivateData } from "../../containers/isobmff/index.ts";
 
 export interface IKeySystem {
   systemId: string;

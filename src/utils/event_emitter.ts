@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "./is_null_or_undefined";
-import noop from "./noop";
-import type { CancellationSignal } from "./task_canceller";
+import isNullOrUndefined from "./is_null_or_undefined.ts";
+import noop from "./noop.ts";
+import type { CancellationSignal } from "./task_canceller.ts";
 
 export interface IEventEmitter<T> {
   addEventListener<TEventName extends keyof T>(

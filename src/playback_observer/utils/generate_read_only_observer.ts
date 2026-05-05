@@ -1,6 +1,6 @@
-import type { IReadOnlySharedReference } from "../../utils/reference";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import type { IReadOnlyPlaybackObserver } from "../types";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import type { IReadOnlyPlaybackObserver } from "../types.ts";
 
 /**
  * Create `IReadOnlyPlaybackObserver` from a source `IReadOnlyPlaybackObserver`

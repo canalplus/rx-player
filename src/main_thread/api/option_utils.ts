@@ -19,9 +19,9 @@
  * throw if something is wrong, and return a normalized option object.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import config from "../../config";
-import log from "../../log";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import config from "../../config.ts";
+import log from "../../log.ts";
 import type {
   IAudioTrackSwitchingMode,
   IConstructorOptions,
@@ -35,10 +35,10 @@ import type {
   IServerSyncInfos,
   IRxPlayerMode,
   ICmcdOptions,
-} from "../../public_types";
-import arrayIncludes from "../../utils/array_includes";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import objectAssign from "../../utils/object_assign";
+} from "../../public_types.ts";
+import arrayIncludes from "../../utils/array_includes.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../utils/object_assign.ts";
 
 /** Value once parsed for the `startAt` option of the `loadVideo` method. */
 export type IParsedStartAtOption =

@@ -1,24 +1,24 @@
-import type { IManifest, IAdaptation, IPeriod } from "../../../manifest";
+import type { IManifest, IAdaptation, IPeriod } from "../../../manifest/index.ts";
 import type {
   ObservationPosition,
   IReadOnlyPlaybackObserver,
-} from "../../../playback_observer";
-import type { ITrackType } from "../../../public_types";
-import type { IRange } from "../../../utils/ranges";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import type SharedReference from "../../../utils/reference";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import type WeakMapMemory from "../../../utils/weak_map_memory";
-import type { IRepresentationEstimator } from "../../adaptive";
-import type { SegmentQueueCreator } from "../../fetchers";
-import type { IBufferType, SegmentSink } from "../../segment_sinks";
-import type SegmentSinksStore from "../../segment_sinks";
+} from "../../../playback_observer/index.ts";
+import type { ITrackType } from "../../../public_types.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import type SharedReference from "../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import type WeakMapMemory from "../../../utils/weak_map_memory.ts";
+import type { IRepresentationEstimator } from "../../adaptive/index.ts";
+import type { SegmentQueueCreator } from "../../fetchers/index.ts";
+import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
+import type SegmentSinksStore from "../../segment_sinks/index.ts";
 import type {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamOptions,
-} from "../adaptation";
-import type { IPausedPlaybackObservation } from "../representation";
+} from "../adaptation/index.ts";
+import type { IPausedPlaybackObservation } from "../representation/index.ts";
 
 export type { IPausedPlaybackObservation };
 
@@ -131,4 +131,4 @@ export type IPeriodStreamOptions = IAdaptationStreamOptions & {
   onCodecSwitch: "continue" | "reload";
 };
 
-export type { IAudioTrackSwitchingMode } from "../../../public_types";
+export type { IAudioTrackSwitchingMode } from "../../../public_types.ts";

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import assert from "../../../utils/assert";
-import MediaElementTracksStore from "../media_element_tracks_store";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
+import assert from "../../../utils/assert.ts";
+import MediaElementTracksStore from "../media_element_tracks_store.ts";
 
 type TrackListEventName = "addtrack" | "removetrack" | "change";
 

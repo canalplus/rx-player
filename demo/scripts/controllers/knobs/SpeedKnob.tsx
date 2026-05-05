@@ -1,7 +1,7 @@
 import * as React from "react";
-import Knob from "../../components/Knob";
-import useModuleState from "../../lib/useModuleState";
-import type { IPlayerModule } from "../../modules/player/index";
+import Knob from "../../components/Knob.tsx";
+import useModuleState from "../../lib/useModuleState.ts";
+import type { IPlayerModule } from "../../modules/player/index.ts";
 
 const AVAILABLE_RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 const ALIASES: Partial<Record<number, string>> = { 1: "Normal" };

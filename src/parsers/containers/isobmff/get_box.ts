@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import assert from "../../../utils/assert";
-import { be4toi, be8toi } from "../../../utils/byte_parsing";
+import log from "../../../log.ts";
+import assert from "../../../utils/assert.ts";
+import { be4toi, be8toi } from "../../../utils/byte_parsing.ts";
 
 /**
  * From a given buffer representing ISOBMFF data, browses inner boxes in

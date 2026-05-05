@@ -14,31 +14,34 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../compat/browser_compatibility_types";
-import type IInitializeCoreEntry from "../core/entry";
-import type { SegmentSink } from "../core/segment_sinks";
+import type { IMediaElement } from "../compat/browser_compatibility_types.ts";
+import type IInitializeCoreEntry from "../core/entry/index.ts";
+import type { SegmentSink } from "../core/segment_sinks/index.ts";
 import type {
   WorkerCoreInterface,
   MonoThreadCoreInterface,
-} from "../main_thread/core_interface/types";
-import type ContentDecryptor from "../main_thread/decrypt";
-import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer";
-import type MediaSourceContentInitializer from "../main_thread/init/media_source_content_initializer";
-import type HTMLTextDisplayer from "../main_thread/text_displayer/html";
-import type NativeTextDisplayer from "../main_thread/text_displayer/native/native_text_displayer";
-import type MediaElementTracksStore from "../main_thread/tracks_store/media_element_tracks_store";
-import type { IRxPlayer } from "../main_thread/types";
+} from "../main_thread/core_interface/types.ts";
+import type ContentDecryptor from "../main_thread/decrypt/index.ts";
+import type DirectFileContentInitializer from "../main_thread/init/directfile_content_initializer.ts";
+import type MediaSourceContentInitializer from "../main_thread/init/media_source_content_initializer.ts";
+import type HTMLTextDisplayer from "../main_thread/text_displayer/html/index.ts";
+import type NativeTextDisplayer from "../main_thread/text_displayer/native/native_text_displayer.ts";
+import type MediaElementTracksStore from "../main_thread/tracks_store/media_element_tracks_store.ts";
+import type { IRxPlayer } from "../main_thread/types.ts";
 import type {
   IDashParserResponse,
   IMPDParserArguments,
-} from "../parsers/manifest/dash/parsers_types";
-import type DashWasmParser from "../parsers/manifest/dash/wasm-parser";
+} from "../parsers/manifest/dash/parsers_types.ts";
+import type DashWasmParser from "../parsers/manifest/dash/wasm-parser/index.ts";
 import type {
   IHTMLTextTracksParserFn,
   INativeTextTracksParserFn,
-} from "../parsers/texttracks";
-import type { ISupportedTextTrackFormat, ITransportFunction } from "../transports";
-import type { CancellationSignal } from "../utils/task_canceller";
+} from "../parsers/texttracks/index.ts";
+import type {
+  ISupportedTextTrackFormat,
+  ITransportFunction,
+} from "../transports/index.ts";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
 
 /**
  * Function allowing to implement a text track rendered by displaying them

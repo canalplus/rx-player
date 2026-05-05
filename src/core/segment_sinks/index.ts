@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import BufferGarbageCollector from "./garbage_collector";
+import BufferGarbageCollector from "./garbage_collector.ts";
 import type {
   IBufferType,
   ICompleteSegmentInfo,
@@ -25,20 +25,20 @@ import type {
   IRemoveOperation,
   ISBOperation,
   ITextDisplayerInterface,
-} from "./implementations";
-import { SegmentSink, SegmentSinkOperation } from "./implementations";
+} from "./implementations/index.ts";
+import { SegmentSink, SegmentSinkOperation } from "./implementations/index.ts";
 import type {
   IBufferedHistoryEntry,
   IBufferedChunk,
   IChunkContext,
   IInsertedChunkInfos,
-} from "./inventory";
+} from "./inventory/index.ts";
 import {
   ChunkStatus,
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
-} from "./inventory";
-import SegmentSinksStore from "./segment_sinks_store";
+} from "./inventory/index.ts";
+import SegmentSinksStore from "./segment_sinks_store.ts";
 
 export default SegmentSinksStore;
 export type {

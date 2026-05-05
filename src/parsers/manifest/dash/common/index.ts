@@ -19,13 +19,13 @@ import {
   ListRepresentationIndex,
   TemplateRepresentationIndex,
   TimelineRepresentationIndex,
-} from "./indexes";
+} from "./indexes/index.ts";
 import type {
   IIrParserResponse,
   ILoadedXlinkData,
   IMPDParserArguments,
-} from "./parse_mpd";
-import parseMpdIr from "./parse_mpd";
+} from "./parse_mpd.ts";
+import parseMpdIr from "./parse_mpd.ts";
 
 export default parseMpdIr;
 export type { IIrParserResponse, ILoadedXlinkData, IMPDParserArguments };

@@ -1,8 +1,8 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import log from "../../log";
-import arrayFindIndex from "../../utils/array_find_index";
-import type { IMediaElement } from "../browser_compatibility_types";
-import clearElementSrc from "../clear_element_src";
+import log from "../../log.ts";
+import arrayFindIndex from "../../utils/array_find_index.ts";
+import type { IMediaElement } from "../browser_compatibility_types.ts";
+import clearElementSrc from "../clear_element_src.ts";
 
 const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
   /* noop */

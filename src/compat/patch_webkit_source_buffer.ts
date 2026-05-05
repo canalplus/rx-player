@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import EventEmitter from "../utils/event_emitter";
-import globalScope from "../utils/global_scope";
-import isNode from "../utils/is_node";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-import queueMicrotask from "../utils/queue_microtask";
+import EventEmitter from "../utils/event_emitter.ts";
+import globalScope from "../utils/global_scope.ts";
+import isNode from "../utils/is_node.ts";
+import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
+import queueMicrotask from "../utils/queue_microtask.ts";
 
 interface IWebKitSourceBufferConstructor {
   new (): IWebKitSourceBuffer;

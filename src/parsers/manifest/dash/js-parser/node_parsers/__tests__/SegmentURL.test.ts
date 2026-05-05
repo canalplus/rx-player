@@ -1,9 +1,9 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import log from "../../../../../../log";
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import { parseXml } from "../../../../../../utils/xml-parser";
-import parseSegmentURL from "../SegmentURL";
-import { MPDError } from "../utils";
+import log from "../../../../../../log.ts";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import { parseXml } from "../../../../../../utils/xml-parser.ts";
+import parseSegmentURL from "../SegmentURL.ts";
+import { MPDError } from "../utils.ts";
 
 const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
   /* noop */
