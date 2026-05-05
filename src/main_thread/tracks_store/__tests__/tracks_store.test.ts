@@ -7,7 +7,7 @@ import {
   DummyPeriod,
   DummyRepresentation,
 } from "../../../manifest/classes/__tests__/mocks.ts";
-import type { Adaptation, Period } from "../../../manifest/classes/index.js";
+import type { Adaptation, Period } from "../../../manifest/classes/index.ts";
 import SharedReference from "../../../utils/reference.ts";
 import TracksStore from "../tracks_store.ts";
 
