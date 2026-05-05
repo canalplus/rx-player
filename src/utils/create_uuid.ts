@@ -1,5 +1,5 @@
-import globalScope from "./global_scope";
-import getMonotonicTimeStamp from "./monotonic_timestamp";
+import globalScope from "./global_scope.ts";
+import getMonotonicTimeStamp from "./monotonic_timestamp.ts";
 
 /**
  * Create and return a Universally Unique IDentifier (UUID) as defined by

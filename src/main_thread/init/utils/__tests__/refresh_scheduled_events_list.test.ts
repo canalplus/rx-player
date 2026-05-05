@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
-import type { IManifest } from "../../../../manifest";
-import type { IParsedStreamEventData } from "../../../../parsers/manifest";
-import type { IStreamEventData } from "../../../../public_types";
-import refreshScheduledEventsList from "../stream_events_emitter/refresh_scheduled_events_list";
+import type { IManifest } from "../../../../manifest/index.ts";
+import type { IParsedStreamEventData } from "../../../../parsers/manifest/index.ts";
+import type { IStreamEventData } from "../../../../public_types.ts";
+import refreshScheduledEventsList from "../stream_events_emitter/refresh_scheduled_events_list.ts";
 import type {
   INonFiniteStreamEventPayload,
   IStreamEventPayload,
-} from "../stream_events_emitter/types";
+} from "../stream_events_emitter/types.ts";
 
 describe("init - refreshScheduledEventsList", () => {
   it("should correctly refresh scheduled events", () => {

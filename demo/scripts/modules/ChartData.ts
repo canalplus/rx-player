@@ -1,4 +1,4 @@
-import { declareModule, IStateUpdater } from "../lib/declareModule";
+import { declareModule, IStateUpdater } from "../lib/declareModule.ts";
 
 export interface IChartDataModuleState {
   data: Array<{

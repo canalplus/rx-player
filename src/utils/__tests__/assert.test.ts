@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import assert, { assertInterface, assertUnreachable, AssertionError } from "../assert";
+import assert, { assertInterface, assertUnreachable, AssertionError } from "../assert.ts";
 
 describe("utils - assert", () => {
   it("should throw an error if the assertion is false", () => {

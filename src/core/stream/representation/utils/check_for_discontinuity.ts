@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
+import log from "../../../../log.ts";
 import type {
   IManifest,
   IAdaptation,
   IPeriod,
   IRepresentation,
-} from "../../../../manifest";
-import type { IBufferedChunk } from "../../../segment_sinks";
-import type { IBufferDiscontinuity } from "../types";
+} from "../../../../manifest/index.ts";
+import type { IBufferedChunk } from "../../../segment_sinks/index.ts";
+import type { IBufferDiscontinuity } from "../types.ts";
 
 /**
  * Check if there is a soon-to-be-encountered discontinuity in the buffer that

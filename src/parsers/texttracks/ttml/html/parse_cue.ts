@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import getTimeDelimiters from "../get_time_delimiters";
-import type { IParsedTTMLCue } from "../parse_ttml";
-import createElement from "./create_element";
+import getTimeDelimiters from "../get_time_delimiters.ts";
+import type { IParsedTTMLCue } from "../parse_ttml.ts";
+import createElement from "./create_element.ts";
 
 export interface ITTMLHTMLCue {
   start: number;

@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-import LocalManifestPipelines from "./pipelines";
+import LocalManifestPipelines from "./pipelines.ts";
 export default LocalManifestPipelines;

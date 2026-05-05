@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import BROWSER_GLOBALS from "../../../../compat/browser_compatibility_types";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import BROWSER_GLOBALS from "../../../../compat/browser_compatibility_types.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 
 /**
  * Check if one of given video codecs are supported for decode.

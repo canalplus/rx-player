@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { ITNode } from "../../../../../utils/xml-parser";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
   IRepresentationAttributes,
   IRepresentationChildren,
   IRepresentationIntermediateRepresentation,
-} from "../../node_parser_types";
-import parseBaseURL from "./BaseURL";
-import parseContentProtection from "./ContentProtection";
-import parseSegmentBase from "./SegmentBase";
-import parseSegmentList from "./SegmentList";
-import parseSegmentTemplate from "./SegmentTemplate";
+} from "../../node_parser_types.ts";
+import parseBaseURL from "./BaseURL.ts";
+import parseContentProtection from "./ContentProtection.ts";
+import parseSegmentBase from "./SegmentBase.ts";
+import parseSegmentList from "./SegmentList.ts";
+import parseSegmentTemplate from "./SegmentTemplate.ts";
 import {
   MPDError,
   parseBoolean,
@@ -34,7 +34,7 @@ import {
   parseMPDInteger,
   parseScheme,
   ValueParser,
-} from "./utils";
+} from "./utils.ts";
 
 /**
  * @param {Array.<Object | string>} representationChildren

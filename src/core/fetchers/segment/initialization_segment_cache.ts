@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ISegment, IRepresentation } from "../../../manifest";
+import type { ISegment, IRepresentation } from "../../../manifest/index.ts";
 
 /**
  * Caching object used to cache initialization segments.

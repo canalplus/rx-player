@@ -1,8 +1,8 @@
-import type { IManifest } from "../../manifest";
-import type { IThumbnailResponse } from "../../transports";
-import arrayFind from "../../utils/array_find";
-import TaskCanceller from "../../utils/task_canceller";
-import type { IThumbnailFetcher } from "../fetchers";
+import type { IManifest } from "../../manifest/index.ts";
+import type { IThumbnailResponse } from "../../transports/index.ts";
+import arrayFind from "../../utils/array_find.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import type { IThumbnailFetcher } from "../fetchers/index.ts";
 
 /**
  * @param {function} fetchThumbnails

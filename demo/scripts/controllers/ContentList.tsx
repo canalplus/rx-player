@@ -4,20 +4,20 @@ import {
   getLocalStorageContents,
   storeContent,
   removeStoredContent,
-} from "../lib/localStorage";
-import type { IContentInfo, IStoredContentInfo } from "../lib/localStorage";
-import parseDRMConfigurations from "../lib/parseDRMConfigurations";
-import { generateLinkForCustomContent, parseHashInURL } from "../lib/url_hash";
-import Button from "../components/Button";
-import Checkbox from "../components/CheckBox";
-import FocusedTextInput from "../components/FocusedInput";
-import TextInput from "../components/Input";
-import Select from "../components/Select";
-import DEFAULT_CONTENTS from "../contents";
-import type { IDefaultContent, IDrmInfo } from "../contents";
-import GeneratedLinkURL from "../components/GenerateLinkURL";
-import GenerateLinkButton from "../components/GenerateLinkButton";
-import type { IKeySystemOption, ILoadVideoOptions } from "../../../src/public_types";
+} from "../lib/localStorage.ts";
+import type { IContentInfo, IStoredContentInfo } from "../lib/localStorage.ts";
+import parseDRMConfigurations from "../lib/parseDRMConfigurations.ts";
+import { generateLinkForCustomContent, parseHashInURL } from "../lib/url_hash.ts";
+import Button from "../components/Button.tsx";
+import Checkbox from "../components/CheckBox.tsx";
+import FocusedTextInput from "../components/FocusedInput.tsx";
+import TextInput from "../components/Input.tsx";
+import Select from "../components/Select.tsx";
+import DEFAULT_CONTENTS from "../contents.ts";
+import type { IDefaultContent, IDrmInfo } from "../contents.ts";
+import GeneratedLinkURL from "../components/GenerateLinkURL.tsx";
+import GenerateLinkButton from "../components/GenerateLinkButton.tsx";
+import type { IKeySystemOption, ILoadVideoOptions } from "../../../src/public_types.ts";
 
 const win = window as typeof window & {
   MozMediaKeys?: typeof MediaKeys | undefined | null;

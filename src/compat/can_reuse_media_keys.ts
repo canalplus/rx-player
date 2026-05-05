@@ -1,5 +1,5 @@
-import config from "../config";
-import EnvDetector from "./env_detector";
+import config from "../config.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * Returns `true` if a `MediaKeys` instance (the  `Encrypted Media Extension`

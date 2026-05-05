@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { ITNode } from "../../../../../utils/xml-parser";
-import type { ISegmentBaseIntermediateRepresentation } from "../../node_parser_types";
-import parseInitialization from "./Initialization";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
+import type { ISegmentBaseIntermediateRepresentation } from "../../node_parser_types.ts";
+import parseInitialization from "./Initialization.ts";
 import {
   parseBoolean,
   parseByteRange,
   parseMPDFloat,
   parseMPDInteger,
   ValueParser,
-} from "./utils";
+} from "./utils.ts";
 
 /**
  * Parse a SegmentBase element into a SegmentBase intermediate representation.

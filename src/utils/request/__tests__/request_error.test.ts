@@ -15,7 +15,7 @@ import { describe, it, expect } from "vitest";
  * limitations under the License.
  */
 
-import RequestError from "../request_error";
+import RequestError from "../request_error.ts";
 
 describe("errors - RequestError", () => {
   it("should format a RequestError when called", () => {

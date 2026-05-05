@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import NativeTextDisplayer from "../../main_thread/text_displayer/native";
-import srtParser from "../../parsers/texttracks/srt/native";
-import type { IFeaturesObject } from "../types";
+import NativeTextDisplayer from "../../main_thread/text_displayer/native/index.ts";
+import srtParser from "../../parsers/texttracks/srt/native.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to parse SRT text tracks in a native textrack mode.

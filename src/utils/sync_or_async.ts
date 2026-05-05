@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import noop from "./noop";
+import noop from "./noop.ts";
 
 /**
  * Type wrapping an underlying value that might either be obtained synchronously

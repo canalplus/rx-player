@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import type { ISegment } from "../../manifest";
-import { getDurationFromTrun, getTRAF } from "../../parsers/containers/isobmff";
-import type { IChunkTimeInfo } from "../types";
-import type { IISOBMFFBasicSegment } from "./isobmff";
-import { parseTfrf, parseTfxd } from "./isobmff";
+import log from "../../log.ts";
+import type { ISegment } from "../../manifest/index.ts";
+import { getDurationFromTrun, getTRAF } from "../../parsers/containers/isobmff/index.ts";
+import type { IChunkTimeInfo } from "../types.ts";
+import type { IISOBMFFBasicSegment } from "./isobmff/index.ts";
+import { parseTfrf, parseTfxd } from "./isobmff/index.ts";
 
 /** Information on future segments. */
 export interface INextSegmentsInfos {

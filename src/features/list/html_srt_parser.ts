@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
-import srtParser from "../../parsers/texttracks/srt/html";
-import type { IFeaturesObject } from "../types";
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html/index.ts";
+import srtParser from "../../parsers/texttracks/srt/html.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to parse SRT text tracks in an HTML textrack mode.

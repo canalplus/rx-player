@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-import EventEmitter from "../../../utils/event_emitter";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import TaskCanceller from "../../../utils/task_canceller";
-import wrapInPromise from "../../../utils/wrapInPromise";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import wrapInPromise from "../../../utils/wrapInPromise.ts";
 import type {
   IMediaElement,
   IMediaKeySession,
   IMediaKeys,
-} from "../../browser_compatibility_types";
-import * as events from "../../event_listeners";
-import type { MSMediaKeys, MSMediaKeySession } from "./ms_media_keys_constructor";
-import { MSMediaKeysConstructor } from "./ms_media_keys_constructor";
+} from "../../browser_compatibility_types.ts";
+import * as events from "../../event_listeners.ts";
+import type { MSMediaKeys, MSMediaKeySession } from "./ms_media_keys_constructor.ts";
+import { MSMediaKeysConstructor } from "./ms_media_keys_constructor.ts";
 
 class IE11MediaKeySession
   extends EventEmitter<MediaKeySessionEventMap>

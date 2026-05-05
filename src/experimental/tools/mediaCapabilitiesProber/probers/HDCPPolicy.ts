@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import getEmeApiImplementation from "../../../../compat/eme";
-import log from "../log";
+import getEmeApiImplementation from "../../../../compat/eme/index.ts";
+import log from "../log.ts";
 
 type IMediaKeyStatus =
   | "usable"

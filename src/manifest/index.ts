@@ -10,9 +10,9 @@ import type {
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
   IThumbnailTrack,
-} from "./classes";
-import type Manifest from "./classes";
-import { areSameContent, getLoggableSegmentId } from "./classes";
+} from "./classes/index.ts";
+import type Manifest from "./classes/index.ts";
+import { areSameContent, getLoggableSegmentId } from "./classes/index.ts";
 
 /** Type of a `Manifest` class. */
 export type IManifest = Manifest;
@@ -42,6 +42,6 @@ export type {
   IPeriodMetadata,
   IAdaptationMetadata,
   IRepresentationMetadata,
-} from "./types";
-export { ManifestMetadataFormat } from "./types";
-export * from "./utils";
+} from "./types.ts";
+export { ManifestMetadataFormat } from "./types.ts";
+export * from "./utils.ts";

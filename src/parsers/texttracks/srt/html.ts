@@ -24,10 +24,10 @@
 // Done for fun. Understand <b>, <i>, <u> and <font color="#ff0000" /> type
 // of tags.
 
-import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8";
-import { utf8ToStr } from "../../../utils/string_parsing";
-import getCueBlocks from "./get_cue_blocks";
-import parseCueBlock from "./parse_cue";
+import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8.ts";
+import { utf8ToStr } from "../../../utils/string_parsing.ts";
+import getCueBlocks from "./get_cue_blocks.ts";
+import parseCueBlock from "./parse_cue.ts";
 
 export interface ISRTHTMLCue {
   start: number;

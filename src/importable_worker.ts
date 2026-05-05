@@ -1,15 +1,15 @@
-import { CoreMessageType } from "./core/types";
-import type { IFeature } from "./features";
-import { addFeatures } from "./features";
-import initializeWorker from "./initialize_worker";
-import logger from "./log";
-import { type IMainThreadMessage, MainThreadMessageType } from "./main_thread/types";
+import { CoreMessageType } from "./core/types.ts";
+import type { IFeature } from "./features/index.ts";
+import { addFeatures } from "./features/index.ts";
+import initializeWorker from "./initialize_worker.ts";
+import logger from "./log.ts";
+import { type IMainThreadMessage, MainThreadMessageType } from "./main_thread/types.ts";
 import type {
   IManifestLoader,
   IRepresentationFilter,
   ISegmentLoader,
-} from "./public_types";
-import globalScope from "./utils/global_scope";
+} from "./public_types.ts";
+import globalScope from "./utils/global_scope.ts";
 
 let isInitialized = false;
 

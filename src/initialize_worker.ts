@@ -6,17 +6,17 @@
  * case this file is not depended on.
  */
 
-import initializeCoreEntry from "./core/entry";
-import type { ICorePlugins } from "./core/entry";
-import type { ICoreMessage } from "./core/types";
-import { CoreMessageType } from "./core/types";
-import features from "./features";
-import log from "./log";
-import Manifest from "./manifest/classes";
-import DashJsParser from "./parsers/manifest/dash/js-parser";
-import DashWasmParser from "./parsers/manifest/dash/wasm-parser";
-import createDashPipelines from "./transports/dash";
-import globalScope from "./utils/global_scope";
+import initializeCoreEntry from "./core/entry/index.ts";
+import type { ICorePlugins } from "./core/entry/index.ts";
+import type { ICoreMessage } from "./core/types.ts";
+import { CoreMessageType } from "./core/types.ts";
+import features from "./features/index.ts";
+import log from "./log.ts";
+import Manifest from "./manifest/classes/index.ts";
+import DashJsParser from "./parsers/manifest/dash/js-parser/index.ts";
+import DashWasmParser from "./parsers/manifest/dash/wasm-parser/index.ts";
+import createDashPipelines from "./transports/dash/index.ts";
+import globalScope from "./utils/global_scope.ts";
 
 export default function initializeWorker(corePlugins: ICorePlugins): void {
   // Initialize Manually a `DashWasmParser` and add the feature.

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import dash from "../../../../transports/dash";
-import type { ILoaders } from "../types";
+import dash from "../../../../transports/dash/index.ts";
+import type { ILoaders } from "../types.ts";
 
 export default function addDashFeature(loaders: ILoaders): void {
   const transports = dash({ lowLatencyMode: false });

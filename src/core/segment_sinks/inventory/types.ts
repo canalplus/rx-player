@@ -22,7 +22,7 @@ import type {
   IAdaptationMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
-} from "../../../manifest";
+} from "../../../manifest/index.ts";
 
 /** Content information for a single buffered chunk */
 export interface IChunkContext {

@@ -1,15 +1,15 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import getEmeApiImplementation from "../../../../compat/eme";
-import type { IKeySystemOption } from "../../../../public_types";
-import assert from "../../../../utils/assert";
-import ContentDecryptor from "../../content_decryptor";
-import { ContentDecryptorState } from "../../types";
+import getEmeApiImplementation from "../../../../compat/eme/index.ts";
+import type { IKeySystemOption } from "../../../../public_types.ts";
+import assert from "../../../../utils/assert.ts";
+import ContentDecryptor from "../../content_decryptor.ts";
+import { ContentDecryptorState } from "../../types.ts";
 import {
   MediaKeysImpl,
   MediaKeySystemAccessImpl,
   mockCompat,
   testContentDecryptorError,
-} from "./utils";
+} from "./utils.ts";
 
 const mocks = vi.hoisted(() => {
   return {

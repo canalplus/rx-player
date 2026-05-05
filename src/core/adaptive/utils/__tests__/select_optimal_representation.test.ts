@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
-import selectOptimalRepresentation from "../select_optimal_representation";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks.ts";
+import selectOptimalRepresentation from "../select_optimal_representation.ts";
 
 describe("ABR - selectOptimalRepresentation", () => {
   const fakeReps = [

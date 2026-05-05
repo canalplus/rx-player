@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import type { IEncryptedMediaErrorKeyStatusObject } from "../public_types";
-import type { IEncryptedMediaErrorCode } from "./error_codes";
-import { ErrorTypes } from "./error_codes";
-import errorMessage from "./error_message";
+import type { IEncryptedMediaErrorKeyStatusObject } from "../public_types.ts";
+import type { IEncryptedMediaErrorCode } from "./error_codes.ts";
+import { ErrorTypes } from "./error_codes.ts";
+import errorMessage from "./error_message.ts";
 
 /**
  * Error linked to the encryption of the media.

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { createBoxWithChildren } from "../../../parsers/containers/isobmff";
-import { hexToBytes } from "../../../utils/string_parsing";
+import { createBoxWithChildren } from "../../../parsers/containers/isobmff/index.ts";
+import { hexToBytes } from "../../../utils/string_parsing.ts";
 import {
   createAVC1Box,
   createAVCCBox,
@@ -25,8 +25,8 @@ import {
   createSTSDBox,
   createTENCBox,
   createVMHDBox,
-} from "./create_boxes";
-import createInitSegment from "./create_init_segment";
+} from "./create_boxes.ts";
+import createInitSegment from "./create_init_segment.ts";
 
 /**
  * Return full video Init segment as Uint8Array

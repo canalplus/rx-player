@@ -1,7 +1,7 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import { parseXml } from "../../../../../../utils/xml-parser";
-import parseContentProtection from "../ContentProtection";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import { parseXml } from "../../../../../../utils/xml-parser.ts";
+import parseContentProtection from "../ContentProtection.ts";
 
 const mocks = vi.hoisted(() => {
   return {

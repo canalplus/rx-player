@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "./browser_compatibility_types";
+import type { IMediaElement } from "./browser_compatibility_types.ts";
 
 /**
  * Calculating a live-offseted media position necessitate to obtain first an

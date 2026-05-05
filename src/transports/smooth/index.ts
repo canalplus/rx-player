@@ -19,5 +19,5 @@
  * It always should be imported through the `features` object.
  */
 
-import SmoothPipelines from "./pipelines";
+import SmoothPipelines from "./pipelines.ts";
 export default SmoothPipelines;

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import findEndOfCueBlock from "./find_end_of_cue_block";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import findEndOfCueBlock from "./find_end_of_cue_block.ts";
 
 /**
  * Get cue blocks from a srt file.

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import globalScope from "../../../../utils/global_scope";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { IMediaConfiguration } from "../types";
-import { findDefaultVideoCodec } from "./defaultCodecsFinder";
+import globalScope from "../../../../utils/global_scope.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import type { IMediaConfiguration } from "../types.ts";
+import { findDefaultVideoCodec } from "./defaultCodecsFinder.ts";
 
 type ISupportWithFeatures = "" | "Maybe" | "Not Supported" | "Probably";
 

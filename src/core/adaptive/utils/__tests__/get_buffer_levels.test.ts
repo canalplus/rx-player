@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import getBufferLevels from "../get_buffer_levels";
+import getBufferLevels from "../get_buffer_levels.ts";
 
 describe("getBufferLevels", () => {
   it("should return an empty array if given an empty array", () => {

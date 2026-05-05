@@ -1,5 +1,5 @@
-import startsWith from "../utils/starts_with";
-import { getChromeVersion } from "./browser_version";
+import startsWith from "../utils/starts_with.ts";
+import { getChromeVersion } from "./browser_version.ts";
 
 /**
  * This function returns true if the potential `dvcC` ISOBMFF box should be

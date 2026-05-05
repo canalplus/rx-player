@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type { IManifest } from "../../../manifest";
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
-import { StaticRepresentationIndex } from "../../../manifest/classes";
-import type { ITrackType } from "../../../public_types";
-import idGenerator from "../../../utils/id_generator";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import { getFilenameIndexInUrl } from "../../../utils/url-utils";
+import log from "../../../log.ts";
+import { StaticRepresentationIndex } from "../../../manifest/classes/index.ts";
+import type { IManifest } from "../../../manifest/index.ts";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest/index.ts";
+import type { ITrackType } from "../../../public_types.ts";
+import idGenerator from "../../../utils/id_generator.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import { getFilenameIndexInUrl } from "../../../utils/url-utils.ts";
 import type {
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
-} from "../types";
-import MetaRepresentationIndex from "./representation_index";
+} from "../types.ts";
+import MetaRepresentationIndex from "./representation_index.ts";
 
 export type IParserResponse<T> =
   | {

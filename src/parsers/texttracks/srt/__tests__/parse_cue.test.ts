@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import parseCueBlock from "../parse_cue";
+import parseCueBlock from "../parse_cue.ts";
 
 const cueBlock1 = [
   "112",

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import log from "../../../../../../log";
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import { parseXml } from "../../../../../../utils/xml-parser";
-import { createAdaptationSetIntermediateRepresentation } from "../AdaptationSet";
-import { MPDError } from "../utils";
+import log from "../../../../../../log.ts";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import { parseXml } from "../../../../../../utils/xml-parser.ts";
+import { createAdaptationSetIntermediateRepresentation } from "../AdaptationSet.ts";
+import { MPDError } from "../utils.ts";
 
 function testBooleanAttribute(attributeName: string, variableName?: string): void {
   const _variableName = variableName ?? attributeName;

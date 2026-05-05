@@ -1,10 +1,10 @@
-import log from "../../log";
-import type { ITrackUpdateChoiceObject } from "../../main_thread/types";
-import type { ITrackType } from "../../public_types";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import objectAssign from "../../utils/object_assign";
-import SharedReference from "../../utils/reference";
-import type { IAdaptationChoice, IRepresentationsChoice } from "../stream";
+import log from "../../log.ts";
+import type { ITrackUpdateChoiceObject } from "../../main_thread/types.ts";
+import type { ITrackType } from "../../public_types.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../utils/object_assign.ts";
+import SharedReference from "../../utils/reference.ts";
+import type { IAdaptationChoice, IRepresentationsChoice } from "../stream/index.ts";
 
 export default class TrackChoiceSetter {
   /**

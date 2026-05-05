@@ -18,21 +18,21 @@ import type {
   IMediaElement,
   IMediaKeySystemAccess,
   IMediaKeys,
-} from "../../compat/browser_compatibility_types";
-import canReuseMediaKeys from "../../compat/can_reuse_media_keys";
-import type { IEmeApiImplementation } from "../../compat/eme";
-import { EncryptedMediaError } from "../../errors";
-import log from "../../log";
-import type { IKeySystemOption } from "../../public_types";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import getMediaKeySystemAccess from "./find_key_system";
-import type { ICodecSupportList } from "./find_key_system";
-import type { IMediaKeySessionStores } from "./types";
-import LoadedSessionsStore from "./utils/loaded_sessions_store";
-import MediaKeysAttacher from "./utils/media_keys_attacher";
-import PersistentSessionsStore from "./utils/persistent_sessions_store";
-import ServerCertificateStore from "./utils/server_certificate_store";
+} from "../../compat/browser_compatibility_types.ts";
+import canReuseMediaKeys from "../../compat/can_reuse_media_keys.ts";
+import type { IEmeApiImplementation } from "../../compat/eme/index.ts";
+import { EncryptedMediaError } from "../../errors/index.ts";
+import log from "../../log.ts";
+import type { IKeySystemOption } from "../../public_types.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import getMediaKeySystemAccess from "./find_key_system.ts";
+import type { ICodecSupportList } from "./find_key_system.ts";
+import type { IMediaKeySessionStores } from "./types.ts";
+import LoadedSessionsStore from "./utils/loaded_sessions_store.ts";
+import MediaKeysAttacher from "./utils/media_keys_attacher.ts";
+import PersistentSessionsStore from "./utils/persistent_sessions_store.ts";
+import ServerCertificateStore from "./utils/server_certificate_store.ts";
 
 /**
  * @throws {EncryptedMediaError}

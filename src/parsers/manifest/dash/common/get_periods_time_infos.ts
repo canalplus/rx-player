@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { IPeriodIntermediateRepresentation } from "../node_parser_types";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import type { IPeriodIntermediateRepresentation } from "../node_parser_types.ts";
 
 /** Time information from a Period. */
 interface IPeriodTimeInformation {

@@ -18,49 +18,49 @@ import type {
   IMediaElement,
   IMediaKeySystemAccess,
   IMediaKeys,
-} from "../../compat/browser_compatibility_types";
-import type { IEmeApiImplementation } from "../../compat/eme";
-import { getInitData } from "../../compat/eme";
-import config from "../../config";
-import { EncryptedMediaError, OtherError } from "../../errors";
-import log from "../../log";
-import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest";
-import type { IKeySystemOption, IPlayerError } from "../../public_types";
-import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import arrayFind from "../../utils/array_find";
-import arrayIncludes from "../../utils/array_includes";
-import EventEmitter from "../../utils/event_emitter";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import { objectValues } from "../../utils/object_values";
-import { bytesToHex } from "../../utils/string_parsing";
-import TaskCanceller from "../../utils/task_canceller";
-import createOrLoadSession from "./create_or_load_session";
-import type { ICodecSupportList } from "./find_key_system";
-import type { IMediaKeysInfos } from "./get_media_keys";
-import initMediaKeys from "./init_media_keys";
-import type { IKeyUpdateValue } from "./session_events_listener";
+} from "../../compat/browser_compatibility_types.ts";
+import type { IEmeApiImplementation } from "../../compat/eme/index.ts";
+import { getInitData } from "../../compat/eme/index.ts";
+import config from "../../config.ts";
+import { EncryptedMediaError, OtherError } from "../../errors/index.ts";
+import log from "../../log.ts";
+import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest/index.ts";
+import type { IKeySystemOption, IPlayerError } from "../../public_types.ts";
+import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal.ts";
+import arrayFind from "../../utils/array_find.ts";
+import arrayIncludes from "../../utils/array_includes.ts";
+import EventEmitter from "../../utils/event_emitter.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import { objectValues } from "../../utils/object_values.ts";
+import { bytesToHex } from "../../utils/string_parsing.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import createOrLoadSession from "./create_or_load_session.ts";
+import type { ICodecSupportList } from "./find_key_system.ts";
+import type { IMediaKeysInfos } from "./get_media_keys.ts";
+import initMediaKeys from "./init_media_keys.ts";
+import type { IKeyUpdateValue } from "./session_events_listener.ts";
 import SessionEventsListener, {
   BlacklistedSessionError,
-} from "./session_events_listener";
-import setServerCertificate from "./set_server_certificate";
+} from "./session_events_listener.ts";
+import setServerCertificate from "./set_server_certificate.ts";
 import type {
   IProtectionData,
   IMediaKeySessionStores,
   IProcessedProtectionData,
   IContentDecryptorEvent,
-} from "./types";
-import { MediaKeySessionLoadingType, ContentDecryptorState } from "./types";
-import { DecommissionedSessionError } from "./utils/check_key_statuses";
-import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info";
-import getDrmSystemId from "./utils/get_drm_system_id";
-import InitDataValuesContainer from "./utils/init_data_values_container";
-import isCompatibleCodecSupported from "./utils/is_compatible_codec_supported";
+} from "./types.ts";
+import { MediaKeySessionLoadingType, ContentDecryptorState } from "./types.ts";
+import { DecommissionedSessionError } from "./utils/check_key_statuses.ts";
+import cleanOldStoredPersistentInfo from "./utils/clean_old_stored_persistent_info.ts";
+import getDrmSystemId from "./utils/get_drm_system_id.ts";
+import InitDataValuesContainer from "./utils/init_data_values_container.ts";
+import isCompatibleCodecSupported from "./utils/is_compatible_codec_supported.ts";
 import {
   areAllKeyIdsContainedIn,
   areSomeKeyIdsContainedIn,
-} from "./utils/key_id_comparison";
-import type KeySessionRecord from "./utils/key_session_record";
-import MediaKeysAttacher from "./utils/media_keys_attacher";
+} from "./utils/key_id_comparison.ts";
+import type KeySessionRecord from "./utils/key_session_record.ts";
+import MediaKeysAttacher from "./utils/media_keys_attacher.ts";
 
 /**
  * Module communicating with the Content Decryption Module (or CDM) to be able

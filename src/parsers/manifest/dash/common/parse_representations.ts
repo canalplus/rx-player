@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import type { IAdaptation } from "../../../../manifest";
-import type { IHDRInformation } from "../../../../public_types";
-import arrayFind from "../../../../utils/array_find";
-import objectAssign from "../../../../utils/object_assign";
-import type { IParsedRepresentation } from "../../types";
+import log from "../../../../log.ts";
+import type { IAdaptation } from "../../../../manifest/index.ts";
+import type { IHDRInformation } from "../../../../public_types.ts";
+import arrayFind from "../../../../utils/array_find.ts";
+import objectAssign from "../../../../utils/object_assign.ts";
+import type { IParsedRepresentation } from "../../types.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
   IScheme,
-} from "../node_parser_types";
-import type ContentProtectionParser from "./content_protection_parser";
-import { convertSupplementalCodecsToRFC6381 } from "./convert_supplemental_codecs";
-import { getWEBMHDRInformation } from "./get_hdr_information";
-import type { IRepresentationIndexContext } from "./parse_representation_index";
-import parseRepresentationIndex from "./parse_representation_index";
-import resolveBaseURLs from "./resolve_base_urls";
+} from "../node_parser_types.ts";
+import type ContentProtectionParser from "./content_protection_parser.ts";
+import { convertSupplementalCodecsToRFC6381 } from "./convert_supplemental_codecs.ts";
+import { getWEBMHDRInformation } from "./get_hdr_information.ts";
+import type { IRepresentationIndexContext } from "./parse_representation_index.ts";
+import parseRepresentationIndex from "./parse_representation_index.ts";
+import resolveBaseURLs from "./resolve_base_urls.ts";
 
 /**
  * Combine inband event streams from representation and

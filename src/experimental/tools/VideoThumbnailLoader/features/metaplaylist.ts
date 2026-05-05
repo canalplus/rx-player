@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import mpl from "../../../../transports/metaplaylist";
-import type { ILoaders } from "../types";
+import mpl from "../../../../transports/metaplaylist/index.ts";
+import type { ILoaders } from "../types.ts";
 
 export default function addMplFeature(loaders: ILoaders): void {
   const transports = mpl({ lowLatencyMode: false });

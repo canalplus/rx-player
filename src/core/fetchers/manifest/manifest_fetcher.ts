@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import { formatError } from "../../../errors";
-import log from "../../../log";
-import Manifest from "../../../manifest/classes";
+import config from "../../../config.ts";
+import { formatError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import Manifest from "../../../manifest/classes/index.ts";
 import type {
   IInitialManifest,
   ILoadedManifestFormat,
   IPlayerError,
-} from "../../../public_types";
+} from "../../../public_types.ts";
 import type {
   IManifestLoaderOptions,
   IRequestedData,
   ITransportManifestPipeline,
   ITransportName,
   ITransportPipelines,
-} from "../../../transports";
-import EventEmitter from "../../../utils/event_emitter";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import noop from "../../../utils/noop";
-import TaskCanceller from "../../../utils/task_canceller";
-import type CmcdDataBuilder from "../../cmcd";
-import errorSelector from "../utils/error_selector";
-import type { IBackoffSettings } from "../utils/schedule_request";
-import { scheduleRequestPromise } from "../utils/schedule_request";
+} from "../../../transports/index.ts";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import noop from "../../../utils/noop.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import type CmcdDataBuilder from "../../cmcd/index.ts";
+import errorSelector from "../utils/error_selector.ts";
+import type { IBackoffSettings } from "../utils/schedule_request.ts";
+import { scheduleRequestPromise } from "../utils/schedule_request.ts";
 
 /**
  * Class allowing to facilitate the task of loading and parsing a Manifest, as

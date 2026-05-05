@@ -1,5 +1,5 @@
-import type CoreInterface from "./base";
-import type { MonoThreadCoreInterface } from "./monothread";
-import type { WorkerCoreInterface } from "./multithread";
+import type CoreInterface from "./base.ts";
+import type { MonoThreadCoreInterface } from "./monothread.ts";
+import type { WorkerCoreInterface } from "./multithread.ts";
 export type { MonoThreadCoreInterface, WorkerCoreInterface };
 export default CoreInterface;

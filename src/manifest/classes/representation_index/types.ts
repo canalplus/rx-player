@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import type { IEMSG } from "../../../parsers/containers/isobmff";
+import type { IEMSG } from "../../../parsers/containers/isobmff/index.ts";
 import type {
   ILocalIndexSegment,
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
-} from "../../../parsers/manifest/local";
-import type { IPlayerError } from "../../../public_types";
-import type { ISegmentInformation } from "../../../transports";
+} from "../../../parsers/manifest/local/index.ts";
+import type { IPlayerError } from "../../../public_types.ts";
+import type { ISegmentInformation } from "../../../transports/index.ts";
 
 /**
  * Supplementary information specific to Smooth Initialization segments.

@@ -29,9 +29,9 @@
  * already have been instanciated.
  */
 
-import addFeatures from "./add_features";
-import features from "./features_object";
-import type { IFeature } from "./types";
+import addFeatures from "./add_features.ts";
+import features from "./features_object.ts";
+import type { IFeature } from "./types.ts";
 
 export default features;
 export type { IFeature };

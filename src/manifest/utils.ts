@@ -1,6 +1,11 @@
-import log from "../log";
-import type { IProcessedProtectionData } from "../main_thread/types";
-import type { IManifest, IPeriod, IAdaptation, IPeriodsUpdateResult } from "../manifest";
+import log from "../log.ts";
+import type { IProcessedProtectionData } from "../main_thread/types.ts";
+import type {
+  IManifest,
+  IPeriod,
+  IAdaptation,
+  IPeriodsUpdateResult,
+} from "../manifest/index.ts";
 import type {
   IAudioRepresentation,
   IAudioTrack,
@@ -9,20 +14,20 @@ import type {
   ITrackType,
   IVideoRepresentation,
   IVideoTrack,
-} from "../public_types";
-import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal";
-import arrayFind from "../utils/array_find";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../utils/monotonic_timestamp";
-import { objectValues } from "../utils/object_values";
-import { ManifestMetadataFormat } from "./types";
+} from "../public_types.ts";
+import areArraysOfNumbersEqual from "../utils/are_arrays_of_numbers_equal.ts";
+import arrayFind from "../utils/array_find.ts";
+import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../utils/monotonic_timestamp.ts";
+import { objectValues } from "../utils/object_values.ts";
+import { ManifestMetadataFormat } from "./types.ts";
 import type {
   IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
   IThumbnailTrackMetadata,
-} from "./types";
+} from "./types.ts";
 
 /** List in an array every possible value for the Adaptation's `type` property. */
 export const SUPPORTED_ADAPTATIONS_TYPE: ITrackType[] = ["audio", "video", "text"];

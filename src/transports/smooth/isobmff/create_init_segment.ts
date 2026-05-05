@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import { createBox, createBoxWithChildren } from "../../../parsers/containers/isobmff";
-import { concat } from "../../../utils/byte_parsing";
+import {
+  createBox,
+  createBoxWithChildren,
+} from "../../../parsers/containers/isobmff/index.ts";
+import { concat } from "../../../utils/byte_parsing.ts";
 import {
   createDREFBox,
   createFTYPBox,
@@ -24,7 +27,7 @@ import {
   createMVHDBox,
   createTKHDBox,
   createTREXBox,
-} from "./create_boxes";
+} from "./create_boxes.ts";
 
 export type IPSSList = Array<{
   systemId: string;

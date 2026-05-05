@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   makeReadyOnlyPlaybackObserver,
   DummyObservationPosition,
-} from "../../../playback_observer/__tests__/mocks";
-import type { IRange } from "../../../utils/ranges";
-import SharedReference from "../../../utils/reference";
-import TaskCanceller from "../../../utils/task_canceller";
-import type { IStreamOrchestratorPlaybackObservation } from "../../stream";
-import BufferGarbageCollector from "../garbage_collector";
-import { DummySegmentSink } from "./mocks";
+} from "../../../playback_observer/__tests__/mocks.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import SharedReference from "../../../utils/reference.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import type { IStreamOrchestratorPlaybackObservation } from "../../stream/index.ts";
+import BufferGarbageCollector from "../garbage_collector.ts";
+import { DummySegmentSink } from "./mocks.ts";
 
 const mockLog = vi.hoisted(() => ({
   debug: vi.fn(),

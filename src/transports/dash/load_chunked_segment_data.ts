@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import { extractCompleteChunks } from "../../parsers/containers/isobmff";
-import { concat } from "../../utils/byte_parsing";
-import type { IFetchedDataObject } from "../../utils/request/fetch";
-import fetchRequest from "../../utils/request/fetch";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import { extractCompleteChunks } from "../../parsers/containers/isobmff/index.ts";
+import { concat } from "../../utils/byte_parsing.ts";
+import type { IFetchedDataObject } from "../../utils/request/fetch.ts";
+import fetchRequest from "../../utils/request/fetch.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   ISegmentLoaderCallbacks,
   ISegmentLoaderResultChunkedComplete,
-} from "../types";
+} from "../types.ts";
 
 /**
  * Load segments through a "chunk" mode (decodable chunk by decodable chunk).

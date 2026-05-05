@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import type { IMediaKeySession } from "../../../compat/browser_compatibility_types";
-import log from "../../../log";
+import type { IMediaKeySession } from "../../../compat/browser_compatibility_types.ts";
+import log from "../../../log.ts";
 import type {
   IPersistentLicenseConfig,
   IPersistentSessionInfo,
-} from "../../../public_types";
-import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
-import { assertInterface } from "../../../utils/assert";
-import { bytesToBase64 } from "../../../utils/base64";
-import hashBuffer from "../../../utils/hash_buffer";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type { IProcessedProtectionData } from "../types";
-import areInitializationValuesCompatible from "./are_init_values_compatible";
-import type { IFormattedInitDataValue } from "./init_data_values_container";
-import SerializableBytes from "./serializable_bytes";
+} from "../../../public_types.ts";
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal.ts";
+import { assertInterface } from "../../../utils/assert.ts";
+import { bytesToBase64 } from "../../../utils/base64.ts";
+import hashBuffer from "../../../utils/hash_buffer.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import type { IProcessedProtectionData } from "../types.ts";
+import areInitializationValuesCompatible from "./are_init_values_compatible.ts";
+import type { IFormattedInitDataValue } from "./init_data_values_container.ts";
+import SerializableBytes from "./serializable_bytes.ts";
 
 /**
  * Throw if the given storage does not respect the right interface.

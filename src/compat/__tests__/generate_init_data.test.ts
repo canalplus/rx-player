@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { utf16LEToStr } from "../../utils/string_parsing";
-import { generatePlayReadyInitData } from "../generate_init_data";
+import { utf16LEToStr } from "../../utils/string_parsing.ts";
+import { generatePlayReadyInitData } from "../generate_init_data.ts";
 
 describe("utils - generatePlayReadyInitData", () => {
   const playReadyHeader =

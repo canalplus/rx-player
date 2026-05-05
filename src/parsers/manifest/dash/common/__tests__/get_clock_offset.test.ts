@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import log from "../../../../../log";
-import getClockOffset from "../get_clock_offset";
+import log from "../../../../../log.ts";
+import getClockOffset from "../get_clock_offset.ts";
 
 const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
   /* noop */

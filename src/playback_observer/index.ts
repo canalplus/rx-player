@@ -1,12 +1,12 @@
-import type MediaElementPlaybackObserver from "./media_element_playback_observer";
-import ObservationPosition from "./utils/observation_position";
+import type MediaElementPlaybackObserver from "./media_element_playback_observer.ts";
+import ObservationPosition from "./utils/observation_position.ts";
 
-export { SeekingState } from "./types";
+export { SeekingState } from "./types.ts";
 export type {
   IFreezingStatus,
   IRebufferingStatus,
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
-} from "./types";
+} from "./types.ts";
 export type IMediaElementPlaybackObserver = MediaElementPlaybackObserver;
 export { ObservationPosition };

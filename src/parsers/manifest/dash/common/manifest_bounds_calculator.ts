@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
 
 /**
  * This class allows to easily calculate the first and last available positions

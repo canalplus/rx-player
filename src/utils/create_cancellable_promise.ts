@@ -1,4 +1,4 @@
-import type { CancellationError, CancellationSignal } from "./task_canceller";
+import type { CancellationError, CancellationSignal } from "./task_canceller.ts";
 
 /**
  * Returns a Promise linked to a `CancellationSignal`, which will reject the

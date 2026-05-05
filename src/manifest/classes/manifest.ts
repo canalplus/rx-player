@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../errors";
-import log from "../../log";
-import { getCodecsWithUnknownSupport } from "../../main_thread/init/utils/update_manifest_codec_support";
-import type { IParsedManifest } from "../../parsers/manifest";
-import type { ITrackType, IRepresentationFilter } from "../../public_types";
-import arrayFind from "../../utils/array_find";
-import EventEmitter from "../../utils/event_emitter";
-import idGenerator from "../../utils/id_generator";
-import warnOnce from "../../utils/warn_once";
+import { MediaError } from "../../errors/index.ts";
+import log from "../../log.ts";
+import { getCodecsWithUnknownSupport } from "../../main_thread/init/utils/update_manifest_codec_support.ts";
+import type { IParsedManifest } from "../../parsers/manifest/index.ts";
+import type { ITrackType, IRepresentationFilter } from "../../public_types.ts";
+import arrayFind from "../../utils/array_find.ts";
+import EventEmitter from "../../utils/event_emitter.ts";
+import idGenerator from "../../utils/id_generator.ts";
+import warnOnce from "../../utils/warn_once.ts";
 import type {
   IAdaptationMetadata,
   IManifestMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
-} from "../types";
-import { ManifestMetadataFormat } from "../types";
+} from "../types.ts";
+import { ManifestMetadataFormat } from "../types.ts";
 import {
   getLivePosition,
   getMaximumSafePosition,
@@ -37,16 +37,16 @@ import {
   getPeriodForTime,
   getPeriodAfter,
   toTaggedTrack,
-} from "../utils";
-import type Adaptation from "./adaptation";
-import CodecSupportCache from "./codec_support_cache";
-import type { ICodecSupportInfo } from "./codec_support_cache";
-import type { IManifestAdaptations } from "./period";
-import Period from "./period";
-import type Representation from "./representation";
-import { MANIFEST_UPDATE_TYPE } from "./types";
-import type { IPeriodsUpdateResult } from "./update_periods";
-import { replacePeriods, updatePeriods } from "./update_periods";
+} from "../utils.ts";
+import type Adaptation from "./adaptation.ts";
+import CodecSupportCache from "./codec_support_cache.ts";
+import type { ICodecSupportInfo } from "./codec_support_cache.ts";
+import type { IManifestAdaptations } from "./period.ts";
+import Period from "./period.ts";
+import type Representation from "./representation.ts";
+import { MANIFEST_UPDATE_TYPE } from "./types.ts";
+import type { IPeriodsUpdateResult } from "./update_periods.ts";
+import { replacePeriods, updatePeriods } from "./update_periods.ts";
 
 const generateNewManifestId = idGenerator();
 

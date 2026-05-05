@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type MediaElementTracksStore from "./media_element_tracks_store";
-import TracksStore from "./tracks_store";
+import type MediaElementTracksStore from "./media_element_tracks_store.ts";
+import TracksStore from "./tracks_store.ts";
 
 export type IMediaElementTracksStore = MediaElementTracksStore;
 export default TracksStore;
-export * from "./tracks_store";
+export * from "./tracks_store.ts";

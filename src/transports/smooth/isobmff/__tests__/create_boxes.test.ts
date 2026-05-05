@@ -6,7 +6,7 @@ import {
   createMDHDBox,
   createSMHDBox,
   createVMHDBox,
-} from "../create_boxes";
+} from "../create_boxes.ts";
 
 const mocks = vi.hoisted(() => {
   return {

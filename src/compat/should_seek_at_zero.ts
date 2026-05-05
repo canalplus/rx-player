@@ -1,5 +1,5 @@
-import config from "../config";
-import EnvDetector from "./env_detector";
+import config from "../config.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * Determines whether the player should perform an explicit initial seek to 0.

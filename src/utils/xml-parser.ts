@@ -6,9 +6,9 @@
  * https://github.com/TobiasNickel/tXml
  */
 
-import isNonEmptyString from "./is_non_empty_string";
+import isNonEmptyString from "./is_non_empty_string.ts";
 
-// import arrayIncludes from "./array_includes";
+// import arrayIncludes from "./array_includes.ts";
 
 /**
  * The MIT License (MIT)

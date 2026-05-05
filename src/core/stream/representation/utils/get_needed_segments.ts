@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-import config from "../../../../config";
-import log from "../../../../log";
+import config from "../../../../config.ts";
+import log from "../../../../log.ts";
 import type {
   IManifest,
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
-} from "../../../../manifest";
-import { areSameContent } from "../../../../manifest";
-import objectAssign from "../../../../utils/object_assign";
+} from "../../../../manifest/index.ts";
+import { areSameContent } from "../../../../manifest/index.ts";
+import objectAssign from "../../../../utils/object_assign.ts";
 import type {
   IBufferedChunk,
   ICompleteSegmentInfo,
   IBufferedHistoryEntry,
   IChunkContext,
-} from "../../../segment_sinks";
-import { ChunkStatus } from "../../../segment_sinks/inventory/segment_inventory";
+} from "../../../segment_sinks/index.ts";
+import { ChunkStatus } from "../../../segment_sinks/inventory/segment_inventory.ts";
 
 interface IContentContext {
   adaptation: IAdaptation;

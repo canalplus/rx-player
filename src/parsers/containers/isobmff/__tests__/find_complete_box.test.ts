@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import findCompleteBox from "../find_complete_box";
+import findCompleteBox from "../find_complete_box.ts";
 
 describe("transports utils - findCompleteBox", () => {
   it("should return -1 if the box is not found", () => {

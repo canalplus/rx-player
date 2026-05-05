@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type { IRepresentationIndex, ISegment } from "./types";
+import log from "../../../log.ts";
+import type { IRepresentationIndex, ISegment } from "./types.ts";
 
 export interface IStaticRepresentationIndexInfos {
   media: string;

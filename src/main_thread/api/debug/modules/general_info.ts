@@ -1,13 +1,13 @@
-import hasMseInWorker from "../../../../compat/has_mse_in_worker";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import type RxPlayer from "../../public_api";
-import { DEFAULT_REFRESH_INTERVAL } from "../constants";
+import hasMseInWorker from "../../../../compat/has_mse_in_worker.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import type RxPlayer from "../../public_api.ts";
+import { DEFAULT_REFRESH_INTERVAL } from "../constants.ts";
 import {
   createCompositeElement,
   createElement,
   createMetricTitle,
   isExtendedMode,
-} from "../utils";
+} from "../utils.ts";
 
 export default function constructDebugGeneralInfo(
   instance: RxPlayer,

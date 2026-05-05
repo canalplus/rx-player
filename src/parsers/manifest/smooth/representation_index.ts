@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import { NetworkError } from "../../../errors";
-import log from "../../../log";
-import type { IRepresentationIndex, ISegment } from "../../../manifest";
-import type { IPlayerError } from "../../../public_types";
-import assert from "../../../utils/assert";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import { checkDiscontinuity, getIndexSegmentEnd } from "../utils/index_helpers";
-import type { IIndexSegment } from "./shared_smooth_segment_timeline";
-import type SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline";
-import { replaceSegmentSmoothTokens } from "./utils/tokens";
+import { NetworkError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { IRepresentationIndex, ISegment } from "../../../manifest/index.ts";
+import type { IPlayerError } from "../../../public_types.ts";
+import assert from "../../../utils/assert.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import { checkDiscontinuity, getIndexSegmentEnd } from "../utils/index_helpers.ts";
+import type { IIndexSegment } from "./shared_smooth_segment_timeline.ts";
+import type SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline.ts";
+import { replaceSegmentSmoothTokens } from "./utils/tokens.ts";
 
 /**
  * @param {Number} start

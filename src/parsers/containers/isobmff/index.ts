@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import extractCompleteChunks, { extractInitSegment } from "./extract_complete_chunks";
-import extractPssh, { getPsshSystemID } from "./extract_pssh";
-import findCompleteBox from "./find_complete_box";
-import removeDolbyVisionConfigData from "./remove_dolby_vision_config_data";
+import extractCompleteChunks, { extractInitSegment } from "./extract_complete_chunks.ts";
+import extractPssh, { getPsshSystemID } from "./extract_pssh.ts";
+import findCompleteBox from "./find_complete_box.ts";
+import removeDolbyVisionConfigData from "./remove_dolby_vision_config_data.ts";
 
 export { extractInitSegment };
-export { createBox, createBoxWithChildren } from "./create_box";
+export { createBox, createBoxWithChildren } from "./create_box.ts";
 export {
   getBox,
   getBoxContent,
   getNextBoxOffsets,
   getBoxOffsets,
   getUuidContent,
-} from "./get_box";
-export { getMDAT, getMDIA, getTRAF } from "./read";
-export type { IEMSG, ISidxSegment } from "./utils";
+} from "./get_box.ts";
+export { getMDAT, getMDIA, getTRAF } from "./read.ts";
+export type { IEMSG, ISidxSegment } from "./utils.ts";
 export {
   getMDHDTimescale,
   getPlayReadyKIDFromPrivateData,
@@ -38,7 +38,7 @@ export {
   getSegmentsFromSidx,
   patchPssh,
   updateBoxLength,
-} from "./utils";
+} from "./utils.ts";
 export {
   extractCompleteChunks,
   findCompleteBox,

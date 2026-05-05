@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { itole4, le4toi, toUint8Array } from "../../utils/byte_parsing";
-import { strToUtf16LE, utf16LEToStr } from "../../utils/string_parsing";
+import { itole4, le4toi, toUint8Array } from "../../utils/byte_parsing.ts";
+import { strToUtf16LE, utf16LEToStr } from "../../utils/string_parsing.ts";
 
 /**
  * Create formatted fairplay initdata for WebKit createSession.

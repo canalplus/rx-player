@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type { ISegment } from "../../../manifest";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import clearTimelineFromPosition from "../utils/clear_timeline_from_position";
-import { getIndexSegmentEnd } from "../utils/index_helpers";
-import updateSegmentTimeline from "../utils/update_segment_timeline";
-import addSegmentInfos from "./utils/add_segment_infos";
+import log from "../../../log.ts";
+import type { ISegment } from "../../../manifest/index.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import clearTimelineFromPosition from "../utils/clear_timeline_from_position.ts";
+import { getIndexSegmentEnd } from "../utils/index_helpers.ts";
+import updateSegmentTimeline from "../utils/update_segment_timeline.ts";
+import addSegmentInfos from "./utils/add_segment_infos.ts";
 
 /**
  * Smooth contents provide the index of segments under a "StreamIndex", the

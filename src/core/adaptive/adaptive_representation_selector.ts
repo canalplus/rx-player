@@ -14,43 +14,43 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import log from "../../log";
+import config from "../../config.ts";
+import log from "../../log.ts";
 import type {
   IAdaptation,
   IManifest,
   IPeriod,
   IRepresentation,
   ISegment,
-} from "../../manifest";
+} from "../../manifest/index.ts";
 import type {
   ObservationPosition,
   IReadOnlyPlaybackObserver,
-} from "../../playback_observer";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import noop from "../../utils/noop";
-import type { IRange } from "../../utils/ranges";
-import { getLeftSizeOfRange } from "../../utils/ranges";
-import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import TaskCanceller from "../../utils/task_canceller";
-import type { IBufferType } from "../segment_sinks";
-import BufferBasedChooser from "./buffer_based_chooser";
-import GuessBasedChooser from "./guess_based_chooser";
-import NetworkAnalyzer from "./network_analyzer";
-import BandwidthEstimator from "./utils/bandwidth_estimator";
-import filterByBitrate from "./utils/filter_by_bitrate";
-import filterByResolution from "./utils/filter_by_resolution";
-import type { IResolutionInfo } from "./utils/filter_by_resolution";
-import LastEstimateStorage, { ABRAlgorithmType } from "./utils/last_estimate_storage";
+} from "../../playback_observer/index.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import noop from "../../utils/noop.ts";
+import type { IRange } from "../../utils/ranges.ts";
+import { getLeftSizeOfRange } from "../../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import SharedReference from "../../utils/reference.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import type { IBufferType } from "../segment_sinks/index.ts";
+import BufferBasedChooser from "./buffer_based_chooser.ts";
+import GuessBasedChooser from "./guess_based_chooser.ts";
+import NetworkAnalyzer from "./network_analyzer.ts";
+import BandwidthEstimator from "./utils/bandwidth_estimator.ts";
+import filterByBitrate from "./utils/filter_by_bitrate.ts";
+import filterByResolution from "./utils/filter_by_resolution.ts";
+import type { IResolutionInfo } from "./utils/filter_by_resolution.ts";
+import LastEstimateStorage, { ABRAlgorithmType } from "./utils/last_estimate_storage.ts";
 import type {
   IPendingRequestStoreBegin,
   IPendingRequestStoreProgress,
-} from "./utils/pending_requests_store";
-import PendingRequestsStore from "./utils/pending_requests_store";
-import RepresentationScoreCalculator from "./utils/representation_score_calculator";
-import selectOptimalRepresentation from "./utils/select_optimal_representation";
+} from "./utils/pending_requests_store.ts";
+import PendingRequestsStore from "./utils/pending_requests_store.ts";
+import RepresentationScoreCalculator from "./utils/representation_score_calculator.ts";
+import selectOptimalRepresentation from "./utils/select_optimal_representation.ts";
 
 // Create default shared references
 

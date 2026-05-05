@@ -1,14 +1,14 @@
-import log from "../../../log";
-import { be4toi } from "../../../utils/byte_parsing";
-import { utf8ToStr } from "../../../utils/string_parsing";
+import log from "../../../log.ts";
+import { be4toi } from "../../../utils/byte_parsing.ts";
+import { utf8ToStr } from "../../../utils/string_parsing.ts";
 import {
   getBoxContent,
   getMDAT,
   getTrackFragmentDecodeTime,
-} from "../../containers/isobmff";
-import { getTrunSamples } from "../../containers/isobmff/utils";
-import { parseSettings } from "./parse_cue_block";
-import type { IStyleElements } from "./parse_style_block";
+} from "../../containers/isobmff/index.ts";
+import { getTrunSamples } from "../../containers/isobmff/utils.ts";
+import { parseSettings } from "./parse_cue_block.ts";
+import type { IStyleElements } from "./parse_style_block.ts";
 
 /**
  * WebVTT embedded in an MP4 file weirdly follow another format.

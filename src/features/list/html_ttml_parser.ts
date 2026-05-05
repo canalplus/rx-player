@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
-import ttmlParser from "../../parsers/texttracks/ttml/html";
-import type { IFeaturesObject } from "../types";
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html/index.ts";
+import ttmlParser from "../../parsers/texttracks/ttml/html/index.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to parse TTML text tracks in an HTML textrack mode.

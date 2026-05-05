@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import features from "../../features";
-import type { ITransportOptions, ITransportPipelines } from "../types";
-import generateManifestLoader from "../utils/generate_manifest_loader";
-import { addManifestIntegrityChecks } from "./integrity_checks";
-import generateManifestParser from "./manifest_parser";
-import generateSegmentLoader from "./segment_loader";
-import generateAudioVideoSegmentParser from "./segment_parser";
-import generateTextTrackLoader from "./text_loader";
-import generateTextTrackParser from "./text_parser";
-import { loadThumbnail, parseThumbnail } from "./thumbnails";
+import features from "../../features/index.ts";
+import type { ITransportOptions, ITransportPipelines } from "../types.ts";
+import generateManifestLoader from "../utils/generate_manifest_loader.ts";
+import { addManifestIntegrityChecks } from "./integrity_checks.ts";
+import generateManifestParser from "./manifest_parser.ts";
+import generateSegmentLoader from "./segment_loader.ts";
+import generateAudioVideoSegmentParser from "./segment_parser.ts";
+import generateTextTrackLoader from "./text_loader.ts";
+import generateTextTrackParser from "./text_parser.ts";
+import { loadThumbnail, parseThumbnail } from "./thumbnails.ts";
 
 /**
  * Returns pipelines used for DASH streaming.

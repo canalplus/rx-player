@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-import noop from "../../../../../../utils/noop";
+import noop from "../../../../../../utils/noop.ts";
 import type {
   IAdaptationSetAttributes,
   IAdaptationSetChildren,
   ISegmentListIntermediateRepresentation,
-} from "../../../node_parser_types";
-import type { IAttributeParser, IChildrenParser } from "../parsers_stack";
-import type ParsersStack from "../parsers_stack";
-import { AttributeName, TagName } from "../types";
-import { parseFloatOrBool, parseString } from "../utils";
-import { generateBaseUrlAttrParser } from "./BaseURL";
-import { generateContentComponentAttrParser } from "./ContentComponent";
-import { generateContentProtectionAttrParser } from "./ContentProtection";
-import { generateLabelElementParser } from "./Label";
+} from "../../../node_parser_types.ts";
+import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
+import type ParsersStack from "../parsers_stack.ts";
+import { AttributeName, TagName } from "../types.ts";
+import { parseFloatOrBool, parseString } from "../utils.ts";
+import { generateBaseUrlAttrParser } from "./BaseURL.ts";
+import { generateContentComponentAttrParser } from "./ContentComponent.ts";
+import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
+import { generateLabelElementParser } from "./Label.ts";
 import {
   generateRepresentationAttrParser,
   generateRepresentationChildrenParser,
-} from "./Representation";
-import { generateSchemeAttrParser } from "./Scheme";
-import { generateSegmentBaseAttrParser } from "./SegmentBase";
-import { generateSegmentListChildrenParser } from "./SegmentList";
-import { generateSegmentTemplateAttrParser } from "./SegmentTemplate";
+} from "./Representation.ts";
+import { generateSchemeAttrParser } from "./Scheme.ts";
+import { generateSegmentBaseAttrParser } from "./SegmentBase.ts";
+import { generateSegmentListChildrenParser } from "./SegmentList.ts";
+import { generateSegmentTemplateAttrParser } from "./SegmentTemplate.ts";
 
 /**
  * Generate a "children parser" once inside a `AdaptationSet` node.

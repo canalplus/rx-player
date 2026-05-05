@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { IRepresentation } from "../../../manifest";
-import arrayFindIndex from "../../../utils/array_find_index";
+import type { IRepresentation } from "../../../manifest/index.ts";
+import arrayFindIndex from "../../../utils/array_find_index.ts";
 
 /**
  * From the given array of Representations (sorted by bitrate order ascending),

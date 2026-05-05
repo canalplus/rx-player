@@ -14,34 +14,38 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import { MediaError } from "../../../errors";
-import log from "../../../log";
-import type { IManifest, IUpdatedRepresentationInfo, IPeriod } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import queueMicrotask from "../../../utils/queue_microtask";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import { createMappedReference } from "../../../utils/reference";
-import SortedList from "../../../utils/sorted_list";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller from "../../../utils/task_canceller";
-import WeakMapMemory from "../../../utils/weak_map_memory";
-import type { IRepresentationEstimator } from "../../adaptive";
-import type { SegmentQueueCreator } from "../../fetchers";
-import type { IBufferType, SegmentSink } from "../../segment_sinks";
-import type SegmentSinksStore from "../../segment_sinks";
-import { BufferGarbageCollector } from "../../segment_sinks";
-import type { IWaitingMediaSourceReloadPayload } from "../adaptation";
+import config from "../../../config.ts";
+import { MediaError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type {
+  IManifest,
+  IUpdatedRepresentationInfo,
+  IPeriod,
+} from "../../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import queueMicrotask from "../../../utils/queue_microtask.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import { createMappedReference } from "../../../utils/reference.ts";
+import SortedList from "../../../utils/sorted_list.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import WeakMapMemory from "../../../utils/weak_map_memory.ts";
+import type { IRepresentationEstimator } from "../../adaptive/index.ts";
+import type { SegmentQueueCreator } from "../../fetchers/index.ts";
+import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
+import type SegmentSinksStore from "../../segment_sinks/index.ts";
+import { BufferGarbageCollector } from "../../segment_sinks/index.ts";
+import type { IWaitingMediaSourceReloadPayload } from "../adaptation/index.ts";
 import type {
   IPeriodStreamCallbacks,
   IPeriodStreamOptions,
   IPeriodStreamPlaybackObservation,
   IPeriodStreamReadyPayload,
-} from "../period";
-import PeriodStream from "../period";
-import type { IStreamStatusPayload } from "../representation";
-import getTimeRangesForContent from "./get_time_ranges_for_content";
+} from "../period/index.ts";
+import PeriodStream from "../period/index.ts";
+import type { IStreamStatusPayload } from "../representation/index.ts";
+import getTimeRangesForContent from "./get_time_ranges_for_content.ts";
 
 /**
  * Create and manage the various "Streams" needed for the content to

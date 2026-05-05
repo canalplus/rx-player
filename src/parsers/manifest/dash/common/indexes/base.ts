@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-import log from "../../../../../log";
-import type { IRepresentationIndex, ISegment } from "../../../../../manifest";
-import type { ISegmentInformation } from "../../../../../transports";
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { IEMSG } from "../../../../containers/isobmff";
-import type { IIndexSegment } from "../../../utils/index_helpers";
+import log from "../../../../../log.ts";
+import type { IRepresentationIndex, ISegment } from "../../../../../manifest/index.ts";
+import type { ISegmentInformation } from "../../../../../transports/index.ts";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import type { IEMSG } from "../../../../containers/isobmff/index.ts";
+import type { IIndexSegment } from "../../../utils/index_helpers.ts";
 import {
   fromIndexTime,
   getIndexSegmentEnd,
   toIndexTime,
-} from "../../../utils/index_helpers";
-import type ManifestBoundsCalculator from "../manifest_bounds_calculator";
-import getInitSegment from "./get_init_segment";
-import getSegmentsFromTimeline from "./get_segments_from_timeline";
-import { constructRepresentationUrl } from "./tokens";
+} from "../../../utils/index_helpers.ts";
+import type ManifestBoundsCalculator from "../manifest_bounds_calculator.ts";
+import getInitSegment from "./get_init_segment.ts";
+import getSegmentsFromTimeline from "./get_segments_from_timeline.ts";
+import { constructRepresentationUrl } from "./tokens.ts";
 
 /**
  * Index property defined for a SegmentBase RepresentationIndex

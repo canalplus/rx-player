@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
-import noop from "../../../../utils/noop";
+import noop from "../../../../utils/noop.ts";
 import type {
   CancellationError,
   CancellationSignal,
-} from "../../../../utils/task_canceller";
-import TaskCanceller from "../../../../utils/task_canceller";
-import type { ITaskFn } from "../task_prioritizer";
-import TaskPrioritizer from "../task_prioritizer";
+} from "../../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../../utils/task_canceller.ts";
+import type { ITaskFn } from "../task_prioritizer.ts";
+import TaskPrioritizer from "../task_prioritizer.ts";
 
 function generateTaskFunction<T>(res: T): ITaskFn<T> {
   return (cancelSignal: CancellationSignal) => {

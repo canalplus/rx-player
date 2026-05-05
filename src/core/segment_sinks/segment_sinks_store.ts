@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../errors";
-import log from "../../log";
-import type { IMediaSourceInterface } from "../../mse";
-import { SourceBufferType } from "../../mse";
-import assert from "../../utils/assert";
-import createCancellablePromise from "../../utils/create_cancellable_promise";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import noop from "../../utils/noop";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import type { IBufferType, SegmentSink } from "./implementations";
-import { AudioVideoSegmentSink } from "./implementations";
-import type { ITextDisplayerInterface } from "./implementations/text";
-import TextSegmentSink from "./implementations/text";
-import type { IBufferedChunk } from "./inventory/segment_inventory";
-import type { IChunkContext, IChunkContextSnapshot } from "./inventory/types";
+import { MediaError } from "../../errors/index.ts";
+import log from "../../log.ts";
+import type { IMediaSourceInterface } from "../../mse/index.ts";
+import { SourceBufferType } from "../../mse/index.ts";
+import assert from "../../utils/assert.ts";
+import createCancellablePromise from "../../utils/create_cancellable_promise.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import noop from "../../utils/noop.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import type { IBufferType, SegmentSink } from "./implementations/index.ts";
+import { AudioVideoSegmentSink } from "./implementations/index.ts";
+import type { ITextDisplayerInterface } from "./implementations/text/index.ts";
+import TextSegmentSink from "./implementations/text/index.ts";
+import type { IBufferedChunk } from "./inventory/segment_inventory.ts";
+import type { IChunkContext, IChunkContextSnapshot } from "./inventory/types.ts";
 
 const POSSIBLE_BUFFER_TYPES: IBufferType[] = ["audio", "video", "text"];
 

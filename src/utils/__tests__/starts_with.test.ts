@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import startsWith from "../starts_with";
+import startsWith from "../starts_with.ts";
 
 // eslint-disable-next-line no-restricted-properties, @typescript-eslint/unbound-method
 const initialStartsWith = String.prototype.startsWith;

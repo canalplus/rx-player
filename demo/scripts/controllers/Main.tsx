@@ -1,7 +1,7 @@
-import RxPlayer from "../../../src/minimal";
+import RxPlayer from "../../../src/minimal.ts";
 import * as React from "react";
-import GitHubButton from "../components/GitHubButton";
-import Player from "./Player";
+import GitHubButton from "../components/GitHubButton.tsx";
+import Player from "./Player.tsx";
 
 function MainComponent(): React.JSX.Element {
   return (

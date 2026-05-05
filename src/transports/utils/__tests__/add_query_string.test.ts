@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import addQueryString from "../add_query_string";
+import addQueryString from "../add_query_string.ts";
 
 describe("addQueryString", () => {
   it("should do nothing if no query string is wanted", () => {

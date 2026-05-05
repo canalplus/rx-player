@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import globalScope from "../../../../../utils/global_scope";
-import type IProbeMediaDisplayInfos from "../../probers/mediaDisplayInfos";
+import globalScope from "../../../../../utils/global_scope.ts";
+import type IProbeMediaDisplayInfos from "../../probers/mediaDisplayInfos.ts";
 
 const origMatchMedia = globalScope.matchMedia;
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {

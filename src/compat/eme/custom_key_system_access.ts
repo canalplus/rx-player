@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { IMediaKeySystemAccess, IMediaKeys } from "../browser_compatibility_types";
+import type {
+  IMediaKeySystemAccess,
+  IMediaKeys,
+} from "../browser_compatibility_types.ts";
 
 /**
  * Simple implementation of the MediaKeySystemAccess EME API.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import parseBif from "../../parsers/images/bif";
+import parseBif from "../../parsers/images/bif.ts";
 
 export interface IBifThumbnail {
   startTime: number;

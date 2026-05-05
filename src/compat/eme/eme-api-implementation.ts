@@ -1,32 +1,32 @@
-import { MediaError } from "../../errors";
-import assert from "../../utils/assert";
-import globalScope from "../../utils/global_scope";
-import isNode from "../../utils/is_node";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import objectAssign from "../../utils/object_assign";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import { MediaError } from "../../errors/index.ts";
+import assert from "../../utils/assert.ts";
+import globalScope from "../../utils/global_scope.ts";
+import isNode from "../../utils/is_node.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../utils/object_assign.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   IMediaElement,
   IMediaEncryptedEvent,
   IMediaKeySystemAccess,
   IMediaKeys,
-} from "../browser_compatibility_types";
-import EnvDetector from "../env_detector";
-import type { IEventTargetLike } from "../event_listeners";
-import { createCompatibleEventListener } from "../event_listeners";
-import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME";
-import CustomMediaKeySystemAccess from "./custom_key_system_access";
+} from "../browser_compatibility_types.ts";
+import EnvDetector from "../env_detector.ts";
+import type { IEventTargetLike } from "../event_listeners.ts";
+import { createCompatibleEventListener } from "../event_listeners.ts";
+import shouldFavourCustomSafariEME from "../should_favour_custom_safari_EME.ts";
+import CustomMediaKeySystemAccess from "./custom_key_system_access.ts";
 import getIE11MediaKeysCallbacks, {
   MSMediaKeysConstructor,
-} from "./custom_media_keys/ie11_media_keys";
+} from "./custom_media_keys/ie11_media_keys.ts";
 import getMozMediaKeysCallbacks, {
   MozMediaKeysConstructor,
-} from "./custom_media_keys/moz_media_keys_constructor";
+} from "./custom_media_keys/moz_media_keys_constructor.ts";
 import getOldKitWebKitMediaKeyCallbacks, {
   isOldWebkitMediaElement,
-} from "./custom_media_keys/old_webkit_media_keys";
-import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys";
-import getWebKitMediaKeysConstructor from "./custom_media_keys/webkit_media_keys_constructor";
+} from "./custom_media_keys/old_webkit_media_keys.ts";
+import getWebKitMediaKeysCallbacks from "./custom_media_keys/webkit_media_keys.ts";
+import getWebKitMediaKeysConstructor from "./custom_media_keys/webkit_media_keys_constructor.ts";
 
 /**
  * Generic interface harmonizing the structure of the different EME API

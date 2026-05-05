@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import { parseXml } from "../../../../../../utils/xml-parser";
-import parseContentComponent from "../ContentComponent";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import { parseXml } from "../../../../../../utils/xml-parser.ts";
+import parseContentComponent from "../ContentComponent.ts";
 
 function testStringAttribute(attributeName: string, variableName?: string): void {
   const _variableName = variableName ?? attributeName;

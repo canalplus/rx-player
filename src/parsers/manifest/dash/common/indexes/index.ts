@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import type { IBaseIndexContextArgument } from "./base";
-import BaseRepresentationIndex from "./base";
-import type { IListIndexContextArgument } from "./list";
-import ListRepresentationIndex from "./list";
-import type { ITemplateIndexContextArgument } from "./template";
-import TemplateRepresentationIndex from "./template";
-import type { ITimelineIndexContextArgument } from "./timeline";
-import TimelineRepresentationIndex from "./timeline";
+import type { IBaseIndexContextArgument } from "./base.ts";
+import BaseRepresentationIndex from "./base.ts";
+import type { IListIndexContextArgument } from "./list.ts";
+import ListRepresentationIndex from "./list.ts";
+import type { ITemplateIndexContextArgument } from "./template.ts";
+import TemplateRepresentationIndex from "./template.ts";
+import type { ITimelineIndexContextArgument } from "./timeline/index.ts";
+import TimelineRepresentationIndex from "./timeline/index.ts";
 
 export type {
   IBaseIndexContextArgument,

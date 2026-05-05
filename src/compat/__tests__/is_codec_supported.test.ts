@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import isCodecSupported from "../is_codec_supported";
+import isCodecSupported from "../is_codec_supported.ts";
 
 type IMockedMediaSource =
   | {

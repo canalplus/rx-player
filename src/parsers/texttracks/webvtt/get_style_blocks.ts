@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import { isStartOfStyleBlock } from "./utils";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import { isStartOfStyleBlock } from "./utils.ts";
 
 /**
  * Get cue blocks from a WebVTT file.

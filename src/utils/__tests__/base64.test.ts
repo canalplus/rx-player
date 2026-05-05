@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { bytesToBase64, base64ToBytes } from "../base64";
+import { bytesToBase64, base64ToBytes } from "../base64.ts";
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/unbound-method */

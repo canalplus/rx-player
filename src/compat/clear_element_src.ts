@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../log";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-import type { IMediaElement } from "./browser_compatibility_types";
+import log from "../log.ts";
+import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
+import type { IMediaElement } from "./browser_compatibility_types.ts";
 
 /**
  * Clear element's src attribute.

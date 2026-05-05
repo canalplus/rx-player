@@ -1,17 +1,17 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-import config from "../../../config";
-import log from "../../../log";
+import config from "../../../config.ts";
+import log from "../../../log.ts";
 import type {
   IAudioTrackSwitchingMode,
   IKeySystemOption,
   ILoadVideoOptions,
   IStartAtOption,
-} from "../../../public_types";
+} from "../../../public_types.ts";
 import {
   parseConstructorOptions,
   parseLoadVideoOptions,
   checkReloadOptions,
-} from "../option_utils";
+} from "../option_utils.ts";
 
 const mocks = vi.hoisted(() => {
   return {

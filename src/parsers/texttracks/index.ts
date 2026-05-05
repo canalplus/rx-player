@@ -18,4 +18,4 @@ export type {
   IHTMLCue,
   INativeTextTracksParserFn,
   IHTMLTextTracksParserFn,
-} from "./types";
+} from "./types.ts";

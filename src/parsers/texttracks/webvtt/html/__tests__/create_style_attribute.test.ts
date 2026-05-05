@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import createStyleAttribute from "../create_style_attribute";
+import createStyleAttribute from "../create_style_attribute.ts";
 
 describe("parsers - webvtt - createStyleAttribute", () => {
   const alwaysAppliedStyle = "position: absolute; margin:0;";

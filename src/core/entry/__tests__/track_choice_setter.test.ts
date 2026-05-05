@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import TrackChoiceSetter from "../track_choice_setter";
+import TrackChoiceSetter from "../track_choice_setter.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import createAudioInitSegment from "./create_audio_init_segment";
-import createVideoInitSegment from "./create_video_init_segment";
-import type { IISOBMFFBasicSegment } from "./parse_tfrf";
-import parseTfrf from "./parse_tfrf";
-import parseTfxd from "./parse_tfxd";
-import patchSegment from "./patch_segment";
+import createAudioInitSegment from "./create_audio_init_segment.ts";
+import createVideoInitSegment from "./create_video_init_segment.ts";
+import type { IISOBMFFBasicSegment } from "./parse_tfrf.ts";
+import parseTfrf from "./parse_tfrf.ts";
+import parseTfxd from "./parse_tfxd.ts";
+import patchSegment from "./patch_segment.ts";
 
 export type { IISOBMFFBasicSegment };
 export {

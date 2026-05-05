@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import noop from "../../../../utils/noop";
-import SharedReference from "../../../../utils/reference";
-import SegmentQueue from "../segment_queue";
-import type { ISegmentQueueContext } from "../segment_queue";
+import noop from "../../../../utils/noop.ts";
+import SharedReference from "../../../../utils/reference.ts";
+import SegmentQueue from "../segment_queue.ts";
+import type { ISegmentQueueContext } from "../segment_queue.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

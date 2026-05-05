@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import EventEmitter from "../event_emitter";
+import EventEmitter from "../event_emitter.ts";
 
 describe("utils - EventEmitter", () => {
   it("should be able to call synchronously a callback on a given event", () => {

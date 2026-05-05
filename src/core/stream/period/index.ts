@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import PeriodStream from "./period_stream";
-export type * from "./types";
+import PeriodStream from "./period_stream.ts";
+export type * from "./types.ts";
 
 export default PeriodStream;

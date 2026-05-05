@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import addClassName from "../../../../compat/add_class_name";
-import log from "../../../../log";
-import { REGXP_LENGTH } from "../regexps";
+import addClassName from "../../../../compat/add_class_name.ts";
+import log from "../../../../log.ts";
+import { REGXP_LENGTH } from "../regexps.ts";
 
 /**
  * @param {HTMLElement} element

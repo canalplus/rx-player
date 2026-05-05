@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import config from "../config";
-import EnvDetector from "./env_detector";
+import config from "../config.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * Returns true if the metadata received after a "loadedmetadata" event has

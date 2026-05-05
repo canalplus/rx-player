@@ -1,4 +1,4 @@
-import EnvDetector from "./env_detector";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * Return `true` if the current device is compatible with the Worker API.

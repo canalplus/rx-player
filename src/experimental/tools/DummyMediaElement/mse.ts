@@ -5,7 +5,7 @@ import type {
   ISourceBuffer,
   ISourceBufferEventMap,
   ISourceBufferList,
-} from "../../../compat/browser_compatibility_types";
+} from "../../../compat/browser_compatibility_types.ts";
 import {
   extractInitSegment,
   findCompleteBox,
@@ -13,16 +13,16 @@ import {
   getMDHDTimescale,
   getTrackFragmentDecodeTime,
   extractCompleteChunks,
-} from "../../../parsers/containers/isobmff";
-import { getKeyIdFromInitSegment } from "../../../parsers/containers/isobmff/utils";
-import arrayIncludes from "../../../utils/array_includes";
-import EventEmitter from "../../../utils/event_emitter";
-import noop from "../../../utils/noop";
-import type { IRange } from "../../../utils/ranges";
-import startsWith from "../../../utils/starts_with";
-import { bytesToHex } from "../../../utils/string_parsing";
-import TaskCanceller from "../../../utils/task_canceller";
-import TimeRangesWithMetadata, { EventScheduler } from "./utils";
+} from "../../../parsers/containers/isobmff/index.ts";
+import { getKeyIdFromInitSegment } from "../../../parsers/containers/isobmff/utils.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import noop from "../../../utils/noop.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import startsWith from "../../../utils/starts_with.ts";
+import { bytesToHex } from "../../../utils/string_parsing.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import TimeRangesWithMetadata, { EventScheduler } from "./utils.ts";
 
 /**
  * Re-implementation of the MSE `MediaSource` Object.

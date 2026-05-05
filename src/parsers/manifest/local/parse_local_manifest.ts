@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import idGenerator from "../../../utils/id_generator";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
+import idGenerator from "../../../utils/id_generator.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
 import type {
   IContentProtections,
   IContentProtectionInitData,
@@ -23,15 +23,15 @@ import type {
   IParsedManifest,
   IParsedPeriod,
   IParsedRepresentation,
-} from "../types";
-import LocalRepresentationIndex from "./representation_index";
+} from "../types.ts";
+import LocalRepresentationIndex from "./representation_index.ts";
 import type {
   IContentProtections as ILocalContentProtections,
   ILocalAdaptation,
   ILocalManifest,
   ILocalPeriod,
   ILocalRepresentation,
-} from "./types";
+} from "./types.ts";
 
 /**
  * @param {Object} localManifest

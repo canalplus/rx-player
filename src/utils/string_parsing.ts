@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../log";
-import assert from "./assert";
-import globalScope from "./global_scope";
+import log from "../log.ts";
+import assert from "./assert.ts";
+import globalScope from "./global_scope.ts";
 
 const hasTextDecoder =
   typeof globalScope === "object" && typeof globalScope.TextDecoder === "function";

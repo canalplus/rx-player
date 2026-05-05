@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { IRepresentation } from "../../../manifest";
-import arrayFind from "../../../utils/array_find";
+import type { IRepresentation } from "../../../manifest/index.ts";
+import arrayFind from "../../../utils/array_find.ts";
 
 /**
  * Filter representations based on their resolution.

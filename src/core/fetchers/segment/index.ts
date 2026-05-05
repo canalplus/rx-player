@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import type SegmentQueue from "./segment_queue";
-import type { ISegmentQueueContext } from "./segment_queue";
-import type { ISegmentQueueCreatorBackoffOptions } from "./segment_queue_creator";
-import SegmentQueueCreator from "./segment_queue_creator";
+import type SegmentQueue from "./segment_queue.ts";
+import type { ISegmentQueueContext } from "./segment_queue.ts";
+import type { ISegmentQueueCreatorBackoffOptions } from "./segment_queue_creator.ts";
+import SegmentQueueCreator from "./segment_queue_creator.ts";
 
 export default SegmentQueueCreator;
 export type { SegmentQueue, ISegmentQueueCreatorBackoffOptions, ISegmentQueueContext };

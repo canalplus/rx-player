@@ -1,5 +1,5 @@
-import config from "../config";
-import EnvDetector from "./env_detector";
+import config from "../config.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * When talking about `ISOBMFF`/.mp4 metadata, the `pssh` is a box (a subpart of

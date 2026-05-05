@@ -1,7 +1,7 @@
 import * as React from "react";
-import Checkbox from "../CheckBox";
-import DEFAULT_VALUES from "../../lib/defaultOptionsValues";
-import PlayerOptionNumberInput from "./PlayerOptionNumberInput";
+import Checkbox from "../CheckBox.tsx";
+import DEFAULT_VALUES from "../../lib/defaultOptionsValues.ts";
+import PlayerOptionNumberInput from "./PlayerOptionNumberInput.tsx";
 
 const { Fragment, useCallback, useEffect, useState } = React;
 

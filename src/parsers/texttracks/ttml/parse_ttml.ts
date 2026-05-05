@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-import arrayFind from "../../../utils/array_find";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import objectAssign from "../../../utils/object_assign";
-import type { ITTParameters } from "./get_parameters";
-import getParameters from "./get_parameters";
-import type { IStyleObject } from "./get_styling";
-import { getStylingAttributes, getStylingFromElement } from "./get_styling";
-import resolveStylesInheritance from "./resolve_styles_inheritance";
+import arrayFind from "../../../utils/array_find.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import type { ITTParameters } from "./get_parameters.ts";
+import getParameters from "./get_parameters.ts";
+import type { IStyleObject } from "./get_styling.ts";
+import { getStylingAttributes, getStylingFromElement } from "./get_styling.ts";
+import resolveStylesInheritance from "./resolve_styles_inheritance.ts";
 import {
   getParentDivElements,
   getBodyNode,
   getRegionNodes,
   getStyleNodes,
   getTextNodes,
-} from "./xml_utils";
+} from "./xml_utils.ts";
 
 const STYLE_ATTRIBUTES = [
   "align",

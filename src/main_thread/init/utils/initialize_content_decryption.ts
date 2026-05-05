@@ -1,16 +1,16 @@
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import getEmeApiImplementation from "../../../compat/eme";
-import { EncryptedMediaError } from "../../../errors";
-import features from "../../../features";
-import log from "../../../log";
-import type { IKeySystemOption, IPlayerError } from "../../../public_types";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference from "../../../utils/reference";
-import TaskCanceller from "../../../utils/task_canceller";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import { ContentDecryptorState } from "../../decrypt";
-import type IContentDecryptor from "../../decrypt";
-import type { IProcessedProtectionData } from "../../decrypt";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
+import getEmeApiImplementation from "../../../compat/eme/index.ts";
+import { EncryptedMediaError } from "../../../errors/index.ts";
+import features from "../../../features/index.ts";
+import log from "../../../log.ts";
+import type { IKeySystemOption, IPlayerError } from "../../../public_types.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import SharedReference from "../../../utils/reference.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import { ContentDecryptorState } from "../../decrypt/index.ts";
+import type IContentDecryptor from "../../decrypt/index.ts";
+import type { IProcessedProtectionData } from "../../decrypt/index.ts";
 
 /**
  * Initialize content decryption capabilities on the given `HTMLMediaElement`.

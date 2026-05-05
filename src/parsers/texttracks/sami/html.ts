@@ -29,11 +29,11 @@
  * It always should be imported through the `features` object.
  */
 
-import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import { utf8ToStr } from "../../../utils/string_parsing";
-import type { IHTMLCue } from "../types";
+import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import { utf8ToStr } from "../../../utils/string_parsing.ts";
+import type { IHTMLCue } from "../types.ts";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;

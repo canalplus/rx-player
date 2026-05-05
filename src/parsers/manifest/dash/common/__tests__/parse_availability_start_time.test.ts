@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import parseAvailabilityStartTime from "../parse_availability_start_time";
+import parseAvailabilityStartTime from "../parse_availability_start_time.ts";
 
 describe("parseAvailabilityStartTime", function () {
   it("should return 0 for a non-dynamic MPD", () => {

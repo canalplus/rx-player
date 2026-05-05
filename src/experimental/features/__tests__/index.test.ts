@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { METAPLAYLIST, LOCAL_MANIFEST } from "../index";
-import { LOCAL_MANIFEST as FEATURE_LOCAL_MANIFEST } from "../local";
-import { METAPLAYLIST as FEATURE_METAPLAYLIST } from "../metaplaylist";
+import { METAPLAYLIST, LOCAL_MANIFEST } from "../index.ts";
+import { LOCAL_MANIFEST as FEATURE_LOCAL_MANIFEST } from "../local.ts";
+import { METAPLAYLIST as FEATURE_METAPLAYLIST } from "../metaplaylist.ts";
 
 describe("Experimental Features", () => {
   it("should export all experimental features", () => {

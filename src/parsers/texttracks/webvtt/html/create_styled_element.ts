@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import arrayIncludes from "../../../../utils/array_includes";
-import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import type { IStyleElements } from "../parse_style_block";
+import arrayIncludes from "../../../../utils/array_includes.ts";
+import isNonEmptyString from "../../../../utils/is_non_empty_string.ts";
+import type { IStyleElements } from "../parse_style_block.ts";
 
 /**
  * Construct an HTMLElement/TextNode representing the given node and apply

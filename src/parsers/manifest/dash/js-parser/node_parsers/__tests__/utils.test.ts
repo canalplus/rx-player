@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import { parseXml } from "../../../../../../utils/xml-parser";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import { parseXml } from "../../../../../../utils/xml-parser.ts";
 import {
   MPDError,
   parseBoolean,
@@ -9,7 +9,7 @@ import {
   parseDuration,
   parseIntOrBoolean,
   parseScheme,
-} from "../utils";
+} from "../utils.ts";
 
 describe("dash parser helpers", function () {
   describe("parseBoolean", () => {

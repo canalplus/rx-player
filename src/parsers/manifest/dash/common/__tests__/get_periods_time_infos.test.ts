@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { IPeriodIntermediateRepresentation } from "../../node_parser_types";
-import type { IParsedPeriodsContext } from "../get_periods_time_infos";
-import getPeriodsTimeInformation from "../get_periods_time_infos";
+import type { IPeriodIntermediateRepresentation } from "../../node_parser_types.ts";
+import type { IParsedPeriodsContext } from "../get_periods_time_infos.ts";
+import getPeriodsTimeInformation from "../get_periods_time_infos.ts";
 
 describe("DASH Parser - getPeriodsTimeInformation", () => {
   it("should guess duration and end from next period.", () => {

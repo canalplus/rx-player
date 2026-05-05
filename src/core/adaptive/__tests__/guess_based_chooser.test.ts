@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { IRepresentation } from "../../../manifest";
 import {
   DummyRepresentation,
   DummyAdaptation,
   DummyPeriod,
   DummyManifest,
   createSegment,
-} from "../../../manifest/classes/__tests__/mocks";
-import noop from "../../../utils/noop";
-import { makeMockedClass } from "../../../utils/test-utils";
-import GuessBasedChooser from "../guess_based_chooser";
-import type LastEstimateStorage from "../utils/last_estimate_storage";
-import { ABRAlgorithmType } from "../utils/last_estimate_storage";
-import type { IRequestInfo } from "../utils/pending_requests_store";
-import type { IRepresentationMaintainabilityScore } from "../utils/representation_score_calculator";
-import type RepresentationScoreCalculator from "../utils/representation_score_calculator";
-import { ScoreConfidenceLevel } from "../utils/representation_score_calculator";
+} from "../../../manifest/classes/__tests__/mocks.ts";
+import type { IRepresentation } from "../../../manifest/index.ts";
+import noop from "../../../utils/noop.ts";
+import { makeMockedClass } from "../../../utils/test-utils.ts";
+import GuessBasedChooser from "../guess_based_chooser.ts";
+import type LastEstimateStorage from "../utils/last_estimate_storage.ts";
+import { ABRAlgorithmType } from "../utils/last_estimate_storage.ts";
+import type { IRequestInfo } from "../utils/pending_requests_store.ts";
+import type { IRepresentationMaintainabilityScore } from "../utils/representation_score_calculator.ts";
+import type RepresentationScoreCalculator from "../utils/representation_score_calculator.ts";
+import { ScoreConfidenceLevel } from "../utils/representation_score_calculator.ts";
 
 const mocks = vi.hoisted(() => ({
   estimateRequestBandwidth: vi.fn(),

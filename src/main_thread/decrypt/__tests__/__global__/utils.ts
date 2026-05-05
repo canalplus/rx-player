@@ -1,14 +1,17 @@
 import type { Mock, MockInstance } from "vitest";
 import { vi } from "vitest";
-import type { IMediaElement } from "../../../../compat/browser_compatibility_types";
-import type { IEncryptedEventData, IEmeApiImplementation } from "../../../../compat/eme";
-import type { IKeySystemOption } from "../../../../public_types";
-import { base64ToBytes, bytesToBase64 } from "../../../../utils/base64";
-import EventEmitter from "../../../../utils/event_emitter";
-import flatMap from "../../../../utils/flat_map";
-import { strToUtf8, utf8ToStr } from "../../../../utils/string_parsing";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import type IContentDecryptor from "../../content_decryptor";
+import type { IMediaElement } from "../../../../compat/browser_compatibility_types.ts";
+import type {
+  IEncryptedEventData,
+  IEmeApiImplementation,
+} from "../../../../compat/eme/index.ts";
+import type { IKeySystemOption } from "../../../../public_types.ts";
+import { base64ToBytes, bytesToBase64 } from "../../../../utils/base64.ts";
+import EventEmitter from "../../../../utils/event_emitter.ts";
+import flatMap from "../../../../utils/flat_map.ts";
+import { strToUtf8, utf8ToStr } from "../../../../utils/string_parsing.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import type IContentDecryptor from "../../content_decryptor.ts";
 
 /** Default MediaKeySystemAccess configuration used by the RxPlayer. */
 export const defaultKSConfig: MediaKeySystemConfiguration[] = [

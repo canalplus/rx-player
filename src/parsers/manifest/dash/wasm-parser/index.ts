@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IDashWasmParserOptions } from "./ts/dash-wasm-parser";
-import DashWasmParser from "./ts/dash-wasm-parser";
+import type { IDashWasmParserOptions } from "./ts/dash-wasm-parser.ts";
+import DashWasmParser from "./ts/dash-wasm-parser.ts";
 export type { IDashWasmParserOptions };
 export default DashWasmParser;

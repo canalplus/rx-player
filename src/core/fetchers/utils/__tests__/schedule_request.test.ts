@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { NetworkErrorTypes } from "../../../../errors";
-import { RequestError } from "../../../../utils/request";
-import TaskCanceller from "../../../../utils/task_canceller";
-import { scheduleRequestWithCdns, scheduleRequestPromise } from "../schedule_request";
+import { NetworkErrorTypes } from "../../../../errors/index.ts";
+import { RequestError } from "../../../../utils/request/index.ts";
+import TaskCanceller from "../../../../utils/task_canceller.ts";
+import { scheduleRequestWithCdns, scheduleRequestPromise } from "../schedule_request.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

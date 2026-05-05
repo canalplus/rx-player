@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import isNullOrUndefined from "../is_null_or_undefined";
+import isNullOrUndefined from "../is_null_or_undefined.ts";
 
 describe("utils - isNullOrUndefined", () => {
   it("should return true when the value given is `null` or `undefined`", () => {

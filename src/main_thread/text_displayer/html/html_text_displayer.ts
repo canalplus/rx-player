@@ -1,21 +1,21 @@
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import { onEnded, onSeeked, onSeeking } from "../../../compat/event_listeners";
-import onHeightWidthChange from "../../../compat/on_height_width_change";
-import config from "../../../config";
-import log from "../../../log";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
+import { onEnded, onSeeked, onSeeking } from "../../../compat/event_listeners.ts";
+import onHeightWidthChange from "../../../compat/on_height_width_change.ts";
+import config from "../../../config.ts";
+import log from "../../../log.ts";
 import type {
   ISupportedTextTrackFormat,
   ITextTrackSegmentData,
-} from "../../../transports";
-import type { IRange } from "../../../utils/ranges";
-import { convertToRanges } from "../../../utils/ranges";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller from "../../../utils/task_canceller";
-import ManualTimeRanges from "../manual_time_ranges";
-import type { ITextDisplayer, ITextDisplayerData } from "../types";
-import parseTextTrackToElements from "./html_parsers";
-import TextTrackCuesStore from "./text_track_cues_store";
-import updateProportionalElements from "./update_proportional_elements";
+} from "../../../transports/index.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import { convertToRanges } from "../../../utils/ranges.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import ManualTimeRanges from "../manual_time_ranges.ts";
+import type { ITextDisplayer, ITextDisplayerData } from "../types.ts";
+import parseTextTrackToElements from "./html_parsers.ts";
+import TextTrackCuesStore from "./text_track_cues_store.ts";
+import updateProportionalElements from "./update_proportional_elements.ts";
 
 /**
  * @param {Element} element

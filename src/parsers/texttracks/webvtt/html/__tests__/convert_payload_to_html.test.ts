@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import globalScope from "../../../../../utils/global_scope";
-import convertPayloadToHTML from "../convert_payload_to_html";
+import globalScope from "../../../../../utils/global_scope.ts";
+import convertPayloadToHTML from "../convert_payload_to_html.ts";
 
 const mocks = vi.hoisted(() => {
   return {

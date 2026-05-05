@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import type { IIndexSegment } from "../../../../utils/index_helpers";
-import convertElementsToIndexSegment from "./convert_element_to_index_segment";
-import type { IParsedS } from "./parse_s_element";
-import { parseSElementNode } from "./parse_s_element";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import type { IIndexSegment } from "../../../../utils/index_helpers.ts";
+import convertElementsToIndexSegment from "./convert_element_to_index_segment.ts";
+import type { IParsedS } from "./parse_s_element.ts";
+import { parseSElementNode } from "./parse_s_element.ts";
 
 /**
  * Allows to generate the "timeline" for the "Timeline" RepresentationIndex.

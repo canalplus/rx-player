@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import cancellableSleep from "../../utils/cancellable_sleep";
-import TaskCanceller, { CancellationError } from "../../utils/task_canceller";
-import type { IMediaKeySession } from "../browser_compatibility_types";
+import log from "../../log.ts";
+import cancellableSleep from "../../utils/cancellable_sleep.ts";
+import TaskCanceller, { CancellationError } from "../../utils/task_canceller.ts";
+import type { IMediaKeySession } from "../browser_compatibility_types.ts";
 
 /**
  * Close the given `MediaKeySession` and returns a Promise resolving when the

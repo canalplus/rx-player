@@ -1,8 +1,8 @@
-import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
-import { strToUtf8 } from "../../../../utils/string_parsing";
-import parseMp4EmbeddedWebVtt from "../parse_mp4_embedded_wvtt";
-import type { IVTTHTMLCue } from "./to_html";
-import toHTML from "./to_html";
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8.ts";
+import { strToUtf8 } from "../../../../utils/string_parsing.ts";
+import parseMp4EmbeddedWebVtt from "../parse_mp4_embedded_wvtt.ts";
+import type { IVTTHTMLCue } from "./to_html.ts";
+import toHTML from "./to_html.ts";
 
 /**
  * Parse WebVTT subtitles format when embedded in an MP4 file.

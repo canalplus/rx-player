@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { IRepresentationIndex } from "../../manifest";
-import type { IHDRInformation } from "../../public_types";
+import type { IRepresentationIndex } from "../../manifest/index.ts";
+import type { IHDRInformation } from "../../public_types.ts";
 
 export interface IManifestStreamEvent {
   start: number;

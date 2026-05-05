@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import objectAssign from "../../../../../utils/object_assign";
-import type { ITNode } from "../../../../../utils/xml-parser";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../../../../utils/object_assign.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
   ISegmentTemplateIntermediateRepresentation,
   ITimelineParser,
-} from "../../node_parser_types";
-import parseSegmentBase from "./SegmentBase";
-import createSegmentTimelineParser from "./SegmentTimeline";
-import { parseBoolean, parseMPDFloat, ValueParser } from "./utils";
+} from "../../node_parser_types.ts";
+import parseSegmentBase from "./SegmentBase.ts";
+import createSegmentTimelineParser from "./SegmentTimeline.ts";
+import { parseBoolean, parseMPDFloat, ValueParser } from "./utils.ts";
 
 /**
  * Parse a SegmentTemplate element into a SegmentTemplate intermediate

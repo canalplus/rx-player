@@ -1,5 +1,5 @@
 import * as React from "react";
-import { toMinutes, toHours } from "../lib/time";
+import { toMinutes, toHours } from "../lib/time.ts";
 
 /**
  * Text with the following structure:

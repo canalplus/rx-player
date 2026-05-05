@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import createMetaplaylist from "./createMetaplaylist";
-import mediaCapabilitiesProber from "./mediaCapabilitiesProber";
-import VideoThumbnailLoader from "./VideoThumbnailLoader";
+import createMetaplaylist from "./createMetaplaylist/index.ts";
+import mediaCapabilitiesProber from "./mediaCapabilitiesProber/index.ts";
+import VideoThumbnailLoader from "./VideoThumbnailLoader/index.ts";
 
 export { createMetaplaylist, mediaCapabilitiesProber, VideoThumbnailLoader };

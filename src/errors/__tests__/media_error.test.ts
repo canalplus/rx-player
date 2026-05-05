@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { ISerializedMediaError } from "../media_error";
-import MediaError, { deserializeMediaError } from "../media_error";
+import type { ISerializedMediaError } from "../media_error.ts";
+import MediaError, { deserializeMediaError } from "../media_error.ts";
 
 describe("errors - MediaError", () => {
   it("should format a MediaError", () => {

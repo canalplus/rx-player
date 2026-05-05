@@ -9,22 +9,22 @@ import type {
   IRemoveBufferCoreMessage,
   IStopEndOfStreamCoreMessage,
   IUpdateMediaSourceDurationCoreMessage,
-} from "../core/types";
-import { CoreMessageType } from "../core/types";
-import { SourceBufferError } from "../errors";
-import type { ISerializedSourceBufferError } from "../errors/source_buffer_error";
-import log from "../log";
-import EventEmitter from "../utils/event_emitter";
-import idGenerator from "../utils/id_generator";
-import type { IRange } from "../utils/ranges";
-import TaskCanceller, { CancellationError } from "../utils/task_canceller";
+} from "../core/types.ts";
+import { CoreMessageType } from "../core/types.ts";
+import { SourceBufferError } from "../errors/index.ts";
+import type { ISerializedSourceBufferError } from "../errors/source_buffer_error.ts";
+import log from "../log.ts";
+import EventEmitter from "../utils/event_emitter.ts";
+import idGenerator from "../utils/id_generator.ts";
+import type { IRange } from "../utils/ranges.ts";
+import TaskCanceller, { CancellationError } from "../utils/task_canceller.ts";
 import type {
   IMediaSourceInterface,
   IMediaSourceInterfaceEvents,
   ISourceBufferInterface,
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
-} from "./types";
+} from "./types.ts";
 
 const generateMediaSourceId = idGenerator();
 const generateSourceBufferOperationId = idGenerator();

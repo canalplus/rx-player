@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { IRepresentation } from "../../../../manifest";
-import InitializationSegmentCache from "../initialization_segment_cache";
+import type { IRepresentation } from "../../../../manifest/index.ts";
+import InitializationSegmentCache from "../initialization_segment_cache.ts";
 
 const representation1 = {
   bitrate: 12,

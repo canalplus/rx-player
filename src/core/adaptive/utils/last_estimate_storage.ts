@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IRepresentation } from "../../../manifest";
+import type { IRepresentation } from "../../../manifest/index.ts";
 
 /** Stores the last estimate made by the `RepresentationEstimator`. */
 export default class LastEstimateStorage {

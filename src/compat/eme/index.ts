@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import closeSession from "./close_session";
+import closeSession from "./close_session.ts";
 import type {
   IEmeApiImplementation,
   IPreferredEmeApiType,
-} from "./eme-api-implementation";
-import getEmeApiImplementation from "./eme-api-implementation";
-import generateKeyRequest from "./generate_key_request";
-import type { IEncryptedEventData } from "./get_init_data";
-import getInitData from "./get_init_data";
-import loadSession from "./load_session";
+} from "./eme-api-implementation.ts";
+import getEmeApiImplementation from "./eme-api-implementation.ts";
+import generateKeyRequest from "./generate_key_request.ts";
+import type { IEncryptedEventData } from "./get_init_data.ts";
+import getInitData from "./get_init_data.ts";
+import loadSession from "./load_session.ts";
 
 export default getEmeApiImplementation;
 export type { IEmeApiImplementation, IPreferredEmeApiType, IEncryptedEventData };

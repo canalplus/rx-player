@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { be4toi } from "../../../utils/byte_parsing";
-import findCompleteBox from "./find_complete_box";
+import { be4toi } from "../../../utils/byte_parsing.ts";
+import findCompleteBox from "./find_complete_box.ts";
 
 /**
  * Take a chunk of ISOBMFF data and extract complete `moof`+`mdat` subsegments

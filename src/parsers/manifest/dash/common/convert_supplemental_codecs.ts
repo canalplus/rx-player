@@ -1,4 +1,4 @@
-import isNonEmptyString from "../../../../utils/is_non_empty_string";
+import isNonEmptyString from "../../../../utils/is_non_empty_string.ts";
 
 const supplementalCodecSeparator = /[, ]+/g;
 /**

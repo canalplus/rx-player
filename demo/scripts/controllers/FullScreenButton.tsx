@@ -1,14 +1,14 @@
 import * as React from "react";
-import Button from "../components/Button";
+import Button from "../components/Button.tsx";
 import {
   addFullscreenListener,
   exitFullscreen,
   isFullscreen,
   removeFullscreenListener,
   requestFullscreen,
-} from "../lib/fullscreen";
-import useModuleState from "../lib/useModuleState";
-import type { IPlayerModule } from "../modules/player/index";
+} from "../lib/fullscreen.ts";
+import useModuleState from "../lib/useModuleState.ts";
+import type { IPlayerModule } from "../modules/player/index.ts";
 
 const { useCallback, useEffect, useMemo, useState } = React;
 

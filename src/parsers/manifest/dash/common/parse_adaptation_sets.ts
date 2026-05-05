@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import type { IPeriod } from "../../../../manifest";
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
-import type { ITrackType } from "../../../../public_types";
-import arrayFind from "../../../../utils/array_find";
-import arrayFindIndex from "../../../../utils/array_find_index";
-import arrayIncludes from "../../../../utils/array_includes";
-import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+import log from "../../../../log.ts";
+import type { IPeriod } from "../../../../manifest/index.ts";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest/index.ts";
+import type { ITrackType } from "../../../../public_types.ts";
+import arrayFind from "../../../../utils/array_find.ts";
+import arrayFindIndex from "../../../../utils/array_find_index.ts";
+import arrayIncludes from "../../../../utils/array_includes.ts";
+import isNonEmptyString from "../../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 import type {
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedRepresentation,
   IParsedThumbnailTrack,
-} from "../../types";
+} from "../../types.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
-} from "../node_parser_types";
-import attachTrickModeTrack from "./attach_trickmode_track";
-import type ContentProtectionParser from "./content_protection_parser";
+} from "../node_parser_types.ts";
+import attachTrickModeTrack from "./attach_trickmode_track.ts";
+import type ContentProtectionParser from "./content_protection_parser.ts";
 import inferAdaptationType, {
   getThumbnailAdaptationSetInfo,
-} from "./infer_adaptation_type";
-import type { IRepresentationContext } from "./parse_representations";
-import parseRepresentations from "./parse_representations";
-import resolveBaseURLs from "./resolve_base_urls";
+} from "./infer_adaptation_type.ts";
+import type { IRepresentationContext } from "./parse_representations.ts";
+import parseRepresentations from "./parse_representations.ts";
+import resolveBaseURLs from "./resolve_base_urls.ts";
 
 /**
  * Supplementary information for "switchable" AdaptationSets of the same Period.

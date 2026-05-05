@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import log from "../../../log";
-import type { IAdaptation, ISegment, IPeriod, IRepresentation } from "../../../manifest";
-import { areSameContent, getLoggableSegmentId } from "../../../manifest";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import type { IRange } from "../../../utils/ranges";
-import type { IBufferedHistoryEntry } from "./buffered_history";
-import BufferedHistory from "./buffered_history";
-import type { IChunkContext } from "./types";
+import config from "../../../config.ts";
+import log from "../../../log.ts";
+import type {
+  IAdaptation,
+  ISegment,
+  IPeriod,
+  IRepresentation,
+} from "../../../manifest/index.ts";
+import { areSameContent, getLoggableSegmentId } from "../../../manifest/index.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import type { IBufferedHistoryEntry } from "./buffered_history.ts";
+import BufferedHistory from "./buffered_history.ts";
+import type { IChunkContext } from "./types.ts";
 
 /** Categorization of a given chunk in the `SegmentInventory`. */
 export const enum ChunkStatus {

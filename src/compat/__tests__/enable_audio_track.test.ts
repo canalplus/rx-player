@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import enableAudioTrack from "../enable_audio_track";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
+import enableAudioTrack from "../enable_audio_track.ts";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
 
 describe("compat - enableAudioTrack", () => {
   beforeEach(() => {

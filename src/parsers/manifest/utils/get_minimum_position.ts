@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type { IParsedPeriod } from "../types";
-import getFirstPositionFromAdaptation from "./get_first_time_from_adaptation";
+import log from "../../../log.ts";
+import type { IParsedPeriod } from "../types.ts";
+import getFirstPositionFromAdaptation from "./get_first_time_from_adaptation.ts";
 
 /**
  * @param {Array.<Object>} periods

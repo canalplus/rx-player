@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import parseCueBlock from "../parse_cue_block";
-import type parseTimestamp from "../parse_timestamp";
+import parseCueBlock from "../parse_cue_block.ts";
+import type parseTimestamp from "../parse_timestamp.ts";
 
 const mocks = vi.hoisted(() => {
   return {

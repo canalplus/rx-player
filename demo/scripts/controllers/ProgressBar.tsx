@@ -1,10 +1,10 @@
 import * as React from "react";
-import ProgressbarComponent from "../components/ProgressBar";
-import ToolTip from "../components/ToolTip";
-import ThumbnailPreview from "../components/ThumbnailPreview";
-import useModuleState from "../lib/useModuleState";
-import type { IPlayerModule } from "../modules/player/index";
-import isNullOrUndefined from "../../../src/utils/is_null_or_undefined";
+import ProgressbarComponent from "../components/ProgressBar.tsx";
+import ToolTip from "../components/ToolTip.tsx";
+import ThumbnailPreview from "../components/ThumbnailPreview.tsx";
+import useModuleState from "../lib/useModuleState.ts";
+import type { IPlayerModule } from "../modules/player/index.ts";
+import isNullOrUndefined from "../../../src/utils/is_null_or_undefined.ts";
 
 function ProgressBar({
   player,

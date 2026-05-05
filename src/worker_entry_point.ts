@@ -1,4 +1,4 @@
-import initializeWorker from "./initialize_worker";
+import initializeWorker from "./initialize_worker.ts";
 
 initializeWorker({
   // By default, there's no callback defined. An application can define some by

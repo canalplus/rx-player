@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
-import { utf8ToStr } from "../../../../utils/string_parsing";
-import parseTtml from "../parse_ttml";
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8.ts";
+import { utf8ToStr } from "../../../../utils/string_parsing.ts";
+import parseTtml from "../parse_ttml.ts";
 import {
   applyDefaultTTMLStyle,
   shouldApplyDefaultTTMLStyle,
-} from "./apply_default_ttml_paragraph_style";
-import type { ITTMLHTMLCue } from "./parse_cue";
-import parseCue from "./parse_cue";
+} from "./apply_default_ttml_paragraph_style.ts";
+import type { ITTMLHTMLCue } from "./parse_cue.ts";
+import parseCue from "./parse_cue.ts";
 
 /**
  * Create array of objects which should represent the given TTML text track.

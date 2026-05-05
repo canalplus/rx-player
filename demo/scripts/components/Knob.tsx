@@ -1,5 +1,5 @@
 import * as React from "react";
-import Select from "./Select";
+import Select from "./Select.tsx";
 
 function Knob({
   ariaLabel,

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { IParsedAdaptations, IParsedAdaptation } from "../../../types";
-import attachTrickModeTrack from "../attach_trickmode_track";
+import type { IParsedAdaptations, IParsedAdaptation } from "../../../types.ts";
+import attachTrickModeTrack from "../attach_trickmode_track.ts";
 
 describe("attachTrickModeTrack", () => {
   it("should correclty attach trickmode tracks", () => {

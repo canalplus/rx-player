@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import * as byteUtils from "../byte_parsing";
+import * as byteUtils from "../byte_parsing.ts";
 
 describe("utils - byte parsing", () => {
   describe("concat", () => {

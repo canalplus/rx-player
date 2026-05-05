@@ -2,12 +2,12 @@ import {
   CoreMessageType,
   type ICoreMessage,
   type IMessageReceiverCallback,
-} from "../../core/types";
-import log from "../../log";
-import noop from "../../utils/noop";
-import queueMicrotaskUtil from "../../utils/queue_microtask";
-import type { IMainThreadMessage } from "../types";
-import CoreInterface from "./base";
+} from "../../core/types.ts";
+import log from "../../log.ts";
+import noop from "../../utils/noop.ts";
+import queueMicrotaskUtil from "../../utils/queue_microtask.ts";
+import type { IMainThreadMessage } from "../types.ts";
+import CoreInterface from "./base.ts";
 
 export class MonoThreadCoreInterface extends CoreInterface {
   private _currentCoreListener: IMessageReceiverCallback;

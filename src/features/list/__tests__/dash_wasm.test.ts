@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import type { IFeaturesObject } from "../../../features/types";
-import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser";
-import DASHFeature from "../../../transports/dash";
-import dashWasmFeature from "../dash_wasm";
+import type { IFeaturesObject } from "../../../features/types.ts";
+import DashWasmParser from "../../../parsers/manifest/dash/wasm-parser/index.ts";
+import DASHFeature from "../../../transports/dash/index.ts";
+import dashWasmFeature from "../dash_wasm.ts";
 
 describe("Features list - DASH WASM Parser", () => {
   it("should add DASH WASM parser in the current features", () => {

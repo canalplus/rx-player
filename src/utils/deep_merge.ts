@@ -1,4 +1,4 @@
-import objectAssign from "./object_assign";
+import objectAssign from "./object_assign.ts";
 
 /**
  * Check if an item is an object

@@ -1,4 +1,4 @@
-import MetaPlaylistDASHSmoothURL from "./metaplaylist_url";
+import MetaPlaylistDASHSmoothURL from "./metaplaylist_url.ts";
 
 export interface IDrmInfo {
   licenseServerUrl: string;

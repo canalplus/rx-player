@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import type { IParsedAdaptation } from "../../parsers/manifest";
+import log from "../../log.ts";
+import type { IParsedAdaptation } from "../../parsers/manifest/index.ts";
 import type {
   ITrackType,
   IRepresentationFilter,
   IRepresentationFilterRepresentation,
-} from "../../public_types";
-import arrayFind from "../../utils/array_find";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import normalizeLanguage from "../../utils/languages";
+} from "../../public_types.ts";
+import arrayFind from "../../utils/array_find.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import normalizeLanguage from "../../utils/languages/index.ts";
 import type {
   IAdaptationMetadata,
   IRepresentationMetadata,
   IAdaptationSupportStatus,
-} from "../types";
-import type CodecSupportCache from "./codec_support_cache";
-import Representation from "./representation";
+} from "../types.ts";
+import type CodecSupportCache from "./codec_support_cache.ts";
+import Representation from "./representation.ts";
 
 /**
  * Normalized Adaptation structure.

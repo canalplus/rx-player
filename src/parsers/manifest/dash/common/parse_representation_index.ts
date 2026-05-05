@@ -14,29 +14,32 @@
  * limitations under the License.
  */
 
-import type { IRepresentationIndex, IRepresentation } from "../../../../manifest";
-import objectAssign from "../../../../utils/object_assign";
-import type { IEMSG } from "../../../containers/isobmff";
+import type {
+  IRepresentationIndex,
+  IRepresentation,
+} from "../../../../manifest/index.ts";
+import objectAssign from "../../../../utils/object_assign.ts";
+import type { IEMSG } from "../../../containers/isobmff/index.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
   IScheme,
-} from "../node_parser_types";
+} from "../node_parser_types.ts";
 import type {
   IBaseIndexContextArgument,
   IListIndexContextArgument,
   ITemplateIndexContextArgument,
   ITimelineIndexContextArgument,
-} from "./indexes";
+} from "./indexes/index.ts";
 import {
   BaseRepresentationIndex,
   ListRepresentationIndex,
   TemplateRepresentationIndex,
   TimelineRepresentationIndex,
-} from "./indexes";
-import type ManifestBoundsCalculator from "./manifest_bounds_calculator";
-import type { IResolvedBaseUrl } from "./resolve_base_urls";
+} from "./indexes/index.ts";
+import type ManifestBoundsCalculator from "./manifest_bounds_calculator.ts";
+import type { IResolvedBaseUrl } from "./resolve_base_urls.ts";
 
 /**
  * Parse the specific segment indexing information found in a representation

@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-import { assertUnreachable } from "../../../../utils/assert";
-import { parseXml } from "../../../../utils/xml-parser";
-import type { IIrParserResponse, ILoadedXlinkData, IMPDParserArguments } from "../common";
-import parseMpdIr from "../common";
-import type { IPeriodIntermediateRepresentation } from "../node_parser_types";
-import type { IDashParserResponse, ILoadedResource } from "../parsers_types";
-import { createMPDIntermediateRepresentation } from "./node_parsers/MPD";
-import { createPeriodIntermediateRepresentation } from "./node_parsers/Period";
+import { assertUnreachable } from "../../../../utils/assert.ts";
+import { parseXml } from "../../../../utils/xml-parser.ts";
+import type {
+  IIrParserResponse,
+  ILoadedXlinkData,
+  IMPDParserArguments,
+} from "../common/index.ts";
+import parseMpdIr from "../common/index.ts";
+import type { IPeriodIntermediateRepresentation } from "../node_parser_types.ts";
+import type { IDashParserResponse, ILoadedResource } from "../parsers_types.ts";
+import { createMPDIntermediateRepresentation } from "./node_parsers/MPD.ts";
+import { createPeriodIntermediateRepresentation } from "./node_parsers/Period.ts";
 
 /**
  * Parse MPD through the Fast JS parser.

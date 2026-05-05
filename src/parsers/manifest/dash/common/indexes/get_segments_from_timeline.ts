@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import type { ISegment } from "../../../../../manifest";
-import type { IEMSG } from "../../../../containers/isobmff";
-import type { IIndexSegment } from "../../../utils/index_helpers";
-import { calculateRepeat, toIndexTime } from "../../../utils/index_helpers";
-import type ManifestBoundsCalculator from "../manifest_bounds_calculator";
-import { createDashUrlDetokenizer } from "./tokens";
+import type { ISegment } from "../../../../../manifest/index.ts";
+import type { IEMSG } from "../../../../containers/isobmff/index.ts";
+import type { IIndexSegment } from "../../../utils/index_helpers.ts";
+import { calculateRepeat, toIndexTime } from "../../../utils/index_helpers.ts";
+import type ManifestBoundsCalculator from "../manifest_bounds_calculator.ts";
+import { createDashUrlDetokenizer } from "./tokens.ts";
 
 /**
  * For the given start time and duration of a timeline element, calculate how

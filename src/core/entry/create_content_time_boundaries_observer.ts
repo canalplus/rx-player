@@ -1,14 +1,14 @@
 import type {
   ISegmentSinksStore,
   IStreamOrchestratorPlaybackObservation,
-} from "../../core/types";
-import log from "../../log";
-import type { IManifest, IPeriod } from "../../manifest";
-import type { IMediaSourceInterface } from "../../mse";
-import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
-import type { IPlayerError } from "../../public_types";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import ContentTimeBoundariesObserver from "./content_time_boundaries_observer";
+} from "../../core/types.ts";
+import log from "../../log.ts";
+import type { IManifest, IPeriod } from "../../manifest/index.ts";
+import type { IMediaSourceInterface } from "../../mse/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../playback_observer/index.ts";
+import type { IPlayerError } from "../../public_types.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import ContentTimeBoundariesObserver from "./content_time_boundaries_observer.ts";
 
 export interface IContentTimeBoundariesObserverCallbacks {
   onWarning: (evt: IPlayerError) => void;

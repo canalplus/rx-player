@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import type { IRepresentationIndex, ISegment } from "../../../manifest";
-import type { IPlayerError } from "../../../public_types";
-import type { ISegmentInformation } from "../../../transports";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import objectAssign from "../../../utils/object_assign";
+import type { IRepresentationIndex, ISegment } from "../../../manifest/index.ts";
+import type { IPlayerError } from "../../../public_types.ts";
+import type { ISegmentInformation } from "../../../transports/index.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../../utils/object_assign.ts";
 
 export interface IBaseContentMetadata {
   isLive: boolean;

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import noop from "../../../../../../utils/noop";
-import type { ISegmentListIntermediateRepresentation } from "../../../node_parser_types";
-import type { IChildrenParser } from "../parsers_stack";
-import type ParsersStack from "../parsers_stack";
-import { TagName } from "../types";
-import { generateSegmentUrlAttrParser } from "./SegmentUrl";
+import noop from "../../../../../../utils/noop.ts";
+import type { ISegmentListIntermediateRepresentation } from "../../../node_parser_types.ts";
+import type { IChildrenParser } from "../parsers_stack.ts";
+import type ParsersStack from "../parsers_stack.ts";
+import { TagName } from "../types.ts";
+import { generateSegmentUrlAttrParser } from "./SegmentUrl.ts";
 
 /**
  * Generate a "children parser" once inside a `SegmentList` node.

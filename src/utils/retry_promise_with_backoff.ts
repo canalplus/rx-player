@@ -1,7 +1,7 @@
-import getFuzzedDelay from "./get_fuzzed_delay";
-import isNullOrUndefined from "./is_null_or_undefined";
-import sleep from "./sleep";
-import type { CancellationSignal } from "./task_canceller";
+import getFuzzedDelay from "./get_fuzzed_delay.ts";
+import isNullOrUndefined from "./is_null_or_undefined.ts";
+import sleep from "./sleep.ts";
+import type { CancellationSignal } from "./task_canceller.ts";
 
 /**
  * Retry the given Promise (if it rejects) with an exponential

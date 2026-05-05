@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { RequestError } from "../../utils/request";
-import EncryptedMediaError from "../encrypted_media_error";
-import isKnownError from "../is_known_error";
-import MediaError from "../media_error";
-import NetworkError from "../network_error";
-import OtherError from "../other_error";
+import { RequestError } from "../../utils/request/index.ts";
+import EncryptedMediaError from "../encrypted_media_error.ts";
+import isKnownError from "../is_known_error.ts";
+import MediaError from "../media_error.ts";
+import NetworkError from "../network_error.ts";
+import OtherError from "../other_error.ts";
 
 describe("Errors - isKnownError", () => {
   it("should return false for a regular error", () => {

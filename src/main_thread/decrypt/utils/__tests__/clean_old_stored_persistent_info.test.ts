@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import log from "../../../../log";
-import cleanOldStoredPersistentInfo from "../clean_old_stored_persistent_info";
-import type PersistentSessionsStore from "../persistent_sessions_store";
+import log from "../../../../log.ts";
+import cleanOldStoredPersistentInfo from "../clean_old_stored_persistent_info.ts";
+import type PersistentSessionsStore from "../persistent_sessions_store.ts";
 
 const logInfo = vi.spyOn(log, "info").mockImplementation(() => {
   /* noop */

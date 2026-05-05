@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 
-import log from "../../../../log";
-import type { IManifest } from "../../../../manifest";
-import flatMap from "../../../../utils/flat_map";
-import idGenerator from "../../../../utils/id_generator";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp";
-import objectValues from "../../../../utils/object_values";
-import { utf8ToStr } from "../../../../utils/string_parsing";
+import log from "../../../../log.ts";
+import type { IManifest } from "../../../../manifest/index.ts";
+import flatMap from "../../../../utils/flat_map.ts";
+import idGenerator from "../../../../utils/id_generator.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
+import objectValues from "../../../../utils/object_values.ts";
+import { utf8ToStr } from "../../../../utils/string_parsing.ts";
 import type {
   IManifestStreamEvent,
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedPeriod,
-} from "../../types";
+} from "../../types.ts";
 import type {
   IEventStreamIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
-} from "../node_parser_types";
-import type ContentProtectionParser from "./content_protection_parser";
-import flattenOverlappingPeriods from "./flatten_overlapping_periods";
-import getPeriodsTimeInformation from "./get_periods_time_infos";
-import type { IAdaptationSetContext } from "./parse_adaptation_sets";
-import parseAdaptationSets from "./parse_adaptation_sets";
-import resolveBaseURLs from "./resolve_base_urls";
+} from "../node_parser_types.ts";
+import type ContentProtectionParser from "./content_protection_parser.ts";
+import flattenOverlappingPeriods from "./flatten_overlapping_periods.ts";
+import getPeriodsTimeInformation from "./get_periods_time_infos.ts";
+import type { IAdaptationSetContext } from "./parse_adaptation_sets.ts";
+import parseAdaptationSets from "./parse_adaptation_sets.ts";
+import resolveBaseURLs from "./resolve_base_urls.ts";
 
 const generatePeriodID = idGenerator();
 

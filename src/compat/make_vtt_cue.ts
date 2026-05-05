@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import log from "../log";
-import globalScope from "../utils/global_scope";
-import isNullOrUndefined from "../utils/is_null_or_undefined";
-import type { ICompatVTTCue } from "./browser_compatibility_types";
+import log from "../log.ts";
+import globalScope from "../utils/global_scope.ts";
+import isNullOrUndefined from "../utils/is_null_or_undefined.ts";
+import type { ICompatVTTCue } from "./browser_compatibility_types.ts";
 
 /**
  * Creates a cue using the best platform-specific interface available.

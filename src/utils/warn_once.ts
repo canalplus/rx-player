@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import arrayIncludes from "./array_includes";
+import arrayIncludes from "./array_includes.ts";
 
 const WARNED_MESSAGES: string[] = [];
 

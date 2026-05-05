@@ -1,12 +1,12 @@
 import * as React from "react";
-import AudioRepresentationKnob from "./knobs/AudioRepresentation";
-import VideoRepresentationKnob from "./knobs/VideoRepresentation";
-import LanguageKnob from "./knobs/AudioTrack";
-import SubtitlesKnob from "./knobs/Subtitles";
-import VideoTrack from "./knobs/VideoTrack";
-import PlaybackRateKnob from "./knobs/SpeedKnob";
-import type { IPlayerModule } from "../modules/player/index";
-import useModuleState from "../lib/useModuleState";
+import AudioRepresentationKnob from "./knobs/AudioRepresentation.tsx";
+import VideoRepresentationKnob from "./knobs/VideoRepresentation.tsx";
+import LanguageKnob from "./knobs/AudioTrack.tsx";
+import SubtitlesKnob from "./knobs/Subtitles.tsx";
+import VideoTrack from "./knobs/VideoTrack.tsx";
+import PlaybackRateKnob from "./knobs/SpeedKnob.tsx";
+import type { IPlayerModule } from "../modules/player/index.ts";
+import useModuleState from "../lib/useModuleState.ts";
 
 function PlayerKnobsSettings({
   shouldDisplay,

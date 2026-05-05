@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import getStyleBlocks from "../get_style_blocks";
+import getStyleBlocks from "../get_style_blocks.ts";
 
 const webvtt1 = [
   "WEBVTT",

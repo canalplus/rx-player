@@ -3,11 +3,11 @@ import type {
   IParsedAdaptation,
   IParsedPeriod,
   IParsedRepresentation,
-} from "../../../parsers/manifest";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import CodecSupportCache from "../codec_support_cache";
-import Manifest from "../manifest";
-import type IPeriod from "../period";
+} from "../../../parsers/manifest/index.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import CodecSupportCache from "../codec_support_cache.ts";
+import Manifest from "../manifest.ts";
+import type IPeriod from "../period.ts";
 
 const mocks = vi.hoisted(() => {
   const fakeGenerateNewId = vi.fn(() => "fakeId");

@@ -19,20 +19,20 @@ import type {
   IStreamOrchestratorOptions,
   IStreamOrchestratorPlaybackObservation,
   IStreamOrchestratorCallbacks,
-} from "./orchestrator";
-import StreamOrchestrator from "./orchestrator";
-import type { IPausedPlaybackObservation } from "./period";
+} from "./orchestrator/index.ts";
+import StreamOrchestrator from "./orchestrator/index.ts";
+import type { IPausedPlaybackObservation } from "./period/index.ts";
 export type {
   IRepresentationsChoice,
   IInbandEvent,
   IStreamStatusPayload,
-} from "./representation";
+} from "./representation/index.ts";
 export type {
   IAdaptationChoice,
   INeedsBufferFlushPayload,
   ITrackSwitchingMode,
   IWaitingMediaSourceReloadPayload,
-} from "./adaptation";
+} from "./adaptation/index.ts";
 
 export default StreamOrchestrator;
 export type {

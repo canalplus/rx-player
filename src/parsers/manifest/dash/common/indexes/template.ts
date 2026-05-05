@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import config from "../../../../../config";
-import log from "../../../../../log";
-import type { IRepresentationIndex, ISegment } from "../../../../../manifest";
-import assert from "../../../../../utils/assert";
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { IEMSG } from "../../../../containers/isobmff";
-import type ManifestBoundsCalculator from "../manifest_bounds_calculator";
-import getInitSegment from "./get_init_segment";
-import { createDashUrlDetokenizer, constructRepresentationUrl } from "./tokens";
-import { getSegmentTimeRoundingError } from "./utils";
+import config from "../../../../../config.ts";
+import log from "../../../../../log.ts";
+import type { IRepresentationIndex, ISegment } from "../../../../../manifest/index.ts";
+import assert from "../../../../../utils/assert.ts";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import type { IEMSG } from "../../../../containers/isobmff/index.ts";
+import type ManifestBoundsCalculator from "../manifest_bounds_calculator.ts";
+import getInitSegment from "./get_init_segment.ts";
+import { createDashUrlDetokenizer, constructRepresentationUrl } from "./tokens.ts";
+import { getSegmentTimeRoundingError } from "./utils.ts";
 
 /**
  * Index property defined for a SegmentTemplate RepresentationIndex

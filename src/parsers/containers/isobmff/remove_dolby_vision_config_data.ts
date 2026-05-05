@@ -1,6 +1,6 @@
-import log from "../../../log";
-import { be4toi } from "../../../utils/byte_parsing";
-import { boxTypeToFourCC, getBoxContent, getBoxOffsets } from "./get_box";
+import log from "../../../log.ts";
+import { be4toi } from "../../../utils/byte_parsing.ts";
+import { boxTypeToFourCC, getBoxContent, getBoxOffsets } from "./get_box.ts";
 
 /**
  * Replace every dvcC/dvvC/dvwC box in an ISOBMFF segment with FREE boxes.

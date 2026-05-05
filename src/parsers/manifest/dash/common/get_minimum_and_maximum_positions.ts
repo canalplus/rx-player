@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IParsedPeriod } from "../../types";
-import getMaximumPositions from "../../utils/get_maximum_positions";
-import getMinimumPosition from "../../utils/get_minimum_position";
+import type { IParsedPeriod } from "../../types.ts";
+import getMaximumPositions from "../../utils/get_maximum_positions.ts";
+import getMinimumPosition from "../../utils/get_minimum_position.ts";
 
 /**
  * @param {Object} periods

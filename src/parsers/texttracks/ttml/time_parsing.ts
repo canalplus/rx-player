@@ -21,7 +21,7 @@
  * But rewritten to a more rx-player style.
  */
 
-import type { ITTParameters } from "./get_parameters";
+import type { ITTParameters } from "./get_parameters.ts";
 import {
   REGXP_TIME_COLON,
   REGXP_TIME_COLON_FRAMES,
@@ -29,7 +29,7 @@ import {
   REGXP_TIME_FRAMES,
   REGXP_TIME_HMS,
   REGXP_TIME_TICK,
-} from "./regexps";
+} from "./regexps.ts";
 
 /**
  * Parses a TTML time into seconds.

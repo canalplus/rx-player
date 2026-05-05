@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import isNonEmptyString from "../is_non_empty_string";
+import isNonEmptyString from "../is_non_empty_string.ts";
 
 describe("utils - isNonEmptyString", () => {
   it("should return false for anything that is not a string", () => {

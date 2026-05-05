@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import NativeTextDisplayer from "../../main_thread/text_displayer/native";
+import NativeTextDisplayer from "../../main_thread/text_displayer/native/index.ts";
 import {
   parseMp4EmbeddedWebVttToVTTCues,
   parseWebVTTPlainTextToVTTCues,
-} from "../../parsers/texttracks/webvtt/native";
-import type { IFeaturesObject } from "../types";
+} from "../../parsers/texttracks/webvtt/native/index.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to parse WebVTT text tracks in a native textrack mode.

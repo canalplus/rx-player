@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import objectAssign from "../../../../../utils/object_assign";
-import type { ITNode } from "../../../../../utils/xml-parser";
+import objectAssign from "../../../../../utils/object_assign.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
   ISegmentListIntermediateRepresentation,
   ISegmentUrlIntermediateRepresentation,
-} from "../../node_parser_types";
-import parseSegmentBase from "./SegmentBase";
-import parseSegmentURL from "./SegmentURL";
+} from "../../node_parser_types.ts";
+import parseSegmentBase from "./SegmentBase.ts";
+import parseSegmentURL from "./SegmentURL.ts";
 
 /**
  * @param {Object} root

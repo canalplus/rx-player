@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import initializeCoreEntry from "../../../core/entry";
-import { MonoThreadCoreInterface } from "../../../main_thread/core_interface/monothread";
-import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer";
-import SmoothFeature from "../../../transports/smooth";
-import type { IFeaturesObject } from "../../types";
-import addSmoothFeature from "../smooth";
+import initializeCoreEntry from "../../../core/entry/index.ts";
+import { MonoThreadCoreInterface } from "../../../main_thread/core_interface/monothread.ts";
+import MediaSourceContentInitializer from "../../../main_thread/init/media_source_content_initializer.ts";
+import SmoothFeature from "../../../transports/smooth/index.ts";
+import type { IFeaturesObject } from "../../types.ts";
+import addSmoothFeature from "../smooth.ts";
 
 describe("Features list - Smooth", () => {
   it("should add Smooth in the current features", () => {

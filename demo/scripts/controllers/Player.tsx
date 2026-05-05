@@ -1,24 +1,24 @@
 import * as React from "react";
-import DummyMediaElement from "../../../src/experimental/tools/DummyMediaElement";
+import DummyMediaElement from "../../../src/experimental/tools/DummyMediaElement/index.ts";
 import type {
   IAudioRepresentationsSwitchingMode,
   ILoadVideoOptions,
   IVideoRepresentationsSwitchingMode,
-} from "../../../src/public_types";
-import PlayerModule from "../modules/player";
-import type { IPlayerModule } from "../modules/player";
-import ControlBar from "./ControlBar";
-import ContentList from "./ContentList";
-import Settings from "./Settings";
-import ErrorDisplayer from "./ErrorDisplayer";
-import ChartsManager from "./charts/index";
-import PlayerKnobsSettings from "./PlayerKnobsSettings";
-import defaultOptionsValues from "../lib/defaultOptionsValues";
+} from "../../../src/public_types.ts";
+import PlayerModule from "../modules/player/index.ts";
+import type { IPlayerModule } from "../modules/player/index.ts";
+import ControlBar from "./ControlBar.tsx";
+import ContentList from "./ContentList.tsx";
+import Settings from "./Settings.tsx";
+import ErrorDisplayer from "./ErrorDisplayer.tsx";
+import ChartsManager from "./charts/index.tsx";
+import PlayerKnobsSettings from "./PlayerKnobsSettings.tsx";
+import defaultOptionsValues from "../lib/defaultOptionsValues.ts";
 import type {
   ILoadVideoSettings,
   IConstructorSettings,
-} from "../lib/defaultOptionsValues";
-import { toDummyDrmConfiguration } from "../lib/parseDRMConfigurations";
+} from "../lib/defaultOptionsValues.ts";
+import { toDummyDrmConfiguration } from "../lib/parseDRMConfigurations.ts";
 
 const { useCallback, useEffect, useRef, useState } = React;
 

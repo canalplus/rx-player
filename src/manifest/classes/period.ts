@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { MediaError } from "../../errors";
+import { MediaError } from "../../errors/index.ts";
 import type {
   ICdnMetadata,
   IManifestStreamEvent,
   IParsedAdaptations,
   IParsedPeriod,
-} from "../../parsers/manifest";
-import type { ITrackType, IRepresentationFilter } from "../../public_types";
-import arrayFind from "../../utils/array_find";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { IAdaptationMetadata, IPeriodMetadata } from "../types";
-import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils";
-import Adaptation from "./adaptation";
-import type CodecSupportCache from "./codec_support_cache";
-import type { IRepresentationIndex } from "./representation_index";
+} from "../../parsers/manifest/index.ts";
+import type { ITrackType, IRepresentationFilter } from "../../public_types.ts";
+import arrayFind from "../../utils/array_find.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { IAdaptationMetadata, IPeriodMetadata } from "../types.ts";
+import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils.ts";
+import Adaptation from "./adaptation.ts";
+import type CodecSupportCache from "./codec_support_cache.ts";
+import type { IRepresentationIndex } from "./representation_index/index.ts";
 
 /** Structure listing every `Adaptation` in a Period. */
 export type IManifestAdaptations = Partial<Record<ITrackType, Adaptation[]>>;

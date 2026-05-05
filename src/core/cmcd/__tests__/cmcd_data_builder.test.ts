@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import CmcdDataBuilder from "../cmcd_data_builder";
+import CmcdDataBuilder from "../cmcd_data_builder.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

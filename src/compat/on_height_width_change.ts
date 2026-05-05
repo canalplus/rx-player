@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import log from "../log";
-import globalScope from "../utils/global_scope";
-import type { IReadOnlySharedReference } from "../utils/reference";
-import SharedReference from "../utils/reference";
-import type { CancellationSignal } from "../utils/task_canceller";
+import log from "../log.ts";
+import globalScope from "../utils/global_scope.ts";
+import type { IReadOnlySharedReference } from "../utils/reference.ts";
+import SharedReference from "../utils/reference.ts";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
 
 export interface IResolution {
   width: number;

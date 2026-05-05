@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import { findEndOfCueBlock, isStartOfCueBlock } from "./utils";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import { findEndOfCueBlock, isStartOfCueBlock } from "./utils.ts";
 
 /**
  * Get cue blocks from a WebVTT file.

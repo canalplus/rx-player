@@ -1,6 +1,6 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
-import shouldUnsetMediaKeys from "../should_unset_media_keys";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
+import shouldUnsetMediaKeys from "../should_unset_media_keys.ts";
 
 describe("compat - shouldUnsetMediaKeys", () => {
   beforeEach(() => {

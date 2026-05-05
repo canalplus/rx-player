@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import assert from "../../../../utils/assert";
-import { insertInto, keepRangeIntersection } from "../../../../utils/ranges";
+import assert from "../../../../utils/assert.ts";
+import { insertInto, keepRangeIntersection } from "../../../../utils/ranges.ts";
 
 /**
  * Simulate TimeRanges as returned by SourceBuffer.prototype.buffered.

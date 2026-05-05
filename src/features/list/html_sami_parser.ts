@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
-import samiParser from "../../parsers/texttracks/sami/html";
-import type { IFeaturesObject } from "../types";
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html/index.ts";
+import samiParser from "../../parsers/texttracks/sami/html.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to parse SAMI text tracks in an HTML textrack mode.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import EnvDetector from "./env_detector";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * TODO(pierre): fix patchSegmentInPlace to work with IE11. Maybe

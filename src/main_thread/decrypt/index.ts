@@ -19,11 +19,11 @@
  * It always should be imported through the `features` object.
  */
 
-import clearOnStop from "./clear_on_stop";
-import ContentDecryptor from "./content_decryptor";
-import disposeDecryptionResources from "./dispose_decryption_resources";
-import getKeySystemConfiguration from "./get_key_system_configuration";
-export * from "./types";
+import clearOnStop from "./clear_on_stop.ts";
+import ContentDecryptor from "./content_decryptor.ts";
+import disposeDecryptionResources from "./dispose_decryption_resources.ts";
+import getKeySystemConfiguration from "./get_key_system_configuration.ts";
+export * from "./types.ts";
 
 export default ContentDecryptor;
 export { clearOnStop, disposeDecryptionResources, getKeySystemConfiguration };

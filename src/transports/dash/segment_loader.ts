@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-import { CustomLoaderError } from "../../errors";
-import type { ICdnMetadata } from "../../parsers/manifest";
-import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types";
-import request, { fetchIsSupported } from "../../utils/request";
-import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
-import warnOnce from "../../utils/warn_once";
+import { CustomLoaderError } from "../../errors/index.ts";
+import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
+import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types.ts";
+import request, { fetchIsSupported } from "../../utils/request/index.ts";
+import type {
+  CancellationError,
+  CancellationSignal,
+} from "../../utils/task_canceller.ts";
+import warnOnce from "../../utils/warn_once.ts";
 import type {
   ILoadedAudioVideoSegmentFormat,
   ISegmentContext,
@@ -29,14 +32,14 @@ import type {
   ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
-} from "../types";
-import addQueryString from "../utils/add_query_string";
-import byteRange from "../utils/byte_range";
-import inferSegmentContainer from "../utils/infer_segment_container";
-import constructSegmentUrl from "./construct_segment_url";
-import initSegmentLoader from "./init_segment_loader";
-import { addSegmentIntegrityChecks } from "./integrity_checks";
-import loadChunkedSegmentData from "./load_chunked_segment_data";
+} from "../types.ts";
+import addQueryString from "../utils/add_query_string.ts";
+import byteRange from "../utils/byte_range.ts";
+import inferSegmentContainer from "../utils/infer_segment_container.ts";
+import constructSegmentUrl from "./construct_segment_url.ts";
+import initSegmentLoader from "./init_segment_loader.ts";
+import { addSegmentIntegrityChecks } from "./integrity_checks.ts";
+import loadChunkedSegmentData from "./load_chunked_segment_data.ts";
 
 /**
  * Segment loader triggered if there was no custom-defined one in the API.

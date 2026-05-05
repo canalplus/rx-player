@@ -1,6 +1,6 @@
 import * as React from "react";
-import useModuleState from "../lib/useModuleState";
-import type { IPlayerModule } from "../modules/player/index";
+import useModuleState from "../lib/useModuleState.ts";
+import type { IPlayerModule } from "../modules/player/index.ts";
 
 function PlayerError({ error }: { error: Error }): React.JSX.Element {
   const message: string =

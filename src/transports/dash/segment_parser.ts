@@ -14,31 +14,34 @@
  * limitations under the License.
  */
 
-import shouldPatchOutDolbyVisionConfigDataFromMp4 from "../../compat/should_patch_out_dolby_vision_config_data_from_mp4";
-import logger from "../../log";
+import shouldPatchOutDolbyVisionConfigDataFromMp4 from "../../compat/should_patch_out_dolby_vision_config_data_from_mp4.ts";
+import logger from "../../log.ts";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
   extractPssh,
   removeDolbyVisionConfigData,
-} from "../../parsers/containers/isobmff";
+} from "../../parsers/containers/isobmff/index.ts";
 import {
   getKeyIdFromInitSegment,
   parseEmsgBoxes,
-} from "../../parsers/containers/isobmff/utils";
-import { getSegmentsFromCues, getTimeCodeScale } from "../../parsers/containers/matroska";
-import { toUint8Array } from "../../utils/byte_parsing";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
+} from "../../parsers/containers/isobmff/utils.ts";
+import {
+  getSegmentsFromCues,
+  getTimeCodeScale,
+} from "../../parsers/containers/matroska/index.ts";
+import { toUint8Array } from "../../utils/byte_parsing.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
 import type {
   IProtectionDataInfo,
   ISegmentContext,
   ISegmentParser,
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
-} from "../types";
-import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
-import inferSegmentContainer from "../utils/infer_segment_container";
-import getEventsOutOfEMSGs from "./get_events_out_of_emsgs";
+} from "../types.ts";
+import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos.ts";
+import inferSegmentContainer from "../utils/infer_segment_container.ts";
+import getEventsOutOfEMSGs from "./get_events_out_of_emsgs.ts";
 
 /**
  * @param {Object} config
