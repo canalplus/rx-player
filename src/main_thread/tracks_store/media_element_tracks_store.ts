@@ -40,6 +40,7 @@ import type {
 import EventEmitter from "../../utils/event_emitter";
 import isNullOrUndefined from "../../utils/is_null_or_undefined";
 import normalizeLanguage from "../../utils/languages";
+import TaskCanceller from "../../utils/task_canceller";
 
 /** Events emitted by the MediaElementTracksStore. */
 interface IMediaElementTracksStoreEvents {
@@ -237,8 +238,14 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
    */
   private _videoTrackLockedOn: ICompatVideoTrack | undefined | null;
 
+  /** Task canceller that is cancel when the MediaTrackStore is disposed */
+  private taskCanceller: TaskCanceller;
+
   constructor(mediaElement: IMediaElement) {
     super();
+
+    this.taskCanceller = new TaskCanceller("media_element_track_store");
+
     // TODO In practice, the audio/video/text tracks API are not always implemented on
     // the media element, although Typescript HTMLMediaElement types tend to mean
     // that can't be undefined.
@@ -441,24 +448,7 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
    * Free the resources used by the MediaElementTracksStore.
    */
   public dispose(): void {
-    if (this._nativeVideoTracks !== undefined) {
-      this._nativeVideoTracks.onchange = null;
-      this._nativeVideoTracks.onaddtrack = null;
-      this._nativeVideoTracks.onremovetrack = null;
-    }
-
-    if (this._nativeAudioTracks !== undefined) {
-      this._nativeAudioTracks.onchange = null;
-      this._nativeAudioTracks.onaddtrack = null;
-      this._nativeAudioTracks.onremovetrack = null;
-    }
-
-    if (this._nativeTextTracks !== undefined) {
-      this._nativeTextTracks.onchange = null;
-      this._nativeTextTracks.onaddtrack = null;
-      this._nativeTextTracks.onremovetrack = null;
-    }
-
+    this.taskCanceller.cancel("disposed");
     this.removeEventListener();
   }
 
@@ -607,7 +597,7 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
    */
   private _handleNativeTracksCallbacks(): void {
     if (this._nativeAudioTracks !== undefined) {
-      this._nativeAudioTracks.onaddtrack = () => {
+      const onAddAudioTrack = () => {
         if (this._nativeAudioTracks !== undefined) {
           const newAudioTracks = createAudioTracks(this._nativeAudioTracks);
           if (areTrackArraysDifferent(this._audioTracks, newAudioTracks)) {
@@ -622,7 +612,12 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           }
         }
       };
-      this._nativeAudioTracks.onremovetrack = () => {
+      this._nativeAudioTracks.addEventListener("addtrack", onAddAudioTrack);
+      this.taskCanceller.signal.register(() => {
+        this._nativeAudioTracks?.removeEventListener("addtrack", onAddAudioTrack);
+      });
+
+      const onRemoveAudioTrack = () => {
         if (this._nativeAudioTracks !== undefined) {
           const newAudioTracks = createAudioTracks(this._nativeAudioTracks);
           if (areTrackArraysDifferent(this._audioTracks, newAudioTracks)) {
@@ -637,7 +632,13 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           }
         }
       };
-      this._nativeAudioTracks.onchange = () => {
+
+      this._nativeAudioTracks.addEventListener("removetrack", onRemoveAudioTrack);
+      this.taskCanceller.signal.register(() => {
+        this._nativeAudioTracks?.removeEventListener("removetrack", onRemoveAudioTrack);
+      });
+
+      const onAudioChange = () => {
         if (this._audioTracks !== undefined) {
           for (let i = 0; i < this._audioTracks.length; i++) {
             const { track, nativeTrack } = this._audioTracks[i];
@@ -656,10 +657,15 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         }
         return;
       };
+
+      this._nativeAudioTracks.addEventListener("change", onAudioChange);
+      this.taskCanceller.signal.register(() => {
+        this._nativeAudioTracks?.removeEventListener("change", onAudioChange);
+      });
     }
 
     if (this._nativeTextTracks !== undefined) {
-      this._nativeTextTracks.onaddtrack = () => {
+      const onAddTextTrack = () => {
         if (this._nativeTextTracks !== undefined) {
           const newTextTracks = createTextTracks(this._nativeTextTracks);
           if (areTrackArraysDifferent(this._textTracks, newTextTracks)) {
@@ -674,7 +680,13 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           }
         }
       };
-      this._nativeTextTracks.onremovetrack = () => {
+
+      this._nativeTextTracks.addEventListener("addtrack", onAddTextTrack);
+      this.taskCanceller.signal.register(() => {
+        this._nativeTextTracks?.removeEventListener("addtrack", onAddTextTrack);
+      });
+
+      const onRemoveTextTrack = () => {
         if (this._nativeTextTracks !== undefined) {
           const newTextTracks = createTextTracks(this._nativeTextTracks);
           if (areTrackArraysDifferent(this._textTracks, newTextTracks)) {
@@ -689,7 +701,12 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           }
         }
       };
-      this._nativeTextTracks.onchange = () => {
+      this._nativeTextTracks.addEventListener("removetrack", onRemoveTextTrack);
+      this.taskCanceller.signal.register(() => {
+        this._nativeTextTracks?.removeEventListener("removetrack", onRemoveTextTrack);
+      });
+
+      const onTextChange = () => {
         if (this._textTracks !== undefined) {
           for (let i = 0; i < this._textTracks.length; i++) {
             const { track, nativeTrack } = this._textTracks[i];
@@ -708,10 +725,15 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         }
         return;
       };
+
+      this._nativeTextTracks.addEventListener("change", onTextChange);
+      this.taskCanceller.signal.register(() => {
+        this._nativeTextTracks?.removeEventListener("change", onTextChange);
+      });
     }
 
     if (this._nativeVideoTracks !== undefined) {
-      this._nativeVideoTracks.onaddtrack = () => {
+      const onAddVideoTrack = () => {
         if (this._nativeVideoTracks !== undefined) {
           const newVideoTracks = createVideoTracks(this._nativeVideoTracks);
           if (areTrackArraysDifferent(this._videoTracks, newVideoTracks)) {
@@ -726,7 +748,13 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           }
         }
       };
-      this._nativeVideoTracks.onremovetrack = () => {
+
+      this._nativeVideoTracks.addEventListener("addtrack", onAddVideoTrack);
+      this.taskCanceller.signal.register(() => {
+        this._nativeVideoTracks?.removeEventListener("addtrack", onAddVideoTrack);
+      });
+
+      const onRemoveVideoTrack = () => {
         if (this._nativeVideoTracks !== undefined) {
           const newVideoTracks = createVideoTracks(this._nativeVideoTracks);
           if (areTrackArraysDifferent(this._videoTracks, newVideoTracks)) {
@@ -741,7 +769,13 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           }
         }
       };
-      this._nativeVideoTracks.onchange = () => {
+
+      this._nativeVideoTracks.addEventListener("removetrack", onRemoveVideoTrack);
+      this.taskCanceller.signal.register(() => {
+        this._nativeVideoTracks?.removeEventListener("removetrack", onRemoveVideoTrack);
+      });
+
+      const onVideoChange = () => {
         if (this._videoTracks !== undefined) {
           for (let i = 0; i < this._videoTracks.length; i++) {
             const { track, nativeTrack } = this._videoTracks[i];
@@ -760,6 +794,11 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         }
         return;
       };
+
+      this._nativeVideoTracks.addEventListener("change", onVideoChange);
+      this.taskCanceller.signal.register(() => {
+        this._nativeVideoTracks?.removeEventListener("change", onVideoChange);
+      });
     }
   }
 
