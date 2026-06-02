@@ -64,6 +64,7 @@ import type IContentDecryptor from "../decrypt";
 import { ContentDecryptorState, getKeySystemConfiguration } from "../decrypt";
 import type { ITextDisplayer } from "../text_displayer";
 import { MainThreadMessageType } from "../types";
+import { canHandleTextTracks } from "../utils/media_capabilities";
 import type { ITextDisplayerOptions } from "./types";
 import { ContentInitializer } from "./types";
 import type { ICorePlaybackObservation } from "./utils/create_core_playback_observer";
@@ -203,7 +204,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         cmcd: this._settings.cmcd,
         enableRepresentationAvoidance: this._settings.enableRepresentationAvoidance,
         url: this._settings.url,
-        hasText: this._hasTextBufferFeature(),
+        hasText: canHandleTextTracks(this._settings.textTrackOptions),
         transport,
         transportOptions,
         initialVideoBitrate,
@@ -358,16 +359,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         this._settings.textTrackOptions.textTrackMode === "html" &&
         features.htmlTextDisplayer !== null
       ) {
-        assert(this._hasTextBufferFeature());
+        assert(canHandleTextTracks(this._settings.textTrackOptions));
         textDisplayer = new features.htmlTextDisplayer(
           mediaElement,
           this._settings.textTrackOptions.textTrackElement,
         );
       } else if (features.nativeTextDisplayer !== null) {
-        assert(this._hasTextBufferFeature());
+        assert(canHandleTextTracks(this._settings.textTrackOptions));
         textDisplayer = new features.nativeTextDisplayer(mediaElement);
       } else {
-        assert(!this._hasTextBufferFeature());
+        assert(!canHandleTextTracks(this._settings.textTrackOptions));
       }
     } catch (err) {
       log.error(
@@ -1573,14 +1574,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     } catch (err) {
       this._onFatalError(err);
     }
-  }
-
-  private _hasTextBufferFeature(): boolean {
-    return (
-      (this._settings.textTrackOptions.textTrackMode === "html" &&
-        features.htmlTextDisplayer !== null) ||
-      features.nativeTextDisplayer !== null
-    );
   }
 
   private _reload(
