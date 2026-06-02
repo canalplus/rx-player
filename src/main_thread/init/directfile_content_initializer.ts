@@ -338,16 +338,24 @@ function getDirectFileInitialTime(
   }
 
   const duration = mediaElement.duration;
-  if (typeof startAt.fromLastPosition === "number") {
-    if (!isNullOrUndefined(duration) && isFinite(duration)) {
-      return Math.max(0, duration + startAt.fromLastPosition);
-    }
 
+  const getLastPosition = () => {
     if (mediaElement.seekable.length > 0) {
       const lastSegmentEnd = mediaElement.seekable.end(mediaElement.seekable.length - 1);
       if (isFinite(lastSegmentEnd)) {
-        return Math.max(0, lastSegmentEnd + startAt.fromLastPosition);
+        return lastSegmentEnd;
       }
+    }
+    if (!isNullOrUndefined(duration) && isFinite(duration)) {
+      return duration;
+    }
+    return undefined;
+  };
+
+  if (typeof startAt.fromLastPosition === "number") {
+    const lastPosition = getLastPosition();
+    if (!isNullOrUndefined(lastPosition)) {
+      return Math.max(0, lastPosition + startAt.fromLastPosition);
     }
     log.warn(
       "Init",
@@ -356,17 +364,19 @@ function getDirectFileInitialTime(
     );
     return undefined;
   } else if (typeof startAt.fromLivePosition === "number") {
-    const livePosition =
-      mediaElement.seekable.length > 0 ? mediaElement.seekable.end(0) : duration;
-    if (isNullOrUndefined(livePosition)) {
-      log.warn(
-        "Init",
-        "startAt.fromLivePosition set but live position is not known, " +
-          "beginning at 0.",
-      );
-      return 0;
+    // Directfile contents do not expose a distinct live edge here, so
+    // `fromLivePosition` falls back to the same reference point as `fromLastPosition`.
+    const livePosition = getLastPosition();
+    if (!isNullOrUndefined(livePosition)) {
+      return Math.max(0, livePosition + startAt.fromLivePosition);
     }
-    return Math.max(0, livePosition + startAt.fromLivePosition);
+    log.warn(
+      "Init",
+      "startAt.fromLivePosition set but live position is not known, " +
+        "it may be too soon to seek",
+    );
+
+    return undefined;
   } else if (!isNullOrUndefined(startAt.percentage)) {
     if (isNullOrUndefined(duration) || !isFinite(duration)) {
       log.warn(
