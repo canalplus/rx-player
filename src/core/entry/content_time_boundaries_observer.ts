@@ -47,6 +47,12 @@ import TaskCanceller from "../../utils/task_canceller";
  *     Manifest range.
  * @class ContentTimeBoundariesObserver
  */
+
+// `HTMLMediaElement.currentTime` can be off by a very small amount from the
+// Manifest-derived boundaries. We keep an epsilon so those rounding
+// differences do not trigger spurious boundary warnings.
+const EPSILON = 1e-3;
+
 export default class ContentTimeBoundariesObserver extends EventEmitter<IContentTimeBoundariesObserverEvent> {
   /** Allows to interrupt everything the `ContentTimeBoundariesObserver` is doing. */
   private _canceller: TaskCanceller;
@@ -115,7 +121,11 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
           const wantedPosition = position.getWanted();
           const minimumPosition = manifest.getMinimumSafePosition();
           const maximumPosition = maximumPositionCalculator.getMaximumAvailablePosition();
-          if (wantedPosition < minimumPosition) {
+
+          // Only report "before manifest" when the position is meaningfully
+          // behind the minimum, not when `<video>.currentTime` and the
+          // Manifest disagree by a tiny floating-point delta.
+          if (wantedPosition < minimumPosition - EPSILON) {
             const warning = new MediaError(
               "MEDIA_TIME_BEFORE_MANIFEST",
               "The current position is behind the " +
@@ -129,7 +139,7 @@ export default class ContentTimeBoundariesObserver extends EventEmitter<IContent
               },
             );
             this.trigger("warning", warning);
-          } else if (wantedPosition > maximumPosition) {
+          } else if (wantedPosition > maximumPosition + EPSILON) {
             const warning = new MediaError(
               "MEDIA_TIME_AFTER_MANIFEST",
               "The current position is after the latest " +

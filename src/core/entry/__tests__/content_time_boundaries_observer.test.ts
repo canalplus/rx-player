@@ -150,6 +150,20 @@ describe("ContentTimeBoundariesObserver", () => {
       });
     });
 
+    it("should not trigger warning when position is within epsilon of manifest minimum", async () => {
+      mockGetMinimumSafePosition.mockReturnValue(10);
+      const manifest = createMockManifest();
+      const playbackObserver = createMockPlaybackObserver();
+
+      new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      await sleep(0);
+
+      const positionCallback = mockPlaybackObserverListen.mock.calls[0][0];
+      positionCallback({ position: { getWanted: () => 9.9995 } });
+
+      expect(mockTrigger).not.toHaveBeenCalled();
+    });
+
     it("should trigger warning when position is after manifest maximum", async () => {
       mockGetMaximumSafePosition.mockReturnValue(100);
       const manifest = createMockManifest();
