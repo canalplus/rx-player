@@ -3,22 +3,62 @@ import type { IMediaElement } from "../../../compat/browser_compatibility_types"
 import assert from "../../../utils/assert";
 import MediaElementTracksStore from "../media_element_tracks_store";
 
-function createFakeMediaElement(): IMediaElement {
-  return {
-    audioTracks: [
-      { language: "en", enabled: false },
-      { language: "fr", enabled: true },
-      { language: "el", enabled: false },
-      { language: "pt-BR", enabled: false },
-    ],
-    textTracks: [
-      { language: "en", mode: "hidden" },
-      { language: "fr", mode: "showing" },
-      { language: "el", mode: "hidden" },
-      { language: "pt-BR", mode: "hidden" },
-    ],
-    videoTracks: [{ language: "", selected: true }],
-  } as unknown as IMediaElement;
+type TrackListEventName = "addtrack" | "removetrack" | "change";
+
+type FakeTrackList<TTrack, TEvent = Event> = TTrack[] & {
+  addEventListener(evt: TrackListEventName, fn: (evt: TEvent) => void): void;
+  removeEventListener(evt: TrackListEventName, fn: (evt: TEvent) => void): void;
+  trigger(evt: TrackListEventName, payload: TEvent): void;
+};
+
+type IFakeMediaElement = IMediaElement & {
+  readonly audioTracks: FakeTrackList<{ language: string; enabled: boolean }>;
+  readonly textTracks: FakeTrackList<TextTrack, TrackEvent>;
+  readonly videoTracks: FakeTrackList<{ language: string; selected: boolean }>;
+};
+
+function createFakeTrackList<TTrack, TEvent = Event>(
+  tracks: TTrack[],
+): FakeTrackList<TTrack, TEvent> {
+  const listeners: Record<TrackListEventName, Array<(evt: TEvent) => void>> = {
+    addtrack: [],
+    removetrack: [],
+    change: [],
+  };
+  const trackList = tracks as FakeTrackList<TTrack, TEvent>;
+  trackList.addEventListener = (evt, fn) => {
+    listeners[evt].push(fn);
+  };
+  trackList.removeEventListener = (evt, fn) => {
+    listeners[evt] = listeners[evt].filter((listener) => listener !== fn);
+  };
+  trackList.trigger = (evt, payload) => {
+    listeners[evt].forEach((listener) => listener(payload));
+  };
+  return trackList;
+}
+
+function createFakeMediaElement(): IFakeMediaElement {
+  const audioTracks = createFakeTrackList([
+    { language: "en", enabled: false },
+    { language: "fr", enabled: true },
+    { language: "el", enabled: false },
+    { language: "pt-BR", enabled: false },
+  ]);
+  const textTracks = createFakeTrackList<TextTrack, TrackEvent>([
+    { language: "en", mode: "hidden" },
+    { language: "fr", mode: "showing" },
+    { language: "el", mode: "hidden" },
+    { language: "pt-BR", mode: "hidden" },
+  ] as TextTrack[]);
+  const videoTracks = createFakeTrackList([{ language: "", selected: true }]);
+  const fakeMediaElement = {} as IFakeMediaElement;
+  Object.defineProperties(fakeMediaElement, {
+    audioTracks: { get: () => audioTracks },
+    textTracks: { get: () => textTracks },
+    videoTracks: { get: () => videoTracks },
+  });
+  return fakeMediaElement;
 }
 
 describe("API - MediaElementTracksStore", () => {
@@ -99,15 +139,11 @@ describe("API - MediaElementTracksStore", () => {
       });
 
       // Fake browser behavior
-      (fakeMediaElement.textTracks as unknown as TextTrack[]).unshift({
+      fakeMediaElement.textTracks.unshift({
         language: "es",
         mode: "hidden",
       } as TextTrack);
-      (
-        fakeMediaElement.textTracks as {
-          onaddtrack: ((arg: TrackEvent) => void) | undefined;
-        }
-      ).onaddtrack?.({} as TrackEvent);
+      fakeMediaElement.textTracks.trigger("addtrack", {} as TrackEvent);
     });
   });
 
@@ -123,14 +159,8 @@ describe("API - MediaElementTracksStore", () => {
       });
 
       // Fake browser behavior
-      const _elt = fakeMediaElement;
-      (
-        _elt.videoTracks as unknown as Array<{
-          language: string;
-          selected: boolean;
-        }>
-      ).unshift({ language: "en", selected: false });
-      _elt.videoTracks?.onaddtrack?.({} as TrackEvent);
+      fakeMediaElement.videoTracks.unshift({ language: "en", selected: false });
+      fakeMediaElement.videoTracks.trigger("addtrack", {} as Event);
     });
   });
 
@@ -149,14 +179,8 @@ describe("API - MediaElementTracksStore", () => {
       });
 
       // Fake browser behavior
-      const _elt = fakeMediaElement;
-      (
-        _elt.audioTracks as unknown as Array<{
-          language: string;
-          selected: boolean;
-        }>
-      ).unshift({ language: "en", selected: false });
-      _elt.audioTracks?.onaddtrack?.({} as TrackEvent);
+      fakeMediaElement.audioTracks.unshift({ language: "en", enabled: false });
+      fakeMediaElement.audioTracks.trigger("addtrack", {} as Event);
     });
   });
 
@@ -173,11 +197,7 @@ describe("API - MediaElementTracksStore", () => {
       trackManager.setTextTrackById("gen_text_en_1");
 
       // Fake browser behavior
-      (
-        fakeMediaElement.textTracks as {
-          onchange: ((arg: Event) => void) | undefined;
-        }
-      ).onchange?.(undefined as unknown as Event);
+      fakeMediaElement.textTracks.trigger("change", undefined as unknown as TrackEvent);
     });
   });
 });
