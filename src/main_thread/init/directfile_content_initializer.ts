@@ -340,14 +340,14 @@ function getDirectFileInitialTime(
   const duration = mediaElement.duration;
 
   const getLastPosition = () => {
-    if (!isNullOrUndefined(duration) && isFinite(duration)) {
-      return duration;
-    }
     if (mediaElement.seekable.length > 0) {
       const lastSegmentEnd = mediaElement.seekable.end(mediaElement.seekable.length - 1);
       if (isFinite(lastSegmentEnd)) {
         return lastSegmentEnd;
       }
+    }
+    if (!isNullOrUndefined(duration) && isFinite(duration)) {
+      return duration;
     }
     return undefined;
   };
