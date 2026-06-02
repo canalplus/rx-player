@@ -222,11 +222,40 @@
     const initDataClearKey = (new TextEncoder()).encode('{"kids":["LwVHf8JLtPrv2GUXFW2v_A"]}');
     // const r = Array.from(initDataPlayReady).map(i2hex).join("");
 
+    const DEFAULT_API_TIMEOUT_MS = 10000;
+    const API_TIMEOUTS_MS = {
+      requestMediaKeySystemAccess: 15000,
+      createMediaKeys: DEFAULT_API_TIMEOUT_MS,
+      createSession: DEFAULT_API_TIMEOUT_MS,
+      generateRequest: 15000,
+      messageEvent: 15000,
+    };
+
+    function createTimeoutError(apiName, timeoutMs) {
+      return new Error(`${apiName} timed out after ${timeoutMs}ms`);
+    }
+
+    async function withTimeout(promise, timeoutMs, apiName) {
+      let timeoutId;
+      try {
+        return await Promise.race([
+          promise,
+          new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+              reject(createTimeoutError(apiName, timeoutMs));
+            }, timeoutMs);
+          }),
+        ]);
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
     async function waitForMessageEvent(session) {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         session.addEventListener("message", (event) => {
           resolve(event);
-        });
+        }, { once: true });
       });
     }
 
@@ -255,9 +284,13 @@
       /* Check `requestMediaKeySystemAccess` */
       let keySystemAccess;
       try {
-        keySystemAccess = await navigator.requestMediaKeySystemAccess(
-          keySystemIdentifier,
-          configuration
+        keySystemAccess = await withTimeout(
+          navigator.requestMediaKeySystemAccess(
+            keySystemIdentifier,
+            configuration
+          ),
+          API_TIMEOUTS_MS.requestMediaKeySystemAccess,
+          "requestMediaKeySystemAccess"
         );
         checkStatus.requestMediaKeySystemAccess = { support: true, time: performance.now() - startTime };
       } catch (err) {
@@ -289,7 +322,11 @@
 
       let mediaKeys;
       try {
-        mediaKeys = await keySystemAccess.createMediaKeys();
+        mediaKeys = await withTimeout(
+          keySystemAccess.createMediaKeys(),
+          API_TIMEOUTS_MS.createMediaKeys,
+          "createMediaKeys"
+        );
         checkStatus.createMediaKeys = { support: true, time: performance.now() - checkTime };
       } catch (err) {
         checkStatus.createMediaKeys = { support: false, time: performance.now() - checkTime };
@@ -320,7 +357,11 @@
       try {
         const sessionType /* temporary or persistent-license */ =
           configuration[0].sessionTypes[0];
-        session = await mediaKeys.createSession(sessionType);
+        session = await withTimeout(
+          Promise.resolve(mediaKeys.createSession(sessionType)),
+          API_TIMEOUTS_MS.createSession,
+          "createSession"
+        );
         checkStatus.createSession = { support: true, time: performance.now() - checkTime };
       } catch (err) {
         checkStatus.createSession = { support: false, time: performance.now() - checkTime };
@@ -346,7 +387,6 @@
 
       /* Check `generateRequest` */
       checkTime = performance.now()
-      let generateRequest;
       let initData;
       let initDataType;
       if (keySystemIdentifier.includes("widevine")) {
@@ -375,8 +415,16 @@
       try {
         const [messageEvent, generateRequestResult] =
           await Promise.all([
-            waitForMessageEvent(session),
-            session.generateRequest(initDataType, initData),
+            withTimeout(
+              waitForMessageEvent(session),
+              API_TIMEOUTS_MS.messageEvent,
+              "message event"
+            ),
+            withTimeout(
+              session.generateRequest(initDataType, initData),
+              API_TIMEOUTS_MS.generateRequest,
+              "generateRequest"
+            ),
           ]);
         checkStatus.generateRequest = { support: true, time: performance.now() - checkTime };
       } catch (err) {
@@ -472,21 +520,18 @@
       otherInfos.innerHTML = `<p>IsSecureContext:  <span style="color:${isSecureContext ? "green" : "red"
         }">${isSecureContext}</span></p>
         `;
-      const results = []
-      for (const keySystem of keySystems) {
-        results.push(await checkOneKeySystem(keySystem, configuration))
-        testAchieved++;
-      }
-      // For parallel testing
-      // const results = keySystems.map((keySystem) => {
-      //   return checkOneKeySystem(keySystem, configuration);
-      // });
+      const results = await Promise.all(
+        keySystems.map(async (keySystem) => {
+          try {
+            return await checkOneKeySystem(keySystem, configuration);
+          } finally {
+            testAchieved++;
+          }
+        })
+      );
 
-      Promise.all(results).then((res) => {
-        console.log("checkAllKeySystems results:", res);
-
-        renderKeySystemResult(renderElement, res);
-      });
+      console.log("checkAllKeySystems results:", results);
+      renderKeySystemResult(renderElement, results);
     }
     (async () => {
       const hideProgress = displayProgress()
