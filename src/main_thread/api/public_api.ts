@@ -3939,7 +3939,7 @@ export interface IPublicApiContentInfos {
    * has no MediaElementTracksStore.
    */
   mediaElementTracksStore: IMediaElementTracksStore | null;
-  /** Track types for which this player instance can create dispatchers. */
+  /** Track types currently handled by the player for the loaded content. */
   handledTrackTypes: Record<ITrackType, boolean>;
   /**
    * If `true`, the RxPlayer's main logic is running in a WebWorker for this
