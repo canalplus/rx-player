@@ -133,6 +133,7 @@ import renderThumbnail from "../render_thumbnail";
 import type { IMediaElementTracksStore, ITSPeriodObject } from "../tracks_store";
 import TracksStore from "../tracks_store";
 import { MainThreadMessageType } from "../types";
+import { canHandleTextTracks, canHandleVideoTracks } from "../utils/media_capabilities";
 import type { IParsedLoadVideoOptions, IParsedStartAtOption } from "./option_utils";
 import {
   checkReloadOptions,
@@ -643,7 +644,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           sendBackLogs: isDebugModeEnabled,
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
-          hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
+          hasVideo: canHandleVideoTracks(this.videoElement),
         },
       });
       log.addEventListener(
@@ -1191,7 +1192,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           type: MainThreadMessageType.Init,
           value: {
             dashWasmUrl: undefined,
-            hasVideo: this.videoElement?.nodeName.toLowerCase() === "video",
+            hasVideo: canHandleVideoTracks(this.videoElement),
             logLevel: log.getLevel(),
             logFormat: log.getFormat(),
             sendBackLogs: false,
@@ -1356,6 +1357,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       activeRepresentations: null,
       tracksStore: null,
       mediaElementTracksStore,
+      handledTrackTypes: {
+        audio: true,
+        video: canHandleVideoTracks(this.videoElement),
+        text: canHandleTextTracks(options),
+      },
       useWorker,
       segmentSinkMetricsCallback: null,
       fetchThumbnailDataCallback: null,
@@ -2981,6 +2987,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     const tracksStore = new TracksStore({
       preferTrickModeTracks: this._priv_preferTrickModeTracks,
       defaultAudioTrackSwitchingMode: contentInfos.defaultAudioTrackSwitchingMode,
+      handledTrackTypes: contentInfos.handledTrackTypes,
       onTracksNotPlayableForType: {
         audio: contentInfos.onAudioTracksNotPlayable,
         video: contentInfos.onVideoTracksNotPlayable,
@@ -3932,6 +3939,8 @@ export interface IPublicApiContentInfos {
    * has no MediaElementTracksStore.
    */
   mediaElementTracksStore: IMediaElementTracksStore | null;
+  /** Track types currently handled by the player for the loaded content. */
+  handledTrackTypes: Record<ITrackType, boolean>;
   /**
    * If `true`, the RxPlayer's main logic is running in a WebWorker for this
    * content.

@@ -71,6 +71,9 @@ import TrackDispatcher from "./track_dispatcher";
  * @class TracksStore
  */
 export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
+  /** Track types for which the current runtime can create dispatchers. */
+  private _handledTrackTypes: Record<ITrackType, boolean>;
+
   /**
    * Store track selection information, per Period.
    * Sorted by Period's start time ascending
@@ -113,6 +116,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   constructor(args: {
     preferTrickModeTracks: boolean;
     defaultAudioTrackSwitchingMode: IAudioTrackSwitchingMode | undefined;
+    handledTrackTypes: Record<ITrackType, boolean>;
     onTracksNotPlayableForType: {
       audio: "error" | "continue";
       video: "error" | "continue";
@@ -120,6 +124,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     };
   }) {
     super();
+    this._handledTrackTypes = args.handledTrackTypes;
     this._storedPeriodInfo = [];
     this._isDisposed = false;
     this._cachedPeriodInfo = new WeakMap();
@@ -1635,9 +1640,25 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
   private _shouldAdvertisePeriod(periodObj: ITSPeriodObject): boolean {
     return (
       !periodObj.isPeriodAdvertised &&
-      periodObj.text.dispatcher !== null &&
-      periodObj.video.dispatcher !== null &&
-      periodObj.audio.dispatcher !== null
+      this._isPeriodTypeReadyForAdvertisement(periodObj, "text") &&
+      this._isPeriodTypeReadyForAdvertisement(periodObj, "video") &&
+      this._isPeriodTypeReadyForAdvertisement(periodObj, "audio")
+    );
+  }
+
+  /**
+   * Returns `true` if the given type is ready for Period advertisement.
+   *
+   * We only wait for dispatchers that can actually be created in the current
+   * runtime. Types disabled through feature selection or media element
+   * capabilities should not keep the Period hidden forever.
+   */
+  private _isPeriodTypeReadyForAdvertisement(
+    periodObj: ITSPeriodObject,
+    bufferType: ITrackType,
+  ): boolean {
+    return (
+      !this._handledTrackTypes[bufferType] || periodObj[bufferType].dispatcher !== null
     );
   }
 }
