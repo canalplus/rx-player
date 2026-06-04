@@ -180,6 +180,7 @@ try {
 
 if (isDebugModeEnabled) {
   log.setLevel("DEBUG", "full");
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 } else if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
   log.setLevel(__LOGGER_LEVEL__.CURRENT_LEVEL, "standard");
 }

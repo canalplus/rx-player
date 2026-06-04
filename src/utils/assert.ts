@@ -47,6 +47,7 @@ export class AssertionError extends Error {
  */
 export default function assert(assertion: boolean, message?: string): asserts assertion {
   if (
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     (__ENVIRONMENT__.DEV as number) === (__ENVIRONMENT__.CURRENT_ENV as number) &&
     !assertion
   ) {

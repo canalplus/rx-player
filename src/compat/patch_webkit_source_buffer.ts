@@ -25,13 +25,12 @@ interface IWebKitSourceBufferConstructor {
   prototype: IWebKitSourceBuffer;
 }
 
-interface IWebKitSourceBuffer
-  extends EventEmitter<{
-    updatestart: Event;
-    update: Event;
-    updateend: Event;
-    error: Event | Error;
-  }> {
+interface IWebKitSourceBuffer extends EventEmitter<{
+  updatestart: Event;
+  update: Event;
+  updateend: Event;
+  error: Event | Error;
+}> {
   _emitUpdate?: (eventName: "error" | "update", val: unknown) => void;
   appendBuffer?: (data: BufferSource) => void;
   updating: boolean;

@@ -315,7 +315,7 @@ function defaultSetMediaKeys(
   try {
     let ret: unknown;
     if (typeof elt.setMediaKeys === "function") {
-      // eslint-disable-next-line @typescript-eslint/no-restricted-types
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-restricted-types
       ret = elt.setMediaKeys(mediaKeys as MediaKeys);
     }
 

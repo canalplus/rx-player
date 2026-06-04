@@ -244,6 +244,7 @@ function assertLoadedResourcesFormatString(
   loadedResources: Array<ILoadedResource<string | ArrayBuffer>>,
 ): asserts loadedResources is Array<ILoadedResource<string>> {
   if (
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
   ) {
     return;
@@ -271,6 +272,7 @@ function assertLoadedResourcesFormatArrayBuffer(
   loadedResources: Array<ILoadedResource<string | ArrayBuffer>>,
 ): asserts loadedResources is Array<ILoadedResource<ArrayBuffer>> {
   if (
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
   ) {
     return;

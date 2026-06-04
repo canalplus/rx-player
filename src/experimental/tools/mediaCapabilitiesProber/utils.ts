@@ -83,6 +83,7 @@ export function filterConfigurationWithCapabilities(
           }
         )[capability] !== undefined
       ) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         (probedConfig as { [id: string]: string | IMediaConfiguration })[capability] = (
           configuration as { [id: string]: string | IMediaConfiguration }
         )[capability];
@@ -105,6 +106,7 @@ export function filterConfigurationWithCapabilities(
           Object.keys((configuration as { [id: string]: IMediaConfiguration })[key])
             .length === 0)
       ) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         (probedConfig as { [id: string]: IMediaConfiguration })[key] = subProbedConfig;
       }
     }

@@ -123,7 +123,7 @@ function createPlaybackObserver(
     deriveReadOnlyObserver() {
       throw new Error("unused in this test");
     },
-  } as unknown as IReadOnlyPlaybackObserver<IPlaybackObservation>;
+  };
 }
 
 function generateManifest(): IManifestMetadata {

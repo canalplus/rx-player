@@ -349,6 +349,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
  */
 function assertDataIsBufferSource(data: unknown): asserts data is BufferSource {
   if (
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
   ) {
     return;

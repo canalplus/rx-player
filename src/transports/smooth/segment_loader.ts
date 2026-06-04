@@ -171,6 +171,7 @@ const generateSegmentLoader =
         }
         default:
           if (
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
             (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)
           ) {
             assert(false, "responseData should have been set");

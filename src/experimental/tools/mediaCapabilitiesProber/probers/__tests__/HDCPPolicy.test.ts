@@ -1,10 +1,16 @@
 import { describe, afterEach, it, expect, vi, beforeEach } from "vitest";
 import probeHDCPPolicy from "../../probers/HDCPPolicy";
 
-const compatEmeMock = vi.hoisted(() => {
+type IRequestMediaKeySystemAccess =
+  | ((...args: unknown[]) => Promise<unknown>)
+  | undefined;
+
+const compatEmeMock: {
+  default: { requestMediaKeySystemAccess: IRequestMediaKeySystemAccess };
+} = vi.hoisted(() => {
   return {
     default: {
-      requestMediaKeySystemAccess: undefined as unknown,
+      requestMediaKeySystemAccess: undefined,
     },
   };
 });

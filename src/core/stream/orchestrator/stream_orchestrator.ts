@@ -710,8 +710,10 @@ export type IStreamOrchestratorOptions = IPeriodStreamOptions & {
 };
 
 /** Callbacks called by the `StreamOrchestrator` on various events. */
-export interface IStreamOrchestratorCallbacks
-  extends Omit<IPeriodStreamCallbacks, "waitingMediaSourceReload"> {
+export interface IStreamOrchestratorCallbacks extends Omit<
+  IPeriodStreamCallbacks,
+  "waitingMediaSourceReload"
+> {
   /**
    * Called when a `PeriodStream` has been removed.
    * This event can be used for clean-up purposes. For example, you are free to

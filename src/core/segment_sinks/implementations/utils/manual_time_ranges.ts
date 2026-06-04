@@ -36,6 +36,7 @@ export default class ManualTimeRanges implements TimeRanges {
   }
 
   insert(start: number, end: number): void {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");
@@ -45,6 +46,7 @@ export default class ManualTimeRanges implements TimeRanges {
   }
 
   remove(start: number, end: number): void {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
       assert(start >= 0, "invalid start time");
       assert(end - start > 0, "invalid end time");

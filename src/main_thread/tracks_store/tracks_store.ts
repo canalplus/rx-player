@@ -234,6 +234,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
 
     // We assume that they are always sorted chronologically
     // In dev mode, perform a runtime check that this is the case
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
       for (let i = 1; i < periods.length; i++) {
         assert(periods[i - 1].start <= periods[i].start);

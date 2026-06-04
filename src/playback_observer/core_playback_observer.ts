@@ -73,9 +73,7 @@ export interface IPausedPlaybackObservation {
   pending: boolean | undefined;
 }
 
-export default class CorePlaybackObserver
-  implements IReadOnlyPlaybackObserver<ICorePlaybackObservation>
-{
+export default class CorePlaybackObserver implements IReadOnlyPlaybackObserver<ICorePlaybackObservation> {
   private _src: IReadOnlySharedReference<ICorePlaybackObservation>;
   private _cancelSignal: CancellationSignal;
   private _messageSender: (msg: IUpdatePlaybackRateCoreMessage) => void;

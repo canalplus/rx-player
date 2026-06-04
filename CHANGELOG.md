@@ -1,6 +1,6 @@
 # Changelog
 
-## Current dev build: v4.5.0-dev.2026043000
+## Current dev build: v4.5.0-dev.2026060400
 
 ### Features
 
@@ -21,6 +21,7 @@
 - DRM: Fix `"close-session"` handling that could unnecessarily close other DRM sessions
 - On Safari when beginning at `0`, seek explicitly to `0` because their native HLS player
   would else start at live position [#1803]
+- Ignore unhandled runtime track types for period advertisement [#1850]
 - Fix `startAt.wallClockTime` on safari HLS live playlists [#1799]
 - Fix rare scenario when an ended live audio content would not have its duration known
   until the end-of-stream [#1801]
@@ -31,6 +32,7 @@
 - Thumbnails: Fix thumbnail request sometimes being wrongly cancelled [#1810]
 - API: Fix incomplete format in the initial `audioRepresentationChange` event
 - CMCD: fix the `headers` CMCD `communicationType` [#1809]
+- fix precision difference which triggered frequent content boundaries warnings [#1848]
 - Compat: To fix an issue with some older LG TV when playing retro-compatible Dolby Vision
   contents, patch out some Dolby Vision-related ISOBMFF boxes in some conditions [#1818]
 - Do not send two times a `streamEvent` after temporarily switching to the `RELOADING`
@@ -39,6 +41,9 @@
   set-top boxes to fix playback of encrypted playback on them [#1822]
 - Text: Continue playback if subtitle initialization fails instead of remaining stuck in
   `LOADING` [#1827]
+- directfile: fix side effects for multiples instance of media element track store [#1845]
+- directfile/compat: fix issue on Safari with startAt.fromLivePosition with directfile
+  content when duration is infinite [#1842]
 
 ### Other improvements
 

@@ -15,8 +15,10 @@ import type {
 } from "../representation";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
-export interface IAdaptationStreamCallbacks
-  extends Omit<IRepresentationStreamCallbacks, "terminating" | "addedSegment"> {
+export interface IAdaptationStreamCallbacks extends Omit<
+  IRepresentationStreamCallbacks,
+  "terminating" | "addedSegment"
+> {
   /** Called as new bitrate estimates are done. */
   bitrateEstimateChange(payload: IBitrateEstimateChangePayload): void;
   /**
@@ -111,8 +113,7 @@ export interface INeedsBufferFlushPayload {
 }
 
 /** Regular playback information needed by the AdaptationStream. */
-export interface IAdaptationStreamPlaybackObservation
-  extends IRepresentationStreamPlaybackObservation {
+export interface IAdaptationStreamPlaybackObservation extends IRepresentationStreamPlaybackObservation {
   /**
    * For the current SegmentSink, difference in seconds between the next position
    * where no segment data is available and the current position.

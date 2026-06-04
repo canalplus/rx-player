@@ -500,6 +500,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
         value: sentMediaSourceLink,
         mediaSourceId: mediaSourceInterface.id,
       },
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       [handle.value as unknown as Transferable],
     );
   } else {

@@ -1,10 +1,16 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
 import isCodecSupported from "../is_codec_supported";
 
-const mocks = vi.hoisted(() => {
+type IMockedMediaSource =
+  | {
+      isTypeSupported?: ((codec: string) => boolean) | undefined;
+    }
+  | undefined;
+
+const mocks: { default: { MediaSource_: IMockedMediaSource } } = vi.hoisted(() => {
   return {
     default: {
-      MediaSource_: {} as unknown,
+      MediaSource_: {},
     },
   };
 });

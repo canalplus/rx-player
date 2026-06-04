@@ -471,7 +471,7 @@ export interface IStoredSessionEntry {
    * awaited.
    */
   closingStatus: /** Status when the MediaKeySession is currently being closed. */
-  | { type: "pending" }
+    | { type: "pending" }
     /** Status when the MediaKeySession has been closed. */
     | { type: "done" }
     /** Status when the MediaKeySession failed to close. */

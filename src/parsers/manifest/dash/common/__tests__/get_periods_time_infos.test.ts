@@ -65,6 +65,7 @@ describe("DASH Parser - getPeriodsTimeInformation", () => {
     };
     const timeInfos = getPeriodsTimeInformation(
       periodsInfos as IPeriodIntermediateRepresentation[],
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       manifestInfos as IParsedPeriodsContext,
     );
     expect(timeInfos[0].periodStart).toBe(500);

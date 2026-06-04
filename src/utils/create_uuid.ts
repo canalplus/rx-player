@@ -17,10 +17,10 @@ export default function createUuid(): string {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     let r = Math.random() * 16;
     if (ts1 > 0) {
-      r = (ts1 + r) % 16 | 0;
+      r = ((ts1 + r) % 16) | 0;
       ts1 = Math.floor(ts1 / 16);
     } else {
-      r = (ts2 + r) % 16 | 0;
+      r = ((ts2 + r) % 16) | 0;
       ts2 = Math.floor(ts2 / 16);
     }
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);

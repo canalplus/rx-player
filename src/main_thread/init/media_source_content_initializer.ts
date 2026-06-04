@@ -2265,7 +2265,7 @@ function bindNumberReferencesToCore(
         // overload, but the body here is not aware of that.
         coreInterface.sendMessage({
           type: MainThreadMessageType.ReferenceUpdate,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-assertion
           value: { name: ref[1] as any, newVal: newVal as any },
         });
       },

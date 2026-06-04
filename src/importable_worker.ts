@@ -63,6 +63,7 @@ export default class RxPlayerWorker<
     globalScope.addEventListener("message", (evt: MessageEvent<IMainThreadMessage>) => {
       if (evt.data.type === MainThreadMessageType.AppDefined) {
         const { name, payload } = evt.data.value;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         const listeners = this._messageListeners.get(name as keyof TReceivingEventRecord);
         if (listeners === undefined) {
           return;

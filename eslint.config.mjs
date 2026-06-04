@@ -1,4 +1,6 @@
 import { defineConfig, globalIgnores } from "eslint/config";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import jsLint from "@eslint/js";
 import tsLint from "typescript-eslint";
 import _import from "eslint-plugin-import";
@@ -8,6 +10,8 @@ import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import react from "eslint-plugin-react";
 import globals from "globals";
+
+const rootDir = dirname(fileURLToPath(import.meta.url));
 
 const rulesJS = {
   "ban/ban": [
@@ -500,7 +504,7 @@ export default defineConfig([
       sourceType: "module",
 
       parserOptions: {
-        tsconfigRootDir: ".",
+        tsconfigRootDir: rootDir,
         project: "./tsconfig.eslint.json",
         ecmaFeatures: {
           jsx: true,
@@ -592,7 +596,7 @@ export default defineConfig([
       sourceType: "module",
 
       parserOptions: {
-        tsconfigRootDir: ".",
+        tsconfigRootDir: rootDir,
         project: "tsconfig.eslint.json",
         ecmaFeatures: {
           jsx: true,
@@ -697,6 +701,7 @@ export default defineConfig([
       sourceType: "module",
 
       parserOptions: {
+        tsconfigRootDir: rootDir,
         project: "tsconfig.eslint.json",
       },
     },

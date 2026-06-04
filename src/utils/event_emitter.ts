@@ -160,6 +160,7 @@ export default class EventEmitter<T> implements IEventEmitter<T> {
       try {
         listener.cb(arg);
       } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
           throw e instanceof Error ? e : new Error("EventEmitter: listener error");
         }

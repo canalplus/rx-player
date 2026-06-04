@@ -191,6 +191,7 @@ function assertChunkIsTextTrackSegmentData(
   chunk: unknown,
 ): asserts chunk is ITextTracksBufferSegmentData {
   if (
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     (__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.PRODUCTION as number)
   ) {
     return;
@@ -285,6 +286,7 @@ export interface ITextDisplayerInterface {
  * It doesn't correspond at all to real code that will be called. This is just
  * a hack to tell TypeScript to perform that check.
  */
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 if ((__ENVIRONMENT__.CURRENT_ENV as number) === (__ENVIRONMENT__.DEV as number)) {
   // @ts-expect-error: unused function for type checking
   function _checkType(input: ITextTrackSegmentData): void {

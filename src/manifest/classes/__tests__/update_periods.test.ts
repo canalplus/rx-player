@@ -100,6 +100,7 @@ function generateFakePeriod({
   start?: number | undefined;
   end?: number | undefined;
 }): IPeriod {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
   return new FakePeriod({ id, start, end }) as IPeriod;
 }
 
