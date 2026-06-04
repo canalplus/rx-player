@@ -612,9 +612,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           }
         }
       };
-      this._nativeAudioTracks.addEventListener("addtrack", onAddAudioTrack);
+      this._nativeAudioTracks.addEventListener?.("addtrack", onAddAudioTrack);
       this.taskCanceller.signal.register(() => {
-        this._nativeAudioTracks?.removeEventListener("addtrack", onAddAudioTrack);
+        this._nativeAudioTracks?.removeEventListener?.("addtrack", onAddAudioTrack);
       });
 
       const onRemoveAudioTrack = () => {
@@ -633,9 +633,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         }
       };
 
-      this._nativeAudioTracks.addEventListener("removetrack", onRemoveAudioTrack);
+      this._nativeAudioTracks.addEventListener?.("removetrack", onRemoveAudioTrack);
       this.taskCanceller.signal.register(() => {
-        this._nativeAudioTracks?.removeEventListener("removetrack", onRemoveAudioTrack);
+        this._nativeAudioTracks?.removeEventListener?.("removetrack", onRemoveAudioTrack);
       });
 
       const onAudioChange = () => {
@@ -658,9 +658,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         return;
       };
 
-      this._nativeAudioTracks.addEventListener("change", onAudioChange);
+      this._nativeAudioTracks.addEventListener?.("change", onAudioChange);
       this.taskCanceller.signal.register(() => {
-        this._nativeAudioTracks?.removeEventListener("change", onAudioChange);
+        this._nativeAudioTracks?.removeEventListener?.("change", onAudioChange);
       });
     }
 
@@ -681,9 +681,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         }
       };
 
-      this._nativeTextTracks.addEventListener("addtrack", onAddTextTrack);
+      this._nativeTextTracks.addEventListener?.("addtrack", onAddTextTrack);
       this.taskCanceller.signal.register(() => {
-        this._nativeTextTracks?.removeEventListener("addtrack", onAddTextTrack);
+        this._nativeTextTracks?.removeEventListener?.("addtrack", onAddTextTrack);
       });
 
       const onRemoveTextTrack = () => {
@@ -701,9 +701,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
           }
         }
       };
-      this._nativeTextTracks.addEventListener("removetrack", onRemoveTextTrack);
+      this._nativeTextTracks.addEventListener?.("removetrack", onRemoveTextTrack);
       this.taskCanceller.signal.register(() => {
-        this._nativeTextTracks?.removeEventListener("removetrack", onRemoveTextTrack);
+        this._nativeTextTracks?.removeEventListener?.("removetrack", onRemoveTextTrack);
       });
 
       const onTextChange = () => {
@@ -726,9 +726,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         return;
       };
 
-      this._nativeTextTracks.addEventListener("change", onTextChange);
+      this._nativeTextTracks.addEventListener?.("change", onTextChange);
       this.taskCanceller.signal.register(() => {
-        this._nativeTextTracks?.removeEventListener("change", onTextChange);
+        this._nativeTextTracks?.removeEventListener?.("change", onTextChange);
       });
     }
 
@@ -749,9 +749,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         }
       };
 
-      this._nativeVideoTracks.addEventListener("addtrack", onAddVideoTrack);
+      this._nativeVideoTracks.addEventListener?.("addtrack", onAddVideoTrack);
       this.taskCanceller.signal.register(() => {
-        this._nativeVideoTracks?.removeEventListener("addtrack", onAddVideoTrack);
+        this._nativeVideoTracks?.removeEventListener?.("addtrack", onAddVideoTrack);
       });
 
       const onRemoveVideoTrack = () => {
@@ -770,9 +770,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         }
       };
 
-      this._nativeVideoTracks.addEventListener("removetrack", onRemoveVideoTrack);
+      this._nativeVideoTracks.addEventListener?.("removetrack", onRemoveVideoTrack);
       this.taskCanceller.signal.register(() => {
-        this._nativeVideoTracks?.removeEventListener("removetrack", onRemoveVideoTrack);
+        this._nativeVideoTracks?.removeEventListener?.("removetrack", onRemoveVideoTrack);
       });
 
       const onVideoChange = () => {
@@ -795,9 +795,9 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
         return;
       };
 
-      this._nativeVideoTracks.addEventListener("change", onVideoChange);
+      this._nativeVideoTracks.addEventListener?.("change", onVideoChange);
       this.taskCanceller.signal.register(() => {
-        this._nativeVideoTracks?.removeEventListener("change", onVideoChange);
+        this._nativeVideoTracks?.removeEventListener?.("change", onVideoChange);
       });
     }
   }
