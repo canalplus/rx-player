@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  type="static"
+  mediaPresentationDuration="PT12.032222S"
+  minBufferTime="PT2S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011">
+  <Period id="1" duration="PT12.032222S">
+    <BaseURL>/DASH_static_SegmentTimeline/media/dash/</BaseURL>
+    <AdaptationSet
+      group="1"
+      contentType="audio"
+      segmentAlignment="true"
+      audioSamplingRate="44100"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      startWithSAP="1">
+      <AudioChannelConfiguration
+        schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+        value="2">
+      </AudioChannelConfiguration>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="44100"
+        initialization="ateam-$RepresentationID$.dash"
+        media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="177341" />
+          <S d="176128" />
+          <S d="177152" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="audio=128000" bandwidth="128000" />
+    </AdaptationSet>
+    <AdaptationSet
+      group="2"
+      contentType="video"
+      par="40:17"
+      segmentAlignment="true"
+      mimeType="video/mp4"
+      startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="ateam-$RepresentationID$.dash"
+        media="ateam-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="4004" />
+          <S d="4004" />
+          <S d="4004" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="video=400000"
+        bandwidth="400000"
+        width="220"
+        height="124"
+        sar="248:187"
+        codecs="avc1.42C014"
+        scanType="progressive" />
+    </AdaptationSet>
+  </Period>
+</MPD>

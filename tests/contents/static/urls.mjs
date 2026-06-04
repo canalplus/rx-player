@@ -16,6 +16,7 @@ import urls11 from "./DASH_static_number_based_SegmentTimeline/urls.mjs";
 import urls12 from "./DASH_DRM_static_SegmentTemplate/urls.mjs";
 import urls13 from "./DASH_dynamic_SegmentTemplate_UnsupportedAudio/urls.mjs";
 import urls14 from "./imagetracks/urls.mjs";
+import urls15 from "./DASH_static_audio_tag/urls.mjs";
 
 export default [
   ...urls1,
@@ -32,4 +33,5 @@ export default [
   ...urls12,
   ...urls13,
   ...urls14,
+  ...urls15,
 ];
