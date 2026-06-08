@@ -63,7 +63,9 @@ export default async function renderThumbnail(
   const onFinished = () => {
     unlinkCanceller();
     canceller.cancel("thumbnail request finished");
-    thumbnailRequestsInfo.pendingRequests.delete(container);
+    if (thumbnailRequestsInfo.pendingRequests.get(container) === canceller) {
+      thumbnailRequestsInfo.pendingRequests.delete(container);
+    }
 
     // Let's revoke the URL after a round-trip to the event loop just in case
     // to prevent revoking before the browser use it.
@@ -208,15 +210,16 @@ export default async function renderThumbnail(
       };
     });
   } catch (srcError) {
-    if (options.keepPreviousThumbnailOnError !== true) {
-      clearPreviousThumbnails();
-    }
     if (srcError !== null && srcError === canceller.signal.cancellationError) {
+      onFinished();
       const error = new ThumbnailRenderingError(
         "ABORTED",
         "Thumbnail rendering has been aborted",
       );
       throw error;
+    }
+    if (options.keepPreviousThumbnailOnError !== true) {
+      clearPreviousThumbnails();
     }
     if (srcError instanceof ThumbnailRenderingError) {
       onFinished();

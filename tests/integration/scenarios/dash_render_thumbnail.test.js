@@ -38,6 +38,7 @@ function runDashRenderThumbnailTests({ multithread } = {}) {
     let player;
     let container1;
     let container2;
+    let delayedThumbnailRequests;
 
     beforeEach(() => {
       player = new RxPlayer();
@@ -49,9 +50,11 @@ function runDashRenderThumbnailTests({ multithread } = {}) {
       }
       container1 = createContainer();
       container2 = createContainer();
+      delayedThumbnailRequests = null;
     });
 
     afterEach(() => {
+      delayedThumbnailRequests?.restore();
       player.dispose();
       container1.remove();
       container2.remove();
@@ -106,6 +109,79 @@ function runDashRenderThumbnailTests({ multithread } = {}) {
         expectRenderedThumbnail(container1);
       });
     });
+
+    if (multithread !== true) {
+      it("should keep the newer thumbnail if the older request resolves after being aborted", async () => {
+        player.loadVideo({
+          url: thumbnailInfos.url,
+          transport: "dash",
+          mode: "main",
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+
+        delayedThumbnailRequests = delayThumbnailRequests(["tile_1.jpg"]);
+
+        const firstPromise = player.renderThumbnail({
+          container: container1,
+          time: 0.5,
+        });
+        await delayedThumbnailRequests.waitForRequest("tile_1.jpg");
+
+        const secondPromise = player.renderThumbnail({
+          container: container1,
+          time: 12,
+        });
+
+        await expect(secondPromise).resolves.toBeUndefined();
+        expectRenderedThumbnail(container1);
+
+        delayedThumbnailRequests.release("tile_1.jpg");
+        await expect(firstPromise).rejects.toMatchObject({ code: "ABORTED" });
+
+        await checkAfterSleepWithBackoff({ maxTimeMs: 1000, stepMs: 50 }, () => {
+          expectRenderedThumbnail(container1);
+        });
+      });
+
+      it("should still abort the latest pending render after an older aborted request resolves", async () => {
+        player.loadVideo({
+          url: thumbnailInfos.url,
+          transport: "dash",
+          mode: "main",
+        });
+        await waitForLoadedStateAfterLoadVideo(player);
+
+        delayedThumbnailRequests = delayThumbnailRequests(["tile_1.jpg", "tile_2.jpg"]);
+
+        const firstPromise = player.renderThumbnail({
+          container: container1,
+          time: 0.5,
+        });
+        await delayedThumbnailRequests.waitForRequest("tile_1.jpg");
+
+        const secondPromise = player.renderThumbnail({
+          container: container1,
+          time: 12,
+        });
+        await delayedThumbnailRequests.waitForRequest("tile_2.jpg");
+
+        delayedThumbnailRequests.release("tile_1.jpg");
+        await expect(firstPromise).rejects.toMatchObject({ code: "ABORTED" });
+
+        const thirdPromise = player.renderThumbnail({
+          container: container1,
+          time: 24,
+        });
+
+        delayedThumbnailRequests.release("tile_2.jpg");
+        await expect(secondPromise).rejects.toMatchObject({ code: "ABORTED" });
+        await expect(thirdPromise).resolves.toBeUndefined();
+
+        await checkAfterSleepWithBackoff({ maxTimeMs: 1000, stepMs: 50 }, () => {
+          expectRenderedThumbnail(container1);
+        });
+      });
+    }
 
     it("should keep or clear the previous thumbnail on error depending on keepPreviousThumbnailOnError", async () => {
       player.loadVideo({
@@ -170,4 +246,69 @@ function runDashRenderThumbnailTests({ multithread } = {}) {
       });
     });
   });
+}
+
+function delayThumbnailRequests(fileNames) {
+  const NativeXHR = XMLHttpRequest;
+  const nativeOpen = NativeXHR.prototype.open;
+  const nativeSend = NativeXHR.prototype.send;
+  const delayedRequests = new Map();
+  const requestPromises = new Map();
+  const requestResolvers = new Map();
+  const waitingFileNames = new Set(fileNames);
+
+  XMLHttpRequest.prototype.open = function open(method, url, async, user, password) {
+    this.__thumbnailTestUrl = url;
+    return nativeOpen.call(this, method, url, async, user, password);
+  };
+
+  XMLHttpRequest.prototype.send = function send(body) {
+    const requestUrl =
+      typeof this.__thumbnailTestUrl === "string" ? this.__thumbnailTestUrl : "";
+    const matchingFileName = [...waitingFileNames].find((fileName) =>
+      requestUrl.includes(fileName),
+    );
+    if (matchingFileName === undefined) {
+      return nativeSend.call(this, body);
+    }
+
+    if (!requestPromises.has(matchingFileName)) {
+      requestPromises.set(
+        matchingFileName,
+        new Promise((resolve) => {
+          requestResolvers.set(matchingFileName, resolve);
+        }),
+      );
+    }
+    delayedRequests.set(matchingFileName, {
+      xhr: this,
+      body,
+    });
+    requestResolvers.get(matchingFileName)();
+  };
+
+  return {
+    release(fileName) {
+      const delayedRequest = delayedRequests.get(fileName);
+      expect(delayedRequest).toBeDefined();
+      delayedRequests.delete(fileName);
+      waitingFileNames.delete(fileName);
+      nativeSend.call(delayedRequest.xhr, delayedRequest.body);
+    },
+    async waitForRequest(fileName) {
+      if (!requestPromises.has(fileName)) {
+        requestPromises.set(
+          fileName,
+          new Promise((resolve) => {
+            requestResolvers.set(fileName, resolve);
+          }),
+        );
+      }
+      await requestPromises.get(fileName);
+    },
+    restore() {
+      XMLHttpRequest.prototype.open = nativeOpen;
+      XMLHttpRequest.prototype.send = nativeSend;
+    },
+  };
 }
