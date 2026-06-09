@@ -96,7 +96,7 @@ export default function initializeCoreEntry(
    * Abstraction allowing to prepare contents (fetching its manifest as
    * well as creating and reloading its MediaSource) for playback.
    */
-  let contentPreparer = new ContentPreparer();
+  const contentPreparer = new ContentPreparer();
   /**
    * Object allowing to control the lifecycle of the current content (stop/reload etc.).
    * `null` if there's no content loaded currently.
