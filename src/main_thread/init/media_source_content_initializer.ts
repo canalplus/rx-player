@@ -178,13 +178,8 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return;
     }
     const contentId = generateContentId();
-    const {
-      adaptiveOptions,
-      transport,
-      transportOptions,
-      useMseInWorker,
-      coreInterface,
-    } = this._settings;
+    const { adaptiveOptions, transport, transportOptions, capabilities, coreInterface } =
+      this._settings;
     const { wantedBufferAhead, maxVideoBufferSize, maxBufferAhead, maxBufferBehind } =
       this._settings.bufferOptions;
     const initialVideoBitrate = adaptiveOptions.initialBitrates.video;
@@ -198,7 +193,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       initialTime: undefined,
       autoPlay: undefined,
       initialPlayPerformed: null,
-      useMseInWorker,
+      useMseInWorker: capabilities.mseInWorker,
     };
     coreInterface.sendMessage({
       type: MainThreadMessageType.PrepareContent,
@@ -207,7 +202,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         cmcd: this._settings.cmcd,
         enableRepresentationAvoidance: this._settings.enableRepresentationAvoidance,
         url: this._settings.url,
-        hasText: canHandleTextTracks(this._settings.textTrackOptions),
+        capabilities: this._settings.capabilities,
         transport,
         transportOptions,
         initialVideoBitrate,
@@ -217,7 +212,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           lowLatencyMode: this._settings.lowLatencyMode,
         },
         segmentRetryOptions: this._settings.segmentRequestOptions,
-        useMseInWorker,
       },
     });
     this._initCanceller.signal.register(() => {
@@ -2115,16 +2109,30 @@ export interface IInitializeArguments {
    * which cases message exchanging mechanisms would be different.
    */
   coreInterface: CoreInterface;
-  /**
-   * If `true`, MSE API should be used in the core part of the RxPlayer (in the
-   * WebWorker).
-   * If `false`, they should be relied on on main thread.
-   *
-   * This might depend on both browser capabilities and preferences. It is
-   * assumed that the caller perform all those checks, the `ContentInitializer`
-   * won't check again the validity of this value.
-   */
-  useMseInWorker: boolean;
+  /** The capabilities of the current environment for this content. */
+  capabilities: {
+    /**
+     * If `true`, MSE API should be used in the core part of the RxPlayer (in the
+     * WebWorker).
+     * If `false`, they should be relied on on main thread.
+     *
+     * This might depend on both browser capabilities and preferences. It is
+     * assumed that the caller perform all those checks, the `ContentInitializer`
+     * won't check again the validity of this value.
+     */
+    mseInWorker: boolean;
+    /**
+     * If `true`, the right environment **and** features are present to be able
+     * to support text tracks.
+     */
+    textTrack: boolean;
+    /**
+     * If `true`, the right environment **and** features are present to be able
+     * to support video tracks.
+     * This includes a video element tag.
+     */
+    videoTrack: boolean;
+  };
   /** Options concerning the ABR logic. */
   adaptiveOptions: IAdaptiveRepresentationSelectorArguments;
   /** `true` if we should play when loaded. */

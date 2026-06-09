@@ -650,7 +650,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           sendBackLogs: isDebugModeEnabled,
           date: Date.now(),
           timestamp: getMonotonicTimeStamp(),
-          hasVideo: canHandleVideoTracks(this.videoElement),
         },
       });
       log.addEventListener(
@@ -1034,6 +1033,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
 
     const isDirectFile = transport === "directfile";
 
+    const isTextHandled = canHandleTextTracks(options);
+    const isVideoHandled = canHandleVideoTracks(this.videoElement);
+
     /** Emit to stop the current content. */
     const currentContentCanceller = new TaskCanceller("API current content");
 
@@ -1204,7 +1206,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           type: MainThreadMessageType.Init,
           value: {
             dashWasmUrl: undefined,
-            hasVideo: canHandleVideoTracks(this.videoElement),
             logLevel: log.getLevel(),
             logFormat: log.getFormat(),
             sendBackLogs: false,
@@ -1230,7 +1231,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
-          useMseInWorker: false,
+          capabilities: {
+            mseInWorker: false,
+            videoTrack: isVideoHandled,
+            textTrack: isTextHandled,
+          },
           MediaSourceClass,
         });
       } else {
@@ -1311,8 +1316,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
-          useMseInWorker: hasMseInWorker,
           MediaSourceClass,
+          capabilities: {
+            mseInWorker: hasMseInWorker,
+            videoTrack: isVideoHandled,
+            textTrack: isTextHandled,
+          },
         });
       }
     } else {
@@ -1373,8 +1382,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       mediaElementTracksStore,
       handledTrackTypes: {
         audio: true,
-        video: canHandleVideoTracks(this.videoElement),
-        text: canHandleTextTracks(options),
+        video: isVideoHandled,
+        text: isTextHandled,
       },
       useWorker,
       segmentSinkMetricsCallback: null,

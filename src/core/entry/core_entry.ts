@@ -98,7 +98,7 @@ export default function initializeCoreEntry(
    *
    * Creating a default one which may change on initialization.
    */
-  let contentPreparer = new ContentPreparer({ hasVideo: true });
+  let contentPreparer = new ContentPreparer({ videoTrack: true });
   /**
    * Object allowing to control the lifecycle of the current content (stop/reload etc.).
    * `null` if there's no content loaded currently.
@@ -145,12 +145,6 @@ export default function initializeCoreEntry(
                 });
             }
           }
-
-          if (!msg.value.hasVideo) {
-            contentPreparer.disposeCurrentContent("Received Init msg");
-            contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
-          }
-
           sendMessage({ type: CoreMessageType.InitSuccess, value: null });
         }
         break;
@@ -164,6 +158,12 @@ export default function initializeCoreEntry(
         break;
 
       case MainThreadMessageType.PrepareContent:
+        if (msg.value.capabilities.videoTrack !== contentPreparer.videoTrack) {
+          contentPreparer.disposeCurrentContent("Received Prepare msg");
+          contentPreparer = new ContentPreparer({
+            videoTrack: msg.value.capabilities.videoTrack,
+          });
+        }
         prepareNewContent(sendMessage, contentPreparer, msg.value, refs, corePlugins);
         break;
 
