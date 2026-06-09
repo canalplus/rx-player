@@ -95,10 +95,8 @@ export default function initializeCoreEntry(
   /**
    * Abstraction allowing to prepare contents (fetching its manifest as
    * well as creating and reloading its MediaSource) for playback.
-   *
-   * Creating a default one which may change on initialization.
    */
-  let contentPreparer = new ContentPreparer({ videoTrack: true });
+  let contentPreparer = new ContentPreparer();
   /**
    * Object allowing to control the lifecycle of the current content (stop/reload etc.).
    * `null` if there's no content loaded currently.
@@ -158,12 +156,6 @@ export default function initializeCoreEntry(
         break;
 
       case MainThreadMessageType.PrepareContent:
-        if (msg.value.capabilities.videoTrack !== contentPreparer.videoTrack) {
-          contentPreparer.disposeCurrentContent("Received Prepare msg");
-          contentPreparer = new ContentPreparer({
-            videoTrack: msg.value.capabilities.videoTrack,
-          });
-        }
         prepareNewContent(sendMessage, contentPreparer, msg.value, refs, corePlugins);
         break;
 

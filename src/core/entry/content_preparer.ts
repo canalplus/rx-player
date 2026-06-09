@@ -76,24 +76,9 @@ export default class ContentPreparer {
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
-  /** @see constructor */
-  public videoTrack: boolean;
-
-  /**
-   * @param {Object} capabilities
-   * @param {boolean} capabilities.videoTrack - If `true`, we're playing on an
-   * element which has video capabilities.
-   * If `false`, we're only able to play audio, optionally with subtitles.
-   *
-   * Typically this boolean is `true` for `<video>` HTMLElement and `false` for
-   * `<audio>` HTMLElement.
-   * TODO: Why having it both on construction and in `initializeNewContent`'s
-   * context and not just the latter? To check.
-   */
-  constructor(capabilities: { videoTrack: boolean }) {
+  constructor() {
     this._currentContent = null;
     this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
-    this.videoTrack = capabilities.videoTrack;
     const contentCanceller = new TaskCanceller("ContentPreparer");
     this._contentCanceller = contentCanceller;
   }
@@ -200,7 +185,7 @@ export default class ContentPreparer {
           contentId,
           {
             mseInWorker: capabilities.mseInWorker,
-            videoTrack: this.videoTrack,
+            videoTrack: capabilities.videoTrack,
             textTrack: capabilities.textTrack,
           },
           currentMediaSourceCanceller.signal,
@@ -221,6 +206,8 @@ export default class ContentPreparer {
         coreTextSender,
         trackChoiceSetter,
         mseInWorker: capabilities.mseInWorker,
+        videoTrack: capabilities.videoTrack,
+        textTrack: capabilities.textTrack,
       };
       mediaSource.addEventListener(
         "mediaSourceOpen",
@@ -346,8 +333,8 @@ export default class ContentPreparer {
         this._currentContent.contentId,
         {
           mseInWorker: this._currentContent.mseInWorker,
-          videoTrack: this.videoTrack,
-          textTrack: this._currentContent.coreTextSender !== null,
+          videoTrack: this._currentContent.videoTrack,
+          textTrack: this._currentContent.textTrack,
         },
         this._currentMediaSourceCanceller.signal,
       );
@@ -459,6 +446,15 @@ export interface IPreparedContentData {
    * If `false`, they should be relied on on main thread.
    */
   mseInWorker: boolean;
+  /**
+   * If `true`, the current content should create and use a video buffer.
+   * If `false`, only audio should be buffered natively.
+   */
+  videoTrack: boolean;
+  /**
+   * If `true`, the current content should create and use text-track handling.
+   */
+  textTrack: boolean;
 }
 
 /**
