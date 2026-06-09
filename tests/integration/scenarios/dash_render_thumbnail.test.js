@@ -252,59 +252,142 @@ function delayThumbnailRequests(fileNames) {
   const NativeXHR = XMLHttpRequest;
   const nativeOpen = NativeXHR.prototype.open;
   const nativeSend = NativeXHR.prototype.send;
+  /**
+   * Delayed XHRs, grouped by thumbnail file name.
+   * Multiple requests for the same asset can pile up before we release them,
+   * so each file name maps to a FIFO queue instead of a single request.
+   * @type {Map<string, Array<{
+   *   xhr: XMLHttpRequest & { __thumbnailTestUrl?: string },
+   *   body: Document | XMLHttpRequestBodyInit | null | undefined
+   * }>>}
+   */
   const delayedRequests = new Map();
+  /**
+   * Promise awaited by the next `waitForRequest(fileName)` call for each file.
+   * It gets replaced when several waits are queued for the same asset.
+   * @type {Map<string, Promise<void>>}
+   */
   const requestPromises = new Map();
+  /**
+   * Resolver paired with `requestPromises`.
+   * We keep it around until the corresponding delayed request reaches `send`.
+   * @type {Map<string, () => void>}
+   */
   const requestResolvers = new Map();
+  /**
+   * Number of `waitForRequest` calls still waiting to be matched for each file.
+   * This lets the helper observe multiple concurrent XHRs for the same asset
+   * without collapsing them into a single notification.
+   * @type {Map<string, number>}
+   */
+  const waitingRequestCounts = new Map();
   const waitingFileNames = new Set(fileNames);
 
   XMLHttpRequest.prototype.open = function open(method, url, async, user, password) {
-    this.__thumbnailTestUrl = url;
-    return nativeOpen.call(this, method, url, async, user, password);
+    const xhr = /** @type {XMLHttpRequest & { __thumbnailTestUrl?: string }} */ (this);
+    /**
+     * Keep the request URL on the XHR instance so `send` can decide whether this
+     * request should be delayed by the helper.
+     */
+    xhr.__thumbnailTestUrl = url;
+    return nativeOpen.call(xhr, method, url, async, user, password);
   };
 
+  /**
+   * Resolve the promise corresponding to the next request expected for that file.
+   * This allows the helper to wait for multiple concurrent requests to the same
+   * asset without losing track of older ones.
+   * @param {string} fileName
+   */
+  function markRequestAsSeen(fileName) {
+    const currentCount = waitingRequestCounts.get(fileName) ?? 0;
+    if (currentCount <= 1) {
+      waitingRequestCounts.delete(fileName);
+      requestPromises.delete(fileName);
+      const resolver = requestResolvers.get(fileName);
+      requestResolvers.delete(fileName);
+      resolver?.();
+      return;
+    }
+
+    waitingRequestCounts.set(fileName, currentCount - 1);
+    const resolver = requestResolvers.get(fileName);
+    requestPromises.set(
+      fileName,
+      new Promise((resolve) => {
+        requestResolvers.set(fileName, resolve);
+      }),
+    );
+    resolver?.();
+  }
+
+  /**
+   * Return a promise resolved when the next request for that file reaches `send`.
+   * Each call waits for one request, even if several requests for the same asset
+   * are fired concurrently.
+   * @param {string} fileName
+   * @returns {Promise<void>}
+   */
+  function waitForNthRequest(fileName) {
+    const currentCount = waitingRequestCounts.get(fileName) ?? 0;
+    waitingRequestCounts.set(fileName, currentCount + 1);
+    if (!requestPromises.has(fileName)) {
+      requestPromises.set(
+        fileName,
+        new Promise((resolve) => {
+          requestResolvers.set(fileName, resolve);
+        }),
+      );
+    }
+    return requestPromises.get(fileName);
+  }
+
   XMLHttpRequest.prototype.send = function send(body) {
+    const xhr = /** @type {XMLHttpRequest & { __thumbnailTestUrl?: string }} */ (this);
     const requestUrl =
-      typeof this.__thumbnailTestUrl === "string" ? this.__thumbnailTestUrl : "";
+      typeof xhr.__thumbnailTestUrl === "string" ? xhr.__thumbnailTestUrl : "";
     const matchingFileName = [...waitingFileNames].find((fileName) =>
       requestUrl.includes(fileName),
     );
     if (matchingFileName === undefined) {
-      return nativeSend.call(this, body);
+      return nativeSend.call(xhr, body);
     }
 
-    if (!requestPromises.has(matchingFileName)) {
-      requestPromises.set(
-        matchingFileName,
-        new Promise((resolve) => {
-          requestResolvers.set(matchingFileName, resolve);
-        }),
-      );
-    }
-    delayedRequests.set(matchingFileName, {
-      xhr: this,
+    const delayedRequestsForFile = delayedRequests.get(matchingFileName) ?? [];
+    delayedRequestsForFile.push({
+      xhr,
       body,
     });
-    requestResolvers.get(matchingFileName)();
+    delayedRequests.set(matchingFileName, delayedRequestsForFile);
+    markRequestAsSeen(matchingFileName);
   };
 
   return {
+    /**
+     * Release the oldest delayed request for that file.
+     * Releasing in FIFO order keeps the helper deterministic when multiple
+     * requests for the same asset are waiting at once.
+     * @param {string} fileName
+     */
     release(fileName) {
-      const delayedRequest = delayedRequests.get(fileName);
+      const delayedRequestsForFile = delayedRequests.get(fileName);
+      expect(delayedRequestsForFile).toBeDefined();
+      expect(delayedRequestsForFile.length).toBeGreaterThan(0);
+      const delayedRequest = delayedRequestsForFile.shift();
       expect(delayedRequest).toBeDefined();
-      delayedRequests.delete(fileName);
-      waitingFileNames.delete(fileName);
+      if (delayedRequestsForFile.length === 0) {
+        delayedRequests.delete(fileName);
+        waitingFileNames.delete(fileName);
+      }
       nativeSend.call(delayedRequest.xhr, delayedRequest.body);
     },
+    /**
+     * Wait until the next delayed request for that file has been intercepted.
+     * @param {string} fileName
+     * @returns {Promise<void>}
+     */
     async waitForRequest(fileName) {
-      if (!requestPromises.has(fileName)) {
-        requestPromises.set(
-          fileName,
-          new Promise((resolve) => {
-            requestResolvers.set(fileName, resolve);
-          }),
-        );
-      }
-      await requestPromises.get(fileName);
+      await waitForNthRequest(fileName);
     },
     restore() {
       XMLHttpRequest.prototype.open = nativeOpen;
