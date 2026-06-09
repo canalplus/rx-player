@@ -1231,7 +1231,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           startAt,
           textTrackOptions,
           url,
-          capabilities: {
+          playbackSupport: {
             mseInWorker: false,
             videoTrack: isVideoHandled,
             textTrack: isTextHandled,
@@ -1317,7 +1317,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           textTrackOptions,
           url,
           MediaSourceClass,
-          capabilities: {
+          playbackSupport: {
             mseInWorker: hasMseInWorker,
             videoTrack: isVideoHandled,
             textTrack: isTextHandled,

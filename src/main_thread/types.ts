@@ -103,8 +103,8 @@ export interface IContentInitializationData {
    * `undefined` if unknown.
    */
   url?: string | undefined;
-  /** The capabilities of the current environment for this content. */
-  capabilities: {
+  /** The resolved playback support for this content. */
+  playbackSupport: {
     /**
      * If `true`, MSE API should be used in the core part of the RxPlayer when
      * relying on a WebWorker.

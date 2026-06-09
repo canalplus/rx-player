@@ -178,8 +178,13 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       return;
     }
     const contentId = generateContentId();
-    const { adaptiveOptions, transport, transportOptions, capabilities, coreInterface } =
-      this._settings;
+    const {
+      adaptiveOptions,
+      transport,
+      transportOptions,
+      playbackSupport,
+      coreInterface,
+    } = this._settings;
     const { wantedBufferAhead, maxVideoBufferSize, maxBufferAhead, maxBufferBehind } =
       this._settings.bufferOptions;
     const initialVideoBitrate = adaptiveOptions.initialBitrates.video;
@@ -193,7 +198,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       initialTime: undefined,
       autoPlay: undefined,
       initialPlayPerformed: null,
-      useMseInWorker: capabilities.mseInWorker,
+      useMseInWorker: playbackSupport.mseInWorker,
     };
     coreInterface.sendMessage({
       type: MainThreadMessageType.PrepareContent,
@@ -202,7 +207,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         cmcd: this._settings.cmcd,
         enableRepresentationAvoidance: this._settings.enableRepresentationAvoidance,
         url: this._settings.url,
-        capabilities: this._settings.capabilities,
+        playbackSupport: this._settings.playbackSupport,
         transport,
         transportOptions,
         initialVideoBitrate,
@@ -2109,8 +2114,8 @@ export interface IInitializeArguments {
    * which cases message exchanging mechanisms would be different.
    */
   coreInterface: CoreInterface;
-  /** The capabilities of the current environment for this content. */
-  capabilities: {
+  /** The resolved playback support for this content. */
+  playbackSupport: {
     /**
      * If `true`, MSE API should be used in the core part of the RxPlayer (in the
      * WebWorker).

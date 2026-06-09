@@ -117,7 +117,7 @@ export default class ContentPreparer {
       const {
         contentId,
         url,
-        capabilities,
+        playbackSupport,
         transportOptions,
         enableRepresentationAvoidance,
         transport,
@@ -184,9 +184,9 @@ export default class ContentPreparer {
           sendMessage,
           contentId,
           {
-            mseInWorker: capabilities.mseInWorker,
-            videoTrack: capabilities.videoTrack,
-            textTrack: capabilities.textTrack,
+            mseInWorker: playbackSupport.mseInWorker,
+            videoTrack: playbackSupport.videoTrack,
+            textTrack: playbackSupport.textTrack,
           },
           currentMediaSourceCanceller.signal,
         );
@@ -205,9 +205,9 @@ export default class ContentPreparer {
         fetchThumbnailData,
         coreTextSender,
         trackChoiceSetter,
-        mseInWorker: capabilities.mseInWorker,
-        videoTrack: capabilities.videoTrack,
-        textTrack: capabilities.textTrack,
+        mseInWorker: playbackSupport.mseInWorker,
+        videoTrack: playbackSupport.videoTrack,
+        textTrack: playbackSupport.textTrack,
       };
       mediaSource.addEventListener(
         "mediaSourceOpen",
@@ -460,17 +460,17 @@ export interface IPreparedContentData {
 /**
  * @param {Function} sendMessage
  * @param {string} contentId
- * @param {Object} capabilities
- * @param {boolean} capabilities.mseInWorker
- * @param {boolean} capabilities.videoTrack
- * @param {boolean} capabilities.textTrack
+ * @param {Object} playbackSupport
+ * @param {boolean} playbackSupport.mseInWorker
+ * @param {boolean} playbackSupport.videoTrack
+ * @param {boolean} playbackSupport.textTrack
  * @param {Object} cancelSignal
  * @returns {Array.<Object>}
  */
 function createMediaSourceInterfaceAndSegmentSinksStore(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentId: string,
-  capabilities: {
+  playbackSupport: {
     mseInWorker: boolean;
     videoTrack: boolean;
     textTrack: boolean;
@@ -478,7 +478,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
   cancelSignal: CancellationSignal,
 ): [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null] {
   let mediaSourceInterface: IMediaSourceInterface;
-  if (capabilities.mseInWorker) {
+  if (playbackSupport.mseInWorker) {
     if (BROWSER_GLOBALS.MediaSource_ === undefined) {
       throw new Error("ContentPreparer: Cannot use MSE-in-Worker: no MSE");
     }
@@ -518,10 +518,10 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
     );
   }
 
-  const textSender = capabilities.textTrack
+  const textSender = playbackSupport.textTrack
     ? new CoreTextDisplayerInterface(contentId, sendMessage)
     : null;
-  const { videoTrack } = capabilities;
+  const { videoTrack } = playbackSupport;
   const segmentSinksStore = new SegmentSinksStore(
     mediaSourceInterface,
     videoTrack,
