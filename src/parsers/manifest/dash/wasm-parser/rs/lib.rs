@@ -15,6 +15,7 @@ use processor::MPDProcessor;
 use reader::MPDReader;
 use std::io::BufReader;
 
+#[cfg_attr(target_family = "wasm", link(wasm_import_module = "env"))]
 extern "C" {
     /// JS callback called each time a new known tag is encountered in the MPD.
     ///
