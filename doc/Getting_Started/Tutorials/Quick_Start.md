@@ -152,10 +152,10 @@ player.addEventListener("playerStateChange", (state) => {
 
     // toggle between play and pause when the user clicks on the video
     videoElement.onclick = function () {
-      if (player.getPlayerState() === "PLAYING") {
-        player.pause();
-      } else {
+      if (player.isPaused()) {
         player.play();
+      } else {
+        player.pause();
       }
     };
   }
@@ -173,5 +173,5 @@ player.loadVideo({
 Now that you know the basic RxPlayer APIs, you might want to dive deep into
 [the whole API documentation](../../api/Overview.md).
 
-You can also read our next tutorial, on how to play contents with DRM,
-[here](./Content_with_DRM.md).
+You can also read our next tutorial, on how to start building a UI on top of the RxPlayer,
+[here](./Building_a_Custom_Player_UI.md).
