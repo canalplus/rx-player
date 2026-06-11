@@ -5,6 +5,10 @@
       "displayName": "Quick Start"
     },
     {
+      "path": "./Building_a_Custom_Player_UI.md",
+      "displayName": "Building a Custom Player UI"
+    },
+    {
       "path": "./Content_with_DRM.md",
       "displayName": "Contents with DRM"
     },
