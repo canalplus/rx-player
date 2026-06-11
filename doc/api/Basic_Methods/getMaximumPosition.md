@@ -6,7 +6,7 @@ Returns the maximum seekable player position in seconds on the current loaded me
 
 Returns `null` if no content is currently loaded.
 
-This is useful for live contents, where this position might be updated continously as new
+This is useful for live contents, where this position might be updated continuously as new
 content is generated.
 
 Please bear in mind that seeking exactly at the maximum position is rarely a good idea:

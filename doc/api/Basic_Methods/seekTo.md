@@ -20,7 +20,7 @@ the `position` property (absolute position).
 Seeking should only be done when a content is loaded (i.e. the player isn't in the
 `STOPPED`, `LOADING` or `RELOADING` state).
 
-The seek operation will start as soon as possible, in almost every cases directly after
+The seek operation will start as soon as possible, in almost every case directly after
 this method is called.
 
 You will know when the seek is being performed and has been performed respectively by

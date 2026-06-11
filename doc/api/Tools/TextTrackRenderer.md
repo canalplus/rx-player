@@ -228,7 +228,7 @@ textTrackRenderer.removeTextTrack();
 ### Disposing of the TextTrackRenderer
 
 If you're sure that you won't need the TextTrackRenderer anymore, you can dispose of most
-ressources (which is not much) it took on your page by calling the `dispose` method:
+resources (which is not much) it took on your page by calling the `dispose` method:
 
 ```js
 textTrackRenderer.dispose();

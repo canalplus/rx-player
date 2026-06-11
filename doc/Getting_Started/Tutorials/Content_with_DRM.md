@@ -37,9 +37,9 @@ Which of them you want to use depend on several factors, among which:
 In the RxPlayer's API, we more especially expect the whole "reverse domain name" for that
 key systems (e.g. `com.widevine.alpha` or `com.microsoft.playready`).
 
-We also have shortcuts for Widevine or PlayReady, where you can just tell us respectively
-`widevine` or `playready` as the key system and we will try several corresponding reverse
-domain names.
+We also have shortcuts for Widevine, PlayReady and ClearKey, where you can just tell us
+respectively `widevine`, `playready` or `clearkey` as the key system and we will try
+several corresponding reverse domain names.
 
 In any case, you can ask for several key systems, even including ones that are not
 available in the current browser. Those will be detected and automatically filtered out.
@@ -70,7 +70,7 @@ keys are contained in one or several license files.
 Those files usually need to be downloaded from a license server.
 
 As that logic sometimes depends on your application (i.e. you might want to add
-authentification to that request to know which user made that request), the RxPlayer team
+authentication to that request to know which user made that request), the RxPlayer team
 made the choice to let you write your logic entirely.
 
 This logic takes the form of a callback named `getLicense`.
@@ -177,7 +177,7 @@ This code is sufficient for a majority of encrypted contents.
 
 There's a lot of things that can go wrong during the license request:
 
-- The user could be temporarly disconnected
+- The user could be temporarily disconnected
 - The license server might be down
 - The license server might refuse to deliver a license based on your rights
 - The license server might refuse to deliver a license based on your CDM capabilities
@@ -185,12 +185,12 @@ There's a lot of things that can go wrong during the license request:
 
 From this, you could want to have a different behavior based on what happened:
 
-- When a user is temporarly disconnected, you could chose to retry indefinitely (the
-  RxPlayer retry after a delay to not overload the client or the server).
+- When a user is temporarily disconnected, you could choose to retry indefinitely (the
+  RxPlayer retries after a delay to not overload the client or the server).
 - When the license server is down, you might want to fail directly.
 - When the license server refuse to deliver a license based on your rights, you might want
   to throw an explicit error message that you will be able to display.
-- If there's a problem with your CDM capabilities, you might want to just fallback to
+- If there's a problem with your CDM capabilities, you might want to just fall back to
   another media quality with a different license.
 
 All of this is possible with more advanced APIs that we will see in this chapter.
@@ -245,9 +245,9 @@ error (or just an object), with the following properties:
 - `message`: a custom message string we will communicate through a warning or error event
   (depending if we will retry or not the call)
 
-- `fallbackOnLastTry`: When set to `true` and if we are doing or last try or retry (to be
-  sure you can set `noRetry` to true), we will try to fallback to another quality, which
-  might have a different license.
+- `fallbackOnLastTry`: When set to `true` and if we are doing our last try or retry (to be
+  sure you can set `noRetry` to `true`), we will try to fall back to another quality,
+  which might have a different license.
 
   This is only useful for contents which have a different license depending on the quality
   (for example having different rights for 4k video content than for 480p video content).
@@ -269,23 +269,23 @@ rxPlayer.loadVideo({
           xhr.open("POST", LICENSE_SERVER_URL, true);
           xhr.onerror = (err) => {
             // Keep retrying on XHR errors.
-            // Instanciating an Error like that automatically set the
+            // Instantiating an Error like that automatically sets the
             // message attribute to this Error's message. That way, the
             // linked "error" or "warning" event sent by the RxPlayer
             // will have the same message.
             const error = new Error("Request error: " + err.toString());
-            reject(err);
+            reject(error);
           };
           xhr.onload = (evt) => {
             if (xhr.status >= 200 && xhr.status < 300) {
               const license = evt.target.response;
               resolve(license);
             } else if (xhr.status >= 500 && xhr.status < 600) {
-              // Directly fails + fallbacks on a server error
+              // Directly fails + falls back on a server error
               const error = new Error(
                 "The license server had a problem and" +
                   ` responded with ${xhr.status} HTTP ` +
-                  "error. We will now fallback to another" +
+                  "error. We will now fall back to another " +
                   "quality.",
               );
               error.noRetry = true;
@@ -354,7 +354,7 @@ either a key is refused or as the license fetching logic (the `getLicense` funct
 
 When playing a content with multiple keys, you might instead not care that much if a key
 is refused or if the license-fetching logic fails. What you can just do is to remove the
-quality for which we could not obtain a key and to instead fallback on another,
+quality for which we could not obtain a key and to instead fall back to another,
 decipherable, quality.
 
 That's exactly what the RxPlayer does, when the right options are set:
@@ -393,28 +393,34 @@ device cannot provide a high enough guarantee that the content cannot be copied.
 thus refuse to use one of the decryption key found in a license, especially the one needed
 for the higher content qualities.
 
-Those options then allows to fallback when this happens.
+Those options then allow to fall back when this happens.
 
 - `onKeyInternalError`: Behavior to set when the corresponding key has the
   [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus) `"internal-error"`.
   We found that most widevine implementation use this error when a key is refused.
 
-  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  You can set it to `"fallback"` so the RxPlayer switches to other, decipherable,
   Representations when this status is received.
+
+  You can also set it to `"close-session"` so the RxPlayer closes and re-creates the
+  corresponding DRM session.
 
 - `onKeyOutputRestricted`: Behavior to set when the corresponding key has the
   [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus)
   `"output-restricted"`. This is the proper status for a key refused due to output
   restrictions.
 
-  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  You can set it to `"fallback"` so the RxPlayer switches to other, decipherable,
   Representations when this status is received.
 
-- `onKeyOutputRestricted`: Behavior to set when the corresponding key has the
+- `onKeyExpiration`: Behavior to set when the corresponding key has the
   [status](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus) `"expired"`.
 
-  You can set it to `"fallback"` so the RxPlayer switch to other, decipherable,
+  You can set it to `"fallback"` so the RxPlayer switches to other, decipherable,
   Representations when this status is received.
+
+  You can also set it to `"close-session"` so the RxPlayer closes and re-creates the
+  corresponding DRM session.
 
 For people on embedded devices with specific key systems, you can look a little more into
 what [MediaKeyStatus](https://www.w3.org/TR/encrypted-media/#dom-mediakeystatus) is set
@@ -440,7 +446,7 @@ rxPlayer.loadVideo({
 ## Server certificate
 
 The "server Certificate" is a certificate allowing to encrypt messages coming from the
-Content Decryption module to the license server. They can be required by some key system
+Content Decryption Module to the license server. They can be required by some key system
 as a supplementary security mechanism.
 
 Thankfully, an application is not obligated to set one, even if one is needed. If not set,
@@ -473,7 +479,7 @@ rxPlayer.loadVideo({
 ```
 
 The `serverCertificate` has to either be in an `ArrayBuffer` form or a `TypedArray` (i.e.
-`Uint8Array`, `Uint16Array` etc.)
+`Uint8Array`, `Uint16Array` etc.).
 
 ## Persistent licenses
 
@@ -504,12 +510,12 @@ rxPlayer.loadVideo({
 
 ### persistentLicenseConfig property
 
-The `persistentLicenseConfig` property is an object allowing the RxPlayer to load and
-saved stored session identifiers, to be able to retrieve them later.
+The `persistentLicenseConfig` property is an object allowing the RxPlayer to load and save
+stored session identifiers, to be able to retrieve them later.
 
 It needs to contain two functions:
 
-- `save`: Which sould store the argument given. The argument will be an array of Objects.
+- `save`: Which should store the argument given. The argument will be an array of Objects.
 - `load`: Called without any argument, it has to return what was given to the last `save`
   call. Any return value which is not an Array will be ignored (example: when `save` has
   never been called).

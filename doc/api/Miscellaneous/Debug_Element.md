@@ -1,6 +1,6 @@
 # Displaying the RxPlayer's debugging element
 
-The `DEBUG_ELEMENT` feature allows to render an HTML element displaying debug information
+The `DEBUG_ELEMENT` feature allows rendering an HTML element displaying debug information
 that might be interesting while debugging playback.
 
 ![Example of a debug element](../../static/img/debug_elt.png)
@@ -76,7 +76,7 @@ exactly what's going on at a particular point in time.
     buffered range and the current second.
   - **rs**: _Ready State_. Reflects the HTMLMediaElement property `readyState`
   - **pr**: _Playback Rate_. Reflects the HTMLMediaElement property `playbackRate`
-  - **sp**: _Speed_. The playback rate configurated through the `setPlaybackRate` method.
+  - **sp**: _Speed_. The playback rate configured through the `setPlaybackRate` method.
   - **pa**: _Paused_. Reflects the HTMLMediaElement property `paused`. `0` for `false` and
     `1` for `true`.
   - **en**: _Ended_. Reflects the HTMLMediaElement property `ended`. `0` for `false` and

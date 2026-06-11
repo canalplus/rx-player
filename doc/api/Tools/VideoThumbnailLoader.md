@@ -109,7 +109,7 @@ where the thumbnail loader decides not to load. Here is a list of every failure 
 - NO_TRACK : In the player manifest, there are either no period or no representation to
   get video chunks.
 - NO_THUMBNAIL : No segments are available for this time of the track.
-- LOADING_ERROR : An error occured when loading a thumbnail into the video element.
+- LOADING_ERROR : An error occurred when loading a thumbnail into the video element.
 - ABORTED : The loading has been aborted (probably because of another loading started)
 - NO_LOADER : Trickmode track can't be loaded as no loader was imported, or exists for
   this type of content (e.g. HSS content)

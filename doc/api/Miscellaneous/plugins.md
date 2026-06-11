@@ -404,10 +404,10 @@ The representationFilter will be called each time we load a
       support (mainly when running through the RxPlayer's `MULTI_THREAD` feature in a
       browser without MSE-in-worker capabilities).
 
-    - The corresponding Representation is compatible to a restrictive codec yet also
-      retro-compatible to a less restrictive one.
+    - The corresponding Representation is compatible with a restrictive codec yet also
+      retro-compatible with a less restrictive one.
 
-      The main example being Dolby Vision Representations which are retro-compatible to
+      The main example being Dolby Vision Representations which are retro-compatible with
       HDR10 HEVC codecs. In that very specific case, we could have an array with two
       elements:
       1.  The Dolby Vision codec
@@ -454,7 +454,7 @@ The representationFilter will be called each time we load a
     this audio track is a "dub", meaning it was recorded in another language than the
     original. If set to `false`, we know that this audio track is in an original language.
 
-    This property is `undefined` if we do not known whether it is in an original language
+    This property is `undefined` if we do not know whether it is in an original language
     or if does not apply for the track type.
 
   - isSignInterpreted `{Boolean|undefined}`): If set to `true` and if this is a video

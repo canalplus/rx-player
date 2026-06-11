@@ -51,7 +51,7 @@ Calling this method allows to start locking Representations until either:
   that Period. If you choose to come back to the original track in the future, it won't be
   locked anymore either.
 
-- the RxPlayer "break" the lock. This is a very rare occurence happening when locked
+- the RxPlayer "breaks" the lock. This is a very rare occurrence happening when locked
   Representations all become unavailable. More details on this below.
 
 You can know if video or audio Representations are locked for the current track (or even

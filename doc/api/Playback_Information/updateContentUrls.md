@@ -8,9 +8,9 @@ allowing to request an immediate refresh of it.
 This method can for example be called when you would prefer that the content and its
 associated resources to be reached through another URL than what has been used until now.
 
-Note that if a request through one of the given URL lead to a HTTP redirect, the RxPlayer
-will generally prefer the redirected URL over the URL explicitely communicated (to prevent
-more HTTP redirect).
+Note that if a request through one of the given URLs leads to an HTTP redirect, the
+RxPlayer will generally prefer the redirected URL over the URL explicitly communicated (to
+prevent more HTTP redirect).
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a

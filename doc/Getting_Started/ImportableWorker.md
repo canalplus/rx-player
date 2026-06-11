@@ -50,7 +50,7 @@ const rxPlayerWorker = new RxPlayerWorker();
 ```
 
 This would then need to be bundled by you and the resulting bundle will be the file you
-will have to provide (through an URL) to
+will have to provide (through a URL) to
 [the `attachWorker` API](../api/MultiThread/attachWorker.md).
 
 ## Defining a `representationFilter`, `manifestLoader` or `segmentLoader` callback
@@ -79,7 +79,7 @@ rxPlayerWorker.registerRepresentationFilter(
   // Give it a "name" through which it will be referenced from your application
   // bundle when you want to enable it.
   "my-representation-filter",
-  // Same thing than your usual representation filter. Here filtering in only
+  // Same thing as your usual representation filter. Here filtering in only
   // 1080p video or less
   (representationInfo, context) => {
     if (context.trackType === "video") {
@@ -95,7 +95,7 @@ rxPlayerWorker.registerRepresentationFilter(
 // To register a `manifestLoader`
 rxPlayerWorker.registerManifestLoader(
   "my-manifest-loader",
-  // Same thing than your usual `manifestLoader`
+  // Same thing as your usual `manifestLoader`
   (manifestInfo, callbacks) => {
     /* ... */
   },
@@ -104,7 +104,7 @@ rxPlayerWorker.registerManifestLoader(
 // To register a `segmentLoader`
 rxPlayerWorker.registerSegmentLoader(
   "my-segment-loader",
-  // Same thing than your usual `segmentLoader`
+  // Same thing as your usual `segmentLoader`
   (segmentInfo, callbacks) => {
     /* ... */
   },
@@ -134,7 +134,7 @@ rxPlayer.loadVideo({
 });
 ```
 
-Because the content might fallback on main thread when "multithreading mode" is not
+Because the content might fall back to the main thread when "multithreading mode" is not
 available (see [its limitations](./MultiThreading.md) for the list of reasons why), we
 generally recommend however providing both the `workerId` and a fallback function for
 cases where the content does not load in multithreading mode:
@@ -267,9 +267,9 @@ For now only the following features exist:
 **Notes**:
 
 **[1]**: In cases where both the `DASH` and `DASH_WASM` features are added (which are both
-parsers for DASH contents), the RxPlayer will default using the WebAssembly parser
-(provided by `DASH_WASM`) and fallback on the JavaScript parser (provided by `DASH`) when
-it cannot do so.
+parsers for DASH contents), the RxPlayer will use the WebAssembly parser by default
+(provided by `DASH_WASM`) and fall back to the JavaScript parser (provided by `DASH`) when
+it cannot use it.
 
 **[2]** The `DASH_WASM` feature requires a WebAssembly file that has to be loaded
 separately. This can be done in two ways: either you rely on that features' `initialize`

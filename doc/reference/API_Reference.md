@@ -7,8 +7,8 @@ This is the API reference which presents every RxPlayer API in a single page.
 The point of this page is to provide an easier-to-navigate page than the
 [API documentation](../api/Overview.md) for when you're already familiar with it.
 
-API are splitted here in multiple categories depending on if they are properties, methods,
-events and so on.
+APIs are split here in multiple categories depending on whether they are properties,
+methods, events and so on.
 
 ## Constructor
 
@@ -171,7 +171,7 @@ events and so on.
 - [`onVideoTracksNotPlayable`](../api/Loading_a_Content.md#onvideotracksnotplayable):
   Specifies the behavior when all video tracks are not playable.
 
-- [`lowLatencyMode`](../api/Loading_a_Content.md#lowlatencymode): Allows to play
+- [`lowLatencyMode`](../api/Loading_a_Content.md#lowlatencymode): Allows playing
   low-latency contents efficiently.
 
 - [`enableFastSwitching`](../api/Loading_a_Content.md#enablefastswitching): Enable or
@@ -191,7 +191,7 @@ events and so on.
   add to the segment's time to obtain a live time. This is in most cases not needed.
 
 - [`mode`](../api/Loading_a_Content.md#mode): Force the content to be loaded in a
-  `"mulithread"` mode or not.
+  `"multithread"` mode or not.
 
 - [`experimentalOptions.enableRepresentationAvoidance`](../api/Loading_a_Content.md#experimentaloptionsenablerepresentationavoidance):
   Enable the "Representation Avoidance" mechanism, allowing to work around some playback
@@ -225,7 +225,7 @@ events and so on.
   condition.
 
 - [`getWallClockTime`](../api/Basic_Methods/getWallClockTime.md): Get the current playback
-  condition offseted to be relative to the the current date.
+  condition offset to be relative to the current date.
 
 - [`getWallClockOffset`](../api/Basic_Methods/getWallClockOffset.md): Get the offset to
   add to a media time to obtain a date-adjusted "wall-clock time".
@@ -239,7 +239,7 @@ events and so on.
   seekable position.
 
 - [`getLivePosition`](../api/Basic_Methods/getLivePosition.md): Get the time corresponding
-  to live content (when klaying live contents).
+  to live content (when playing live contents).
 
 - [`getMediaDuration`](../api/Basic_Methods/getMediaDuration.md): Get the duration linked
   to the media element.
@@ -252,7 +252,7 @@ events and so on.
 - [`dispose`](../api/Basic_Methods/dispose.md): Dispose of most resources taken by the
   RxPlayer.
 
-- [`reload`](../api/Basic_Methods/reload.md): Reload the last loade content as fast as
+- [`reload`](../api/Basic_Methods/reload.md): Reload the last loaded content as fast as
   possible.
 
 - [`getAvailablePeriods`](../api/Basic_Methods/getAvailablePeriods.md): Returns the list
@@ -306,17 +306,17 @@ events and so on.
 - [`lockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
   Select audio Representations (a.k.a. qualities) that should the only one being played.
 
-- [`getLockedVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+- [`getLockedVideoRepresentations`](../api/Representation_Selection/getLockedVideoRepresentations.md):
   Get the list of currently "locked" video Representations (a.k.a. qualities).
 
-- [`getLockedAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+- [`getLockedAudioRepresentations`](../api/Representation_Selection/getLockedAudioRepresentations.md):
   Get the list of currently "locked" audio Representations (a.k.a. qualities).
 
-- [`unlockVideoRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+- [`unlockVideoRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
   Deactivate potential pending video Representations (a.k.a. qualities) lock, thus
   re-allowing any Representation to being played.
 
-- [`unlockAudioRepresentations`](../api/Representation_Selection/lockAudioVideoRepresentations.md):
+- [`unlockAudioRepresentations`](../api/Representation_Selection/unlockAudioVideoRepresentations.md):
   Deactivate potential pending audio Representations (a.k.a. qualities) lock, thus
   re-allowing any Representation to being played.
 
@@ -394,7 +394,7 @@ events and so on.
 - [`getLastStoredContentPosition`](../api/Playback_Information/getLastStoredContentPosition.md):
   Returns the last stored content position, in seconds.
 
-- [`createDebugElement`](../api/Miscellaneous/Debug_Element.md): Display a
+- [`createDebugElement`](../api/Playback_Information/createDebugElement.md): Display a
   RxPlayer-specialized debugging element.
 
 - [`attachWorker`](../api/MultiThread/attachWorker.md): Attach a WebWorker to the RxPlayer
@@ -429,6 +429,15 @@ events and so on.
 
 - [`ErrorCodes`](../api/Static_Properties.md#errorcodes): All Error codes that can be
   encountered.
+
+## Player States
+
+- [Player States](../api/Player_States.md): The possible states of the RxPlayer.
+
+## TypeScript Types
+
+- [Exported TypeScript Types](../api/Typescript_Types.md): TypeScript types exported by
+  the RxPlayer.
 
 ## Events
 
@@ -531,3 +540,34 @@ events and so on.
 
 - [`createMetaplaylist`](../api/Tools/createMetaplaylist.md): Generate a MetaPlaylist
   content.
+
+## Miscellaneous
+
+- [Plugins](../api/Miscellaneous/plugins.md): Advanced plugin APIs.
+
+- [Low Latency](../api/Miscellaneous/Low_Latency.md): Low-latency content playback.
+
+- [DASH WASM Parser](../api/Miscellaneous/DASH_WASM_Parser.md): WebAssembly-based DASH MPD
+  parsing.
+
+- [HDR](../api/Miscellaneous/hdr.md): HDR information exposed by the RxPlayer.
+
+- [Debug Element](../api/Miscellaneous/Debug_Element.md): Debug element feature and usage.
+
+- [Local Contents](../api/Miscellaneous/Local_Contents.md): Local content playback.
+
+- [Local Manifest v0.1](../api/Miscellaneous/Local_Manifest_v0.1.md): Previous local
+  Manifest format.
+
+- [Text Tracks](../api/Miscellaneous/Text_Tracks.md): Adding text tracks to content.
+
+- [MetaPlaylist](../api/Miscellaneous/MetaPlaylist.md): MetaPlaylist format and playback.
+
+- [Initial Position](../api/Miscellaneous/Initial_Position.md): Rules used to choose an
+  initial playback position.
+
+- [presentationTimeOffset](../api/Miscellaneous/presentationTimeOffset.md): DASH
+  `presentationTimeOffset` handling.
+
+- [Differences between DASH AdaptationSets and Adaptations](../api/Miscellaneous/DASH_Adaptation_Difference.md):
+  Differences between DASH `AdaptationSet` elements and RxPlayer `Adaptation` objects.

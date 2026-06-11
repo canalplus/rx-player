@@ -37,11 +37,11 @@ carries the `hdrInfo`.
 
 ## Exploiting the API
 
-HDR do not specify new display's capabilities. However, it allows to make better use of
-the display brightness, contrast and color capabilities. HDR will not be rendered the same
-way on each used display. It is possible through several APIs to query the browser about
-its screen characteristics, to speculate about the quality of the HDR rendering. Here are
-the available APIs now :
+HDR does not specify new display capabilities. However, it allows making better use of the
+display brightness, contrast and color capabilities. HDR will not be rendered the same way
+on each used display. It is possible through several APIs to query the browser about its
+screen characteristics, to speculate about the quality of the HDR rendering. Here are the
+available APIs now :
 
 ### Color depth
 

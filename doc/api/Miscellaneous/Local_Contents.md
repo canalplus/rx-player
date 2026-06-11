@@ -9,7 +9,7 @@ playback without buffering.
 This documentation page will be about how to load already downloaded contents. We suppose
 the content is already downloaded and that you just want to play it through the RxPlayer.
 
-However, a tool to download DASH/Smooth/MetaPlaylist contents compatible to this API is
+However, a tool to download DASH/Smooth/MetaPlaylist contents compatible with this API is
 under way.
 
 ## Overview
@@ -18,7 +18,7 @@ To play contents stored locally, the RxPlayer uses its own Manifest format - the
 manifest" which is close in semantics to DASH's own Manifest file, the MPD.
 
 This new Manifest format will be the only element you will need to generate on your side
-to play stored contents. As such, this what most of this documentation page is about.
+to play stored contents. As such, this is what most of this documentation page is about.
 
 Note that the wanted content does not need to be completely downloaded before creating
 this local manifest. Playback can even begin while the content is still downloading.
@@ -27,7 +27,7 @@ You will just need to:
 
 1. indicate that this is a "local" content by setting the `transport` option in
    `loadVideo` to `"local"`
-2. As the generated Manifest object most likely won't be available through an URL but
+2. As the generated Manifest object most likely won't be available through a URL but
    directly as a JavaScript object, you will need to communicate it through the
    `manifestLoader` option of `loadVideo`.
 
@@ -328,7 +328,7 @@ Here how it looks when adaptations are integrated in a given period:
 },
 ```
 
-Let's now describes precizely every properties encountered here.
+Let's now describe precisely every property encountered here.
 
 ### properties
 
@@ -612,7 +612,7 @@ The previous `0.1` version of the local Manifest is now obsolete and is not comp
 with the new versions of the RxPlayer. Its documentation can be found
 [here](./Local_Manifest_v0.1.md).
 
-If you were relying on this version before and would like to switch the the `0.2` version,
+If you were relying on this version before and would like to switch to the `0.2` version,
 to be able to play it on newer versions of the RxPlayer, here is the exhaustive list of
 what changed:
 

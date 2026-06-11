@@ -4,7 +4,7 @@
 
 The RxPlayer has an advanced API when it comes to track selection:
 
-You can list, change, enable or disable video audio and text tracks for either what is
+You can list, change, enable or disable video, audio and text tracks for either what is
 currently being played or any other [Period](../Glossary.md#period) in the current
 content. Because the RxPlayer's track API tries to be complete and flexible, it can feel
 intimidating at first.
@@ -37,8 +37,8 @@ And we could even imagine multiple video tracks:
   here but let's just pretend we're talking about some kind of experimental film!)
 
 All those will provide to the user a different way to offer the same film. In most cases,
-audiom video and text tracks are currently independent and can such be switched in a large
-number of combination to give a large number of different experience for what is
+audio, video and text tracks are currently independent and can thus be switched in a large
+number of combinations to give a large number of different experiences for what is
 effectively the same content.
 
 ## Listing the available tracks
@@ -125,7 +125,7 @@ be the exact same data that what you would get when calling the corresponding
 `getAvailable...Tracks` method at this point.
 
 Note that no `available...TracksChange` event will be sent when the RxPlayer stops the
-content or temporarly goes through the `RELOADING` player state with an empty array as a
+content or temporarily goes through the `RELOADING` player state with an empty array as a
 payload - as there is no current content in those cases.
 
 ##### Examples
@@ -188,13 +188,15 @@ That `id` can be known in several ways:
 
 - the [`newAvailablePeriods` event](../../api/Player_Events.md#newavailableperiods)
   triggered each time new Periods are known (either when the content is first loaded, or
-  when the it is updated) with their respective `id` property:
+  when it is updated) with their respective `id` property:
 
   ```js
-  rxPlayer.addEventListener("newAvailablePeriods, (periods) => {
+  rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
     for (const period of periods) {
-      console.log(`Tracks for Period ${period.id}:`,
-                  rxPlayer.getAvailableAudioTracks(period.id));
+      console.log(
+        `Tracks for Period ${period.id}:`,
+        rxPlayer.getAvailableAudioTracks(period.id),
+      );
     }
   });
   ```
@@ -202,9 +204,11 @@ That `id` can be known in several ways:
 - the [`periodChange` event](../../api/Player_Events.md#periodchange) triggered when the
   current Period being played changes, with the corresponding `id` property:
   ```js
-  rxPlayer.addEventListener("periodChange, (period) => {
-    console.log(`Tracks for the current Period ${period.id}:`,
-                rxPlayer.getAvailableAudioTracks(period.id));
+  rxPlayer.addEventListener("periodChange", (period) => {
+    console.log(
+      `Tracks for the current Period ${period.id}:`,
+      rxPlayer.getAvailableAudioTracks(period.id),
+    );
   });
   ```
 
@@ -225,18 +229,19 @@ of available audio, video and text tracks is available after loading the content
 [`newAvailablePeriods`](../../api/Player_Events.md#newavailableperiods) event:
 
 ```js
-rxPlayer.loadVideo({ url: "foo/bar", transport: "dash" /* ... */ });
 rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
   for (const period of periods) {
     const periodId = period.id;
     const videoTracks = rxPlayer.getAvailableVideoTracks(periodId);
-    const audioTracks = rxPlayer.getAvailableVideoTracks(periodId);
+    const audioTracks = rxPlayer.getAvailableAudioTracks(periodId);
     const textTracks = rxPlayer.getAvailableTextTracks(periodId);
-    console.log(`Video tracks for Period "${periodId}":`${videoTracks}`);
-    console.log(`Audio tracks for Period "${periodId}":`${audioTracks}`);
-    console.log(`Text tracks for Period "${periodId}":`${textTracks}`);
+    console.log(`Video tracks for Period "${periodId}":`, videoTracks);
+    console.log(`Audio tracks for Period "${periodId}":`, audioTracks);
+    console.log(`Text tracks for Period "${periodId}":`, textTracks);
   }
 });
+
+rxPlayer.loadVideo({ url: "foo/bar", transport: "dash" /* ... */ });
 ```
 
 This `newAvailablePeriods` event is also the right one for setting the initial track (we
@@ -280,7 +285,7 @@ The RxPlayer has a set of methods that just return the currently active tracks:
 Those methods will return an object describing the attributes of the current tracks. They
 can also return `null` if no track has been enabled (for example, the user could have
 wanted to disable all text tracks) and `undefined` if the track is either unknown (which
-is a very rare occurence) or if no content is currently playing.
+is a very rare occurrence) or if no content is currently playing.
 
 Like the `getAvailable...Tracks` methods, the format of the objects returned will entirely
 depend on which method you call. You can refer to the API documentation to get more
@@ -325,7 +330,7 @@ possible through the following events:
   text track changed
 
 Those events just emit the current track information as soon as it changes, in the same
-format that the `get...Track` methods.
+format as the `get...Track` methods.
 
 Unlike for the `get...Track` methods however, its payload cannot be set to `undefined`:
 you won't receive any `...TracksChange` event if the track is unknown or if there is no
@@ -377,7 +382,7 @@ rxPlayer.addEventListener("availableAudioTracksChange", (tracks) => {
 
 ### Which one to use?
 
-As usual here, this is highly dependant on your application. All of those APIs give the
+As usual here, this is highly dependent on your application. All of those APIs give the
 same information through different means.
 
 Accessing with the `get...Track` method is simple to use, the events allow to know at the
@@ -398,8 +403,12 @@ To do that, you will have to use one of those three RxPlayer methods:
 - [`setTextTrack()`](../../api/Track_Selection/setTextTrack.md): change the current text
   track
 
-Each of those methods take a single string as argument. That string should be the value of
-the `id` property of the chosen track.
+Each of those methods can take an object with a `trackId` property, set to the value of
+the `id` property of the chosen track. This object can also contain a `periodId` property
+if you want to select a track for a Period that is not currently playing.
+
+For the common case where you just want to change the track for the currently-playing
+Period, you can also just give the `trackId` property directly as a string.
 
 For example, to choose the first audio track with an audio description, you can do:
 

@@ -46,7 +46,7 @@ The `IExposedSegment` type has been removed as no API depends on it anymore.
 ## `IAudioTrackPreference` / `ITextTrackPreference` / `IVideoTrackPreference`
 
 The `IAudioTrackPreference`, `ITextTrackPreference` and `IVideoTrackPreference` public
-types have been removed as the corresponding API do not exist anymore.
+types have been removed as the corresponding APIs do not exist anymore.
 
 ## `IDefaultAudioTrackOption` / `IDefaultTextTrackOption`
 

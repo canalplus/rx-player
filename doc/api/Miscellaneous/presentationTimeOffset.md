@@ -62,7 +62,7 @@ lead to several issues:
   segments corresponding to a `00:05:24.000` while the browser is still waiting for the
   `00:00:00.000` ones (in that case, we would just have an infinite buffering state).
 
-- even if it does, the client timeline will announce a wrong time, offseted 5 minutes and
+- even if it does, the client timeline will announce a wrong time, offset by 5 minutes and
   24 seconds too late.
 
 This is where the `presentationTimeOffset` comes into play. In our simple example, this
@@ -71,7 +71,7 @@ timescale to convert it into seconds), and the client will know what to do.
 
 What the client has to do here is:
 
-- begin to play at 0 secods
+- begin to play at 0 seconds
 - ask the right segments, by adding this offset to the one it thinks it needs
 - remove the offset from the segment before decoding it
 
@@ -172,14 +172,14 @@ The RxPlayer has A LOT of time-related values defined for a given segment:
 
 As it turns out it's a lot simpler once you make two isolated groups:
 
-- the `manifest` group, which uses the non-offseted `mediaTime`.
+- the `manifest` group, which uses the non-offset `mediaTime`.
 
   In this group you have:
   - the mediaTime (duh)
   - the manifestTime
   - the requestSegmentTime
 
-- the `real time` group, which uses the offseted `presentationTime`.
+- the `real time` group, which uses the offset `presentationTime`.
 
   In this group you have:
   - the presentationTime

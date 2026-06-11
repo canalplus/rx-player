@@ -89,7 +89,7 @@ Can be either:
   Note that to be able to play MetaPlaylist contents:
   - for the default "main thread" RxPlayer mode:
 
-    You will need to add add the `METAPLAYLIST` experimental feature
+    You will need to add the `METAPLAYLIST` experimental feature
     [through our usual feature mechanism](./RxPlayer_Features.md).
 
   - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
@@ -98,13 +98,13 @@ Can be either:
     [importable worker](../Getting_Started/ImportableWorker.md), and add the
     `METAPLAYLIST` feature to it.
 
-- `"local"` for [local manifests](./Miscellaneous/Local_Contents.md), which allows to play
+- `"local"` for [local manifests](./Miscellaneous/Local_Contents.md), which allows playing
   downloaded DASH, Smooth or MetaPlaylist contents (when offline for example).
 
   Note that to be able to play "local" contents:
   - for the default "main thread" RxPlayer mode:
 
-    You will need to add add the `LOCAL_MANIFEST` experimental feature
+    You will need to add the `LOCAL_MANIFEST` experimental feature
     [through our usual feature mechanism](./RxPlayer_Features.md).
 
   - For RxPlayer's ["multithread" mode](../Getting_Started/MultiThreading.md):
@@ -252,7 +252,7 @@ More information on how the initial position is chosen can be found
 
 For dynamic contents, `startAt` could work not as expected:
 
-- Depending on the type of Manifest, it will be more or less precize to guess the current
+- Depending on the type of Manifest, it will be more or less precise to guess the current
   last position of the content. This will mostly affect the `fromLastPosition` option.
 
 - If the Manifest does not allow to go far enough in the past (not enough buffer,
@@ -813,10 +813,10 @@ _type_: `Boolean|undefined`
 
 _defaults_: `false`
 
-Allow to play DASH low-latency contents (with Chunk-encoded and chunk-transferred CMAF
+Allows playing DASH low-latency contents (with Chunk-encoded and chunk-transferred CMAF
 segments) with a low latency efficiently.
 
-In the some rare browsers who do not support the `fetch` API (like IE11 or the BlackBerry
+In the rare browsers that do not support the `fetch` API (like IE11 or the BlackBerry
 browser), we might be more prone to rebuffering in that mode the first few seconds. If you
 want to have a better experience on those browsers, you might want to begin to play
 further from the live edge in those cases through the `startAt` option.
@@ -1050,7 +1050,7 @@ This value is also very useful for low-latency contents, as some of them do not 
 any server's time, relying on the client one instead.
 
 Note that there is a risk of us losing synchronization when leap seconds are
-added/substracted to unix time. However we consider those situations rare enough (and the
+added/subtracted to unix time. However we consider those situations rare enough (and the
 effect should be relatively weak) to let this as is for the moment. For a complete
 explanation, you can look at the
 [corresponding chapter of the low-latency documentation](./Miscellaneous/Low_Latency.md#note-about-time-synchronization).

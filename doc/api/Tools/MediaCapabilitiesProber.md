@@ -16,12 +16,11 @@ The MediaCapabilitiesProber is a tool probing what your browser can do, especial
 This tool is still in an experimental phase, meaning that its API can
 change at any new release. This is not because it is not stable (it is actually)
 or should not be used in production. This is just because we want to receive
-your feedbacks before locking definitely the API.
+your feedback before locking the API definitively.
 </div>
 
-We can for example add supplementary information of even explode the
-MediaCapabilitiesProber into several tools to lower the size of the import. We're waiting
-for your feedbacks!
+We can for example add supplementary information or even split the MediaCapabilitiesProber
+into several tools to lower the size of the import. We're waiting for your feedback!
 
 ## How to use it
 
@@ -94,10 +93,10 @@ _arguments_:
 
 _return value_: `Object`
 
-Probe the support of the given key sytem configuration. If it is supported, this call will
-resolve with a `MediaKeySystemConfiguration` compatible to what you asked that would
-actually be relied on. It will often correspond to a subset of the inputted
-_configuration_ object (for example, you might have there fewer _videoCapabilities_ that
+Probe the support of the given key system configuration. If it is supported, this call
+will resolve with a `MediaKeySystemConfiguration` compatible with what you asked that
+would actually be relied on. It will often correspond to a subset of the inputted
+_configuration_ object (for example, you might have there fewer _videoCapabilities_ than
 in the _configuration_ object).
 
 Rejects if the given configuration is not supported or if we have no way to know if it is

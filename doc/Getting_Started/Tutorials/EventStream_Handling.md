@@ -4,7 +4,7 @@ Some contents contain events a player will need to send at a particular point in
 call those in the RxPlayer "stream events".
 
 For example, stream events are often used jointly with ad-insertion, to allow a player to
-notify when an user begin to see a particular ad.
+notify when a user begins to see a particular ad.
 
 Stream events are not only restrained to ad-related usages though. Any event you want to
 synchronize with the played content can be inserted.
@@ -70,7 +70,7 @@ The events related to stream events are:
 - `"streamEvent"`: an event has just been reached.
 
 - `"streamEventSkip"`: an event has been skipped over. This usually means that a player
-  seek operation resulted in the corresponds event being "missed".
+  seek operation resulted in the corresponding event being "missed".
 
 In any case, the corresponding event will be attached as a payload.
 
@@ -121,15 +121,14 @@ Here is an example of such events:
 
     value: EVENT_VALUE, // This property's format and content depends on the
                         // `type` property. For example, when the type property
-                        // is set to "dash-event-stream", this value will be the
-                        // <Event /> element corresponding to that DASH event.
+                        // is set to "dash-event-stream", this value contains
+                        // information about the corresponding DASH event.
   }
 }
 ```
 
 As written in this example, the underlying format of the event itself will depend on the
-source of the event. For example, an event generated from a DASH's `<EventStream />` won't
-be in the same format that an event generated from a MP4's `emsg` box.
+source of the event.
 
 You can know which current format is used by checking the value of the `data.type`
 property.
@@ -195,7 +194,7 @@ readable `document` format):
   data: {
     type: "dash-event-stream",
     value: {
-      schemeIdUri: "urn::uuid::XYZY",
+      schemeIdUri: "urn:uuid:XYZY",
       element: <Event presentationTime="0" duration="10000" id="0">
                  1 800 10101010
                </Event>,
@@ -211,7 +210,7 @@ readable `document` format):
   data: {
     type: "dash-event-stream",
     value: {
-      schemeIdUri: "urn::uuid::XYZY",
+      schemeIdUri: "urn:uuid:XYZY",
       element: <Event presentationTime="40000" duration="10000" id="1">
                  1 800 10101012
                </Event>,
@@ -227,7 +226,7 @@ readable `document` format):
   data: {
     type: "dash-event-stream",
     value: {
-      schemeIdUri: "urn::uuid::XYZY",
+      schemeIdUri: "urn:uuid:XYZY",
       element: <Event presentationTime="60000" duration="10000" id="2">
                  1 800 10101013
                </Event>,
@@ -280,8 +279,8 @@ rxPlayer.addEventListener("streamEvent", (evt) => {
   if (evt.data.type === "dash-event-stream") {
     console.log("This is a DASH EventStream's Event element.");
 
-    console.log("schemeIdUri:", evt.data.schemeIdUri);
-    console.log("<Event /> element:", evt.data.element);
+    console.log("schemeIdUri:", evt.data.value.schemeIdUri);
+    console.log("<Event /> element:", evt.data.value.element);
   }
 
   if (evt.end !== undefined) {

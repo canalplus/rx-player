@@ -16,8 +16,8 @@ This page is the API documentation page for the second parser.
 
 ## Do I need this?
 
-When playing DASH contents, parsing its MPD file often become the most expensive operation
-in terms of performance.
+When playing DASH contents, parsing its MPD file often becomes the most expensive
+operation in terms of performance.
 
 This is especially true when the MPD is sufficiently large (for example, we often
 encounter MPD of several megabytes in size at Canal+) and when it needs to be refreshed
@@ -27,20 +27,20 @@ Even for smaller MPDs, we observed that on some low-end devices (ChromeCast, set
 some smart TVs) the parsing operation can noticeably lengthen the content's loading time
 and in some rare occasions trigger brief rebuffering periods.
 
-If you encouter large MPDs and/or you noticed poor performance when playing DASH contents,
-you may have a better experience with this parser.
+If you encounter large MPDs and/or you noticed poor performance when playing DASH
+contents, you may have a better experience with this parser.
 
 Note however that your browser has to be compatible with WebAssembly. In case WebAssembly
 is not supported on the current platform and both the WebAssembly and default JavaScript
 DASH parsers are imported through their respective features, the RxPlayer will
-automatically fallback on the latter.
+automatically fall back to the latter.
 
 ## How to use it?
 
 To use the WebAssembly-based parser you will need to do two things:
 
-- the WebAssembly file will have to be stored somewhere, accessible through an URL that
-  can be then communicated to the RxPlayer.
+- the WebAssembly file will have to be stored somewhere, accessible through a URL that can
+  be then communicated to the RxPlayer.
 
 - the `DASH_WASM` feature has to be initialized with it and added to the RxPlayer.
 
@@ -117,7 +117,7 @@ You can find it at any of the following places:
 
 Once you've retrieved the right WebAssembly file linked to your RxPlayer version, you will
 need to store it and give its URL to the RxPlayer so it will be able to load it (the
-embedded version may be used directly instead, like an URL, in the `initialize` method
+embedded version may be used directly instead, like a URL, in the `initialize` method
 shown below).
 
 ### Step 2: importing the `DASH_WASM` feature

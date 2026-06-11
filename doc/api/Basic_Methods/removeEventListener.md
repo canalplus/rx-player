@@ -4,7 +4,7 @@
 
 Remove an event listener. That is, remove a callback previously registered with
 `addEventListener` from being triggered on the corresponding event. This also free-up the
-corresponding ressources.
+corresponding resources.
 
 The callback given is optional: if not given, _every_ registered callback to that event
 will be removed.

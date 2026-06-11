@@ -194,8 +194,8 @@ player.renderThumbnail({
         replace it if the new `renderThumbnail` call succeeds (with the new thumbnail).
 
         If set to `false`, to `undefined`, or not set, the previous thumbnail potentially
-        found inside the container will also be removed if the new new `renderThumbnail`
-        call fails.
+        found inside the container will also be removed if the new `renderThumbnail` call
+        fails.
 
         The default behavior (equivalent to `false`) is generally more expected, as you
         usually don't want to provide an unrelated preview thumbnail for a completely

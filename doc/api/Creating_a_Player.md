@@ -1,4 +1,4 @@
-# Creating a RxPlayer
+# Creating an RxPlayer
 
 ## Instantiation
 

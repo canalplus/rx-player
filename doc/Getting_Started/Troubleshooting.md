@@ -111,7 +111,7 @@ higher than the set "wanted buffer ahead" option
 [`wantedBufferAhead`](../api/Creating_a_Player.md#wantedbufferahead) constructor option or
 [`setWantedBufferAhead`](../api/Buffer_Control/setWantedBufferAhead.md) method).
 
-If you want even a more precize control over memory usage of media data, you can set the
+If you want even more precise control over memory usage of media data, you can set the
 "maximum video buffer size" setting through either:
 
 - the [`maxVideoBufferSize`](../api/Creating_a_Player.md#maxvideobuffersize) constructor
@@ -136,7 +136,7 @@ create a reproducible scenario and document that issue so it can hopefully be fi
 future. In the meantime, you're encouraged either to use Widevine (only on Chromium-based
 Edge) or to not make use of the `fallBackOnLastTry` option on that browser.
 
-### The Player do not download any segment when playing encrypted contents
+### The Player does not download any segment when playing encrypted contents
 
 This is probably due to an issue we encountered several time on embedded devices.
 
@@ -180,7 +180,7 @@ rxPlayer.loadVideo({
 There's a chance that you're encountering another issue we found on embedded devices.
 
 By default, the RxPlayer maintains a cache containing the last loaded licenses. This
-allows to quickly switch to already-played contents, an important improvement when playing
+allows quickly switching to already-played contents, an important improvement when playing
 live contents for example. Rest assured, our cache size is not infinite, and as such it
 should work on most devices.
 

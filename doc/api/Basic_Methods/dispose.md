@@ -2,7 +2,7 @@
 
 ## Description
 
-Free the ressources used by the player.
+Free the resources used by the player.
 
 You can call this method if you know you won't need the RxPlayer anymore.
 

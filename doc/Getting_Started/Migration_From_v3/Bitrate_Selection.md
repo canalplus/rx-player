@@ -287,8 +287,9 @@ rxPlayer.addEventListener("newAvailablePeriods", (periods) => {
 ```
 
 Most methods exposed in this page, whether they are for Representations locking or the
-tracks API, allow to precize which Period you're talking about (if it's not communicated,
-the RxPlayer will assume that you're talking about the currently-playing one).
+tracks API, allow you to specify which Period you're talking about (if it's not
+communicated, the RxPlayer will assume that you're talking about the currently-playing
+one).
 
 For example, to only lock the first video Representation of the first considered Period
 you can do:

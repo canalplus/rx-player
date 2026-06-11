@@ -7,7 +7,7 @@ Returns the maximum video buffer memory size limit , in kilobytes.
 This setting can be updated either by:
 
 - calling the [setMaxVideoBufferSize](./setMaxVideoBufferSize.md) method.
-- instanciating an RxPlayer with a `maxVideoBufferSize` property set.
+- instantiating an RxPlayer with a `maxVideoBufferSize` property set.
 
 ## Syntax
 

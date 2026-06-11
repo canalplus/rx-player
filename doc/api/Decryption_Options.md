@@ -86,8 +86,8 @@ for this `message` event or a Promise which should either:
 - reject if an error was encountered.
 
 Note: We set a 10 seconds timeout by default on this request (configurable through the
-`keySystems[].getLicenseConfig` object). If the returned Promise do not resolve or reject
-under this limit, the RxPlayer will stop with an error.
+`keySystems[].getLicenseConfig` object). If the returned Promise does not resolve or
+reject under this limit, the RxPlayer will stop with an error.
 
 In any case, if a license is provided by this function it should be under a `BufferSource`
 type (example: an `Uint8Array` or an `ArrayBuffer`).
@@ -143,7 +143,7 @@ are mandatory) to configure the behavior of the RxPlayer relative to that failur
 
 - `fallbackOnLastTry` (`boolean`): If this getLicense is the last retry (if the `noRetry`
   property is set to `true`, this is always true), we will not throw immediately but
-  rather try to fallback on other Representations (e.g. qualities) which might have a
+  rather try to fall back to other Representations (e.g. qualities) which might have a
   different decryption key. If no Representation is left, we will throw a MediaError with
   a `NO_PLAYABLE_REPRESENTATION` code, as documented
   [in the errors documentation](./Player_Errors.md#media_error).
@@ -494,7 +494,7 @@ _type_: `string | undefined`
 
 `"error"` by default.
 
-Behavior the RxPlayer should have when one of the key is known to be expired.
+Behavior the RxPlayer should have when one of the keys is known to be expired.
 
 `onKeyExpiration` can be set to a string, each describing a different behavior, the
 default one if not is defined being `"error"`:
@@ -542,8 +542,8 @@ and
 of the wanted key system.
 
 Setting one of these options (or both) allows for example to signal that some robustness
-level (SL3000, Widevine L1...) are explicitely wanted when decrypting respectively video
-and audio and/or that the key system should also be compatible to specific video/audio
+level (SL3000, Widevine L1...) are explicitly wanted when decrypting respectively video
+and audio and/or that the key system should also be compatible with specific video/audio
 codecs and containers.
 
 Those options are relatively advanced, thus it is preferable to let them to `undefined`
@@ -628,7 +628,7 @@ Moreover, because our `MediaKeySession` cache (see
 keeping the same one allows the RxPlayer to also keep the same cache (whereas changing
 `MediaKeySystemAccess` when changing contents resets that cache).
 
-Note that the current device has to be compatible to _ALL_ `sessionTypes` for that
+Note that the current device has to be compatible with _ALL_ `sessionTypes` for that
 configuration to go through.
 
 #### Notes

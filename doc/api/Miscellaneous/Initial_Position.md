@@ -74,14 +74,14 @@ For live contents, we have here three cases:
   does not announce clearly a maximum position, we will use the system clock and play
   close to[2] that time instead.
 
-[1] We can obtain a synchronized clock allowing us to to know which content should be
+[1] We can obtain a synchronized clock allowing us to know which content should be
 broadcasted at which time by either of those means:
 
 - the Manifest document defines one (e.g. `UTCTiming` elements for DASH contents).
 - One was provided to `loadVideo` thanks to the `serverSyncInfos` transport option
   [see loadVideo documentation](../Loading_a_Content.md#serversyncinfos).
 
-[2] I wrote "close to" in every cases as we might substract some seconds from that value.
+[2] I wrote "close to" in every case as we might subtract some seconds from that value.
 How much we might do, depends on:
 
 - if the manifest suggest us a delay relative to the live, in which case we apply it

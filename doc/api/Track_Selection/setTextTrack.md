@@ -14,7 +14,7 @@ const textTracks = rxPlayer.getAvailableTextTracks();
 rxPlayer.setTextTrack(textTracks[0].id);
 ```
 
-`setTextTrack` can also accept an object argument allowing more precize settings,
+`setTextTrack` can also accept an object argument allowing more precise settings,
 described below. In the case an object is given, the text track's id should be set as in a
 `trackId` property.
 

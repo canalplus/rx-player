@@ -1,6 +1,6 @@
 # Tutorial: Quick Start
 
-Because the RxPlayer exports a lot of functionnalities, you might want to quickly test
+Because the RxPlayer exports a lot of functionalities, you might want to quickly test
 basic use cases before you dive deep into the
 [whole API documentation](../../api/Overview.md).
 
@@ -23,14 +23,14 @@ or
 yarn add rx-player
 ```
 
-## Instanciating a Player
+## Instantiating a Player
 
-The first step is to instanciate a new RxPlayer.
+The first step is to instantiate a new RxPlayer.
 
 Each RxPlayer instance is attached to a single video (or audio) HTML element, and is able
 to play a single content at once.
 
-To instanciate it with a linked video element you can just do something along the lines
+To instantiate it with a linked video element you can just do something along the lines
 of:
 
 ```js
@@ -59,8 +59,8 @@ Loading a new content is done through the `loadVideo` method.
 [a lot of possible options](../../api/Loading_a_Content.md), but to simplify we will start
 with just three:
 
-- `transport`: String describing the transport protocol (can be `"dash"`, `"smooth"` or
-  `"directfile"` for now).
+- `transport`: String describing the transport protocol. For the usual first use cases,
+  this will generally be `"dash"`, `"smooth"` or `"directfile"`.
 
 - `url`: URL to the content (to the Manifest for Smooth contents, to the MPD for DASH
   contents or to the whole file for DirectFile contents).
@@ -73,7 +73,7 @@ Here is a quick example which will load and play a DASH content:
 
 ```js
 player.loadVideo({
-  url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+  url: "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
   transport: "dash",
   autoPlay: true,
 });
@@ -129,7 +129,7 @@ others can be used in any case (like `setVolume`, `getVideoElement` or `loadVide
 
 Here is a complete example where I:
 
-1. Instanciate an RxPlayer
+1. Instantiate an RxPlayer
 2. load a content with it with autoPlay
 3. toggle between play and pause once the content is loaded and the user click on the
    video element.
@@ -162,7 +162,7 @@ player.addEventListener("playerStateChange", (state) => {
 });
 
 player.loadVideo({
-  url: "http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
+  url: "https://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_6s/Manifest.mpd",
   transport: "dash",
   autoPlay: true,
 });

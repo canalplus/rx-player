@@ -43,7 +43,7 @@ media monitoring, handles content decryption, displays text tracks and interacts
 with web API that are only usable in the main thread.
 
 [2] RxPlayer Core: Loads and parses the Manifest as well as media segments that
-will be be played. Also monitors what's being played and will be played to
+will be played. Also monitors what's being played and what will be played to
 ensure a smooth playback.
 ```
 
@@ -111,7 +111,7 @@ import { MULTI_THREAD } from "rx-player/experimental/features";
 
 // To simplify this example, we'll directly import an "embedded" version of the
 // supplementary code loaded by the `MULTI_THREAD` feature.
-// We could also load it on demand through an URL
+// We could also load it on demand through a URL
 import { EMBEDDED_WORKER } from "rx-player/experimental/features/embeds";
 
 // Add the MULTI_THREAD feature, like any other feature
@@ -166,7 +166,7 @@ middle of playback)._
 Note that the `"multithread"` mode will only run on a `loadVideo` call if all the
 following conditions are respected:
 
-- Your supported platforms are compatible to the `WebWorker` browser feature (the great
+- Your supported platforms are compatible with the `WebWorker` browser feature (the great
   majority are compatible).
 
 - You've added the `MULTI_THREAD` feature to the `RxPlayer` class (as shown in examples)
@@ -209,9 +209,9 @@ for more information on this.
 ### Work-around those limitations
 
 If any of those conditions may not always be respected by your application, you can also
-let the player fallback on the usual "main" mode (which runs everything on main thread)
-automatically when multithreading mode is not available. This is what we recommend for
-most cases:
+let the player fall back to the usual "main" mode (which runs everything on the main
+thread) automatically when multithreading mode is not available. This is what we recommend
+for most cases:
 
 - If you rely on the minimal build of the RxPlayer, ensure you've added the feature for
   the wanted streaming protocol(s).
@@ -307,7 +307,7 @@ Optionally, for very specific use-cases where you've seen improvements with it, 
 also rely on our [DASH WebAssembly parser](../api/Miscellaneous/DASH_WASM_Parser.md) in
 those "multithread" scenarios. Note that this is unneeded for most usages.
 
-To do this, you have to explicitely provide the corresponding WebAssembly file. Like for
+To do this, you have to explicitly provide the corresponding WebAssembly file. Like for
 the worker file, it can either be found:
 
 - As an "embedded" version, exported through the
@@ -436,14 +436,14 @@ if (currentModeInfo === null) {
 
 ## Note about ES5 Environment
 
-The Worker file will use es2017 features which should be compatible to a majority of
+The Worker file will use es2017 features which should be compatible with a majority of
 devices.
 
-However, some older devices might not be compatible with ES2017 yet still compatible to
+However, some older devices might not be compatible with ES2017 yet still compatible with
 the WebWorker API (and thus could theoretically be compatible with the `MULTI_THREAD`
 feature).
 
 If you need to provide support for the `MULTI_THREAD` feature on those platforms, we
 recommend that you [bundle the worker file on your side](./ImportableWorker.md) using a
-transpiler tool on in the process to make it compatible to ES5. Examples of transpiler
+transpiler tool in the process to make it compatible with ES5. Examples of transpiler
 tools are [babel](https://babeljs.io/) and [swc](https://swc.rs/).

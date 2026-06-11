@@ -11,7 +11,7 @@ The RxPlayer does not come with an UI in itself as the idea is to let you have a
 control over your application's experience.
 
 What happens here is that you provide only a `<video>` or `<audio>` element to it (and
-optionally a separate element to display text tracks) an URL to the content (for example,
+optionally a separate element to display text tracks) a URL to the content (for example,
 to the DASH's MPD) and the configuration you want (the languages, control over the quality
 etc.) and the RxPlayer takes care of every little details to play the content inside that
 element:

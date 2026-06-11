@@ -38,7 +38,7 @@ bitrate-oriented API.
 
 Its behavior is however easy to replace, just by using respectively the
 [`getAudioRepresentation`](../../api/Representation_Selection/getAudioRepresentation.md)
-and and
+and
 [`getVideoRepresentation`](../../api/Representation_Selection/getVideoRepresentation.md)
 methods:
 

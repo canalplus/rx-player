@@ -12,8 +12,8 @@ The returned value can either be an object or:
 - `null` if no video track is enabled right now.
 - `undefined` if no video content has been loaded yet or if its information is unknown.
 
-In case it a video track is set and its properties is known, the `getVideoRepresentation`
-method will return an object with the following properties:
+If a video track is set and its properties are known, the `getVideoRepresentation` method
+will return an object with the following properties:
 
 - `id` (`string`): The id used to identify this Representation. No other video
   Representation for the same [Period](../../Getting_Started/Glossary.md#period) will have

@@ -77,7 +77,7 @@ The player will not play until it gets out of this state.
 
 ### The FREEZING state
 
-TThe player cannot play the content despite having enough data, due to an unknown reason.
+The player cannot play the content despite having enough data, due to an unknown reason.
 
 This state might be due to either:
 

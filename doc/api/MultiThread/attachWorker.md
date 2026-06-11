@@ -2,7 +2,7 @@
 
 ## Short Description
 
-Link the "RxPlayer Worker" to an RxPlayer instance, allowing to enable its
+Link the "RxPlayer Worker" to an RxPlayer instance, enabling its
 ["multithreading" mode](../../Getting_Started/MultiThreading.md) when future contents are
 loaded.
 
@@ -20,9 +20,9 @@ thread. The `attachWorker` method let you provide that worker file by doing a ca
 player.attachWorker({ workerUrl });
 ```
 
-You will first need to obtain a reference to that worker file, for more information on how
-to do this can be found in the
-[Multithreading documentation](.../../Getting_Started/MultiThreading.md).
+You will first need to obtain a reference to that worker file. More information on how to
+do this can be found in the
+[Multithreading documentation](../../Getting_Started/MultiThreading.md).
 
 This `attachWorker` method then returns a Promise which:
 
@@ -43,7 +43,7 @@ import { MULTI_THREAD } from "rx-player/experimental/features";
 
 // To simplify this example, we'll directly import an "embedded" version of the
 // supplementary code loaded by the `MULTI_THREAD` feature.
-// We could also load it on demand through an URL
+// We could also load it on demand through a URL
 import { EMBEDDED_WORKER } from "rx-player/experimental/features/embeds";
 
 // Add the MULTI_THREAD feature, like any other feature

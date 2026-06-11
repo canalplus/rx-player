@@ -6,12 +6,12 @@ Updates the current playback rate, i.e. the speed at which contents are played.
 
 As its name hints at, the value indicates the rate at which contents play:
 
-- Setting it to `2` allows to play at a speed multiplied by 2 relatively to regular
+- Setting it to `2` allows playing at a speed multiplied by 2 relatively to regular
   playback.
 
 - Setting that value to `1` reset the playback rate to its "normal" rythm.
 
-- Setting it to `0.5` allows to play at half the speed relatively to regular playback.
+- Setting it to `0.5` allows playing at half the speed relatively to regular playback.
 
 - etc.
 

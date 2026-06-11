@@ -38,13 +38,13 @@ MetaPlaylist has several advantages. Some of them are:
   avoiding many customers doing the same manifest request at the exact same time are much
   easier to implement.
 
-- this file rarely needs to be updated, improving the caching of this ressource.
+- this file rarely needs to be updated, improving the caching of this resource.
 
 - its format is very simple and in JSON, which is easy to integrate with JavaScript
   codebases. The file can even be very easily generated directly on the client's page.
   This paves the way for contents personalized to a single customer.
 
-- Digital right management is also much more flexible than with a DASH MPD. For example,
+- Digital rights management is also much more flexible than with a DASH MPD. For example,
   different license servers for different contents could be integrated. This is still a
   work-in-progress.
 
@@ -264,7 +264,7 @@ More infos on the `manifestLoader` can be found [here](./plugins.md#manifestload
 As already explained, a MetaPlaylist can either be dynamic or static.
 
 For calculating the initial position of those contents, the RxPlayer will obey
-[the same rules than for other contents](./Initial_Position.md).
+[the same rules as for other contents](./Initial_Position.md).
 
 As such, dynamic MetaPlaylist contents will by default start just before the end of the
 last defined content which might not be what you want.

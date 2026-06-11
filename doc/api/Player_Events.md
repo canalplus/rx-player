@@ -107,7 +107,7 @@ when no content is loading nor loaded.
 Emitted when the `RxPlayer`'s `videoElement` is now considered paused.
 
 This event is triggered when and if the [`pause`](./Basic_Methods/play.md) method has
-succeeded, when the content has ended or due to other rare occurences: for example if we
+succeeded, when the content has ended or due to other rare occurrences: for example if we
 could not automatically play after a `"LOADING"` or `"RELOADING"` state due to
 [the browser's autoplay policies](https://developer.mozilla.org/en-US/docs/Web/Media/Autoplay_guide).
 
@@ -141,7 +141,7 @@ _The event might also rarely be emitted even if the list of available audio trac
 really change - as the RxPlayer might send it in situations where there's a chance it had
 without thoroughly checking it._
 
-The array emitted contains object describing each available audio track:
+The array emitted contains objects describing each available audio track:
 
 - `active` (`Boolean`): Whether the track is the one currently active or not.
 
@@ -161,7 +161,7 @@ The array emitted contains object describing each available audio track:
 
 - `dub` (`Boolean|undefined`): If set to `true`, this audio track is a "dub", meaning it
   was recorded in another language than the original. If set to `false`, we know that this
-  audio track is in an original language. This property is `undefined` if we do not known
+  audio track is in an original language. This property is `undefined` if we do not know
   whether it is in an original language.
 
 - `label` (`string|undefined`): A human readable label that may be displayed in the user
@@ -187,17 +187,17 @@ The array emitted contains object describing each available audio track:
   - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
     Representation is supported by the current platform.
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that because elements of the `representations` array only contain playable
+    Representations, this value here cannot be set to `false` when in this array.
 
     `undefined` (or not set) if support of that Representation is unknown or if does not
     make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
-    (in the eventuality it had DRM-related protection).
+    (if it had DRM-related protection).
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that because elements of the `representations` array only contain playable
+    Representations, this value here cannot be set to `false` when in this array.
 
   - `contentProtections` (`Object|undefined`): Encryption information linked to this
     Representation.
@@ -222,7 +222,7 @@ _The event might also rarely be emitted even if the list of available video trac
 really change - as the RxPlayer might send it in situations where there's a chance it had
 without thoroughly checking it._
 
-The array emitted contains object describing each available video track:
+The array emitted contains objects describing each available video track:
 
 - `id` (`string`): The id used to identify the track. Use it for setting the track via
   `setVideoTrack`.
@@ -258,17 +258,17 @@ The array emitted contains object describing each available video track:
   - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
     Representation is supported by the current platform.
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that because elements of the `representations` array only contain playable
+    Representations, this value here cannot be set to `false` when in this array.
 
     `undefined` (or not set) if support of that Representation is unknown or if does not
     make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
-    (in the eventuality it had DRM-related protection).
+    (if it had DRM-related protection).
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that because elements of the `representations` array only contain playable
+    Representations, this value here cannot be set to `false` when in this array.
 
   - `contentProtections` (`Object|undefined`): Encryption information linked to this
     Representation.
@@ -295,7 +295,7 @@ _The event might also rarely be emitted even if the list of available text track
 really change - as the RxPlayer might send it in situations where there's a chance it had
 without thoroughly checking it._
 
-The array emitted contains object describing each available text track:
+The array emitted contains objects describing each available text track:
 
 - `id` (`string`): The id used to identify the track. Use it for setting the track via
   `setTextTrack`.
@@ -345,7 +345,7 @@ The payload is an object describing the new track, with the following properties
   happening at the screen.
 - `dub` (`Boolean|undefined`): If set to `true`, this audio track is a "dub", meaning it
   was recorded in another language than the original. If set to `false`, we know that this
-  audio track is in an original language. This property is `undefined` if we do not known
+  audio track is in an original language. This property is `undefined` if we do not know
   whether it is in an original language.
 - `label` (`string|undefined`): A human readable label that may be displayed in the user
   interface providing a choice between audio tracks.
@@ -370,17 +370,17 @@ The payload is an object describing the new track, with the following properties
   - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
     Representation is supported by the current platform.
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that because elements of the `representations` array only contain playable
+    Representations, this value here cannot be set to `false` when in this array.
 
     `undefined` (or not set) if support of that Representation is unknown or if does not
     make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
-    (in the eventuality it had DRM-related protection).
+    (if it had DRM-related protection).
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that because elements of the `representations` array only contain playable
+    Representations, this value here cannot be set to `false` when in this array.
 
   - `contentProtections` (`Object|undefined`): Encryption information linked to this
     Representation.
@@ -473,17 +473,17 @@ The payload is an object describing the new track, with the following properties
   - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that
     Representation is supported by the current platform.
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that because elements of the `representations` array only contain playable
+    Representations, this value here cannot be set to `false` when in this array.
 
     `undefined` (or not set) if support of that Representation is unknown or if does not
     make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
-    (in the eventuality it had DRM-related protection).
+    (if it had DRM-related protection).
 
-    Note that because elements of the `representations` array only contains playable
-    Representation, this value here cannot be set to `false` when in this array.
+    Note that because elements of the `representations` array only contain playable
+    Representations, this value here cannot be set to `false` when in this array.
 
   - `contentProtections` (`Object|undefined`): Encryption information linked to this
     Representation.
@@ -505,10 +505,10 @@ The payload is an object describing the new track, with the following properties
 - `trickModeTracks` (`Object | undefined`): Trick mode video tracks attached to this video
   track.
 
-  Each of those objects contain the same properties that a regular video track (same
-  properties than what is documented here).
+  Each of those objects contains the same properties as a regular video track (same
+  properties as what is documented here).
 
-  It this property is either `undefined` or not set, then this track has no linked
+  If this property is either `undefined` or not set, then this track has no linked
   trickmode video track.
 
 - `signInterpreted` (`Boolean`): Whether the track contains sign interpretation.
@@ -602,17 +602,17 @@ properties:
 - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that Representation
   is supported by the current platform.
 
-  Note that because elements of the `representations` array only contains playable
-  Representation, this value here cannot be set to `false` when in this array.
+  Note that because elements of the `representations` array only contain playable
+  Representations, this value here cannot be set to `false` when in this array.
 
   `undefined` (or not set) if support of that Representation is unknown or if does not
   make sense here.
 
-- `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered (in
-  the eventuality it had DRM-related protection).
+- `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered (if
+  it had DRM-related protection).
 
-  Note that because elements of the `representations` array only contains playable
-  Representation, this value here cannot be set to `false` when in this array.
+  Note that because elements of the `representations` array only contain playable
+  Representations, this value here cannot be set to `false` when in this array.
 
 - `contentProtections` (`Object|undefined`): Encryption information linked to this
   Representation.
@@ -653,17 +653,17 @@ The payload is an object describing the new Representation, with the following p
 - `isCodecSupported` (`Boolean|undefined`): If `true` the codec(s) of that Representation
   is supported by the current platform.
 
-  Note that because elements of the `representations` array only contains playable
-  Representation, this value here cannot be set to `false` when in this array.
+  Note that because elements of the `representations` array only contain playable
+  Representations, this value here cannot be set to `false` when in this array.
 
   `undefined` (or not set) if support of that Representation is unknown or if does not
   make sense here.
 
-- `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered (in
-  the eventuality it had DRM-related protection).
+- `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered (if
+  it had DRM-related protection).
 
-  Note that because elements of the `representations` array only contains playable
-  Representation, this value here cannot be set to `false` when in this array.
+  Note that because elements of the `representations` array only contain playable
+  Representations, this value here cannot be set to `false` when in this array.
 
 - `contentProtections` (`Object|undefined`): Encryption information linked to this
   Representation.

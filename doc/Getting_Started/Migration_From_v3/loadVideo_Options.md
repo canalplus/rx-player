@@ -33,7 +33,7 @@ If you still need that option for a valid use case, you are welcomed to open an 
 The `manifestUpdateUrl` option has been removed without replacement.
 
 It was previously used as a non-standard DASH optimization to be able to refresh a DASH
-MPD (its Manifest document) through an URL containing a shorter version of the full DASH
+MPD (its Manifest document) through a URL containing a shorter version of the full DASH
 MPD. As we knew, it was only used at Canal+, though we now use (and we always preferred)
 more standard solutions both on the packaging-side (use of repeat attributes) and on the
 RxPlayer-side (usage of WebAssembly, internal optimizations like "unsafeMode").
@@ -134,8 +134,8 @@ it directly to the url of the Manifest for contents of the `"smooth"` `transport
 An undocumented feature of that option was that, for legacy reasons, it was previously
 possible to set it to a JSON or XML document that would contain the Manifest URL.
 
-You're most probably not impacted by this change as as far as we know, the feature was
-only used internally at Canal+ and was not documented.
+You're most probably not impacted by this change as far as we know, the feature was only
+used internally at Canal+ and was not documented.
 
 ### `networkConfig`
 

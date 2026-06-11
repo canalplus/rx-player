@@ -3,8 +3,8 @@
 Welcome to the RxPlayer documentation.
 
 This directory contains all available information on how to use the RxPlayer.
-Documentation files in this directory are all Markdown files compatible to the CommonMark
-specification.
+Documentation files in this directory are all Markdown files compatible with the
+CommonMark specification.
 
 Moreover, the RxPlayer's doc generator is able to use those files and the
 `.docConfig.json` files in the different folders to generate the official HTML

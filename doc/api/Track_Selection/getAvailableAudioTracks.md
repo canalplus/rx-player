@@ -27,7 +27,7 @@ Each of the objects in the returned array have the following properties:
 
 - `dub` (`Boolean|undefined`): If set to `true`, this audio track is a "dub", meaning it
   was recorded in another language than the original. If set to `false`, we know that this
-  audio track is in an original language. This property is `undefined` if we do not known
+  audio track is in an original language. This property is `undefined` if we do not know
   whether it is in an original language.
 
 - `label` (`string|undefined`): A human readable label that may be displayed in the user
@@ -62,7 +62,7 @@ Each of the objects in the returned array have the following properties:
     make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
-    (in the eventuality it had DRM-related protection).
+    (if it had DRM-related protection).
 
     Note that unless you set the `filterPlayableRepresentations` option to `false`, no
     Representation with a `isCodecSupported` value of `false` will be present in this

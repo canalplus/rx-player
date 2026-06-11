@@ -77,9 +77,9 @@ Here is the anotated exhaustive list (notes are at the bottom of the table):
 **Notes**:
 
 **[1]**: In cases where both the `DASH` and `DASH_WASM` features are added (which are both
-parsers for DASH contents), the RxPlayer will default using the WebAssembly parser
-(provided by `DASH_WASM`) and fallback on the JavaScript parser (provided by `DASH`) when
-it cannot do so.
+parsers for DASH contents), the RxPlayer will use the WebAssembly parser by default
+(provided by `DASH_WASM`) and fall back to the JavaScript parser (provided by `DASH`) when
+it cannot use it.
 
 **[2]**: Both the `DASH` and `DASH_WASM` features only concern DASH contents loaded in
 main thread. If you just want to load DASH content in
@@ -125,7 +125,7 @@ import { DASH, NATIVE_VTT_PARSER } from "rx-player/features";
 RxPlayer.addFeatures([DASH, NATIVE_VTT_PARSER]);
 ```
 
-## possibly-encrypted DASH contents with HMTL webVTT and TTML subtitles
+## possibly-encrypted DASH contents with HTML webVTT and TTML subtitles
 
 ```js
 import RxPlayer from "rx-player/minimal";

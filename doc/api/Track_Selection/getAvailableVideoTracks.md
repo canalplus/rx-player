@@ -51,7 +51,7 @@ Each of the objects in the returned array have the following properties:
     make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
-    (in the eventuality it had DRM-related protection).
+    (if it had DRM-related protection).
 
     Note that unless you set the `filterPlayableRepresentations` option to `false`, no
     Representation with a `isCodecSupported` value of `false` will be present in this
@@ -75,10 +75,10 @@ Each of the objects in the returned array have the following properties:
 - `trickModeTracks` (`Array.<Object> | undefined`): Trick mode video tracks attached to
   this video track.
 
-  Each of those objects contain the same properties that a regular video track (same
-  properties than what is documented here).
+  Each of those objects contains the same properties as a regular video track (same
+  properties as what is documented here).
 
-  It this property is either `undefined` or not set, then this track has no linked
+  If this property is either `undefined` or not set, then this track has no linked
   trickmode video track.
 
 ### Asking for a specific Period

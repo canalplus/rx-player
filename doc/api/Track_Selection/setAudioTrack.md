@@ -14,7 +14,7 @@ const audioTracks = rxPlayer.getAvailableAudioTracks();
 rxPlayer.setAudioTrack(audioTracks[0].id);
 ```
 
-`setAudioTrack` can also accept an object argument allowing more precize settings,
+`setAudioTrack` can also accept an object argument allowing more precise settings,
 described below. In the case an object is given, the audio track's id should be set as in
 a `trackId` property.
 

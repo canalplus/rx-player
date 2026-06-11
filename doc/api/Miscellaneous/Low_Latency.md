@@ -79,7 +79,7 @@ rxPlayer.loadVideo({
 In most cases, DASH low-latency contents rely on time synchronization between the server
 and the client without providing a synchronization mechanism.
 
-This means that, on poorly configurated client (with bad clock settings), you could lose
+This means that, on a poorly configured client (with bad clock settings), you could lose
 latency or worse: obtain playback issues.
 
 To work around that problem, the RxPlayer allows you to provide a synchronization
@@ -92,11 +92,11 @@ a quick explanation of what to put in it.
 
 Here how it works:
 
-Imagine you have an URL allowing you to know the UTC time on the server's side. Let's call
+Imagine you have a URL allowing you to know the UTC time on the server's side. Let's call
 it `serverTimeURL`.
 
 Now you can have the server's time at a particular point in time (!). The problem is that
-time continously changes: a time synchronization mechanism will have to be aware of how
+time continuously changes: a time synchronization mechanism will have to be aware of how
 much time passed since the last request to obtain that time.
 
 We could asks for the client's timestamp - obtained thanks to the `Date.now()` API - at
@@ -115,7 +115,7 @@ the system's clock. However, we are still left with two other issues:
 
 2. `performance.now()` doesn't integrate the notion of leap seconds whereas unix time (the
    server's time) does. This could mean small time de-synchronization when leap seconds
-   are added or substracted.
+   are added or subtracted.
 
 We however consider those last two problems minor when compared to `Date.now()`'s problem
 (which is the fact that it "breaks" if the system clock is updated). If you would prefer

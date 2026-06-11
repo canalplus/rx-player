@@ -30,7 +30,7 @@ You can also be warned of any non-fatal error by:
 
 All of those are in essence `Error` instances with added information.
 
-Those supplementary information are described in this page.
+This supplementary information is described in this page.
 
 ## Structure of an Error
 
@@ -92,7 +92,7 @@ They all have a `type` property equal to `"MEDIA_ERROR"`.
 
 Depending on its `code` property (listed below), a `MEDIA_ERROR` may also have a
 supplementary `tracksInfo` property, describing the track(s) related to the issue. The
-format of that property is decribed in the chapter below listed codes, and the codes for
+format of that property is described in the chapter below listed codes, and the codes for
 which it is set are indicated in the corresponding code's description below.
 
 Depending on its `code` property, a `MEDIA_ERROR` may also have a supplementary `timeInfo`
@@ -302,7 +302,7 @@ the following properties:
     make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
-    (in the eventuality it had DRM-related protection).
+    (if it had DRM-related protection).
 
 - `signInterpreted` (`Boolean|undefined`): If set to `true`, this track is known to
   contain an interpretation in sign language. If set to `false`, the track is known to not
@@ -316,10 +316,10 @@ the following properties:
 - `trickModeTracks` (`Array.<Object> | undefined`): Trick mode video tracks attached to
   this video track.
 
-  Each of those objects contain the same properties that a regular video track (same
-  properties than what is documented here).
+  Each of those objects contains the same properties as a regular video track (same
+  properties as what is documented here).
 
-  It this property is either `undefined` or not set, then this track has no linked
+  If this property is either `undefined` or not set, then this track has no linked
   trickmode video track.
 
 ##### For audio tracks
@@ -343,7 +343,7 @@ contains the following properties:
 
 - `dub` (`Boolean|undefined`): If set to `true`, this audio track is a "dub", meaning it
   was recorded in another language than the original. If set to `false`, we know that this
-  audio track is in an original language. This property is `undefined` if we do not known
+  audio track is in an original language. This property is `undefined` if we do not know
   whether it is in an original language.
 
 - `label` (`string|undefined`): A human readable label that may be displayed in the user
@@ -372,8 +372,8 @@ contains the following properties:
     make sense here.
 
   - `decipherable` (`Boolean|undefined`): If `true` the Representation can be deciphered
-    (in the eventuality it had DRM-related protection). If `false`, it cannot. If
-    `undefined` or not set, it is unknown if it can or cannot be deciphered.
+    (if it had DRM-related protection). If `false`, it cannot. If `undefined` or not set,
+    it is unknown if it can or cannot be deciphered.
 
 ##### For text tracks
 

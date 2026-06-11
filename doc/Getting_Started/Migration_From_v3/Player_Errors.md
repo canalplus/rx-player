@@ -14,7 +14,7 @@ Previously, if no compatible audio and/or video codec was found in the Manifest,
 supported codec found.
 
 Now this final fatal error is also a `MediaError` with the code
-`MANIFEST_INCOMPATIBLE_CODECS_ERROR`, as it's more precize.
+`MANIFEST_INCOMPATIBLE_CODECS_ERROR`, as it's more precise.
 
 ## `NetworkError`
 

@@ -7,7 +7,7 @@ Returns the maximum kept buffer before the current position, in seconds.
 This setting can be updated either by:
 
 - calling the `setMaxBufferBehind` method.
-- instanciating an RxPlayer with a `maxBufferBehind` property set.
+- instantiating an RxPlayer with a `maxBufferBehind` property set.
 
 ## Syntax
 

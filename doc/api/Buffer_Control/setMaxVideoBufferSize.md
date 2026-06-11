@@ -17,7 +17,7 @@ You can set it to `Infinity` to remove this limit and just let the browser do th
 instead.
 
 <div class="warning">
-The limit set by `setMaxVideoBufferSize` is approximative, and bypassed in edge case scenarios if we dont have enough buffer because of this limitation.
+The limit set by `setMaxVideoBufferSize` is approximate, and bypassed in edge case scenarios if we don't have enough buffer because of this limitation.
 </div>
 
 <div class="warning">

@@ -14,7 +14,7 @@ const video = rxPlayer.getAvailableVideoTracks();
 rxPlayer.setVideoTrack(video[0].id);
 ```
 
-`setVideoTrack` can also accept an object argument allowing more precize settings,
+`setVideoTrack` can also accept an object argument allowing more precise settings,
 described below. In the case an object is given, the video track's id should be set as in
 a `trackId` property.
 
@@ -38,7 +38,7 @@ should use `setPlaybackRate` instead.
 Setting a new video track when a previous one was already playing can lead by default to a
 `RELOADING` player state, during which playback might go into a transitory black screen
 and while multiple API will not be available. You can forbid this from happening (with
-some disadvantages, by explicitely setting
+some disadvantages, by explicitly setting
 
 <div class="warning">
 In <i>DirectFile</i> mode (see <a
