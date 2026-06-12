@@ -57,7 +57,7 @@ export function getCodecsWithUnknownSupport(
  * Because probing for codec support is always synchronous in the main thread,
  * calling this function ensures that support is now known.
  *
- * @param {Object|Function|null|undefined} MediaSourceClass - The `MediaSource`
+ * @param {Object|Function|null|undefined} mediaSourceClass - The `MediaSource`
  * class that is intended to be used to play the content.
  * @param {Object} manifest - The manifest to update
  * @param {Object|null} contentDecryptor - The current content decryptor
@@ -65,8 +65,7 @@ export function getCodecsWithUnknownSupport(
  * @returns {Array.<Object>}
  */
 export function updateManifestCodecSupport(
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  MediaSourceClass: IMediaSourceClass,
+  mediaSourceClass: IMediaSourceClass,
   manifest: IManifestMetadata,
   contentDecryptor: ContentDecryptor | null,
   isPlayingWithMSEinWorker: boolean,
@@ -94,7 +93,7 @@ export function updateManifestCodecSupport(
     }
 
     let newData;
-    const isSupported = isCodecSupported(MediaSourceClass, inputCodec);
+    const isSupported = isCodecSupported(mediaSourceClass, inputCodec);
     if (!isSupported) {
       newData = {
         isSupportedClear: false,
