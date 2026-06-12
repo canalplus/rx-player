@@ -86,21 +86,17 @@ export default class MainMediaSourceInterface
    *
    * @param {string} id - The wanted `id` property for this new `MediaSource`
    * instance.
-   * @param {Object|function} MediaSourceClass - `MediaSource` implementation
+   * @param {Object|function} mediaSourceClass - `MediaSource` implementation
    * relied on.
    */
-  constructor(
-    id: string,
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    MediaSourceClass: IMediaSourceClass,
-  ) {
+  constructor(id: string, mediaSourceClass: IMediaSourceClass) {
     super();
     this.id = id;
     this.sourceBuffers = [];
     this._canceller = new TaskCanceller("MainMediaSourceInterface");
 
     log.info("mse", "Creating MediaSource");
-    const mediaSource = new MediaSourceClass();
+    const mediaSource = new mediaSourceClass();
     const handle = (mediaSource as unknown as { handle: MediaProvider }).handle;
     this.handle = isNullOrUndefined(handle)
       ? // eslint-disable-next-line @typescript-eslint/no-restricted-types

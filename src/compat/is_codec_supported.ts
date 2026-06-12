@@ -33,7 +33,7 @@ const supportMap: Map<string, boolean> = new Map();
 /**
  * Returns true if the given codec is supported by the browser's MediaSource
  * implementation.
- * @param {Object|Function|null|undefined} MediaSourceClass - The `MediaSource`
+ * @param {Object|Function|null|undefined} mediaSourceClass - The `MediaSource`
  * class that is intended to be used to play the content.
  * @param {string} mimeType - The MIME media type that you want to test support
  * for in the current browser.
@@ -42,23 +42,22 @@ const supportMap: Map<string, boolean> = new Map();
  * @returns {Boolean}
  */
 export default function isCodecSupported(
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  MediaSourceClass: IMediaSourceClass | null,
+  mediaSourceClass: IMediaSourceClass | null,
   mimeType: string,
 ): boolean {
-  if (isNullOrUndefined(MediaSourceClass)) {
+  if (isNullOrUndefined(mediaSourceClass)) {
     if (isWorker) {
       log.error("mse", "Cannot request codec support in a worker without MSE.");
     }
     return false;
   }
 
-  if (typeof MediaSourceClass.isTypeSupported === "function") {
+  if (typeof mediaSourceClass.isTypeSupported === "function") {
     const cachedSupport = supportMap.get(mimeType);
     if (cachedSupport !== undefined) {
       return cachedSupport;
     } else {
-      const isSupported = MediaSourceClass.isTypeSupported(mimeType);
+      const isSupported = mediaSourceClass.isTypeSupported(mimeType);
       if (supportMap.size >= MAX_SUPPORT_MAP_ENTRIES) {
         supportMap.clear();
       }
