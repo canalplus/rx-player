@@ -15,6 +15,7 @@
  */
 
 import isSeekingApproximate from "../../../compat/is_seeking_approximate";
+import mayHaveIneffectiveZeroPlaybackRate from "../../../compat/may_have_ineffective_zero_playback_rate";
 import config from "../../../config";
 import type { IBufferType } from "../../../core/types";
 import { MediaError } from "../../../errors";
@@ -51,6 +52,30 @@ const MAX_ZERO_RATE_ADVANCING_SAMPLES_BEFORE_WARNING = 2;
  * media is actually advancing.
  */
 const MINIMUM_ADVANCING_DELTA_WHILE_ZERO_RATE = EPSILON;
+
+/**
+ * Delay used to re-apply `playbackRate = 0` after first letting the browser
+ * process the previous playback-rate update.
+ */
+const ZERO_PLAYBACK_RATE_NUDGE_DELAY = 0;
+
+/**
+ * Recovery steps followed when a device keeps advancing despite the
+ * `HTMLMediaElement` advertising a zero `playbackRate`.
+ */
+const enum ZeroRateRecoveryStep {
+  /** No recovery has been attempted for the current rebuffering phase. */
+  None,
+  /** Next recovery should re-apply `playbackRate = 0` asynchronously. */
+  ReapplyZeroRate,
+  /**
+   * Next recovery should briefly restore a non-zero playback rate before
+   * forcing it back to `0`.
+   */
+  NudgePlaybackRate,
+  /** Next recovery should stop relying on zero-rate rebuffering for this phase. */
+  DisableZeroRateRebuffering,
+}
 
 /**
  * Monitor playback, trying to avoid stalling situation.
@@ -115,10 +140,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
       (observation) => {
         const discontinuitiesStore = this._discontinuitiesStore;
         const { buffered, position, readyState, rebuffering, freezing } = observation;
-        this._monitorPositionAdvancingWhilePlaybackRateIsZero(
-          observation,
-          playbackRateUpdater,
-        );
+        this._checkInefective0PlaybackRate(observation, playbackRateUpdater);
 
         const { BUFFER_DISCONTINUITY_THRESHOLD, FREEZING_STALLED_DELAY } =
           config.getCurrent();
@@ -360,14 +382,20 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     this._canceller.cancel(reason ?? "RebufferingController destroy");
   }
 
-  private _monitorPositionAdvancingWhilePlaybackRateIsZero(
+  /**
+   * Detect a browser/device that advertises `playbackRate === 0` but still lets
+   * the media position advance, then lets the `PlaybackRateUpdater` try to
+   * recover from that situation.
+   * @param {Object} observation - Last playback observation.
+   * @param {Object} playbackRateUpdater - Object managing forced playback rate.
+   */
+  private _checkInefective0PlaybackRate(
     observation: IPlaybackObservation,
     playbackRateUpdater: PlaybackRateUpdater,
   ): void {
     const currentPosition = observation.position.getPolled();
     const resetMonitor = () => {
-      this._zeroRateAdvancingPositionMonitor =
-        createZeroRateAdvancingPositionMonitor();
+      this._zeroRateAdvancingPositionMonitor = createZeroRateAdvancingPositionMonitor();
     };
 
     if (
@@ -397,21 +425,21 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
 
     if (
       !monitor.warningEmitted &&
-      monitor.consecutiveAdvancingSamples >= MAX_ZERO_RATE_ADVANCING_SAMPLES_BEFORE_WARNING
+      monitor.consecutiveAdvancingSamples >=
+        MAX_ZERO_RATE_ADVANCING_SAMPLES_BEFORE_WARNING
     ) {
       monitor.warningEmitted = true;
-      log.warn(
-        "Init",
-        "Playback position is advancing despite playbackRate being zero",
-        {
-          previousPosition,
-          currentPosition,
-          consecutiveAdvancingSamples: monitor.consecutiveAdvancingSamples,
-          rebufferingReason: observation.rebuffering?.reason ?? null,
-          bufferGap: observation.bufferGap,
-          readyState: observation.readyState,
-        },
-      );
+      log.warn("Init", "Playback position is advancing despite playbackRate being zero", {
+        previousPosition,
+        currentPosition,
+        consecutiveAdvancingSamples: monitor.consecutiveAdvancingSamples,
+        rebufferingReason: observation.rebuffering?.reason ?? null,
+        bufferGap: observation.bufferGap,
+        readyState: observation.readyState,
+      });
+      if (playbackRateUpdater.recoverFromIneffectiveZeroPlaybackRate()) {
+        resetMonitor();
+      }
     }
   }
 }
@@ -569,11 +597,28 @@ function generateDiscontinuityError(stalledPosition: number, seekTo: number): Me
  * @class PlaybackRateUpdater
  */
 class PlaybackRateUpdater {
+  /** Emit the current playback conditions and allows updating playback rate. */
   private _playbackObserver: IMediaElementPlaybackObserver;
+  /** Last playback speed wanted by the user/application. */
   private _speed: IReadOnlySharedReference<number>;
+  /** Cancels callbacks listening to wanted-speed updates. */
   private _speedUpdateCanceller: TaskCanceller;
+  /** If `true`, the player is currently forcing `playbackRate = 0`. */
   private _isRebuffering: boolean;
+  /** If `true`, this instance should not update playback rate anymore. */
   private _isDisposed: boolean;
+  /**
+   * Current recovery step when `playbackRate = 0` seems ineffective on the
+   * current device.
+   */
+  private _zeroRateRecoveryStep: ZeroRateRecoveryStep;
+  /**
+   * If `true`, do not try zero-rate rebuffering again until the current
+   * rebuffering phase has ended.
+   */
+  private _zeroRateRebufferingDisabledForCurrentRebuffering: boolean;
+  /** Timeout scheduled to asynchronously re-apply `playbackRate = 0`. */
+  private _pendingZeroRateRecoveryTimeout: ReturnType<typeof setTimeout> | null;
 
   /**
    * Create a new `PlaybackRateUpdater`.
@@ -589,6 +634,9 @@ class PlaybackRateUpdater {
     this._playbackObserver = playbackObserver;
     this._isDisposed = false;
     this._speed = speed;
+    this._zeroRateRecoveryStep = ZeroRateRecoveryStep.None;
+    this._zeroRateRebufferingDisabledForCurrentRebuffering = false;
+    this._pendingZeroRateRecoveryTimeout = null;
     this._updateSpeed();
   }
 
@@ -598,7 +646,14 @@ class PlaybackRateUpdater {
    * You can call `stopRebuffering` when you want the rebuffering phase to end.
    */
   public startRebuffering(): void {
-    if (this._isRebuffering || this._isDisposed) {
+    if (this._isDisposed) {
+      return;
+    }
+    if (this._zeroRateRebufferingDisabledForCurrentRebuffering) {
+      this._restoreWantedPlaybackRate();
+      return;
+    }
+    if (this._isRebuffering) {
       return;
     }
     this._isRebuffering = true;
@@ -614,7 +669,13 @@ class PlaybackRateUpdater {
    * Do nothing if not in a rebuffering phase.
    */
   public stopRebuffering() {
-    if (!this._isRebuffering || this._isDisposed) {
+    if (this._isDisposed) {
+      return;
+    }
+    this._zeroRateRebufferingDisabledForCurrentRebuffering = false;
+    this._clearPendingZeroRateRecoveryTimeout();
+    this._zeroRateRecoveryStep = ZeroRateRecoveryStep.None;
+    if (!this._isRebuffering) {
       return;
     }
     this._isRebuffering = false;
@@ -624,6 +685,53 @@ class PlaybackRateUpdater {
 
   public isRebuffering(): boolean {
     return this._isRebuffering;
+  }
+
+  /**
+   * Try to recover from a device-specific situation where the position still
+   * advances while the media element advertises a zero playback rate.
+   *
+   * This returns `true` when a recovery action has been performed and `false`
+   * when the updater decided not to act.
+   * @returns {boolean}
+   */
+  public recoverFromIneffectiveZeroPlaybackRate(): boolean {
+    if (
+      this._isDisposed ||
+      !this._isRebuffering ||
+      this._zeroRateRebufferingDisabledForCurrentRebuffering ||
+      !mayHaveIneffectiveZeroPlaybackRate()
+    ) {
+      return false;
+    }
+
+    switch (this._zeroRateRecoveryStep) {
+      case ZeroRateRecoveryStep.None:
+        this._zeroRateRecoveryStep = ZeroRateRecoveryStep.ReapplyZeroRate;
+        log.warn("Init", "Retrying zero playback rate rebuffering");
+        this._scheduleZeroPlaybackRateUpdate();
+        return true;
+
+      case ZeroRateRecoveryStep.ReapplyZeroRate:
+        this._zeroRateRecoveryStep = ZeroRateRecoveryStep.NudgePlaybackRate;
+        log.warn("Init", "Nudging playback rate before forcing it back to zero");
+        this._nudgePlaybackRate();
+        return true;
+
+      case ZeroRateRecoveryStep.NudgePlaybackRate:
+        this._zeroRateRecoveryStep = ZeroRateRecoveryStep.DisableZeroRateRebuffering;
+        log.warn(
+          "Init",
+          "Disabling zero playback rate rebuffering for this rebuffering phase",
+        );
+        this._clearPendingZeroRateRecoveryTimeout();
+        this._zeroRateRebufferingDisabledForCurrentRebuffering = true;
+        this._restoreWantedPlaybackRate();
+        return true;
+
+      case ZeroRateRecoveryStep.DisableZeroRateRebuffering:
+        return false;
+    }
   }
 
   /**
@@ -637,6 +745,7 @@ class PlaybackRateUpdater {
    * inspection.
    */
   public dispose(reason: string | undefined) {
+    this._clearPendingZeroRateRecoveryTimeout();
     this._speedUpdateCanceller.cancel(reason ?? "PlaybackRateUpdater dispose");
     this._isDisposed = true;
   }
@@ -653,14 +762,74 @@ class PlaybackRateUpdater {
       },
     );
   }
+
+  /**
+   * Stop forcing a zero playback rate and apply the last wanted playback speed
+   * instead.
+   */
+  private _restoreWantedPlaybackRate(): void {
+    if (this._isRebuffering) {
+      this._isRebuffering = false;
+      this._speedUpdateCanceller = new TaskCanceller("PlaybackRateUpdater speed updates");
+      this._updateSpeed();
+    } else {
+      this._playbackObserver.setPlaybackRate(this._speed.getValue());
+    }
+  }
+
+  /**
+   * Briefly sets a non-zero playback rate before asynchronously forcing the
+   * playback rate back to `0`.
+   */
+  private _nudgePlaybackRate(): void {
+    this._clearPendingZeroRateRecoveryTimeout();
+    const nudgePlaybackRate = this._speed.getValue() > 0 ? this._speed.getValue() : 1;
+    this._playbackObserver.setPlaybackRate(nudgePlaybackRate);
+    this._scheduleZeroPlaybackRateUpdate();
+  }
+
+  /**
+   * Schedule an asynchronous `playbackRate = 0` update.
+   */
+  private _scheduleZeroPlaybackRateUpdate(): void {
+    this._clearPendingZeroRateRecoveryTimeout();
+    this._pendingZeroRateRecoveryTimeout = setTimeout(() => {
+      this._pendingZeroRateRecoveryTimeout = null;
+      if (
+        !this._isDisposed &&
+        this._isRebuffering &&
+        !this._zeroRateRebufferingDisabledForCurrentRebuffering
+      ) {
+        this._playbackObserver.setPlaybackRate(0);
+      }
+    }, ZERO_PLAYBACK_RATE_NUDGE_DELAY);
+  }
+
+  /**
+   * Cancel a previously scheduled zero playback-rate update, if any.
+   */
+  private _clearPendingZeroRateRecoveryTimeout(): void {
+    if (this._pendingZeroRateRecoveryTimeout !== null) {
+      clearTimeout(this._pendingZeroRateRecoveryTimeout);
+      this._pendingZeroRateRecoveryTimeout = null;
+    }
+  }
 }
 
 interface IZeroRateAdvancingPositionMonitor {
+  /** Last position observed while checking zero-rate advancement. */
   lastPosition: number | null;
+  /** Number of consecutive samples showing position advancement. */
   consecutiveAdvancingSamples: number;
+  /** `true` once a warning has been emitted for the current monitoring run. */
   warningEmitted: boolean;
 }
 
+/**
+ * Create the state used to detect position advancement despite a zero playback
+ * rate.
+ * @returns {Object}
+ */
 function createZeroRateAdvancingPositionMonitor(): IZeroRateAdvancingPositionMonitor {
   return {
     lastPosition: null,
