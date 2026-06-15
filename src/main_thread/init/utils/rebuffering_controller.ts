@@ -41,6 +41,18 @@ import type { IStallingSituation } from "../types";
 const EPSILON = 1 / 60;
 
 /**
+ * Number of consecutive playback observations for which we tolerate the
+ * position advancing despite having forced a zero playback rate.
+ */
+const MAX_ZERO_RATE_ADVANCING_SAMPLES_BEFORE_WARNING = 2;
+
+/**
+ * Minimum position difference, in seconds, above which we consider that the
+ * media is actually advancing.
+ */
+const MINIMUM_ADVANCING_DELTA_WHILE_ZERO_RATE = EPSILON;
+
+/**
  * Monitor playback, trying to avoid stalling situation.
  * If stopping the player to build buffer is needed, temporarily set the
  * playback rate (i.e. speed) at `0` until enough buffer is available again.
@@ -61,6 +73,8 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
    */
   private _discontinuitiesStore: IDiscontinuityStoredInfo[];
 
+  private _zeroRateAdvancingPositionMonitor: IZeroRateAdvancingPositionMonitor;
+
   private _canceller: TaskCanceller;
 
   /**
@@ -78,6 +92,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
     this._manifest = manifest;
     this._speed = speed;
     this._discontinuitiesStore = [];
+    this._zeroRateAdvancingPositionMonitor = createZeroRateAdvancingPositionMonitor();
     this._isStarted = false;
     this._canceller = new TaskCanceller("RebufferingController");
   }
@@ -100,6 +115,10 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
       (observation) => {
         const discontinuitiesStore = this._discontinuitiesStore;
         const { buffered, position, readyState, rebuffering, freezing } = observation;
+        this._monitorPositionAdvancingWhilePlaybackRateIsZero(
+          observation,
+          playbackRateUpdater,
+        );
 
         const { BUFFER_DISCONTINUITY_THRESHOLD, FREEZING_STALLED_DELAY } =
           config.getCurrent();
@@ -340,6 +359,61 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
   public destroy(reason: string | undefined): void {
     this._canceller.cancel(reason ?? "RebufferingController destroy");
   }
+
+  private _monitorPositionAdvancingWhilePlaybackRateIsZero(
+    observation: IPlaybackObservation,
+    playbackRateUpdater: PlaybackRateUpdater,
+  ): void {
+    const currentPosition = observation.position.getPolled();
+    const resetMonitor = () => {
+      this._zeroRateAdvancingPositionMonitor =
+        createZeroRateAdvancingPositionMonitor();
+    };
+
+    if (
+      !playbackRateUpdater.isRebuffering() ||
+      observation.playbackRate !== 0 ||
+      observation.position.isAwaitingFuturePosition() ||
+      observation.seeking !== SeekingState.None ||
+      observation.paused ||
+      observation.ended ||
+      observation.readyState === 0
+    ) {
+      resetMonitor();
+      return;
+    }
+
+    const monitor = this._zeroRateAdvancingPositionMonitor;
+    const previousPosition = monitor.lastPosition;
+    if (
+      previousPosition !== null &&
+      currentPosition > previousPosition + MINIMUM_ADVANCING_DELTA_WHILE_ZERO_RATE
+    ) {
+      monitor.consecutiveAdvancingSamples++;
+    } else {
+      monitor.consecutiveAdvancingSamples = 0;
+    }
+    monitor.lastPosition = currentPosition;
+
+    if (
+      !monitor.warningEmitted &&
+      monitor.consecutiveAdvancingSamples >= MAX_ZERO_RATE_ADVANCING_SAMPLES_BEFORE_WARNING
+    ) {
+      monitor.warningEmitted = true;
+      log.warn(
+        "Init",
+        "Playback position is advancing despite playbackRate being zero",
+        {
+          previousPosition,
+          currentPosition,
+          consecutiveAdvancingSamples: monitor.consecutiveAdvancingSamples,
+          rebufferingReason: observation.rebuffering?.reason ?? null,
+          bufferGap: observation.bufferGap,
+          readyState: observation.readyState,
+        },
+      );
+    }
+  }
 }
 
 /**
@@ -548,6 +622,10 @@ class PlaybackRateUpdater {
     this._updateSpeed();
   }
 
+  public isRebuffering(): boolean {
+    return this._isRebuffering;
+  }
+
   /**
    * The `PlaybackRateUpdater` allocate resources to for example listen to
    * wanted speed changes and react to it.
@@ -575,6 +653,20 @@ class PlaybackRateUpdater {
       },
     );
   }
+}
+
+interface IZeroRateAdvancingPositionMonitor {
+  lastPosition: number | null;
+  consecutiveAdvancingSamples: number;
+  warningEmitted: boolean;
+}
+
+function createZeroRateAdvancingPositionMonitor(): IZeroRateAdvancingPositionMonitor {
+  return {
+    lastPosition: null,
+    consecutiveAdvancingSamples: 0,
+    warningEmitted: false,
+  };
 }
 
 export interface IRebufferingControllerEvent {
