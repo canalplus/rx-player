@@ -224,7 +224,7 @@
     "@vitest/browser-webdriverio": "^4.1.8",
     "core-js": "3.49.0",
     "cross-env": "^10.1.0",
-    "esbuild": "0.28.0",
+    "esbuild": "0.28.1",
     "eslint": "9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-ban": "2.0.0",
