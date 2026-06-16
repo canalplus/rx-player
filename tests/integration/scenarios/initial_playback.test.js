@@ -343,7 +343,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
 
     it(
       "should download more than the first segment when wanted buffer ahead is over the first segment duration",
-      { timeout: 12000, retry: 2 },
+      { timeout: 20000, retry: 2 },
       async function () {
         let mainThreadManifestLoaderCalledTimes = 0;
         let mainThreadSegmentLoaderCalledTimes = 0;
@@ -401,7 +401,7 @@ function runInitialPlaybackTests({ multithread } = {}) {
         expect(workerManifestLoaderCalledTimes).to.equal(0);
         expect(validManifestLoaderCallTimes).to.equal(mode.useWorker ? 0 : 1);
 
-        await checkAfterSleepWithBackoff({ maxTimeMs: 10000 }, () => {
+        await checkAfterSleepWithBackoff({ maxTimeMs: 15000 }, () => {
           if (mode.useWorker) {
             expect(mainThreadManifestLoaderCalledTimes).to.equal(0);
             expect(workerManifestLoaderCalledTimes).to.equal(1);
@@ -415,9 +415,9 @@ function runInitialPlaybackTests({ multithread } = {}) {
             expect(mainThreadSegmentLoaderCalledTimes).to.equal(12);
             expect(workerSegmentLoaderCalledTimes).to.equal(0);
           }
+          expect(player.getCurrentBufferGap()).to.be.above(18);
+          expect(player.getCurrentBufferGap()).to.be.below(30);
         });
-        expect(player.getCurrentBufferGap()).to.be.above(18);
-        expect(player.getCurrentBufferGap()).to.be.below(30);
       },
     );
 

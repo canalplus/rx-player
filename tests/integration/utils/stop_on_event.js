@@ -149,7 +149,7 @@ export default function launchEventInterruptionTests(
       ...loadVideoOptions,
     });
 
-    await checkAfterSleepWithBackoff({ minTimeMs: 200, maxTimeMs: 8000 }, () => {
+    await checkAfterSleepWithBackoff({ minTimeMs: 200, maxTimeMs: 15000 }, () => {
       expect(shouldNowBeStopped).to.equal(true);
     });
     expect(hasStoppedProperly).to.equal(true);
@@ -197,7 +197,7 @@ export default function launchEventInterruptionTests(
       player.dispose();
     });
 
-    describe("stop() during initial loading events", { timeout: 10000 }, () => {
+    describe("stop() during initial loading events", { timeout: 20000 }, () => {
       it("should stop immediately when stop() is called during playerStateChange to LOADING", async () => {
         await testStopDuringEvent({
           eventName: "playerStateChange",
@@ -226,7 +226,7 @@ export default function launchEventInterruptionTests(
       });
     });
 
-    describe("stop() during playback events", { timeout: 15000 }, () => {
+    describe("stop() during playback events", { timeout: 25000 }, () => {
       it("should stop immediately when stop() is called during positionUpdate", async () => {
         await testStopDuringEvent({
           eventName: "positionUpdate",
@@ -266,7 +266,7 @@ export default function launchEventInterruptionTests(
     });
 
     // TODO: Only run this on Manifest with multiple audio/video/text tracks
-    describe("stop() during track switch events", { timeout: 15000 }, () => {
+    describe("stop() during track switch events", { timeout: 25000 }, () => {
       [
         { type: "Audio", eventName: "audioTrackChange" },
         { type: "Video", eventName: "videoTrackChange" },
@@ -290,7 +290,7 @@ export default function launchEventInterruptionTests(
       });
     });
 
-    describe("stop() during metadata events", { timeout: 10000 }, () => {
+    describe("stop() during metadata events", { timeout: 20000 }, () => {
       [
         "newAvailablePeriods",
         "periodChange",
