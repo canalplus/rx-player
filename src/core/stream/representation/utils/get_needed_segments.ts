@@ -173,6 +173,14 @@ export default function getNeededSegments({
     if (segment.isInit) {
       return true; // never skip initialization segments
     }
+    if (
+      adaptation.type === "video" &&
+      segment.time < content.period.start &&
+      segment.end > content.period.start &&
+      isCoveredByPreviousPeriodSegment(segment, reusableSegments, content.period.start)
+    ) {
+      return false;
+    }
     if (shouldStopLoadingSegments) {
       segmentsOnHold.push(segment);
       return false;
@@ -293,6 +301,22 @@ export default function getNeededSegments({
     return true;
   });
   return { segmentsToLoad, segmentsOnHold, isBufferFull };
+}
+
+function isCoveredByPreviousPeriodSegment(
+  segment: ISegment,
+  bufferedSegments: IBufferedChunk[],
+  periodStart: number,
+): boolean {
+  const { MINIMUM_SEGMENT_SIZE } = config.getCurrent();
+  const ROUNDING_ERROR = Math.min(1 / 60, MINIMUM_SEGMENT_SIZE);
+  return bufferedSegments.some(
+    (bufferedSegment) =>
+      bufferedSegment.status === ChunkStatus.FullyLoaded &&
+      bufferedSegment.infos.period.start < periodStart &&
+      bufferedSegment.start <= periodStart + ROUNDING_ERROR &&
+      bufferedSegment.end >= segment.end - ROUNDING_ERROR,
+  );
 }
 /**
  * Compute the estimated available buffer size in memory in kilobytes

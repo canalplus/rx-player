@@ -71,6 +71,11 @@ export default async function pushMediaSegment<T>(
   const { chunkData, chunkInfos, chunkOffset, chunkSize, appendWindow } = parsedSegment;
   const codec = content.representation.getMimeTypeString();
   const { APPEND_WINDOW_SECURITIES } = config.getCurrent();
+  const shouldKeepVideoOverlapAfterPeriodEnd =
+    content.adaptation.type === "video" &&
+    content.period.end !== undefined &&
+    appendWindow[1] === content.period.end &&
+    segment.end > content.period.end;
   // Cutting exactly at the start or end of the appendWindow can lead to
   // cases of infinite rebuffering due to how browser handle such windows.
   // To work-around that, we add a small offset before and after those.
@@ -78,7 +83,7 @@ export default async function pushMediaSegment<T>(
     appendWindow[0] !== undefined
       ? Math.max(0, appendWindow[0] - APPEND_WINDOW_SECURITIES.START)
       : undefined,
-    appendWindow[1] !== undefined
+    appendWindow[1] !== undefined && !shouldKeepVideoOverlapAfterPeriodEnd
       ? appendWindow[1] + APPEND_WINDOW_SECURITIES.END
       : undefined,
   ];
