@@ -179,6 +179,7 @@ export default function getNeededSegments({
       segment.end > content.period.start &&
       isCoveredByPreviousPeriodSegment(segment, reusableSegments, content.period.start)
     ) {
+      console.warn("!!!!! Segment already covered", segment.time, content.period.start);
       return false;
     }
     if (shouldStopLoadingSegments) {

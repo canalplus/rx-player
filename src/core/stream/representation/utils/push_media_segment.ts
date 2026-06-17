@@ -76,6 +76,16 @@ export default async function pushMediaSegment<T>(
     content.period.end !== undefined &&
     appendWindow[1] === content.period.end &&
     segment.end > content.period.end;
+
+  if (shouldKeepVideoOverlapAfterPeriodEnd) {
+    console.warn(
+      "!!!!! keeping overlap after period end",
+      segment.time,
+      segment.end,
+      content.period.end,
+    );
+  }
+
   // Cutting exactly at the start or end of the appendWindow can lead to
   // cases of infinite rebuffering due to how browser handle such windows.
   // To work-around that, we add a small offset before and after those.
