@@ -46,7 +46,8 @@ function shouldRetry(error: unknown): boolean {
         error.status === 415 || // some CDN seems to use that code when
         // requesting low-latency segments too much
         // in advance
-        error.status === 412
+        error.status === 412 ||
+        error.status === 429 // TODO: Handle optional Retry-After header
       );
     }
     return (
@@ -64,7 +65,8 @@ function shouldRetry(error: unknown): boolean {
         error.xhr.status === 415 || // some CDN seems to use that code when
         // requesting low-latency segments too much
         // in advance
-        error.xhr.status === 412
+        error.xhr.status === 412 ||
+        error.xhr.status === 429
       );
     }
     return false;
