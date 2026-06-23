@@ -78,6 +78,7 @@
       "com.widevine.alpha",
       "com.apple.fps",
       "com.apple.fps.1_0",
+      "com.nagra.prm",
       "org.w3.clearkey",
     ];
     const minimalMediaConfiguration = [
@@ -268,6 +269,9 @@
       }
       if (keySystem.includes("apple")) {
         return "Apple";
+      }
+      if (keySystem.includes("nagra")) {
+        return 'Nagra'
       }
       return "Others";
     }
