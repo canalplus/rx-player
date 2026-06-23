@@ -290,7 +290,7 @@ export default class RebufferingController extends EventEmitter<IRebufferingCont
       this.start();
     }
     const lastObservation = this._playbackObserver.getReference().getValue();
-    updateDiscontinuitiesStore(this._discontinuitiesStore, evt, lastObservation);
+    updateDiscontinuitiesStore([], evt, lastObservation);
   }
 
   /**
