@@ -79,6 +79,7 @@
       "com.apple.fps",
       "com.apple.fps.1_0",
       "com.nagra.prm",
+      "com.tvkey.drm",
       "org.w3.clearkey",
     ];
     const minimalMediaConfiguration = [
@@ -270,7 +271,7 @@
       if (keySystem.includes("apple")) {
         return "Apple";
       }
-      if (keySystem.includes("nagra")) {
+      if (keySystem.includes("nagra") || keySystem.includes("tvkey")) {
         return 'Nagra'
       }
       return "Others";
