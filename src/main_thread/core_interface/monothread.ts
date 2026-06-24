@@ -5,6 +5,7 @@ import {
 } from "../../core/types";
 import log from "../../log";
 import noop from "../../utils/noop";
+import queueMicrotaskUtil from "../../utils/queue_microtask";
 import type { IMainThreadMessage } from "../types";
 import CoreInterface from "./base";
 
@@ -18,7 +19,7 @@ export class MonoThreadCoreInterface extends CoreInterface {
 
   public sendMessage(msg: IMainThreadMessage) {
     log.debug("M-->C", "Sending message", { name: msg.type });
-    queueMicrotask(() => {
+    queueMicrotaskUtil(() => {
       // NOTE: We don't clone for performance reasons
       this._currentCoreListener({ data: msg });
     });
@@ -32,7 +33,7 @@ export class MonoThreadCoreInterface extends CoreInterface {
       this._currentCoreListener = handler;
     };
     const sendCoreMessage = (msg: ICoreMessage, _transferables?: Transferable[]) => {
-      queueMicrotask(() => {
+      queueMicrotaskUtil(() => {
         if (msg.type !== CoreMessageType.LogMessage) {
           log.debug("M<--C", "Sending message", { name: msg.type });
         }
