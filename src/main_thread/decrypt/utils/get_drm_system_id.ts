@@ -34,7 +34,7 @@ export default function getDrmSystemId(keySystem: string): string | undefined {
   if (startsWith(keySystem, "com.apple.fps")) {
     return "94ce86fb07ff4f43adb893d2fa968ca2";
   }
-  if (startsWith(keySystem, "com.nagra.")) {
+  if (startsWith(keySystem, "com.nagra.") || startsWith(keySystem, "com.tvkey.")) {
     return "adb41c242dbf4a6d958b4457c0d27b95";
   }
   return undefined;
