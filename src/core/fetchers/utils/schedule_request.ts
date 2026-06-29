@@ -28,6 +28,7 @@ import { RequestError } from "../../../utils/request/index.ts";
 import type { CancellationSignal } from "../../../utils/task_canceller.ts";
 import TaskCanceller from "../../../utils/task_canceller.ts";
 import type CdnPrioritizer from "../cdn_prioritizer.ts";
+import getRetryDelayWithRetryAfter from "./retry_after_delay.ts";
 
 /**
  * Called on a loader error.
@@ -51,7 +52,7 @@ function shouldRetry(error: unknown): boolean {
         // requesting low-latency segments too much
         // in advance
         error.status === 412 ||
-        error.status === 429 // TODO: Handle optional Retry-After header
+        error.status === 429
       );
     }
     return (
@@ -251,9 +252,13 @@ export async function scheduleRequestWithCdns<T>(
         missedAttemptsObj.isBlacklisted = true;
       } else {
         const errorCounter = missedAttemptsObj.errorCounter;
-        const delay = Math.min(baseDelay * Math.pow(2, errorCounter - 1), maxDelay);
-        const fuzzedDelay = getFuzzedDelay(delay);
-        missedAttemptsObj.blockedUntil = getTimestamp() + fuzzedDelay;
+        const regularDelay = Math.min(
+          baseDelay * Math.pow(2, errorCounter - 1),
+          maxDelay,
+        );
+        const backoffDelay = getFuzzedDelay(regularDelay);
+        const delay = getRetryDelayWithRetryAfter(error, backoffDelay);
+        missedAttemptsObj.blockedUntil = getTimestamp() + delay;
       }
 
       return retryWithNextCdn(error);

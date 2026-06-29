@@ -28,13 +28,21 @@ export default class RequestError extends Error {
   public readonly type: IRequestErrorType;
   public readonly url: string;
   public readonly status: number;
+  public readonly retryAfter: string | undefined;
 
   /**
    * @param {string} url
    * @param {number} status
    * @param {string} type
+   * @param {Object} [options]
+   * @param {string|undefined} [options.retryAfter]
    */
-  constructor(url: string, status: number, type: IRequestErrorType) {
+  constructor(
+    url: string,
+    status: number,
+    type: IRequestErrorType,
+    options?: IRequestErrorOptions,
+  ) {
     let message: string;
     switch (type) {
       case "TIMEOUT":
@@ -61,11 +69,25 @@ export default class RequestError extends Error {
     this.url = url;
     this.status = status;
     this.type = type;
+    this.retryAfter = options?.retryAfter;
   }
 
   public serialize(): ISerializedRequestError {
-    return { url: this.url, status: this.status, type: this.type };
+    const serializedError: ISerializedRequestError = {
+      url: this.url,
+      status: this.status,
+      type: this.type,
+    };
+    if (this.retryAfter !== undefined) {
+      serializedError.retryAfter = this.retryAfter;
+    }
+    return serializedError;
   }
+}
+
+export interface IRequestErrorOptions {
+  /** Raw Retry-After response field value, when present. */
+  retryAfter?: string;
 }
 
 /** Serializable object which allows to create a `RequestError` later. */
@@ -73,6 +95,7 @@ export interface ISerializedRequestError {
   url: string;
   status: number;
   type: IRequestErrorType;
+  retryAfter?: string;
 }
 
 export type IRequestErrorType =

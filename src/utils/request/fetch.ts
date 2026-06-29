@@ -201,10 +201,12 @@ export default function fetchRequest(
           status: response.status,
           responseUrl: response.url,
         });
+        const retryAfter = response.headers.get("Retry-After");
         throw new RequestError(
           response.url,
           response.status,
           RequestErrorTypes.ERROR_HTTP_CODE,
+          retryAfter === null ? undefined : { retryAfter },
         );
       }
 

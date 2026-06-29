@@ -3,7 +3,10 @@ import {
   scheduleRequestWithCdns,
   scheduleRequestPromise,
 } from "../../../../../../src/core/fetchers/utils/schedule_request.ts";
-import { NetworkErrorTypes } from "../../../../../../src/errors/index.ts";
+import {
+  CustomLoaderError,
+  NetworkErrorTypes,
+} from "../../../../../../src/errors/index.ts";
 import { RequestError } from "../../../../../../src/utils/request/index.ts";
 import TaskCanceller from "../../../../../../src/utils/task_canceller.ts";
 
@@ -11,24 +14,33 @@ import TaskCanceller from "../../../../../../src/utils/task_canceller.ts";
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-const { mockLog, mockCancellableSleep, mockGetFuzzedDelay, mockGetTimestamp } =
-  vi.hoisted(() => {
-    return {
-      mockLog: { warn: vi.fn() },
-      mockCancellableSleep: vi.fn(),
-      mockGetFuzzedDelay: vi.fn((delay: number) => delay),
-      mockGetTimestamp: vi.fn(() => 0),
-    };
-  });
+const {
+  mockConfigGetCurrent,
+  mockLog,
+  mockCancellableSleep,
+  mockGetFuzzedDelay,
+  mockGetTimestamp,
+} = vi.hoisted(() => {
+  return {
+    mockConfigGetCurrent: vi.fn(),
+    mockLog: { debug: vi.fn(), warn: vi.fn() },
+    mockCancellableSleep: vi.fn(),
+    mockGetFuzzedDelay: vi.fn((delay: number) => delay),
+    mockGetTimestamp: vi.fn(() => 0),
+  };
+});
 
-vi.mock("../../../../../../src/core/log", () => ({ default: mockLog }));
-vi.mock("../../../../../../src/core/utils/cancellable_sleep", () => ({
+vi.mock("../../../../../../src/config", () => ({
+  default: { getCurrent: mockConfigGetCurrent },
+}));
+vi.mock("../../../../../../src/log", () => ({ default: mockLog }));
+vi.mock("../../../../../../src/utils/cancellable_sleep", () => ({
   default: mockCancellableSleep,
 }));
-vi.mock("../../../../../../src/core/utils/get_fuzzed_delay", () => ({
+vi.mock("../../../../../../src/utils/get_fuzzed_delay", () => ({
   default: mockGetFuzzedDelay,
 }));
-vi.mock("../../../../../../src/core/utils/monotonic_timestamp", () => ({
+vi.mock("../../../../../../src/utils/monotonic_timestamp", () => ({
   default: mockGetTimestamp,
 }));
 
@@ -44,6 +56,7 @@ function makeCdn(id: string): any {
 }
 
 beforeEach(() => {
+  mockConfigGetCurrent.mockReturnValue({ MAX_RETRY_AFTER_DELAY: 60_000 });
   mockGetTimestamp.mockReturnValue(0);
   mockGetFuzzedDelay.mockImplementation((delay: number) => delay);
   // By default cancellableSleep resolves immediately
@@ -322,6 +335,174 @@ describe("scheduleRequestPromise", () => {
       new TaskCanceller("test").signal,
     );
     expect(result).toBe("ok");
+  });
+
+  it("uses a Retry-After header on 429 HTTP errors", async () => {
+    const error = new RequestError("url", 429, NetworkErrorTypes.ERROR_HTTP_CODE, {
+      retryAfter: "3",
+    });
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce("ok");
+
+    const result = await scheduleRequestPromise(
+      performRequest,
+      defaultOptions,
+      new TaskCanceller("test").signal,
+    );
+
+    expect(result).toBe("ok");
+    expect(mockCancellableSleep).toHaveBeenCalledWith(3000, expect.anything());
+    expect(mockLog.warn).not.toHaveBeenCalled();
+    expect(mockLog.debug).toHaveBeenCalledWith("utils", "Applying Retry-After delay.", {
+      retryAfter: "3",
+      selectedDelay: 3000,
+    });
+  });
+
+  it("uses a Retry-After HTTP-date on 429 HTTP errors", async () => {
+    const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(1000);
+    try {
+      const error = new RequestError(
+        "url",
+        429,
+        NetworkErrorTypes.ERROR_HTTP_CODE,
+        { retryAfter: new Date(4000).toUTCString() },
+      );
+      const performRequest = vi
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce("ok");
+
+      await scheduleRequestPromise(
+        performRequest,
+        defaultOptions,
+        new TaskCanceller("test").signal,
+      );
+
+      expect(mockCancellableSleep).toHaveBeenCalledWith(3000, expect.anything());
+    } finally {
+      dateNowSpy.mockRestore();
+    }
+  });
+
+  it("caps too long Retry-After delays and logs a warning", async () => {
+    mockConfigGetCurrent.mockReturnValue({ MAX_RETRY_AFTER_DELAY: 1_000 });
+    const retryAfter = "10000";
+    const error = new RequestError("url", 429, NetworkErrorTypes.ERROR_HTTP_CODE, {
+      retryAfter,
+    });
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce("ok");
+
+    await scheduleRequestPromise(
+      performRequest,
+      defaultOptions,
+      new TaskCanceller("test").signal,
+    );
+
+    expect(mockCancellableSleep).toHaveBeenCalledWith(1_000, expect.anything());
+    expect(mockLog.warn).toHaveBeenCalledWith("utils", "Capping Retry-After delay.", {
+      retryAfter,
+      maximumRetryAfterDelay: 1_000,
+      selectedDelay: 1_000,
+    });
+  });
+
+  it("falls back to the regular backoff for invalid Retry-After headers", async () => {
+    const error = new RequestError("url", 429, NetworkErrorTypes.ERROR_HTTP_CODE, {
+      retryAfter: "not-a-date",
+    });
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce("ok");
+
+    await scheduleRequestPromise(
+      performRequest,
+      defaultOptions,
+      new TaskCanceller("test").signal,
+    );
+
+    expect(mockCancellableSleep).toHaveBeenCalledWith(100, expect.anything());
+    expect(mockLog.debug).toHaveBeenCalledWith(
+      "utils",
+      "Ignoring invalid Retry-After header.",
+      {
+        retryAfter: "not-a-date",
+        selectedDelay: 100,
+      },
+    );
+  });
+
+  it("ignores Retry-After headers on non-429 retryable HTTP errors", async () => {
+    const error = new RequestError("url", 529, NetworkErrorTypes.ERROR_HTTP_CODE, {
+      retryAfter: "3",
+    });
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce("ok");
+
+    await scheduleRequestPromise(
+      performRequest,
+      defaultOptions,
+      new TaskCanceller("test").signal,
+    );
+
+    expect(mockCancellableSleep).toHaveBeenCalledWith(100, expect.anything());
+  });
+
+  it("uses a Retry-After header from a custom loader XHR on 429 errors", async () => {
+    const getResponseHeader = vi.fn().mockReturnValue("2");
+    const xhr = {
+      status: 429,
+      getResponseHeader,
+    } as unknown as XMLHttpRequest;
+    const error = new CustomLoaderError("Too many requests", true, xhr);
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce("ok");
+
+    await scheduleRequestPromise(
+      performRequest,
+      defaultOptions,
+      new TaskCanceller("test").signal,
+    );
+
+    expect(mockCancellableSleep).toHaveBeenCalledWith(2000, expect.anything());
+    expect(getResponseHeader).toHaveBeenCalledWith("Retry-After");
+  });
+
+  it("uses regular backoff when reading Retry-After from a custom loader throws", async () => {
+    const getResponseHeader = vi.fn(() => {
+      throw new Error("Cannot read response headers");
+    });
+    const xhr = {
+      status: 429,
+      getResponseHeader,
+    } as unknown as XMLHttpRequest;
+    const error = new CustomLoaderError("Too many requests", true, xhr);
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce("ok");
+
+    await scheduleRequestPromise(
+      performRequest,
+      defaultOptions,
+      new TaskCanceller("test").signal,
+    );
+
+    expect(mockCancellableSleep).toHaveBeenCalledWith(100, expect.anything());
+    expect(mockLog.debug).toHaveBeenCalledWith(
+      "utils",
+      "Could not read Retry-After header from custom loader XHR.",
+    );
   });
 
   it("rejects after all retries are exhausted", async () => {
