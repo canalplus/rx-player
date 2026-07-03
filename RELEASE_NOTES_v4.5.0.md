@@ -15,7 +15,7 @@
 - [Application-defined worker logic](https://github.com/canalplus/rx-player/releases/tag/v4.5.0#worker-callbacks)
 - [More complete `MULTI_THREAD` transport support](https://github.com/canalplus/rx-player/releases/tag/v4.5.0#multithread-transports)
 - [A more shared core path internally](https://github.com/canalplus/rx-player/releases/tag/v4.5.0#shared-core-path)
-- [More explicit out-of-bound errors](https://github.com/canalplus/rx-player/releases/tag/v4.5.0#timeinfo)
+- [More explicit out-of-bounds errors](https://github.com/canalplus/rx-player/releases/tag/v4.5.0#timeinfo)
 - [The `reload` API is now easier to integrate](https://github.com/canalplus/rx-player/releases/tag/v4.5.0#less-surprises)
 - [Thumbnail improvements](https://github.com/canalplus/rx-player/releases/tag/v4.5.0#thumbnails)
 - [CMCD updates](https://github.com/canalplus/rx-player/releases/tag/v4.5.0#cmcd)
@@ -25,7 +25,7 @@
 
 ## :mag: Overview
 
-This new releases adds several fixes and features:
+This new release adds several fixes and features:
 
 - The biggest update here is on the `MULTI_THREAD` experimental feature: applications can now bring their complex `manifestLoader`, `segmentLoader` and `representationFilter` logic that will run worker-side.
 
@@ -62,9 +62,9 @@ This new releases adds several fixes and features:
 - Fix memory leak linked to quality changes [#1781]
 - DRM: When a license request times out, now send a `KEY_LOAD_TIMEOUT` error instead of `KEY_LOAD_ERROR`
 - DRM: Fix `"close-session"` handling that could unnecessarily close other DRM sessions
-- On Safari when beginning at `0`, seek explicitly to `0` because their native HLS player would else start at live position [#1803]
+- On Safari when beginning at `0`, seek explicitly to `0` because its native HLS player would otherwise start at live position [#1803]
 - Ignore unhandled runtime track types for period advertisement [#1850]
-- Fix `startAt.wallClockTime` on safari HLS live playlists [#1799]
+- Fix `startAt.wallClockTime` on Safari HLS live playlists [#1799]
 - Fix rare scenario when an ended live audio content would not have its duration known until the end-of-stream [#1801]
 - TTML: Do not apply percentage line heights anymore as they are sometimes subtly broken [#1812]
 - Thumbnails: Fix shared thumbnail requests (through multiple `HTMLElement` for the same data) in `MULTI_THREAD` mode [#1830]
@@ -73,16 +73,16 @@ This new releases adds several fixes and features:
 - CMCD: fix the `headers` CMCD `communicationType` [#1809]
 - fix precision difference which triggered frequent content boundaries warnings [#1848]
 - Compat: To fix an issue with some older LG TV when playing retro-compatible Dolby Vision contents, patch out some Dolby Vision-related ISOBMFF boxes in some conditions [#1818]
-- Do not send two times a `streamEvent` after temporarily switching to the `RELOADING` state while playing it [#1828]
+- Do not send a `streamEvent` twice after temporarily switching to the `RELOADING` state while playing it [#1828]
 - Compat/DRM: Preserve `pssh` boxes in encrypted initialization segments on some DStv set-top boxes to fix playback of encrypted playback on them [#1822]
 - Text: Continue playback if subtitle initialization fails instead of remaining stuck in `LOADING` [#1827]
-- directfile: fix side effects for multiples instance of media element track store [#1845]
+- directfile: fix side effects for multiple instances of media element track store [#1845]
 - directfile/compat: fix issue on Safari with startAt.fromLivePosition with directfile content when duration is infinite [#1842]
 
 ### Other improvements
 
 - Adaptive bitrate: React faster to sudden bandwidth drops when playback is close to starving [#1831]
-- Add `getMaximumPosition` and `getMinimumPosition` support when using directfile with HLS playlist on safari [#1800]
+- Add `getMaximumPosition` and `getMinimumPosition` support when using directfile with HLS playlists on Safari [#1800]
 - CMCD: Avoid sending invalid CMCD values when playback rate is `0` or negative, and better escape string values [#1833]
 - Fix ordering of a PeriodChange/AdaptationChange couple that may have previously led to unnecessary duplicate events [#1764]
 - Text track id can only be string [#1785]
@@ -96,7 +96,7 @@ This new releases adds several fixes and features:
 
 Applications can define custom loading and filtering logic through `loadVideo` options such as `manifestLoader`, `segmentLoader` and `representationFilter`. Those can be used for multiple advanced needs: peer-to-peer integrations, alternative application-known URLs, pre-processing of loaded data, or filtering out media qualities based on specific constraints.
 
-Yet in multithreading mode (under the `MULTI_THREAD` feature), those API weren't available.
+Yet in multithreading mode (under the `MULTI_THREAD` feature), those APIs weren't available.
 
 This was because the logic needing those callbacks would there most likely run in a WebWorker. Sending arbitrary JavaScript functions to a WebWorker is not something we can do reliably: the browser only gives us message passing, which means serialization, and serialization breaks common JavaScript assumptions such as closures, outer scope access (e.g. accessing variables defined outside your function) and some build-tool transformations (e.g. your build tool writing some helpers that would be accessed inside that function).
 
@@ -138,7 +138,7 @@ rxPlayerWorker.registerRepresentationFilter(
 );
 ```
 
-The worker has to be bundled separately and can be then just communicated to the RxPlayer through the same `attachWorker` API that you would have used in other multithreading scenarios:
+The worker has to be bundled separately and can then just be communicated to the RxPlayer through the same `attachWorker` API that you would have used in other multithreading scenarios:
 
 ```
 import RxPlayer from "rx-player";
@@ -170,7 +170,7 @@ TODO: First schema, then simple corresponding code for message exchange, both wo
 
 Another important improvement for the `MULTI_THREAD` feature is that most transport features can now be added worker-side: `DASH`, `DASH_WASM`, `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`.
 
-This means that you can now play e.g. Smooth streaming contents in multithreading mode. We didn't permit something else than `DASH` before as we both needed a way for application to be able to add features to the RxPlayer worker logic (that is one of the main feature of this release) and because we had to make some code update to ensure all of them can run in our worker.
+This means that you can now play e.g. Smooth streaming contents in multithreading mode. We didn't permit anything other than `DASH` before as we both needed a way for applications to be able to add features to the RxPlayer worker logic (that is one of the main features of this release) and because we had to make some code updates to ensure all of them can run in our worker.
 
 For example, Smooth support needed a specific effort because its Manifest parser relied on DOM APIs that are not available in the same way from a WebWorker. To make it work, we had to transition to the same full-JS fast XML parser approach as our `DASH` Manifest parser.
 
@@ -184,7 +184,7 @@ Historically, multithreaded and monothreaded logic had distinct initialization l
 
 Now that it's pretty clear to us that multithreading mode will be a long-term API, we decided to do something about it: we merged most of the unique logic both modes had into only one code path.
 
-There are some differences between the two (as one of those modes mostly run in a WebWorker yet the otherdo not) but they have been kept minimal:
+There are some differences between the two (as one of those modes mostly runs in a WebWorker yet the other does not) but they have been kept minimal:
 
 - There's now a thin communication layer between the code running always in main-thread (decryption handling, API, HTML5 media monitoring...) and the code that would run in a WebWorker if we're in multithreading mode (manifest+segment loading/parsing, adaptive logic, buffer management...).
 
@@ -192,7 +192,7 @@ There are some differences between the two (as one of those modes mostly run in 
 
   _TODO: Add a schema showing the old split paths, then the new CoreInterface layer: main-thread init -> CoreInterface -> core, with either postMessage in `MULTI_THREAD` or a local event-like bridge in monothreaded mode._
 
-- Also we had to be careful on a few tweaks to ensure we didn't degrade the monothreaded mode: the monothreaded mode often keep the same data structures in both code areas whereas the multithraded mode has to go through a serialization step. This could lead to some behavior change (e.g. mutations being shared in one mode but not the other) to which we had to be especially careful.
+- Also we had to be careful on a few tweaks to ensure we didn't degrade the monothreaded mode: the monothreaded mode often keeps the same data structures in both code areas whereas the multithreaded mode has to go through a serialization step. This could lead to some behavior change (e.g. mutations being shared in one mode but not the other) to which we had to be especially careful.
 
 The end goal was to remove duplicated logic, reduce accidental differences between both modes, and make our tests more valuable: when both modes go through more of the same code, a test written for one mode is more likely to protect the other one too.
 
@@ -200,7 +200,7 @@ This should not change the public API in any way. Yet we still wanted to mention
 
 <a name="timeinfo"></a>
 
-## More explicit out-of-bound errors
+## More explicit out-of-bounds errors
 
 Some dynamic contents have a moving playable window.
 
@@ -210,22 +210,28 @@ The RxPlayer already reported those cases through `MEDIA_TIME_BEFORE_MANIFEST` a
 
 _TODO: Add a small schema for a dynamic Manifest window: minimum position / requested position / maximum position, before introducing the new `timeInfo` object._
 
-There was something missing with those errors though: they did not communicate what the position we were at when we send the error nor what the "safe" position to play would be.
+There was something missing with those errors though: they did not communicate what the position we were at when we sent the error nor what the "safe" position to play would be.
 
-We initially assumed that the user could just rely on other API like `getPosition()` and `getMinimumPosition()` / `getMaximumPosition()` to obtain those information, but under some edge cases those weren't enough: (TODO: Which edge cases? I do not remember)
+We initially assumed that the user could just rely on other APIs like `getPosition()` and `getMinimumPosition()` / `getMaximumPosition()` to obtain that information, but under some edge cases those weren't enough: (TODO: Which edge cases? I do not remember)
 
-In `v4.5.0`, those errors thus now expose a `timeInfo` property with more context on the issue. This property indicates the concerned boundary and the position that led to the error.
+In `v4.5.0`, those errors thus now expose a `timeInfo` property with more context on the issue. This property indicates the relevant boundary and the position that led to the error.
 
 This should make it easier for applications to decide how to recover:
 
 ```javascript
 rxPlayer.addEventListener("warning", (error) => {
-  if (
-    error.code === "MEDIA_TIME_BEFORE_MANIFEST" ||
-    error.code === "MEDIA_TIME_AFTER_MANIFEST"
-  ) {
-    // TODO: actually read properties from `timeInfo` to make it clear what those are
-    console.warn("Position outside of the current Manifest bounds", error.timeInfo);
+  if (error.code === "MEDIA_TIME_BEFORE_MANIFEST") {
+    const { position, minPosition } = error.timeInfo;
+
+    console.warn(
+      `Position ${position} is before the current Manifest start: ${minPosition}`,
+    );
+  } else if (error.code === "MEDIA_TIME_AFTER_MANIFEST") {
+    const { position, maxPosition } = error.timeInfo;
+
+    console.warn(
+      `Position ${position} is after the current Manifest end: ${maxPosition}`,
+    );
   }
 });
 ```
@@ -271,8 +277,8 @@ We also updated how we handled CMCD, a way of providing playback metrics to the 
 CMCD values are now more conservative in edge cases:
 
 - we avoid sending some optional values when the playback rate is `0` or negative where the semantics of those values in the specification are unclear
-- We had an issue that basically broke communications of CMCD values through HTTP headers, that we've now fixed
-- we renforced string value escaping
+- We had an issue that basically broke communication of CMCD values through HTTP headers, that we've now fixed
+- we reinforced string value escaping
 
 <a name="safari-hls"></a>
 
@@ -290,6 +296,6 @@ We fixed multiple cases around that:
 
 - `startAt.fromLivePosition` is fixed for directfile contents when the duration is infinite;
 
-- the `getMinimumPosition` and `getMaximumPosition` methods now better consider that Safari HLS case, which should make them more precize.
+- the `getMinimumPosition` and `getMaximumPosition` methods now better consider that Safari HLS case, which should make them more precise.
 
-- when explicitly asked to beginn at `0`, the RxPlayer now also explicitly seeks to `0`, avoiding a Safari native-HLS behavior where playback could instead start at the live position.
+- when explicitly asked to begin at `0`, the RxPlayer now also explicitly seeks to `0`, avoiding a Safari native-HLS behavior where playback could instead start at the live position.
