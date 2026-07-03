@@ -70,7 +70,7 @@
 
   <!-- Boundary -->
   <rect x="514" y="100" width="172" height="24" rx="10" fill="#ffffff"/>
-  <text x="600" y="117" text-anchor="middle" class="small">WebWorker boundary</text>
+  <text x="600" y="117" text-anchor="middle">WebWorker boundary</text>
   <line x1="600" y1="128" x2="600" y2="636" stroke="#9aa0a6" stroke-width="3" stroke-dasharray="10 12"/>
 
   <!-- Worker bundle -->
