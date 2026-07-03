@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 240" role="img" aria-labelledby="title desc">
+  <title id="title">Stringified function workaround</title>
+  <desc id="desc">The previous workaround passed a stringified callback from the application to the worker.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #202124; }
+      .label { font-size: 22px; font-weight: 700; }
+      .body { font-size: 17px; }
+      .small { font-size: 15px; fill: #5f6368; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+    </style>
+  </defs>
+  <rect width="920" height="240" rx="18" fill="#ffffff"/>
+  <rect x="44" y="54" width="270" height="112" rx="14" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="179" y="92" text-anchor="middle" class="label">Application</text>
+  <text x="179" y="128" text-anchor="middle" class="code">"function(rep) { ... }"</text>
+  <path d="M332 110h256" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="460" y="94" text-anchor="middle" class="small">explicit string contract</text>
+  <text x="460" y="138" text-anchor="middle" class="small">harder to write and review</text>
+  <rect x="606" y="54" width="270" height="112" rx="14" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
+  <text x="741" y="92" text-anchor="middle" class="label">Worker</text>
+  <text x="741" y="128" text-anchor="middle" class="code">new Function(...)</text>
+</svg>

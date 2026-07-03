@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" role="img" aria-labelledby="title desc">
+  <title id="title">Shared thumbnail request lifecycle</title>
+  <desc id="desc">Two renderThumbnail calls share the same request. Cancelling one caller does not cancel the pipeline still needed by the remaining caller.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #202124; }
+      .label { font-size: 22px; font-weight: 700; }
+      .body { font-size: 16px; }
+      .small { font-size: 14px; fill: #5f6368; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+    </style>
+  </defs>
+  <rect width="920" height="320" rx="18" fill="#ffffff"/>
+  <rect x="44" y="60" width="220" height="62" rx="12" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="154" y="98" text-anchor="middle" class="code">renderThumbnail A</text>
+  <rect x="44" y="198" width="220" height="62" rx="12" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="154" y="236" text-anchor="middle" class="code">renderThumbnail B</text>
+  <rect x="370" y="112" width="200" height="96" rx="14" fill="#eef6ff" stroke="#1a73e8" stroke-width="3"/>
+  <text x="470" y="150" text-anchor="middle" class="label">Shared request</text>
+  <text x="470" y="178" text-anchor="middle" class="small">same image data</text>
+  <rect x="676" y="112" width="200" height="96" rx="14" fill="#e6f4ea" stroke="#188038" stroke-width="3"/>
+  <text x="776" y="150" text-anchor="middle" class="label">Pipeline continues</text>
+  <text x="776" y="178" text-anchor="middle" class="small">B still waits for result</text>
+  <path d="M264 92c52 0 58 42 94 58" stroke="#5f6368" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <path d="M264 230c52 0 58-42 94-58" stroke="#5f6368" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <path d="M570 160h86" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="154" y1="122" x2="154" y2="180" stroke="#d93025" stroke-width="4"/>
+  <text x="154" y="166" text-anchor="middle" class="body" fill="#d93025">A cancelled</text>
+</svg>

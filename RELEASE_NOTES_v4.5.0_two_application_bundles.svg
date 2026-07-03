@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="48 64 1180 458" role="img" aria-labelledby="title desc">
+  <title id="title">Application and worker bundles</title>
+  <desc id="desc">An application using RxPlayer MULTI_THREAD custom worker logic builds two separate bundles: the usual application bundle and a worker bundle.</desc>
+
+  <defs>
+    <marker id="arrow-slate" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#4b5563"/>
+    </marker>
+    <marker id="arrow-pink" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#d72657"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#26a757"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        fill: #202124;
+      }
+      .title {
+        font-size: 30px;
+        font-weight: 700;
+      }
+      .panel-title {
+        font-size: 23px;
+        font-weight: 700;
+      }
+      .section {
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .body {
+        font-size: 16px;
+      }
+      .code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 14px;
+      }
+    </style>
+  </defs>
+
+  <rect x="48" y="64" width="1180" height="458" rx="18" fill="#ffffff"/>
+
+  <rect x="64" y="82" width="344" height="170" rx="16" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
+  <text x="236" y="122" text-anchor="middle" class="panel-title">Application</text>
+  <text x="94" y="164" class="body">What you already build, importing the</text>
+  <text x="94" y="194" class="body">RxPlayer, calling loadVideo and</text>
+  <text x="94" y="224" class="body"> other APIs.</text>
+
+  <rect x="64" y="356" width="344" height="148" rx="16" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
+  <text x="236" y="396" text-anchor="middle" class="panel-title">New worker entry point</text>
+  <text x="94" y="434" class="body">Imports the RxPlayer worker and registers</text>
+  <text x="94" y="464" class="body">worker-side callbacks.</text>
+
+  <rect x="526" y="82" width="190" height="170" rx="16" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
+  <text x="621" y="170" text-anchor="middle" class="panel-title">Usual build</text>
+
+  <rect x="526" y="356" width="190" height="148" rx="16" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
+  <text x="621" y="436" text-anchor="middle" class="panel-title">Extra build</text>
+
+  <rect x="834" y="82" width="326" height="170" rx="16" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
+  <text x="997" y="122" text-anchor="middle" class="panel-title">Your app bundle</text>
+  <text x="872" y="164" class="body">Contains your application's code and</text>
+  <text x="872" y="194" class="body">the RxPlayer API.</text>
+
+  <rect x="834" y="356" width="326" height="148" rx="16" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
+  <text x="997" y="396" text-anchor="middle" class="panel-title">worker.js</text>
+  <text x="872" y="438" class="body">Contains the RxPlayer's core logic</text>
+  <text x="872" y="468" class="body">and your "registered" code on top.</text>
+
+  <path d="M408 168h96" stroke="#d72657" stroke-width="3" marker-end="url(#arrow-pink)"/>
+  <path d="M716 168h96" stroke="#d72657" stroke-width="3" marker-end="url(#arrow-pink)"/>
+
+  <path d="M408 430h96" stroke="#4b5563" stroke-width="3" marker-end="url(#arrow-slate)"/>
+  <path d="M716 430h96" stroke="#4b5563" stroke-width="3" marker-end="url(#arrow-slate)"/>
+
+  <path d="M997 262 V340" fill="none" stroke="#26a757" stroke-width="3" marker-end="url(#arrow-green)"/>
+  <text x="1016" y="300">Loads through the RxPlayer</text>
+</svg>

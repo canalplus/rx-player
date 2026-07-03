@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 260" role="img" aria-labelledby="title desc">
+  <title id="title">Worker interface message exchange</title>
+  <desc id="desc">The application sends a configuration update to the worker and can receive acknowledgements or events back.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #202124; }
+      .label { font-size: 22px; font-weight: 700; }
+      .body { font-size: 17px; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+    </style>
+  </defs>
+  <rect width="920" height="260" rx="18" fill="#ffffff"/>
+  <rect x="54" y="70" width="250" height="110" rx="14" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="179" y="108" text-anchor="middle" class="label">Application</text>
+  <text x="179" y="142" text-anchor="middle" class="code">send("update")</text>
+  <rect x="616" y="70" width="250" height="110" rx="14" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
+  <text x="741" y="108" text-anchor="middle" class="label">Worker</text>
+  <text x="741" y="142" text-anchor="middle" class="code">on("update")</text>
+  <path d="M324 104h272" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="460" y="88" text-anchor="middle" class="body">configuration</text>
+  <path d="M596 150H324" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="460" y="180" text-anchor="middle" class="body">acknowledgement or event</text>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">JavaScript function crossing a worker boundary</title>
+  <desc id="desc">A main thread function depends on closures and build helpers that cannot be serialized through postMessage to a worker.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #202124; }
+      .label { font-size: 22px; font-weight: 700; }
+      .body { font-size: 17px; }
+      .small { font-size: 15px; fill: #5f6368; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+    </style>
+  </defs>
+  <rect width="920" height="360" rx="18" fill="#ffffff"/>
+  <rect x="34" y="42" width="340" height="250" rx="14" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="204" y="82" text-anchor="middle" class="label">Application bundle</text>
+  <rect x="74" y="112" width="260" height="62" rx="10" fill="#ffffff" stroke="#ec3655" stroke-width="2"/>
+  <text x="204" y="149" text-anchor="middle" class="code">representationFilter()</text>
+  <rect x="74" y="210" width="110" height="48" rx="8" fill="#ffffff" stroke="#ec3655" stroke-width="2" stroke-dasharray="7 6"/>
+  <text x="129" y="240" text-anchor="middle" class="body">closure</text>
+  <rect x="224" y="210" width="110" height="48" rx="8" fill="#ffffff" stroke="#ec3655" stroke-width="2" stroke-dasharray="7 6"/>
+  <text x="279" y="230" text-anchor="middle" class="body">bundle</text>
+  <text x="279" y="250" text-anchor="middle" class="body">helper</text>
+  <path d="M182 174 132 210" stroke="#ec3655" stroke-width="2" fill="none"/>
+  <path d="M226 174 276 210" stroke="#ec3655" stroke-width="2" fill="none"/>
+  <line x1="460" y1="50" x2="460" y2="286" stroke="#5f6368" stroke-width="3" stroke-dasharray="10 9"/>
+  <text x="460" y="146" text-anchor="middle" class="small">postMessage</text>
+  <text x="460" y="168" text-anchor="middle" class="small">serialization</text>
+  <path d="M374 142h52" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M494 142h52" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="546" y="42" width="340" height="250" rx="14" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
+  <text x="716" y="82" text-anchor="middle" class="label">Worker</text>
+  <rect x="586" y="112" width="260" height="62" rx="10" fill="#ffffff" stroke="#5f6368" stroke-width="2"/>
+  <text x="716" y="149" text-anchor="middle" class="body">callback needed here</text>
+  <path d="M620 220h192" stroke="#d93025" stroke-width="3"/>
+  <path d="M620 250h192" stroke="#d93025" stroke-width="3"/>
+  <text x="716" y="218" text-anchor="middle" class="body" fill="#d93025">outer scope missing</text>
+  <text x="716" y="248" text-anchor="middle" class="body" fill="#d93025">helpers not guaranteed</text>
+</svg>

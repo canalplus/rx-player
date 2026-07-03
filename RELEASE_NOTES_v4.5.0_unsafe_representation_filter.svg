@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 260" role="img" aria-labelledby="title desc">
+  <title id="title">Unsafe representationFilter example</title>
+  <desc id="desc">An unsafe stringified representationFilter can evaluate unvalidated input in the worker.</desc>
+  <defs>
+    <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#d93025"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #202124; }
+      .label { font-size: 22px; font-weight: 700; }
+      .body { font-size: 17px; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; }
+    </style>
+  </defs>
+  <rect width="920" height="260" rx="18" fill="#ffffff"/>
+  <rect x="44" y="58" width="230" height="124" rx="14" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="159" y="96" text-anchor="middle" class="label">Input</text>
+  <text x="159" y="130" text-anchor="middle" class="body">unvalidated rule</text>
+  <text x="159" y="154" text-anchor="middle" class="code">filterExpression</text>
+  <path d="M292 120h112" stroke="#d93025" stroke-width="3" marker-end="url(#arrow-red)"/>
+  <rect x="422" y="58" width="230" height="124" rx="14" fill="#fff8e1" stroke="#fbbc04" stroke-width="3"/>
+  <text x="537" y="96" text-anchor="middle" class="label">String callback</text>
+  <text x="537" y="134" text-anchor="middle" class="code">eval(input)</text>
+  <path d="M670 120h82" stroke="#d93025" stroke-width="3" marker-end="url(#arrow-red)"/>
+  <rect x="770" y="58" width="106" height="124" rx="14" fill="#fce8e6" stroke="#d93025" stroke-width="3"/>
+  <text x="823" y="104" text-anchor="middle" class="label" fill="#d93025">Risk</text>
+  <text x="823" y="138" text-anchor="middle" class="body" fill="#d93025">worker-side</text>
+  <text x="823" y="160" text-anchor="middle" class="body" fill="#d93025">execution</text>
+</svg>

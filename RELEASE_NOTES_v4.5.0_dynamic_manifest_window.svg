@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 260" role="img" aria-labelledby="title desc">
+  <title id="title">Dynamic Manifest window</title>
+  <desc id="desc">A requested position may be before, inside, or after the current moving Manifest window.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #202124; }
+      .label { font-size: 21px; font-weight: 700; }
+      .body { font-size: 16px; }
+      .small { font-size: 14px; fill: #5f6368; }
+    </style>
+  </defs>
+  <rect width="920" height="260" rx="18" fill="#ffffff"/>
+  <line x1="90" y1="132" x2="830" y2="132" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="266" y="106" width="390" height="52" rx="26" fill="#eef6ff" stroke="#1a73e8" stroke-width="3"/>
+  <text x="461" y="138" text-anchor="middle" class="body">currently playable Manifest window</text>
+  <line x1="266" y1="84" x2="266" y2="180" stroke="#1a73e8" stroke-width="3"/>
+  <line x1="656" y1="84" x2="656" y2="180" stroke="#1a73e8" stroke-width="3"/>
+  <text x="266" y="72" text-anchor="middle" class="label">minimum</text>
+  <text x="656" y="72" text-anchor="middle" class="label">maximum</text>
+  <circle cx="170" cy="132" r="10" fill="#d93025"/>
+  <text x="170" y="196" text-anchor="middle" class="body" fill="#d93025">requested before</text>
+  <circle cx="742" cy="132" r="10" fill="#d93025"/>
+  <text x="742" y="196" text-anchor="middle" class="body" fill="#d93025">requested after</text>
+  <circle cx="456" cy="132" r="10" fill="#188038"/>
+  <text x="456" y="196" text-anchor="middle" class="body" fill="#188038">safe position</text>
+</svg>
