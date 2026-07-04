@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="32 80 1136 608" role="img" aria-labelledby="title desc">
   <defs>
-    <marker id="arrow-slate" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+    <marker id="arrow-slate" viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="9" refY="5" orient="auto">
       <path d="M0 0 10 5 0 10z" fill="#4b5563"/>
     </marker>
-    <marker id="arrow-pink" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+    <marker id="arrow-pink" viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="9" refY="5" orient="auto">
       <path d="M0 0 10 5 0 10z" fill="#d72657"/>
     </marker>
-    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="7" markerHeight="7" refX="9" refY="5" orient="auto">
       <path d="M0 0 10 5 0 10z" fill="#1967d2"/>
     </marker>
     <style>
@@ -97,22 +97,20 @@
   <text x="774" y="602" class="code">);</text>
 
   <!-- attachWorker arrow -->
-  <path d="M448 236 C526 236 560 236 590 236" fill="none" stroke="#4b5563" stroke-width="3" marker-end="url(#arrow-slate)"/>
-  <path d="M610 236 C642 236 674 236 752 236" fill="none" stroke="#4b5563" stroke-width="3" marker-end="url(#arrow-slate)"/>
-  <rect x="546" y="256" width="108" height="24" rx="8" fill="#ffffff"/>
-  <text x="600" y="273" text-anchor="middle" class="small">Loads worker</text>
+  <path d="M448 236 C526 236 674 236 752 236" fill="none" stroke="#4b5563" stroke-width="2.25" marker-end="url(#arrow-slate)"/>
+  <rect x="486" y="248" width="108" height="24" rx="8" fill="#ffffff"/>
+  <text x="540" y="265" text-anchor="middle" class="small">Loads worker</text>
 
   <!-- loadVideo workerId arrow -->
-  <path d="M448 372 C526 372 560 372 590 372" fill="none" stroke="#d72657" stroke-width="3" marker-end="url(#arrow-pink)"/>
-  <path d="M610 372 C642 372 674 372 752 372" fill="none" stroke="#d72657" stroke-width="3" marker-end="url(#arrow-pink)"/>
-  <rect x="516" y="392" width="168" height="26" rx="8" fill="#ffffff"/>
-  <text x="600" y="410" text-anchor="middle" class="small">References callback</text>
+  <path d="M448 392 C526 392 674 392 752 392" fill="none" stroke="#d72657" stroke-width="2.25" marker-end="url(#arrow-pink)"/>
+  <rect x="486" y="404" width="108" height="40" rx="8" fill="#ffffff"/>
+  <text x="540" y="421" text-anchor="middle" class="small">References</text>
+  <text x="540" y="438" text-anchor="middle" class="small">callback</text>
 
   <!-- getWorkerInterface messages -->
-  <path d="M448 544 C528 544 558 544 590 544" fill="none" stroke="#1967d2" stroke-width="3" marker-end="url(#arrow-blue)"/>
-  <path d="M610 544 C642 544 672 544 752 544" fill="none" stroke="#1967d2" stroke-width="3" marker-end="url(#arrow-blue)"/>
-  <rect x="520" y="570" width="160" height="26" rx="8" fill="#ffffff"/>
-  <text x="600" y="588" text-anchor="middle" class="small">Sends message</text>
+  <path d="M448 539 C528 539 672 539 752 539" fill="none" stroke="#1967d2" stroke-width="2.25" marker-end="url(#arrow-blue)"/>
+  <rect x="486" y="551" width="108" height="26" rx="8" fill="#ffffff"/>
+  <text x="540" y="569" text-anchor="middle" class="small">Sends message</text>
   <rect x="310" y="642" width="578" height="26" rx="8" fill="#ffffff"/>
   <text x="600" y="660" text-anchor="middle" class="small">NOTE: worker.sendMessage(...) can also emit app-defined events back to the application</text>
 </svg>
