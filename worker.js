@@ -1,1 +1,1 @@
-./versions/4.4.1/demo/worker.js
+./versions/4.5.0/demo/worker.js
