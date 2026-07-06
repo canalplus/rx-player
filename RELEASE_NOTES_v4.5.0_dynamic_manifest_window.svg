@@ -24,25 +24,34 @@
         font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
         font-size: 14px;
       }
+      .label-bg {
+        fill: #ffffff;
+      }
     </style>
   </defs>
 
   <line x1="95" y1="160" x2="825" y2="160" stroke="#5f6368" stroke-width="3" marker-end="url(#axis-arrow)"/>
+  <rect x="800" y="172" width="30" height="22" rx="3" class="label-bg"/>
   <text x="828" y="188" text-anchor="end" class="small">time</text>
 
   <rect x="380" y="124" width="300" height="72" fill="#e8f0fe" stroke="#1967d2" stroke-width="3"/>
   <text x="530" y="166" text-anchor="middle" class="body">currently playable window</text>
 
   <line x1="380" y1="92" x2="380" y2="218" stroke="#1967d2" stroke-width="3"/>
+  <rect x="326" y="222" width="108" height="22" rx="3" class="label-bg"/>
   <text x="380" y="238" text-anchor="middle" class="code">minPosition</text>
 
   <line x1="680" y1="92" x2="680" y2="218" stroke="#1967d2" stroke-width="3"/>
+  <rect x="626" y="222" width="108" height="22" rx="3" class="label-bg"/>
   <text x="680" y="238" text-anchor="middle" class="code">maxPosition</text>
 
   <circle cx="205" cy="160" r="11" fill="#c5221f"/>
+  <rect x="164" y="222" width="82" height="22" rx="3" class="label-bg"/>
   <text x="205" y="238" text-anchor="middle" class="code">position</text>
-  <text x="205" y="260" text-anchor="middle" class="small">before current window</text>
+  <rect x="132" y="245" width="146" height="20" rx="3" class="label-bg"/>
+  <text x="205" y="260" text-anchor="middle" class="small">(before current window)</text>
 
   <path d="M427 276h206" stroke="#1967d2" stroke-width="3" marker-end="url(#move-arrow)"/>
+  <rect x="400" y="291" width="260" height="21" rx="3" class="label-bg"/>
   <text x="530" y="306" text-anchor="middle" class="small">dynamic content: bounds move forward</text>
 </svg>
