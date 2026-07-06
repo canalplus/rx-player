@@ -233,7 +233,6 @@ jobs:
       - integration_windows_firefox
       - integration_windows_edge
       - memory_linux
-      - performance_tests
 
     permissions:
       contents: write
