@@ -84,12 +84,12 @@ it <code>serverTimeURL</code>.</p>
 <p>Now you can have the server's time at a particular point in time (!). The problem is that
 time continuously changes: a time synchronization mechanism will have to be aware of how
 much time passed since the last request to obtain that time.</p>
-<p>We could ask for the client's timestamp - obtained thanks to the <code>Date.now()</code> API - at
-the time of the request. This would allow us to know how much time has passed since that
-event by calling <code>Date.now()</code> again in the future and calculating the difference. The
-problem however is that <code>Date.now()</code> will instantly change if the user updates its system
-clock. If that happens, we will lose the ability to know how much time has elapsed since
-the request.</p>
+<p>We could ask for the client's timestamp - obtained thanks to the <code>Date.now()</code> API - at the
+time of the request. This would allow us to know how much time has passed since that event
+by calling <code>Date.now()</code> again in the future and calculating the difference. The problem
+however is that <code>Date.now()</code> will instantly change if the user updates its system clock.
+If that happens, we will lose the ability to know how much time has elapsed since the
+request.</p>
 <p>To workaround this issue, we can use instead <code>performance.now()</code>, which does not rely on
 the system's clock. However, we are still left with two other issues:</p>
 <ol>

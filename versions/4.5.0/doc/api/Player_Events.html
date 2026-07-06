@@ -1025,8 +1025,8 @@ time for "stream event" without an end time).</p>
 <p>This is most likely due to the user seeking in the content. A "regular" content playback
 which continuously plays the content without seeking shouldn't trigger any
 <code>streamEventSkip</code> event.</p>
-<p>The payload of a <code>streamEventSkip</code> is the same as for a <code>streamEvent</code> and as such
-depends on the source of the event. All possible formats are described in the
+<p>The payload of a <code>streamEventSkip</code> is the same as for a <code>streamEvent</code> and as such depends
+on the source of the event. All possible formats are described in the
 <a href="../Getting_Started/Tutorials/EventStream_Handling.html">stream event tutorial</a>.</p>
 <p>Note that unlike <code>streamEvent</code> events, there's no point to define an <code>onExit</code> callback on
 the payload of a <code>streamEventSkip</code> event. This is because this event was not entered, and
