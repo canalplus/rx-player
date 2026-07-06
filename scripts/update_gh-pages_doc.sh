@@ -54,12 +54,14 @@ if [ -n "$(git status --porcelain doc)" ]; then
 fi
 
 tmpDir=$(mktemp -d)
-tmpDemoList=$(mktemp)
-tmpDocList=$(mktemp)
+tmpScriptsDir=$(mktemp -d .tmp-gh-pages-doc-scripts.XXXXXX)
+trap 'rm -rf "$tmpScriptsDir"' EXIT
 
 cp -r doc/generated/* "$tmpDir"
-cp -v scripts/generate_demo_list.mjs "$tmpDemoList"
-cp -v scripts/generate_documentation_list.mjs "$tmpDocList"
+mkdir -p "$tmpScriptsDir/utils"
+cp -v scripts/generate_demo_list.mjs "$tmpScriptsDir/generate_demo_list.mjs"
+cp -v scripts/generate_documentation_list.mjs "$tmpScriptsDir/generate_documentation_list.mjs"
+cp -v scripts/utils/sort_versions.mjs "$tmpScriptsDir/utils/sort_versions.mjs"
 
 # update gh-pages
 git checkout gh-pages
@@ -70,8 +72,6 @@ mkdir -p "versions/$current_version/doc"
 rm -rf doc
 mv "$tmpDir"/* "versions/$current_version/doc"
 ln -s "./versions/$current_version/doc" doc
-mv "$tmpDemoList" generate_demo_list.mjs
-mv "$tmpDocList" generate_documentation_list.mjs
 
 cat >doc/index.html <<'EOF'
 <!DOCTYPE html>
@@ -87,9 +87,7 @@ cat >doc/index.html <<'EOF'
 </html>
 EOF
 
-node generate_documentation_list.mjs
-rm generate_documentation_list.mjs
-rm generate_demo_list.mjs
+node "$tmpScriptsDir/generate_documentation_list.mjs"
 
 if [ -n "$(git status --porcelain doc "versions/$current_version/doc" documentation_pages_by_version.html)" ]; then
   echo "-- Current Status on gh-pages: --"

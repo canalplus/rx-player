@@ -60,7 +60,8 @@ tmpIndexFile=$(mktemp)
 tmpFaviconFile=$(mktemp)
 tmpWorkerFile=$(mktemp)
 tmpMpdWasmFile=$(mktemp)
-tmpDemoList=$(mktemp)
+tmpScriptsDir=$(mktemp -d .tmp-gh-pages-demo-scripts.XXXXXX)
+trap 'rm -rf "$tmpScriptsDir"' EXIT
 
 cp -rv demo/fonts "$tmpFontsDir"
 cp -rv demo/assets "$tmpAssetsDir"
@@ -70,7 +71,9 @@ cp -v demo/index.html "$tmpIndexFile"
 cp -v demo/plus.ico "$tmpFaviconFile"
 cp -v demo/worker.js "$tmpWorkerFile"
 cp -v dist/mpd-parser.wasm "$tmpMpdWasmFile"
-cp -v scripts/generate_demo_list.mjs "$tmpDemoList"
+mkdir -p "$tmpScriptsDir/utils"
+cp -v scripts/generate_demo_list.mjs "$tmpScriptsDir/generate_demo_list.mjs"
+cp -v scripts/utils/sort_versions.mjs "$tmpScriptsDir/utils/sort_versions.mjs"
 
 # update gh-pages
 git checkout gh-pages
@@ -94,7 +97,6 @@ mv "$tmpMpdWasmFile" "versions/$current_version/demo/mpd-parser.wasm"
 mv "$tmpFontsDir/fonts" "versions/$current_version/demo/fonts"
 mv "$tmpAssetsDir/assets" "versions/$current_version/demo/assets"
 mv "$tmpStylesDir/styles" "versions/$current_version/demo/styles"
-mv "$tmpDemoList" generate_demo_list.mjs
 ln -s "./versions/$current_version/demo/index.html" index.html
 ln -s "./versions/$current_version/demo/plus.ico" plus.ico
 ln -s "./versions/$current_version/demo/bundle.js" bundle.js
@@ -104,8 +106,7 @@ ln -s "./versions/$current_version/demo/fonts" fonts
 ln -s "./versions/$current_version/demo/assets" assets
 ln -s "./versions/$current_version/demo/styles" styles
 
-node generate_demo_list.mjs
-rm generate_demo_list.mjs
+node "$tmpScriptsDir/generate_demo_list.mjs"
 
 if [ -n "$(git status --porcelain bundle.js worker.js mpd-parser.wasm plus.ico styles fonts assets index.html "versions/$current_version/demo" demo_page_by_version.html)" ]; then
   echo "-- Current Status on gh-pages: --"
