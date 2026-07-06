@@ -14,8 +14,8 @@ The argument can be an object with a single `Number` property, either:
 - `wallClockTime`: seek to the given wallClock position, as returned by
   `getWallClockTime`.
 
-The argument can also just be a `Number` property, which will have the same effect than
-the `position` property (absolute position).
+The argument can also just be a `Number` property, which will have the same effect as the
+`position` property (absolute position).
 
 Seeking should only be done when a content is loaded (i.e. the player isn't in the
 `STOPPED`, `LOADING` or `RELOADING` state).

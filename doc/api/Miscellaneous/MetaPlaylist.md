@@ -205,7 +205,7 @@ properties:
     MetaPlaylist files!
 
 All those contents should be contiguous (meaning that the `endTime` of one should be the
-same value than the `startTime` of the following one).
+same value as the `startTime` of the following one).
 
 ## How to actually play a MetaPlaylist content
 

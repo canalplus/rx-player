@@ -90,7 +90,7 @@ a quick explanation of what to put in it.
 
 ---
 
-Here how it works:
+Here is how it works:
 
 Imagine you have a URL allowing you to know the UTC time on the server's side. Let's call
 it `serverTimeURL`.
@@ -99,12 +99,12 @@ Now you can have the server's time at a particular point in time (!). The proble
 time continuously changes: a time synchronization mechanism will have to be aware of how
 much time passed since the last request to obtain that time.
 
-We could asks for the client's timestamp - obtained thanks to the `Date.now()` API - at
-the time of the request. This would allow us to know how much time have passed since that
-event by calling `Date.now()` again in the future and calculating the difference. The
-problem however is that `Date.now()` will instantly change if the user updates its system
-clock. If that happens, we will lose the ability to know how much time has elapsed since
-the request.
+We could ask for the client's timestamp - obtained thanks to the `Date.now()` API - at the
+time of the request. This would allow us to know how much time has passed since that event
+by calling `Date.now()` again in the future and calculating the difference. The problem
+however is that `Date.now()` will instantly change if the user updates its system clock.
+If that happens, we will lose the ability to know how much time has elapsed since the
+request.
 
 To workaround this issue, we can use instead `performance.now()`, which does not rely on
 the system's clock. However, we are still left with two other issues:
@@ -127,7 +127,7 @@ So we now have two values:
 - `serverTimestamp` (`number`): Unix timestamp of the server at a given point in time.
 - `clientTime` (`number`): Value of the `performance.now()` API at the time the
   `serverTimestamp` value was true. Please note that if your page contains multiple
-  worker, the `performance.now()` call should be done on the same worker than the one in
+  workers, the `performance.now()` call should be done on the same worker as the one in
   which loadVideo is called.
 
 Those two values can be combined in the `serverSyncInfos` option like this:
@@ -148,11 +148,11 @@ rxPlayer.loadVideo({
 When playing in low latency mode, it is still possible to rebuffer or pause the content,
 which could lead the user to being far from the live edge.
 
-As several applications could want several workaround to that possible issue (like
+As several applications could want several workarounds for that possible issue (like
 updating the speed, seeking or just signaling the delay to the user), we choose to let
 that happen by default with the RxPlayer.
 
-As an example, ou demo page choose the following strategy for now:
+As an example, our demo page chooses the following strategy for now:
 
 - When falling between 6 to 15 seconds behind the live edge, the playback rate is updated
   proportionally to our delay until we reach 3 seconds behind the live edge.

@@ -162,7 +162,7 @@ Here is the description about all the properties encountered in a local manifest
 
   This is for example useful when playing a content which is still downloading. Here
   `expired` could resolve once a new segment is available, the RxPlayer would then request
-  the new local manifest (through the same API than for the initial request, e.g. through
+  the new local manifest (through the same API as for the initial request, e.g. through
   the `manifestLoader` property indicated in `loadVideo`) and would obtain a new local
   manifest with this new segment included and a new `expired` property set. This can go on
   until the content is completely downloaded at which time `expired` can be set to
@@ -171,11 +171,11 @@ Here is the description about all the properties encountered in a local manifest
 ## The period object
 
 As seen in the previous chapter, the local manifest contains a `periods` property. The
-concept of period comes from DASH and allow to separate a content into multiple sub-parts,
+concept of period comes from DASH and allows separating content into multiple sub-parts,
 each with their own configurations.
 
-For example, you could have in the same content a TV Show in german followed by an
-american film, each with its own language choices and qualities.
+For example, you could have in the same content a TV show in German followed by an
+American film, each with its own language choices and qualities.
 
 If you don't need that kind of granularity, you can just create a single period for your
 local manifest.
@@ -278,7 +278,7 @@ We'll finish with a text track example:
 }
 ```
 
-Here how it looks when adaptations are integrated in a given period:
+Here is how it looks when adaptations are integrated in a given period:
 
 ```js
 {
@@ -589,7 +589,7 @@ This callback is very similar to `loadInitSegment` with two differences:
   1. The first being the segment object (from the `segments` array) of the segment we want
      to recuperate. You can generally discriminate which segment we want from the `time`
      property of the given segment, which should be unique for that representation.
-  2. The second being the callbacks object, which has the exact same form than the one in
+  2. The second being the callbacks object, which has the exact same form as the one in
      `loadInitSegment` (two properties `resolve` and reject).
 
 - it cannot return null. It has to return an `ArrayBuffer` corresponding to the wanted

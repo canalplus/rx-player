@@ -11,7 +11,7 @@ for subtitles formats you don't depend on.
 Which features you will need to import will depend on what RxPlayer's build you rely on;
 
 - If you import the default RxPlayer build (e.g. through an
-  `import RxPlayer from "rx-player` import), you will obtain an RxPlayer with most
+  `import RxPlayer from "rx-player"` import), you will obtain an RxPlayer with most
   features, which should be sufficient for most use-cases. It already includes the
   following features (description of each available in the next chapter):
   - `SMOOTH`
@@ -28,7 +28,7 @@ Which features you will need to import will depend on what RxPlayer's build you 
   - `HTML_SAMI_PARSER`
 
 - If you import the [RxPlayer's minimal build](../Getting_Started/Minimal_Player.md)
-  however (e.g. through an `import RxPlayer from "rx-player/minimal` import), you will
+  however (e.g. through an `import RxPlayer from "rx-player/minimal"` import), you will
   obtain an RxPlayer with no feature by default. In that case, you will probably need to
   add the features you want.
 
@@ -49,7 +49,7 @@ RxPlayer.addFeatures([DASH]);
 Features, which are variables imported from the `"rx-player/features"` path, are all
 objects declared in upper-case.
 
-Here is the anotated exhaustive list (notes are at the bottom of the table):
+Here is the annotated exhaustive list (notes are at the bottom of the table):
 
 | Feature                  | Description of the feature                                |
 | ------------------------ | --------------------------------------------------------- |
@@ -114,7 +114,7 @@ They are already implicitly imported when adding any of the corresponding text p
 
 ## Examples
 
-To help you choose your features, are some examples that represents common usecases.
+To help you choose your features, here are some examples that represent common use cases.
 
 ### unencrypted DASH contents with native webVTT subtitles
 

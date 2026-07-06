@@ -36,7 +36,7 @@ The options argument is an object containing :
 - _keySystems_ (`Array.<Object> | undefined`): If set, a new configuration will be set on
   this reloaded content regarding its decryption.
 
-  The value of this property follows the exact same structure than for the original
+  The value of this property follows the exact same structure as for the original
   `loadVideo` call, it is described in the
   [decryption options documentation page](../Decryption_Options.md).
 
