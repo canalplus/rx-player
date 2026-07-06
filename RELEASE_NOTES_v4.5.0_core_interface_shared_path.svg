@@ -10,7 +10,7 @@
       <path d="M0 0 10 5 0 10z" fill="#1967d2"/>
     </marker>
     <marker id="arrow-blue-soft" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
-      <path d="M0 0 10 5 0 10z" fill="#3b74c5"/>
+      <path d="M0 0 10 5 0 10z" fill="#5b7fcf"/>
     </marker>
     <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
       <path d="M0 0 10 5 0 10z" fill="#c5221f"/>
@@ -59,18 +59,18 @@
   <text x="177" y="240" text-anchor="middle" class="section">Monothread init</text>
   <text x="177" y="266" text-anchor="middle" class="small">default path</text>
 
-  <rect x="335" y="210" width="175" height="78" rx="12" fill="#f5f8ff" stroke="#3b74c5" stroke-width="2.5"/>
+  <rect x="335" y="210" width="175" height="78" rx="12" fill="#f0f4ff" stroke="#5b7fcf" stroke-width="2.5"/>
   <text x="422" y="240" text-anchor="middle" class="section">MULTI_THREAD init</text>
   <text x="422" y="266" text-anchor="middle" class="small">multithread path</text>
 
   <path d="M177 288v54" stroke="#1967d2" stroke-width="3" marker-end="url(#arrow-blue)"/>
-  <path d="M422 288v54" stroke="#3b74c5" stroke-width="3" marker-end="url(#arrow-blue-soft)"/>
+  <path d="M422 288v54" stroke="#5b7fcf" stroke-width="3" marker-end="url(#arrow-blue-soft)"/>
 
   <rect x="90" y="352" width="175" height="76" rx="12" fill="#fff4f2" stroke="#c5221f" stroke-width="2.5"/>
   <text x="177" y="382" text-anchor="middle" class="section">Core logic</text>
   <text x="177" y="408" text-anchor="middle" class="small">direct local calls</text>
 
-  <rect x="335" y="352" width="175" height="76" rx="12" fill="#fff6f5" stroke="#d14b3f" stroke-width="2.5"/>
+  <rect x="335" y="352" width="175" height="76" rx="12" fill="#fff2ee" stroke="#df6b57" stroke-width="2.5"/>
   <text x="422" y="382" text-anchor="middle" class="section">Core logic</text>
   <text x="422" y="408" text-anchor="middle" class="small">worker messages</text>
 
