@@ -1,0 +1,525 @@
+<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1"><meta charset="utf-8"><link rel="stylesheet" href="../styles/style.css"/><link rel="stylesheet" href="../styles/code.css"/><title>Multithread mode: Custom worker</title><link rel="icon" type="image/png" href="../static/img/favicon.png"></head><body class="no-js"><script type="text/javascript">document.body.className = "";window.rootUrl = "..";</script><div class="page-wrapper"><nav class="navbar-parent"><div class="navbar-wrapper"><div class="navbar-items"><button aria-label="Open website index" class="hamburger-opener"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="logo-link" href="https://github.com/canalplus/rx-player"><img alt="Logo" class="navbar-item navbar-item-logo" src="../static/img/logo.png" /></a><a class="navbar-item navbar-active hideable"href="./Welcome.html">Getting Started</a>
+<a class="navbar-item hideable"href="../api/Overview.html">API</a>
+<a class="navbar-item hideable"href="../reference/API_Reference.html">Reference</a>
+<span class="navbar-item search-icon last-left"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><title>search</title><path d="M19 17l-5.15-5.15a7 7 0 1 0-2 2L17 19zM3.5 8A4.5 4.5 0 1 1 8 12.5 4.5 4.5 0 0 1 3.5 8z"/><script xmlns=""/></svg></span>
+<a class="navbar-item first-right hideable"href="https://developers.canal-plus.com/rx-player/">Demo</a>
+<a class="navbar-item hideable"href="../contributing/CONTRIBUTING.html">Contributing</a>
+<a aria-label="Link to repository" class="navbar-item github-link hideable" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a>
+<a class="navbar-item"href="https://developers.canal-plus.com/rx-player/documentation_pages_by_version.html"><span class="version-item">version: 4.5.0</span></a></div></div> </nav><aside class="sidebar-parent"><div class="sidebar-header"><a href="https://github.com/canalplus/rx-player"><img alt="logo" class="sidebar-header-logo" src="../static/img/logo.png" /></a></div><div class="sidebar-wrapper"><div class="sidebar-items"><li class="sidebar-item"><a class="sidebar-link" href="./Welcome.html">Welcome</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Tutorials</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Quick_Start.html">Quick Start</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Building_a_Custom_Player_UI.html">Building a Custom Player UI</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Content_with_DRM.html">Contents with DRM</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/Selecting_a_Track.html">Selecting a Track</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li><li class="sidebar-item"><a class="sidebar-link" href="./Minimal_Player.html">Importing a minimal RxPlayer</a></li><li class="sidebar-item"><a class="sidebar-link" href="./MultiThreading.html">Multithread mode</a></li><li class="sidebar-item"><a class="sidebar-link active" href="./ImportableWorker.html">Multithread mode: Custom worker</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Glossary.html">Glossary</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Troubleshooting.html">Troubleshooting</a></li><li class="sidebar-item"><div class="sidebar-item sidebar-item-group">Migration from RxPlayer v3</div><ul><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/Overview.html">Overview</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/Preferences.html">Track Preferences</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/Constructor_Options.html">Constructor Options</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/Player_Events.html">Player Events</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/Player_Errors.html">Player Errors</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/Player_Methods.html">Player Methods</a></li><li class="sidebar-item"><a class="sidebar-link" href="./Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li></div></div></aside><div class="content-wrapper"><div class="content"><div id="search-wrapper"><input type="search" name="search" id="searchbar" placeholder="Search in this documentation" class="active" /><div id="search-results"></div></div><html><head></head><body><a name="building-your-own-rxplayer-worker"></a><h1>Building your own RxPlayer worker</h1>
+<a name="preamble"></a><h2>Preamble</h2>
+<p>The RxPlayer can rely on a
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API"><code>WebWorker</code></a> to run its
+main logic, effectively running in a separate thread from your application.</p>
+<p>If you're interested in this and haven't read it already, refer first to our
+<a href="./MultiThreading.html">MultiThreading</a> documentation to understand how to setup this.</p>
+<a name="overview"></a><h2>Overview</h2>
+<p>By default, the RxPlayer provide its own worker file. For most situations this is
+sufficient and it can be relied on to easily enable our multithreading mode.</p>
+<p>However there are some scenarios where you might want to prefer bundling your own worker
+file instead:</p>
+<ul>
+<li>
+<p>You want to set a
+<a href="../api/Loading_a_Content.html#representationfilter"><code>representationFilter</code></a>,
+<a href="../api/Loading_a_Content.html#manifestloader"><code>manifestLoader</code></a> or a
+<a href="../api/Loading_a_Content.html#segmentloader"><code>segmentLoader</code></a> callback for a content
+loading in multithreading mode.</p>
+<p>Those run on the <code>WebWorker</code>-side and as such have to be declared on the RxPlayer
+worker.</p>
+</li>
+<li>
+<p>You want a different set of features than the one present by default in our worker file
+(which are <code>DASH</code> and <code>DASH_WASM</code>).</p>
+</li>
+<li>
+<p>You want to run your own bundling tool on this worker, e.g. because you want to
+transpile it to ES5-compatible code.</p>
+</li>
+</ul>
+<p>For those cases, we export the basis for our worker file through the
+<code>rx-player/experimental/worker</code> path. You can just create a simple RxPlayer worker file
+like this:</p>
+<pre><code class="language-js"><span class="hljs-comment">// <span class="hljs-doctag">NOTE:</span> This file is the worker bundle you will bundle independently from your</span>
+<span class="hljs-comment">// application</span>
+
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayerWorker</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/worker"</span>;
+<span class="hljs-comment">// import the features you want worker-side, here just `DASH`</span>
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/worker/features"</span>;
+
+<span class="hljs-title class_">RxPlayerWorker</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH</span>]);
+
+<span class="hljs-keyword">const</span> rxPlayerWorker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayerWorker</span>();
+</code></pre>
+<p>This would then need to be bundled by you and the resulting bundle will be the file you
+will have to provide (through a URL) to
+<a href="../api/MultiThread/attachWorker.html">the <code>attachWorker</code> API</a>.</p>
+<a name="defining-a-representationfilter-manifestloader-or-segmentloader-callback"></a><h2>Defining a <code>representationFilter</code>, <code>manifestLoader</code> or <code>segmentLoader</code> callback</h2>
+<p>As written in the previous chapter, one of the main advantage of creating your own worker
+is to be able to define your own
+<a href="../api/Loading_a_Content.html#representationfilter"><code>representationFilter</code></a>,
+<a href="../api/Loading_a_Content.html#manifestloader"><code>manifestLoader</code></a> and
+<a href="../api/Loading_a_Content.html#segmentloader"><code>segmentLoader</code></a> callbacks.</p>
+<p>Those can be respectively added worker-side through the <code>registerRepresentationFilter</code>,
+<code>registerManifestLoader</code> and <code>registerSegmentLoader</code> API:</p>
+<pre><code class="language-js"><span class="hljs-comment">// <span class="hljs-doctag">NOTE:</span> This file is the worker bundle you will bundle independently from your</span>
+<span class="hljs-comment">// application</span>
+
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayerWorker</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/worker"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/worker/features"</span>;
+<span class="hljs-title class_">RxPlayerWorker</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH</span>]);
+
+<span class="hljs-keyword">const</span> rxPlayerWorker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayerWorker</span>();
+
+<span class="hljs-comment">// To register a `representationFilter`</span>
+rxPlayerWorker.<span class="hljs-title function_">registerRepresentationFilter</span>(
+  <span class="hljs-comment">// Give it a "name" through which it will be referenced from your application</span>
+  <span class="hljs-comment">// bundle when you want to enable it.</span>
+  <span class="hljs-string">"my-representation-filter"</span>,
+  <span class="hljs-comment">// Same thing as your usual representation filter. Here filtering in only</span>
+  <span class="hljs-comment">// 1080p video or less</span>
+  <span class="hljs-function">(<span class="hljs-params">representationInfo, context</span>) =&gt;</span> {
+    <span class="hljs-keyword">if</span> (context.<span class="hljs-property">trackType</span> === <span class="hljs-string">"video"</span>) {
+      <span class="hljs-keyword">const</span> { width, height } = representationInfo;
+      <span class="hljs-keyword">return</span> width != <span class="hljs-literal">null</span> &amp;&amp; height != <span class="hljs-literal">null</span> &amp;&amp; width &lt;= <span class="hljs-number">1920</span> &amp;&amp; height &lt;= <span class="hljs-number">1080</span>;
+    }
+
+    <span class="hljs-comment">// Otherwise, allow all non-video representations</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+  },
+);
+
+<span class="hljs-comment">// To register a `manifestLoader`</span>
+rxPlayerWorker.<span class="hljs-title function_">registerManifestLoader</span>(
+  <span class="hljs-string">"my-manifest-loader"</span>,
+  <span class="hljs-comment">// Same thing as your usual `manifestLoader`</span>
+  <span class="hljs-function">(<span class="hljs-params">manifestInfo, callbacks</span>) =&gt;</span> {
+    <span class="hljs-comment">/* ... */</span>
+  },
+);
+
+<span class="hljs-comment">// To register a `segmentLoader`</span>
+rxPlayerWorker.<span class="hljs-title function_">registerSegmentLoader</span>(
+  <span class="hljs-string">"my-segment-loader"</span>,
+  <span class="hljs-comment">// Same thing as your usual `segmentLoader`</span>
+  <span class="hljs-function">(<span class="hljs-params">segmentInfo, callbacks</span>) =&gt;</span> {
+    <span class="hljs-comment">/* ... */</span>
+  },
+);
+</code></pre>
+<p>As you can see, each of those three methods take a string as first argument which is the
+<code>workerId</code> with which that callback will be identified.</p>
+<p>In your regular application (not the worker anymore), you can then refer to that
+identifier when loading a content like so:</p>
+<pre><code class="language-js"><span class="hljs-comment">// ... Your application</span>
+
+rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-comment">/* ... */</span>
+  <span class="hljs-attr">representationFilter</span>: {
+    <span class="hljs-attr">workerId</span>: <span class="hljs-string">"my-representation-filter"</span>,
+  },
+  <span class="hljs-attr">manifestLoader</span>: {
+    <span class="hljs-attr">workerId</span>: <span class="hljs-string">"my-manifest-loader"</span>,
+  },
+  <span class="hljs-attr">segmentLoader</span>: {
+    <span class="hljs-attr">workerId</span>: <span class="hljs-string">"my-segment-loader"</span>,
+  },
+});
+</code></pre>
+<p>Because the content might fall back to the main thread when "multithreading mode" is not
+available (see <a href="./MultiThreading.html">its limitations</a> for the list of reasons why), we
+generally recommend however providing both the <code>workerId</code> and a fallback function for
+cases where the content does not load in multithreading mode:</p>
+<pre><code class="language-js"><span class="hljs-comment">// ... Your application</span>
+
+rxPlayer.<span class="hljs-title function_">loadVideo</span>({
+  <span class="hljs-comment">/* ... */</span>
+  <span class="hljs-attr">representationFilter</span>: {
+    <span class="hljs-comment">// This one is declared with that name worker-side through your worker bundle</span>
+    <span class="hljs-comment">// and will be used when the content loads in multithreading mode&gt;</span>
+    <span class="hljs-attr">workerId</span>: <span class="hljs-string">"my-representation-filter"</span>,
+    <span class="hljs-comment">// This one s for when the content is loaded on main thread.</span>
+    <span class="hljs-attr">fn</span>: myRepresentationFilterFunction,
+  },
+  <span class="hljs-attr">manifestLoader</span>: {
+    <span class="hljs-attr">workerId</span>: <span class="hljs-string">"my-manifest-loader"</span>,
+    <span class="hljs-attr">fn</span>: myManifestLoaderFunction,
+  },
+  <span class="hljs-attr">segmentLoader</span>: {
+    <span class="hljs-attr">workerId</span>: <span class="hljs-string">"my-segment-loader"</span>,
+    <span class="hljs-attr">fn</span>: mySegmentLoaderFunction,
+  },
+});
+</code></pre>
+<p>Usually this means that the same functions may be declared both worker-side and in your
+application. You can for example declare that function in its own independent file and
+import it in both your worker and application bundles.</p>
+<a name="communicating-between-the-main-thread-and-the-worker"></a><h2>Communicating between the main thread and the worker</h2>
+<p>Until now we have two different bundles (the worker bundle and your application bundle)
+with no way to communicate between the two.</p>
+<p>For example you might want to be able to configure your <code>representationFilter</code> before
+loading a content or to send back information on each request each time a <code>segmentLoader</code>
+is called.</p>
+<p>To allow for those usages, three methods have been added on the worker-side (on an
+<code>RxPlayerWorker</code>):</p>
+<pre><code class="language-js"><span class="hljs-comment">// The usual set-up for the worker-side...</span>
+<span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayerWorker</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"../dist/es2017/importable_worker"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"../dist/es2017/features/worker/index"</span>;
+<span class="hljs-title class_">RxPlayerWorker</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH</span>]);
+<span class="hljs-keyword">const</span> rxPlayerWorker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayerWorker</span>();
+
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">onMainMessage</span> = (<span class="hljs-params">value</span>) =&gt; {
+  <span class="hljs-comment">// The `sendMessage` method, allowing to send messages back to your application</span>
+  rxPlayerWorker.<span class="hljs-title function_">sendMessage</span>(<span class="hljs-string">"pong"</span>, value);
+};
+
+<span class="hljs-comment">// New method on an `RxPlayerWorker` to listen to messages coming from main thread.</span>
+rxPlayerWorker.<span class="hljs-title function_">addMessageListener</span>(<span class="hljs-string">"ping"</span>, onMainMessage);
+
+<span class="hljs-comment">// If you want to stop listening to those messages, you can call</span>
+<span class="hljs-comment">// `removeMessageListener` with those same arguments</span>
+rxPlayerWorker.<span class="hljs-title function_">addMessageListener</span>(<span class="hljs-string">"ping"</span>, onMainMessage);
+</code></pre>
+<p>The 3 same methods also exists alongside your main application thanks to the new
+<a href="../api/MultiThread/getWorkerInterface.html"><code>getWorkerInterface</code> RxPlayer method</a>:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Your application code ...</span>
+
+<span class="hljs-comment">// Some RxPlayer setup</span>
+<span class="hljs-keyword">const</span> rxPlayer = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayer</span>({ videoElement });
+rxPlayer.<span class="hljs-title function_">attachWorker</span>({ workerUrl });
+
+<span class="hljs-comment">// The new API: `getWorkerInterface`</span>
+<span class="hljs-keyword">const</span> workerInterface = rxPlayer.<span class="hljs-title function_">getWorkerInterface</span>();
+
+<span class="hljs-keyword">if</span> (workerInterface === <span class="hljs-literal">null</span>) {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(<span class="hljs-string">"Could not initialize worker"</span>);
+} <span class="hljs-keyword">else</span> {
+  <span class="hljs-comment">// Mirror the event sent/receviced by the worker</span>
+  workerInterface.<span class="hljs-title function_">addMessageListener</span>(<span class="hljs-string">"pong"</span>, <span class="hljs-function">(<span class="hljs-params">value</span>) =&gt;</span> {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">warn</span>(<span class="hljs-string">"Worker responded back:"</span>, value);
+  });
+
+  workerInterface.<span class="hljs-title function_">sendMessage</span>(<span class="hljs-string">"ping"</span>, {
+    <span class="hljs-attr">someValue</span>: <span class="hljs-string">"foo"</span>,
+  });
+}
+</code></pre>
+<p>If you want more information on how those API work, [take a look at <code>getWorkerInteface</code>'s
+API documentation].</p>
+<a name="available-features"></a><h2>Available features</h2>
+<p>By default, this "importable worker" comes with no support for any "transport protocol"
+(e.g. "DASH", "Smooth" etc.) and so won't be able to play any content. The idea is to let
+you reduce the size of that bundle by making it contain just what you want.</p>
+<a name="the-addfeatures-static-method"></a><h3>The <code>addFeatures</code> static method</h3>
+<p>The <code>RxPlayerWorker</code> you import in your worker-side bundle also have an <code>addFeatures</code>
+method, like the <code>RxPlayer</code>. This is this method you'll use to add features, providing it
+the "features" (list below) that can be imported through the
+<code>"rx-player/experimental/worker/features"</code> path:</p>
+<pre><code class="language-js"><span class="hljs-keyword">import</span> <span class="hljs-title class_">RxPlayerWorker</span> <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/worker"</span>;
+<span class="hljs-keyword">import</span> { <span class="hljs-variable constant_">DASH</span> } <span class="hljs-keyword">from</span> <span class="hljs-string">"rx-player/experimental/worker/features"</span>;
+
+<span class="hljs-title class_">RxPlayerWorker</span>.<span class="hljs-title function_">addFeatures</span>([<span class="hljs-variable constant_">DASH</span>]);
+
+<span class="hljs-keyword">const</span> rxPlayerWorker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">RxPlayerWorker</span>();
+</code></pre>
+<a name="features-list"></a><h3>Features list</h3>
+<p>For now only the following features exist:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description of the feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DASH</code> [1]</td>
+<td>Enable DASH playback using a JavaScript-based MPD parser</td>
+</tr>
+<tr>
+<td><code>DASH_WASM</code> [1] [2]</td>
+<td>Enable DASH playback using a WebAssembly-based MPD parser</td>
+</tr>
+<tr>
+<td><code>SMOOTH</code></td>
+<td>Enable playback of Smooth Streaming contents</td>
+</tr>
+<tr>
+<td><code>LOCAL_MANIFEST</code></td>
+<td>Enable playback of "local" contents</td>
+</tr>
+<tr>
+<td><code>METAPLAYLIST</code></td>
+<td>Enable playback of "metaplaylist" contents</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><strong>Notes</strong>:</p>
+<p><strong>[1]</strong>: In cases where both the <code>DASH</code> and <code>DASH_WASM</code> features are added (which are both
+parsers for DASH contents), the RxPlayer will use the WebAssembly parser by default
+(provided by <code>DASH_WASM</code>) and fall back to the JavaScript parser (provided by <code>DASH</code>) when
+it cannot use it.</p>
+<p><strong>[2]</strong> The <code>DASH_WASM</code> feature requires a WebAssembly file that has to be loaded
+separately. This can be done in two ways: either you rely on that features' <code>initialize</code>
+function (<a href="../api/Miscellaneous/DASH_WASM_Parser.html">corresponding documentation page</a>),
+or you'll provide the <code>wasmUrl</code> option to the
+<a href="../api/MultiThread/attachWorker.html"><code>attachWorker</code></a> method on you application's side.</p>
+<a name="worker-limitations"></a><h2>Worker limitations</h2>
+<p>Note that this "worker bundle" will run in a
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope">WorkerGlobalScope</a>,
+which operates in a separate thread from your main application. This environment has
+several important limitations that affect what your worker code can do.</p>
+<a name="unavailable-apis"></a><h3>Unavailable APIs</h3>
+<p>The following APIs are <strong>not available</strong> in the worker context:</p>
+<ul>
+<li><strong>DOM APIs</strong>: No access to <code>document</code>, <code>window</code>, <code>HTMLElement</code>, or any DOM manipulation</li>
+<li><strong>Browser storage</strong>: No <code>localStorage</code>, <code>sessionStorage</code>, or <code>indexedDB</code></li>
+<li><strong>User interface</strong>: No <code>alert()</code>, <code>confirm()</code>, <code>prompt()</code></li>
+<li><strong>Navigation</strong>: No <code>location</code> object or history manipulation</li>
+<li><strong>Parent object</strong>: No access to the main thread's global scope</li>
+</ul>
+<a name="examples-of-what-wont-work"></a><h3>Examples of what won't work:</h3>
+<pre><code class="language-js"><span class="hljs-comment">// These will throw errors in your worker:</span>
+
+<span class="hljs-comment">// DOM access (you don't have access to the DOM in a WebWorker)</span>
+<span class="hljs-keyword">const</span> videoElement = <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">querySelector</span>(<span class="hljs-string">"video"</span>);
+
+<span class="hljs-comment">// Local storage</span>
+<span class="hljs-keyword">const</span> setting = <span class="hljs-variable language_">localStorage</span>.<span class="hljs-title function_">getItem</span>(<span class="hljs-string">"userPreference"</span>);
+
+<span class="hljs-comment">// Window object (use `self` to refect to global object)</span>
+<span class="hljs-keyword">const</span> screenWidth = <span class="hljs-variable language_">window</span>.<span class="hljs-property">innerWidth</span>;
+</code></pre>
+<a name="available-apis"></a><h3>Available APIs</h3>
+<p>Many JavaScript APIs are still available in workers:</p>
+<ul>
+<li><strong>Core JavaScript</strong>: <code>JSON</code>, <code>Math</code>, <code>Date</code>, <code>Promise</code>, <code>setTimeout</code>, <code>setInterval</code></li>
+<li><strong>Network requests</strong>: <code>fetch()</code>, <code>XMLHttpRequest</code></li>
+<li><strong>Performance</strong>: <code>performance</code> object for timing measurements</li>
+<li><strong>Console</strong>: <code>console.log()</code>, <code>console.error()</code>, etc.</li>
+<li><strong>Crypto</strong>: <code>crypto</code> for cryptographic operations</li>
+<li><strong>Typed arrays</strong>: <code>ArrayBuffer</code>, <code>Uint8Array</code>, etc.</li>
+</ul>
+<a name="communication-constraints"></a><h3>Communication Constraints</h3>
+<p>Variables and objects cannot be directly shared between main thread and worker, all
+communication must happen through the <code>sendMessage</code> system:</p>
+<pre><code class="language-js"><span class="hljs-comment">// Correct way to share data</span>
+rxPlayerWorker.<span class="hljs-title function_">sendMessage</span>(<span class="hljs-string">"config"</span>, { <span class="hljs-attr">quality</span>: <span class="hljs-string">"high"</span> });
+</code></pre>
+<p>Moreover, only serializable data can be passed between threads:</p>
+<pre><code class="language-js"><span class="hljs-comment">// These can be passed:</span>
+<span class="hljs-keyword">const</span> validData = {
+  <span class="hljs-attr">string</span>: <span class="hljs-string">"hello"</span>,
+  <span class="hljs-attr">number</span>: <span class="hljs-number">42</span>,
+  <span class="hljs-attr">boolean</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">array</span>: [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>],
+  <span class="hljs-attr">object</span>: { <span class="hljs-attr">nested</span>: <span class="hljs-string">"value"</span> },
+};
+
+<span class="hljs-comment">// These **CANNOT** be passed:</span>
+<span class="hljs-keyword">const</span> invalidData = {
+  <span class="hljs-attr">function</span>: <span class="hljs-function">() =&gt;</span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"hello"</span>),
+  <span class="hljs-attr">domElement</span>: <span class="hljs-variable language_">document</span>.<span class="hljs-title function_">querySelector</span>(<span class="hljs-string">"div"</span>),
+  <span class="hljs-attr">symbol</span>: <span class="hljs-title class_">Symbol</span>(<span class="hljs-string">"test"</span>),
+  <span class="hljs-attr">undefined</span>: <span class="hljs-literal">undefined</span>,
+};
+</code></pre>
+<a name="loading-external-dependencies"></a><h3>Loading external dependencies</h3>
+<p>If your callbacks need external libraries, they must be imported in the worker bundle:</p>
+<pre><code class="language-js"><span class="hljs-comment">// In your worker file</span>
+<span class="hljs-keyword">import</span> externalLibrary <span class="hljs-keyword">from</span> <span class="hljs-string">"some-library"</span>;
+
+rxPlayerWorker.<span class="hljs-title function_">registerSegmentLoader</span>(<span class="hljs-string">"custom-loader"</span>, <span class="hljs-function">(<span class="hljs-params">segmentInfo, callbacks</span>) =&gt;</span> {
+  <span class="hljs-comment">// Now you can use externalLibrary here</span>
+  <span class="hljs-keyword">const</span> processedData = externalLibrary.<span class="hljs-title function_">process</span>(segmentInfo);
+  <span class="hljs-comment">// ...</span>
+});
+</code></pre>
+<a name="performance-considerations"></a><h3>Performance considerations</h3>
+<ul>
+<li><strong>Memory isolation</strong>: Workers have their own memory space, so large objects are
+duplicated when passed</li>
+<li><strong>Communication latency</strong>: Message passing between threads has small but measurable
+latency</li>
+</ul>
+<a name="common-pitfalls"></a><h3>Common Pitfalls</h3>
+<h4>Attempting to access main thread state</h4>
+<pre><code class="language-js"><span class="hljs-comment">// You cannot access objects defined in the main thread (e.g. `userSettings` here)</span>
+rxPlayerWorker.<span class="hljs-title function_">registerRepresentationFilter</span>(<span class="hljs-string">"filter"</span>, <span class="hljs-function">(<span class="hljs-params">rep, context</span>) =&gt;</span> {
+  <span class="hljs-comment">// This won't work: `userSettings` doesn't exist in worker</span>
+  <span class="hljs-keyword">if</span> (userSettings.<span class="hljs-property">allowHighQuality</span>) {
+    <span class="hljs-keyword">return</span> rep.<span class="hljs-property">bitrate</span> &lt; <span class="hljs-number">5000000</span>;
+  }
+});
+
+<span class="hljs-comment">// Correct approach: pass configuration via messages</span>
+rxPlayerWorker.<span class="hljs-title function_">addMessageListener</span>(<span class="hljs-string">"updateSettings"</span>, <span class="hljs-function">(<span class="hljs-params">settings</span>) =&gt;</span> {
+  <span class="hljs-comment">// Store settings in worker scope</span>
+  workerSettings = settings;
+});
+</code></pre>
+<h4>Forgetting async nature of communication</h4>
+<pre><code class="language-js"><span class="hljs-comment">// Wrong: expecting immediate response</span>
+<span class="hljs-keyword">let</span> config = <span class="hljs-attr">null</span>:
+rxPlayerWorker.<span class="hljs-title function_">sendMessage</span>(<span class="hljs-string">"getConfig"</span>);
+rxPlayerWorker.<span class="hljs-title function_">addMessageListener</span>(<span class="hljs-string">"configResponse"</span>, <span class="hljs-function">(<span class="hljs-params">response</span>) =&gt;</span> {
+  config = response;
+});
+<span class="hljs-comment">// This won't work: config is not immediately available here</span>
+<span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(config.<span class="hljs-property">value</span>);
+
+<span class="hljs-comment">// Correct: handle async communication</span>
+rxPlayerWorker.<span class="hljs-title function_">sendMessage</span>(<span class="hljs-string">"getConfig"</span>);
+rxPlayerWorker.<span class="hljs-title function_">addMessageListener</span>(<span class="hljs-string">"configResponse"</span>, <span class="hljs-function">(<span class="hljs-params">config</span>) =&gt;</span> {
+  <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(config.<span class="hljs-property">value</span>);
+});
+</code></pre>
+</body></html><nav class="next-previous-page-wrapper" aria-label="Navigate between pages"><div class="next-or-previous-page"><a class="next-or-previous-page-link" href="./MultiThreading.html"><div class="next-or-previous-page-link-label">Previous</div><div class="next-or-previous-page-link-name">Multithread mode</div></a></div><div class="next-or-previous-page next-page"><a class="next-or-previous-page-link" href="./Glossary.html"><div class="next-or-previous-page-link-label">Next</div><div class="next-or-previous-page-link-name">Glossary</div></a></div></nav></div><div class="tocbar-wrapper"><div class="tocbar"><p><a href="#building-your-own-rxplayer-worker">Building your own RxPlayer worker</a></p>
+<ul>
+<li><a href="#preamble">Preamble</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#defining-a-representationfilter-manifestloader-or-segmentloader-callback">Defining a representationFilter, manifestLoader or segmentLoader callback</a></li>
+<li><a href="#communicating-between-the-main-thread-and-the-worker">Communicating between the main thread and the worker</a></li>
+<li><a href="#available-features">Available features</a>
+<ul>
+<li><a href="#the-addfeatures-static-method">The addFeatures static method</a></li>
+<li><a href="#features-list">Features list</a></li>
+</ul>
+</li>
+<li><a href="#worker-limitations">Worker limitations</a>
+<ul>
+<li><a href="#unavailable-apis">Unavailable APIs</a></li>
+<li><a href="#examples-of-what-wont-work">Examples of what won't work:</a></li>
+<li><a href="#available-apis">Available APIs</a></li>
+<li><a href="#communication-constraints">Communication Constraints</a></li>
+<li><a href="#loading-external-dependencies">Loading external dependencies</a></li>
+<li><a href="#performance-considerations">Performance considerations</a></li>
+<li><a href="#common-pitfalls">Common Pitfalls</a></li>
+</ul>
+</li>
+</ul>
+</div></div></div></div><div class="hamburger-bar"><div class="hamburger-header"><span class="hamburger-title">Page List</span><button aria-label="Close website index" type="button" class="hamburger-bar-closer"><svg viewBox="0 0 15 15" width="21" height="21"><g stroke="black" stroke-width="1.2"><path d="M.75.75l13.5 13.5M14.25.75L.75 14.25"></path></g></svg></button></div><ul class="page-list-wrapper"><li class="page-list-item"><div class="page-list-group opened active">Getting Started</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="./Welcome.html">Welcome</a></li>
+<li><div class="page-list-item page-list-group">Tutorials</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Tutorials/Quick_Start.html">Quick Start</a></li>
+<li class="page-list-item"><a href="./Tutorials/Building_a_Custom_Player_UI.html">Building a Custom Player UI</a></li>
+<li class="page-list-item"><a href="./Tutorials/Content_with_DRM.html">Contents with DRM</a></li>
+<li class="page-list-item"><a href="./Tutorials/Selecting_a_Track.html">Selecting a Track</a></li>
+<li class="page-list-item"><a href="./Tutorials/EventStream_Handling.html">EventStream handling</a></li></ul></li>
+<li class="page-list-item"><a href="./Minimal_Player.html">Importing a minimal RxPlayer</a></li>
+<li class="page-list-item"><a href="./MultiThreading.html">Multithread mode</a></li>
+<li class="page-list-item active"><a href="./ImportableWorker.html">Multithread mode: Custom worker</a></li>
+<li class="page-list-item"><a href="./Glossary.html">Glossary</a></li>
+<li class="page-list-item"><a href="./Troubleshooting.html">Troubleshooting</a></li>
+<li><div class="page-list-item page-list-group">Migration from RxPlayer v3</div><ul class="page-list-group-group"><li class="page-list-item"><a href="./Migration_From_v3/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="./Migration_From_v3/Preferences.html">Track Preferences</a></li>
+<li class="page-list-item"><a href="./Migration_From_v3/Bitrate_Selection.html">Bitrate Selection</a></li>
+<li class="page-list-item"><a href="./Migration_From_v3/Constructor_Options.html">Constructor Options</a></li>
+<li class="page-list-item"><a href="./Migration_From_v3/loadVideo_Options.html">loadVideo Options</a></li>
+<li class="page-list-item"><a href="./Migration_From_v3/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="./Migration_From_v3/Player_Errors.html">Player Errors</a></li>
+<li class="page-list-item"><a href="./Migration_From_v3/Player_Methods.html">Player Methods</a></li>
+<li class="page-list-item"><a href="./Migration_From_v3/Player_Types.html">Player Types</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">API</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../api/Overview.html">Overview</a></li>
+<li class="page-list-item"><a href="../api/Creating_a_Player.html">Creating a Player</a></li>
+<li class="page-list-item"><a href="../api/RxPlayer_Features.html">Feature switching</a></li>
+<li class="page-list-item"><a href="../api/Loading_a_Content.html">Loading a Content</a></li>
+<li class="page-list-item"><a href="../api/Decryption_Options.html">Decryption Options</a></li>
+<li><div class="page-list-item page-list-group">Basic Methods</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Basic_Methods/getPlayerState.html">getPlayerState</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/addEventListener.html">addEventListener</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/removeEventListener.html">removeEventListener</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/play.html">play</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/pause.html">pause</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/stop.html">stop</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getPosition.html">getPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getWallClockTime.html">getWallClockTime</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getWallClockOffset.html">getWallClockOffset</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/seekTo.html">seekTo</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMinimumPosition.html">getMinimumPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMaximumPosition.html">getMaximumPosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getLivePosition.html">getLivePosition</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getMediaDuration.html">getMediaDuration</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getError.html">getError</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getVideoElement.html">getVideoElement</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getAvailablePeriods.html">getAvailablePeriods</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/getCurrentPeriod.html">getCurrentPeriod</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/dispose.html">dispose</a></li>
+<li class="page-list-item"><a href="../api/Basic_Methods/reload.html">reload</a></li></ul></li>
+<li class="page-list-item"><a href="../api/Player_States.html">Player States</a></li>
+<li class="page-list-item"><a href="../api/Player_Events.html">Player Events</a></li>
+<li class="page-list-item"><a href="../api/Player_Errors.html">Player Errors</a></li>
+<li><div class="page-list-item page-list-group">Track Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Track_Selection/getAudioTrack.html">getAudioTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getTextTrack.html">getTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getVideoTrack.html">getVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableAudioTracks.html">getAvailableAudioTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableTextTracks.html">getAvailableTextTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/getAvailableVideoTracks.html">getAvailableVideoTracks</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setAudioTrack.html">setAudioTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setTextTrack.html">setTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/setVideoTrack.html">setVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableTextTrack.html">disableTextTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableVideoTrack.html">disableVideoTrack</a></li>
+<li class="page-list-item"><a href="../api/Track_Selection/disableAudioTrack.html">disableAudioTrack</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Representation Selection</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Representation_Selection/getVideoRepresentation.html">getVideoRepresentation</a></li>
+<li class="page-list-item"><a href="../api/Representation_Selection/getAudioRepresentation.html">getAudioRepresentation</a></li>
+<li class="page-list-item"><a href="../api/Representation_Selection/lockAudioVideoRepresentations.html">lockVideoRepresentations / lockAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../api/Representation_Selection/getLockedVideoRepresentations.html">getLockedVideoRepresentations</a></li>
+<li class="page-list-item"><a href="../api/Representation_Selection/getLockedAudioRepresentations.html">getLockedAudioRepresentations</a></li>
+<li class="page-list-item"><a href="../api/Representation_Selection/unlockAudioVideoRepresentations.html">unlockVideoRepresentations / unlockAudioRepresentations</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Speed Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Speed_Control/setPlaybackRate.html">setPlaybackRate</a></li>
+<li class="page-list-item"><a href="../api/Speed_Control/getPlaybackRate.html">getPlaybackRate</a></li>
+<li class="page-list-item"><a href="../api/Speed_Control/areTrickModeTracksEnabled.html">areTrickModeTracksEnabled</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Volume Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Volume_Control/setVolume.html">setVolume</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/getVolume.html">getVolume</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/mute.html">mute</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/isMute.html">isMute</a></li>
+<li class="page-list-item"><a href="../api/Volume_Control/unMute.html">unMute</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Buffer Control</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Buffer_Control/setWantedBufferAhead.html">setWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getWantedBufferAhead.html">getWantedBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxBufferBehind.html">setMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxBufferBehind.html">getMaxBufferBehind</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxBufferAhead.html">setMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxBufferAhead.html">getMaxBufferAhead</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/setMaxVideoBufferSize.html">setMaxVideoBufferSize</a></li>
+<li class="page-list-item"><a href="../api/Buffer_Control/getMaxVideoBufferSize.html">getMaxVideoBufferSize</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Playback Information</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Playback_Information/getContentUrls.html">getContentUrls</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/updateContentUrls.html">updateContentUrls</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/isLive.html">isLive</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/getKeySystemConfiguration.html">getKeySystemConfiguration</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/getCurrentModeInformation.html">getCurrentModeInformation</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/createDebugElement.html">createDebugElement</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/getCurrentBufferGap.html">getCurrentBufferGap</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/isContentLoaded.html">isContentLoaded</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/isBuffering.html">isBuffering</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/isPaused.html">isPaused</a></li>
+<li class="page-list-item"><a href="../api/Playback_Information/getLastStoredContentPosition.html">getLastStoredContentPosition</a></li></ul></li>
+<li><div class="page-list-item page-list-group">MultiThreading</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/MultiThread/attachWorker.html">attachWorker</a></li>
+<li class="page-list-item"><a href="../api/MultiThread/getWorkerInterface.html">getWorkerInterface</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Thumbnails</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Thumbnails/renderThumbnail.html">renderThumbnail</a></li>
+<li class="page-list-item"><a href="../api/Thumbnails/getAvailableThumbnailTracks.html">getAvailableThumbnailTracks</a></li></ul></li>
+<li class="page-list-item"><a href="../api/Static_Properties.html">RxPlayer Static Properties</a></li>
+<li class="page-list-item"><a href="../api/Typescript_Types.html">Typescript Types</a></li>
+<li><div class="page-list-item page-list-group">Tools</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Tools/TextTrackRenderer.html">TextTrackRenderer</a></li>
+<li class="page-list-item"><a href="../api/Tools/VideoThumbnailLoader.html">VideoThumbnailLoader</a></li>
+<li class="page-list-item"><a href="../api/Tools/StringUtils.html">StringUtils</a></li>
+<li class="page-list-item"><a href="../api/Tools/parseBifThumbnails.html">parseBifThumbnails</a></li>
+<li class="page-list-item"><a href="../api/Tools/MediaCapabilitiesProber.html">MediaCapabilitiesProber</a></li>
+<li class="page-list-item"><a href="../api/Tools/createMetaplaylist.html">createMetaplaylist</a></li></ul></li>
+<li><div class="page-list-item page-list-group">Miscellaneous</div><ul class="page-list-group-group"><li class="page-list-item"><a href="../api/Miscellaneous/plugins.html">Plugins</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Low_Latency.html">Low Latency</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/DASH_WASM_Parser.html">DASH WASM Parser</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/hdr.html">HDR</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Debug_Element.html">Debug Element</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Local_Contents.html">Local Contents</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Local_Manifest_v0.1.html">Local Manifest v0.1</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Text_Tracks.html">Text Tracks</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/MetaPlaylist.html">MetaPlaylist</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/Initial_Position.html">Initial Position</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/presentationTimeOffset.html">presentationTimeOffset</a></li>
+<li class="page-list-item"><a href="../api/Miscellaneous/DASH_Adaptation_Difference.html">Differences between DASH&apos; AdaptationSets and `Adaptation`</a></li></ul></li></ul></li>
+<li class="page-list-item"><div class="page-list-group">Reference</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../reference/API_Reference.html">API Reference</a></li></ul></li>
+
+<li class="page-list-item"><a href="https://developers.canal-plus.com/rx-player/">Demo</a></li>
+<li class="page-list-item"><div class="page-list-group">Contributing</div><ul class="page-list-cat-group"><li class="page-list-item"><a href="../contributing/CONTRIBUTING.html">Overview</a></li>
+<li class="page-list-item"><a href="../contributing/FILES.html">File architecture</a></li>
+<li class="page-list-item"><a href="../contributing/releases.html">Releases</a></li></ul></li>
+<li class="page-list-item"><a aria-label="Link to repository" href="https://github.com/canalplus/rx-player"><svg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/></svg></a></li>
+</ul></div><script type="text/javascript" src="../scripts/fuse.js" charset="utf-8"></script><script type="text/javascript" src="../scripts/script.js" charset="utf-8"></script></body></html>
