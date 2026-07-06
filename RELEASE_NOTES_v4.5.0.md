@@ -253,7 +253,9 @@ You can think for example of live contents: the maximum position evolves over ti
 
 The RxPlayer already reported those cases through `MEDIA_TIME_BEFORE_MANIFEST` and `MEDIA_TIME_AFTER_MANIFEST` errors.
 
-_TODO: Add a small schema for a dynamic Manifest window: minimum position / requested position / maximum position, before introducing the new `timeInfo` object._
+<img alt="RELEASE_NOTES_v4 5 0_dynamic_manifest_window" src="https://github.com/user-attachments/assets/66c60f9a-73fb-44ca-8768-7eb9c5c7ed41" />
+
+_Schema: simple visual of the type of situations where a `MEDIA_TIME_BEFORE_MANIFEST` warning would be triggered. The position to play (e.g. requested through a `seekTo` call) is before the minimum boundary of the last-fetched Manifest._
 
 There was something missing with those errors though: they did not communicate what the position we were at when we sent the error nor what the "safe" position to play would be.
 
