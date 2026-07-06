@@ -362,7 +362,9 @@ Applications often use our [`directfile` transport](https://developers.canal-plu
 
 In that scenario, the browser may expose timing information through its own media element APIs instead of through Manifest and segment data loaded and parsed by the RxPlayer. That can lead to subtle differences, especially for live contents or when starting from a position relative to the live edge.
 
-_TODO: Add some schema/graphic_
+<img alt="RELEASE_NOTES_v4 5 0_safari_native_hls_timing" src="https://github.com/user-attachments/assets/9fb76a9d-ce03-4809-96d7-391d595ea6aa" />
+
+_Schema: In the `directfile` transport, we obtain all timing information from the browser, which are often less precise than from the media itself (Manifest, segments) which we only have access to in other transports._
 
 We fixed multiple cases around that:
 
