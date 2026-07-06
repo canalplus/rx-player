@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" role="img" aria-labelledby="title desc">
+  <title id="title">More transports available in MULTI_THREAD mode</title>
+  <desc id="desc">Version 4.5.0 lets a custom RxPlayer worker include DASH, DASH WASM, Smooth, local manifest, and metaplaylist transport features.</desc>
+
+  <defs>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        fill: #202124;
+      }
+      .label {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .subtitle {
+        font-size: 15px;
+        fill: #5f6368;
+      }
+      .directfile-subtitle {
+        font-size: 15px;
+        fill: #9aa0a6;
+      }
+      .feature {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 16px;
+        font-weight: 500;
+        dominant-baseline: middle;
+      }
+    </style>
+  </defs>
+
+  <rect x="46" y="40" width="280" height="150" fill="#f8f9fa" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="186" y="70" text-anchor="middle" class="label">Before</text>
+  <text x="186" y="94" text-anchor="middle" class="subtitle">Available transport features</text>
+
+  <rect x="92" y="118" width="76" height="34" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="132" y="135" text-anchor="middle" class="feature">DASH</text>
+  <rect x="184" y="118" width="108" height="34" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="238" y="135" text-anchor="middle" class="feature">DASH_WASM</text>
+
+  <rect x="434" y="40" width="280" height="172" fill="#f1f8f4" stroke="#26a757" stroke-width="1.5"/>
+  <text x="574" y="70" text-anchor="middle" class="label">Now</text>
+  <text x="574" y="94" text-anchor="middle" class="subtitle">Available transport features</text>
+
+  <rect x="452" y="102" width="84" height="30" fill="#ffffff" stroke="#b7dfc5" stroke-width="1"/>
+  <text x="494" y="117" text-anchor="middle" class="feature">DASH</text>
+  <rect x="554" y="102" width="124" height="30" fill="#ffffff" stroke="#b7dfc5" stroke-width="1"/>
+  <text x="616" y="117" text-anchor="middle" class="feature">DASH_WASM</text>
+
+  <rect x="446" y="140" width="100" height="30" fill="#ffffff" stroke="#b7dfc5" stroke-width="1"/>
+  <text x="496" y="155" text-anchor="middle" class="feature">SMOOTH</text>
+  <rect x="554" y="140" width="144" height="30" fill="#ffffff" stroke="#b7dfc5" stroke-width="1"/>
+  <text x="626" y="155" text-anchor="middle" class="feature">LOCAL_MANIFEST</text>
+
+  <rect x="498" y="178" width="152" height="30" fill="#ffffff" stroke="#b7dfc5" stroke-width="1"/>
+  <text x="574" y="193" text-anchor="middle" class="feature">METAPLAYLIST</text>
+
+  <rect x="318" y="230" width="124" height="30" fill="#ffffff" stroke="#d1d5db" stroke-width="1"/>
+  <text x="380" y="245" text-anchor="middle" class="feature">DIRECTFILE</text>
+  <text x="380" y="284" text-anchor="middle" class="directfile-subtitle">still handled outside multithreading mode</text>
+</svg>

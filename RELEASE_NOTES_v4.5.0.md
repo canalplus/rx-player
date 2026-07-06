@@ -211,6 +211,10 @@ Note that all complexities around communication between the two bundles are alre
 
 Another important improvement for the `MULTI_THREAD` feature is that most transport features can now be added worker-side: `DASH`, `DASH_WASM`, `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`.
 
+<img alt="RELEASE_NOTES_v4 5 0_multithread_transport_support" src="./RELEASE_NOTES_v4.5.0_multithread_transport_support.svg" />
+
+_Schema: before v4.5.0, multithreading mode covered `DASH` and `DASH_WASM`. Now applications building their own RxPlayer worker can explicitly add most transport features worker-side._
+
 This means that you can now play e.g. Smooth streaming contents in multithreading mode. We didn't permit anything other than `DASH` before as we both needed a way for applications to be able to add features to the RxPlayer worker logic (that is one of the main features of this release) and because we had to make some code updates to ensure all of them can run in our worker.
 
 For example, Smooth support needed a specific effort because its Manifest parser relied on DOM APIs that are not available in the same way from a WebWorker. To make it work, we had to transition to the same full-JS fast XML parser approach as our `DASH` Manifest parser.
