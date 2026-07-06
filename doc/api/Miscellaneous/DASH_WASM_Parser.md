@@ -190,6 +190,6 @@ import RxPlayer from "rx-player/minimal";
 RxPlayer.addFeatures([DASH_WASM]);
 ```
 
-Once both this step an the `initialize` method (on the `DASH_WASM` object) is called, the
-RxPlayer will try to use the WebAssembly DASH_WASM parser by default when encountering
+Once both this step and the `initialize` method (on the `DASH_WASM` object) are called,
+the RxPlayer will try to use the WebAssembly DASH_WASM parser by default when encountering
 DASH contents.

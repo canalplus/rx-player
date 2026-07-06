@@ -23,7 +23,7 @@ The returned Promise informs you on the result:
 <div class="note">
 On browsers which do not support Promises natively (such as Internet
 Explorer 11), a JavaScript implementation is provided instead. This
-implementation has the exact same implementation than ES2015 Promises.
+implementation has the exact same implementation as ES2015 Promises.
 </div>
 
 You might want for a content to be loaded before being able to play (the current state has
