@@ -7,41 +7,45 @@
 - `MULTI_THREAD`: Allow applications to define their own `representationFilter`,
   `segmentLoader` and `manifestLoader` callbacks worker-side [#1719]
 - `MULTI_THREAD`: Enable adding most transport features worker-side (`DASH`, `DASH_WASM`,
-  `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`) to play them in `"multithread"` mode
+  `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`) to play them in `"multithreading"` mode
   [#1783]
 - `MediaError` with the code `MEDIA_TIME_BEFORE_MANIFEST` and `MEDIA_TIME_AFTER_MANIFEST`
-  now has a `timeInfo` property specifying the exact boundaries and position linked to the
-  issue [#1838]
+  now have a `timeInfo` property to make explicit the exact boundaries and present
+  position linked to the issue [#1838]
 
 ### Bug fixes
 
 - Fix memory leak linked to quality changes [#1781]
 - DRM: When a license request times out, now send a `KEY_LOAD_TIMEOUT` error instead of
   `KEY_LOAD_ERROR`
-- DRM: Fix `"close-session"` handling that could unnecessarily close other DRM sessions
+- DRM: Fix `"close-session"` handling (from `onKeyExpiration`, `onKeyOutputRestricted` and
+  `onKeyInternalError` `keySystems` options) that could unnecessarily close other DRM
+  sessions
 - On Safari when beginning at `0`, seek explicitly to `0` because its native HLS player
   would otherwise start at live position [#1803]
-- Ignore unhandled runtime track types for period advertisement [#1850]
-- Fix `startAt.wallClockTime` on Safari HLS live playlists [#1799]
+- Ignore unhandled runtime track types when advertising Periods to prevent infinite
+  rebuffering when text tracks and/or video tracks are not available features [#1850]
+- Fix `startAt.wallClockTime` on Safari HLS live playback [#1799]
 - Fix rare scenario when an ended live audio content would not have its duration known
   until the end-of-stream [#1801]
 - TTML: Do not apply percentage line heights anymore as they are sometimes subtly broken
   [#1812]
 - Thumbnails: Fix shared thumbnail requests (through multiple `HTMLElement` for the same
-  data) in `MULTI_THREAD` mode [#1830, #1853]
+  data) in `MULTI_THREAD` mode [#1830]
 - Thumbnails: Fix thumbnail request sometimes being wrongly cancelled [#1810]
 - API: Fix incomplete format in the initial `audioRepresentationChange` event
 - CMCD: fix the `headers` CMCD `communicationType` [#1809]
 - fix precision difference which triggered frequent content boundaries warnings [#1848]
-- Compat: To fix an issue with some older LG TV when playing retro-compatible Dolby Vision
-  contents, patch out some Dolby Vision-related ISOBMFF boxes in some conditions [#1818]
+- Compat: On some older LG TV patch out some Dolby Vision-related ISOBMFF boxes when
+  playing retro-compatible Dolby Vision contents to fix playback [#1818]
 - Do not send a `streamEvent` twice after temporarily switching to the `RELOADING` state
   while playing it [#1828]
 - Compat/DRM: Preserve `pssh` boxes in encrypted initialization segments on some DStv
-  set-top boxes to fix encrypted playback on them [#1822]
+  set-top boxes to fix playback of encrypted playback on them [#1822]
 - Text: Continue playback if subtitle initialization fails instead of remaining stuck in
   `LOADING` [#1827]
-- directfile: fix side effects for multiple instances of media element track store [#1845]
+- directfile: fix some track events not being sent when quickly switching between
+  directfile contents [#1845]
 - directfile/compat: fix issue on Safari with startAt.fromLivePosition with directfile
   content when duration is infinite [#1842]
 
@@ -50,7 +54,7 @@
 - Adaptive bitrate: React faster to sudden bandwidth drops when playback is close to
   starving [#1831]
 - Add `getMaximumPosition` and `getMinimumPosition` support when using directfile with HLS
-  playlist on Safari [#1800]
+  playlists on Safari [#1800]
 - CMCD: Avoid sending invalid CMCD values when playback rate is `0` or negative, and
   better escape string values [#1833]
 - Fix ordering of a PeriodChange/AdaptationChange couple that may have previously led to
@@ -58,7 +62,6 @@
 - Text track id can only be string [#1785]
 - The reload API now only throws if no `loadVideo` call has been made before [#1767]
 - Use native base64-bytes conversion utils when they exist [#1786]
-- consider HTTP 429 as retryable requests [#1860]
 - Merge most of the multithreaded and monothreaded codebase to simplify maintenance
   [#1627]
 
