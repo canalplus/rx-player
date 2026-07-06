@@ -25,4 +25,4 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
       - name: Lint files in the tests directory
-      - run: npm run lint:tests
+        run: npm run lint:tests
