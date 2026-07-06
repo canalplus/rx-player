@@ -51,11 +51,11 @@
   <rect x="52" y="126" width="430" height="510" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
   <text x="267" y="166" text-anchor="middle" class="panel-title">Application bundle</text>
 
-  <rect x="86" y="198" width="362" height="76" fill="#ffffff" stroke="#d72657" stroke-width="2"/>
+  <rect x="86" y="198" width="362" height="76" rx="12" fill="#ffffff" stroke="#d72657" stroke-width="2"/>
   <text x="108" y="226" class="section">Use the player and attach its worker</text>
   <text x="108" y="252" class="code">rxPlayer.attachWorker({ workerUrl });</text>
 
-  <rect x="86" y="308" width="362" height="162" fill="#ffffff" stroke="#d72657" stroke-width="2"/>
+  <rect x="86" y="308" width="362" height="162" rx="12" fill="#ffffff" stroke="#d72657" stroke-width="2"/>
   <text x="108" y="336" class="section">Call loadVideo with worker callback id</text>
   <text x="108" y="364" class="code">rxPlayer.loadVideo({</text>
   <text x="124" y="386" class="code">representationFilter: {</text>
@@ -63,7 +63,7 @@
   <text x="124" y="430" class="code">},</text>
   <text x="108" y="452" class="code">});</text>
 
-  <rect x="86" y="480" width="362" height="104" fill="#ffffff" stroke="#d72657" stroke-width="2"/>
+  <rect x="86" y="480" width="362" height="104" rx="12" fill="#ffffff" stroke="#d72657" stroke-width="2"/>
   <text x="108" y="508" class="section">Exchange messages</text>
   <text x="108" y="536" class="code">const w = rxPlayer.getWorkerInterface();</text>
   <text x="108" y="560" class="code">w.sendMessage("max-resolution", value);</text>
@@ -77,19 +77,19 @@
   <rect x="718" y="126" width="430" height="510" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
   <text x="933" y="166" text-anchor="middle" class="panel-title">RxPlayer worker bundle</text>
 
-  <rect x="752" y="198" width="362" height="96" fill="#ffffff" stroke="#4b5563" stroke-width="2"/>
+  <rect x="752" y="198" width="362" height="96" rx="12" fill="#ffffff" stroke="#4b5563" stroke-width="2"/>
   <text x="774" y="226" class="section">Instantiate RxPlayer core logic</text>
   <text x="774" y="252" class="code">RxPlayerWorker.addFeatures([DASH]);</text>
   <text x="774" y="274" class="code">const worker = new RxPlayerWorker();</text>
 
-  <rect x="752" y="328" width="362" height="135" fill="#ffffff" stroke="#4b5563" stroke-width="2"/>
+  <rect x="752" y="328" width="362" height="135" rx="12" fill="#ffffff" stroke="#4b5563" stroke-width="2"/>
   <text x="774" y="356" class="section">Registration of callbacks</text>
   <text x="774" y="384" class="code">worker.registerRepresentationFilter(</text>
   <text x="790" y="406" class="code">"resolution-filter",</text>
   <text x="790" y="428" class="code">filterByResolution</text>
   <text x="774" y="450" class="code">);</text>
 
-  <rect x="752" y="480" width="362" height="132" fill="#ffffff" stroke="#4b5563" stroke-width="2"/>
+  <rect x="752" y="480" width="362" height="132" rx="12" fill="#ffffff" stroke="#4b5563" stroke-width="2"/>
   <text x="774" y="508" class="section">App-defined messages listeners</text>
   <text x="774" y="536" class="code">worker.addMessageListener(</text>
   <text x="790" y="558" class="code">"max-resolution",</text>

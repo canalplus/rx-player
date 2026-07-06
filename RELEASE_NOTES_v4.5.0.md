@@ -149,9 +149,9 @@ All those issues were already known initially, which is why we only tried this s
 
 Now we propose a new solution that should be both more convenient and safer for application developers. Instead of having to write weird not-exactly-JS stringified logic, they can just write the code like they usually do and then build the RxPlayer worker themselves:
 
-<img alt="RELEASE_NOTES_v4 5 0_two_application_bundles" src="https://github.com/user-attachments/assets/a0f1fb6b-c43f-4635-99b2-f0e8c6df2a25" />
+<img alt="RELEASE_NOTES_v4 5 0_two_application_bundles" src="https://github.com/user-attachments/assets/5a3f46ba-bd34-412c-8b08-6dcfca9cd28b" />
 
-_Schema: this new API lets you define the RxPlayer worker yourself. In that situation you can add whatever code you want on top and then handle the bundling transpiling yourself._
+_Schema: this new API lets you define the RxPlayer worker yourself. In that situation you can add whatever code you want on top and then handle the bundling/transpiling yourself._
 
 For example, you can create a separate worker bundle that "registers" a `representationFilter`:
 
@@ -199,7 +199,7 @@ The same general mechanism also exists for `segmentLoader` and `manifestLoader`.
 
 We also added APIs to communicate with the worker from the main application bundle. This makes it possible to update worker-side state without rebuilding a new worker each time.
 
-<img alt="bundles responsibilities" src="https://github.com/user-attachments/assets/27bdde6f-282c-4906-9d7c-41f250bfbe77" />
+<img alt="bundles responsibilities" src="https://github.com/user-attachments/assets/136586b2-8d57-48ae-8a9f-649d8321aa59" />
 
 _Schema: The responsibilities of the two bundles. Your application code continue to be in your usual application logic, but you can define callbacks and process custom runtime events in the RxPlayer worker to tweak the corresponding rx-player callbacks._
 
@@ -211,13 +211,15 @@ Note that all complexities around communication between the two bundles are alre
 
 Another important improvement for the `MULTI_THREAD` feature is that most transport features can now be added worker-side: `DASH`, `DASH_WASM`, `SMOOTH`, `LOCAL_MANIFEST` and `METAPLAYLIST`.
 
-<img alt="RELEASE_NOTES_v4 5 0_multithread_transport_support" src="./RELEASE_NOTES_v4.5.0_multithread_transport_support.svg" />
-
-_Schema: before v4.5.0, multithreading mode covered `DASH` and `DASH_WASM`. Now applications building their own RxPlayer worker can explicitly add most transport features worker-side._
+<p align="center">
+  <img width="600" alt="RELEASE_NOTES_v4 5 0_multithread_transport_support" src="https://github.com/user-attachments/assets/debd8a8b-8914-4fb5-aaf6-caa949f3774a" />
+</p>
 
 This means that you can now play e.g. Smooth streaming contents in multithreading mode. We didn't permit anything other than `DASH` before as we both needed a way for applications to be able to add features to the RxPlayer worker logic (that is one of the main features of this release) and because we had to make some code updates to ensure all of them can run in our worker.
 
 For example, Smooth support needed a specific effort because its Manifest parser relied on DOM APIs that are not available in the same way from a WebWorker. To make it work, we had to transition to the same full-JS fast XML parser approach as our `DASH` Manifest parser.
+
+It also means that you can remove features that you wouldn't need anyway from the worker bundle. For example we included `DASH_WASM` in all builds before because applications relying on the `MULTI_THREAD` feature could also have needed it. With the separate worker bundle you just select all the transports you want with none included by default.
 
 There's however one missing transport here: `directfile` (through the `DIRECTFILE` feature). Yet porting that one made much less sense as most of its logic is performed by the browser anyway, thus it would probably not gain much by running in multithreading mode.
 
@@ -235,7 +237,7 @@ There are some differences between the two (as one of those modes mostly runs in
 
   That "communication layer" allows to exchange messages between both. There is a multithreaded flavor (which uses the [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage) API to transmit those messages) whereas our monothreaded implementation just uses a simple event listener logic for those same messages.
 
-<img alt="RELEASE_NOTES_v4 5 0_core_interface_shared_path" src="https://github.com/user-attachments/assets/2eb64929-ed68-41ad-bc7c-e48909d49546" />
+<img alt="RELEASE_NOTES_v4 5 0_core_interface_shared_path" src="https://github.com/user-attachments/assets/647bcfc1-e5a6-40c3-8497-682708ca01b2" />
 
 _Schema: How the inner architecture of the RxPlayer was updated. Instead of two independent paths each importing and using blocks of the RxPlayer separately, we've now merged most of it into one path._
 
@@ -297,11 +299,30 @@ The [`reload`](https://developers.canal-plus.com/rx-player/versions/4.4.1/doc/ap
 
 Previously, `reload` could throw when `reloadAt.relative` was used before the RxPlayer had been able to know the previous content position. This single case would generally force applications into an awkward `try` / `catch` logic just because a previous content did not reach the right state soon enough.
 
-_TODO: Add a small before/after code or sequence diagram: application previously wrapping `reload` in `try` / `catch`, versus the new behavior where the relative offset is ignored when no previous position is known._
-
 After looking at some application code, we decided to remove this as a reason to throw, instead we're now just ignoring that relative offset - as how it should be interpreted here is ambiguous.
 
-This has been done only to simplify application code and their expectations. They can mostly assume that `reload` does not throw anymore.
+For a very simple example (actual code we saw was much more complex), an application wanting to retry after a playback error, slightly after the last known position, previously had to go through a try-catch block:
+
+```javascript
+retryButton.onclick = () => {
+  try {
+    rxPlayer.reload({ reloadAt: { relative: 5 } });
+  } catch (err) {
+    rxPlayer.reload();
+  }
+};
+```
+
+Starting with `v4.5.0`, that fallback is handled by the RxPlayer:
+
+```javascript
+retryButton.onclick = () => {
+  // If `relative` cannot be applied, we silently skip it
+  rxPlayer.reload({ reloadAt: { relative: 5 } });
+};
+```
+
+This has been done only to simplify application code and their expectations. Application developers can mostly assume that `reload` does not throw anymore.
 
 There's actually one remaining case where it can, but this one does not make much sense from an application perspective: it still throws if `reload` is called before any `loadVideo` call has been made - as there's nothing to reload.
 
