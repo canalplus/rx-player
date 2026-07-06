@@ -100,7 +100,9 @@ Yet in multithreading mode (under the `MULTI_THREAD` feature), those APIs weren'
 
 Sending arbitrary JavaScript functions to a WebWorker is not something we can do reliably: the browser mostly gives us message passing, which means those function's code would need to be serialized, e.g. to their stringified content. Serialization breaks common JavaScript assumptions such as accessing variables defined outside your function and some build-tool transformations (e.g. your build tool writing some helpers that would be accessed inside that function, or that could be unavailable in a WebWorker context).
 
-_TODO: Add a schema showing why a regular JavaScript function is not enough here: main thread function with closure / build-tool output on one side, worker message boundary on the other._
+<img alt="RELEASE_NOTES_v4 5 0_regular_function_worker_boundary" src="https://github.com/user-attachments/assets/de0cffaa-b2d5-405c-896a-26e0693d4d7e" />
+
+_Schema: The previous `representationFilter` API for multithreading mode removed several assumptions from regular JavaScript code, that made it very hard to implement._
 
 We previously tried to work around that for `representationFilter` with a stringified function format. It made it explicit that this function would not be running under regular JavaScript assumptions, but it was not very pleasant to write nor to maintain and very easy to get wrong.
 
@@ -121,11 +123,11 @@ rxPlayer.loadVideo({
 });
 ```
 
-This was at least explicit: what is sent to the worker is JavaScript source code, not a normal function carrying its lexical environment with it. Yet it also meant losing syntax highlighting and type-checking in many setups, making escaping mistakes more likely, and having to write the callback as self-contained worker-compatible JavaScript instead of regular application code.
+This was at least explicit: what is sent to the worker is not a normal closure carrying its environment with it. Yet it also meant losing syntax highlighting and type-checking in most setups, making escaping mistakes more likely and the code much harder to maintain.
 
-With a partner application integrating us, we even ended up reviewing all changes to their `representationFilter` logic to make sure it complied with those rules, corresponded to their target JS (ES5-compatible) and did not open the door for security problems (e.g. interpreting an unvalidated input in that implementation).
+With a partner application, we even ended up reviewing all changes to their `representationFilter` logic to make sure it complied with those rules, corresponded to their target JS (ES5-compatible) and did not open the door for security problems (e.g. interpreting an untrusted input in that implementation).
 
-An example for a very wrong version would have been to build that string from untrusted configuration and let it become executable code in the worker:
+An example for a very wrong version would have been to build that string from uncontrolled external input and let it become executable code in the worker:
 
 ```javascript
 const externalInput =
@@ -143,15 +145,15 @@ rxPlayer.loadVideo({
 });
 ```
 
-We always wondered if that "string function" was the way to go which is why we only did so with the usually simpler `representationFilter` API - as a test.
+All those issues were already known initially, which is why we only tried this string solution with the usually simpler `representationFilter` API - as a test.
 
-Now we propose a new solution that should be both more convenient and safer for application developers: they can build the RxPlayer worker themselves:
+Now we propose a new solution that should be both more convenient and safer for application developers. Instead of having to write weird not-exactly-JS stringified logic, they can just write the code like they usually do and then build the RxPlayer worker themselves:
 
 <img alt="RELEASE_NOTES_v4 5 0_two_application_bundles" src="https://github.com/user-attachments/assets/a0f1fb6b-c43f-4635-99b2-f0e8c6df2a25" />
 
 _Schema: this new API lets you define the RxPlayer worker yourself. In that situation you can add whatever code you want on top and then handle the bundling transpiling yourself._
 
-For example, you can create a separate worker bundle that registers a `representationFilter`:
+For example, you can create a separate worker bundle that "registers" a `representationFilter`:
 
 ```javascript
 import RxPlayerWorker from "rx-player/experimental/worker";

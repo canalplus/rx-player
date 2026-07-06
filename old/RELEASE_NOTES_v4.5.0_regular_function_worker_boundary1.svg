@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+  <title id="title">Why a regular JavaScript function cannot be sent to a worker</title>
+  <desc id="desc">A main thread callback uses a named helper and modern JavaScript syntax, but sending it as source text to a worker loses normal build and scope assumptions.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, sans-serif;
+        fill: #202124;
+      }
+      .title {
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .body {
+        font-size: 15px;
+      }
+      .muted {
+        fill: #5f6368;
+      }
+      .code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+      .bad {
+        fill: #c5221f;
+      }
+    </style>
+  </defs>
+
+  <rect width="920" height="360" rx="18" fill="#ffffff"/>
+
+  <rect x="34" y="42" width="340" height="250" rx="14" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="204" y="82" text-anchor="middle" class="title">Main thread</text>
+  <text x="204" y="108" text-anchor="middle" class="body muted">normal bundled code</text>
+
+  <rect x="64" y="132" width="280" height="118" rx="10" fill="#ffffff" stroke="#ec3655" stroke-width="2"/>
+  <text x="84" y="162" class="code">const maxHeight = 1080;</text>
+  <text x="84" y="190" class="code">const filter = (rep) =&gt;</text>
+  <text x="104" y="218" class="code">getHeight(rep?.video) ?? 0</text>
+  <text x="104" y="242" class="code">&lt;= maxHeight;</text>
+
+  <line x1="460" y1="44" x2="460" y2="316" stroke="#5f6368" stroke-width="3" stroke-dasharray="10 9"/>
+  <path d="M374 174h172" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="460" y="154" text-anchor="middle" class="body muted">postMessage</text>
+
+  <rect x="546" y="42" width="340" height="250" rx="14" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
+  <text x="716" y="82" text-anchor="middle" class="title">Worker</text>
+  <text x="716" y="108" text-anchor="middle" class="body muted">separate execution context</text>
+
+  <rect x="586" y="130" width="260" height="42" rx="10" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
+  <path d="M610 142l18 18m0-18l-18 18" stroke="#c5221f" stroke-width="3" stroke-linecap="round"/>
+  <text x="730" y="156" text-anchor="middle" class="body bad">getHeight is missing</text>
+
+  <rect x="586" y="186" width="260" height="42" rx="10" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
+  <path d="M610 198l18 18m0-18l-18 18" stroke="#c5221f" stroke-width="3" stroke-linecap="round"/>
+  <text x="730" y="212" text-anchor="middle" class="body bad">maxHeight is missing</text>
+
+  <rect x="586" y="242" width="260" height="42" rx="10" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
+  <path d="M610 254l18 18m0-18l-18 18" stroke="#c5221f" stroke-width="3" stroke-linecap="round"/>
+  <text x="730" y="268" text-anchor="middle" class="body bad">?. / ?? not transpiled</text>
+</svg>

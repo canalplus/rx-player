@@ -1,40 +1,114 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 420" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 60 1120 570" role="img" aria-labelledby="title desc">
   <title id="title">Shared CoreInterface path</title>
-  <desc id="desc">Old monothreaded and multithreaded paths are replaced by a shared CoreInterface layer with different communication flavors.</desc>
+  <desc id="desc">Before version 4.5.0 monothreaded and multithreaded playback used more separate initialization paths. Version 4.5.0 routes both through a CoreInterface layer between main-thread initialization and core logic.</desc>
+
   <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    <marker id="arrow-slate" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#4b5563"/>
+    </marker>
+    <marker id="arrow-pink" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#d72657"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#1967d2"/>
     </marker>
     <style>
-      text { font-family: Arial, sans-serif; fill: #202124; }
-      .label { font-size: 21px; font-weight: 700; }
-      .body { font-size: 16px; }
-      .small { font-size: 14px; fill: #5f6368; }
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        fill: #202124;
+      }
+      .title {
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .panel-title {
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .section {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .body {
+        font-size: 15px;
+      }
+      .small {
+        font-size: 13px;
+        fill: #5f6368;
+      }
+      .code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 13px;
+      }
+      .muted {
+        fill: #5f6368;
+      }
     </style>
   </defs>
-  <rect width="980" height="420" rx="18" fill="#ffffff"/>
-  <text x="240" y="44" text-anchor="middle" class="label">Before</text>
-  <rect x="40" y="76" width="180" height="76" rx="12" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
-  <text x="130" y="108" text-anchor="middle" class="body">Main-thread</text>
-  <text x="130" y="130" text-anchor="middle" class="body">init</text>
-  <rect x="300" y="70" width="180" height="70" rx="12" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
-  <text x="390" y="112" text-anchor="middle" class="body">Monothread core</text>
-  <rect x="300" y="172" width="180" height="70" rx="12" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
-  <text x="390" y="214" text-anchor="middle" class="body">Worker core</text>
-  <path d="M220 108h60" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
-  <path d="M220 126c34 42 34 80 60 82" stroke="#5f6368" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
-  <text x="260" y="268" text-anchor="middle" class="small">separate initialization paths</text>
-  <line x1="520" y1="48" x2="520" y2="332" stroke="#dadce0" stroke-width="3"/>
-  <text x="750" y="44" text-anchor="middle" class="label">Now</text>
-  <rect x="580" y="76" width="170" height="76" rx="12" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
-  <text x="665" y="108" text-anchor="middle" class="body">Main-thread</text>
-  <text x="665" y="130" text-anchor="middle" class="body">init</text>
-  <rect x="798" y="76" width="150" height="76" rx="12" fill="#eef6ff" stroke="#1a73e8" stroke-width="3"/>
-  <text x="873" y="120" text-anchor="middle" class="body">CoreInterface</text>
-  <rect x="704" y="230" width="170" height="70" rx="12" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
-  <text x="789" y="272" text-anchor="middle" class="body">Shared core</text>
-  <path d="M750 114h48" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
-  <path d="M873 152c0 40-26 60-70 78" stroke="#5f6368" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
-  <text x="650" y="352" text-anchor="middle" class="small">monothreaded: local event bridge</text>
-  <text x="830" y="352" text-anchor="middle" class="small">MULTI_THREAD: postMessage</text>
+
+  <rect x="40" y="60" width="1120" height="570" fill="#ffffff"/>
+  <text x="600" y="98" text-anchor="middle" class="title">One shared path between main-thread and core logic</text>
+
+  <!-- Before -->
+  <rect x="60" y="130" width="480" height="430" rx="16" fill="#ffffff" stroke="#9aa0a6" stroke-width="2"/>
+  <text x="300" y="170" text-anchor="middle" class="panel-title">Before: split paths</text>
+  <text x="300" y="196" text-anchor="middle" class="body muted">More mode-specific initialization and concepts</text>
+
+  <rect x="90" y="230" width="175" height="78" rx="12" fill="#fff6f8" stroke="#d72657" stroke-width="2.5"/>
+  <text x="177" y="260" text-anchor="middle" class="section">Monothread init</text>
+  <text x="177" y="286" text-anchor="middle" class="small">main thread only</text>
+
+  <rect x="335" y="230" width="175" height="78" rx="12" fill="#f8f9fa" stroke="#4b5563" stroke-width="2.5"/>
+  <text x="422" y="260" text-anchor="middle" class="section">MULTI_THREAD init</text>
+  <text x="422" y="286" text-anchor="middle" class="small">worker-backed path</text>
+
+  <path d="M177 308v54" stroke="#d72657" stroke-width="3" marker-end="url(#arrow-pink)"/>
+  <path d="M422 308v54" stroke="#4b5563" stroke-width="3" marker-end="url(#arrow-slate)"/>
+
+  <rect x="90" y="372" width="175" height="76" rx="12" fill="#fff6f8" stroke="#d72657" stroke-width="2.5"/>
+  <text x="177" y="402" text-anchor="middle" class="section">Core logic</text>
+  <text x="177" y="428" text-anchor="middle" class="small">direct local calls</text>
+
+  <rect x="335" y="372" width="175" height="76" rx="12" fill="#f8f9fa" stroke="#4b5563" stroke-width="2.5"/>
+  <text x="422" y="402" text-anchor="middle" class="section">Core logic</text>
+  <text x="422" y="428" text-anchor="middle" class="small">worker messages</text>
+
+  <rect x="126" y="488" width="348" height="38" rx="12" fill="#ffffff" stroke="#9aa0a6" stroke-width="2"/>
+  <text x="300" y="512" text-anchor="middle" class="body muted">Same playback concerns, but easier to diverge</text>
+
+  <!-- Separator -->
+  <line x1="580" y1="130" x2="580" y2="560" stroke="#9aa0a6" stroke-width="3" stroke-dasharray="10 10"/>
+  <path d="M542 345h76" stroke="#1967d2" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <!-- After -->
+  <rect x="660" y="130" width="480" height="430" rx="16" fill="#ffffff" stroke="#1967d2" stroke-width="2"/>
+  <text x="900" y="170" text-anchor="middle" class="panel-title">Now: shared CoreInterface layer</text>
+  <text x="900" y="196" text-anchor="middle" class="body muted">Both modes exchange the same message shapes</text>
+
+  <rect x="810" y="226" width="180" height="70" rx="12" fill="#fff6f8" stroke="#d72657" stroke-width="2.5"/>
+  <text x="900" y="254" text-anchor="middle" class="section">Main-thread init</text>
+  <text x="900" y="278" text-anchor="middle" class="small">API, DRM, media element</text>
+
+  <path d="M900 296v44" stroke="#d72657" stroke-width="3" marker-end="url(#arrow-pink)"/>
+  <text x="925" y="324" class="small">messages</text>
+
+  <rect x="790" y="350" width="220" height="76" rx="12" fill="#ffffff" stroke="#1967d2" stroke-width="3"/>
+  <text x="900" y="380" text-anchor="middle" class="section">CoreInterface</text>
+  <text x="900" y="405" text-anchor="middle" class="code">sendMessage / listeners</text>
+
+  <path d="M900 426v44" stroke="#4b5563" stroke-width="3" marker-end="url(#arrow-slate)"/>
+
+  <rect x="810" y="480" width="180" height="56" rx="12" fill="#f8f9fa" stroke="#4b5563" stroke-width="2.5"/>
+  <text x="900" y="512" text-anchor="middle" class="section">Core logic</text>
+
+  <rect x="660" y="350" width="118" height="76" rx="12" fill="#f8f9fa" stroke="#4b5563" stroke-width="2"/>
+  <text x="719" y="380" text-anchor="middle" class="code">postMessage</text>
+  <text x="719" y="404" text-anchor="middle" class="small">MULTI_THREAD</text>
+
+  <rect x="1022" y="350" width="98" height="76" rx="12" fill="#fff6f8" stroke="#d72657" stroke-width="2"/>
+  <text x="1071" y="380" text-anchor="middle" class="code">listeners</text>
+  <text x="1071" y="404" text-anchor="middle" class="small">monothread</text>
+
+  <path d="M790 388h-12" stroke="#1967d2" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+  <path d="M1010 388h12" stroke="#1967d2" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
 </svg>

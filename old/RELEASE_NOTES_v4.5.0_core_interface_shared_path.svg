@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 420" role="img" aria-labelledby="title desc">
+  <title id="title">Shared CoreInterface path</title>
+  <desc id="desc">Old monothreaded and multithreaded paths are replaced by a shared CoreInterface layer with different communication flavors.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    </marker>
+    <style>
+      text { font-family: Arial, sans-serif; fill: #202124; }
+      .label { font-size: 21px; font-weight: 700; }
+      .body { font-size: 16px; }
+      .small { font-size: 14px; fill: #5f6368; }
+    </style>
+  </defs>
+  <rect width="980" height="420" rx="18" fill="#ffffff"/>
+  <text x="240" y="44" text-anchor="middle" class="label">Before</text>
+  <rect x="40" y="76" width="180" height="76" rx="12" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="130" y="108" text-anchor="middle" class="body">Main-thread</text>
+  <text x="130" y="130" text-anchor="middle" class="body">init</text>
+  <rect x="300" y="70" width="180" height="70" rx="12" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
+  <text x="390" y="112" text-anchor="middle" class="body">Monothread core</text>
+  <rect x="300" y="172" width="180" height="70" rx="12" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
+  <text x="390" y="214" text-anchor="middle" class="body">Worker core</text>
+  <path d="M220 108h60" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M220 126c34 42 34 80 60 82" stroke="#5f6368" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <text x="260" y="268" text-anchor="middle" class="small">separate initialization paths</text>
+  <line x1="520" y1="48" x2="520" y2="332" stroke="#dadce0" stroke-width="3"/>
+  <text x="750" y="44" text-anchor="middle" class="label">Now</text>
+  <rect x="580" y="76" width="170" height="76" rx="12" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <text x="665" y="108" text-anchor="middle" class="body">Main-thread</text>
+  <text x="665" y="130" text-anchor="middle" class="body">init</text>
+  <rect x="798" y="76" width="150" height="76" rx="12" fill="#eef6ff" stroke="#1a73e8" stroke-width="3"/>
+  <text x="873" y="120" text-anchor="middle" class="body">CoreInterface</text>
+  <rect x="704" y="230" width="170" height="70" rx="12" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
+  <text x="789" y="272" text-anchor="middle" class="body">Shared core</text>
+  <path d="M750 114h48" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M873 152c0 40-26 60-70 78" stroke="#5f6368" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <text x="650" y="352" text-anchor="middle" class="small">monothreaded: local event bridge</text>
+  <text x="830" y="352" text-anchor="middle" class="small">MULTI_THREAD: postMessage</text>
+</svg>
