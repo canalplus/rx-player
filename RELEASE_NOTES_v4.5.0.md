@@ -332,13 +332,15 @@ There's actually one remaining case where it can, but this one does not make muc
 
 Thumbnail handling also gained a few small fixes.
 
-_TODO: Add a something to show the bug: `renderThumbnail` called twice for the same image, one call cancelled, and the shared request continuing for the remaining caller._
-
 - cancelling one `renderThumbnail` request should no longer cancel the shared request pipeline still needed by another request for the same thumbnail;
 
 - requesting a thumbnail outside of the available thumbnail range should now propagate the expected `NO_THUMBNAIL` error instead of a more generic `NOT_FOUND` error;
 
 - shared thumbnail requests are now fixed in `MULTI_THREAD` mode too.
+
+<img alt="RELEASE_NOTES_v4 5 0_shared_thumbnail_request" src="https://github.com/user-attachments/assets/381d5d00-5659-4b70-8f41-012f13f13a5a" />
+
+_Schema: multiple `renderThumbnail` calls can actually rely on the same thumbnail request behind the hood. We previously had a bug where if a previous call was aborted, further ones relying on the same request resource could also be aborted as a side-effect._
 
 <a name="cmcd"></a>
 

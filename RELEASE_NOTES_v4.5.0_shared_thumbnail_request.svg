@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220" role="img" aria-labelledby="desc">
+  <desc id="desc">Two renderThumbnail calls request the same image through one shared request. Cancelling one caller does not cancel the request still needed by the other caller.</desc>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 8 4 0 8z" fill="#6b7280"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        fill: #202124;
+      }
+      .label {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 14px;
+      }
+      .note {
+        font-size: 14px;
+        fill: #5f6368;
+      }
+      .cancel {
+        font-size: 14px;
+        fill: #d93025;
+      }
+      .success {
+        font-size: 14px;
+        fill: #188038;
+      }
+      .arrow {
+        fill: none;
+        stroke: #6b7280;
+        stroke-width: 2;
+        marker-end: url(#arrow);
+      }
+    </style>
+  </defs>
+
+  <rect x="48" y="32" width="200" height="48" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  <text x="148" y="62" text-anchor="middle" class="code">renderThumbnail A</text>
+
+  <rect x="48" y="132" width="200" height="48" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  <text x="148" y="162" text-anchor="middle" class="code">renderThumbnail B</text>
+
+  <rect x="326" y="72" width="170" height="80" fill="#f8f9fa" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="411" y="104" text-anchor="middle" class="label">Shared request</text>
+  <text x="411" y="126" text-anchor="middle" class="note">
+    <tspan x="411">(same server-side</tspan>
+    <tspan x="411" dy="17">thumbnail resource)</tspan>
+  </text>
+
+  <rect x="574" y="88" width="138" height="48" fill="#f1f8f4" stroke="#26a757" stroke-width="1.5"/>
+  <text x="643" y="118" text-anchor="middle" class="label">B rendered</text>
+
+  <path class="arrow" d="M248 56 C286 56 288 86 318 96"/>
+  <path class="arrow" d="M248 156 C286 156 288 138 318 128"/>
+  <path class="arrow" d="M496 112 H566"/>
+
+  <path d="M258 50 L278 70 M278 50 L258 70" stroke="#d93025" stroke-width="2.5"/>
+  <text x="288" y="60" class="cancel">A cancelled</text>
+
+  <text x="550" y="150" text-anchor="middle" class="success">continues for B</text>
+</svg>
