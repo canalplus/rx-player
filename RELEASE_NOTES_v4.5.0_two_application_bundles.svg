@@ -39,29 +39,29 @@
     </style>
   </defs>
 
-  <rect x="64" y="82" width="344" height="170" rx="16" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
+  <rect x="64" y="82" width="344" height="170" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
   <text x="236" y="122" text-anchor="middle" class="panel-title">Application</text>
   <text x="94" y="164" class="body">What you already build, importing the</text>
   <text x="94" y="194" class="body">RxPlayer, calling loadVideo and</text>
   <text x="94" y="224" class="body"> other APIs.</text>
 
-  <rect x="64" y="356" width="344" height="148" rx="16" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
+  <rect x="64" y="356" width="344" height="148" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
   <text x="236" y="396" text-anchor="middle" class="panel-title">New worker entry point</text>
   <text x="94" y="434" class="body">Imports the RxPlayer worker and registers</text>
   <text x="94" y="464" class="body">worker-side callbacks.</text>
 
-  <rect x="526" y="82" width="190" height="170" rx="16" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
+  <rect x="526" y="82" width="190" height="170" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
   <text x="621" y="170" text-anchor="middle" class="panel-title">Usual build</text>
 
-  <rect x="526" y="356" width="190" height="148" rx="16" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
+  <rect x="526" y="356" width="190" height="148" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
   <text x="621" y="436" text-anchor="middle" class="panel-title">Extra build</text>
 
-  <rect x="834" y="82" width="326" height="170" rx="16" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
+  <rect x="834" y="82" width="326" height="170" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
   <text x="997" y="122" text-anchor="middle" class="panel-title">Your app bundle</text>
   <text x="872" y="164" class="body">Contains your application's code and</text>
   <text x="872" y="194" class="body">the RxPlayer API.</text>
 
-  <rect x="834" y="356" width="326" height="148" rx="16" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
+  <rect x="834" y="356" width="326" height="148" fill="#f8f9fa" stroke="#4b5563" stroke-width="3"/>
   <text x="997" y="396" text-anchor="middle" class="panel-title">worker.js</text>
   <text x="872" y="438" class="body">Contains the RxPlayer's core logic</text>
   <text x="872" y="468" class="body">and your "registered" code on top.</text>

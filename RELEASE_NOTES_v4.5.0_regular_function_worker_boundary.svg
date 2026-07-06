@@ -30,11 +30,11 @@
     </style>
   </defs>
 
-  <rect x="34" y="42" width="340" height="250" rx="14" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
+  <rect x="34" y="42" width="340" height="250" fill="#fff4f6" stroke="#ec3655" stroke-width="3"/>
   <text x="204" y="82" text-anchor="middle" class="title">Main thread</text>
   <text x="204" y="108" text-anchor="middle" class="body muted">normal bundled code</text>
 
-  <rect x="58" y="128" width="292" height="132" rx="10" fill="#ffffff" stroke="#ec3655" stroke-width="2"/>
+  <rect x="58" y="128" width="292" height="132" fill="#ffffff" stroke="#ec3655" stroke-width="2"/>
   <text x="80" y="158" class="code">const maxHeight = 1080;</text>
   <text x="80" y="186" class="code">const filter = (rep) =&gt;</text>
   <text x="100" y="214" class="code">(getHeight(rep?.video) ?? 0)</text>
@@ -42,23 +42,23 @@
 
   <line x1="460" y1="44" x2="460" y2="316" stroke="#5f6368" stroke-width="3" stroke-dasharray="10 9"/>
   <path d="M374 174h172" stroke="#5f6368" stroke-width="3" marker-end="url(#arrow)"/>
-  <rect x="418" y="134" width="84" height="30" rx="15" fill="#ffffff" stroke="#5f6368" stroke-width="2"/>
+  <rect x="418" y="134" width="84" height="30" fill="#ffffff" stroke="#5f6368" stroke-width="2"/>
   <text x="460" y="154" text-anchor="middle" class="code muted">filter</text>
   <text x="460" y="197" text-anchor="middle" class="body muted">postMessage</text>
 
-  <rect x="546" y="42" width="340" height="250" rx="14" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
+  <rect x="546" y="42" width="340" height="250" fill="#f8f9fa" stroke="#5f6368" stroke-width="3"/>
   <text x="716" y="82" text-anchor="middle" class="title">Worker</text>
   <text x="716" y="108" text-anchor="middle" class="body muted">separate execution context</text>
 
-  <rect x="586" y="130" width="260" height="42" rx="10" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
+  <rect x="586" y="130" width="260" height="42" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
   <path d="M610 142l18 18m0-18l-18 18" stroke="#c5221f" stroke-width="3" stroke-linecap="round"/>
   <text x="730" y="156" text-anchor="middle" class="body bad">getHeight is missing</text>
 
-  <rect x="586" y="186" width="260" height="42" rx="10" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
+  <rect x="586" y="186" width="260" height="42" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
   <path d="M610 198l18 18m0-18l-18 18" stroke="#c5221f" stroke-width="3" stroke-linecap="round"/>
   <text x="730" y="212" text-anchor="middle" class="body bad">maxHeight is missing</text>
 
-  <rect x="586" y="242" width="260" height="42" rx="10" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
+  <rect x="586" y="242" width="260" height="42" fill="#ffffff" stroke="#c5221f" stroke-width="2"/>
   <path d="M610 254l18 18m0-18l-18 18" stroke="#c5221f" stroke-width="3" stroke-linecap="round"/>
   <text x="730" y="268" text-anchor="middle" class="body bad">TS/Babel helper unreachable</text>
 </svg>

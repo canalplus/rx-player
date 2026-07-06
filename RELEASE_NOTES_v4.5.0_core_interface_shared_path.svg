@@ -50,25 +50,25 @@
   </defs>
 
   <!-- Before -->
-  <rect x="60" y="110" width="480" height="400" rx="16" fill="#ffffff" stroke="#9aa0a6" stroke-width="2"/>
+  <rect x="60" y="110" width="480" height="400" fill="#ffffff" stroke="#9aa0a6" stroke-width="2"/>
   <text x="300" y="154" text-anchor="middle" class="panel-title">Before: split paths</text>
 
-  <rect x="90" y="210" width="175" height="78" rx="12" fill="#f3f8ff" stroke="#1967d2" stroke-width="2.5"/>
+  <rect x="90" y="210" width="175" height="78" fill="#f3f8ff" stroke="#1967d2" stroke-width="2.5"/>
   <text x="177" y="240" text-anchor="middle" class="section">Monothread init</text>
   <text x="177" y="266" text-anchor="middle" class="small">default path</text>
 
-  <rect x="335" y="210" width="175" height="78" rx="12" fill="#f0f4ff" stroke="#5b7fcf" stroke-width="2.5"/>
+  <rect x="335" y="210" width="175" height="78" fill="#f0f4ff" stroke="#5b7fcf" stroke-width="2.5"/>
   <text x="422" y="240" text-anchor="middle" class="section">MULTI_THREAD init</text>
   <text x="422" y="266" text-anchor="middle" class="small">multithread path</text>
 
   <path d="M177 288v54" stroke="#1967d2" stroke-width="3" marker-end="url(#arrow-blue)"/>
   <path d="M422 288v54" stroke="#5b7fcf" stroke-width="3" marker-end="url(#arrow-blue-soft)"/>
 
-  <rect x="90" y="352" width="175" height="76" rx="12" fill="#fff4f2" stroke="#c5221f" stroke-width="2.5"/>
+  <rect x="90" y="352" width="175" height="76" fill="#fff4f2" stroke="#c5221f" stroke-width="2.5"/>
   <text x="177" y="382" text-anchor="middle" class="section">Core logic</text>
   <text x="177" y="408" text-anchor="middle" class="small">direct local calls</text>
 
-  <rect x="335" y="352" width="175" height="76" rx="12" fill="#fff2ee" stroke="#df6b57" stroke-width="2.5"/>
+  <rect x="335" y="352" width="175" height="76" fill="#fff2ee" stroke="#df6b57" stroke-width="2.5"/>
   <text x="422" y="382" text-anchor="middle" class="section">Core logic</text>
   <text x="422" y="408" text-anchor="middle" class="small">worker messages</text>
 
@@ -76,27 +76,27 @@
   <line x1="600" y1="110" x2="600" y2="510" stroke="#9aa0a6" stroke-width="3" stroke-dasharray="10 10"/>
 
   <!-- After -->
-  <rect x="660" y="110" width="480" height="400" rx="16" fill="#ffffff" stroke="#9aa0a6" stroke-width="2"/>
+  <rect x="660" y="110" width="480" height="400" fill="#ffffff" stroke="#9aa0a6" stroke-width="2"/>
   <text x="900" y="154" text-anchor="middle" class="panel-title">Now: Single path through a thin bridge</text>
 
-  <rect x="810" y="188" width="180" height="70" rx="12" fill="#f3f8ff" stroke="#1967d2" stroke-width="2.5"/>
+  <rect x="810" y="188" width="180" height="70" fill="#f3f8ff" stroke="#1967d2" stroke-width="2.5"/>
   <text x="900" y="216" text-anchor="middle" class="section">Main-thread init</text>
   <text x="900" y="240" text-anchor="middle" class="small">API, DRM, media element</text>
 
   <path d="M900 258v44" stroke="#1967d2" stroke-width="3" marker-end="url(#arrow-blue)"/>
   <text x="925" y="284" class="small">messages</text>
 
-  <rect x="760" y="318" width="280" height="74" rx="12" fill="#ffffff" stroke="#6b7280" stroke-width="2.5" stroke-dasharray="8 7"/>
+  <rect x="760" y="318" width="280" height="74" fill="#ffffff" stroke="#6b7280" stroke-width="2.5" stroke-dasharray="8 7"/>
   <text x="900" y="344" text-anchor="middle" class="section">CoreInterface</text>
 
-  <rect x="784" y="354" width="112" height="26" rx="8" fill="#f8f9fa" stroke="#6b7280" stroke-width="1.5"/>
+  <rect x="784" y="354" width="112" height="26" fill="#f8f9fa" stroke="#6b7280" stroke-width="1.5"/>
   <text x="840" y="372" text-anchor="middle" class="code">postMessage</text>
 
-  <rect x="904" y="354" width="112" height="26" rx="8" fill="#f8f9fa" stroke="#6b7280" stroke-width="1.5"/>
+  <rect x="904" y="354" width="112" height="26" fill="#f8f9fa" stroke="#6b7280" stroke-width="1.5"/>
   <text x="960" y="372" text-anchor="middle" class="code">listeners</text>
 
   <path d="M900 392v46" stroke="#c5221f" stroke-width="3" marker-end="url(#arrow-red)"/>
 
-  <rect x="810" y="448" width="180" height="56" rx="12" fill="#fff4f2" stroke="#c5221f" stroke-width="2.5"/>
+  <rect x="810" y="448" width="180" height="56" fill="#fff4f2" stroke="#c5221f" stroke-width="2.5"/>
   <text x="900" y="480" text-anchor="middle" class="section">Core logic</text>
 </svg>
