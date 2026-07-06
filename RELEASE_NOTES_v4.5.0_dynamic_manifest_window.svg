@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 300" role="img" aria-labelledby="title desc">
+  <title id="title">Dynamic Manifest window</title>
+  <desc id="desc">A dynamic Manifest has a moving playable window delimited by a minimum position and a maximum position. A requested playback position can fall outside those bounds.</desc>
+
+  <defs>
+    <marker id="axis-arrow" viewBox="0 0 10 10" markerWidth="9" markerHeight="9" refX="9" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#5f6368"/>
+    </marker>
+    <marker id="move-arrow" viewBox="0 0 10 10" markerWidth="8" markerHeight="8" refX="9" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#1967d2"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        fill: #202124;
+      }
+      .title {
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .label {
+        font-size: 17px;
+        font-weight: 700;
+      }
+      .body {
+        font-size: 15px;
+      }
+      .small {
+        font-size: 13px;
+        fill: #5f6368;
+      }
+      .code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 14px;
+      }
+    </style>
+  </defs>
+
+  <rect width="920" height="300" rx="16" fill="#ffffff"/>
+
+  <text x="460" y="42" text-anchor="middle" class="title">Dynamic Manifest window</text>
+
+  <line x1="95" y1="160" x2="825" y2="160" stroke="#5f6368" stroke-width="3" marker-end="url(#axis-arrow)"/>
+  <text x="828" y="188" text-anchor="end" class="small">time</text>
+
+  <rect x="330" y="124" width="330" height="72" rx="10" fill="#e8f0fe" stroke="#1967d2" stroke-width="3"/>
+  <text x="495" y="166" text-anchor="middle" class="body">currently playable window</text>
+
+  <line x1="330" y1="92" x2="330" y2="218" stroke="#1967d2" stroke-width="3"/>
+  <text x="330" y="76" text-anchor="middle" class="label">minimum position</text>
+  <text x="330" y="238" text-anchor="middle" class="code">minPosition</text>
+
+  <line x1="660" y1="92" x2="660" y2="218" stroke="#1967d2" stroke-width="3"/>
+  <text x="660" y="76" text-anchor="middle" class="label">maximum position</text>
+  <text x="660" y="238" text-anchor="middle" class="code">maxPosition</text>
+
+  <line x1="235" y1="104" x2="235" y2="218" stroke="#c5221f" stroke-width="3"/>
+  <circle cx="235" cy="160" r="11" fill="#c5221f"/>
+  <text x="235" y="76" text-anchor="middle" class="label">requested position</text>
+  <text x="235" y="238" text-anchor="middle" class="code">position</text>
+  <text x="235" y="260" text-anchor="middle" class="small">before current window</text>
+
+  <path d="M380 275h230" stroke="#1967d2" stroke-width="3" marker-end="url(#move-arrow)"/>
+  <text x="495" y="292" text-anchor="middle" class="small">on dynamic content, these bounds can move forward</text>
+</svg>

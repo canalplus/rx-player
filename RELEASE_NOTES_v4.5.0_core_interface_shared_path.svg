@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 90 1120 530" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 100 1100 420" role="img" aria-labelledby="title desc">
   <title id="title">Shared CoreInterface path</title>
   <desc id="desc">Before version 4.5.0 monothreaded and multithreaded playback used more separate initialization paths. Version 4.5.0 routes both through a CoreInterface layer between main-thread initialization and core logic.</desc>
 
@@ -49,8 +49,6 @@
     </style>
   </defs>
 
-  <rect x="40" y="90" width="1120" height="530" fill="#ffffff"/>
-
   <!-- Before -->
   <rect x="60" y="110" width="480" height="400" rx="16" fill="#ffffff" stroke="#9aa0a6" stroke-width="2"/>
   <text x="300" y="154" text-anchor="middle" class="panel-title">Before: split paths</text>
@@ -79,7 +77,7 @@
 
   <!-- After -->
   <rect x="660" y="110" width="480" height="400" rx="16" fill="#ffffff" stroke="#9aa0a6" stroke-width="2"/>
-  <text x="900" y="154" text-anchor="middle" class="panel-title">Now: shared CoreInterface layer</text>
+  <text x="900" y="154" text-anchor="middle" class="panel-title">Now: Single path through a thin bridge</text>
 
   <rect x="810" y="188" width="180" height="70" rx="12" fill="#f3f8ff" stroke="#1967d2" stroke-width="2.5"/>
   <text x="900" y="216" text-anchor="middle" class="section">Main-thread init</text>

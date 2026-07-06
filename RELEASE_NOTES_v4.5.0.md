@@ -231,9 +231,13 @@ There are some differences between the two (as one of those modes mostly runs in
 
   That "communication layer" allows to exchange messages between both. There is a multithreaded flavor (which uses the [`postMessage`](https://developer.mozilla.org/en-US/docs/Web/API/Worker/postMessage) API to transmit those messages) whereas our monothreaded implementation just uses a simple event listener logic for those same messages.
 
-  _TODO: Add a schema showing the old split paths, then the new CoreInterface layer: main-thread init -> CoreInterface -> core, with either postMessage in `MULTI_THREAD` or a local event-like bridge in monothreaded mode._
+<img alt="RELEASE_NOTES_v4 5 0_core_interface_shared_path" src="https://github.com/user-attachments/assets/2eb64929-ed68-41ad-bc7c-e48909d49546" />
 
-- Also we had to be careful on a few tweaks to ensure we didn't degrade the monothreaded mode: the monothreaded mode often keeps the same data structures in both code areas whereas the multithreaded mode has to go through a serialization step. This could lead to some behavior change (e.g. mutations being shared in one mode but not the other) to which we had to be especially careful.
+_Schema: How the inner architecture of the RxPlayer was updated. Instead of two independent paths each importing and using blocks of the RxPlayer separately, we've now merged most of it into one path._
+
+- Also we had to do a few tweaks to ensure we didn't degrade the monothreaded mode: we e.g. might want to share some data structures in that mode whereas the multithreaded mode has to go through a serialization step and synchronization. We kept that difference for efficiency reasons, yet this could lead in the future to some behavior change and bugs (e.g. mutations being shared in one mode but not the other) if we're not careful about it.
+
+  Thankfully, most of that complexity is centralized around a single structure (our `Manifest` concept), so we could here make it work without sacrificing code readability too much.
 
 The end goal was to remove duplicated logic, reduce accidental differences between both modes, and make our tests more valuable: when both modes go through more of the same code, a test written for one mode is more likely to protect the other one too.
 
