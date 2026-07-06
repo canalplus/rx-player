@@ -196,7 +196,7 @@ This option can have the following values:
 - `"screen"`: The loaded video Representation will be throttled according to the screen's
   dimensions. Simply written, the RxPlayer won't try to play Representation with a
   resolution higher than the screen resolution with the exception of the immediately
-  superior resolution if no Representation has the same resolution than the screen.
+  superior resolution if no Representation has the same resolution as the screen.
 
   You might prefer this value over `"videoElement"` to stay ready when and if the user
   decides to enter a "fullscreen mode".

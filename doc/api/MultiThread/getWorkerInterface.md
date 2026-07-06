@@ -42,7 +42,7 @@ If however a worker is initialized (you called the `attachWorker` method on the 
 
 - `removeMessageListener`: A function allowing to remove a message listener previously
   added through an `addMessageListener` call. Takes two arguments which have to be the
-  same ones than the one provided to `addMessageListener`.
+  same ones as the ones provided to `addMessageListener`.
 
 #### Example
 

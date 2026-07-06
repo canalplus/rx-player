@@ -973,7 +973,7 @@ Those events can either have only a start time or both a start time and an end t
   again receive a `streamEvent` for that same event.
 
 The payload of a `streamEvent` depends on the source of the event. For example, it will
-not have the same format when it comes from a Manifest than when it comes from the media
+not have the same format when it comes from a Manifest as when it comes from the media
 container. All possible formats are described in the
 [stream event tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
 
@@ -1004,8 +1004,8 @@ This is most likely due to the user seeking in the content. A "regular" content 
 which continuously plays the content without seeking shouldn't trigger any
 `streamEventSkip` event.
 
-The payload of a `streamEventSkip` is the same than for a `streamEvent` and as such
-depends on the source of the event. All possible formats are described in the
+The payload of a `streamEventSkip` is the same as for a `streamEvent` and as such depends
+on the source of the event. All possible formats are described in the
 [stream event tutorial](../Getting_Started/Tutorials/EventStream_Handling.md).
 
 Note that unlike `streamEvent` events, there's no point to define an `onExit` callback on

@@ -435,10 +435,10 @@ transport option</a>)
 [textTrackMode](#texttrackmode).
 
 This property will be the element on which text tracks will be set, as child elements, at
-the right time. We expect that this element is the exact same size than the media element
-it applies to (this allows us to properly place the subtitles position without polling
-where the video is in your UI). You can however re-size or update the style of it as you
-wish, to better suit your UI needs.
+the right time. We expect that this element is the exact same size as the media element it
+applies to (this allows us to properly place the subtitles position without polling where
+the video is in your UI). You can however re-size or update the style of it as you wish,
+to better suit your UI needs.
 
 ### minimumManifestUpdateInterval
 
@@ -1022,7 +1022,7 @@ The `serverSyncInfos` object contains two keys:
 
 - `clientTime` (`number`): Value of the `performance.now()` API at the time the
   `serverTimestamp` value was true. Please note that if your page contains multiple
-  worker, the `performance.now()` call should be done on the same worker than the one in
+  workers, the `performance.now()` call should be done on the same worker as the one in
   which loadVideo is called.
 
   <div class="note">

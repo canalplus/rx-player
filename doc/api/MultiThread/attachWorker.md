@@ -14,7 +14,7 @@ RxPlayer.
 
 That WebWorker is a separate JavaScript file implementing the core RxPlayer logic that
 needs to be first "attached" to your RxPlayer instance before it can run it in another
-thread. The `attachWorker` method let you provide that worker file by doing a call like:
+thread. The `attachWorker` method lets you provide that worker file by doing a call like:
 
 ```js
 player.attachWorker({ workerUrl });
@@ -26,7 +26,7 @@ do this can be found in the
 
 This `attachWorker` method then returns a Promise which:
 
-- resolves if the WebWorker could be attached with your RxPlayer instance with success.
+- resolves if the WebWorker could be successfully attached to your RxPlayer instance.
 
 - rejects if the initialization step failed with an error describing the issue. This can
   happen for example if the given URL is not reachable.
@@ -55,8 +55,8 @@ const player = new RxPlayer(/* your usual options */);
 // After instantiation, you can at any time "attach" a WebWorker so any
 // following `loadVideo` call can rely on it when possible.
 player.attachWorker({ workerUrl: EMBEDDED_WORKER }).catch((err) => {
-  console.error("An error arised while initializing the worker", err);
-  // Note the if `attachWorker` rejects, the next `loadVideo` / `reload` calls
+  console.error("An error arose while initializing the worker", err);
+  // Note that if `attachWorker` rejects, the next `loadVideo` / `reload` calls
   // will not rely on the "multithread" mode anymore.
   //
   // However the last-loaded content may fail on error if it was already
