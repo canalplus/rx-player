@@ -49,8 +49,8 @@ EOF
 set -euo pipefail
 
 # Check for --help flag
-while [[ $# -gt 0 ]]; do
-  case "$1" in
+for arg in "$@"; do
+  case "$arg" in
   -h|--help) help; exit 0;;
   esac
 done
