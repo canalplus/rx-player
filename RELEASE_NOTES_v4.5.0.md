@@ -1,4 +1,4 @@
-# Release v4.5.0 (TODO)
+# Release v4.5.0 (2026-07-06)
 
 <p align="center">
   <b>Quick Links:</b>
@@ -29,7 +29,7 @@ This new release adds several fixes and features:
 
 - The biggest update here is on the `MULTI_THREAD` experimental feature: applications can now bring their complex `manifestLoader`, `segmentLoader` and `representationFilter` logic that will run worker-side.
 
-  This is done by letting you build your own separate RxPlayer worker bundle, through a wrapper with a simple wrapper API exported from a `rx-player/experimental/worker` path. Once bundled you can then provide the resulting file/build to the RxPlayer's usual `attachWorker` API.
+  This is done by letting you build your own separate RxPlayer worker bundle, through a wrapper with a simple API exported from the `rx-player/experimental/worker` path. Once bundled you can then provide the resulting file/build to the RxPlayer's usual `attachWorker` API.
 
 - Moreover, it's now possible through the same worker bundle feature to add "`transport`" features that were previously unavailable in multithreading mode: `SMOOTH`, `DASH_WASM`, `LOCAL_MANIFEST` and `METAPLAYLIST`.
 
@@ -96,25 +96,25 @@ This new release adds several fixes and features:
 
 Applications can define custom loading and filtering logic through `loadVideo` options such as `manifestLoader`, `segmentLoader` and `representationFilter`. Those can be used for multiple advanced needs: peer-to-peer integrations, alternative application-known URLs, pre-processing of loaded data, or filtering out media qualities based on specific constraints.
 
-Yet in multithreading mode (under the `MULTI_THREAD` feature), those APIs weren't available.
+Yet in multithreading mode (under the `MULTI_THREAD` feature), those APIs weren't available. This was because the logic needing those callbacks would there most likely run in a WebWorker, yet be originally written outside of it: in your application's code.
 
-This was because the logic needing those callbacks would there most likely run in a WebWorker. Sending arbitrary JavaScript functions to a WebWorker is not something we can do reliably: the browser only gives us message passing, which means serialization, and serialization breaks common JavaScript assumptions such as closures, outer scope access (e.g. accessing variables defined outside your function) and some build-tool transformations (e.g. your build tool writing some helpers that would be accessed inside that function).
+Sending arbitrary JavaScript functions to a WebWorker is not something we can do reliably: the browser mostly gives us message passing, which means those function's code would need to be serialized, e.g. to their stringified content. Serialization breaks common JavaScript assumptions such as accessing variables defined outside your function and some build-tool transformations (e.g. your build tool writing some helpers that would be accessed inside that function, or that could be unavailable in a WebWorker context).
 
 _TODO: Add a schema showing why a regular JavaScript function is not enough here: main thread function with closure / build-tool output on one side, worker message boundary on the other._
 
 We previously tried to work around that for `representationFilter` with a stringified function format. It made it explicit that this function would not be running under regular JavaScript assumptions, but it was not very pleasant to write nor to maintain and very easy to get wrong.
 
-_TODO: Add a small "old workaround" visual with a stringified function, to make clear why the previous solution was explicit but awkward._
+_TODO: Add code and note for the previous `representationFilter` string API, to make clear why the previous solution was explicit but awkward._
 
 With a partner application integrating us, we even ended up reviewing all changes to their `representationFilter` logic to make sure it complied with those rules, corresponded to their target JS (ES5-compatible) and did not open the door for security problems (e.g. interpreting an unvalidated input in that implementation).
 
 _TODO: Show what a very wrong `representationFilter` in terms of security could have been._
 
-We always wondered if that "string function" was the way to go which is why we only did so with the usually simpler `representationFilter` API - as a test.
+We always wondered if that "string function" was the way to go which is why we only did so with the usually simpler `representationFilter` API - as a test. Now we propose a new solution that should be both more convenient and safer for application developers: they can build the RxPlayer worker themselves.
 
-Now we propose a new solution that should be both more convenient and safer for application developers: they can build the RxPlayer worker themselves.
+<img alt="RELEASE_NOTES_v4 5 0_two_application_bundles" src="https://github.com/user-attachments/assets/a0f1fb6b-c43f-4635-99b2-f0e8c6df2a25" />
 
-_TODO: Add a schema of an application bundle and a worker bundle sharing the same callback helper, with messages going through `getWorkerInterface`._
+_Schema: this new API lets you define the RxPlayer worker yourself. In that situation you can add whatever code you want on top and then handle the bundling transpiling yourself._
 
 For example, you can create a separate worker bundle that registers a `representationFilter`:
 
@@ -140,7 +140,7 @@ rxPlayerWorker.registerRepresentationFilter(
 
 The worker has to be bundled separately and can then just be communicated to the RxPlayer through the same `attachWorker` API that you would have used in other multithreading scenarios:
 
-```
+```javascript
 import RxPlayer from "rx-player";
 
 const rxPlayer = new RxPlayer({ videoElement });
@@ -160,9 +160,13 @@ rxPlayer.loadVideo({
 
 The same general mechanism also exists for `segmentLoader` and `manifestLoader`.
 
-We also added APIs to communicate with the worker from the main application bundle. This makes it possible to update worker-side state without rebuilding a new worker each time, for example to update quality filtering constraints before loading a content:
+We also added APIs to communicate with the worker from the main application bundle. This makes it possible to update worker-side state without rebuilding a new worker each time.
 
-TODO: First schema, then simple corresponding code for message exchange, both worker-side and app-side
+<img alt="bundles responsibilities" src="https://github.com/user-attachments/assets/27bdde6f-282c-4906-9d7c-41f250bfbe77" />
+
+_Schema: The responsibilities of the two bundles. Your application code continue to be in your usual application logic, but you can define callbacks and process custom runtime events in the RxPlayer worker to tweak the corresponding rx-player callbacks._
+
+Note that all complexities around communication between the two bundles are already handled by the RxPlayer here, an application _just_ has to produce and provide the separate worker bundle and call a few documented RxPlayer API. Complete examples can be found in the new [Importable Worker documentation page](XXX TODO).
 
 <a name="multithread-transports"></a>
 
@@ -180,7 +184,7 @@ There's however one missing transport here: `directfile` (through the `DIRECTFIL
 
 ## `MULTI_THREAD`: A more shared core path internally
 
-Historically, multithreaded and monothreaded logic had distinct initialization logic and some distinct concepts. This made sense when `MULTI_THREAD` was introduced as it was very experimental and weren't sure of how it would evolve, but it made the code harder to maintain and made behavior differences between both modes easier to introduce.
+Historically, multithreaded and monothreaded logic had distinct initialization logic and some separate concepts. This made sense when `MULTI_THREAD` was introduced as it was very experimental and weren't sure of how it would evolve, but it made the code harder to maintain and made behavior differences between both modes easier to introduce.
 
 Now that it's pretty clear to us that multithreading mode will be a long-term API, we decided to do something about it: we merged most of the unique logic both modes had into only one code path.
 
@@ -242,7 +246,7 @@ This is mostly useful for live or dynamic contents where the application may wan
 
 ## The `reload` API is now easier to integrate
 
-The [`reload`](XXX TODO: link) API allows to re-load from scratch the last content loaded through a `loadVideo` call, even if it failed on an error or was stopped since.
+The [`reload`](https://developers.canal-plus.com/rx-player/versions/4.4.1/doc/api/Basic_Methods/reload.html) API allows to re-load from scratch the last content loaded through a `loadVideo` call, even if it failed on an error or was stopped since.
 
 Previously, `reload` could throw when `reloadAt.relative` was used before the RxPlayer had been able to know the previous content position. This single case would generally force applications into an awkward `try` / `catch` logic just because a previous content did not reach the right state soon enough.
 
@@ -284,7 +288,7 @@ CMCD values are now more conservative in edge cases:
 
 ## Safari and native HLS improvements
 
-Applications often use our [`directfile` transport](XXX TODO: API link) to be able to play HLS contents on Safari.
+Applications often use our [`directfile` transport](https://developers.canal-plus.com/rx-player/versions/4.5.0/doc/api/Loading_a_Content.html#transport) to be able to play HLS contents on Safari.
 
 In that scenario, the browser may expose timing information through its own media element APIs instead of through Manifest and segment data loaded and parsed by the RxPlayer. That can lead to subtle differences, especially for live contents or when starting from a position relative to the live edge.
 

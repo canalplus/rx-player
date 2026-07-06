@@ -39,8 +39,6 @@
     </style>
   </defs>
 
-  <rect x="48" y="64" width="1180" height="458" rx="18" fill="#ffffff"/>
-
   <rect x="64" y="82" width="344" height="170" rx="16" fill="#fff6f8" stroke="#d72657" stroke-width="3"/>
   <text x="236" y="122" text-anchor="middle" class="panel-title">Application</text>
   <text x="94" y="164" class="body">What you already build, importing the</text>
