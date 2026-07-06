@@ -114,8 +114,8 @@ standardized FourCC code for another supported format.
 
 ---
 
-The `Language` is used to know the language the track is in. The rules are the same than
-for DASH:
+The `Language` is used to know the language the track is in. The rules are the same as for
+DASH:
 
 The rx-player understand the following standards:
 

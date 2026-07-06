@@ -24,5 +24,5 @@ const debugInfo = player.createDebugElement(myElement);
   1. _element_ `HTMLElement`: HTML element in which the debugging information should be
      displayed.
 
-- **return value** `Object`: Object with a `dispose method, allowing to remove and stop
+- **return value** `Object`: Object with a `dispose` method, allowing to remove and stop
   updating the debugging element.

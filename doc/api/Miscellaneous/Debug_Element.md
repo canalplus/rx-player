@@ -57,8 +57,8 @@ debuggingInfo.dispose();
 
 Note that more or less information may be displayed depending on the height of that HTML
 element. If playing video, it would be a good default to communicate an HTML element of
-the same size than the video element on which the content plays. Ultimately, only the
-upper left corner of that element should be used to display current debugging information.
+the same size as the video element on which the content plays. Ultimately, only the upper
+left corner of that element should be used to display current debugging information.
 
 ## Displayed information
 
@@ -163,7 +163,7 @@ exactly what's going on at a particular point in time.
       `p:<period_start>-<period_end>`.
   - **load**: Information on the content that is currently loaded on the buffer of the
     type in the previously represented buffer (audio, video or text). Information
-    represented follows the exact same format than the **play** metric.
+    represented follows the exact same format as the **play** metric.
   - **bgap**: _Buffer gap_. Representation of the evolution of the amount of pre-buffered
     data in the intersection of the video and audio buffers. A raising value means that
     the buffer is being filled and a lowering one means that the buffer is emptying. If

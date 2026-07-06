@@ -37,7 +37,7 @@ TextTrackRenderer.addParsers([TTML_PARSER, VTT_PARSER, SRT_PARSER, SAMI_PARSER])
 const videoElement = document.querySelector("video");
 
 // get HTML element in which the text track will be displayed
-// Should generally be on top of the video, with the same size than it (but can
+// Should generally be on top of the video, with the same size as it (but can
 // also be in any shape, corresponding to your UI needs).
 const textTrackElement = document.querySelector(".text-track-container");
 
