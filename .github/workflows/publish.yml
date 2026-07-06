@@ -78,9 +78,10 @@ jobs:
     uses: ./.github/workflows/integration_tests_base.yml
     with: { os: "ubuntu-latest", browser: "firefox" }
 
-  integration_linux_edge:
-    uses: ./.github/workflows/integration_tests_base.yml
-    with: { os: "ubuntu-latest", browser: "edge" }
+  # NOTE: Too instable - most of the time it does not run. Commented out for now
+  # integration_linux_edge:
+  #   uses: ./.github/workflows/integration_tests_base.yml
+  #   with: { os: "ubuntu-latest", browser: "edge" }
 
   integration_windows_chrome:
     uses: ./.github/workflows/integration_tests_base.yml
