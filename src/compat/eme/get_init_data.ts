@@ -150,8 +150,13 @@ export default function getInitData(
   encryptedEvent: IMediaEncryptedEvent,
 ): IEncryptedEventData | null {
   const { initData, initDataType, forceSessionRecreation } = encryptedEvent;
-  if (isNullOrUndefined(initData) || initData.byteLength === 0) {
+  if (isNullOrUndefined(initData)) {
     log.warn("DRM", "No init data found on media encrypted event.");
+    return null;
+  }
+
+  if (initData.byteLength === 0) {
+    log.warn("DRM", "Init data is empty on media encrypted event.");
     return null;
   }
 
