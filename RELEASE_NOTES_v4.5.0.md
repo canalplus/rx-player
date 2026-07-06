@@ -332,7 +332,7 @@ There's actually one remaining case where it can, but this one does not make muc
 
 Thumbnail handling also gained a few small fixes.
 
-_TODO: Add a screenshot or sequence schema for `renderThumbnail` called twice for the same image, one call cancelled, and the shared request continuing for the remaining caller._
+_TODO: Add a something to show the bug: `renderThumbnail` called twice for the same image, one call cancelled, and the shared request continuing for the remaining caller._
 
 - cancelling one `renderThumbnail` request should no longer cancel the shared request pipeline still needed by another request for the same thumbnail;
 
