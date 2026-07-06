@@ -123,7 +123,7 @@ rxPlayer.loadVideo({
 });
 ```
 
-This was at least explicit: what is sent to the worker is not a normal closure carrying its environment with it. Yet it also meant losing syntax highlighting and type-checking in most setups, making escaping mistakes more likely and the code much harder to maintain.
+The format was voluntarily awkward (writing code inside a string) to indicate clearly to developers that this was not a normal closure carrying its environment with it, but more of a "worker callback JS subset". Yet this meant losing syntax highlighting and type-checking in most setups, making escaping mistakes more likely and the code much harder to maintain.
 
 With a partner application, we even ended up reviewing all changes to their `representationFilter` logic to make sure it complied with those rules, corresponded to their target JS (ES5-compatible) and did not open the door for security problems (e.g. interpreting an untrusted input in that implementation).
 
