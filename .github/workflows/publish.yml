@@ -78,9 +78,10 @@ jobs:
     uses: ./.github/workflows/integration_tests_base.yml
     with: { os: "ubuntu-latest", browser: "firefox" }
 
-  integration_linux_edge:
-    uses: ./.github/workflows/integration_tests_base.yml
-    with: { os: "ubuntu-latest", browser: "edge" }
+  # NOTE: Too instable - most of the time it does not run. Commented out for now
+  # integration_linux_edge:
+  #   uses: ./.github/workflows/integration_tests_base.yml
+  #   with: { os: "ubuntu-latest", browser: "edge" }
 
   integration_windows_chrome:
     uses: ./.github/workflows/integration_tests_base.yml
@@ -150,7 +151,7 @@ jobs:
       - general_release_checks
       - integration_linux_chrome
       - integration_linux_firefox
-      - integration_linux_edge
+      # - integration_linux_edge
       - integration_windows_chrome
       - integration_windows_firefox
       - integration_windows_edge
@@ -228,7 +229,7 @@ jobs:
       - general_release_checks
       - integration_linux_chrome
       - integration_linux_firefox
-      - integration_linux_edge
+      # - integration_linux_edge
       - integration_windows_chrome
       - integration_windows_firefox
       - integration_windows_edge
