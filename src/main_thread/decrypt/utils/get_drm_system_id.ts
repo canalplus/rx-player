@@ -34,7 +34,9 @@ export default function getDrmSystemId(keySystem: string): string | undefined {
   if (startsWith(keySystem, "com.apple.fps")) {
     return "94ce86fb07ff4f43adb893d2fa968ca2";
   }
-  if (startsWith(keySystem, "com.nagra.")) {
+
+  // @see https://docs.nagra.vision/connect-player-sdk-5-for-browsers/5.28.x/Default/drm-preferences-and-security-levels
+  if (startsWith(keySystem, "com.nagra.") || keySystem === "com.tvkey.drm") {
     return "adb41c242dbf4a6d958b4457c0d27b95";
   }
   return undefined;
