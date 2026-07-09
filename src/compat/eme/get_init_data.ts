@@ -155,6 +155,11 @@ export default function getInitData(
     return null;
   }
 
+  if (initData.byteLength === 0) {
+    log.warn("DRM", "Init data is empty on media encrypted event.");
+    return null;
+  }
+
   const initDataBytes = new Uint8Array(initData);
   const values = getInitializationDataValues(initDataBytes);
   return { type: initDataType, values, forceSessionRecreation };
