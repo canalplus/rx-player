@@ -210,6 +210,8 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
       reject: (err: CancellationError | SourceBufferError) => void;
     }
   >;
+  /** Set once this SourceBuffer should not receive new operations anymore. */
+  private _fatalError: SourceBufferError | null;
   /**
    * Identifier Identifying this `WorkerSourceBufferInterface` in-between
    * threads.
@@ -235,6 +237,7 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     this._mediaSourceId = mediaSourceId;
     this._queuedOperations = [];
     this._pendingOperations = new Map();
+    this._fatalError = null;
     this._messageSender = messageSender;
   }
 
@@ -258,7 +261,12 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     const formattedErr =
       error.errorName === "CancellationError"
         ? new CancellationError("Pending SBI Operation " + this.type, "SBI Failure")
-        : new SourceBufferError(error.errorName, error.message, error.isBufferFull);
+        : new SourceBufferError(
+            error.errorName,
+            error.message,
+            error.isBufferFull,
+            error.needsMediaSourceReload,
+          );
     const mapElt = this._pendingOperations.get(operationId);
     if (mapElt === undefined) {
       log.info(
@@ -272,12 +280,15 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
       mapElt.reject(formattedErr);
     }
 
-    const cancellationError = new CancellationError(
-      "Queued SBI Operation " + this.type,
-      "SBI failure",
-    );
+    if (formattedErr instanceof SourceBufferError && formattedErr.needsMediaSourceReload) {
+      this._fatalError = formattedErr;
+    }
+    const queuedError =
+      formattedErr instanceof SourceBufferError && formattedErr.needsMediaSourceReload
+        ? formattedErr
+        : new CancellationError("Queued SBI Operation " + this.type, "SBI failure");
     for (const operation of this._queuedOperations) {
-      operation.reject(cancellationError);
+      operation.reject(queuedError);
     }
     this._queuedOperations = [];
   }
@@ -287,6 +298,10 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
     params: ISourceBufferInterfaceAppendBufferParameters,
   ): Promise<IRange[]> {
     return new Promise((resolve, reject) => {
+      if (this._fatalError !== null) {
+        reject(this._fatalError);
+        return;
+      }
       if (
         this._queuedOperations.length > 0 ||
         this._pendingOperations.size >= MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE
@@ -334,6 +349,10 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
 
   public remove(start: number, end: number): Promise<IRange[]> {
     return new Promise((resolve, reject) => {
+      if (this._fatalError !== null) {
+        reject(this._fatalError);
+        return;
+      }
       if (
         this._queuedOperations.length > 0 ||
         this._pendingOperations.size >= MAX_WORKER_SOURCE_BUFFER_QUEUE_SIZE
@@ -412,6 +431,9 @@ export class WorkerSourceBufferInterface implements ISourceBufferInterface {
   }
 
   private _performNextQueuedOperationIfItExists() {
+    if (this._fatalError !== null) {
+      return;
+    }
     const nextOp = this._queuedOperations.shift();
     if (nextOp !== undefined) {
       try {

@@ -20,6 +20,7 @@ import type {
 import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
 import type { IRepresentationStreamPlaybackObservation } from "../../types";
 import appendSegmentToBuffer from "../append_segment_to_buffer";
+import MediaSourceReloadError from "../media_source_reload_error";
 
 vi.mock("../../../../../log", () => ({
   default: {
@@ -243,6 +244,21 @@ describe("appendSegmentToBuffer", () => {
   });
 
   describe("non-buffer-full errors", () => {
+    it("should request a MediaSource reload on codec switch failures", async () => {
+      const error = new SourceBufferError("SOME_ERROR", "Codec switch failed", false, true);
+      mockPushChunk.mockRejectedValueOnce(error);
+
+      await expect(
+        appendSegmentToBuffer(
+          mockedPlaybackObserver.observer,
+          mockSegmentSink,
+          mockDataInfos,
+          mockBufferGoal,
+          mockTaskCanceller.signal,
+        ),
+      ).rejects.toThrow(MediaSourceReloadError);
+    });
+
     it("should throw BUFFER_APPEND_ERROR for non-buffer-full SourceBufferError", async () => {
       const error = new SourceBufferError("SOME_ERROR", "Some error", false);
       mockPushChunk.mockRejectedValueOnce(error);

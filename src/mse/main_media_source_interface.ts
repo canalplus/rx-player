@@ -223,6 +223,11 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
    * `null` if no known operation is pending.
    */
   private _currentOperations: Array<Omit<ISbiQueuedOperation, "params">>;
+  /**
+   * Set once this SourceBuffer hit an unrecoverable error and should not
+   * receive new operations anymore.
+   */
+  private _fatalError: SourceBufferError | null;
 
   /**
    * Creates a new `SourceBufferInterface` linked to the given `SourceBuffer`
@@ -238,6 +243,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     this._sourceBuffer = sourceBuffer;
     this._operationQueue = [];
     this._currentOperations = [];
+    this._fatalError = null;
 
     const onError = this._onError.bind(this);
     const onUpdateEnd = this._onUpdateEnd.bind(this);
@@ -391,6 +397,10 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     operation: Pick<ISbiQueuedOperation, "operationName" | "params">,
   ): Promise<IRange[]> {
     return new Promise<IRange[]>((resolve, reject) => {
+      if (this._fatalError !== null) {
+        reject(this._fatalError);
+        return;
+      }
       const shouldRestartQueue =
         this._operationQueue.length === 0 && this._currentOperations.length === 0;
       const queueItem = objectAssign(
@@ -494,17 +504,30 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
         this._appendBufferNow(segmentData, params);
       } catch (err) {
         const error =
-          err instanceof Error
-            ? new SourceBufferError(
-                err.name,
-                err.message,
-                err.name === "QuotaExceededError",
-              )
-            : new SourceBufferError(
-                "Error",
-                "Unknown SourceBuffer Error during appendBuffer",
-                false,
-              );
+          // eslint-disable-next-line no-nested-ternary
+          err instanceof SourceBufferError
+            ? err
+            : err instanceof Error
+              ? new SourceBufferError(
+                  err.name,
+                  err.message,
+                  err.name === "QuotaExceededError",
+                )
+              : new SourceBufferError(
+                  "Error",
+                  "Unknown SourceBuffer Error during appendBuffer",
+                  false,
+                );
+        if (error.needsMediaSourceReload) {
+          this._fatalError = error;
+          try {
+            this._sourceBuffer.abort();
+          } catch (_) {
+            // Best effort: the MediaSource will be recreated right after.
+          }
+          this._emptyCurrentQueue(error.message);
+          return;
+        }
         this._currentOperations.forEach((op) => {
           op.reject(error);
         });
@@ -560,6 +583,9 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
     data: BufferSource,
     params: ISourceBufferInterfaceAppendBufferParameters,
   ): void {
+    if (this._fatalError !== null) {
+      throw this._fatalError;
+    }
     const sourceBuffer = this._sourceBuffer;
     const { codec, timestampOffset, appendWindow = [] } = params;
     if (codec !== undefined && codec !== this.codec) {
@@ -572,12 +598,17 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       if (hasUpdatedSourceBufferType) {
         this.codec = codec;
       } else {
-        log.debug("mse", "could not update codec", {
-          type: this.type,
-          prevCodec: this.codec,
-          newCodec: codec,
-        });
+        throw new SourceBufferError(
+          "CHANGE_TYPE_ERROR",
+          `Could not update SourceBuffer codec from "${this.codec}" to "${codec}".`,
+          false,
+          true,
+        );
       }
+    }
+
+    if (this._fatalError !== null) {
+      throw this._fatalError;
     }
 
     if (

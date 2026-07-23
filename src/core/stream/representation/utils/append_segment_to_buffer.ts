@@ -33,6 +33,7 @@ import type {
   SegmentSink,
 } from "../../../segment_sinks";
 import type { IRepresentationStreamPlaybackObservation } from "../types";
+import MediaSourceReloadError from "./media_source_reload_error";
 
 /**
  * Append a segment to the given segmentSink.
@@ -57,6 +58,11 @@ export default async function appendSegmentToBuffer<T>(
   } catch (appendError: unknown) {
     if (cancellationSignal.isCancelled() && appendError instanceof CancellationError) {
       throw appendError;
+    } else if (
+      appendError instanceof SourceBufferError &&
+      appendError.needsMediaSourceReload
+    ) {
+      throw new MediaSourceReloadError(appendError.message);
     } else if (!(appendError instanceof SourceBufferError) || !appendError.isBufferFull) {
       const reason =
         appendError instanceof Error

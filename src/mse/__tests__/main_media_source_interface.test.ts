@@ -439,13 +439,31 @@ describe("MainSourceBufferInterface", () => {
     expect(iface.codec).toBe("video/webm");
   });
 
-  it("does not update codec when tryToChangeSourceBufferType returns false", async () => {
+  it("rejects and poisons the SourceBuffer when codec update fails", async () => {
     mockTryToChangeSourceBufferType.mockReturnValue(false);
     const iface = createMainSourceBufferInterface(SourceBufferType.Video, "video/mp4");
     const data = new Uint8Array([1]);
+    const secondData = new Uint8Array([2]);
     const promise = iface.appendBuffer(data, { codec: "video/webm" });
-    sb._emit("updateend");
-    await promise;
+    const nextPromise = iface.appendBuffer(secondData, { codec: "video/webm" });
+    const nextPromiseAssertion = expect(nextPromise).rejects.toMatchObject(
+      new SourceBufferError(
+        "CHANGE_TYPE_ERROR",
+        'Could not update SourceBuffer codec from "video/mp4" to "video/webm".',
+        false,
+        true,
+      ),
+    );
+
+    await expect(promise).rejects.toMatchObject(
+      new SourceBufferError(
+        "CHANGE_TYPE_ERROR",
+        'Could not update SourceBuffer codec from "video/mp4" to "video/webm".',
+        false,
+        true,
+      ),
+    );
+    await nextPromiseAssertion;
     expect(iface.codec).toBe("video/mp4");
   });
 

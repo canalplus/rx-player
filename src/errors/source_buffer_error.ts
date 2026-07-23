@@ -7,14 +7,23 @@ export default class SourceBufferError extends Error {
   public readonly name: "SourceBufferError";
   public readonly errorName: string;
   public readonly isBufferFull: boolean;
+  public readonly needsMediaSourceReload: boolean;
 
   /**
    * @param {string} errorName - The original Error's name.
    * @param {string} message - The original Error's message.
    * @param {boolean} isBufferFull - If `true`, the Error is due to the fact
    * that the `SourceBuffer` was full.
+   * @param {boolean} needsMediaSourceReload - If `true`, the error means that
+   * the current MediaSource should be recreated before new operations are
+   * attempted on that SourceBuffer.
    */
-  constructor(errorName: string, message: string, isBufferFull: boolean) {
+  constructor(
+    errorName: string,
+    message: string,
+    isBufferFull: boolean,
+    needsMediaSourceReload: boolean = false,
+  ) {
     super(message);
     // @see https://stackoverflow.com/questions/41102060/typescript-extending-error-class
     Object.setPrototypeOf(this, SourceBufferError.prototype);
@@ -22,6 +31,7 @@ export default class SourceBufferError extends Error {
     this.name = "SourceBufferError";
     this.errorName = errorName;
     this.isBufferFull = isBufferFull;
+    this.needsMediaSourceReload = needsMediaSourceReload;
   }
 
   /**
@@ -35,6 +45,7 @@ export default class SourceBufferError extends Error {
       errorName: this.name,
       message: this.message,
       isBufferFull: this.isBufferFull,
+      needsMediaSourceReload: this.needsMediaSourceReload,
     };
   }
 
@@ -56,4 +67,9 @@ export interface ISerializedSourceBufferError {
   message: string;
   /** If `true`, the error is due to the `SourceBuffer` being full. */
   isBufferFull: boolean;
+  /**
+   * If `true`, the error means that the current MediaSource should be
+   * recreated before doing more SourceBuffer operations.
+   */
+  needsMediaSourceReload: boolean;
 }

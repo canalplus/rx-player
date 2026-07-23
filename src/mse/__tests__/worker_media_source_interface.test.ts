@@ -547,6 +547,7 @@ describe("WorkerSourceBufferInterface", () => {
         errorName: "SourceBufferError",
         message: "Buffer full",
         isBufferFull: true,
+        needsMediaSourceReload: false,
       });
 
       await expect(promise).rejects.toBeInstanceOf(SourceBufferError);
@@ -569,6 +570,7 @@ describe("WorkerSourceBufferInterface", () => {
         errorName: "SourceBufferError",
         message: "Buffer full",
         isBufferFull: true,
+        needsMediaSourceReload: false,
       });
       expect(mockLog.info).toHaveBeenCalledWith(
         "mse",
@@ -598,11 +600,34 @@ describe("WorkerSourceBufferInterface", () => {
         errorName: "SourceBufferError",
         message: "full",
         isBufferFull: true,
+        needsMediaSourceReload: false,
       });
 
       await expect(promise1).rejects.toBeInstanceOf(SourceBufferError);
       expect(reject2).toHaveBeenCalledOnce();
       expect(wsbi._queuedOperations).toHaveLength(0);
+    });
+
+    it("rejects future operations after a MediaSource reload-worthy failure", async () => {
+      const { wsbi, messageSender } = makeWsbi();
+      const promise = wsbi.appendBuffer(new ArrayBuffer(4), { codec: "video/mp4" });
+      const { operationId } = getLastCallFirstArg<{ operationId: string }>(messageSender);
+
+      wsbi.onOperationFailure(operationId, {
+        errorName: "SourceBufferError",
+        message: "Codec switch failed",
+        isBufferFull: false,
+        needsMediaSourceReload: true,
+      });
+
+      await expect(promise).rejects.toMatchObject(
+        new SourceBufferError("SourceBufferError", "Codec switch failed", false, true),
+      );
+      await expect(
+        wsbi.appendBuffer(new ArrayBuffer(4), { codec: "video/mp4" }),
+      ).rejects.toMatchObject(
+        new SourceBufferError("SourceBufferError", "Codec switch failed", false, true),
+      );
     });
   });
 });

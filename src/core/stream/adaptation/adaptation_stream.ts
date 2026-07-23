@@ -18,6 +18,7 @@ import type {
   ITerminationOrder,
 } from "../representation";
 import RepresentationStream from "../representation";
+import MediaSourceReloadError from "../representation/utils/media_source_reload_error";
 import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy";
 import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./types";
 
@@ -466,6 +467,16 @@ export default function AdaptationStream(
           return;
         }
         hasEncounteredError = true;
+        if (err instanceof MediaSourceReloadError) {
+          const { DELTA_POSITION_AFTER_RELOAD } = config.getCurrent();
+          callbacks.waitingMediaSourceReload({
+            bufferType: adaptation.type,
+            period,
+            timeOffset: DELTA_POSITION_AFTER_RELOAD.bitrateSwitch,
+            stayInPeriod: true,
+          });
+          return;
+        }
         const formattedError = formatError(err, {
           defaultCode: "NONE",
           defaultReason: "Unknown `RepresentationStream` error",

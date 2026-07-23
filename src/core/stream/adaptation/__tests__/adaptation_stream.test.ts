@@ -33,6 +33,7 @@ import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
 } from "../../representation";
+import MediaSourceReloadError from "../../representation/utils/media_source_reload_error";
 import AdaptationStream from "../adaptation_stream";
 import type { IAdaptationStreamCallbacks } from "../types";
 
@@ -739,6 +740,32 @@ describe("AdaptationStream", () => {
 
     expect(mockCancellableSleep).not.toHaveBeenCalled();
     expect(callbacks.error).toHaveBeenCalledWith(formattedError);
+  });
+
+  it("should request a MediaSource reload on codec switch failures", () => {
+    const { callbacks, waitingMediaSourceReload } = createCallbacks();
+    let streamCallbacks: IRepresentationStreamCallbacks | undefined;
+    mockGetRepresentationsSwitchingStrategy.mockReturnValue({
+      type: "continue",
+      value: undefined,
+    });
+    mockRepresentationStream.mockImplementation(
+      (_args: unknown, repCallbacks: IRepresentationStreamCallbacks) => {
+        streamCallbacks = repCallbacks;
+      },
+    );
+
+    AdaptationStream(createArgs({}), callbacks, parentCanceller.signal);
+
+    streamCallbacks?.error(new MediaSourceReloadError("Codec switch failed"));
+
+    expect(waitingMediaSourceReload).toHaveBeenCalledWith({
+      bufferType: "video",
+      period,
+      timeOffset: -0.1,
+      stayInPeriod: true,
+    });
+    expect(callbacks.error).not.toHaveBeenCalled();
   });
 
   it("should request a reload when the active representation is removed from the manifest", () => {
