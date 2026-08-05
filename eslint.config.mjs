@@ -494,7 +494,6 @@ export default defineConfig([
     },
     languageOptions: {
       globals: {
-        __DEV__: true,
         __LOGGER_LEVEL__: true,
         __FEATURES__: true,
       },

@@ -73,20 +73,17 @@ export default async function generateBuild(options = {}) {
     }
 
     console.log(" 👷 Bundling worker files...");
-    await Promise.all([
-      runBundler(WORKER_IN_FILE, {
-        watch: false,
-        minify: !devMode,
-        outfile: WORKER_OUT_FILE,
-        production: !devMode,
-        silent: true,
-      }),
-    ]);
+    await runBundler(WORKER_IN_FILE, {
+      watch: false,
+      minify: !devMode,
+      outfile: WORKER_OUT_FILE,
+      production: !devMode,
+      silent: true,
+    });
 
     console.log(" 🤖 Generating embedded code...");
     await generateEmbeds({ noWasm });
 
-    console.log(" ⚙️ Compiling project with TypeScript...");
     await compile({ devMode, noCheck });
   } catch (err) {
     console.error("Fatal error:", err instanceof Error ? err.message : err);
@@ -110,7 +107,8 @@ async function removePreviousBuildArtefacts() {
 }
 
 /**
- * Compile the project by spawning a separate procress running TypeScript.
+ * Compile ES2017 and CommonJS builds by spawning tsc, also transpile CommonJS
+ * to ES5 with swc.
  * @param {Object} opts
  * @param {boolean} opts.devMode
  * @param {boolean} opts.noCheck
@@ -122,6 +120,7 @@ async function compile(opts) {
   // easily by running typescript directly from NodeJS.
   // So we just spawn a separate process running tsc:
 
+  console.log(" ⚙️ Compiling project with TypeScript...");
   const es6Build = spawnShellProm(
     "npx tsc -p " +
       path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json") +
@@ -140,7 +139,18 @@ async function compile(opts) {
     (code) => new Error(`CommonJS compilation process exited with code ${code}`),
   );
 
-  await Promise.all([es6Build, commonJsBuild]);
+  await Promise.all([
+    es6Build,
+    commonJsBuild.then(async () => {
+      // Transpile the CommonJS directory from ES2017 to ES5 using swc
+      console.log(" 🔄 Transpiling CommonJS files to ES5...");
+      await spawnShellProm(
+        `npx swc dist/commonjs -d dist --strip-leading-paths --config jsc.target=es5 --config module.type=commonjs --quiet`,
+        /** @param {number|null} code */
+        (code) => new Error(`swc transpilation process exited with code ${code}`),
+      );
+    }),
+  ]);
 }
 
 /**
