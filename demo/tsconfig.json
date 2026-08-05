@@ -13,7 +13,7 @@
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "types": [],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react",
     "rewriteRelativeImportExtensions": true,
     "typeRoots": ["../node_modules/@types"]
