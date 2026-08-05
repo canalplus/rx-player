@@ -216,7 +216,7 @@
     "url": "git://github.com/canalplus/rx-player.git"
   },
   "devDependencies": {
-    "@canalplus/readme.doc": "0.6.0",
+    "@canalplus/readme.doc": "0.6.1",
     "@eslint/js": "9.39.5",
     "@swc/cli": "^0.8.1",
     "@swc/core": "^1.15.47",
