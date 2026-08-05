@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 import * as path from "path";
 import patchSegmentWithTimeOffset from "../utils/patchSegmentWithTimeOffset.mjs";
 import { fileURLToPath } from "url";

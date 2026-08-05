@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
 
 import { exec, spawn } from "child_process";
 import * as fs from "fs";

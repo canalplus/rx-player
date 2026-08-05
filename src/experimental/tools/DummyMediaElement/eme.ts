@@ -758,6 +758,50 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
   }
 
   /**
+   * Returns an iterator over the key/status pairs in insertion order.
+   */
+  public *entries(): MediaKeyStatusMapIterator<[
+    BufferSource,
+    MediaKeyStatus,
+  ]> {
+    for (const [key, value] of this._innerMap) {
+      const toLocalFormat = kidToPlatformKid(
+        this._keySystem,
+        toUint8Array(hexToBytes(key)),
+      );
+      yield [toLocalFormat.buffer, value.status];
+    }
+  }
+
+  /**
+   * Returns an iterator over the key ids in insertion order.
+   */
+  public *keys(): MediaKeyStatusMapIterator<BufferSource> {
+    for (const [key] of this.entries()) {
+      yield key;
+    }
+  }
+
+  /**
+   * Returns an iterator over the key statuses in insertion order.
+   */
+  public *values(): MediaKeyStatusMapIterator<MediaKeyStatus> {
+    for (const [, value] of this.entries()) {
+      yield value;
+    }
+  }
+
+  /**
+   * Returns an iterator over the key/status pairs in insertion order.
+   */
+  public [Symbol.iterator](): MediaKeyStatusMapIterator<[
+    BufferSource,
+    MediaKeyStatus,
+  ]> {
+    return this.entries();
+  }
+
+  /**
    * Adds a new element with a specified key id and `MediaKeyStatus` to the
    * `DummyMediaKeyStatusMap`.
    * If an element with the same key id already exists, the element will be

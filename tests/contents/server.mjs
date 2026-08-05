@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 /* eslint-disable no-console */
 
 import { createServer } from "http";

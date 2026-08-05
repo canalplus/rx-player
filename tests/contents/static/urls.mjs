@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 // Every URLs served by our server. For test purposes.
 
 import urls1 from "./Smooth_static/urls.mjs";

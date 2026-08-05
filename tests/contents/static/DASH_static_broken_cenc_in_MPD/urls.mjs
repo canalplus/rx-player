@@ -1,4 +1,3 @@
-/* eslint-env node */
 /**
  * Data worth a little more than 15s of playback audio+video
  *

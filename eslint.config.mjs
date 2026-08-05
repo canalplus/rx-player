@@ -774,7 +774,14 @@ export default defineConfig([
       ...rulesJS,
     },
   },
-
+  {
+    files: ["tests/contents/**/*.mjs", "tests/performance/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
   {
     files: ["src/**/*.ts", "src/**/*.tsx"],
     extends: [jsLint.configs.recommended, tsLint.configs.recommended],

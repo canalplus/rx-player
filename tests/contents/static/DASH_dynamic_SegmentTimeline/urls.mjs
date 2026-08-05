@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 import * as path from "path";
 import { fileURLToPath } from "url";
 
