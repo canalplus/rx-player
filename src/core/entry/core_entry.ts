@@ -95,10 +95,8 @@ export default function initializeCoreEntry(
   /**
    * Abstraction allowing to prepare contents (fetching its manifest as
    * well as creating and reloading its MediaSource) for playback.
-   *
-   * Creating a default one which may change on initialization.
    */
-  let contentPreparer = new ContentPreparer({ hasVideo: true });
+  const contentPreparer = new ContentPreparer();
   /**
    * Object allowing to control the lifecycle of the current content (stop/reload etc.).
    * `null` if there's no content loaded currently.
@@ -145,12 +143,6 @@ export default function initializeCoreEntry(
                 });
             }
           }
-
-          if (!msg.value.hasVideo) {
-            contentPreparer.disposeCurrentContent("Received Init msg");
-            contentPreparer = new ContentPreparer({ hasVideo: msg.value.hasVideo });
-          }
-
           sendMessage({ type: CoreMessageType.InitSuccess, value: null });
         }
         break;

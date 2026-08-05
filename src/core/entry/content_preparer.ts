@@ -76,22 +76,9 @@ export default class ContentPreparer {
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
-  /** @see constructor */
-  private _hasVideo: boolean;
-
-  /**
-   * @param {Object} capabilities
-   * @param {boolean} capabilities.hasVideo - If `true`, we're playing on an
-   * element which has video capabilities.
-   * If `false`, we're only able to play audio, optionally with subtitles.
-   *
-   * Typically this boolean is `true` for `<video>` HTMLElement and `false` for
-   * `<audio>` HTMLElement.
-   */
-  constructor({ hasVideo }: { hasVideo: boolean }) {
+  constructor() {
     this._currentContent = null;
     this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
-    this._hasVideo = hasVideo;
     const contentCanceller = new TaskCanceller("ContentPreparer");
     this._contentCanceller = contentCanceller;
   }
@@ -130,9 +117,8 @@ export default class ContentPreparer {
       const {
         contentId,
         url,
-        hasText,
+        playbackSupport,
         transportOptions,
-        useMseInWorker,
         enableRepresentationAvoidance,
         transport,
       } = context;
@@ -198,9 +184,9 @@ export default class ContentPreparer {
           sendMessage,
           contentId,
           {
-            useMseInWorker,
-            hasVideo: this._hasVideo,
-            hasText,
+            mseInWorker: playbackSupport.mseInWorker,
+            videoTrack: playbackSupport.videoTrack,
+            textTrack: playbackSupport.textTrack,
           },
           currentMediaSourceCanceller.signal,
         );
@@ -219,7 +205,9 @@ export default class ContentPreparer {
         fetchThumbnailData,
         coreTextSender,
         trackChoiceSetter,
-        useMseInWorker,
+        mseInWorker: playbackSupport.mseInWorker,
+        videoTrack: playbackSupport.videoTrack,
+        textTrack: playbackSupport.textTrack,
       };
       mediaSource.addEventListener(
         "mediaSourceOpen",
@@ -344,9 +332,9 @@ export default class ContentPreparer {
         sendMessage,
         this._currentContent.contentId,
         {
-          useMseInWorker: this._currentContent.useMseInWorker,
-          hasVideo: this._hasVideo,
-          hasText: this._currentContent.coreTextSender !== null,
+          mseInWorker: this._currentContent.mseInWorker,
+          videoTrack: this._currentContent.videoTrack,
+          textTrack: this._currentContent.textTrack,
         },
         this._currentMediaSourceCanceller.signal,
       );
@@ -457,31 +445,40 @@ export interface IPreparedContentData {
    * WebWorker).
    * If `false`, they should be relied on on main thread.
    */
-  useMseInWorker: boolean;
+  mseInWorker: boolean;
+  /**
+   * If `true`, the current content should create and use a video buffer.
+   * If `false`, only audio should be buffered natively.
+   */
+  videoTrack: boolean;
+  /**
+   * If `true`, the current content should create and use text-track handling.
+   */
+  textTrack: boolean;
 }
 
 /**
  * @param {Function} sendMessage
  * @param {string} contentId
- * @param {Object} capabilities
- * @param {boolean} capabilities.useMseInWorker
- * @param {boolean} capabilities.hasVideo
- * @param {boolean} capabilities.hasText
+ * @param {Object} playbackSupport
+ * @param {boolean} playbackSupport.mseInWorker
+ * @param {boolean} playbackSupport.videoTrack
+ * @param {boolean} playbackSupport.textTrack
  * @param {Object} cancelSignal
  * @returns {Array.<Object>}
  */
 function createMediaSourceInterfaceAndSegmentSinksStore(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   contentId: string,
-  capabilities: {
-    useMseInWorker: boolean;
-    hasVideo: boolean;
-    hasText: boolean;
+  playbackSupport: {
+    mseInWorker: boolean;
+    videoTrack: boolean;
+    textTrack: boolean;
   },
   cancelSignal: CancellationSignal,
 ): [IMediaSourceInterface, SegmentSinksStore, CoreTextDisplayerInterface | null] {
   let mediaSourceInterface: IMediaSourceInterface;
-  if (capabilities.useMseInWorker) {
+  if (playbackSupport.mseInWorker) {
     if (BROWSER_GLOBALS.MediaSource_ === undefined) {
       throw new Error("ContentPreparer: Cannot use MSE-in-Worker: no MSE");
     }
@@ -521,13 +518,13 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
     );
   }
 
-  const textSender = capabilities.hasText
+  const textSender = playbackSupport.textTrack
     ? new CoreTextDisplayerInterface(contentId, sendMessage)
     : null;
-  const { hasVideo } = capabilities;
+  const { videoTrack } = playbackSupport;
   const segmentSinksStore = new SegmentSinksStore(
     mediaSourceInterface,
-    hasVideo,
+    videoTrack,
     textSender,
   );
   cancelSignal.register((err) => {

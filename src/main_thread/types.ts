@@ -47,16 +47,6 @@ export interface IInitMessage {
   value: {
     /** Link to the DASH_WASM's feature WebAssembly file to parse DASH MPDs. */
     dashWasmUrl: string | undefined;
-    /**
-     * If `true` the final element on the current page displaying the content
-     * can display video content.
-     *
-     * If `false`, it cannot, but it can be assumed to be able to play audio
-     * content.
-     * An example where it would be set to `false` is for `HTMLAudioElement`
-     * elements (`<audio>` tags).
-     */
-    hasVideo: boolean;
     /** Initial logging level that should be set. */
     logLevel: ILoggerLevel;
     /** Intitial logger's log format that should be set. */
@@ -113,8 +103,30 @@ export interface IContentInitializationData {
    * `undefined` if unknown.
    */
   url?: string | undefined;
-  /** If `true`, text buffer (e.g. for subtitles) is enabled. */
-  hasText: boolean;
+  /** The resolved playback support for this content. */
+  playbackSupport: {
+    /**
+     * If `true`, MSE API should be used in the core part of the RxPlayer when
+     * relying on a WebWorker.
+     * If `false`, they should be relied on on main thread.
+     *
+     * This might depend on both browser capabilities and preferences. It is
+     * assumed that the caller perform all those checks, the core won't check
+     * again the validity of this value.
+     */
+    mseInWorker: boolean;
+    /**
+     * If `true`, the right environment **and** features are present to be able
+     * to support text tracks.
+     */
+    textTrack: boolean;
+    /**
+     * If `true`, the right environment **and** features are present to be able
+     * to support video tracks.
+     * This includes a video element tag.
+     */
+    videoTrack: boolean;
+  };
   /**
    * The type of "transport" wanted, e.g. "dash" or "smooth".
    */
@@ -154,16 +166,6 @@ export interface IContentInitializationData {
   manifestRetryOptions: Omit<IManifestFetcherSettings, "cmcdDataBuilder">;
   /** Options relative to the fetching of media segments. */
   segmentRetryOptions: ISegmentQueueCreatorBackoffOptions;
-  /**
-   * If `true`, MSE API should be used in the core part of the RxPlayer when
-   * relying on a WebWorker.
-   * If `false`, they should be relied on on main thread.
-   *
-   * This might depend on both browser capabilities and preferences. It is
-   * assumed that the caller perform all those checks, the core won't check
-   * again the validity of this value.
-   */
-  useMseInWorker: boolean;
 }
 
 export interface ILogLevelUpdateMessage {
