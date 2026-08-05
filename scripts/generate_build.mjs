@@ -73,15 +73,13 @@ export default async function generateBuild(options = {}) {
     }
 
     console.log(" 👷 Bundling worker files...");
-    await Promise.all([
-      runBundler(WORKER_IN_FILE, {
-        watch: false,
-        minify: !devMode,
-        outfile: WORKER_OUT_FILE,
-        production: !devMode,
-        silent: true,
-      }),
-    ]);
+    await runBundler(WORKER_IN_FILE, {
+      watch: false,
+      minify: !devMode,
+      outfile: WORKER_OUT_FILE,
+      production: !devMode,
+      silent: true,
+    });
 
     console.log(" 🤖 Generating embedded code...");
     await generateEmbeds({ noWasm });
@@ -147,7 +145,7 @@ async function compile(opts) {
       // Transpile the CommonJS directory from ES2017 to ES5 using swc
       console.log(" 🔄 Transpiling CommonJS files to ES5...");
       await spawnShellProm(
-        `npx swc dist/commonjs -d dist/commonjs --config jsc.target=es5 --config module.type=commonjs --quiet`,
+        `npx swc dist/commonjs -d dist --strip-leading-paths --config jsc.target=es5 --config module.type=commonjs --quiet`,
         /** @param {number|null} code */
         (code) => new Error(`swc transpilation process exited with code ${code}`),
       );
