@@ -299,9 +299,7 @@ export interface IPushChunkInfos<T> {
 
 /** "Operations" scheduled by a SegmentSink. */
 export type ISBOperation<T> =
-  | IPushOperation<T>
-  | IRemoveOperation
-  | ISignalCompleteSegmentOperation;
+  IPushOperation<T> | IRemoveOperation | ISignalCompleteSegmentOperation;
 
 /**
  * Enum used by a SegmentSink as a discriminant in its queue of

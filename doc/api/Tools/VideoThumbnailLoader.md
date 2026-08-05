@@ -31,9 +31,7 @@ import VideoThumbnailLoader, {
 } from "rx-player/experimental/tools/VideoThumbnailLoader";
 import RxPlayer from "rx-player";
 
-const player = new RxPlayer({
-  /* some options */
-});
+const player = new RxPlayer({/* some options */});
 
 // Link logic to handle DASH segments
 VideoThumbnailLoader.addLoader(DASH_LOADER);
@@ -44,9 +42,7 @@ const thumbnailVideoElement = document.createElement("video");
 // Link VideoThumbnailLoader to the RxPlayer instance
 const videoThumbnailLoader = new VideoThumbnailLoader(thumbnailVideoElement, player);
 
-player.loadVideo({
-  /* some options */
-});
+player.loadVideo({/* some options */});
 
 // Ask for the VideoThumbnailLoader to fetch a thumbnail for the current
 // content that should be displayed at presentation time = 200 seconds.

@@ -213,5 +213,4 @@ export interface IPersistentSessionRecoveryEvent {
 }
 
 export type ICreateSessionEvent =
-  | INewSessionCreatedEvent
-  | IPersistentSessionRecoveryEvent;
+  INewSessionCreatedEvent | IPersistentSessionRecoveryEvent;

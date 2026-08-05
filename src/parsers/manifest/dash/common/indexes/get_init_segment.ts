@@ -28,8 +28,7 @@ export default function getInitSegment(
   index: {
     timescale: number;
     initialization?:
-      | { url: string | null; range?: [number, number] | undefined }
-      | undefined;
+      { url: string | null; range?: [number, number] | undefined } | undefined;
     indexRange?: [number, number] | undefined;
     indexTimeOffset: number;
   },

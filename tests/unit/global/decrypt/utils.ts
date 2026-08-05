@@ -148,8 +148,7 @@ export class MediaKeySessionImpl extends EventEmitter<Record<string, unknown>> {
   public readonly sessionId: string;
   public onkeystatuseschange: ((this: MediaKeySessionImpl, ev: Event) => unknown) | null;
   public onmessage:
-    | ((this: MediaKeySessionImpl, ev: MediaKeyMessageEvent) => unknown)
-    | null;
+    ((this: MediaKeySessionImpl, ev: MediaKeyMessageEvent) => unknown) | null;
 
   private _currentKeyId: number;
   private _close?: () => void;

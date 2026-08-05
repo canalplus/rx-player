@@ -76,10 +76,7 @@ export interface ISerializedRequestError {
 }
 
 export type IRequestErrorType =
-  | "TIMEOUT"
-  | "ERROR_EVENT"
-  | "PARSE_ERROR"
-  | "ERROR_HTTP_CODE";
+  "TIMEOUT" | "ERROR_EVENT" | "PARSE_ERROR" | "ERROR_HTTP_CODE";
 
 const RequestErrorTypes: Record<IRequestErrorType, IRequestErrorType> = {
   TIMEOUT: "TIMEOUT",

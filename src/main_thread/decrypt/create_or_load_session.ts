@@ -140,6 +140,4 @@ export interface ILoadedPersistentSessionEvent {
 
 /** Every possible result returned by `createOrLoadSession`. */
 export type ICreateOrLoadSessionResult =
-  | ICreatedSession
-  | ILoadedOpenSession
-  | ILoadedPersistentSessionEvent;
+  ICreatedSession | ILoadedOpenSession | ILoadedPersistentSessionEvent;

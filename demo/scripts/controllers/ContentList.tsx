@@ -41,9 +41,7 @@ const HAS_EME_APIs =
   typeof (
     HTMLVideoElement.prototype as HTMLVideoElement & {
       webkitGenerateKeyRequest?:
-        | ((keyType: string, initData: ArrayBuffer) => void)
-        | null
-        | undefined;
+        ((keyType: string, initData: ArrayBuffer) => void) | null | undefined;
     }
   ).webkitGenerateKeyRequest === "function";
 

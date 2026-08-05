@@ -10,13 +10,9 @@ const doc: Document & {
 type ICompatHTMLElement = HTMLElement & {
   msRequestFullscreen?: typeof HTMLElement.prototype.requestFullscreen | null | undefined;
   mozRequestFullScreen?:
-    | typeof HTMLElement.prototype.requestFullscreen
-    | null
-    | undefined;
+    typeof HTMLElement.prototype.requestFullscreen | null | undefined;
   webkitRequestFullscreen?:
-    | ((x: unknown) => Promise<unknown> | undefined | null)
-    | null
-    | undefined;
+    ((x: unknown) => Promise<unknown> | undefined | null) | null | undefined;
 };
 
 /**

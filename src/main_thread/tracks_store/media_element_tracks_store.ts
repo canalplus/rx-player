@@ -459,9 +459,7 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
    * @returns {Object|undefined|null}
    */
   private _getCurrentAudioTrack():
-    | { track: IAudioTrack; nativeTrack: ICompatAudioTrack }
-    | undefined
-    | null {
+    { track: IAudioTrack; nativeTrack: ICompatAudioTrack } | undefined | null {
     if (this._nativeAudioTracks === undefined) {
       return undefined;
     }
@@ -481,9 +479,7 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
    * @returns {Object|undefined|null}
    */
   private _getCurrentVideoTrack():
-    | { track: IVideoTrack; nativeTrack: ICompatVideoTrack }
-    | undefined
-    | null {
+    { track: IVideoTrack; nativeTrack: ICompatVideoTrack } | undefined | null {
     if (this._nativeVideoTracks === undefined) {
       return undefined;
     }
@@ -503,9 +499,7 @@ export default class MediaElementTracksStore extends EventEmitter<IMediaElementT
    * @returns {Object|undefined|null}
    */
   private _getCurrentTextTrack():
-    | { track: ITextTrack; nativeTrack: TextTrack }
-    | undefined
-    | null {
+    { track: ITextTrack; nativeTrack: TextTrack } | undefined | null {
     if (this._nativeTextTracks === undefined) {
       return undefined;
     }

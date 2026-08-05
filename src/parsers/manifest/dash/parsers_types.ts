@@ -20,8 +20,7 @@ export type { IMPDParserArguments } from "./common/index.ts";
 
 /** Response returned by a DASH MPD parser. */
 export type IDashParserResponse<T extends string | ArrayBuffer> =
-  | IDashParserNeedsResources<T>
-  | IDashParserResponseDone;
+  IDashParserNeedsResources<T> | IDashParserResponseDone;
 
 /** Response when the MPD parser has been able to parse the whole MPD. */
 export interface IDashParserResponseDone {
@@ -61,8 +60,7 @@ export interface IDashParserNeedsResources<T extends string | ArrayBuffer> {
 }
 
 export type IResponseData<T> =
-  | { success: true; data: T }
-  | { success: false; error: Error };
+  { success: true; data: T } | { success: false; error: Error };
 
 /** Format a loaded resource should take. */
 export interface ILoadedResource<T extends string | ArrayBuffer> {

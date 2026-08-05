@@ -842,7 +842,7 @@ function rankSamples(list) {
     };
   });
 
-  for (let i = 0; i < withRank.length; ) {
+  for (let i = 0; i < withRank.length;) {
     let count = 1;
     let total = withRank[i].rank;
 

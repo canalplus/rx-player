@@ -72,8 +72,7 @@ export interface ICreateMediaKeySystemAccessEvent {
 }
 
 export type IFoundMediaKeySystemAccessEvent =
-  | IReuseMediaKeySystemAccessEvent
-  | ICreateMediaKeySystemAccessEvent;
+  IReuseMediaKeySystemAccessEvent | ICreateMediaKeySystemAccessEvent;
 
 interface IKeySystemType {
   /**

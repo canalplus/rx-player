@@ -27,9 +27,8 @@ import {
 } from "../../../../../mocks/playback_observer.ts";
 import { DummySegmentSink } from "../../../../../mocks/segment_sinks.ts";
 
-const mockAppendSegmentToBuffer = vi.hoisted(
-  (): Mock<typeof appendSegmentToBuffer> =>
-    vi.fn((): Promise<IRange[]> => Promise.resolve([])),
+const mockAppendSegmentToBuffer = vi.hoisted((): Mock<typeof appendSegmentToBuffer> =>
+  vi.fn((): Promise<IRange[]> => Promise.resolve([])),
 );
 vi.mock(
   "../../../../../../../src/core/stream/representation/utils/append_segment_to_buffer",

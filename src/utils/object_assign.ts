@@ -30,10 +30,9 @@ type MergeObjects<T extends object, S extends object> = {
       ? T[K]
       : never;
 } & {
-  [K in Exclude<
-    keyof T | keyof S,
-    OptionalPropertyOfTNotInS<T, S> | OptionalProperty<T>
-  >]: K extends keyof S ? S[K] : K extends keyof T ? T[K] : never;
+  [
+    K in Exclude<keyof T | keyof S, OptionalPropertyOfTNotInS<T, S> | OptionalProperty<T>>
+  ]: K extends keyof S ? S[K] : K extends keyof T ? T[K] : never;
 };
 
 type OptionalProperty<T> = Exclude<

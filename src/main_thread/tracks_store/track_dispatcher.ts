@@ -180,8 +180,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
     function updateReferenceIfNeeded(): void {
       const repSettings = trackInfo.lockedRepresentations.getValue();
       let switchingMode:
-        | IAudioRepresentationsSwitchingMode
-        | IVideoRepresentationsSwitchingMode;
+        IAudioRepresentationsSwitchingMode | IVideoRepresentationsSwitchingMode;
 
       /** Representations for which a `RepresentationStream` can be created. */
       let playableRepresentations;

@@ -760,10 +760,7 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
   /**
    * Returns an iterator over the key/status pairs in insertion order.
    */
-  public *entries(): MediaKeyStatusMapIterator<[
-    BufferSource,
-    MediaKeyStatus,
-  ]> {
+  public *entries(): MediaKeyStatusMapIterator<[BufferSource, MediaKeyStatus]> {
     for (const [key, value] of this._innerMap) {
       const toLocalFormat = kidToPlatformKid(
         this._keySystem,
@@ -794,10 +791,7 @@ export class DummyMediaKeyStatusMap implements MediaKeyStatusMap {
   /**
    * Returns an iterator over the key/status pairs in insertion order.
    */
-  public [Symbol.iterator](): MediaKeyStatusMapIterator<[
-    BufferSource,
-    MediaKeyStatus,
-  ]> {
+  public [Symbol.iterator](): MediaKeyStatusMapIterator<[BufferSource, MediaKeyStatus]> {
     return this.entries();
   }
 
