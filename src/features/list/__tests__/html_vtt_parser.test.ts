@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import HTMLTextDisplayer from "../../../main_thread/text_displayer/html";
+import HTMLTextDisplayer from "../../../main_thread/text_displayer/html/index.ts";
 import {
   parseWebVTTMp4,
   parseWebVTTPlainText,
-} from "../../../parsers/texttracks/webvtt//html";
-import type { IFeaturesObject } from "../../types";
-import addHTMLVTTFeature from "../html_vtt_parser";
+} from "../../../parsers/texttracks/webvtt//html/index.ts";
+import type { IFeaturesObject } from "../../types.ts";
+import addHTMLVTTFeature from "../html_vtt_parser.ts";
 
 describe("Features list - HTML VTT Parser", () => {
   it("should add an HTML VTT Parser in the current features", () => {

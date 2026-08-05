@@ -1,11 +1,11 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import getEmeApiImplementation from "../../../compat/eme";
-import type { IEmeApiImplementation } from "../../../compat/eme";
-import type { IKeySystemOption } from "../../../public_types";
-import TaskCanceller from "../../../utils/task_canceller";
-import getMediaKeySystemAccess from "../find_key_system";
-import LoadedSessionsStore from "../utils/loaded_sessions_store";
-import mediaKeysAttacher from "../utils/media_keys_attacher";
+import getEmeApiImplementation from "../../../compat/eme/index.ts";
+import type { IEmeApiImplementation } from "../../../compat/eme/index.ts";
+import type { IKeySystemOption } from "../../../public_types.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import getMediaKeySystemAccess from "../find_key_system.ts";
+import LoadedSessionsStore from "../utils/loaded_sessions_store.ts";
+import mediaKeysAttacher from "../utils/media_keys_attacher.ts";
 
 const mocks = vi.hoisted(() => {
   return {

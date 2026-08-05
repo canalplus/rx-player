@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html/index.ts";
 import {
   parseWebVTTMp4,
   parseWebVTTPlainText,
-} from "../../parsers/texttracks/webvtt//html";
-import type { IFeaturesObject } from "../types";
+} from "../../parsers/texttracks/webvtt//html/index.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to parse WebVTT text tracks in an HTML textrack mode.

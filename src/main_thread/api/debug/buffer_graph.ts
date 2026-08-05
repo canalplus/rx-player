@@ -1,5 +1,5 @@
-import type { IBufferedChunkSnapshot } from "../../../core/segment_sinks/segment_sinks_store";
-import type { IRepresentationMetadata } from "../../../manifest";
+import type { IBufferedChunkSnapshot } from "../../../core/segment_sinks/segment_sinks_store.ts";
+import type { IRepresentationMetadata } from "../../../manifest/index.ts";
 
 const BUFFER_WIDTH_IN_SECONDS = 30 * 60;
 

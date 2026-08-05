@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import type { IInbandEvent } from "../core/types";
-import type { IManifest, ISegment } from "../manifest";
-import type { IThumbnailTrackMetadata } from "../manifest/types";
-import type { ICdnMetadata } from "../parsers/manifest";
+import type { IInbandEvent } from "../core/types.ts";
+import type { IManifest, ISegment } from "../manifest/index.ts";
+import type { IThumbnailTrackMetadata } from "../manifest/types.ts";
+import type { ICdnMetadata } from "../parsers/manifest/index.ts";
 import type {
   ITrackType,
   ILoadedManifestFormat,
@@ -26,9 +26,9 @@ import type {
   ISegmentLoader as ICustomSegmentLoader,
   IServerSyncInfos,
   ICmcdPayload,
-} from "../public_types";
-import type { CancellationSignal } from "../utils/task_canceller";
-import type TaskCanceller from "../utils/task_canceller";
+} from "../public_types.ts";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
+import type TaskCanceller from "../utils/task_canceller.ts";
 
 /**
  * Interface returned by any transport implementation.

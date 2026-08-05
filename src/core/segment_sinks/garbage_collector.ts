@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { IRange } from "../../utils/ranges";
-import { getInnerAndOuterRanges } from "../../utils/ranges";
-import type { IReadOnlySharedReference } from "../../utils/reference";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import TaskCanceller from "../../utils/task_canceller";
-import type { IStreamOrchestratorPlaybackObservation } from "../stream";
-import type { SegmentSink } from "./implementations";
+import log from "../../log.ts";
+import type { IReadOnlyPlaybackObserver } from "../../playback_observer/index.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { IRange } from "../../utils/ranges.ts";
+import { getInnerAndOuterRanges } from "../../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import type { IStreamOrchestratorPlaybackObservation } from "../stream/index.ts";
+import type { SegmentSink } from "./implementations/index.ts";
 
 export interface IGarbageCollectorArgument {
   /** SegmentSink implementation */

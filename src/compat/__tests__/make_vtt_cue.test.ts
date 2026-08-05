@@ -1,7 +1,7 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import log from "../../log";
-import globalScope from "../../utils/global_scope";
-import makeCue from "../make_vtt_cue";
+import log from "../../log.ts";
+import globalScope from "../../utils/global_scope.ts";
+import makeCue from "../make_vtt_cue.ts";
 
 const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
   /* noop */

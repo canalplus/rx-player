@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type Adaptation from "./adaptation";
-import type Period from "./period";
-import type Representation from "./representation";
-import type { ISegment } from "./representation_index";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type Adaptation from "./adaptation.ts";
+import type Period from "./period.ts";
+import type Representation from "./representation.ts";
+import type { ISegment } from "./representation_index/index.ts";
 
 /** All information needed to identify a given segment. */
 export interface IBufferedChunkInfos {

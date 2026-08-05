@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import assert from "../../../../utils/assert";
-import { concat } from "../../../../utils/byte_parsing";
+import assert from "../../../../utils/assert.ts";
+import { concat } from "../../../../utils/byte_parsing.ts";
 import {
   boxTypeToFourCC,
   getBox,
@@ -10,7 +10,7 @@ import {
   getChildBox,
   getNextBoxOffsets,
   getUuidContent,
-} from "../get_box";
+} from "../get_box.ts";
 
 const logWarn = vi.hoisted(() => vi.fn());
 vi.mock("../../../../log", () => ({

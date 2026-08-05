@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import globalScope from "../../../../../utils/global_scope";
-import probeMediaDisplayInfos from "../../probers/mediaDisplayInfos";
+import globalScope from "../../../../../utils/global_scope.ts";
+import probeMediaDisplayInfos from "../../probers/mediaDisplayInfos.ts";
 
 describe("MediaCapabilitiesProber probers probeMediaDisplayInfos", () => {
   it("should throw if matchMedia is undefined", async () => {

@@ -17,12 +17,12 @@
 // XML-Schema
 // <http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd>
 
-import log from "../../../../../log";
-import { base64ToBytes } from "../../../../../utils/base64";
-import isNonEmptyString from "../../../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import { toContentString, type ITNode } from "../../../../../utils/xml-parser";
-import type { IScheme } from "../../node_parser_types";
+import log from "../../../../../log.ts";
+import { base64ToBytes } from "../../../../../utils/base64.ts";
+import isNonEmptyString from "../../../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import { toContentString, type ITNode } from "../../../../../utils/xml-parser.ts";
+import type { IScheme } from "../../node_parser_types.ts";
 
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;

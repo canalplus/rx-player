@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
 
 /** Generic way to represent segments in an index of segments. */
 export interface IIndexSegment {

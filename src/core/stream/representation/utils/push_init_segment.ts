@@ -20,17 +20,17 @@ import type {
   ISegment,
   IPeriod,
   IRepresentation,
-} from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
-import objectAssign from "../../../../utils/object_assign";
-import type { IReadOnlySharedReference } from "../../../../utils/reference";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import type { IPushedChunkData, SegmentSink } from "../../../segment_sinks";
+} from "../../../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer/index.ts";
+import objectAssign from "../../../../utils/object_assign.ts";
+import type { IReadOnlySharedReference } from "../../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import type { IPushedChunkData, SegmentSink } from "../../../segment_sinks/index.ts";
 import type {
   IRepresentationStreamPlaybackObservation,
   IStreamEventAddedSegmentPayload,
-} from "../types";
-import appendSegmentToBuffer from "./append_segment_to_buffer";
+} from "../types.ts";
+import appendSegmentToBuffer from "./append_segment_to_buffer.ts";
 
 /**
  * Push the initialization segment to the SegmentSink.

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { OtherError } from "../../errors";
-import { findCompleteBox } from "../../parsers/containers/isobmff";
+import { OtherError } from "../../errors/index.ts";
+import { findCompleteBox } from "../../parsers/containers/isobmff/index.ts";
 
 /**
  * Check if an ISOBMFF segment has all the right box needed to be decoded.

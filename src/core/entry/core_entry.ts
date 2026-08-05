@@ -1,47 +1,51 @@
-import config from "../../config";
-import { MediaError, OtherError } from "../../errors";
-import features from "../../features";
-import log from "../../log";
+import config from "../../config.ts";
+import { MediaError, OtherError } from "../../errors/index.ts";
+import features from "../../features/index.ts";
+import log from "../../log.ts";
 import type {
   IContentInitializationData,
   IMainThreadMessage,
   IReferenceUpdateMessage,
   IThumbnailDataRequestMainMessage,
-} from "../../main_thread/types";
-import { MainThreadMessageType } from "../../main_thread/types";
-import Manifest, { Adaptation, Period, Representation } from "../../manifest/classes";
-import { ObservationPosition } from "../../playback_observer";
-import type { ICorePlaybackObservation } from "../../playback_observer/core_playback_observer";
-import CorePlaybackObserver from "../../playback_observer/core_playback_observer";
-import type { IPlayerError, ITrackType } from "../../public_types";
-import arrayFind from "../../utils/array_find";
-import assert, { assertUnreachable } from "../../utils/assert";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { ILogFormat, ILoggerLevel } from "../../utils/logger";
-import { scaleTimestamp } from "../../utils/monotonic_timestamp";
-import objectAssign from "../../utils/object_assign";
-import type { IReadOnlySharedReference } from "../../utils/reference";
-import SharedReference from "../../utils/reference";
-import TaskCanceller from "../../utils/task_canceller";
+} from "../../main_thread/types.ts";
+import { MainThreadMessageType } from "../../main_thread/types.ts";
+import Manifest, {
+  Adaptation,
+  Period,
+  Representation,
+} from "../../manifest/classes/index.ts";
+import type { ICorePlaybackObservation } from "../../playback_observer/core_playback_observer.ts";
+import CorePlaybackObserver from "../../playback_observer/core_playback_observer.ts";
+import { ObservationPosition } from "../../playback_observer/index.ts";
+import type { IPlayerError, ITrackType } from "../../public_types.ts";
+import arrayFind from "../../utils/array_find.ts";
+import assert, { assertUnreachable } from "../../utils/assert.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { ILogFormat, ILoggerLevel } from "../../utils/logger.ts";
+import { scaleTimestamp } from "../../utils/monotonic_timestamp.ts";
+import objectAssign from "../../utils/object_assign.ts";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import SharedReference from "../../utils/reference.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
 import type {
   INeedsMediaSourceReloadPayload,
   IStreamOrchestratorCallbacks,
   IStreamStatusPayload,
-} from "../stream";
-import StreamOrchestrator from "../stream";
+} from "../stream/index.ts";
+import StreamOrchestrator from "../stream/index.ts";
 import type {
   ICoreMessage,
   IDiscontinuityUpdateCoreMessagePayload,
   IResolutionInfo,
-} from "../types";
-import { CoreMessageType } from "../types";
-import ContentPreparer from "./content_preparer";
-import createContentTimeBoundariesObserver from "./create_content_time_boundaries_observer";
-import type { IFreezeResolution } from "./FreezeResolver";
-import getBufferedDataPerMediaBuffer from "./get_buffered_data_per_media_buffer";
-import getThumbnailData from "./get_thumbnail_data";
-import type { ICorePlugins } from "./utils";
-import { formatErrorForSender, synchronizeSegmentSinksOnObservation } from "./utils";
+} from "../types.ts";
+import { CoreMessageType } from "../types.ts";
+import ContentPreparer from "./content_preparer.ts";
+import createContentTimeBoundariesObserver from "./create_content_time_boundaries_observer.ts";
+import type { IFreezeResolution } from "./FreezeResolver.ts";
+import getBufferedDataPerMediaBuffer from "./get_buffered_data_per_media_buffer.ts";
+import getThumbnailData from "./get_thumbnail_data.ts";
+import type { ICorePlugins } from "./utils.ts";
+import { formatErrorForSender, synchronizeSegmentSinksOnObservation } from "./utils.ts";
 
 export type IMessageReceiverCallback = (evt: { data: IMainThreadMessage }) => void;
 

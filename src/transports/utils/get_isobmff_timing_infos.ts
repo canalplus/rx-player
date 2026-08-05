@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import type { ISegment } from "../../manifest";
+import log from "../../log.ts";
+import type { ISegment } from "../../manifest/index.ts";
 import {
   getDurationFromTrun,
   getTrackFragmentDecodeTime,
-} from "../../parsers/containers/isobmff";
-import type { IChunkTimeInfo } from "../types";
+} from "../../parsers/containers/isobmff/index.ts";
+import type { IChunkTimeInfo } from "../types.ts";
 
 /**
  * Get precize start and duration of a chunk.

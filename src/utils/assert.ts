@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "./is_null_or_undefined";
+import isNullOrUndefined from "./is_null_or_undefined.ts";
 
 /**
  * Error due to an abnormal assertion fails.

@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import { canRelyOnRequestMediaKeySystemAccess } from "../../../compat/can_rely_on_request_media_key_system_access";
-import getEmeApiImplementation from "../../../compat/eme";
+import { canRelyOnRequestMediaKeySystemAccess } from "../../../compat/can_rely_on_request_media_key_system_access.ts";
+import getEmeApiImplementation from "../../../compat/eme/index.ts";
 import {
   DUMMY_PLAY_READY_HEADER,
   generatePlayReadyInitData,
-} from "../../../compat/generate_init_data";
-import log from "./log";
-import probeDecodingInfos from "./probers/decodingInfo";
-import probeHDCPPolicy from "./probers/HDCPPolicy";
-import probeTypeWithFeatures from "./probers/isTypeSupportedWithFeatures";
-import probeContentType from "./probers/mediaContentType";
-import probeMatchMedia from "./probers/mediaDisplayInfos";
+} from "../../../compat/generate_init_data.ts";
+import log from "./log.ts";
+import probeDecodingInfos from "./probers/decodingInfo.ts";
+import probeHDCPPolicy from "./probers/HDCPPolicy.ts";
+import probeTypeWithFeatures from "./probers/isTypeSupportedWithFeatures.ts";
+import probeContentType from "./probers/mediaContentType.ts";
+import probeMatchMedia from "./probers/mediaDisplayInfos.ts";
 import type {
   IDisplayConfiguration,
   IMediaConfiguration,
   IMediaKeySystemConfiguration,
-} from "./types";
+} from "./types.ts";
 
 /**
  * A set of API to probe media capabilites.

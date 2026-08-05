@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
-import type { IHTMLCue } from "../utils";
+import type { IHTMLCue } from "../utils.ts";
 import {
   areNearlyEqual,
   getCuesAfter,
   getCuesBefore,
   removeCuesInfosBetween,
   areCuesStartNearlyEqual,
-} from "../utils";
+} from "../utils.ts";
 
 describe("HTML Text buffer utils - getCuesBefore", () => {
   it("should get the right cues when time is the start of a cue", () => {

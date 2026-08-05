@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { createBoxWithChildren } from "../../../parsers/containers/isobmff";
+import { createBoxWithChildren } from "../../../parsers/containers/isobmff/index.ts";
 import {
   createENCABox,
   createESDSBox,
@@ -24,9 +24,9 @@ import {
   createSMHDBox,
   createSTSDBox,
   createTENCBox,
-} from "./create_boxes";
-import createInitSegment from "./create_init_segment";
-import getAacesHeader from "./get_aaces_header";
+} from "./create_boxes.ts";
+import createInitSegment from "./create_init_segment.ts";
+import getAacesHeader from "./get_aaces_header.ts";
 
 /**
  * Return full audio initialization segment as Uint8Array.

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import canPatchOutPsshBox from "../../../compat/can_patch_out_pssh";
-import log from "../../../log";
-import sliceUint8Array from "../../../utils/slice_uint8array";
-import { bytesToHex } from "../../../utils/string_parsing";
-import { getBoxContent, getBoxOffsets } from "./get_box";
+import canPatchOutPsshBox from "../../../compat/can_patch_out_pssh.ts";
+import log from "../../../log.ts";
+import sliceUint8Array from "../../../utils/slice_uint8array.ts";
+import { bytesToHex } from "../../../utils/string_parsing.ts";
+import { getBoxContent, getBoxOffsets } from "./get_box.ts";
 
 /** Information related to a PSSH box. */
 export interface IISOBMFFPSSHInfo {

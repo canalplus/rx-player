@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import globalScope from "../../utils/global_scope";
+import globalScope from "../../utils/global_scope.ts";
 
 // FIXME: fix that one. Mocking properties used in global scope doesn't seem to
 // work: each `importActual` does not seem to trigger a file execution, only the

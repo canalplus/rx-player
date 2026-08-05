@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import type { IParsedRepresentation } from "../../../parsers/manifest";
-import CodecSupportCache from "../codec_support_cache";
-import Representation from "../representation";
-import type { IRepresentationIndex } from "../representation_index";
+import type { IParsedRepresentation } from "../../../parsers/manifest/index.ts";
+import CodecSupportCache from "../codec_support_cache.ts";
+import Representation from "../representation.ts";
+import type { IRepresentationIndex } from "../representation_index/index.ts";
 
 const minimalIndex: IRepresentationIndex = {
   getInitSegment() {

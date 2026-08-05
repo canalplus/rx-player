@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { IManifestMetadata } from "../../../../manifest";
+import type { IManifestMetadata } from "../../../../manifest/index.ts";
 import type {
   IPlaybackObservation,
   IReadOnlyPlaybackObserver,
-} from "../../../../playback_observer";
-import { SeekingState } from "../../../../playback_observer";
-import SharedReference from "../../../../utils/reference";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import TaskCanceller from "../../../../utils/task_canceller";
-import StreamEventsEmitter from "../stream_events_emitter/stream_events_emitter";
+} from "../../../../playback_observer/index.ts";
+import { SeekingState } from "../../../../playback_observer/index.ts";
+import SharedReference from "../../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../../utils/task_canceller.ts";
+import StreamEventsEmitter from "../stream_events_emitter/stream_events_emitter.ts";
 
 describe("init - StreamEventsEmitter", () => {
   afterEach(() => {

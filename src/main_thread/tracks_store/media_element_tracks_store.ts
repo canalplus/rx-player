@@ -26,9 +26,9 @@ import type {
   ICompatVideoTrack,
   ICompatVideoTrackList,
   IMediaElement,
-} from "../../compat/browser_compatibility_types";
-import enableAudioTrack from "../../compat/enable_audio_track";
-import type { IRepresentation } from "../../manifest";
+} from "../../compat/browser_compatibility_types.ts";
+import enableAudioTrack from "../../compat/enable_audio_track.ts";
+import type { IRepresentation } from "../../manifest/index.ts";
 import type {
   IAudioTrack,
   ITextTrack,
@@ -36,11 +36,11 @@ import type {
   IAvailableVideoTrack,
   IAvailableAudioTrack,
   IAvailableTextTrack,
-} from "../../public_types";
-import EventEmitter from "../../utils/event_emitter";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import normalizeLanguage from "../../utils/languages";
-import TaskCanceller from "../../utils/task_canceller";
+} from "../../public_types.ts";
+import EventEmitter from "../../utils/event_emitter.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import normalizeLanguage from "../../utils/languages/index.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
 
 /** Events emitted by the MediaElementTracksStore. */
 interface IMediaElementTracksStoreEvents {

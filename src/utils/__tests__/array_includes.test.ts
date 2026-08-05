@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach, it, expect } from "vitest";
-import arrayIncludes from "../array_includes";
+import arrayIncludes from "../array_includes.ts";
 
 // eslint-disable-next-line no-restricted-properties
 const initialArrayIncludes = Array.prototype.includes;

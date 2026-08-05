@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getIndexSegmentEnd } from "../../utils/index_helpers";
+import { getIndexSegmentEnd } from "../../utils/index_helpers.ts";
 
 export interface IIndexSegment {
   start: number;

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import configHandler from "../../../../../config";
-import getSegmentPriority from "../get_segment_priority";
+import configHandler from "../../../../../config.ts";
+import getSegmentPriority from "../get_segment_priority.ts";
 
 describe("getSegmentPriority", () => {
   const originalConfig = configHandler.getCurrent();

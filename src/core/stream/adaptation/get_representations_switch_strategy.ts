@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import type { IAdaptation, IPeriod } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
-import arrayIncludes from "../../../utils/array_includes";
-import type { IRange } from "../../../utils/ranges";
-import { excludeFromRanges, insertInto } from "../../../utils/ranges";
-import type { SegmentSink } from "../../segment_sinks";
+import config from "../../../config.ts";
+import type { IAdaptation, IPeriod } from "../../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import { excludeFromRanges, insertInto } from "../../../utils/ranges.ts";
+import type { SegmentSink } from "../../segment_sinks/index.ts";
 import {
   getFirstSegmentAfterPeriod,
   getLastSegmentBeforePeriod,
   SegmentSinkOperation,
-} from "../../segment_sinks";
+} from "../../segment_sinks/index.ts";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamPlaybackObservation,
-} from "../representation";
+} from "../representation/index.ts";
 
 export default function getRepresentationsSwitchingStrategy(
   period: IPeriod,

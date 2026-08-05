@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import type { ISegmentFetcher } from "../../../core/fetchers/segment/segment_fetcher";
-import createSegmentFetcher from "../../../core/fetchers/segment/segment_fetcher";
-import log from "../../../log";
-import type { IRxPlayer } from "../../../main_thread/types";
-import type { ISegment } from "../../../manifest";
-import Manifest from "../../../manifest/classes";
-import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
-import arrayFind from "../../../utils/array_find";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import objectAssign from "../../../utils/object_assign";
-import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
-import loadAndPushSegment from "./load_and_push_segment";
-import prepareSourceBuffer from "./prepare_source_buffer";
-import removeBufferAroundTime from "./remove_buffer_around_time";
-import type { IContentInfo, ILoaders } from "./types";
-import VideoThumbnailLoaderError from "./video_thumbnail_loader_error";
+import config from "../../../config.ts";
+import type { ISegmentFetcher } from "../../../core/fetchers/segment/segment_fetcher.ts";
+import createSegmentFetcher from "../../../core/fetchers/segment/segment_fetcher.ts";
+import log from "../../../log.ts";
+import type { IRxPlayer } from "../../../main_thread/types.ts";
+import Manifest from "../../../manifest/classes/index.ts";
+import type { ISegment } from "../../../manifest/index.ts";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface.ts";
+import arrayFind from "../../../utils/array_find.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import TaskCanceller, { CancellationError } from "../../../utils/task_canceller.ts";
+import loadAndPushSegment from "./load_and_push_segment.ts";
+import prepareSourceBuffer from "./prepare_source_buffer.ts";
+import removeBufferAroundTime from "./remove_buffer_around_time.ts";
+import type { IContentInfo, ILoaders } from "./types.ts";
+import VideoThumbnailLoaderError from "./video_thumbnail_loader_error.ts";
 
 const MIN_NEEDED_DATA_AFTER_TIME = 2;
 
@@ -444,5 +444,5 @@ interface IPendingRequestInfo {
   canceller: TaskCanceller;
 }
 
-export { default as DASH_LOADER } from "./features/dash";
-export { default as MPL_LOADER } from "./features/metaplaylist";
+export { default as DASH_LOADER } from "./features/dash.ts";
+export { default as MPL_LOADER } from "./features/metaplaylist.ts";

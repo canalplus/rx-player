@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import arrayFindIndex from "../../utils/array_find_index";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import getBufferLevels from "./utils/get_buffer_levels";
-import type { IRepresentationMaintainabilityScore } from "./utils/representation_score_calculator";
-import { ScoreConfidenceLevel } from "./utils/representation_score_calculator";
+import log from "../../log.ts";
+import arrayFindIndex from "../../utils/array_find_index.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp.ts";
+import getBufferLevels from "./utils/get_buffer_levels.ts";
+import type { IRepresentationMaintainabilityScore } from "./utils/representation_score_calculator.ts";
+import { ScoreConfidenceLevel } from "./utils/representation_score_calculator.ts";
 
 /**
  * Minimum amount of time, in milliseconds, during which we are blocked from

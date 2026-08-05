@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IPrivateInfos, ISegment } from "../../../../../manifest";
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { IEMSG } from "../../../../containers/isobmff";
+import type { IPrivateInfos, ISegment } from "../../../../../manifest/index.ts";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import type { IEMSG } from "../../../../containers/isobmff/index.ts";
 
 /**
  * Construct init segment for the given index.

@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-import { base64ToBytes } from "../../../../utils/base64";
-import { le2toi } from "../../../../utils/byte_parsing";
-import { bytesToHex, guidToUuid, utf16LEToStr } from "../../../../utils/string_parsing";
+import { base64ToBytes } from "../../../../utils/base64.ts";
+import { le2toi } from "../../../../utils/byte_parsing.ts";
+import {
+  bytesToHex,
+  guidToUuid,
+  utf16LEToStr,
+} from "../../../../utils/string_parsing.ts";
 
 /**
  * Parse PlayReady privateData to get its Hexa-coded KeyID.

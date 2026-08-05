@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { objectValues } from "../object_values";
+import { objectValues } from "../object_values.ts";
 
 describe("utils - objectValues", () => {
   it("should return the same thing than Object.values", () => {

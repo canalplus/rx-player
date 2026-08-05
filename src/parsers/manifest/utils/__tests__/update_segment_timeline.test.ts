@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import log from "../../../../log";
-import type { IIndexSegment } from "../index_helpers";
-import updateSegmentTimeline from "../update_segment_timeline";
+import log from "../../../../log.ts";
+import type { IIndexSegment } from "../index_helpers.ts";
+import updateSegmentTimeline from "../update_segment_timeline.ts";
 
 const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
   /* noop */

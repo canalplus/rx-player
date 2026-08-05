@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import shouldReloadMediaSourceOnDecipherabilityUpdate from "../should_reload_media_source_on_decipherability_update";
+import shouldReloadMediaSourceOnDecipherabilityUpdate from "../should_reload_media_source_on_decipherability_update.ts";
 
 describe("Compat - shouldReloadMediaSourceOnDecipherabilityUpdate", () => {
   it("should return true for an unknown key system", () => {

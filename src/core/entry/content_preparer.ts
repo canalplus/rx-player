@@ -1,35 +1,38 @@
-import features from "../../features";
-import log from "../../log";
-import type { IContentInitializationData } from "../../main_thread/types";
-import type { IManifest } from "../../manifest";
-import type { IMediaSourceInterface } from "../../mse";
-import MainMediaSourceInterface from "../../mse/main_media_source_interface";
-import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface";
-import type { IPlayerError } from "../../public_types";
-import idGenerator from "../../utils/id_generator";
-import type { CancellationError, CancellationSignal } from "../../utils/task_canceller";
-import TaskCanceller from "../../utils/task_canceller";
-import type { IRepresentationEstimator } from "../adaptive";
-import createAdaptiveRepresentationSelector from "../adaptive";
-import type { IRepresentationEstimatorThrottlers } from "../adaptive/adaptive_representation_selector";
-import CmcdDataBuilder from "../cmcd";
-import type { IManifestRefreshSettings } from "../fetchers";
-import { ManifestFetcher, SegmentQueueCreator } from "../fetchers";
-import CdnPrioritizer from "../fetchers/cdn_prioritizer";
-import createThumbnailFetcher from "../fetchers/thumbnails/thumbnail_fetcher";
-import type { IThumbnailFetcher } from "../fetchers/thumbnails/thumbnail_fetcher";
-import SegmentSinksStore from "../segment_sinks";
-import type { IAttachMediaSourceCoreMessagePayload, ICoreMessage } from "../types";
-import { CoreMessageType } from "../types";
-import CoreTextDisplayerInterface from "./core_text_displayer_interface";
-import FreezeResolver from "./FreezeResolver";
-import TrackChoiceSetter from "./track_choice_setter";
-import type { ICorePlugins } from "./utils";
+import features from "../../features/index.ts";
+import log from "../../log.ts";
+import type { IContentInitializationData } from "../../main_thread/types.ts";
+import type { IManifest } from "../../manifest/index.ts";
+import type { IMediaSourceInterface } from "../../mse/index.ts";
+import MainMediaSourceInterface from "../../mse/main_media_source_interface.ts";
+import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface.ts";
+import type { IPlayerError } from "../../public_types.ts";
+import idGenerator from "../../utils/id_generator.ts";
+import type {
+  CancellationError,
+  CancellationSignal,
+} from "../../utils/task_canceller.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import type { IRepresentationEstimatorThrottlers } from "../adaptive/adaptive_representation_selector.ts";
+import type { IRepresentationEstimator } from "../adaptive/index.ts";
+import createAdaptiveRepresentationSelector from "../adaptive/index.ts";
+import CmcdDataBuilder from "../cmcd/index.ts";
+import CdnPrioritizer from "../fetchers/cdn_prioritizer.ts";
+import type { IManifestRefreshSettings } from "../fetchers/index.ts";
+import { ManifestFetcher, SegmentQueueCreator } from "../fetchers/index.ts";
+import createThumbnailFetcher from "../fetchers/thumbnails/thumbnail_fetcher.ts";
+import type { IThumbnailFetcher } from "../fetchers/thumbnails/thumbnail_fetcher.ts";
+import SegmentSinksStore from "../segment_sinks/index.ts";
+import type { IAttachMediaSourceCoreMessagePayload, ICoreMessage } from "../types.ts";
+import { CoreMessageType } from "../types.ts";
+import CoreTextDisplayerInterface from "./core_text_displayer_interface.ts";
+import FreezeResolver from "./FreezeResolver.ts";
+import TrackChoiceSetter from "./track_choice_setter.ts";
+import type { ICorePlugins } from "./utils.ts";
 import {
   extractExternalPlugins,
   formatErrorForSender,
   updateCodecSupportInWorkerMode,
-} from "./utils";
+} from "./utils.ts";
 
 /** Function allowing to associate a unique identifier to all created `MediaSource` */
 const generateMediaSourceId = idGenerator();

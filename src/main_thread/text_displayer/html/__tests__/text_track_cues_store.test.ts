@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import TextTrackCuesStore from "../text_track_cues_store";
-import type { ICuesGroup } from "../utils";
+import TextTrackCuesStore from "../text_track_cues_store.ts";
+import type { ICuesGroup } from "../utils.ts";
 
 /**
  * Mocks document.createElement to simplify comparison of cuesElement by returning

@@ -1,31 +1,36 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import type { IAdaptation, IManifest, IRepresentation, IPeriod } from "../../../manifest";
 import {
   DummyManifest,
   DummyPeriod,
   DummyAdaptation,
   DummyRepresentation,
   createSegment,
-} from "../../../manifest/classes/__tests__/mocks";
+} from "../../../manifest/classes/__tests__/mocks.ts";
+import type {
+  IAdaptation,
+  IManifest,
+  IRepresentation,
+  IPeriod,
+} from "../../../manifest/index.ts";
 import {
   makeReadyOnlyPlaybackObserver,
   DummyObservationPosition,
-} from "../../../playback_observer/__tests__/mocks";
-import SharedReference from "../../../utils/reference";
-import TaskCanceller from "../../../utils/task_canceller";
-import type { IBufferType } from "../../segment_sinks";
+} from "../../../playback_observer/__tests__/mocks.ts";
+import SharedReference from "../../../utils/reference.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import type { IBufferType } from "../../segment_sinks/index.ts";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IRepresentationEstimatorPlaybackObservation,
-} from "../adaptive_representation_selector";
-import createAdaptiveRepresentationSelector from "../adaptive_representation_selector";
-import BufferBasedChooser from "../buffer_based_chooser";
-import GuessBasedChooser from "../guess_based_chooser";
-import NetworkAnalyzer from "../network_analyzer";
+} from "../adaptive_representation_selector.ts";
+import createAdaptiveRepresentationSelector from "../adaptive_representation_selector.ts";
+import BufferBasedChooser from "../buffer_based_chooser.ts";
+import GuessBasedChooser from "../guess_based_chooser.ts";
+import NetworkAnalyzer from "../network_analyzer.ts";
 // Imported this way to spy on the constructor
-import BandwidthEstimator from "../utils/bandwidth_estimator";
-import PendingRequestsStore from "../utils/pending_requests_store";
-import RepresentationScoreCalculator from "../utils/representation_score_calculator";
+import BandwidthEstimator from "../utils/bandwidth_estimator.ts";
+import PendingRequestsStore from "../utils/pending_requests_store.ts";
+import RepresentationScoreCalculator from "../utils/representation_score_calculator.ts";
 
 vi.mock("../../../log", () => ({
   default: { debug: vi.fn(), warn: vi.fn(), info: vi.fn(), error: vi.fn() },

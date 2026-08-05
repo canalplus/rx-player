@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import hashBuffer from "../hash_buffer";
+import hashBuffer from "../hash_buffer.ts";
 
 const arrayb1 = new Uint8Array([
   5, 5, 6, 87, 87, 76, 64, 35, 35, 68, 41, 14, 87, 1, 35, 87, 255, 87, 12, 87, 8,

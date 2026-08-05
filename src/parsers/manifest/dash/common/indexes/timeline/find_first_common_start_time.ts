@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined";
-import type { ITNode } from "../../../../../../utils/xml-parser";
-import type { IIndexSegment } from "../../../../utils/index_helpers";
+import isNullOrUndefined from "../../../../../../utils/is_null_or_undefined.ts";
+import type { ITNode } from "../../../../../../utils/xml-parser.ts";
+import type { IIndexSegment } from "../../../../utils/index_helpers.ts";
 
 /**
  * By comparing two timelines for the same content at different points in time,

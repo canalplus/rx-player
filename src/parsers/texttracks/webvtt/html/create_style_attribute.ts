@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import objectValues from "../../../../utils/object_values";
+import objectValues from "../../../../utils/object_values.ts";
 
 /**
  * Construct a DOM attribute reflecting given cue settings

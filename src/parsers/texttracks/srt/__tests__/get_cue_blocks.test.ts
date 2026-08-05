@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import getCueBlocks from "../get_cue_blocks";
+import getCueBlocks from "../get_cue_blocks.ts";
 
 const srt1 = [
   "112", // 0

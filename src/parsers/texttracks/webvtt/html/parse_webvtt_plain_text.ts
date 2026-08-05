@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
-import { utf8ToStr } from "../../../../utils/string_parsing";
-import getCueBlocks from "../get_cue_blocks";
-import getStyleBlocks from "../get_style_blocks";
-import parseCueBlock from "../parse_cue_block";
-import parseStyleBlocks from "../parse_style_block";
-import { getFirstLineAfterHeader } from "../utils";
-import type { IVTTHTMLCue } from "./to_html";
-import toHTML from "./to_html";
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8.ts";
+import { utf8ToStr } from "../../../../utils/string_parsing.ts";
+import getCueBlocks from "../get_cue_blocks.ts";
+import getStyleBlocks from "../get_style_blocks.ts";
+import parseCueBlock from "../parse_cue_block.ts";
+import parseStyleBlocks from "../parse_style_block.ts";
+import { getFirstLineAfterHeader } from "../utils.ts";
+import type { IVTTHTMLCue } from "./to_html.ts";
+import toHTML from "./to_html.ts";
 
 /**
  * Parse WebVTT from text. Returns an array with:

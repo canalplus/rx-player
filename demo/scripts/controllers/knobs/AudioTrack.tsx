@@ -1,9 +1,9 @@
 import * as React from "react";
-import type { IAudioTrack, IAvailableAudioTrack } from "../../../../src/public_types";
-import translateAudioTrackCode from "../../lib/translateLanguageCode";
-import Knob from "../../components/Knob";
-import useModuleState from "../../lib/useModuleState";
-import type { IPlayerModule } from "../../modules/player/index";
+import type { IAudioTrack, IAvailableAudioTrack } from "../../../../src/public_types.ts";
+import translateAudioTrackCode from "../../lib/translateLanguageCode.ts";
+import Knob from "../../components/Knob.tsx";
+import useModuleState from "../../lib/useModuleState.ts";
+import type { IPlayerModule } from "../../modules/player/index.ts";
 
 const AUDIO_DESCRIPTION_ICON = "(AD)"; // String.fromCharCode(0xf29e);
 

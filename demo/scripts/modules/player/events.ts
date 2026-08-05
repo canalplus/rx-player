@@ -1,11 +1,11 @@
 import type { IPlayerModuleState } from ".";
-import type RxPlayer from "../../../../src";
+import type RxPlayer from "../../../../src/index.ts";
 import type {
   IBrokenRepresentationsLockContext,
   IPlayerError,
   IVideoTrack,
-} from "../../../../src/public_types";
-import type { IStateUpdater } from "../../lib/declareModule";
+} from "../../../../src/public_types.ts";
+import type { IStateUpdater } from "../../lib/declareModule.ts";
 
 const POSITION_UPDATES_INTERVAL = 100;
 const BUFFERED_DATA_UPDATES_INTERVAL = 100;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import isWorker from "./is_worker";
+import isWorker from "./is_worker.ts";
 
 /** `true` if we're currently in a Node.JS environment. */
 const isNode = typeof window === "undefined" && !isWorker;

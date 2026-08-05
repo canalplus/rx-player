@@ -1,16 +1,16 @@
-import addTextTrack from "../../../compat/add_text_track";
+import addTextTrack from "../../../compat/add_text_track.ts";
 import type {
   ICompatTextTrack,
   IMediaElement,
-} from "../../../compat/browser_compatibility_types";
-import removeCue from "../../../compat/remove_cue";
-import log from "../../../log";
-import type { ITextTrackSegmentData } from "../../../transports";
-import type { IRange } from "../../../utils/ranges";
-import { convertToRanges } from "../../../utils/ranges";
-import ManualTimeRanges from "../manual_time_ranges";
-import type { ITextDisplayer, ITextDisplayerData } from "../types";
-import parseTextTrackToCues from "./native_parsers";
+} from "../../../compat/browser_compatibility_types.ts";
+import removeCue from "../../../compat/remove_cue.ts";
+import log from "../../../log.ts";
+import type { ITextTrackSegmentData } from "../../../transports/index.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import { convertToRanges } from "../../../utils/ranges.ts";
+import ManualTimeRanges from "../manual_time_ranges.ts";
+import type { ITextDisplayer, ITextDisplayerData } from "../types.ts";
+import parseTextTrackToCues from "./native_parsers.ts";
 
 /**
  * Implementation of an `ITextDisplayer` for "native" text tracks.

@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-import isSeekingApproximate from "../../../compat/is_seeking_approximate";
-import config from "../../../config";
-import type { IBufferType } from "../../../core/types";
-import { MediaError } from "../../../errors";
-import log from "../../../log";
-import type { IManifestMetadata, IPeriodMetadata } from "../../../manifest";
-import { getPeriodAfter } from "../../../manifest";
-import { SeekingState } from "../../../playback_observer";
+import isSeekingApproximate from "../../../compat/is_seeking_approximate.ts";
+import config from "../../../config.ts";
+import type { IBufferType } from "../../../core/types.ts";
+import { MediaError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { IManifestMetadata, IPeriodMetadata } from "../../../manifest/index.ts";
+import { getPeriodAfter } from "../../../manifest/index.ts";
+import { SeekingState } from "../../../playback_observer/index.ts";
 import type {
   IMediaElementPlaybackObserver,
   IPlaybackObservation,
-} from "../../../playback_observer";
-import type { IPlayerError } from "../../../public_types";
-import EventEmitter from "../../../utils/event_emitter";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import { getNextBufferedTimeRangeGap } from "../../../utils/ranges";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import TaskCanceller from "../../../utils/task_canceller";
-import type { IStallingSituation } from "../types";
+} from "../../../playback_observer/index.ts";
+import type { IPlayerError } from "../../../public_types.ts";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import { getNextBufferedTimeRangeGap } from "../../../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import type { IStallingSituation } from "../types.ts";
 
 /**
  * Work-around rounding errors with floating points by setting an acceptable,

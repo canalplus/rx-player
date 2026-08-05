@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import config from "../config";
-import EnvDetector from "./env_detector";
+import config from "../config.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * On some devices (right now only seen on Tizen), seeking through the

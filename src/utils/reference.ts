@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import arrayFindIndex from "./array_find_index";
-import noop from "./noop";
-import type { CancellationSignal } from "./task_canceller";
+import arrayFindIndex from "./array_find_index.ts";
+import noop from "./noop.ts";
+import type { CancellationSignal } from "./task_canceller.ts";
 
 /**
  * A value behind a shared reference, meaning that any update to its value from

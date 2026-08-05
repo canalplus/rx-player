@@ -1,8 +1,8 @@
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import type RxPlayer from "../../public_api";
-import BufferSizeGraph from "../buffer_size_graph";
-import { DEFAULT_REFRESH_INTERVAL } from "../constants";
-import { createElement, createGraphCanvas, createMetricTitle } from "../utils";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import type RxPlayer from "../../public_api.ts";
+import BufferSizeGraph from "../buffer_size_graph.ts";
+import { DEFAULT_REFRESH_INTERVAL } from "../constants.ts";
+import { createElement, createGraphCanvas, createMetricTitle } from "../utils.ts";
 
 export default function createSegmentSinkSizeGraph(
   instance: RxPlayer,

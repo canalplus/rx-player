@@ -19,4 +19,4 @@ export {
   ListRepresentationIndex,
   TemplateRepresentationIndex,
   TimelineRepresentationIndex,
-} from "./common";
+} from "./common/index.ts";

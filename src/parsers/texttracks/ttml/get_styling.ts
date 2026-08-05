@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import arrayFind from "../../../utils/array_find";
-import arrayIncludes from "../../../utils/array_includes";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import startsWith from "../../../utils/starts_with";
+import arrayFind from "../../../utils/array_find.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import startsWith from "../../../utils/starts_with.ts";
 
 export type IStyleList = Partial<Record<string, string>>;
 

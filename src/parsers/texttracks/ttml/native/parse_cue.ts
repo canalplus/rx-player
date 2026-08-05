@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
-import isVTTCue from "../../../../compat/is_vtt_cue";
-import makeVTTCue from "../../../../compat/make_vtt_cue";
-import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { IStyleList } from "../get_styling";
-import getTimeDelimiters from "../get_time_delimiters";
-import type { IParsedTTMLCue } from "../parse_ttml";
-import { REGXP_PERCENT_VALUES } from "../regexps";
-import { isLineBreakElement, isSpanElement } from "../xml_utils";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types.ts";
+import isVTTCue from "../../../../compat/is_vtt_cue.ts";
+import makeVTTCue from "../../../../compat/make_vtt_cue.ts";
+import isNonEmptyString from "../../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import type { IStyleList } from "../get_styling.ts";
+import getTimeDelimiters from "../get_time_delimiters.ts";
+import type { IParsedTTMLCue } from "../parse_ttml.ts";
+import { REGXP_PERCENT_VALUES } from "../regexps.ts";
+import { isLineBreakElement, isSpanElement } from "../xml_utils.ts";
 
 const TEXT_ALIGN_TO_LIGN_ALIGN: Partial<Record<string, string>> = {
   left: "start",

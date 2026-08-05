@@ -18,8 +18,8 @@ import type {
   IManifestFetcherSettings,
   IManifestFetcherEvent,
   IManifestRefreshSettings,
-} from "./manifest_fetcher";
-import ManifestFetcher from "./manifest_fetcher";
+} from "./manifest_fetcher.ts";
+import ManifestFetcher from "./manifest_fetcher.ts";
 
 export type { IManifestFetcherSettings, IManifestFetcherEvent, IManifestRefreshSettings };
 export default ManifestFetcher;

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import ContentDecryptor from "../../main_thread/decrypt";
-import type { IFeaturesObject } from "../types";
+import ContentDecryptor from "../../main_thread/decrypt/index.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to play encrypted contents

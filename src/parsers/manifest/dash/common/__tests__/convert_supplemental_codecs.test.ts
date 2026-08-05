@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { convertSupplementalCodecsToRFC6381 } from "../convert_supplemental_codecs";
+import { convertSupplementalCodecsToRFC6381 } from "../convert_supplemental_codecs.ts";
 
 describe("parseSupplementalCodec", () => {
   it("should return the codec unchanged if there is only one codec", () => {

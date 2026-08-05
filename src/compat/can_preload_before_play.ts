@@ -1,4 +1,4 @@
-import EnvDetector from "./env_detector";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * On Safari (both mobile and desktop), when using direct file playback,

@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import addClassName from "../../../../compat/add_class_name";
-import isNonEmptyString from "../../../../utils/is_non_empty_string";
-import objectAssign from "../../../../utils/object_assign";
-import type { IStyleList, IStyleObject } from "../get_styling";
-import { getStylingAttributes } from "../get_styling";
-import { getParentDivElements, isLineBreakElement, isSpanElement } from "../xml_utils";
-import applyExtent from "./apply_extent";
-import applyFontSize from "./apply_font_size";
-import applyLineHeight from "./apply_line_height";
-import applyOrigin from "./apply_origin";
-import applyPadding from "./apply_padding";
-import generateCSSTextOutline from "./generate_css_test_outline";
-import ttmlColorToCSSColor from "./ttml_color_to_css_color";
+import addClassName from "../../../../compat/add_class_name.ts";
+import isNonEmptyString from "../../../../utils/is_non_empty_string.ts";
+import objectAssign from "../../../../utils/object_assign.ts";
+import type { IStyleList, IStyleObject } from "../get_styling.ts";
+import { getStylingAttributes } from "../get_styling.ts";
+import { getParentDivElements, isLineBreakElement, isSpanElement } from "../xml_utils.ts";
+import applyExtent from "./apply_extent.ts";
+import applyFontSize from "./apply_font_size.ts";
+import applyLineHeight from "./apply_line_height.ts";
+import applyOrigin from "./apply_origin.ts";
+import applyPadding from "./apply_padding.ts";
+import generateCSSTextOutline from "./generate_css_test_outline.ts";
+import ttmlColorToCSSColor from "./ttml_color_to_css_color.ts";
 
 // Styling which can be applied to <span> from any level upper.
 // Added here as an optimization

@@ -1,6 +1,6 @@
 import { describe, afterEach, it, expect } from "vitest";
-import globalScope from "../global_scope";
-import idGenerator from "../id_generator";
+import globalScope from "../global_scope.ts";
+import idGenerator from "../id_generator.ts";
 
 const oldNumberDef = globalScope.Number;
 

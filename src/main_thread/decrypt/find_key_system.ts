@@ -17,24 +17,24 @@
 import type {
   IMediaElement,
   IMediaKeySystemAccess,
-} from "../../compat/browser_compatibility_types";
-import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access";
-import type { IEmeApiImplementation } from "../../compat/eme";
+} from "../../compat/browser_compatibility_types.ts";
+import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access.ts";
+import type { IEmeApiImplementation } from "../../compat/eme/index.ts";
 import {
   generatePlayReadyInitData,
   DUMMY_PLAY_READY_HEADER,
-} from "../../compat/generate_init_data";
-import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access";
-import config from "../../config";
-import { EncryptedMediaError } from "../../errors";
-import log from "../../log";
-import type { IKeySystemOption } from "../../public_types";
-import { parseCodec } from "../../utils/are_codecs_compatible";
-import arrayIncludes from "../../utils/array_includes";
-import flatMap from "../../utils/flat_map";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import MediaKeysAttacher from "./utils/media_keys_attacher";
+} from "../../compat/generate_init_data.ts";
+import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access.ts";
+import config from "../../config.ts";
+import { EncryptedMediaError } from "../../errors/index.ts";
+import log from "../../log.ts";
+import type { IKeySystemOption } from "../../public_types.ts";
+import { parseCodec } from "../../utils/are_codecs_compatible.ts";
+import arrayIncludes from "../../utils/array_includes.ts";
+import flatMap from "../../utils/flat_map.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import MediaKeysAttacher from "./utils/media_keys_attacher.ts";
 
 type MediaKeysRequirement = "optional" | "required" | "not-allowed";
 

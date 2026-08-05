@@ -1,6 +1,6 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-import log from "../../../../log";
-import resolveStylesInheritance from "../resolve_styles_inheritance";
+import log from "../../../../log.ts";
+import resolveStylesInheritance from "../resolve_styles_inheritance.ts";
 
 const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
   /* noop */

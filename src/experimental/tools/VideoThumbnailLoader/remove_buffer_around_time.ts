@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface.ts";
 
 /**
  * Remove buffer around wanted time, considering a margin around

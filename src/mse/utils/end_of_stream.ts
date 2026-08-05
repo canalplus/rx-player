@@ -18,15 +18,15 @@ import type {
   IMediaSource,
   ISourceBuffer,
   ISourceBufferList,
-} from "../../compat/browser_compatibility_types";
+} from "../../compat/browser_compatibility_types.ts";
 import {
   onRemoveSourceBuffers,
   onSourceOpen,
   onSourceBufferUpdate,
-} from "../../compat/event_listeners";
-import log from "../../log";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import TaskCanceller from "../../utils/task_canceller";
+} from "../../compat/event_listeners.ts";
+import log from "../../log.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
 
 /**
  * Get "updating" SourceBuffers from a SourceBufferList.

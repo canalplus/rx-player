@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { getUuidContent } from "../../../parsers/containers/isobmff";
-import { be8toi } from "../../../utils/byte_parsing";
+import { getUuidContent } from "../../../parsers/containers/isobmff/index.ts";
+import { be8toi } from "../../../utils/byte_parsing.ts";
 
 export interface IISOBMFFBasicSegment {
   time: number;

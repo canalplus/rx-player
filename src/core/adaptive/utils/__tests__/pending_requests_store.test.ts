@@ -5,12 +5,12 @@ import {
   DummyAdaptation,
   DummyRepresentation,
   createSegment,
-} from "../../../../manifest/classes/__tests__/mocks";
-import PendingRequestsStore from "../pending_requests_store";
+} from "../../../../manifest/classes/__tests__/mocks.ts";
+import PendingRequestsStore from "../pending_requests_store.ts";
 import type {
   IPendingRequestStoreBegin,
   IPendingRequestStoreProgress,
-} from "../pending_requests_store";
+} from "../pending_requests_store.ts";
 
 const mocks = vi.hoisted(() => ({
   warn: vi.fn(),

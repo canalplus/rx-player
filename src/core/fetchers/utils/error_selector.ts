@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { formatError, NetworkError } from "../../../errors";
-import type { IPlayerError } from "../../../public_types";
-import { RequestError } from "../../../utils/request";
+import { formatError, NetworkError } from "../../../errors/index.ts";
+import type { IPlayerError } from "../../../public_types.ts";
+import { RequestError } from "../../../utils/request/index.ts";
 
 /**
  * Generate a new error from the infos given.

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import startsWith from "../../../../../utils/starts_with";
-import type { ITNode } from "../../../../../utils/xml-parser";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import startsWith from "../../../../../utils/starts_with.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
   IBaseUrlIntermediateRepresentation,
   IContentProtectionIntermediateRepresentation,
@@ -25,17 +25,17 @@ import type {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
   IScheme,
-} from "../../node_parser_types";
-import parseBaseURL from "./BaseURL";
-import parseContentProtection from "./ContentProtection";
-import { createPeriodIntermediateRepresentation } from "./Period";
+} from "../../node_parser_types.ts";
+import parseBaseURL from "./BaseURL.ts";
+import parseContentProtection from "./ContentProtection.ts";
+import { createPeriodIntermediateRepresentation } from "./Period.ts";
 import {
   parseDateTime,
   parseDuration,
   parseScheme,
   textContent,
   ValueParser,
-} from "./utils";
+} from "./utils.ts";
 
 /**
  * Parse children of the MPD's root into a simple object.

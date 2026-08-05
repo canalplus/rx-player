@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-import streamEventsEmitter from "./stream_events_emitter";
-export type { IPublicNonFiniteStreamEvent, IPublicStreamEvent } from "./types";
+import streamEventsEmitter from "./stream_events_emitter.ts";
+export type { IPublicNonFiniteStreamEvent, IPublicStreamEvent } from "./types.ts";
 export default streamEventsEmitter;

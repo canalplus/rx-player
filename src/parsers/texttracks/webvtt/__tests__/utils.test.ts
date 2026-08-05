@@ -6,7 +6,7 @@ import {
   isStartOfNoteBlock,
   isStartOfRegionBlock,
   isStartOfStyleBlock,
-} from "../utils";
+} from "../utils.ts";
 
 const webvtt1 = [
   "WEBVTT", // 0

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import type { IPlayerError } from "../public_types";
-import EncryptedMediaError from "./encrypted_media_error";
-import { ErrorTypes } from "./error_codes";
-import MediaError from "./media_error";
-import NetworkError from "./network_error";
-import OtherError from "./other_error";
+import type { IPlayerError } from "../public_types.ts";
+import EncryptedMediaError from "./encrypted_media_error.ts";
+import { ErrorTypes } from "./error_codes.ts";
+import MediaError from "./media_error.ts";
+import NetworkError from "./network_error.ts";
+import OtherError from "./other_error.ts";
 
 /**
  * Whether the error given is a ICustomError.

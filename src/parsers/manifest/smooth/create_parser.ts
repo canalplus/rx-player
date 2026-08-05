@@ -14,35 +14,35 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest";
-import arrayIncludes from "../../../utils/array_includes";
-import assert from "../../../utils/assert";
-import { concat, itobe4 } from "../../../utils/byte_parsing";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import objectAssign from "../../../utils/object_assign";
-import { hexToBytes } from "../../../utils/string_parsing";
-import { getFilenameIndexInUrl } from "../../../utils/url-utils";
-import { parseXml, type ITNode } from "../../../utils/xml-parser";
-import { createBox } from "../../containers/isobmff";
+import log from "../../../log.ts";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../manifest/index.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import assert from "../../../utils/assert.ts";
+import { concat, itobe4 } from "../../../utils/byte_parsing.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import { hexToBytes } from "../../../utils/string_parsing.ts";
+import { getFilenameIndexInUrl } from "../../../utils/url-utils.ts";
+import { parseXml, type ITNode } from "../../../utils/xml-parser.ts";
+import { createBox } from "../../containers/isobmff/index.ts";
 import type {
   IParsedAdaptation,
   IParsedAdaptations,
   IParsedManifest,
   IParsedRepresentation,
-} from "../types";
-import checkManifestIDs from "../utils/check_manifest_ids";
-import { getAudioCodecs, getVideoCodecs } from "./get_codecs";
-import parseCNodes from "./parse_C_nodes";
-import type { IContentProtectionSmooth, IKeySystem } from "./parse_protection_node";
-import parseProtectionNode from "./parse_protection_node";
-import RepresentationIndex from "./representation_index";
-import SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline";
-import parseBoolean from "./utils/parseBoolean";
-import reduceChildren from "./utils/reduceChildren";
-import { replaceRepresentationSmoothTokens } from "./utils/tokens";
+} from "../types.ts";
+import checkManifestIDs from "../utils/check_manifest_ids.ts";
+import { getAudioCodecs, getVideoCodecs } from "./get_codecs.ts";
+import parseCNodes from "./parse_C_nodes.ts";
+import type { IContentProtectionSmooth, IKeySystem } from "./parse_protection_node.ts";
+import parseProtectionNode from "./parse_protection_node.ts";
+import RepresentationIndex from "./representation_index.ts";
+import SharedSmoothSegmentTimeline from "./shared_smooth_segment_timeline.ts";
+import parseBoolean from "./utils/parseBoolean.ts";
+import reduceChildren from "./utils/reduceChildren.ts";
+import { replaceRepresentationSmoothTokens } from "./utils/tokens.ts";
 
 interface IAdaptationParserArguments {
   root: ITNode;

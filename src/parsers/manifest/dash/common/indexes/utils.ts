@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import config from "../../../../../config";
+import config from "../../../../../config.ts";
 
 /**
  * In Javascript, numbers are encoded in a way that a floating number may be

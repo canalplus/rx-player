@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
+import log from "../../../log.ts";
 import type {
   IManifest,
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
-} from "../../../manifest";
-import type { IPlayerError } from "../../../public_types";
+} from "../../../manifest/index.ts";
+import type { IPlayerError } from "../../../public_types.ts";
 import type {
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
-} from "../../../transports";
-import assert from "../../../utils/assert";
-import EventEmitter from "../../../utils/event_emitter";
-import noop from "../../../utils/noop";
-import objectAssign from "../../../utils/object_assign";
-import SharedReference from "../../../utils/reference";
-import TaskCanceller from "../../../utils/task_canceller";
-import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher";
+} from "../../../transports/index.ts";
+import assert from "../../../utils/assert.ts";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import noop from "../../../utils/noop.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import SharedReference from "../../../utils/reference.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import type { IPrioritizedSegmentFetcher } from "./prioritized_segment_fetcher.ts";
 
 /** Information about a Segment waiting to be loaded by the SegmentQueue. */
 export interface IQueuedSegment {

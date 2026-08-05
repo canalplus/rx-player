@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { guidToUuid } from "../../utils/string_parsing";
-import EnvDetector from "../env_detector";
+import { guidToUuid } from "../../utils/string_parsing.ts";
+import EnvDetector from "../env_detector.ts";
 
 /**
  * Get KID from MediaKeySession keyStatus, and convert it in usual big-endian kid

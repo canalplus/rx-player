@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import probeMediaContentType from "../../probers/mediaContentType";
-import type { IMediaConfiguration } from "../../types";
+import probeMediaContentType from "../../probers/mediaContentType.ts";
+import type { IMediaConfiguration } from "../../types.ts";
 
 type IMockedMediaSource = {
   isTypeSupported?: ((codec: string) => boolean) | boolean | undefined;

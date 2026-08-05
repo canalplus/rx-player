@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import { formatError } from "../../../errors";
-import log from "../../../log";
+import config from "../../../config.ts";
+import { formatError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
 import type {
   IManifest,
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
-} from "../../../manifest";
-import { getLoggableSegmentId } from "../../../manifest";
-import type { ICdnMetadata } from "../../../parsers/manifest";
-import type { IPlayerError } from "../../../public_types";
+} from "../../../manifest/index.ts";
+import { getLoggableSegmentId } from "../../../manifest/index.ts";
+import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
+import type { IPlayerError } from "../../../public_types.ts";
 import type {
   IChunkCompleteInformation,
   ISegmentContext,
@@ -36,26 +36,26 @@ import type {
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
   ISegmentPipeline,
-} from "../../../transports";
-import arrayIncludes from "../../../utils/array_includes";
-import idGenerator from "../../../utils/id_generator";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import getTimestamp from "../../../utils/monotonic_timestamp";
-import objectAssign from "../../../utils/object_assign";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import { CancellationError } from "../../../utils/task_canceller";
+} from "../../../transports/index.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import idGenerator from "../../../utils/id_generator.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import getTimestamp from "../../../utils/monotonic_timestamp.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import { CancellationError } from "../../../utils/task_canceller.ts";
 import type {
   IMetricsCallbackPayload,
   IRequestBeginCallbackPayload,
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
-} from "../../adaptive";
-import type CmcdDataBuilder from "../../cmcd";
-import type { IBufferType } from "../../segment_sinks";
-import type CdnPrioritizer from "../cdn_prioritizer";
-import errorSelector from "../utils/error_selector";
-import { scheduleRequestWithCdns } from "../utils/schedule_request";
-import InitializationSegmentCache from "./initialization_segment_cache";
+} from "../../adaptive/index.ts";
+import type CmcdDataBuilder from "../../cmcd/index.ts";
+import type { IBufferType } from "../../segment_sinks/index.ts";
+import type CdnPrioritizer from "../cdn_prioritizer.ts";
+import errorSelector from "../utils/error_selector.ts";
+import { scheduleRequestWithCdns } from "../utils/schedule_request.ts";
+import InitializationSegmentCache from "./initialization_segment_cache.ts";
 
 /** Allows to generate a unique identifies for each request. */
 const generateRequestID = idGenerator();

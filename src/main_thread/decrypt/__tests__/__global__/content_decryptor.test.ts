@@ -1,11 +1,11 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
-import getEmeApiImplementation from "../../../../compat/eme";
-import { EncryptedMediaError } from "../../../../errors";
-import type { IKeySystemOption } from "../../../../public_types";
-import assert from "../../../../utils/assert";
-import { getMissingKeyIds } from "../../content_decryptor";
-import { ContentDecryptorState } from "../../types";
-import { defaultKSConfig, mockCompat } from "./utils";
+import getEmeApiImplementation from "../../../../compat/eme/index.ts";
+import { EncryptedMediaError } from "../../../../errors/index.ts";
+import type { IKeySystemOption } from "../../../../public_types.ts";
+import assert from "../../../../utils/assert.ts";
+import { getMissingKeyIds } from "../../content_decryptor.ts";
+import { ContentDecryptorState } from "../../types.ts";
+import { defaultKSConfig, mockCompat } from "./utils.ts";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -113,8 +113,9 @@ describe("content_decryptor - session decommissioning", () => {
       ),
       BlacklistedSessionError: class BlacklistedSessionError extends Error {},
     }));
-    const { DecommissionedSessionError } = await import("../../utils/check_key_statuses");
-    const { default: ContentDecryptor } = await import("../../content_decryptor");
+    const { DecommissionedSessionError } =
+      await import("../../utils/check_key_statuses.ts");
+    const { default: ContentDecryptor } = await import("../../content_decryptor.ts");
 
     const mockGetLicense = vi.fn(() => Promise.resolve(new Uint8Array([1, 2, 3, 4])));
     const ksConfig: IKeySystemOption[] = [

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import arrayFind from "../../../utils/array_find";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type { IMediaConfiguration } from "./types";
+import arrayFind from "../../../utils/array_find.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import type { IMediaConfiguration } from "./types.ts";
 
 export type ICapabilities = Array<string | { [key: string]: ICapabilities }>;
 

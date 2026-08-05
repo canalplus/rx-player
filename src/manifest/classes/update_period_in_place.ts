@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import type { IAdaptationMetadata, IRepresentationMetadata } from "../../manifest";
-import type { ITrackType } from "../../public_types";
-import arrayFindIndex from "../../utils/array_find_index";
-import type { IThumbnailTrackMetadata } from "../types";
-import type Period from "./period";
-import { MANIFEST_UPDATE_TYPE } from "./types";
+import log from "../../log.ts";
+import type {
+  IAdaptationMetadata,
+  IRepresentationMetadata,
+} from "../../manifest/index.ts";
+import type { ITrackType } from "../../public_types.ts";
+import arrayFindIndex from "../../utils/array_find_index.ts";
+import type { IThumbnailTrackMetadata } from "../types.ts";
+import type Period from "./period.ts";
+import { MANIFEST_UPDATE_TYPE } from "./types.ts";
 
 /**
  * Update oldPeriod attributes with the one from newPeriod (e.g. when updating

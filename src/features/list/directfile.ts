@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import directfile from "../../main_thread/init/directfile_content_initializer";
-import mediaElementTracksStore from "../../main_thread/tracks_store/media_element_tracks_store";
-import type { IFeaturesObject } from "../types";
+import directfile from "../../main_thread/init/directfile_content_initializer.ts";
+import mediaElementTracksStore from "../../main_thread/tracks_store/media_element_tracks_store.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to play file natively played by the browser

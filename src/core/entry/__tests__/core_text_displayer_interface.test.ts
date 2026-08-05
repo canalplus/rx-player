@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import noop from "../../../utils/noop";
-import { CancellationError } from "../../../utils/task_canceller";
-import { CoreMessageType } from "../../types";
-import CoreTextDisplayerInterface from "../core_text_displayer_interface";
+import noop from "../../../utils/noop.ts";
+import { CancellationError } from "../../../utils/task_canceller.ts";
+import { CoreMessageType } from "../../types.ts";
+import CoreTextDisplayerInterface from "../core_text_displayer_interface.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

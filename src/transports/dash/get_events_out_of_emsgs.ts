@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { IInbandEvent } from "../../core/types";
-import type { IEMSG } from "../../parsers/containers/isobmff";
-import { utf8ToStr } from "../../utils/string_parsing";
+import type { IInbandEvent } from "../../core/types.ts";
+import type { IEMSG } from "../../parsers/containers/isobmff/index.ts";
+import { utf8ToStr } from "../../utils/string_parsing.ts";
 
 /**
  * From an array of EMSGs with manifest validity scheme id,

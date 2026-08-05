@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import arrayFindIndex from "../../../utils/array_find_index";
-import arrayIncludes from "../../../utils/array_includes";
-import objectAssign from "../../../utils/object_assign";
-import type { IStyleObject } from "./get_styling";
+import log from "../../../log.ts";
+import arrayFindIndex from "../../../utils/array_find_index.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import type { IStyleObject } from "./get_styling.ts";
 
 /**
  * Transform all styles inheriting from other styles to the same styles but with

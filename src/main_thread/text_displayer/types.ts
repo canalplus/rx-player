@@ -1,5 +1,5 @@
-import type { ITextTrackSegmentData } from "../../transports";
-import type { IRange } from "../../utils/ranges";
+import type { ITextTrackSegmentData } from "../../transports/index.ts";
+import type { IRange } from "../../utils/ranges.ts";
 
 /**
  * Interface for an Object implementing timed text media data rendering at the

@@ -2,23 +2,23 @@ import type {
   IMediaElement,
   IMediaElementEventMap,
   IMediaKeys,
-} from "../../../compat/browser_compatibility_types";
-import type { IEmeApiImplementation } from "../../../compat/eme";
-import { createCompatibleEventListener } from "../../../compat/event_listeners";
-import EventEmitter from "../../../utils/event_emitter";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import noop from "../../../utils/noop";
-import type { IRange } from "../../../utils/ranges";
+} from "../../../compat/browser_compatibility_types.ts";
+import type { IEmeApiImplementation } from "../../../compat/eme/index.ts";
+import { createCompatibleEventListener } from "../../../compat/event_listeners.ts";
+import EventEmitter from "../../../utils/event_emitter.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import noop from "../../../utils/noop.ts";
+import type { IRange } from "../../../utils/ranges.ts";
 import {
   convertToRanges,
   insertInto,
   keepRangeIntersection,
-} from "../../../utils/ranges";
-import TaskCanceller from "../../../utils/task_canceller";
-import { DummyMediaKeys, createRequestMediaKeySystemAccess } from "./eme";
-import type { IRequestMediaKeySystemAccessConfig } from "./eme";
-import { DummyMediaSource } from "./mse";
-import TimeRangesWithMetadata, { EventScheduler } from "./utils";
+} from "../../../utils/ranges.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import { DummyMediaKeys, createRequestMediaKeySystemAccess } from "./eme.ts";
+import type { IRequestMediaKeySystemAccessConfig } from "./eme.ts";
+import { DummyMediaSource } from "./mse.ts";
+import TimeRangesWithMetadata, { EventScheduler } from "./utils.ts";
 
 /** Constructor options for a `DummyMediaElement`. */
 export interface IDummyMediaElementOptions {

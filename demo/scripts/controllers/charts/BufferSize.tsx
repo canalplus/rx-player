@@ -1,6 +1,6 @@
 import * as React from "react";
-import useModuleState from "../../lib/useModuleState";
-import { IChartModule } from "../../modules/ChartData";
+import useModuleState from "../../lib/useModuleState.ts";
+import { IChartModule } from "../../modules/ChartData.ts";
 
 const { useEffect, useRef } = React;
 

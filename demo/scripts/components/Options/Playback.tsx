@@ -1,5 +1,5 @@
 import * as React from "react";
-import Checkbox from "../CheckBox";
+import Checkbox from "../CheckBox.tsx";
 
 /**
  * @param {Object} props

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import parseLocalManifest from "./parse_local_manifest";
+import parseLocalManifest from "./parse_local_manifest.ts";
 
 export type {
   ILocalIndexSegment,
   ILocalManifest,
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
-} from "./types";
+} from "./types.ts";
 export default parseLocalManifest;

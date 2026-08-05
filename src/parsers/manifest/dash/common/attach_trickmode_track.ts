@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest";
-import type { IParsedAdaptation, IParsedAdaptations } from "../../types";
+import { SUPPORTED_ADAPTATIONS_TYPE } from "../../../../manifest/index.ts";
+import type { IParsedAdaptation, IParsedAdaptations } from "../../types.ts";
 
 /**
  * Attach trick mode tracks to adaptations by assigning to the trickModeTracks

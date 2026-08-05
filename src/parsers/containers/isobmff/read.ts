@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getBoxContent, getBoxesContent } from "./get_box";
+import { getBoxContent, getBoxesContent } from "./get_box.ts";
 
 /**
  * Returns the content of the first "traf" box encountered in the given ISOBMFF

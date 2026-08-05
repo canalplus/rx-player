@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import errorMessage from "../../../errors/error_message";
+import errorMessage from "../../../errors/error_message.ts";
 
 // Returned error when rejecting
 export default class VideoThumbnailLoaderError extends Error {

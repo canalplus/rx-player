@@ -4,9 +4,9 @@ import {
   DummyRepresentation,
   DummyPeriod,
   createSegment,
-} from "../../../../manifest/classes/__tests__/mocks";
-import BufferedHistory from "../buffered_history";
-import type { IChunkContext } from "../types";
+} from "../../../../manifest/classes/__tests__/mocks.ts";
+import BufferedHistory from "../buffered_history.ts";
+import type { IChunkContext } from "../types.ts";
 
 const { mockAreSameContent, mockGetMonotonicTimeStamp } = vi.hoisted(() => {
   return { mockAreSameContent: vi.fn(), mockGetMonotonicTimeStamp: vi.fn() };

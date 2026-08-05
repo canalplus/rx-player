@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import noop from "../../../../utils/noop";
-import sleep from "../../../../utils/sleep";
-import TaskCanceller from "../../../../utils/task_canceller";
-import ManifestFetcher from "../manifest_fetcher";
+import noop from "../../../../utils/noop.ts";
+import sleep from "../../../../utils/sleep.ts";
+import TaskCanceller from "../../../../utils/task_canceller.ts";
+import ManifestFetcher from "../manifest_fetcher.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

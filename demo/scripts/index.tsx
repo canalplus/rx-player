@@ -6,7 +6,7 @@ import "regenerator-runtime/runtime";
 
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
-import Main from "./controllers/Main";
+import Main from "./controllers/Main.tsx";
 
 window.onload = function (): void {
   const rootElt = document.getElementById("player-container");

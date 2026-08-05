@@ -1,11 +1,11 @@
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import isCodecSupported from "../../../compat/is_codec_supported";
-import type { IManifestMetadata } from "../../../manifest";
-import type Manifest from "../../../manifest/classes";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type ContentDecryptor from "../../decrypt";
-import { ContentDecryptorState } from "../../decrypt";
-import type { ICodecSupportInfo } from "../../types";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
+import isCodecSupported from "../../../compat/is_codec_supported.ts";
+import type Manifest from "../../../manifest/classes/index.ts";
+import type { IManifestMetadata } from "../../../manifest/index.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import type ContentDecryptor from "../../decrypt/index.ts";
+import { ContentDecryptorState } from "../../decrypt/index.ts";
+import type { ICodecSupportInfo } from "../../types.ts";
 
 /**
  * Returns a list of all codecs that the support is not known yet on the given

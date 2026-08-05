@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import parseTimestamp from "./parse_timestamp";
+import parseTimestamp from "./parse_timestamp.ts";
 
 /**
  * Parse the settings part of a cue, into key-value object.

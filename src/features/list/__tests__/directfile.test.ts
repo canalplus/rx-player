@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import initDirectFile from "../../../main_thread/init/directfile_content_initializer";
-import mediaElementTracksStore from "../../../main_thread/tracks_store/media_element_tracks_store";
-import type { IFeaturesObject } from "../../types";
-import addDirectfileFeature from "../directfile";
+import initDirectFile from "../../../main_thread/init/directfile_content_initializer.ts";
+import mediaElementTracksStore from "../../../main_thread/tracks_store/media_element_tracks_store.ts";
+import type { IFeaturesObject } from "../../types.ts";
+import addDirectfileFeature from "../directfile.ts";
 
 describe("Features list - Directfile", () => {
   it("should add Directfile in the current features", () => {

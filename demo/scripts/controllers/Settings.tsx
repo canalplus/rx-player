@@ -1,20 +1,20 @@
 import * as React from "react";
-import Option from "../components/Options/Option";
-import Playback from "../components/Options/Playback";
-import AudioAdaptiveSettings from "../components/Options/AudioAdaptiveSettings";
-import VideoAdaptiveSettings from "../components/Options/VideoAdaptiveSettings";
-import RequestConfig from "../components/Options/RequestConfig";
-import TrackSwitch from "../components/Options/TrackSwitch";
-import BufferOptions from "../components/Options/BufferOptions";
+import Option from "../components/Options/Option.tsx";
+import Playback from "../components/Options/Playback.tsx";
+import AudioAdaptiveSettings from "../components/Options/AudioAdaptiveSettings.tsx";
+import VideoAdaptiveSettings from "../components/Options/VideoAdaptiveSettings.tsx";
+import RequestConfig from "../components/Options/RequestConfig.tsx";
+import TrackSwitch from "../components/Options/TrackSwitch.tsx";
+import BufferOptions from "../components/Options/BufferOptions.tsx";
 import type {
   IConstructorSettings,
   ILoadVideoSettings,
-} from "../lib/defaultOptionsValues";
+} from "../lib/defaultOptionsValues.ts";
 import type {
   IAudioRepresentationsSwitchingMode,
   ICmcdOptions,
   IVideoRepresentationsSwitchingMode,
-} from "../../../src/public_types";
+} from "../../../src/public_types.ts";
 
 const { useCallback } = React;
 

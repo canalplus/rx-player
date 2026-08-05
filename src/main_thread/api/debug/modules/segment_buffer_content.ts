@@ -1,22 +1,22 @@
-import type { ISegmentSinkMetrics } from "../../../../core/segment_sinks/segment_sinks_store";
-import type { IBufferType } from "../../../../core/types";
+import type { ISegmentSinkMetrics } from "../../../../core/segment_sinks/segment_sinks_store.ts";
+import type { IBufferType } from "../../../../core/types.ts";
 import type {
   IAdaptationMetadata,
   IPeriodMetadata,
   IRepresentationMetadata,
-} from "../../../../manifest";
-import { getPeriodForTime } from "../../../../manifest";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import type RxPlayer from "../../public_api";
-import SegmentSinkGraph from "../buffer_graph";
-import { DEFAULT_REFRESH_INTERVAL } from "../constants";
+} from "../../../../manifest/index.ts";
+import { getPeriodForTime } from "../../../../manifest/index.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import type RxPlayer from "../../public_api.ts";
+import SegmentSinkGraph from "../buffer_graph.ts";
+import { DEFAULT_REFRESH_INTERVAL } from "../constants.ts";
 import {
   createElement,
   createGraphCanvas,
   createMetricTitle,
   isExtendedMode,
-} from "../utils";
+} from "../utils.ts";
 
 export default function createSegmentSinkGraph(
   instance: RxPlayer,

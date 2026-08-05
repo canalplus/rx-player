@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../errors";
-import log from "../../log";
-import type { IPeriodMetadata } from "../../manifest";
-import type { IPeriod } from "../../public_types";
-import arrayFindIndex from "../../utils/array_find_index";
-import objectAssign from "../../utils/object_assign";
-import type Period from "./period";
-import { MANIFEST_UPDATE_TYPE } from "./types";
-import type { IUpdatedPeriodResult } from "./update_period_in_place";
-import updatePeriodInPlace from "./update_period_in_place";
+import { MediaError } from "../../errors/index.ts";
+import log from "../../log.ts";
+import type { IPeriodMetadata } from "../../manifest/index.ts";
+import type { IPeriod } from "../../public_types.ts";
+import arrayFindIndex from "../../utils/array_find_index.ts";
+import objectAssign from "../../utils/object_assign.ts";
+import type Period from "./period.ts";
+import { MANIFEST_UPDATE_TYPE } from "./types.ts";
+import type { IUpdatedPeriodResult } from "./update_period_in_place.ts";
+import updatePeriodInPlace from "./update_period_in_place.ts";
 
 /**
  * Update old periods by adding new periods and removing

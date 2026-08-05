@@ -1,12 +1,12 @@
 import type { Mock } from "vitest";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks.ts";
 import {
   type IRepresentationProtectionData,
   type Representation,
-} from "../../../../manifest/classes";
-import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
-import type { IProtectionDataInfo } from "../../../../transports";
-import EncryptionDataNotifier from "../encryption_data_notifier";
+} from "../../../../manifest/classes/index.ts";
+import type { IProtectionDataInfo } from "../../../../transports/index.ts";
+import EncryptionDataNotifier from "../encryption_data_notifier.ts";
 
 describe("EncryptionDataNotifier", () => {
   let mockNotify: (contentProtections: IRepresentationProtectionData[]) => void;

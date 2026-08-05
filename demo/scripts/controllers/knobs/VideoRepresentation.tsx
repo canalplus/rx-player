@@ -1,8 +1,8 @@
 import * as React from "react";
-import { IVideoRepresentation } from "../../../../src/public_types";
-import Knob from "../../components/Knob";
-import useModuleState from "../../lib/useModuleState";
-import type { IPlayerModule } from "../../modules/player/index";
+import { IVideoRepresentation } from "../../../../src/public_types.ts";
+import Knob from "../../components/Knob.tsx";
+import useModuleState from "../../lib/useModuleState.ts";
+import type { IPlayerModule } from "../../modules/player/index.ts";
 
 /**
  * @param {Object} props

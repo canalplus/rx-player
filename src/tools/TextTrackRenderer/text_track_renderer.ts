@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import type { IFeature } from "../../features";
-import { addFeatures } from "../../features";
-import HTMLTextDisplayer from "../../main_thread/text_displayer/html";
-import type { ISupportedTextTrackFormat } from "../../transports";
+import type { IFeature } from "../../features/index.ts";
+import { addFeatures } from "../../features/index.ts";
+import HTMLTextDisplayer from "../../main_thread/text_displayer/html/index.ts";
+import type { ISupportedTextTrackFormat } from "../../transports/index.ts";
 
 /** Argument for the `setTextTrack` method. */
 export interface ISetTextTrackArguments {

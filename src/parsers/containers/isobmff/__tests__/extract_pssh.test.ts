@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { concat } from "../../../../utils/byte_parsing";
-import extractPssh, { getPsshSystemID } from "../extract_pssh";
+import { concat } from "../../../../utils/byte_parsing.ts";
+import extractPssh, { getPsshSystemID } from "../extract_pssh.ts";
 
 const { mockCanPatchOutPsshBox, mockLog } = vi.hoisted(() => {
   return {

@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types";
-import { assertUnreachable } from "../../utils/assert";
-import request from "../../utils/request";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types.ts";
+import { assertUnreachable } from "../../utils/assert.ts";
+import request from "../../utils/request/index.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   IManifestLoaderOptions,
   IRequestedData,
   ITransportManifestPipeline,
-} from "../types";
-import addQueryString from "./add_query_string";
-import callCustomManifestLoader from "./call_custom_manifest_loader";
+} from "../types.ts";
+import addQueryString from "./add_query_string.ts";
+import callCustomManifestLoader from "./call_custom_manifest_loader.ts";
 
 /**
  * Manifest loader triggered if there was no custom-defined one in the API.

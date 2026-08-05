@@ -1,30 +1,36 @@
 import type { Mock } from "vitest";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { ICdnMetadata } from "../../../../parsers/manifest";
+import type { ICdnMetadata } from "../../../../parsers/manifest/index.ts";
 import type {
   ISegmentLoader,
   ISegmentLoaderCallbacks,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
   ISegmentParser,
-} from "../../../../transports";
-import sleep from "../../../../utils/sleep";
-import TaskCanceller, { CancellationError } from "../../../../utils/task_canceller";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
+} from "../../../../transports/index.ts";
+import sleep from "../../../../utils/sleep.ts";
+import TaskCanceller, { CancellationError } from "../../../../utils/task_canceller.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
 import type {
   IMetricsCallbackPayload,
   IRequestBeginCallbackPayload,
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
-} from "../../../adaptive";
-import type CmcdDataBuilder from "../../../cmcd";
-import type CdnPrioritizer from "../../cdn_prioritizer";
-import type { IBackoffSettings } from "../../utils/schedule_request";
+} from "../../../adaptive/index.ts";
+import type CmcdDataBuilder from "../../../cmcd/index.ts";
+import type CdnPrioritizer from "../../cdn_prioritizer.ts";
+import type { IBackoffSettings } from "../../utils/schedule_request.ts";
 import createSegmentFetcher, {
   getSegmentFetcherRequestOptions,
-} from "../segment_fetcher";
-import type { ISegmentFetcherArguments, ISegmentLoaderContent } from "../segment_fetcher";
-import type { IParsedInitSegmentPayload, IParsedSegmentPayload } from "../segment_queue";
+} from "../segment_fetcher.ts";
+import type {
+  ISegmentFetcherArguments,
+  ISegmentLoaderContent,
+} from "../segment_fetcher.ts";
+import type {
+  IParsedInitSegmentPayload,
+  IParsedSegmentPayload,
+} from "../segment_queue.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */

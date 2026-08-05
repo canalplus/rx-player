@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import warnOnce from "../warn_once";
+import warnOnce from "../warn_once.ts";
 
 describe("utils - warnOnce", () => {
   it("should only call console.warn once for a given message", () => {

@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
-import shouldValidateMetadata from "../should_validate_metadata";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
+import shouldValidateMetadata from "../should_validate_metadata.ts";
 
 describe("compat - shouldValidateMetadata", () => {
   beforeEach(() => {

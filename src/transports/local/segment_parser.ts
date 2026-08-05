@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { getMDHDTimescale, extractPssh } from "../../parsers/containers/isobmff";
-import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils";
-import { getTimeCodeScale } from "../../parsers/containers/matroska";
+import { getMDHDTimescale, extractPssh } from "../../parsers/containers/isobmff/index.ts";
+import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils.ts";
+import { getTimeCodeScale } from "../../parsers/containers/matroska/index.ts";
 import type {
   IProtectionDataInfo,
   ISegmentContext,
   ISegmentParserParsedInitChunk,
   ISegmentParserParsedMediaChunk,
-} from "../types";
-import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos";
-import inferSegmentContainer from "../utils/infer_segment_container";
+} from "../types.ts";
+import getISOBMFFTimingInfos from "../utils/get_isobmff_timing_infos.ts";
+import inferSegmentContainer from "../utils/infer_segment_container.ts";
 
 export default function segmentParser(
   loadedSegment: {

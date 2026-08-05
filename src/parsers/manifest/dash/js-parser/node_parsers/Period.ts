@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import startsWith from "../../../../../utils/starts_with";
-import type { ITNode } from "../../../../../utils/xml-parser";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import startsWith from "../../../../../utils/starts_with.ts";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
   IBaseUrlIntermediateRepresentation,
@@ -26,13 +26,13 @@ import type {
   IPeriodChildren,
   IPeriodIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
-} from "../../node_parser_types";
-import { createAdaptationSetIntermediateRepresentation } from "./AdaptationSet";
-import parseBaseURL from "./BaseURL";
-import parseContentProtection from "./ContentProtection";
-import { createEventStreamIntermediateRepresentation } from "./EventStream";
-import parseSegmentTemplate from "./SegmentTemplate";
-import { parseBoolean, parseDuration, ValueParser } from "./utils";
+} from "../../node_parser_types.ts";
+import { createAdaptationSetIntermediateRepresentation } from "./AdaptationSet.ts";
+import parseBaseURL from "./BaseURL.ts";
+import parseContentProtection from "./ContentProtection.ts";
+import { createEventStreamIntermediateRepresentation } from "./EventStream.ts";
+import parseSegmentTemplate from "./SegmentTemplate.ts";
+import { parseBoolean, parseDuration, ValueParser } from "./utils.ts";
 
 /**
  * @param {Array.<Object | string>} periodChildren

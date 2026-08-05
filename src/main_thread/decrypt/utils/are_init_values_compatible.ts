@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
-import SerializableBytes from "./serializable_bytes";
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal.ts";
+import SerializableBytes from "./serializable_bytes.ts";
 
 /**
  * Returns `true` if both values are compatible initialization data, which

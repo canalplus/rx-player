@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
-import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
-import { utf8ToStr } from "../../../../utils/string_parsing";
-import parseTtml from "../parse_ttml";
-import parseCue from "./parse_cue";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types.ts";
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8.ts";
+import { utf8ToStr } from "../../../../utils/string_parsing.ts";
+import parseTtml from "../parse_ttml.ts";
+import parseCue from "./parse_cue.ts";
 
 /**
  * @param {string|BufferSource} input

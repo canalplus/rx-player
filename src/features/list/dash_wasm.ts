@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import initializeCoreEntry from "../../core/entry";
-import type { IFeaturesObject } from "../../features/types";
-import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread";
-import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer";
-import type { IDashWasmParserOptions } from "../../parsers/manifest/dash/wasm-parser";
-import DashWasmParser from "../../parsers/manifest/dash/wasm-parser";
-import dash from "../../transports/dash";
+import initializeCoreEntry from "../../core/entry/index.ts";
+import type { IFeaturesObject } from "../../features/types.ts";
+import { MonoThreadCoreInterface } from "../../main_thread/core_interface/monothread.ts";
+import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer.ts";
+import type { IDashWasmParserOptions } from "../../parsers/manifest/dash/wasm-parser/index.ts";
+import DashWasmParser from "../../parsers/manifest/dash/wasm-parser/index.ts";
+import dash from "../../transports/dash/index.ts";
 
 const dashWasmParser = new DashWasmParser();
 const dashWasmFeature = {

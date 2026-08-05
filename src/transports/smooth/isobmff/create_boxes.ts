@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { createBox } from "../../../parsers/containers/isobmff";
+import { createBox } from "../../../parsers/containers/isobmff/index.ts";
 import {
   be2toi,
   be4toi,
@@ -22,8 +22,8 @@ import {
   itobe2,
   itobe4,
   itobe8,
-} from "../../../utils/byte_parsing";
-import { hexToBytes, strToUtf8 } from "../../../utils/string_parsing";
+} from "../../../utils/byte_parsing.ts";
+import { hexToBytes, strToUtf8 } from "../../../utils/string_parsing.ts";
 
 /**
  * @param {Number} width

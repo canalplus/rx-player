@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { ITNode } from "../../../../../utils/xml-parser";
-import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types";
-import { textContent } from "./utils";
+import type { ITNode } from "../../../../../utils/xml-parser.ts";
+import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types.ts";
+import { textContent } from "./utils.ts";
 
 /**
  * Parse an BaseURL element into an BaseURL intermediate

@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-import Adaptation from "./adaptation";
-import type { ICodecSupportInfo } from "./codec_support_cache";
-import type { IUpdatedRepresentationInfo, IManifestParsingOptions } from "./manifest";
-import Manifest from "./manifest";
-import Period from "./period";
-import type { IThumbnailTrack } from "./period";
-import Representation from "./representation";
-import type { IRepresentationProtectionData } from "./representation";
+import Adaptation from "./adaptation.ts";
+import type { ICodecSupportInfo } from "./codec_support_cache.ts";
+import type { IUpdatedRepresentationInfo, IManifestParsingOptions } from "./manifest.ts";
+import Manifest from "./manifest.ts";
+import Period from "./period.ts";
+import type { IThumbnailTrack } from "./period.ts";
+import Representation from "./representation.ts";
+import type { IRepresentationProtectionData } from "./representation.ts";
 import type {
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
   IRepresentationIndex,
   ISegment,
-} from "./representation_index";
-import { StaticRepresentationIndex } from "./representation_index";
-import type { IBufferedChunkInfos } from "./utils";
-import { areSameContent, getLoggableSegmentId } from "./utils";
+} from "./representation_index/index.ts";
+import { StaticRepresentationIndex } from "./representation_index/index.ts";
+import type { IBufferedChunkInfos } from "./utils.ts";
+import { areSameContent, getLoggableSegmentId } from "./utils.ts";
 
 export default Manifest;
-export * from "./types";
-export type { IPeriodsUpdateResult } from "./update_periods";
+export * from "./types.ts";
+export type { IPeriodsUpdateResult } from "./update_periods.ts";
 export type {
   IBufferedChunkInfos,
   ICodecSupportInfo,

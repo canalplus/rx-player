@@ -1,5 +1,5 @@
-import type { CancellationSignal } from "../utils/task_canceller";
-import BROWSER_GLOBALS, { type IMediaElement } from "./browser_compatibility_types";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
+import BROWSER_GLOBALS, { type IMediaElement } from "./browser_compatibility_types.ts";
 
 /**
  * Temporarily disables remote playback on a media element by setting the

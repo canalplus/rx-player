@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import MediaCapabilitiesProber from "./api";
+import MediaCapabilitiesProber from "./api.ts";
 export type {
   IMediaConfiguration,
   IVideoConfiguration,
   IAudioConfiguration,
   IMediaConfigurationKeySystem,
-} from "./types";
+} from "./types.ts";
 export default MediaCapabilitiesProber;

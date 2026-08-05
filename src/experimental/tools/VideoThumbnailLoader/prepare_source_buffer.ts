@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../../compat/browser_compatibility_types";
-import BROWSER_GLOBALS from "../../../compat/browser_compatibility_types";
-import disableRemotePlaybackOnManagedMediaSource from "../../../compat/disable_remote_playback_on_managed_media_source";
-import resetMediaElement from "../../../compat/reset_media_element";
-import log from "../../../log";
-import { SourceBufferType } from "../../../mse";
-import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface";
-import MainMediaSourceInterface from "../../../mse/main_media_source_interface";
-import createCancellablePromise from "../../../utils/create_cancellable_promise";
-import idGenerator from "../../../utils/id_generator";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import type { CancellationSignal } from "../../../utils/task_canceller";
+import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
+import BROWSER_GLOBALS from "../../../compat/browser_compatibility_types.ts";
+import disableRemotePlaybackOnManagedMediaSource from "../../../compat/disable_remote_playback_on_managed_media_source.ts";
+import resetMediaElement from "../../../compat/reset_media_element.ts";
+import log from "../../../log.ts";
+import { SourceBufferType } from "../../../mse/index.ts";
+import type { MainSourceBufferInterface } from "../../../mse/main_media_source_interface.ts";
+import MainMediaSourceInterface from "../../../mse/main_media_source_interface.ts";
+import createCancellablePromise from "../../../utils/create_cancellable_promise.ts";
+import idGenerator from "../../../utils/id_generator.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
 
 const generateMediaSourceId = idGenerator();
 

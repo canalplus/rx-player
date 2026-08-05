@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import type { IRepresentationIndex } from "../../../../manifest";
-import getLastPositionFromAdaptation from "../get_last_time_from_adaptation";
+import type { IRepresentationIndex } from "../../../../manifest/index.ts";
+import getLastPositionFromAdaptation from "../get_last_time_from_adaptation.ts";
 
 function generateRepresentationIndex(
   lastPosition: number | undefined | null,

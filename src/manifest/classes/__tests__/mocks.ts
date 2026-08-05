@@ -10,13 +10,13 @@
  * - All of their methods throw an error immediately on call (you have to
  *   implement the ones you want, generally through testing tools).
  */
-import type { IRepresentationIndex, ISegment } from "../..";
-import { makeMockedClass } from "../../../utils/test-utils";
-import { ManifestMetadataFormat } from "../../types";
-import type Adaptation from "../adaptation";
-import type Manifest from "../manifest";
-import type Period from "../period";
-import type Representation from "../representation";
+import { makeMockedClass } from "../../../utils/test-utils.ts";
+import type { IRepresentationIndex, ISegment } from "../../index.ts";
+import { ManifestMetadataFormat } from "../../types.ts";
+import type Adaptation from "../adaptation.ts";
+import type Manifest from "../manifest.ts";
+import type Period from "../period.ts";
+import type Representation from "../representation.ts";
 
 export const DummyManifest = makeMockedClass<Manifest>(
   {

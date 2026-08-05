@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import type { RequestError, ISerializedRequestError } from "../utils/request";
-import type { INetworkErrorCode, INetworkErrorType } from "./error_codes";
-import { ErrorTypes, NetworkErrorTypes } from "./error_codes";
-import errorMessage from "./error_message";
+import type { RequestError, ISerializedRequestError } from "../utils/request/index.ts";
+import type { INetworkErrorCode, INetworkErrorType } from "./error_codes.ts";
+import { ErrorTypes, NetworkErrorTypes } from "./error_codes.ts";
+import errorMessage from "./error_message.ts";
 
 /**
  * Error linked to network interactions (requests).

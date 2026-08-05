@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import MediaKeysAttacher from "./utils/media_keys_attacher";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import MediaKeysAttacher from "./utils/media_keys_attacher.ts";
 
 /**
  * Free up all ressources taken by the content decryption logic.

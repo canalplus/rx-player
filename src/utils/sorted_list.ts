@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import arrayFind from "./array_find";
-import arrayIncludes from "./array_includes";
+import arrayFind from "./array_find.ts";
+import arrayIncludes from "./array_includes.ts";
 
 /**
  * Creates an Array automatically sorted with the sorting function given to the

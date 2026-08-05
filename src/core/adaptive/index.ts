@@ -27,8 +27,8 @@ import type {
   IRequestEndCallbackPayload,
   IRequestProgressCallbackPayload,
   IResolutionInfo,
-} from "./adaptive_representation_selector";
-import AdaptiveRepresentationSelector from "./adaptive_representation_selector";
+} from "./adaptive_representation_selector.ts";
+import AdaptiveRepresentationSelector from "./adaptive_representation_selector.ts";
 
 export default AdaptiveRepresentationSelector;
 export type {

@@ -19,23 +19,23 @@
  * It always should be imported through the `features` object.
  */
 
-import Manifest from "../../manifest/classes";
-import type { ILocalManifest } from "../../parsers/manifest/local";
-import parseLocalManifest from "../../parsers/manifest/local";
-import type { ILoadedManifestFormat } from "../../public_types";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import Manifest from "../../manifest/classes/index.ts";
+import type { ILocalManifest } from "../../parsers/manifest/local/index.ts";
+import parseLocalManifest from "../../parsers/manifest/local/index.ts";
+import type { ILoadedManifestFormat } from "../../public_types.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   IManifestLoaderOptions,
   IManifestParserResult,
   IRequestedData,
   ITransportOptions,
   ITransportPipelines,
-} from "../types";
-import callCustomManifestLoader from "../utils/call_custom_manifest_loader";
-import segmentLoader from "./segment_loader";
-import segmentParser from "./segment_parser";
-import textTrackParser from "./text_parser";
+} from "../types.ts";
+import callCustomManifestLoader from "../utils/call_custom_manifest_loader.ts";
+import segmentLoader from "./segment_loader.ts";
+import segmentParser from "./segment_parser.ts";
+import textTrackParser from "./text_parser.ts";
 
 /**
  * Returns pipelines used for local Manifest streaming.

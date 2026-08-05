@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import log from "../../log";
-import type { IRepresentation } from "../../manifest";
-import arrayFind from "../../utils/array_find";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import type { IRepresentationEstimatorPlaybackObservation } from "./adaptive_representation_selector";
-import type BandwidthEstimator from "./utils/bandwidth_estimator";
-import EWMA from "./utils/ewma";
+import config from "../../config.ts";
+import log from "../../log.ts";
+import type { IRepresentation } from "../../manifest/index.ts";
+import arrayFind from "../../utils/array_find.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp.ts";
+import type { IRepresentationEstimatorPlaybackObservation } from "./adaptive_representation_selector.ts";
+import type BandwidthEstimator from "./utils/bandwidth_estimator.ts";
+import EWMA from "./utils/ewma.ts";
 import type {
   IPendingRequestStoreProgress,
   IRequestInfo,
-} from "./utils/pending_requests_store";
+} from "./utils/pending_requests_store.ts";
 
 /** Object describing the current playback conditions. */
 export type IPlaybackConditionsInfo = Pick<

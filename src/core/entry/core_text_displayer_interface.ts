@@ -1,15 +1,15 @@
-import log from "../../log";
-import type { ITextDisplayerData } from "../../main_thread/types";
-import type { IRange } from "../../utils/ranges";
-import { CancellationError } from "../../utils/task_canceller";
-import type { ITextDisplayerInterface } from "../segment_sinks";
+import log from "../../log.ts";
+import type { ITextDisplayerData } from "../../main_thread/types.ts";
+import type { IRange } from "../../utils/ranges.ts";
+import { CancellationError } from "../../utils/task_canceller.ts";
+import type { ITextDisplayerInterface } from "../segment_sinks/index.ts";
 import type {
   IPushTextDataCoreMessage,
   IRemoveTextDataCoreMessage,
   IResetTextDisplayerCoreMessage,
   IStopTextDisplayerCoreMessage,
-} from "../types";
-import { CoreMessageType } from "../types";
+} from "../types.ts";
+import { CoreMessageType } from "../types.ts";
 
 /**
  * Implementation of an `ITextDisplayerInterface` for the Core, that can run in

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { getFirefoxVersion } from "./browser_version";
-import EnvDetector from "./env_detector";
+import { getFirefoxVersion } from "./browser_version.ts";
+import EnvDetector from "./env_detector.ts";
 
 /**
  * This functions tells if the RxPlayer can trust on any browser data

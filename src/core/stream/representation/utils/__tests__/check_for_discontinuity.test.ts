@@ -1,19 +1,19 @@
 import { describe, it, expect, vi } from "vitest";
 import {
-  type Adaptation,
-  type Period,
-  type Representation,
-} from "../../../../../manifest/classes";
-import type Manifest from "../../../../../manifest/classes";
-import {
   DummyPeriod,
   DummyManifest,
   DummyAdaptation,
   createSegment,
   DummyRepresentation,
-} from "../../../../../manifest/classes/__tests__/mocks";
-import { ChunkStatus, type IBufferedChunk } from "../../../../segment_sinks";
-import checkForDiscontinuity from "../check_for_discontinuity";
+} from "../../../../../manifest/classes/__tests__/mocks.ts";
+import {
+  type Adaptation,
+  type Period,
+  type Representation,
+} from "../../../../../manifest/classes/index.ts";
+import type Manifest from "../../../../../manifest/classes/index.ts";
+import { ChunkStatus, type IBufferedChunk } from "../../../../segment_sinks/index.ts";
+import checkForDiscontinuity from "../check_for_discontinuity.ts";
 
 describe("checkForDiscontinuity", () => {
   const createMockContent = (): {

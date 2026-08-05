@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { areSameContent } from "../../../manifest";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
-import type { IChunkContext } from "./types";
+import { areSameContent } from "../../../manifest/index.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
+import type { IChunkContext } from "./types.ts";
 
 /**
  * Entry of a `BufferedHistory`, added when the initial buffered range of a

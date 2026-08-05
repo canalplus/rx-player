@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import features from "../../features";
-import type { IMetaPlaylistPrivateInfos, ISegment } from "../../manifest";
-import Manifest from "../../manifest/classes";
-import type { IParserResponse as IMPLParserResponse } from "../../parsers/manifest/metaplaylist";
-import parseMetaPlaylist from "../../parsers/manifest/metaplaylist";
-import type { ICdnMetadata, IParsedManifest } from "../../parsers/manifest/types";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import objectAssign from "../../utils/object_assign";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import config from "../../config.ts";
+import features from "../../features/index.ts";
+import Manifest from "../../manifest/classes/index.ts";
+import type { IMetaPlaylistPrivateInfos, ISegment } from "../../manifest/index.ts";
+import type { IParserResponse as IMPLParserResponse } from "../../parsers/manifest/metaplaylist/index.ts";
+import parseMetaPlaylist from "../../parsers/manifest/metaplaylist/index.ts";
+import type { ICdnMetadata, IParsedManifest } from "../../parsers/manifest/types.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../utils/object_assign.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   IChunkTimeInfo,
   ILoadedAudioVideoSegmentFormat,
@@ -43,8 +43,8 @@ import type {
   ITextTrackSegmentData,
   ITransportOptions,
   ITransportPipelines,
-} from "../types";
-import generateManifestLoader from "./manifest_loader";
+} from "../types.ts";
+import generateManifestLoader from "./manifest_loader.ts";
 
 /**
  * Get base - real - content from an offseted metaplaylist content.

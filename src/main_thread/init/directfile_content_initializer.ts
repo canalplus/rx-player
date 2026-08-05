@@ -19,26 +19,26 @@
  * It always should be imported through the `features` object.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import clearElementSrc from "../../compat/clear_element_src";
-import getStartDate from "../../compat/get_start_date";
-import type { MediaError } from "../../errors";
-import log from "../../log";
-import type { IMediaElementPlaybackObserver } from "../../playback_observer";
-import type { IKeySystemOption, IPlayerError } from "../../public_types";
-import assert from "../../utils/assert";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import noop from "../../utils/noop";
-import type { IReadOnlySharedReference } from "../../utils/reference";
-import type { CancellationSignal } from "../../utils/task_canceller";
-import TaskCanceller from "../../utils/task_canceller";
-import { ContentInitializer } from "./types";
-import type { IInitialTimeOptions } from "./utils/get_initial_time";
-import getLoadedReference from "./utils/get_loaded_reference";
-import performInitialSeekAndPlay from "./utils/initial_seek_and_play";
-import initializeContentDecryption from "./utils/initialize_content_decryption";
-import RebufferingController from "./utils/rebuffering_controller";
-import listenToMediaError from "./utils/throw_on_media_error";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import clearElementSrc from "../../compat/clear_element_src.ts";
+import getStartDate from "../../compat/get_start_date.ts";
+import type { MediaError } from "../../errors/index.ts";
+import log from "../../log.ts";
+import type { IMediaElementPlaybackObserver } from "../../playback_observer/index.ts";
+import type { IKeySystemOption, IPlayerError } from "../../public_types.ts";
+import assert from "../../utils/assert.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import noop from "../../utils/noop.ts";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
+import { ContentInitializer } from "./types.ts";
+import type { IInitialTimeOptions } from "./utils/get_initial_time.ts";
+import getLoadedReference from "./utils/get_loaded_reference.ts";
+import performInitialSeekAndPlay from "./utils/initial_seek_and_play.ts";
+import initializeContentDecryption from "./utils/initialize_content_decryption.ts";
+import RebufferingController from "./utils/rebuffering_controller.ts";
+import listenToMediaError from "./utils/throw_on_media_error.ts";
 
 /**
  * `ContentIntializer` which will load contents by putting their URL in the

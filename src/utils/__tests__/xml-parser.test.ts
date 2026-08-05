@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseXml } from "../xml-parser";
+import { parseXml } from "../xml-parser.ts";
 
 const exampleXml = `<?xml version="1.0" encoding="utf-8"?>
 <MPD availabilityStartTime="2012-01-01T00:00:00Z" id="Config part of url maybe?" minBufferTime="PT2S" minimumUpdatePeriod="PT0S" profiles="urn:mpeg:dash:profile:isoff-live:2011,urn:com:dashif:dash264" publishTime="2018-05-28T11:47:45Z" timeShiftBufferDepth="PT5M" type="dynamic" ns1:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:ns1="http://www.w3.org/2001/XMLSchema-instance">

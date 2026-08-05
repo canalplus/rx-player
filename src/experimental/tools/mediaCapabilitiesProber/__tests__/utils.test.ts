@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import type { IMediaConfiguration } from "../types";
-import type { ICapabilities } from "../utils";
-import { extend, filterConfigurationWithCapabilities } from "../utils";
+import type { IMediaConfiguration } from "../types.ts";
+import type { ICapabilities } from "../utils.ts";
+import { extend, filterConfigurationWithCapabilities } from "../utils.ts";
 
 describe("MediaCapabilitiesProber utils - extends", () => {
   it("should return extender if target is empty", () => {

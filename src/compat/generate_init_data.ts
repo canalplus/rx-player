@@ -1,5 +1,5 @@
-import { itole4, itobe4, itole2, concat } from "../utils/byte_parsing";
-import { strToUtf8, strToUtf16LE, hexToBytes } from "../utils/string_parsing";
+import { itole4, itobe4, itole2, concat } from "../utils/byte_parsing.ts";
+import { strToUtf8, strToUtf16LE, hexToBytes } from "../utils/string_parsing.ts";
 
 /**
  * The PlayReadyHeader sample that will be used to test if the CDM is supported.

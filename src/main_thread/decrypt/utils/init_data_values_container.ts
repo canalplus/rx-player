@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { concat } from "../../../utils/byte_parsing";
-import hashBuffer from "../../../utils/hash_buffer";
-import type { IInitDataValue } from "../types";
-import areInitializationValuesCompatible from "./are_init_values_compatible";
+import { concat } from "../../../utils/byte_parsing.ts";
+import hashBuffer from "../../../utils/hash_buffer.ts";
+import type { IInitDataValue } from "../types.ts";
+import areInitializationValuesCompatible from "./are_init_values_compatible.ts";
 
 /**
  * Wrap initialization data values and reformat it so it becomes easier to check

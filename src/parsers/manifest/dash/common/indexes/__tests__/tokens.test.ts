@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createDashUrlDetokenizer, replaceRepresentationDASHTokens } from "../tokens";
+import { createDashUrlDetokenizer, replaceRepresentationDASHTokens } from "../tokens.ts";
 
 describe("dash parser tokens helpers", function () {
   describe("createDashUrlDetokenizer", () => {

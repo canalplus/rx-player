@@ -1,7 +1,7 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import log from "../../../log";
-import BufferBasedChooser from "../buffer_based_chooser";
-import { ScoreConfidenceLevel } from "../utils/representation_score_calculator";
+import log from "../../../log.ts";
+import BufferBasedChooser from "../buffer_based_chooser.ts";
+import { ScoreConfidenceLevel } from "../utils/representation_score_calculator.ts";
 
 const logDebug = vi.spyOn(log, "debug").mockImplementation(() => {
   /* noop */

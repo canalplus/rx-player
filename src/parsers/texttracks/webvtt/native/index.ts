@@ -19,7 +19,7 @@
  * It always should be imported through the `features` object.
  */
 
-import parseWebVTTPlainTextToVTTCues from "./parse_vtt_plain_text_to_cues";
-import parseMp4EmbeddedWebVttToVTTCues from "./parse_webvtt_mp4_to_cues";
+import parseWebVTTPlainTextToVTTCues from "./parse_vtt_plain_text_to_cues.ts";
+import parseMp4EmbeddedWebVttToVTTCues from "./parse_webvtt_mp4_to_cues.ts";
 
 export { parseMp4EmbeddedWebVttToVTTCues, parseWebVTTPlainTextToVTTCues };

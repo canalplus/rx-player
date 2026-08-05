@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import log from "../../../log";
-import type { IManifestMetadata } from "../../../manifest";
+import config from "../../../config.ts";
+import log from "../../../log.ts";
+import type { IManifestMetadata } from "../../../manifest/index.ts";
 import {
   getLivePosition,
   getMaximumSafePosition,
   getMinimumSafePosition,
-} from "../../../manifest";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp";
+} from "../../../manifest/index.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
 
 /**
  * All possible initial time options that can be set.

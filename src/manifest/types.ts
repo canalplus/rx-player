@@ -1,5 +1,8 @@
-import type { IContentProtections, IManifestStreamEvent } from "../parsers/manifest";
-import type { IHDRInformation, ITrackType } from "../public_types";
+import type {
+  IContentProtections,
+  IManifestStreamEvent,
+} from "../parsers/manifest/index.ts";
+import type { IHDRInformation, ITrackType } from "../public_types.ts";
 
 /**
  * Various formats an `IManifestMetadata` object can take.

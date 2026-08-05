@@ -1,9 +1,9 @@
-import SharedReference from "../../../utils/reference";
+import SharedReference from "../../../utils/reference.ts";
 import type {
   IABREstimate,
   IAdaptiveRepresentationSelectorArguments,
   IRepresentationEstimator,
-} from "../adaptive_representation_selector";
+} from "../adaptive_representation_selector.ts";
 
 /**
  * Easily create objects matching the arguments of the `AdaptiveRepresentationSelector`.

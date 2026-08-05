@@ -5,33 +5,33 @@ import type {
   ISerializedNetworkError,
   ISerializedEncryptedMediaError,
   ISerializedOtherError,
-} from "../errors";
-import type { IContentProtection, ITextDisplayerData } from "../main_thread/types";
-import type { IManifestMetadata, IPeriodsUpdateResult } from "../manifest";
+} from "../errors/index.ts";
+import type { IContentProtection, ITextDisplayerData } from "../main_thread/types.ts";
+import type { IManifestMetadata, IPeriodsUpdateResult } from "../manifest/index.ts";
 import type {
   ISourceBufferInterfaceAppendBufferParameters,
   SourceBufferType,
-} from "../mse";
-import type { ITrackType } from "../public_types";
-import type { IThumbnailResponse } from "../transports";
-import type { ILoggerLevel, ILogNamespace } from "../utils/logger";
+} from "../mse/index.ts";
+import type { ITrackType } from "../public_types.ts";
+import type { IThumbnailResponse } from "../transports/index.ts";
+import type { ILoggerLevel, ILogNamespace } from "../utils/logger.ts";
 import type {
   IAdaptiveRepresentationSelectorArguments,
   IABRThrottlers,
   IResolutionInfo,
-} from "./adaptive";
-import type { IMessageReceiverCallback } from "./entry";
+} from "./adaptive/index.ts";
+import type { IMessageReceiverCallback } from "./entry/index.ts";
 import type {
   IManifestFetcherSettings,
   ISegmentQueueCreatorBackoffOptions,
-} from "./fetchers";
+} from "./fetchers/index.ts";
 import type {
   IBufferedChunk,
   IBufferType,
   ITextDisplayerInterface,
-} from "./segment_sinks";
-import type SegmentSinksStore from "./segment_sinks";
-import type { ISegmentSinkMetrics } from "./segment_sinks/segment_sinks_store";
+} from "./segment_sinks/index.ts";
+import type SegmentSinksStore from "./segment_sinks/index.ts";
+import type { ISegmentSinkMetrics } from "./segment_sinks/segment_sinks_store.ts";
 import type {
   IAdaptationChoice,
   IPausedPlaybackObservation,
@@ -39,7 +39,7 @@ import type {
   IRepresentationsChoice,
   IStreamOrchestratorPlaybackObservation,
   ITrackSwitchingMode,
-} from "./stream";
+} from "./stream/index.ts";
 
 /** Type of an `SegmentSinksStore` class. */
 export type ISegmentSinksStore = SegmentSinksStore;

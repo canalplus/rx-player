@@ -1,6 +1,6 @@
 import * as React from "react";
-import Checkbox from "../CheckBox";
-import Select from "../Select";
+import Checkbox from "../CheckBox.tsx";
+import Select from "../Select.tsx";
 
 /**
  * @param {Object} props

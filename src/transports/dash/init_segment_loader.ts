@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import type { ISegment } from "../../manifest";
-import { concat } from "../../utils/byte_parsing";
-import request from "../../utils/request";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import type { ISegment } from "../../manifest/index.ts";
+import { concat } from "../../utils/byte_parsing.ts";
+import request from "../../utils/request/index.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,
   ISegmentLoaderResultChunkedComplete,
   ISegmentLoaderResultSegmentCreated,
   ISegmentLoaderResultSegmentLoaded,
-} from "../types";
-import addQueryString from "../utils/add_query_string";
-import byteRange from "../utils/byte_range";
+} from "../types.ts";
+import addQueryString from "../utils/add_query_string.ts";
+import byteRange from "../utils/byte_range.ts";
 
 /**
  * Perform a request for an initialization segment, agnostic to the container.

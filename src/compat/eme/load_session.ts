@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import type { IMediaKeySession } from "../browser_compatibility_types";
+import log from "../../log.ts";
+import type { IMediaKeySession } from "../browser_compatibility_types.ts";
 
 const EME_WAITING_DELAY_LOADED_SESSION_EMPTY_KEYSTATUSES = 100;
 

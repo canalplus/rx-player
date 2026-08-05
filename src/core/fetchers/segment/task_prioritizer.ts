@@ -1,8 +1,8 @@
-import log from "../../../log";
-import arrayFindIndex from "../../../utils/array_find_index";
-import createCancellablePromise from "../../../utils/create_cancellable_promise";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
+import log from "../../../log.ts";
+import arrayFindIndex from "../../../utils/array_find_index.ts";
+import createCancellablePromise from "../../../utils/create_cancellable_promise.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller, { CancellationError } from "../../../utils/task_canceller.ts";
 
 /**
  * Utilitary class which allows to perform multiple tasks at once each with an

@@ -3,14 +3,14 @@ import type {
   IMediaSource,
   ISourceBuffer,
   ISourceBufferList,
-} from "../../compat/browser_compatibility_types";
-import { SourceBufferError } from "../../errors";
-import noop from "../../utils/noop";
+} from "../../compat/browser_compatibility_types.ts";
+import { SourceBufferError } from "../../errors/index.ts";
+import noop from "../../utils/noop.ts";
 import MainMediaSourceInterface, {
   MainSourceBufferInterface,
-} from "../main_media_source_interface";
-import { SourceBufferType } from "../types";
-import MediaSourceDurationUpdater from "../utils/media_source_duration_updater";
+} from "../main_media_source_interface.ts";
+import { SourceBufferType } from "../types.ts";
+import MediaSourceDurationUpdater from "../utils/media_source_duration_updater.ts";
 
 const {
   MockMediaSource,

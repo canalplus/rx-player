@@ -17,22 +17,22 @@
 import type {
   IStreamOrchestratorPlaybackObservation,
   IBufferType,
-} from "../../core/types";
-import { MediaError } from "../../errors";
+} from "../../core/types.ts";
+import { MediaError } from "../../errors/index.ts";
 import type {
   IManifest,
   IAdaptation,
   IRepresentationIndex,
   IPeriod,
-} from "../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../playback_observer";
-import type { IPlayerError } from "../../public_types";
-import arrayIncludes from "../../utils/array_includes";
-import EventEmitter from "../../utils/event_emitter";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import queueMicrotask from "../../utils/queue_microtask";
-import SortedList from "../../utils/sorted_list";
-import TaskCanceller from "../../utils/task_canceller";
+} from "../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../playback_observer/index.ts";
+import type { IPlayerError } from "../../public_types.ts";
+import arrayIncludes from "../../utils/array_includes.ts";
+import EventEmitter from "../../utils/event_emitter.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import queueMicrotask from "../../utils/queue_microtask.ts";
+import SortedList from "../../utils/sorted_list.ts";
+import TaskCanceller from "../../utils/task_canceller.ts";
 
 /**
  * Observes what's being played and take care of media events relating to time

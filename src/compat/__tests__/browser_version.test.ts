@@ -1,6 +1,6 @@
 import { describe, afterEach, it, expect, vi } from "vitest";
-import { getChromeVersion, getFirefoxVersion } from "../browser_version";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
+import { getChromeVersion, getFirefoxVersion } from "../browser_version.ts";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
 
 const origUserAgent = navigator.userAgent;
 Object.defineProperty(

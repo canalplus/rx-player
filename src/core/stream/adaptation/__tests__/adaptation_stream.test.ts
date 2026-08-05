@@ -1,40 +1,40 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type {
-  IAdaptation,
-  IManifest,
-  IPeriod,
-  IRepresentation,
-} from "../../../../manifest";
 import {
   DummyAdaptation,
   DummyManifest,
   DummyPeriod,
   DummyRepresentation,
   createSegment,
-} from "../../../../manifest/classes/__tests__/mocks";
-import type { IPeriodsUpdateResult } from "../../../../manifest/classes/update_periods";
-import type { ObservationPosition } from "../../../../playback_observer";
+} from "../../../../manifest/classes/__tests__/mocks.ts";
+import type { IPeriodsUpdateResult } from "../../../../manifest/classes/update_periods.ts";
+import type {
+  IAdaptation,
+  IManifest,
+  IPeriod,
+  IRepresentation,
+} from "../../../../manifest/index.ts";
 import {
   DummyObservationPosition,
   makeReadyOnlyPlaybackObserver,
-} from "../../../../playback_observer/__tests__/mocks";
-import SharedReference from "../../../../utils/reference";
-import TaskCanceller, { CancellationError } from "../../../../utils/task_canceller";
-import { makeMockedClass } from "../../../../utils/test-utils";
+} from "../../../../playback_observer/__tests__/mocks.ts";
+import type { ObservationPosition } from "../../../../playback_observer/index.ts";
+import SharedReference from "../../../../utils/reference.ts";
+import TaskCanceller, { CancellationError } from "../../../../utils/task_canceller.ts";
+import { makeMockedClass } from "../../../../utils/test-utils.ts";
 import type {
   IRepresentationEstimator,
   IRepresentationEstimatorCallbacks,
-} from "../../../adaptive";
-import type { SegmentQueueCreator } from "../../../fetchers";
-import type SegmentQueue from "../../../fetchers/segment/segment_queue";
-import type { SegmentSink } from "../../../segment_sinks";
-import { DummySegmentSink } from "../../../segment_sinks/__tests__/mocks";
+} from "../../../adaptive/index.ts";
+import type { SegmentQueueCreator } from "../../../fetchers/index.ts";
+import type SegmentQueue from "../../../fetchers/segment/segment_queue.ts";
+import { DummySegmentSink } from "../../../segment_sinks/__tests__/mocks.ts";
+import type { SegmentSink } from "../../../segment_sinks/index.ts";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
-} from "../../representation";
-import AdaptationStream from "../adaptation_stream";
-import type { IAdaptationStreamCallbacks } from "../types";
+} from "../../representation/index.ts";
+import AdaptationStream from "../adaptation_stream.ts";
+import type { IAdaptationStreamCallbacks } from "../types.ts";
 
 const {
   mockGetRepresentationsSwitchingStrategy,

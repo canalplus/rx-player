@@ -1,7 +1,7 @@
-import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
-import features from "../../../features";
-import log from "../../../log";
-import type { ISupportedTextTrackFormat } from "../../../transports";
+import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types.ts";
+import features from "../../../features/index.ts";
+import log from "../../../log.ts";
+import type { ISupportedTextTrackFormat } from "../../../transports/index.ts";
 
 /**
  * Convert text track data into timed VTT Cues.

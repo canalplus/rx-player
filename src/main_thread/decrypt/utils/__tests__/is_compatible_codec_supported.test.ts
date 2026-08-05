@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import isCompatibleCodecSupported from "../is_compatible_codec_supported";
+import isCompatibleCodecSupported from "../is_compatible_codec_supported.ts";
 
 describe("isCodecInCompatibleCodecList", () => {
   it("should return true if the compatible codec is supported", () => {

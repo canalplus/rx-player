@@ -23,26 +23,26 @@
  * position and what is currently buffered.
  */
 
-import config from "../../../config";
-import log from "../../../log";
-import type { ISegment } from "../../../manifest";
-import objectAssign from "../../../utils/object_assign";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
+import config from "../../../config.ts";
+import log from "../../../log.ts";
+import type { ISegment } from "../../../manifest/index.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller, { CancellationError } from "../../../utils/task_canceller.ts";
 import type {
   IParsedInitSegmentPayload,
   IParsedSegmentPayload,
-} from "../../fetchers/segment/segment_queue";
-import EncryptionDataNotifier from "./encryption_data_notifier";
+} from "../../fetchers/segment/segment_queue.ts";
+import EncryptionDataNotifier from "./encryption_data_notifier.ts";
 import type {
   IQueuedSegment,
   IRepresentationStreamArguments,
   IRepresentationStreamCallbacks,
-} from "./types";
-import getBufferStatus from "./utils/get_buffer_status";
-import getSegmentPriority from "./utils/get_segment_priority";
-import pushInitSegment from "./utils/push_init_segment";
-import pushMediaSegment from "./utils/push_media_segment";
+} from "./types.ts";
+import getBufferStatus from "./utils/get_buffer_status.ts";
+import getSegmentPriority from "./utils/get_segment_priority.ts";
+import pushInitSegment from "./utils/push_init_segment.ts";
+import pushMediaSegment from "./utils/push_media_segment.ts";
 
 /**
  * Perform the logic to load the right segments for the given Representation and

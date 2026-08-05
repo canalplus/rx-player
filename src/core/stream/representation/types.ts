@@ -1,25 +1,25 @@
-import type { IContentProtection } from "../../../main_thread/types";
+import type { IContentProtection } from "../../../main_thread/types.ts";
 import type {
   IManifest,
   IAdaptation,
   ISegment,
   IPeriod,
   IRepresentation,
-} from "../../../manifest";
-import type { IEMSG } from "../../../parsers/containers/isobmff";
+} from "../../../manifest/index.ts";
+import type { IEMSG } from "../../../parsers/containers/isobmff/index.ts";
 import type {
   ObservationPosition,
   IReadOnlyPlaybackObserver,
-} from "../../../playback_observer";
+} from "../../../playback_observer/index.ts";
 import type {
   IAudioRepresentationsSwitchingMode,
   IPlayerError,
   IVideoRepresentationsSwitchingMode,
-} from "../../../public_types";
-import type { IRange } from "../../../utils/ranges";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import type { SegmentQueue } from "../../fetchers";
-import type { IBufferType, SegmentSink } from "../../segment_sinks";
+} from "../../../public_types.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import type { SegmentQueue } from "../../fetchers/index.ts";
+import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
 
 /** Callbacks called by the `RepresentationStream` on various events. */
 export interface IRepresentationStreamCallbacks {

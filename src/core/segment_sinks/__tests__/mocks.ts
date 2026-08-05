@@ -1,7 +1,7 @@
-import { makeMockedClass } from "../../../utils/test-utils";
-import type { SegmentSink } from "../implementations";
-import type SegmentInventory from "../inventory";
-import type BufferedHistory from "../inventory/buffered_history";
+import { makeMockedClass } from "../../../utils/test-utils.ts";
+import type { SegmentSink } from "../implementations/index.ts";
+import type BufferedHistory from "../inventory/buffered_history.ts";
+import type SegmentInventory from "../inventory/index.ts";
 
 export const DummySegmentSink = makeMockedClass<SegmentSink>(
   {

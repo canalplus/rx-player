@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ICompatVTTCue } from "../../compat/browser_compatibility_types";
+import type { ICompatVTTCue } from "../../compat/browser_compatibility_types.ts";
 
 // Item returned by an HMTL text track parser
 export interface IHTMLCue {

@@ -19,12 +19,12 @@
  * It always should be imported through the `features` object.
  */
 
-import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types";
-import makeVTTCue from "../../../compat/make_vtt_cue";
-import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8";
-import isNonEmptyString from "../../../utils/is_non_empty_string";
-import isNullOrUndefined from "../../../utils/is_null_or_undefined";
-import { utf8ToStr } from "../../../utils/string_parsing";
+import type { ICompatVTTCue } from "../../../compat/browser_compatibility_types.ts";
+import makeVTTCue from "../../../compat/make_vtt_cue.ts";
+import bufferSourceToUint8 from "../../../utils/buffer_source_to_uint8.ts";
+import isNonEmptyString from "../../../utils/is_non_empty_string.ts";
+import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import { utf8ToStr } from "../../../utils/string_parsing.ts";
 
 const HTML_ENTITIES = /&#([0-9]+);/g;
 const BR = /<br>/gi;

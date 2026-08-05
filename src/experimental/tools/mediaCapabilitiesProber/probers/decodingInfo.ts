@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IMediaConfiguration } from "../types";
+import type { IMediaConfiguration } from "../types.ts";
 
 /**
  * Check if the required APIs are available.

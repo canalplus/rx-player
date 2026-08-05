@@ -1,14 +1,14 @@
-import config from "../../config";
-import log from "../../log";
-import type { IAdaptation, IPeriod, IRepresentation } from "../../manifest";
+import config from "../../config.ts";
+import log from "../../log.ts";
+import type { IAdaptation, IPeriod, IRepresentation } from "../../manifest/index.ts";
 import type {
   IFreezingStatus,
   IRebufferingStatus,
   ObservationPosition,
-} from "../../playback_observer";
-import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import type SegmentSinksStore from "../segment_sinks";
-import type { IBufferedChunk } from "../segment_sinks";
+} from "../../playback_observer/index.ts";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp.ts";
+import type SegmentSinksStore from "../segment_sinks/index.ts";
+import type { IBufferedChunk } from "../segment_sinks/index.ts";
 
 /**
  * "Freezing" is a complex situation indicating that playback is not advancing

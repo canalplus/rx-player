@@ -1,7 +1,7 @@
 import * as React from "react";
-import useModuleState from "../lib/useModuleState";
-import { IPlayerModule } from "../modules/player";
-import { IThumbnailTrackInfo } from "../../../src/public_types";
+import useModuleState from "../lib/useModuleState.ts";
+import { IPlayerModule } from "../modules/player/index.ts";
+import { IThumbnailTrackInfo } from "../../../src/public_types.ts";
 
 const DIV_SPINNER_STYLE = {
   backgroundColor: "gray",

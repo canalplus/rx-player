@@ -1,9 +1,9 @@
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import type RxPlayer from "../public_api";
-import constructDebugGeneralInfo from "./modules/general_info";
-import createSegmentSinkGraph from "./modules/segment_buffer_content";
-import createSegmentSinkSizeGraph from "./modules/segment_buffer_size";
-import { createCompositeElement, createElement } from "./utils";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import type RxPlayer from "../public_api.ts";
+import constructDebugGeneralInfo from "./modules/general_info.ts";
+import createSegmentSinkGraph from "./modules/segment_buffer_content.ts";
+import createSegmentSinkSizeGraph from "./modules/segment_buffer_size.ts";
+import { createCompositeElement, createElement } from "./utils.ts";
 
 export default function renderDebugElement(
   parentElt: HTMLElement,

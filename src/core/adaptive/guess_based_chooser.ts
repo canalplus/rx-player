@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import log from "../../log";
-import type { IRepresentation } from "../../manifest";
-import arrayFindIndex from "../../utils/array_find_index";
-import getMonotonicTimeStamp from "../../utils/monotonic_timestamp";
-import { estimateRequestBandwidth } from "./network_analyzer";
-import type LastEstimateStorage from "./utils/last_estimate_storage";
-import { ABRAlgorithmType } from "./utils/last_estimate_storage";
-import type { IRequestInfo } from "./utils/pending_requests_store";
-import type { IRepresentationMaintainabilityScore } from "./utils/representation_score_calculator";
-import type RepresentationScoreCalculator from "./utils/representation_score_calculator";
-import { ScoreConfidenceLevel } from "./utils/representation_score_calculator";
+import log from "../../log.ts";
+import type { IRepresentation } from "../../manifest/index.ts";
+import arrayFindIndex from "../../utils/array_find_index.ts";
+import getMonotonicTimeStamp from "../../utils/monotonic_timestamp.ts";
+import { estimateRequestBandwidth } from "./network_analyzer.ts";
+import type LastEstimateStorage from "./utils/last_estimate_storage.ts";
+import { ABRAlgorithmType } from "./utils/last_estimate_storage.ts";
+import type { IRequestInfo } from "./utils/pending_requests_store.ts";
+import type { IRepresentationMaintainabilityScore } from "./utils/representation_score_calculator.ts";
+import type RepresentationScoreCalculator from "./utils/representation_score_calculator.ts";
+import { ScoreConfidenceLevel } from "./utils/representation_score_calculator.ts";
 
 /**
  * Estimate which Representation should be played based on risky "guesses".

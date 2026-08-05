@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import log from "../../log";
+import log from "../../log.ts";
 import type {
   ICdnMetadata,
   IContentProtections,
   IParsedRepresentation,
-} from "../../parsers/manifest";
-import type { ITrackType, IHDRInformation } from "../../public_types";
-import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal";
-import idGenerator from "../../utils/id_generator";
-import { bytesToHex } from "../../utils/string_parsing";
-import type { IRepresentationMetadata } from "../types";
-import { isRepresentationPlayable } from "../utils";
-import type codecSupportCache from "./codec_support_cache";
-import type { IRepresentationIndex } from "./representation_index";
+} from "../../parsers/manifest/index.ts";
+import type { ITrackType, IHDRInformation } from "../../public_types.ts";
+import areArraysOfNumbersEqual from "../../utils/are_arrays_of_numbers_equal.ts";
+import idGenerator from "../../utils/id_generator.ts";
+import { bytesToHex } from "../../utils/string_parsing.ts";
+import type { IRepresentationMetadata } from "../types.ts";
+import { isRepresentationPlayable } from "../utils.ts";
+import type codecSupportCache from "./codec_support_cache.ts";
+import type { IRepresentationIndex } from "./representation_index/index.ts";
 
 const generateRepresentationUniqueId = idGenerator();
 

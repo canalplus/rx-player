@@ -19,22 +19,22 @@ import type {
   IAdaptation,
   IPeriod,
   IRepresentation,
-} from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
+} from "../../../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer/index.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 import type {
   ISignalCompleteSegmentOperation,
   SegmentSink,
-} from "../../../segment_sinks";
-import SegmentSinksStore, { SegmentSinkOperation } from "../../../segment_sinks";
+} from "../../../segment_sinks/index.ts";
+import SegmentSinksStore, { SegmentSinkOperation } from "../../../segment_sinks/index.ts";
 import type {
   IBufferDiscontinuity,
   IRepresentationStreamPlaybackObservation,
   IQueuedSegment,
-} from "../types";
-import checkForDiscontinuity from "./check_for_discontinuity";
-import getNeededSegments from "./get_needed_segments";
-import getSegmentPriority from "./get_segment_priority";
+} from "../types.ts";
+import checkForDiscontinuity from "./check_for_discontinuity.ts";
+import getNeededSegments from "./get_needed_segments.ts";
+import getSegmentPriority from "./get_segment_priority.ts";
 
 /** Analysis of the current buffer's status. */
 export interface IBufferStatus {

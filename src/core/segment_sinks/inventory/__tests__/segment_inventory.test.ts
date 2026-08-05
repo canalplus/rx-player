@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import configHandler from "../../../../config";
-import logger from "../../../../log";
+import configHandler from "../../../../config.ts";
+import logger from "../../../../log.ts";
 import {
   DummyAdaptation,
   DummyPeriod,
   DummyRepresentation,
   createSegment,
-} from "../../../../manifest/classes/__tests__/mocks";
-import BufferedHistory from "../buffered_history";
-import SegmentInventory, { ChunkStatus } from "../segment_inventory";
-import type { IInsertedChunkInfos } from "../segment_inventory";
+} from "../../../../manifest/classes/__tests__/mocks.ts";
+import BufferedHistory from "../buffered_history.ts";
+import SegmentInventory, { ChunkStatus } from "../segment_inventory.ts";
+import type { IInsertedChunkInfos } from "../segment_inventory.ts";
 
 const { mockGetMonotonicTimeStamp } = vi.hoisted(() => {
   return { mockGetMonotonicTimeStamp: vi.fn().mockReturnValue(1000) };

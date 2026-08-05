@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import NativeTextDisplayer from "../../main_thread/text_displayer/native";
-import type { IFeaturesObject } from "../types";
+import NativeTextDisplayer from "../../main_thread/text_displayer/native/index.ts";
+import type { IFeaturesObject } from "../types.ts";
 
 /**
  * Add ability to display text tracks in a native textrack mode.

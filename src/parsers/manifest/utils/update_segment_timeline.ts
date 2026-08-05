@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../../errors";
-import log from "../../../log";
-import type { IIndexSegment } from "./index_helpers";
-import { getIndexSegmentEnd } from "./index_helpers";
+import { MediaError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { IIndexSegment } from "./index_helpers.ts";
+import { getIndexSegmentEnd } from "./index_helpers.ts";
 
 /**
  * Update a complete array of segments in a given timeline with a [generally]

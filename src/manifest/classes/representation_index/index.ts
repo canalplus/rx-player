@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import StaticRepresentationIndex from "./static";
+import StaticRepresentationIndex from "./static.ts";
 import type {
   IMetaPlaylistPrivateInfos,
   IPrivateInfos,
   IRepresentationIndex,
   ISegment,
-} from "./types";
+} from "./types.ts";
 
 export type { IMetaPlaylistPrivateInfos, IPrivateInfos, IRepresentationIndex, ISegment };
 export { StaticRepresentationIndex };

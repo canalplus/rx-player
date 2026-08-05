@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import EventEmitter from "./event_emitter";
-import getMonotonicTimeStamp from "./monotonic_timestamp";
-import noop from "./noop";
+import EventEmitter from "./event_emitter.ts";
+import getMonotonicTimeStamp from "./monotonic_timestamp.ts";
+import noop from "./noop.ts";
 
 export type ILoggerLevel = "NONE" | "ERROR" | "WARNING" | "INFO" | "DEBUG";
 

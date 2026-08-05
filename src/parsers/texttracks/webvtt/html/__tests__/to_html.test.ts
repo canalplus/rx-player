@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import type { IStyleElements } from "../../parse_style_block";
-import toHTML from "../to_html";
+import type { IStyleElements } from "../../parse_style_block.ts";
+import toHTML from "../to_html.ts";
 
 const mocks = vi.hoisted(() => {
   return {

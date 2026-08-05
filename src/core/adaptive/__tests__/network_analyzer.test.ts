@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import configHandler from "../../../config";
+import configHandler from "../../../config.ts";
 import {
   DummyAdaptation,
   DummyPeriod,
   DummyRepresentation,
   DummyManifest,
   createSegment,
-} from "../../../manifest/classes/__tests__/mocks";
-import { DummyObservationPosition } from "../../../playback_observer/__tests__/mocks";
-import { makeMockedClass } from "../../../utils/test-utils";
-import type { IPlaybackConditionsInfo } from "../network_analyzer";
-import NetworkAnalyzer, { estimateRequestBandwidth } from "../network_analyzer";
-import type BandwidthEstimator from "../utils/bandwidth_estimator";
+} from "../../../manifest/classes/__tests__/mocks.ts";
+import { DummyObservationPosition } from "../../../playback_observer/__tests__/mocks.ts";
+import { makeMockedClass } from "../../../utils/test-utils.ts";
+import type { IPlaybackConditionsInfo } from "../network_analyzer.ts";
+import NetworkAnalyzer, { estimateRequestBandwidth } from "../network_analyzer.ts";
+import type BandwidthEstimator from "../utils/bandwidth_estimator.ts";
 import type {
   IPendingRequestStoreProgress,
   IRequestInfo,
-} from "../utils/pending_requests_store";
+} from "../utils/pending_requests_store.ts";
 
 vi.mock("../../../log", () => ({
   default: {

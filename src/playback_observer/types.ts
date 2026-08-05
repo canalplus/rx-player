@@ -1,6 +1,6 @@
-import type { IReadOnlySharedReference } from "../utils/reference";
-import type { CancellationSignal } from "../utils/task_canceller";
-import type ObservationPosition from "./utils/observation_position";
+import type { IReadOnlySharedReference } from "../utils/reference.ts";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
+import type ObservationPosition from "./utils/observation_position.ts";
 
 /** "Event" that triggered the playback observation. */
 export type IPlaybackObserverEventType =

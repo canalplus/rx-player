@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import noop from "../../../../../../utils/noop";
-import type { IPeriodIntermediateRepresentation } from "../../../node_parser_types";
-import type { IChildrenParser } from "../parsers_stack";
-import type ParsersStack from "../parsers_stack";
-import { TagName } from "../types";
-import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period";
+import noop from "../../../../../../utils/noop.ts";
+import type { IPeriodIntermediateRepresentation } from "../../../node_parser_types.ts";
+import type { IChildrenParser } from "../parsers_stack.ts";
+import type ParsersStack from "../parsers_stack.ts";
+import { TagName } from "../types.ts";
+import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period.ts";
 
 /**
  * Generate a "children parser" when an XLink has been loaded.

@@ -1,6 +1,6 @@
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import features from "../../features";
-import type { ITextDisplayerOptions } from "../init/types";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import features from "../../features/index.ts";
+import type { ITextDisplayerOptions } from "../init/types.ts";
 
 export function canHandleVideoTracks(mediaElement: IMediaElement | null): boolean {
   return mediaElement?.nodeName.toLowerCase() === "video";

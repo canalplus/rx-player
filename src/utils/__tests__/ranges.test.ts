@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { IRange } from "../ranges";
+import type { IRange } from "../ranges.ts";
 import {
   convertToRanges,
   excludeFromRanges,
@@ -22,7 +22,7 @@ import {
   getPlayedSizeOfRange,
   getRange,
   getSizeOfRange,
-} from "../ranges";
+} from "../ranges.ts";
 
 /**
  * Construct TimeRanges implementation from Array of tuples:

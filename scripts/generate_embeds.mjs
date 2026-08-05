@@ -154,8 +154,8 @@ export default blob;`;
 async function writeIndexCode({ noWasm, noWorker } = {}) {
   // Hardcode the code declaring and exporting the embedded URL:
   const indexCode =
-    (noWasm ? "" : 'export { EMBEDDED_DASH_WASM } from "./embedded_dash_wasm";\n') +
-    (noWorker ? "" : 'export { EMBEDDED_WORKER } from "./embedded_worker";');
+    (noWasm ? "" : 'export { EMBEDDED_DASH_WASM } from "./embedded_dash_wasm.ts";\n') +
+    (noWorker ? "" : 'export { EMBEDDED_WORKER } from "./embedded_worker.ts";');
   await writeFile(indexPath, indexCode);
 }
 

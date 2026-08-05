@@ -1,6 +1,6 @@
-import features from "../../../features";
-import log from "../../../log";
-import type { ISupportedTextTrackFormat } from "../../../transports";
+import features from "../../../features/index.ts";
+import log from "../../../log.ts";
+import type { ISupportedTextTrackFormat } from "../../../transports/index.ts";
 
 export interface IHTMLCue {
   start: number;

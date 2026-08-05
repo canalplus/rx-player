@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
-import type { CancellationSignal } from "../../../utils/task_canceller";
+import log from "../../../log.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
 import type {
   ISegmentFetcher,
   ISegmentFetcherCallbacks,
   ISegmentLoaderContent,
-} from "./segment_fetcher";
-import type { ITaskFn, ITaskPrioritizerCallbacks } from "./task_prioritizer";
-import type TaskPrioritizer from "./task_prioritizer";
+} from "./segment_fetcher.ts";
+import type { ITaskFn, ITaskPrioritizerCallbacks } from "./task_prioritizer.ts";
+import type TaskPrioritizer from "./task_prioritizer.ts";
 
 /**
  * This function basically put in relation:

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
-import globalScope from "../../utils/global_scope";
-import patchWebkitSourceBuffer from "../patch_webkit_source_buffer";
+import globalScope from "../../utils/global_scope.ts";
+import patchWebkitSourceBuffer from "../patch_webkit_source_buffer.ts";
 
 const gs = globalScope as typeof globalScope & {
   WebKitSourceBuffer?:

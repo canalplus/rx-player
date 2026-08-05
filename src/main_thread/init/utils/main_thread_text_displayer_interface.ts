@@ -1,6 +1,6 @@
-import type { ITextDisplayerInterface } from "../../../core/types";
-import type { IRange } from "../../../utils/ranges";
-import type { ITextDisplayer, ITextDisplayerData } from "../../text_displayer";
+import type { ITextDisplayerInterface } from "../../../core/types.ts";
+import type { IRange } from "../../../utils/ranges.ts";
+import type { ITextDisplayer, ITextDisplayerData } from "../../text_displayer/index.ts";
 
 /**
  * Implementation of an `ITextDisplayerInterface` running in the main

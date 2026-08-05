@@ -1,18 +1,23 @@
-import type { IManifest, IAdaptation, IPeriod, IRepresentation } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
+import type {
+  IManifest,
+  IAdaptation,
+  IPeriod,
+  IRepresentation,
+} from "../../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
 import type {
   IAudioTrackSwitchingMode,
   IVideoTrackSwitchingMode,
-} from "../../../public_types";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import type { IRepresentationEstimator } from "../../adaptive";
-import type { SegmentQueueCreator } from "../../fetchers";
-import type { IBufferType, SegmentSink } from "../../segment_sinks";
+} from "../../../public_types.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import type { IRepresentationEstimator } from "../../adaptive/index.ts";
+import type { SegmentQueueCreator } from "../../fetchers/index.ts";
+import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
   IRepresentationStreamPlaybackObservation,
-} from "../representation";
+} from "../representation/index.ts";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IAdaptationStreamCallbacks extends Omit<

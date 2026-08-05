@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import log from "../../../log";
+import log from "../../../log.ts";
 
 const SEGMENT_ID = 0x18538067;
 const INFO_ID = 0x1549a966;

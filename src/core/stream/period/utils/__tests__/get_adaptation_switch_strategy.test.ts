@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import configHandler from "../../../../../config";
-import { type Adaptation, type Period } from "../../../../../manifest/classes";
+import configHandler from "../../../../../config.ts";
 import {
   DummyPeriod,
   DummyAdaptation,
   createSegment,
   DummyRepresentation,
-} from "../../../../../manifest/classes/__tests__/mocks";
+} from "../../../../../manifest/classes/__tests__/mocks.ts";
+import { type Adaptation, type Period } from "../../../../../manifest/classes/index.ts";
 import {
   makeReadyOnlyPlaybackObserver,
   DummyObservationPosition,
-} from "../../../../../playback_observer/__tests__/mocks";
-import type { IBufferedChunk, SegmentSink } from "../../../../segment_sinks";
-import { ChunkStatus, SegmentSinkOperation } from "../../../../segment_sinks";
-import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks";
-import type { IPeriodStreamPlaybackObservation } from "../../types";
-import getAdaptationSwitchStrategy from "../get_adaptation_switch_strategy";
+} from "../../../../../playback_observer/__tests__/mocks.ts";
+import { DummySegmentSink } from "../../../../segment_sinks/__tests__/mocks.ts";
+import type { IBufferedChunk, SegmentSink } from "../../../../segment_sinks/index.ts";
+import { ChunkStatus, SegmentSinkOperation } from "../../../../segment_sinks/index.ts";
+import type { IPeriodStreamPlaybackObservation } from "../../types.ts";
+import getAdaptationSwitchStrategy from "../get_adaptation_switch_strategy.ts";
 
 describe("getAdaptationSwitchStrategy", () => {
   let mockSegmentSink: SegmentSink;

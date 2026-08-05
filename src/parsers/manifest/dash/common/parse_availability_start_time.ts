@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { IMPDAttributes } from "../node_parser_types";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import type { IMPDAttributes } from "../node_parser_types.ts";
 
 /**
  * Returns the base time of the Manifest.

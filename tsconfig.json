@@ -15,8 +15,9 @@
     "strictPropertyInitialization": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
-    "moduleResolution": "node",
-    "module": "es6",
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "rewriteRelativeImportExtensions": true,
     "typeRoots": ["./src/globals.prod.d.ts", "./node_modules/@types"]
   },
   "include": ["./src/**/*.ts"],

@@ -18,21 +18,21 @@
  * This file allows any Stream to push data to a SegmentSink.
  */
 
-import { MediaError, SourceBufferError } from "../../../../errors";
-import log from "../../../../log";
-import { toTaggedTrack } from "../../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer";
-import type { IRange } from "../../../../utils/ranges";
-import type { IReadOnlySharedReference } from "../../../../utils/reference";
-import sleep from "../../../../utils/sleep";
-import type { CancellationSignal } from "../../../../utils/task_canceller";
-import { CancellationError } from "../../../../utils/task_canceller";
+import { MediaError, SourceBufferError } from "../../../../errors/index.ts";
+import log from "../../../../log.ts";
+import { toTaggedTrack } from "../../../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer/index.ts";
+import type { IRange } from "../../../../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../../../../utils/reference.ts";
+import sleep from "../../../../utils/sleep.ts";
+import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
+import { CancellationError } from "../../../../utils/task_canceller.ts";
 import type {
   IInsertedChunkInfos,
   IPushChunkInfos,
   SegmentSink,
-} from "../../../segment_sinks";
-import type { IRepresentationStreamPlaybackObservation } from "../types";
+} from "../../../segment_sinks/index.ts";
+import type { IRepresentationStreamPlaybackObservation } from "../types.ts";
 
 /**
  * Append a segment to the given segmentSink.

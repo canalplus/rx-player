@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
-import filterByBitrate from "../filter_by_bitrate";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks.ts";
+import filterByBitrate from "../filter_by_bitrate.ts";
 
 describe("ABR - filterByBitrate", () => {
   const fakeReps = [

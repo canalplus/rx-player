@@ -1,7 +1,7 @@
 import * as React from "react";
-import { IVideoRepresentationsSwitchingMode } from "../../../../src/public_types";
-import Checkbox from "../../components/CheckBox";
-import Select from "../Select";
+import { IVideoRepresentationsSwitchingMode } from "../../../../src/public_types.ts";
+import Checkbox from "../../components/CheckBox.tsx";
+import Select from "../Select.tsx";
 
 const { Fragment } = React;
 

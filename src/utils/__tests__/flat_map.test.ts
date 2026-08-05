@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import flatMap from "../flat_map";
+import flatMap from "../flat_map.ts";
 
 type ICustomArrayProto = Omit<typeof Array.prototype, "flatMap"> & {
   flatMap?: typeof Array.prototype.flatMap | undefined;

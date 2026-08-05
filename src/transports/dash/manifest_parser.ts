@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import { formatError } from "../../errors";
-import features from "../../features";
-import log from "../../log";
-import Manifest from "../../manifest/classes";
+import config from "../../config.ts";
+import { formatError } from "../../errors/index.ts";
+import features from "../../features/index.ts";
+import log from "../../log.ts";
+import Manifest from "../../manifest/classes/index.ts";
 import type {
   IDashParserResponse,
   ILoadedResource,
-} from "../../parsers/manifest/dash/parsers_types";
-import globalScope from "../../utils/global_scope";
-import isNullOrUndefined from "../../utils/is_null_or_undefined";
-import objectAssign from "../../utils/object_assign";
-import request from "../../utils/request";
-import { strToUtf8, utf8ToStr } from "../../utils/string_parsing";
-import type { CancellationSignal } from "../../utils/task_canceller";
+} from "../../parsers/manifest/dash/parsers_types.ts";
+import globalScope from "../../utils/global_scope.ts";
+import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import objectAssign from "../../utils/object_assign.ts";
+import request from "../../utils/request/index.ts";
+import { strToUtf8, utf8ToStr } from "../../utils/string_parsing.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   IManifestParserOptions,
   IManifestParserRequestScheduler,
   IManifestParserResult,
   IRequestedData,
   ITransportOptions,
-} from "../types";
+} from "../types.ts";
 
 export default function generateManifestParser(
   options: ITransportOptions,

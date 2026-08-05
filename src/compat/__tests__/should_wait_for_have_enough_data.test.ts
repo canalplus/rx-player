@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
-import shouldWaitForHaveEnoughData from "../should_wait_for_have_enough_data";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
+import shouldWaitForHaveEnoughData from "../should_wait_for_have_enough_data.ts";
 
 describe("compat - shouldWaitForHaveEnoughData", () => {
   beforeEach(() => {

@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import { createBox, createBoxWithChildren } from "../../../parsers/containers/isobmff";
-import { createSAIOBox, createSAIZBox } from "./create_boxes";
+import {
+  createBox,
+  createBoxWithChildren,
+} from "../../../parsers/containers/isobmff/index.ts";
+import { createSAIOBox, createSAIZBox } from "./create_boxes.ts";
 
 export default function createTrafBox(
   tfhd: Uint8Array,

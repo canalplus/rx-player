@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
-import makeVTTCue from "../../../../compat/make_vtt_cue";
-import type { IStyleElements } from "../parse_style_block";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types.ts";
+import makeVTTCue from "../../../../compat/make_vtt_cue.ts";
+import type { IStyleElements } from "../parse_style_block.ts";
 
 /**
  * @param {Object} cueObj

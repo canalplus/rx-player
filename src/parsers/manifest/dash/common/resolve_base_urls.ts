@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { resolveURL } from "../../../../utils/url-utils";
-import type { IBaseUrlIntermediateRepresentation } from "../node_parser_types";
+import { resolveURL } from "../../../../utils/url-utils.ts";
+import type { IBaseUrlIntermediateRepresentation } from "../node_parser_types.ts";
 
 export interface IResolvedBaseUrl {
   url: string;

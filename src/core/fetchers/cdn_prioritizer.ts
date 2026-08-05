@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import config from "../../config";
-import type { ICdnMetadata } from "../../parsers/manifest";
-import arrayFindIndex from "../../utils/array_find_index";
-import EventEmitter from "../../utils/event_emitter";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import config from "../../config.ts";
+import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
+import arrayFindIndex from "../../utils/array_find_index.ts";
+import EventEmitter from "../../utils/event_emitter.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 
 /**
  * Class storing and signaling the priority between multiple CDN available for

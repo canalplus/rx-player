@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import ManifestBoundsCalculator from "../manifest_bounds_calculator";
+import ManifestBoundsCalculator from "../manifest_bounds_calculator.ts";
 
 describe("DASH parsers - ManifestBoundsCalculator", () => {
   it("should return undefined through `getEstimatedMinimumSegmentTime` if the live edge was never set for a dynamic content with a timeShiftBufferDepth", () => {

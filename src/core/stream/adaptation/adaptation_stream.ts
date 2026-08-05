@@ -1,25 +1,25 @@
-import config from "../../../config";
-import { formatError } from "../../../errors";
-import log from "../../../log";
-import type { IRepresentation } from "../../../manifest";
-import arrayIncludes from "../../../utils/array_includes";
-import { assertUnreachable } from "../../../utils/assert";
-import cancellableSleep from "../../../utils/cancellable_sleep";
-import noop from "../../../utils/noop";
-import objectAssign from "../../../utils/object_assign";
-import queueMicrotask from "../../../utils/queue_microtask";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference, { createMappedReference } from "../../../utils/reference";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller from "../../../utils/task_canceller";
+import config from "../../../config.ts";
+import { formatError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { IRepresentation } from "../../../manifest/index.ts";
+import arrayIncludes from "../../../utils/array_includes.ts";
+import { assertUnreachable } from "../../../utils/assert.ts";
+import cancellableSleep from "../../../utils/cancellable_sleep.ts";
+import noop from "../../../utils/noop.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import queueMicrotask from "../../../utils/queue_microtask.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import SharedReference, { createMappedReference } from "../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
   ITerminationOrder,
-} from "../representation";
-import RepresentationStream from "../representation";
-import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy";
-import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./types";
+} from "../representation/index.ts";
+import RepresentationStream from "../representation/index.ts";
+import getRepresentationsSwitchingStrategy from "./get_representations_switch_strategy.ts";
+import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./types.ts";
 
 /**
  * Create new `AdaptationStream` whose task will be to download the media data

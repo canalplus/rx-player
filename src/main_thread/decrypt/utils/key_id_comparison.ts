@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal";
+import areArraysOfNumbersEqual from "../../../utils/are_arrays_of_numbers_equal.ts";
 
 /**
  * Returns `true` if all key ids in `wantedKeyIds` are present in the

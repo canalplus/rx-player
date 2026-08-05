@@ -1,5 +1,5 @@
-import type { IKeySystemOption } from "../../../src/public_types";
-import { utf8ToStr, strToUtf8, leUtf16ToStr } from "./bytes";
+import type { IKeySystemOption } from "../../../src/public_types.ts";
+import { utf8ToStr, strToUtf8, leUtf16ToStr } from "./bytes.ts";
 
 export default async function parseDRMConfigurations(
   drmConfigurations: Array<{

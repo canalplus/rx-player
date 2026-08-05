@@ -1,8 +1,8 @@
-import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types";
-import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8";
-import { strToUtf8 } from "../../../../utils/string_parsing";
-import parseMp4EmbeddedWebVtt from "../parse_mp4_embedded_wvtt";
-import toNativeCue from "./to_native_cue";
+import type { ICompatVTTCue } from "../../../../compat/browser_compatibility_types.ts";
+import bufferSourceToUint8 from "../../../../utils/buffer_source_to_uint8.ts";
+import { strToUtf8 } from "../../../../utils/string_parsing.ts";
+import parseMp4EmbeddedWebVtt from "../parse_mp4_embedded_wvtt.ts";
+import toNativeCue from "./to_native_cue.ts";
 
 /**
  * Parse WebVTT subtitles format when embedded in an MP4 file.

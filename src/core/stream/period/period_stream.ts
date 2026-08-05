@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import { formatError, MediaError } from "../../../errors";
-import log from "../../../log";
-import type { IAdaptation, IPeriod } from "../../../manifest";
-import { toTaggedTrack } from "../../../manifest";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer";
-import type { ITrackType } from "../../../public_types";
-import arrayFind from "../../../utils/array_find";
-import objectAssign from "../../../utils/object_assign";
-import queueMicrotask from "../../../utils/queue_microtask";
-import { getLeftSizeOfRange } from "../../../utils/ranges";
-import type { IReadOnlySharedReference } from "../../../utils/reference";
-import SharedReference from "../../../utils/reference";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller, { CancellationError } from "../../../utils/task_canceller";
-import type { IBufferType, SegmentSink } from "../../segment_sinks";
-import SegmentSinksStore from "../../segment_sinks";
+import config from "../../../config.ts";
+import { formatError, MediaError } from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { IAdaptation, IPeriod } from "../../../manifest/index.ts";
+import { toTaggedTrack } from "../../../manifest/index.ts";
+import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
+import type { ITrackType } from "../../../public_types.ts";
+import arrayFind from "../../../utils/array_find.ts";
+import objectAssign from "../../../utils/object_assign.ts";
+import queueMicrotask from "../../../utils/queue_microtask.ts";
+import { getLeftSizeOfRange } from "../../../utils/ranges.ts";
+import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
+import SharedReference from "../../../utils/reference.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller, { CancellationError } from "../../../utils/task_canceller.ts";
+import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
+import SegmentSinksStore from "../../segment_sinks/index.ts";
 import type {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
   IAdaptationStreamPlaybackObservation,
-} from "../adaptation";
-import AdaptationStream from "../adaptation";
-import type { IRepresentationsChoice } from "../representation";
+} from "../adaptation/index.ts";
+import AdaptationStream from "../adaptation/index.ts";
+import type { IRepresentationsChoice } from "../representation/index.ts";
 import type {
   IPeriodStreamArguments,
   IPeriodStreamCallbacks,
   IPeriodStreamPlaybackObservation,
-} from "./types";
-import getAdaptationSwitchStrategy from "./utils/get_adaptation_switch_strategy";
+} from "./types.ts";
+import getAdaptationSwitchStrategy from "./utils/get_adaptation_switch_strategy.ts";
 
 /**
  * Create a single PeriodStream:

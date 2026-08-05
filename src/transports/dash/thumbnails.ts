@@ -1,16 +1,16 @@
-import type { ISegment } from "../../manifest";
-import type { ICdnMetadata } from "../../parsers/manifest";
-import request from "../../utils/request/xhr";
-import type { CancellationSignal } from "../../utils/task_canceller";
+import type { ISegment } from "../../manifest/index.ts";
+import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
+import request from "../../utils/request/xhr.ts";
+import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   IRequestedData,
   IThumbnailContext,
   IThumbnailLoaderOptions,
   IThumbnailResponse,
-} from "../types";
-import addQueryString from "../utils/add_query_string";
-import byteRange from "../utils/byte_range";
-import constructSegmentUrl from "./construct_segment_url";
+} from "../types.ts";
+import addQueryString from "../utils/add_query_string.ts";
+import byteRange from "../utils/byte_range.ts";
+import constructSegmentUrl from "./construct_segment_url.ts";
 
 /**
  * Load thumbnails for DASH content.

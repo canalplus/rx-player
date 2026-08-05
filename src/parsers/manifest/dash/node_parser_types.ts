@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ITNode } from "../../../utils/xml-parser";
+import type { ITNode } from "../../../utils/xml-parser.ts";
 
 /**
  * Those are types used when generating the MPD "Intermediate Representation"

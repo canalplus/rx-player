@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import globalScope from "../../../utils/global_scope";
-import wrapInPromise from "../../../utils/wrapInPromise";
-import type { IMediaElement, IMediaKeys } from "../../browser_compatibility_types";
+import globalScope from "../../../utils/global_scope.ts";
+import wrapInPromise from "../../../utils/wrapInPromise.ts";
+import type { IMediaElement, IMediaKeys } from "../../browser_compatibility_types.ts";
 
 interface IMozMediaKeysConstructor {
   new (keySystem: string): IMediaKeys;

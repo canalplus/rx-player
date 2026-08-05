@@ -1,7 +1,7 @@
-import log from "../../../../log";
-import arrayFind from "../../../../utils/array_find";
-import type { IParsedRepresentation } from "../../types";
-import type { IContentProtectionIntermediateRepresentation } from "../node_parser_types";
+import log from "../../../../log.ts";
+import arrayFind from "../../../../utils/array_find.ts";
+import type { IParsedRepresentation } from "../../types.ts";
+import type { IContentProtectionIntermediateRepresentation } from "../node_parser_types.ts";
 
 /**
  * Class whose purpose is to parse `<ContentProtection>` elements in a DASH MPD.

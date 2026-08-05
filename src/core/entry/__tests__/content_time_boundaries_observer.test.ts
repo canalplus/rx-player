@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import sleep from "../../../utils/sleep";
-import type { IBufferType } from "../../segment_sinks";
-import ContentTimeBoundariesObserver from "../content_time_boundaries_observer";
+import sleep from "../../../utils/sleep.ts";
+import type { IBufferType } from "../../segment_sinks/index.ts";
+import ContentTimeBoundariesObserver from "../content_time_boundaries_observer.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-import { CustomLoaderError, isKnownError, NetworkErrorTypes } from "../../../errors";
-import log from "../../../log";
-import type { ICdnMetadata } from "../../../parsers/manifest";
-import cancellableSleep from "../../../utils/cancellable_sleep";
-import getFuzzedDelay from "../../../utils/get_fuzzed_delay";
-import getTimestamp from "../../../utils/monotonic_timestamp";
-import { RequestError } from "../../../utils/request";
-import type { CancellationSignal } from "../../../utils/task_canceller";
-import TaskCanceller from "../../../utils/task_canceller";
-import type CdnPrioritizer from "../cdn_prioritizer";
+import {
+  CustomLoaderError,
+  isKnownError,
+  NetworkErrorTypes,
+} from "../../../errors/index.ts";
+import log from "../../../log.ts";
+import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
+import cancellableSleep from "../../../utils/cancellable_sleep.ts";
+import getFuzzedDelay from "../../../utils/get_fuzzed_delay.ts";
+import getTimestamp from "../../../utils/monotonic_timestamp.ts";
+import { RequestError } from "../../../utils/request/index.ts";
+import type { CancellationSignal } from "../../../utils/task_canceller.ts";
+import TaskCanceller from "../../../utils/task_canceller.ts";
+import type CdnPrioritizer from "../cdn_prioritizer.ts";
 
 /**
  * Called on a loader error.

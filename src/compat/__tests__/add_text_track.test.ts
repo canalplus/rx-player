@@ -1,7 +1,7 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
-import type { IMediaElement } from "../../compat/browser_compatibility_types";
-import addTextTrack from "../add_text_track";
-import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector";
+import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
+import addTextTrack from "../add_text_track.ts";
+import EnvDetector, { mockEnvironment, resetEnvironment } from "../env_detector.ts";
 
 describe("compat - addTextTrack", () => {
   beforeEach(() => {

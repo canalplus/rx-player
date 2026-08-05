@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import BROWSER_GLOBALS from "../../../../compat/browser_compatibility_types";
-import isNullOrUndefined from "../../../../utils/is_null_or_undefined";
-import type { IMediaConfiguration } from "../types";
+import BROWSER_GLOBALS from "../../../../compat/browser_compatibility_types.ts";
+import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
+import type { IMediaConfiguration } from "../types.ts";
 
 /**
  * @param {Object} config

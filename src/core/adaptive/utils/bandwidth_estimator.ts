@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import config from "../../../config";
-import EWMA from "./ewma";
+import config from "../../../config.ts";
+import EWMA from "./ewma.ts";
 
 /**
  * Calculate a mean bandwidth based on the bytes downloaded and the amount

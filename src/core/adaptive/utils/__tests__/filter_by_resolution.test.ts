@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks";
-import filterByResolution from "../filter_by_resolution";
+import { DummyRepresentation } from "../../../../manifest/classes/__tests__/mocks.ts";
+import filterByResolution from "../filter_by_resolution.ts";
 
 describe("ABR - filterByResolution", () => {
   const fakeReps = [

@@ -1,5 +1,5 @@
 import * as React from "react";
-import getCheckBoxValue from "../lib/getCheckboxValue";
+import getCheckBoxValue from "../lib/getCheckboxValue.ts";
 
 function Checkbox({
   ariaLabel,

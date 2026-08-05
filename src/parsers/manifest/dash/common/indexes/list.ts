@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import log from "../../../../../log";
-import type { IRepresentationIndex, ISegment } from "../../../../../manifest";
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined";
-import type { IEMSG } from "../../../../containers/isobmff";
-import { getTimescaledRange } from "../../../utils/index_helpers";
-import getInitSegment from "./get_init_segment";
-import { constructRepresentationUrl } from "./tokens";
+import log from "../../../../../log.ts";
+import type { IRepresentationIndex, ISegment } from "../../../../../manifest/index.ts";
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
+import type { IEMSG } from "../../../../containers/isobmff/index.ts";
+import { getTimescaledRange } from "../../../utils/index_helpers.ts";
+import getInitSegment from "./get_init_segment.ts";
+import { constructRepresentationUrl } from "./tokens.ts";
 
 /**
  * Index property defined for a SegmentList RepresentationIndex

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import log from "../../../../../log";
-import flattenOverlappingPeriods from "../flatten_overlapping_periods";
+import log from "../../../../../log.ts";
+import flattenOverlappingPeriods from "../flatten_overlapping_periods.ts";
 
 describe("flattenOverlappingPeriods", function () {
   it("should do nothing when no period is given", () => {
