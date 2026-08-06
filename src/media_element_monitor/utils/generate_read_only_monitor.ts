@@ -1,22 +1,22 @@
 import type { IReadOnlySharedReference } from "../../utils/reference.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
-import type { IReadOnlyPlaybackObserver } from "../types.ts";
+import type { IReadOnlyMediaElementMonitor } from "../types.ts";
 
 /**
- * Create `IReadOnlyPlaybackObserver` from a source `IReadOnlyPlaybackObserver`
+ * Create `IReadOnlyMediaElementMonitor` from a source `IReadOnlyMediaElementMonitor`
  * and a mapping function.
  * @param {Object} src
  * @param {Function} transform
  * @returns {Object}
  */
 export default function generateReadOnlyObserver<TSource, TDest>(
-  src: IReadOnlyPlaybackObserver<TSource>,
+  src: IReadOnlyMediaElementMonitor<TSource>,
   transform: (
     observationRef: IReadOnlySharedReference<TSource>,
     cancellationSignal: CancellationSignal,
   ) => IReadOnlySharedReference<TDest>,
   cancellationSignal: CancellationSignal,
-): IReadOnlyPlaybackObserver<TDest> {
+): IReadOnlyMediaElementMonitor<TDest> {
   const mappedRef = transform(src.getReference(), cancellationSignal);
   return {
     getCurrentTime() {
@@ -49,12 +49,12 @@ export default function generateReadOnlyObserver<TSource, TDest>(
         emitCurrentValue: params.includeLastObservation,
       });
     },
-    deriveReadOnlyObserver<TNext>(
+    deriveReadOnlyMonitor<TNext>(
       newTransformFn: (
         observationRef: IReadOnlySharedReference<TDest>,
         signal: CancellationSignal,
       ) => IReadOnlySharedReference<TNext>,
-    ): IReadOnlyPlaybackObserver<TNext> {
+    ): IReadOnlyMediaElementMonitor<TNext> {
       return generateReadOnlyObserver(this, newTransformFn, cancellationSignal);
     },
   };

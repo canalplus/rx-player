@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import type {
   IAdaptiveRepresentationSelectorArguments,
-  IRepresentationEstimatorPlaybackObservation,
+  IRepresentationEstimatorMediaObservation,
 } from "../../../../../src/core/adaptive/adaptive_representation_selector.ts";
 import createAdaptiveRepresentationSelector from "../../../../../src/core/adaptive/adaptive_representation_selector.ts";
 import BufferBasedChooser from "../../../../../src/core/adaptive/buffer_based_chooser.ts";
@@ -28,17 +28,17 @@ import {
   createSegment,
 } from "../../../mocks/manifest.ts";
 import {
-  makeReadyOnlyPlaybackObserver,
+  makeReadyOnlyMediaElementMonitor,
   DummyObservationPosition,
-} from "../../../mocks/playback_observer.ts";
+} from "../../../mocks/media_element_monitor.ts";
 
 vi.mock("../../../../../src/log", () => ({
   default: { debug: vi.fn(), warn: vi.fn(), info: vi.fn(), error: vi.fn() },
 }));
 
-/** Dummy object that will be used as the `PlaybackObserver` instance */
-const mockedPlaybackObserver =
-  makeReadyOnlyPlaybackObserver<IRepresentationEstimatorPlaybackObservation>({
+/** Dummy object that will be used as the `MediaElementMonitor` instance */
+const mockedMediaElementMonitor =
+  makeReadyOnlyMediaElementMonitor<IRepresentationEstimatorMediaObservation>({
     bufferGap: 10,
     position: makeObservationPosition(0),
     speed: 1,
@@ -88,11 +88,11 @@ function makeAbrOptions(): IAdaptiveRepresentationSelectorArguments {
   };
 }
 
-/** Emit a new playback observation through `mockedPlaybackObserver`. */
+/** Emit a new media observation through `mockedMediaElementMonitor`. */
 function emitObservation(
-  overrides: Partial<IRepresentationEstimatorPlaybackObservation> = {},
+  overrides: Partial<IRepresentationEstimatorMediaObservation> = {},
 ) {
-  mockedPlaybackObserver.emit({
+  mockedMediaElementMonitor.emit({
     bufferGap: 0,
     position: makeObservationPosition(10),
     speed: 1,
@@ -102,7 +102,7 @@ function emitObservation(
   });
 }
 
-/** Create the `position` attribute for a playback observation. */
+/** Create the `position` attribute for a media observation. */
 function makeObservationPosition(wanted: number) {
   return new DummyObservationPosition({
     getWanted: () => wanted,
@@ -111,7 +111,7 @@ function makeObservationPosition(wanted: number) {
 
 describe("createAdaptiveRepresentationSelector", () => {
   afterEach(() => {
-    mockedPlaybackObserver.reset();
+    mockedMediaElementMonitor.reset();
     vi.resetAllMocks();
   });
 
@@ -131,7 +131,7 @@ describe("createAdaptiveRepresentationSelector", () => {
       makeContext(),
       currentRepRef,
       repsRef,
-      mockedPlaybackObserver.observer,
+      mockedMediaElementMonitor.observer,
       canceller.signal,
     );
     expect(result).not.toBeNull();
@@ -149,14 +149,14 @@ describe("createAdaptiveRepresentationSelector", () => {
       ctx,
       new SharedReference(null),
       new SharedReference([rep]),
-      mockedPlaybackObserver.observer,
+      mockedMediaElementMonitor.observer,
       canceller.signal,
     );
     const result2 = selector(
       ctx,
       new SharedReference(null),
       new SharedReference([rep]),
-      mockedPlaybackObserver.observer,
+      mockedMediaElementMonitor.observer,
       canceller.signal,
     );
 
@@ -205,14 +205,14 @@ describe("createAdaptiveRepresentationSelector", () => {
       videoCtx,
       new SharedReference(null),
       new SharedReference([rep]),
-      mockedPlaybackObserver.observer,
+      mockedMediaElementMonitor.observer,
       canceller.signal,
     );
     const audioResult = selector(
       audioCtx,
       new SharedReference(null),
       new SharedReference([rep]),
-      mockedPlaybackObserver.observer,
+      mockedMediaElementMonitor.observer,
       canceller.signal,
     );
 
@@ -259,7 +259,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(),
         currentRepRef,
         repsRef,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
       const estimate = estimates.getValue();
@@ -275,7 +275,7 @@ describe("createAdaptiveRepresentationSelector", () => {
   describe("getEstimates (multiple representations)", () => {
     function setupMultiRep(
       overrides: {
-        obs?: Partial<IRepresentationEstimatorPlaybackObservation>;
+        obs?: Partial<IRepresentationEstimatorMediaObservation>;
         lowLatencyMode?: boolean;
         isDynamic?: boolean;
         bitrateChosen?: number;
@@ -331,7 +331,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(isDynamic),
         currentRepRef,
         repsRef,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
 
@@ -487,7 +487,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(true),
         currentRepRef,
         repsRef,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
 
@@ -511,7 +511,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(),
         currentRepRef,
         repsRef,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
 
@@ -695,7 +695,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(),
         new SharedReference(null),
         new SharedReference(reps),
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
 
@@ -727,7 +727,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(),
         new SharedReference(null),
         new SharedReference(reps),
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
 
@@ -760,7 +760,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(),
         new SharedReference(null),
         new SharedReference(reps),
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
 
@@ -791,7 +791,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(),
         currentRepRef,
         repsRef,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
 
@@ -834,7 +834,7 @@ describe("createAdaptiveRepresentationSelector", () => {
         makeContext(),
         currentRepRef,
         repsRef,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         canceller.signal,
       );
       const valueBefore = estimates.getValue();

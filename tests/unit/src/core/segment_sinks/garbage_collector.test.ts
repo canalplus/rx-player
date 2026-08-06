@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import BufferGarbageCollector from "../../../../../src/core/segment_sinks/garbage_collector.ts";
-import type { IStreamOrchestratorPlaybackObservation } from "../../../../../src/core/stream/index.ts";
+import type { IStreamOrchestratorMediaObservation } from "../../../../../src/core/stream/index.ts";
 import type { IRange } from "../../../../../src/utils/ranges.ts";
 import SharedReference from "../../../../../src/utils/reference.ts";
 import TaskCanceller from "../../../../../src/utils/task_canceller.ts";
 import {
-  makeReadyOnlyPlaybackObserver,
+  makeReadyOnlyMediaElementMonitor,
   DummyObservationPosition,
-} from "../../../mocks/playback_observer.ts";
+} from "../../../mocks/media_element_monitor.ts";
 import { DummySegmentSink } from "../../../mocks/segment_sinks.ts";
 
 const mockLog = vi.hoisted(() => ({
@@ -19,8 +19,8 @@ const mockLog = vi.hoisted(() => ({
 vi.mock("../../../../../src/log", () => ({ default: mockLog }));
 
 describe("BufferGarbageCollector", () => {
-  const mockedPlaybackObserver = makeReadyOnlyPlaybackObserver<
-    Pick<IStreamOrchestratorPlaybackObservation, "position" | "buffered">
+  const mockedMediaElementMonitor = makeReadyOnlyMediaElementMonitor<
+    Pick<IStreamOrchestratorMediaObservation, "position" | "buffered">
   >({
     position: new DummyObservationPosition({
       getWanted: vi.fn(() => 0),
@@ -30,7 +30,7 @@ describe("BufferGarbageCollector", () => {
   const mockRemoveBuffer = vi.spyOn(DummySegmentSink.prototype, "removeBuffer");
 
   function emitObservation(position: number, videoBuffered: IRange[] | null) {
-    mockedPlaybackObserver.emit({
+    mockedMediaElementMonitor.emit({
       position: new DummyObservationPosition({
         getWanted: () => position,
       }),
@@ -42,7 +42,7 @@ describe("BufferGarbageCollector", () => {
   });
 
   afterEach(() => {
-    mockedPlaybackObserver.reset();
+    mockedMediaElementMonitor.reset();
     vi.resetAllMocks();
   });
 
@@ -55,7 +55,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -79,7 +79,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -102,7 +102,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -125,7 +125,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -148,7 +148,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -171,7 +171,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -194,7 +194,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -216,7 +216,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -240,7 +240,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -260,7 +260,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -288,7 +288,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -307,7 +307,7 @@ describe("BufferGarbageCollector", () => {
     expect(mockRemoveBuffer).toHaveBeenCalledTimes(1);
   });
 
-  it("re-runs clean on new playback observation", async () => {
+  it("re-runs clean on new media observation", async () => {
     // Initially empty buffer, then buffered grows behind position
     emitObservation(100, []);
     const segmentSink = new DummySegmentSink({ bufferType: "video" });
@@ -317,7 +317,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -356,7 +356,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -389,7 +389,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },
@@ -418,7 +418,7 @@ describe("BufferGarbageCollector", () => {
     BufferGarbageCollector(
       {
         segmentSink,
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         maxBufferBehind,
         maxBufferAhead,
       },

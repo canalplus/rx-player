@@ -2,6 +2,6 @@ import CmcdDataBuilder from "./cmcd_data_builder.ts";
 
 export type {
   ICmcdSegmentInfo,
-  ICmcdDataBuilderPlaybackObservation,
+  ICmcdDataBuilderMediaObservation,
 } from "./cmcd_data_builder.ts";
 export default CmcdDataBuilder;

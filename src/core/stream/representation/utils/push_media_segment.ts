@@ -22,14 +22,14 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../../manifest/index.ts";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer/index.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../../../media_element_monitor/index.ts";
 import type { ISegmentParserParsedMediaChunk } from "../../../../transports/index.ts";
 import objectAssign from "../../../../utils/object_assign.ts";
 import type { IReadOnlySharedReference } from "../../../../utils/reference.ts";
 import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
 import type { SegmentSink } from "../../../segment_sinks/index.ts";
 import type {
-  IRepresentationStreamPlaybackObservation,
+  IRepresentationStreamMediaObservation,
   IStreamEventAddedSegmentPayload,
 } from "../types.ts";
 import appendSegmentToBuffer from "./append_segment_to_buffer.ts";
@@ -42,7 +42,7 @@ import appendSegmentToBuffer from "./append_segment_to_buffer.ts";
  */
 export default async function pushMediaSegment<T>(
   {
-    playbackObserver,
+    mediaElementMonitor,
     bufferGoal,
     content,
     initSegmentUniqueId,
@@ -50,7 +50,7 @@ export default async function pushMediaSegment<T>(
     segment,
     segmentSink,
   }: {
-    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+    mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>;
     content: {
       adaptation: IAdaptation;
       manifest: IManifest;
@@ -106,7 +106,7 @@ export default async function pushMediaSegment<T>(
     content,
   );
   const buffered = await appendSegmentToBuffer(
-    playbackObserver,
+    mediaElementMonitor,
     segmentSink,
     { data, inventoryInfos },
     bufferGoal,
