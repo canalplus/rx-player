@@ -1,8 +1,8 @@
 import type { IManifest, IAdaptation, IPeriod } from "../../../manifest/index.ts";
 import type {
   ObservationPosition,
-  IReadOnlyPlaybackObserver,
-} from "../../../playback_observer/index.ts";
+  IReadOnlyMediaElementMonitor,
+} from "../../../media_element_monitor/index.ts";
 import type { ITrackType } from "../../../public_types.ts";
 import type { IRange } from "../../../utils/ranges.ts";
 import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
@@ -18,9 +18,9 @@ import type {
   IAdaptationStreamCallbacks,
   IAdaptationStreamOptions,
 } from "../adaptation/index.ts";
-import type { IPausedPlaybackObservation } from "../representation/index.ts";
+import type { IPausedMediaObservation } from "../representation/index.ts";
 
-export type { IPausedPlaybackObservation };
+export type { IPausedMediaObservation };
 
 /** Callbacks called by the `AdaptationStream` on various events. */
 export interface IPeriodStreamCallbacks extends IAdaptationStreamCallbacks {
@@ -71,13 +71,13 @@ export interface IPeriodStreamReadyPayload {
   adaptationRef: SharedReference<IAdaptationChoice | null | undefined>;
 }
 
-/** Playback observation required by the `PeriodStream`. */
-export interface IPeriodStreamPlaybackObservation {
+/** Media observation required by the `PeriodStream`. */
+export interface IPeriodStreamMediaObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
    */
-  paused: IPausedPlaybackObservation;
+  paused: IPausedMediaObservation;
   /**
    * Information on the current media position in seconds at the time of the
    * Observation.
@@ -118,7 +118,7 @@ export interface IPeriodStreamArguments {
   >;
   segmentQueueCreator: SegmentQueueCreator;
   segmentSinksStore: SegmentSinksStore;
-  playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IPeriodStreamMediaObservation>;
   options: IPeriodStreamOptions;
   representationEstimator: IRepresentationEstimator;
   wantedBufferAhead: IReadOnlySharedReference<number>;

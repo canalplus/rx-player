@@ -2,13 +2,13 @@ import type { IReadOnlySharedReference } from "../utils/reference.ts";
 import type { CancellationSignal } from "../utils/task_canceller.ts";
 import type ObservationPosition from "./utils/observation_position.ts";
 
-/** "Event" that triggered the playback observation. */
-export type IPlaybackObserverEventType =
-  /** First playback observation automatically emitted. */
+/** "Event" that triggered the media observation. */
+export type IMediaElementMonitorEventType =
+  /** First media observation automatically emitted. */
   | "init"
-  /** Observation manually forced by the PlaybackObserver. */
+  /** Observation manually forced by the MediaElementMonitor. */
   | "manual"
-  /** Regularly emitted playback observation when no event happened in a long time. */
+  /** Regularly emitted media observation when no event happened in a long time. */
   | "timeupdate"
   /** On the HTML5 event with the same name */
   | "canplay"
@@ -33,13 +33,13 @@ export type IPlaybackObserverEventType =
   /** An internal seek happens */
   | "internal-seeking";
 
-/** Information recuperated on the media element on each playback observation. */
+/** Information recuperated on the media element on each media observation. */
 export interface IMediaInfos {
   /** Value of `buffered` (buffered ranges) for the media element. */
   buffered: TimeRanges;
   /**
    * `currentTime` (position) set on the media element at the time of the
-   * PlaybackObserver's measure.
+   * MediaElementMonitor's measure.
    */
   position: number;
   /** Current `duration` set on the media element. */
@@ -74,7 +74,7 @@ export const enum SeekingState {
  * status.
  * "Rebuffering" is a status where the player has not enough buffer ahead to
  * play reliably.
- * The RxPlayer should pause playback when a playback observation indicates the
+ * The RxPlayer should pause playback when a media observation indicates the
  * rebuffering status.
  */
 export interface IRebufferingStatus {
@@ -109,10 +109,10 @@ export interface IFreezingStatus {
   timestamp: number;
 }
 
-/** Information emitted on each playback observation. */
-export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "seeking"> {
-  /** Event that triggered this playback observation. */
-  event: IPlaybackObserverEventType;
+/** Information emitted on each media observation. */
+export interface IMediaObservation extends Omit<IMediaInfos, "position" | "seeking"> {
+  /** Event that triggered this media observation. */
+  event: IMediaElementMonitorEventType;
   /** Current seeking state. */
   seeking: SeekingState;
   /**
@@ -151,7 +151,7 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
 }
 
 /**
- * Interface providing a generic and read-only version of a `PlaybackObserver`.
+ * Interface providing a generic and read-only version of a `MediaElementMonitor`.
  *
  * This interface allows to provide regular and specific playback information
  * without allowing any effect on playback like seeking.
@@ -159,10 +159,10 @@ export interface IPlaybackObservation extends Omit<IMediaInfos, "position" | "se
  * This can be very useful to give specific playback information to modules you
  * don't want to be able to update playback.
  *
- * Note that a `PlaybackObserver` is compatible and can thus be upcasted to a
- * `IReadOnlyPlaybackObserver` to "remove" its right to update playback.
+ * Note that a `MediaElementMonitor` is compatible and can thus be upcasted to a
+ * `IReadOnlyMediaElementMonitor` to "remove" its right to update playback.
  */
-export interface IReadOnlyPlaybackObserver<TObservationType> {
+export interface IReadOnlyMediaElementMonitor<TObservationType> {
   /**
    * Get the current playing position, in seconds.
    * Returns `undefined` when this cannot be known, such as when the playback
@@ -196,18 +196,18 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
    */
   getIsPaused(): boolean | undefined;
   /**
-   * Returns an `IReadOnlySharedReference` storing the last playback observation
-   * produced by the `IReadOnlyPlaybackObserver` and updated each time a new one
+   * Returns an `IReadOnlySharedReference` storing the last media observation
+   * produced by the `IReadOnlyMediaElementMonitor` and updated each time a new one
    * is produced.
    *
    * This value can then be for example listened to to be notified of future
-   * playback observations.
+   * media observations.
    *
    * @returns {Object}
    */
   getReference(): IReadOnlySharedReference<TObservationType>;
   /**
-   * Register a callback so it regularly receives playback observations.
+   * Register a callback so it regularly receives media observations.
    * @param {Function} cb
    * @param {Object} options - Configuration options:
    *   - `includeLastObservation`: If set to `true` the last observation will
@@ -224,17 +224,17 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
     },
   ): void;
   /**
-   * Generate a new `IReadOnlyPlaybackObserver` from this one.
+   * Generate a new `IReadOnlyMediaElementMonitor` from this one.
    *
    * As argument, this method takes a function which will allow to produce
    * the new set of properties to be present on each observation.
    * @param {Function} transform
    * @returns {Object}
    */
-  deriveReadOnlyObserver<TDest>(
+  deriveReadOnlyMonitor<TDest>(
     transform: (
       observationRef: IReadOnlySharedReference<TObservationType>,
       cancellationSignal: CancellationSignal,
     ) => IReadOnlySharedReference<TDest>,
-  ): IReadOnlyPlaybackObserver<TDest>;
+  ): IReadOnlyMediaElementMonitor<TDest>;
 }

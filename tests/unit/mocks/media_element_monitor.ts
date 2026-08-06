@@ -1,17 +1,17 @@
-import type CorePlaybackObserver from "../../../src/playback_observer/core_playback_observer.ts";
-import type MediaElementPlaybackObserver from "../../../src/playback_observer/media_element_playback_observer.ts";
-import type { IReadOnlyPlaybackObserver } from "../../../src/playback_observer/types.ts";
-import type ObservationPosition from "../../../src/playback_observer/utils/observation_position.ts";
+import type CoreMediaElementMonitor from "../../../src/media_element_monitor/core_media_element_monitor.ts";
+import type MediaElementMonitor from "../../../src/media_element_monitor/media_element_monitor.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../../src/media_element_monitor/types.ts";
+import type ObservationPosition from "../../../src/media_element_monitor/utils/observation_position.ts";
 import SharedReference from "../../../src/utils/reference.ts";
 import type { CancellationSignal } from "../../../src/utils/task_canceller.ts";
 import { makeMockedClass } from "./utils.ts";
 
 /**
- * Construct a class implementing the `MediaElementPlaybackObserver` interface.
- * @class DummyMediaElementPlaybackObserver
+ * Construct a class implementing the `MediaElementMonitor` interface.
+ * @class DummyMediaElementMonitor
  */
-export const DummyMediaElementPlaybackObserver =
-  makeMockedClass<MediaElementPlaybackObserver>(
+export const DummyMediaElementMonitor =
+  makeMockedClass<MediaElementMonitor>(
     {
       attachMediaElement: notImplemented("attachMediaElement"),
       getCurrentTime: notImplemented("getCurrentTime"),
@@ -23,23 +23,23 @@ export const DummyMediaElementPlaybackObserver =
       getMediaElement: notImplemented("getMediaElement"),
       addMediaErrorListener: notImplemented("addMediaErrorListener"),
       linkUrl: notImplemented("linkUrl"),
-      stop: notImplemented("stop"),
+      destroy: notImplemented("destroy"),
       blockSeeking: notImplemented("blockSeeking"),
       unblockSeeking: notImplemented("unblockSeeking"),
       isSeekingBlocked: notImplemented("isSeekingBlocked"),
       setCurrentTime: notImplemented("setCurrentTime"),
       setPlaybackRate: notImplemented("setPlaybackRate"),
       listen: notImplemented("listen"),
-      deriveReadOnlyObserver: notImplemented("deriveReadOnlyObserver"),
+      deriveReadOnlyMonitor: notImplemented("deriveReadOnlyMonitor"),
     },
     {},
   );
 
 /**
- * Construct a class implementing the `CorePlaybackObserver` interface.
- * @class DummyCorePlaybackObserver
+ * Construct a class implementing the `CoreMediaElementMonitor` interface.
+ * @class DummyCoreMediaElementMonitor
  */
-export const DummyCorePlaybackObserver = makeMockedClass<CorePlaybackObserver>(
+export const DummyCoreMediaElementMonitor = makeMockedClass<CoreMediaElementMonitor>(
   {
     getCurrentTime: notImplemented("getCurrentTime"),
     getIsPaused: notImplemented("getIsPaused"),
@@ -48,20 +48,20 @@ export const DummyCorePlaybackObserver = makeMockedClass<CorePlaybackObserver>(
     getReference: notImplemented("getReference"),
     setPlaybackRate: notImplemented("setPlaybackRate"),
     listen: notImplemented("listen"),
-    deriveReadOnlyObserver: notImplemented("deriveReadOnlyObserver"),
+    deriveReadOnlyMonitor: notImplemented("deriveReadOnlyMonitor"),
   },
   {},
 );
 
 /**
- * Object facilitation the usage of a IReadOnlyPlaybackObserver`.
+ * Object facilitation the usage of a IReadOnlyMediaElementMonitor`.
  * /!\ Do not forget to call `reset` when done to ensure no memory leak.
  */
-export interface IMockedReadOnlyPlaybackObserver<TObservationData> {
+export interface IMockedReadOnlyMediaElementMonitor<TObservationData> {
   /**
-   * The `IReadOnlyPlaybackObserver` itself.
+   * The `IReadOnlyMediaElementMonitor` itself.
    */
-  observer: IReadOnlyPlaybackObserver<TObservationData>;
+  observer: IReadOnlyMediaElementMonitor<TObservationData>;
   /**
    * Allows to trigger new observations through `observer`.
    */
@@ -76,19 +76,19 @@ export interface IMockedReadOnlyPlaybackObserver<TObservationData> {
 }
 
 /**
- * Allows to create any `IReadOnlyPlaybackObserver` with TypeScript typechecking
+ * Allows to create any `IReadOnlyMediaElementMonitor` with TypeScript typechecking
  * and to obtain a function to emit new observations.
  * @param {Object} initialData - The initial observation emitted.
  * @returns {Object} res
- * @returns {IReadOnlyPlaybackObserver} res.observer - The
- * `IReadOnlyPlaybackObserver` instance.
+ * @returns {IReadOnlyMediaElementMonitor} res.observer - The
+ * `IReadOnlyMediaElementMonitor` instance.
  * @returns {Function} res.emit - A function allowing to emit new observations.
- * @returns {Function} res.reset - Reset the playback observer to its initial
+ * @returns {Function} res.reset - Reset the media element monitor to its initial
  * state, also removing all its listeners. Call this between tests.
  */
-export function makeReadyOnlyPlaybackObserver<TObservationData>(
+export function makeReadyOnlyMediaElementMonitor<TObservationData>(
   initialData: TObservationData,
-): IMockedReadOnlyPlaybackObserver<TObservationData> {
+): IMockedReadOnlyMediaElementMonitor<TObservationData> {
   let ref = new SharedReference<TObservationData>(initialData);
   const ret = {
     observer: makeObserver(),
@@ -102,8 +102,8 @@ export function makeReadyOnlyPlaybackObserver<TObservationData>(
   };
   return ret;
 
-  function makeObserver(): IReadOnlyPlaybackObserver<TObservationData> {
-    const klass = makeMockedClass<IReadOnlyPlaybackObserver<TObservationData>>(
+  function makeObserver(): IReadOnlyMediaElementMonitor<TObservationData> {
+    const klass = makeMockedClass<IReadOnlyMediaElementMonitor<TObservationData>>(
       {
         getCurrentTime: notImplemented("getCurrentTime"),
         getIsPaused: notImplemented("getIsPaused"),
@@ -125,7 +125,7 @@ export function makeReadyOnlyPlaybackObserver<TObservationData>(
             emitCurrentValue: params.includeLastObservation,
           });
         },
-        deriveReadOnlyObserver: notImplemented("deriveReadOnlyObserver"),
+        deriveReadOnlyMonitor: notImplemented("deriveReadOnlyMonitor"),
       },
       {},
     );

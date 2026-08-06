@@ -22,7 +22,7 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
 import getStartDate from "../../compat/get_start_date.ts";
 import log from "../../log.ts";
-import type { IMediaElementPlaybackObserver } from "../../playback_observer/index.ts";
+import type { IMediaElementMonitor } from "../../media_element_monitor/index.ts";
 import type { IKeySystemOption, IPlayerError } from "../../public_types.ts";
 import assert from "../../utils/assert.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
@@ -78,15 +78,15 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
   /**
    * Start playback of the content linked to this `DirectFileContentInitializer`
-   * on the given `HTMLMediaElement` and its associated `PlaybackObserver`.
+   * on the given `HTMLMediaElement` and its associated `MediaElementMonitor`.
    * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
    * content will be played.
-   * @param {Object} playbackObserver - Object regularly emitting playback
+   * @param {Object} mediaElementMonitor - Object regularly emitting playback
    * information.
    */
   public start(
     mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
   ): void {
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
@@ -109,7 +109,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     );
 
     /** Translate errors coming from the media element into RxPlayer errors. */
-    playbackObserver.addMediaErrorListener((mediaError) => {
+    mediaElementMonitor.addMediaErrorListener((mediaError) => {
       this._onFatalError(formatMediaError(mediaError));
     }, cancelSignal);
 
@@ -118,7 +118,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
      * events when it cannot, as well as "unstalled" events when it get out of one.
      */
     const rebufferingController = new RebufferingController(
-      playbackObserver,
+      mediaElementMonitor,
       null,
       speed,
     );
@@ -145,7 +145,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
         // Start everything! (Just put the URL in the element's src).
         log.info("Init", "Setting URL to HTMLMediaElement", { url });
-        playbackObserver.linkUrl(url, false, cancelSignal);
+        mediaElementMonitor.linkUrl(url, false, cancelSignal);
 
         if (evt.initializationState.type === "awaiting-media-link") {
           evt.initializationState.value.isMediaLinked.setValue(true);
@@ -153,14 +153,14 @@ export default class DirectFileContentInitializer extends ContentInitializer {
             (newDrmStatus, stopListeningToDrmUpdatesAgain) => {
               if (newDrmStatus.initializationState.type === "initialized") {
                 stopListeningToDrmUpdatesAgain();
-                this._seekAndPlay(mediaElement, playbackObserver);
+                this._seekAndPlay(mediaElement, mediaElementMonitor);
               }
             },
             { emitCurrentValue: true, clearSignal: cancelSignal },
           );
         } else {
           assert(evt.initializationState.type === "initialized");
-          this._seekAndPlay(mediaElement, playbackObserver);
+          this._seekAndPlay(mediaElement, mediaElementMonitor);
         }
       },
       { emitCurrentValue: true, clearSignal: cancelSignal },
@@ -199,11 +199,11 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * Perform the initial seek (to begin playback at an initially-calculated
    * position based on settings) and auto-play if needed when loaded.
    * @param {HTMLMediaElement} mediaElement
-   * @param {Object} playbackObserver
+   * @param {Object} mediaElementMonitor
    */
   private _seekAndPlay(
     mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
   ): void {
     const cancelSignal = this._initCanceller.signal;
     const { autoPlay, startAt } = this._settings;
@@ -215,7 +215,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     };
     performInitialSeekAndPlay(
       {
-        playbackObserver,
+        mediaElementMonitor,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
         onWarning: (err) => this.trigger("warning", err),
@@ -224,7 +224,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       cancelSignal,
     )
       .autoPlayResult.then(() =>
-        getLoadedReference(playbackObserver, true, cancelSignal).onUpdate(
+        getLoadedReference(mediaElementMonitor, true, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();

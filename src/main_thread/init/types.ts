@@ -25,7 +25,7 @@ import type {
   IRepresentationMetadata,
   IDecipherabilityStatusChangedElement,
 } from "../../manifest/index.ts";
-import type { IMediaElementPlaybackObserver } from "../../playback_observer/index.ts";
+import type { IMediaElementMonitor } from "../../media_element_monitor/index.ts";
 import type { IPlayerError } from "../../public_types.ts";
 import type { IThumbnailResponse } from "../../transports/index.ts";
 import EventEmitter from "../../utils/event_emitter.ts";
@@ -73,16 +73,16 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * content will play. This is given to `start` (and not sooner) to ensure
    * that no prior step influence the `HTMLMediaElement`, on which a previous
    * content could have been playing until then.
+   * @param {Object} mediaElementMonitor - Interface allowing to poll playback
+   * information on what's playing on the `HTMLMediaElement` at regular
+   * intervals.
    *
    * If a content was already playing on that `HTMLMediaElement`, it will be
    * stopped.
-   * @param {Object} playbackObserver - Interface allowing to poll playback
-   * information on what's playing on the `HTMLMediaElement` at regular
-   * intervals.
    */
   public abstract start(
     mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
   ): void;
 
   /**

@@ -16,18 +16,18 @@
 
 // TODO: move that file somewhere else
 import getBufferedDataPerMediaBuffer from "../../../core/entry/get_buffered_data_per_media_buffer.ts";
-import type { IPausedPlaybackObservation } from "../../../core/types.ts";
+import type { IPausedMediaObservation } from "../../../core/types.ts";
 import type { IManifestMetadata } from "../../../manifest/index.ts";
 import { getMaximumSafePosition } from "../../../manifest/index.ts";
 import type { IMediaSourceInterface } from "../../../mse/index.ts";
 import type {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
-  IMediaElementPlaybackObserver,
+  IMediaObservation,
+  IReadOnlyMediaElementMonitor,
+  IMediaElementMonitor,
   ObservationPosition,
   IRebufferingStatus,
   IFreezingStatus,
-} from "../../../playback_observer/index.ts";
+} from "../../../media_element_monitor/index.ts";
 import type { ITrackType } from "../../../public_types.ts";
 import type { IRange } from "../../../utils/ranges.ts";
 import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
@@ -36,8 +36,8 @@ import type { CancellationSignal } from "../../../utils/task_canceller.ts";
 import TaskCanceller from "../../../utils/task_canceller.ts";
 import type { ITextDisplayer } from "../../text_displayer/index.ts";
 
-/** Arguments needed to create the core's version of the PlaybackObserver. */
-export interface ICorePlaybackObserverArguments {
+/** Arguments needed to create the core's version of the MediaElementMonitor. */
+export interface ICoreMediaElementMonitorArguments {
   /** If true, the player will auto-play when `initialPlayPerformed` becomes `true`. */
   autoPlay: boolean;
   /** Manifest of the content being played */
@@ -56,12 +56,12 @@ export interface ICorePlaybackObserverArguments {
   mediaSource: IMediaSourceInterface | null;
 }
 
-export interface ICorePlaybackObservation {
+export interface ICoreMediaObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
    */
-  paused: IPausedPlaybackObservation;
+  paused: IPausedMediaObservation;
   /**
    * Information on the current media position in seconds at the time of the
    * Observation.
@@ -98,16 +98,16 @@ export interface ICorePlaybackObservation {
 }
 
 /**
- * Create PlaybackObserver for the core part of the code.
- * @param {Object} srcPlaybackObserver - Base `PlaybackObserver` from which we
+ * Create MediaElementMonitor for the core part of the code.
+ * @param {Object} srcMediaElementMonitor - Base `MediaElementMonitor` from which we
  * will derive information.
  * @param {Object} context - Various information linked to the current content
  * being played.
- * @param {Object} fnCancelSignal - Abort the created PlaybackObserver.
+ * @param {Object} fnCancelSignal - Abort the created MediaElementMonitor.
  * @returns {Object}
  */
-export default function createCorePlaybackObserver(
-  srcPlaybackObserver: IMediaElementPlaybackObserver,
+export default function createCoreMediaElementMonitor(
+  srcMediaElementMonitor: IMediaElementMonitor,
   {
     autoPlay,
     initialPlayPerformed,
@@ -115,29 +115,26 @@ export default function createCorePlaybackObserver(
     mediaSource,
     speed,
     textDisplayer,
-  }: ICorePlaybackObserverArguments,
+  }: ICoreMediaElementMonitorArguments,
   fnCancelSignal: CancellationSignal,
-): IReadOnlyPlaybackObserver<ICorePlaybackObservation> {
-  return srcPlaybackObserver.deriveReadOnlyObserver(function transform(
-    observationRef: IReadOnlySharedReference<IPlaybackObservation>,
+): IReadOnlyMediaElementMonitor<ICoreMediaObservation> {
+  return srcMediaElementMonitor.deriveReadOnlyMonitor(function transform(
+    observationRef: IReadOnlySharedReference<IMediaObservation>,
     parentObserverCancelSignal: CancellationSignal,
-  ): IReadOnlySharedReference<ICorePlaybackObservation> {
-    const canceller = new TaskCanceller("Core PlaybackObserver");
+  ): IReadOnlySharedReference<ICoreMediaObservation> {
+    const canceller = new TaskCanceller("Core MediaElementMonitor");
     canceller.linkToSignal(parentObserverCancelSignal);
     canceller.linkToSignal(fnCancelSignal);
-    const newRef = new SharedReference(
-      constructCorePlaybackObservation(),
-      canceller.signal,
-    );
+    const newRef = new SharedReference(constructCoreMediaObservation(), canceller.signal);
 
     // TODO there might be subtle unexpected behavior here as updating the
     // speed will send observation which may be outdated at the time it is sent
-    speed.onUpdate(emitCorePlaybackObservation, {
+    speed.onUpdate(emitCoreMediaObservation, {
       clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
 
-    observationRef.onUpdate(emitCorePlaybackObservation, {
+    observationRef.onUpdate(emitCoreMediaObservation, {
       clearSignal: canceller.signal,
       emitCurrentValue: false,
     });
@@ -147,13 +144,13 @@ export default function createCorePlaybackObserver(
     mediaSource?.addEventListener(
       "streamingChanged",
       () => {
-        emitCorePlaybackObservation();
+        emitCoreMediaObservation();
       },
       canceller.signal,
     );
     return newRef;
 
-    function constructCorePlaybackObservation() {
+    function constructCoreMediaObservation() {
       const observation = observationRef.getValue();
       const lastSpeed = speed.getValue();
       updateWantedPositionIfAfterManifest(observation, manifest);
@@ -177,14 +174,14 @@ export default function createCorePlaybackObserver(
       };
     }
 
-    function emitCorePlaybackObservation() {
-      newRef.setValue(constructCorePlaybackObservation());
+    function emitCoreMediaObservation() {
+      newRef.setValue(constructCoreMediaObservation());
     }
   });
 }
 
 export function updateWantedPositionIfAfterManifest(
-  observation: IPlaybackObservation,
+  observation: IMediaObservation,
   manifest: IManifestMetadata,
 ): void {
   if (!manifest.isDynamic || manifest.isLastPeriodKnown) {
