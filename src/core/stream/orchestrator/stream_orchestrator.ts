@@ -22,7 +22,7 @@ import type {
   IUpdatedRepresentationInfo,
   IPeriod,
 } from "../../../manifest/index.ts";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../../media_element_monitor/index.ts";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
 import queueMicrotask from "../../../utils/queue_microtask.ts";
 import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
@@ -40,7 +40,7 @@ import type { IWaitingMediaSourceReloadPayload } from "../adaptation/index.ts";
 import type {
   IPeriodStreamCallbacks,
   IPeriodStreamOptions,
-  IPeriodStreamPlaybackObservation,
+  IPeriodStreamMediaObservation,
   IPeriodStreamReadyPayload,
 } from "../period/index.ts";
 import PeriodStream from "../period/index.ts";
@@ -63,7 +63,7 @@ import getTimeRangesForContent from "./get_time_ranges_for_content.ts";
  *   - Call various callbacks to notify of its health and issues
  *
  * @param {Object} content
- * @param {Object} playbackObserver - Emit position information
+ * @param {Object} mediaElementMonitor - Emit position information
  * @param {Object} representationEstimator - Emit bitrate estimates and best
  * Representation to play.
  * @param {Object} segmentSinksStore - Will be used to lazily create
@@ -91,7 +91,7 @@ import getTimeRangesForContent from "./get_time_ranges_for_content.ts";
  */
 export default function StreamOrchestrator(
   content: { manifest: IManifest; initialPeriod: IPeriod },
-  playbackObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IStreamOrchestratorMediaObservation>,
   representationEstimator: IRepresentationEstimator,
   segmentSinksStore: SegmentSinksStore,
   segmentQueueCreator: SegmentQueueCreator,
@@ -119,7 +119,7 @@ export default function StreamOrchestrator(
       BufferGarbageCollector(
         {
           segmentSink,
-          playbackObserver,
+          mediaElementMonitor,
           maxBufferBehind: createMappedReference(
             maxBufferBehind,
             (val) => Math.min(val, defaultMaxBehind),
@@ -174,7 +174,7 @@ export default function StreamOrchestrator(
 
     // Restart the current Stream when the wanted time is in another period
     // than the ones already considered
-    playbackObserver.listen(
+    mediaElementMonitor.listen(
       ({ position }) => {
         const time = position.getWanted();
         if (!enableOutOfBoundsCheck || !isOutOfPeriodList(time)) {
@@ -391,14 +391,14 @@ export default function StreamOrchestrator(
         }
       }
 
-      // Schedule micro task before checking the last playback observation
+      // Schedule micro task before checking the last media observation
       // to reduce the risk of race conditions where the next observation
       // was going to be emitted synchronously.
       queueMicrotask(() => {
         if (restartCanceller.signal.isCancelled()) {
           return;
         }
-        const observation = playbackObserver.getReference().getValue();
+        const observation = mediaElementMonitor.getReference().getValue();
         if (needsFlushingAfterClean(observation, undecipherableRanges)) {
           // Bind to Period start and end
           callbacks.needsDecipherabilityFlush();
@@ -516,7 +516,7 @@ export default function StreamOrchestrator(
 
     // Stop current PeriodStream when the current position goes over the end of
     // that Period.
-    playbackObserver.listen(
+    mediaElementMonitor.listen(
       ({ position }, stopListeningObservations) => {
         if (basePeriod.end !== undefined && position.getWanted() >= basePeriod.end) {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
@@ -555,7 +555,7 @@ export default function StreamOrchestrator(
       segmentQueueCreator,
       segmentSinksStore,
       options,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       wantedBufferAhead,
     };
@@ -703,7 +703,7 @@ export default function StreamOrchestrator(
   }
 }
 
-export type IStreamOrchestratorPlaybackObservation = IPeriodStreamPlaybackObservation;
+export type IStreamOrchestratorMediaObservation = IPeriodStreamMediaObservation;
 
 /** Options tweaking the behavior of the StreamOrchestrator. */
 export type IStreamOrchestratorOptions = IPeriodStreamOptions & {
@@ -826,7 +826,7 @@ export interface ILockedStreamPayload {
  * @returns {boolean}
  */
 function needsFlushingAfterClean(
-  observation: IStreamOrchestratorPlaybackObservation,
+  observation: IStreamOrchestratorMediaObservation,
   cleanedRanges: Array<{ start: number; end: number }>,
 ): boolean {
   if (cleanedRanges.length === 0) {

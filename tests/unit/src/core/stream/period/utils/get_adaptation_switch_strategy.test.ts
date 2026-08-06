@@ -8,7 +8,7 @@ import {
   ChunkStatus,
   SegmentSinkOperation,
 } from "../../../../../../../src/core/segment_sinks/index.ts";
-import type { IPeriodStreamPlaybackObservation } from "../../../../../../../src/core/stream/period/types.ts";
+import type { IPeriodStreamMediaObservation } from "../../../../../../../src/core/stream/period/types.ts";
 import getAdaptationSwitchStrategy from "../../../../../../../src/core/stream/period/utils/get_adaptation_switch_strategy.ts";
 import {
   type Adaptation,
@@ -21,17 +21,17 @@ import {
   DummyRepresentation,
 } from "../../../../../mocks/manifest.ts";
 import {
-  makeReadyOnlyPlaybackObserver,
+  makeReadyOnlyMediaElementMonitor,
   DummyObservationPosition,
-} from "../../../../../mocks/playback_observer.ts";
+} from "../../../../../mocks/media_element_monitor.ts";
 import { DummySegmentSink } from "../../../../../mocks/segment_sinks.ts";
 
 describe("getAdaptationSwitchStrategy", () => {
   let mockSegmentSink: SegmentSink;
   let mockPeriod: Period;
   let mockAdaptation: Adaptation;
-  const mockedPlaybackObserver =
-    makeReadyOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>({
+  const mockedMediaElementMonitor =
+    makeReadyOnlyMediaElementMonitor<IPeriodStreamMediaObservation>({
       position: new DummyObservationPosition({
         getPolled: () => 15,
       }),
@@ -69,15 +69,15 @@ describe("getAdaptationSwitchStrategy", () => {
       id: "adaptation-1",
       type: "video",
     });
-    vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockImplementation(
+    vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockImplementation(
       () => 15,
     );
-    vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+    vi.spyOn(mockedMediaElementMonitor.observer, "getReadyState").mockImplementation(
       () => 3,
     );
   });
   afterEach(() => {
-    mockedPlaybackObserver.reset();
+    mockedMediaElementMonitor.reset();
     vi.resetModules();
   });
   function makeBufferedChunk({
@@ -146,7 +146,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         currMockAdap,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "reload" },
       );
 
@@ -171,7 +171,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         currMockAdap,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "reload" },
       );
 
@@ -196,7 +196,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         currMockAdap,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -222,7 +222,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -246,7 +246,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -272,7 +272,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -296,7 +296,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -339,7 +339,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -368,7 +368,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -391,13 +391,13 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should return needs-reload when switchingMode is reload and readyState > 1", () => {
-      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockReturnValue(3);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getReadyState").mockReturnValue(3);
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "reload",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -405,14 +405,14 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should not reload when readyState is 1 or less", () => {
-      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockReturnValue(1);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getReadyState").mockReturnValue(1);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "reload",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -425,7 +425,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "direct",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -445,7 +445,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         currMockAdap,
         "direct",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -460,7 +460,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -494,13 +494,13 @@ describe("getAdaptationSwitchStrategy", () => {
           adaptationId: "adaptation-2",
         }),
       ]);
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(15);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockReturnValue(15);
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -520,14 +520,14 @@ describe("getAdaptationSwitchStrategy", () => {
         }),
       ]);
       // Away from segment
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(18);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockReturnValue(18);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -555,14 +555,14 @@ describe("getAdaptationSwitchStrategy", () => {
           adaptationId: "adaptation-2",
         }),
       ]);
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(18);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockReturnValue(18);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -593,14 +593,14 @@ describe("getAdaptationSwitchStrategy", () => {
           adaptationId: "adaptation-1",
         }),
       ]);
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(12);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockReturnValue(12);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -621,14 +621,14 @@ describe("getAdaptationSwitchStrategy", () => {
           adaptationId: "adaptation-2",
         }),
       ]);
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(18);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockReturnValue(18);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -648,14 +648,14 @@ describe("getAdaptationSwitchStrategy", () => {
           adaptationId: "adaptation-2",
         }),
       ]);
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(15);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockReturnValue(15);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -675,14 +675,14 @@ describe("getAdaptationSwitchStrategy", () => {
           adaptationId: "adaptation-2",
         }),
       ]);
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(15);
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockReturnValue(15);
 
       const result = getAdaptationSwitchStrategy(
         mockSegmentSink,
         mockPeriod,
         mockAdaptation,
         "direct",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 
@@ -692,8 +692,8 @@ describe("getAdaptationSwitchStrategy", () => {
     });
 
     it("should use polled position when getCurrentTime returns undefined", () => {
-      const mockGetRef = vi.spyOn(mockedPlaybackObserver.observer, "getReference");
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockReturnValue(
+      const mockGetRef = vi.spyOn(mockedMediaElementMonitor.observer, "getReference");
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockReturnValue(
         undefined,
       );
       vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockReturnValue([
@@ -713,7 +713,7 @@ describe("getAdaptationSwitchStrategy", () => {
         mockPeriod,
         mockAdaptation,
         "seamless",
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         { onCodecSwitch: "continue" },
       );
 

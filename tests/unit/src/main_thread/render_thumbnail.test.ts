@@ -150,7 +150,7 @@ function createContentInfos(
     mediaElementTracksStore: null,
     onAudioTracksNotPlayable: "continue",
     onVideoTracksNotPlayable: "continue",
-    playbackObserver: {} as IPublicApiContentInfos["playbackObserver"],
+    mediaElementMonitor: {} as IPublicApiContentInfos["mediaElementMonitor"],
     segmentSinkMetricsCallback: null,
     thumbnailRequestsInfo: {
       pendingRequests: new WeakMap(),

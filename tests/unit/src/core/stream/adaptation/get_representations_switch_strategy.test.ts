@@ -7,7 +7,7 @@ import {
   type SegmentSink,
 } from "../../../../../../src/core/segment_sinks/index.ts";
 import getRepresentationsSwitchingStrategy from "../../../../../../src/core/stream/adaptation/get_representations_switch_strategy.ts";
-import type { IRepresentationStreamPlaybackObservation } from "../../../../../../src/core/stream/representation/index.ts";
+import type { IRepresentationStreamMediaObservation } from "../../../../../../src/core/stream/representation/index.ts";
 import type { IAdaptation, IPeriod } from "../../../../../../src/manifest/index.ts";
 import SharedReference from "../../../../../../src/utils/reference.ts";
 import {
@@ -17,17 +17,17 @@ import {
   createSegment,
 } from "../../../../mocks/manifest.ts";
 import {
-  makeReadyOnlyPlaybackObserver,
+  makeReadyOnlyMediaElementMonitor,
   DummyObservationPosition,
-} from "../../../../mocks/playback_observer.ts";
+} from "../../../../mocks/media_element_monitor.ts";
 import { DummySegmentSink } from "../../../../mocks/segment_sinks.ts";
 
 describe("getRepresentationsSwitchingStrategy", () => {
   let mockPeriod: IPeriod;
   let mockAdaptation: IAdaptation;
   let mockSegmentSink: SegmentSink;
-  const mockedPlaybackObserver =
-    makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>({
+  const mockedMediaElementMonitor =
+    makeReadyOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>({
       position: new DummyObservationPosition({
         getPolled: () => 10,
       }),
@@ -103,15 +103,15 @@ describe("getRepresentationsSwitchingStrategy", () => {
       getLastKnownInventory: () => [],
       getPendingOperations: () => [],
     });
-    vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+    vi.spyOn(mockedMediaElementMonitor.observer, "getReadyState").mockImplementation(
       () => 4,
     );
-    vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockImplementation(
+    vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockImplementation(
       () => 10,
     );
   });
   afterEach(() => {
-    mockedPlaybackObserver.reset();
+    mockedMediaElementMonitor.reset();
     vi.resetAllMocks();
   });
 
@@ -122,7 +122,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "lazy", representationIds: ["rep-1"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
       expect(result).toEqual({ type: "continue", value: undefined });
     });
@@ -135,7 +135,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-1"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
       expect(result).toEqual({ type: "continue", value: undefined });
     });
@@ -151,7 +151,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-1"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
       expect(result).toEqual({ type: "continue", value: undefined });
     });
@@ -175,7 +175,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
       expect(result.type).toBe("flush-buffer");
     });
@@ -197,7 +197,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-1"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
       expect(result.type).toBe("flush-buffer");
     });
@@ -220,7 +220,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result).toEqual({ type: "continue", value: undefined });
@@ -263,7 +263,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
       expect(result.type).toBe("flush-buffer");
     });
@@ -285,7 +285,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
       expect(result).toEqual({ type: "continue", value: undefined });
     });
@@ -293,7 +293,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
 
   describe("reload switching mode", () => {
     it("should return needs-reload when readyState > 1 and mode is reload", () => {
-      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+      vi.spyOn(mockedMediaElementMonitor.observer, "getReadyState").mockImplementation(
         () => 4,
       );
       vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
@@ -307,14 +307,14 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "reload", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result).toEqual({ type: "needs-reload", value: undefined });
     });
 
     it("should reload when readyState is undefined", () => {
-      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+      vi.spyOn(mockedMediaElementMonitor.observer, "getReadyState").mockImplementation(
         () => undefined,
       );
       vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
@@ -328,14 +328,14 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "reload", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result.type).toBe("needs-reload");
     });
 
     it("should not reload when readyState <= 1", () => {
-      vi.spyOn(mockedPlaybackObserver.observer, "getReadyState").mockImplementation(
+      vi.spyOn(mockedMediaElementMonitor.observer, "getReadyState").mockImplementation(
         () => 1,
       );
       vi.spyOn(mockSegmentSink, "getLastKnownInventory").mockImplementation(() => {
@@ -349,7 +349,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "reload", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result.type).not.toBe("needs-reload");
@@ -369,7 +369,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result.type).toBe("flush-buffer");
@@ -387,7 +387,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "seamless", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result.type).toBe("clean-buffer");
@@ -397,10 +397,10 @@ describe("getRepresentationsSwitchingStrategy", () => {
   describe("getCurrentTime fallback", () => {
     it("should use getPolled when getCurrentTime returns undefined", () => {
       const getPolledMock = vi.fn(() => 15);
-      vi.spyOn(mockedPlaybackObserver.observer, "getCurrentTime").mockImplementation(
+      vi.spyOn(mockedMediaElementMonitor.observer, "getCurrentTime").mockImplementation(
         () => undefined,
       );
-      vi.spyOn(mockedPlaybackObserver.observer, "getReference").mockImplementation(() => {
+      vi.spyOn(mockedMediaElementMonitor.observer, "getReference").mockImplementation(() => {
         return new SharedReference({
           position: new DummyObservationPosition({
             getPolled: getPolledMock,
@@ -424,7 +424,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "seamless", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(getPolledMock).toHaveBeenCalled();
@@ -444,7 +444,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result.type).toBe("flush-buffer");
@@ -467,7 +467,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-2"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result.type).toBe("flush-buffer");
@@ -493,7 +493,7 @@ describe("getRepresentationsSwitchingStrategy", () => {
         mockAdaptation,
         { switchingMode: "direct", representationIds: ["rep-1", "rep-2", "rep-3"] },
         mockSegmentSink,
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
       );
 
       expect(result).toEqual({ type: "continue", value: undefined });

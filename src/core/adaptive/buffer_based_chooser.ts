@@ -130,15 +130,13 @@ export default class BufferBasedChooser {
   }
 
   /**
-   * @param {Object} playbackObservation
+   * @param {Object} mediaObservation
    * @returns {number|undefined}
    */
-  public onAddedSegment(
-    playbackObservation: IBufferBasedChooserPlaybackObservation,
-  ): void {
+  public onAddedSegment(mediaObservation: IBufferBasedChooserMediaObservation): void {
     const bufferLevels = this._levelsMap;
     const bitrates = this._bitrates;
-    const { bufferGap, currentBitrate, currentScore, speed } = playbackObservation;
+    const { bufferGap, currentBitrate, currentScore, speed } = mediaObservation;
     if (isNullOrUndefined(currentBitrate)) {
       this._currentEstimate = bitrates[0];
       return;
@@ -256,8 +254,8 @@ export default class BufferBasedChooser {
   }
 }
 
-/** Playback observation needed by the `BufferBasedChooser`. */
-export interface IBufferBasedChooserPlaybackObservation {
+/** media observation needed by the `BufferBasedChooser`. */
+export interface IBufferBasedChooserMediaObservation {
   /**
    * Difference in seconds between the current position and the next
    * non-buffered position in the buffer for the currently-considered

@@ -1,11 +1,11 @@
 import type {
   ISegmentSinksStore,
-  IStreamOrchestratorPlaybackObservation,
+  IStreamOrchestratorMediaObservation,
 } from "../../core/types.ts";
 import log from "../../log.ts";
 import type { IManifest, IPeriod } from "../../manifest/index.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../media_element_monitor/index.ts";
 import type { IMediaSourceInterface } from "../../mse/index.ts";
-import type { IReadOnlyPlaybackObserver } from "../../playback_observer/index.ts";
 import type { IPlayerError } from "../../public_types.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import ContentTimeBoundariesObserver from "./content_time_boundaries_observer.ts";
@@ -25,7 +25,7 @@ export interface IContentTimeBoundariesObserverCallbacks {
  * (see `ContentTimeBoundariesObserver`).
  * @param {Object} manifest
  * @param {Object} mediaSource
- * @param {Object} streamObserver
+ * @param {Object} mediaElementMonitor
  * @param {Object} segmentSinksStore
  * @param {Object} cancelSignal
  * @returns {Object}
@@ -33,7 +33,7 @@ export interface IContentTimeBoundariesObserverCallbacks {
 export default function createContentTimeBoundariesObserver(
   manifest: IManifest,
   mediaSource: IMediaSourceInterface,
-  streamObserver: IReadOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IStreamOrchestratorMediaObservation>,
   segmentSinksStore: ISegmentSinksStore,
   callbacks: IContentTimeBoundariesObserverCallbacks,
   cancelSignal: CancellationSignal,
@@ -43,7 +43,7 @@ export default function createContentTimeBoundariesObserver(
   });
   const contentTimeBoundariesObserver = new ContentTimeBoundariesObserver(
     manifest,
-    streamObserver,
+    mediaElementMonitor,
     segmentSinksStore.getBufferTypes(),
   );
   cancelSignal.register((err) => {
