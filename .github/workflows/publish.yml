@@ -209,10 +209,10 @@ jobs:
           npm run build
           PACKAGE_DIRECTORY="$RUNNER_TEMP/rx-player-dev-package"
           mkdir -p "$PACKAGE_DIRECTORY"
-          PACKAGE_NAME=$(npm pack --silent --pack-destination "$PACKAGE_DIRECTORY")
+          PACKAGE_NAME=$(npm pack --ignore-scripts --pack-destination "$PACKAGE_DIRECTORY")
           PACKAGE_PATH="$PACKAGE_DIRECTORY/$PACKAGE_NAME"
           node scripts/check_package_build.mjs --package "$PACKAGE_PATH"
-          npm publish "$PACKAGE_PATH" --tag dev --provenance
+          npm publish "$PACKAGE_PATH" --ignore-scripts --tag dev --provenance
 
       - name: Apply Canal+ patch
         run: git apply ./scripts/canal-release.patch
@@ -225,10 +225,10 @@ jobs:
           npm run build
           PACKAGE_DIRECTORY="$RUNNER_TEMP/rx-player-canal-package"
           mkdir -p "$PACKAGE_DIRECTORY"
-          PACKAGE_NAME=$(npm pack --silent --pack-destination "$PACKAGE_DIRECTORY")
+          PACKAGE_NAME=$(npm pack --ignore-scripts --pack-destination "$PACKAGE_DIRECTORY")
           PACKAGE_PATH="$PACKAGE_DIRECTORY/$PACKAGE_NAME"
           node scripts/check_package_build.mjs --package "$PACKAGE_PATH"
-          npm publish "$PACKAGE_PATH" --tag canal --provenance
+          npm publish "$PACKAGE_PATH" --ignore-scripts --tag canal --provenance
 
   publish_official:
     if: needs.determine_release_type.outputs.release_type == 'official'
@@ -276,7 +276,7 @@ jobs:
           npm run build
           PACKAGE_DIRECTORY="$RUNNER_TEMP/rx-player-official-package"
           mkdir -p "$PACKAGE_DIRECTORY"
-          PACKAGE_NAME=$(npm pack --silent --pack-destination "$PACKAGE_DIRECTORY")
+          PACKAGE_NAME=$(npm pack --ignore-scripts --pack-destination "$PACKAGE_DIRECTORY")
           PACKAGE_PATH="$PACKAGE_DIRECTORY/$PACKAGE_NAME"
           node scripts/check_package_build.mjs --package "$PACKAGE_PATH"
           echo "PACKAGE_PATH=$PACKAGE_PATH" >> "$GITHUB_ENV"
@@ -308,4 +308,4 @@ jobs:
           git push origin stable
 
       - name: Publish official release
-        run: npm publish "$PACKAGE_PATH" --provenance
+        run: npm publish "$PACKAGE_PATH" --ignore-scripts --provenance

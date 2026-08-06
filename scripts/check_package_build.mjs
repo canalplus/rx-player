@@ -29,6 +29,14 @@ import { fileURLToPath, pathToFileURL } from "url";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = path.join(currentDirectory, "..");
+const UNSUPPORTED_PACKAGE_LIFECYCLE_SCRIPTS = [
+  "prepack",
+  "prepare",
+  "postpack",
+  "prepublishOnly",
+  "publish",
+  "postpublish",
+];
 
 /**
  * @typedef {Object} ICheckPackageBuildOptions
@@ -43,7 +51,7 @@ const ROOT_DIR = path.join(currentDirectory, "..");
  */
 export default async function checkPackageBuild(options = {}) {
   const temporaryDirectory = await fs.mkdtemp(
-    path.join(os.tmpdir(), "rx-player-package-"),
+    path.join(os.tmpdir(), "package-build-check"),
   );
   try {
     const packagePath =
@@ -88,6 +96,7 @@ export default async function checkPackageBuild(options = {}) {
         'The installed package should have a name and an object "exports" field.',
       );
     }
+    checkPublishLifecycleScripts(packageJson);
 
     const installedPackageDirectory = path.dirname(
       packagePathForConsumer(consumerDirectory),
@@ -121,6 +130,33 @@ export default async function checkPackageBuild(options = {}) {
 }
 
 /**
+ * Package builds and releases ignore npm lifecycle scripts so that every step
+ * affecting the published archive stays explicit in the release workflow.
+ * Reject those scripts so that they cannot be silently ignored.
+ * @param {Record<string, unknown>} packageJson
+ */
+function checkPublishLifecycleScripts(packageJson) {
+  if (
+    packageJson.scripts === null ||
+    typeof packageJson.scripts !== "object" ||
+    Array.isArray(packageJson.scripts)
+  ) {
+    return;
+  }
+  const scripts = /** @type {Record<string, unknown>} */ (packageJson.scripts);
+  const skippedScripts = UNSUPPORTED_PACKAGE_LIFECYCLE_SCRIPTS.filter(
+    (scriptName) => typeof scripts[scriptName] === "string",
+  );
+  if (skippedScripts.length > 0) {
+    throw new Error(
+      "Package builds and releases do not run the following npm lifecycle " +
+        `scripts: ${skippedScripts.join(", ")}. Update the release workflow ` +
+        "to handle them explicitly before allowing those scripts.",
+    );
+  }
+}
+
+/**
  * Pack the current project into the given directory.
  * @param {string} destinationDirectory
  * @returns {Promise<string>}
@@ -140,7 +176,7 @@ async function packCurrentProject(destinationDirectory) {
     "npm",
     [
       "pack",
-      "--silent",
+      "--ignore-scripts",
       "--cache",
       path.join(destinationDirectory, "npm-cache"),
       "--pack-destination",
