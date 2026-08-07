@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "module": "es2020",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "typeRoots": ["../../node_modules/@types"]
+  },
+  "include": ["./mocks/**/*.ts", "./src/**/*.ts", "./global/**/*.ts", "../../src/**/*.ts"]
+}

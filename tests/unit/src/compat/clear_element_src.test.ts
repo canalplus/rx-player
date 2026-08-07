@@ -1,0 +1,223 @@
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import type { IMediaElement } from "../../../../src/compat/browser_compatibility_types.ts";
+import clearElementSrc from "../../../../src/compat/clear_element_src.ts";
+import log from "../../../../src/log.ts";
+import arrayFindIndex from "../../../../src/utils/array_find_index.ts";
+
+const logWarn = vi.spyOn(log, "warn").mockImplementation(() => {
+  /* noop */
+});
+
+describe("Compat - clearElementSrc", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+  afterEach(() => {
+    logWarn.mockClear();
+  });
+
+  it("should empty the src and remove the Attribute for a given Element", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() {
+        return null;
+      },
+    } as unknown as IMediaElement;
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    clearElementSrc(fakeElement);
+    expect(fakeElement.src).toBe("");
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+  });
+
+  it("should throw if failed to remove the Attribute for a given Element", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() {
+        throw new Error("Oups, can't remove attribute.");
+      },
+    } as unknown as IMediaElement;
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    expect(() => clearElementSrc(fakeElement)).toThrowError(
+      "Oups, can't remove attribute.",
+    );
+    expect(fakeElement.src).toBe("");
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+  });
+
+  it("should disable text tracks and remove childs", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() {
+        return null;
+      },
+      textTracks: [{ mode: "showing" }, { mode: "showing" }],
+      childNodes: [{ nodeName: "audio" }, { nodeName: "track" }, { nodeName: "track" }],
+      hasChildNodes: () => true,
+      removeChild: (node: Node) => {
+        const childNodes = fakeElement.childNodes as Node[];
+        const idx = arrayFindIndex(childNodes, (n) => n.nodeName === node.nodeName);
+        childNodes.splice(idx, 1);
+      },
+    } as unknown as IMediaElement;
+
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
+
+    clearElementSrc(fakeElement);
+
+    expect(fakeElement.src).toBe("");
+    expect(fakeElement.textTracks[0].mode).toBe("disabled");
+    expect(fakeElement.textTracks[1].mode).toBe("disabled");
+    expect(fakeElement.childNodes).toEqual([{ nodeName: "audio" }]);
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+    expect(spyHasChildNodes).toHaveBeenCalledTimes(1);
+    expect(spyRemoveChild).toHaveBeenCalledTimes(2);
+    expect(spyRemoveChild).toHaveBeenCalledWith({ nodeName: "track" });
+  });
+
+  it("should log when failed to remove text track child node", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() {
+        return null;
+      },
+      textTracks: [{ mode: "showing" }, { mode: "showing" }],
+      childNodes: [{ nodeName: "audio" }, { nodeName: "track" }, { nodeName: "track" }],
+      hasChildNodes: () => true,
+      removeChild: () => {
+        throw new Error();
+      },
+    } as unknown as IMediaElement;
+
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
+
+    clearElementSrc(fakeElement);
+
+    expect(fakeElement.src).toBe("");
+    expect(fakeElement.textTracks[0].mode).toBe("disabled");
+    expect(fakeElement.textTracks[1].mode).toBe("disabled");
+    expect(fakeElement.childNodes).toEqual([
+      { nodeName: "audio" },
+      { nodeName: "track" },
+      { nodeName: "track" },
+    ]);
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+    expect(spyHasChildNodes).toHaveBeenCalledTimes(1);
+    expect(spyRemoveChild).toHaveBeenCalledTimes(2);
+    expect(logWarn).toHaveBeenCalledTimes(2);
+    expect(logWarn).toHaveBeenCalledWith(
+      "media",
+      "Could not remove text track child from element.",
+    );
+  });
+
+  it("should not remove audio child node if on firefox and no text tracks", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() {
+        return null;
+      },
+      textTracks: [],
+      childNodes: [{ nodeName: "audio" }],
+      hasChildNodes: () => true,
+      removeChild: () => null,
+    } as unknown as IMediaElement;
+
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
+
+    clearElementSrc(fakeElement);
+
+    expect(fakeElement.src).toBe("");
+    expect(fakeElement.childNodes).toEqual([{ nodeName: "audio" }]);
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+    expect(spyHasChildNodes).toHaveBeenCalledTimes(1);
+    expect(spyRemoveChild).not.toHaveBeenCalled();
+  });
+
+  it("should not handle text tracks nodes is has no child nodes", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() {
+        return null;
+      },
+      textTracks: [],
+      childNodes: [],
+      hasChildNodes: () => false,
+      removeChild: () => null,
+    } as unknown as IMediaElement;
+
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
+
+    clearElementSrc(fakeElement);
+
+    expect(fakeElement.src).toBe("");
+    expect(fakeElement.childNodes).toEqual([]);
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+    expect(spyHasChildNodes).toHaveBeenCalledTimes(1);
+    expect(spyRemoveChild).not.toHaveBeenCalled();
+  });
+
+  it("should not throw if the textTracks attribute is `null`", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() {
+        return null;
+      },
+      textTracks: null,
+      childNodes: [],
+      hasChildNodes: () => false,
+      removeChild: () => null,
+    } as unknown as IMediaElement;
+
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
+
+    clearElementSrc(fakeElement);
+
+    expect(fakeElement.src).toBe("");
+    expect(fakeElement.childNodes).toEqual([]);
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+    expect(spyHasChildNodes).toHaveBeenCalledTimes(0);
+    expect(spyRemoveChild).not.toHaveBeenCalled();
+  });
+
+  it("should not throw if the textTracks attribute is `undefined`", () => {
+    const fakeElement = {
+      src: "foo",
+      removeAttribute() {
+        return null;
+      },
+      textTracks: undefined,
+      childNodes: [],
+      hasChildNodes: () => false,
+      removeChild: () => null,
+    } as unknown as IMediaElement;
+
+    const spyRemoveAttribute = vi.spyOn(fakeElement, "removeAttribute");
+    const spyHasChildNodes = vi.spyOn(fakeElement, "hasChildNodes");
+    const spyRemoveChild = vi.spyOn(fakeElement, "removeChild");
+
+    clearElementSrc(fakeElement);
+
+    expect(fakeElement.src).toBe("");
+    expect(fakeElement.childNodes).toEqual([]);
+    expect(spyRemoveAttribute).toHaveBeenCalledTimes(1);
+    expect(spyRemoveAttribute).toHaveBeenCalledWith("src");
+    expect(spyHasChildNodes).toHaveBeenCalledTimes(0);
+    expect(spyRemoveChild).not.toHaveBeenCalled();
+  });
+});

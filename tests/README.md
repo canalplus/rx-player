@@ -6,10 +6,9 @@ This directory regroups the RxPlayer's tests.
 
 There are different types of tests in the RxPlayer:
 
-- unit tests: they test specific and sensitive parts of the Player.
+- unit tests: they test RxPlayer source files directly.
 
-  They are written in directories named `__tests__` alongside the corresponding tested
-  code (in `src`).
+  They are written in the `unit` directory.
 
 - integration tests: they test the player globally, by simulating different "scenarios"
   (like playing a content and seeking to an un-buffered part).
