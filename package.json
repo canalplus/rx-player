@@ -169,7 +169,7 @@
     "bundle": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer default bundle\" -o dist/rx-player.js",
     "bundle:min": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer minified bundle\" -o dist/rx-player.min.js --minify",
     "certificate": "bash ./scripts/generate_certificate.sh",
-    "check": "npm run types && npm run lint && npm run types:unit_tests",
+    "check": "npm run types && npm run lint",
     "check:all": "npm run types:all && npm run lint:all",
     "check:demo": "npm run types:demo && npm run lint:demo",
     "clean": "node ./scripts/utils/remove_dir.mjs dist",
@@ -208,7 +208,7 @@
     "types:all": "npm run types && npm run types:demo && npm run types:unit_tests && npm run types:scripts",
     "types:demo": "tsc --noEmit --project demo/",
     "types:scripts": "tsc --project ./scripts",
-    "types:unit_tests": "tsc --noEmit --project ./tsconfig.unit-tests.json",
+    "types:unit_tests": "tsc --noEmit --project ./tests/unit/tsconfig.json",
     "update-version": "bash ./scripts/update-version-number.sh"
   },
   "repository": {

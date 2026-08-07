@@ -195,8 +195,8 @@ every input given.
 
 Writing unit tests for new code is encouraged.
 
-Unit tests are written in a \_\_tests\_\_ directory, itself created in the same directory
-that the code it tests.
+Unit tests are written in the `tests/unit/src` directory, then mirroring the same path
+than the code it tests.
 
 They are written and run with the help of the Jest library and are named the following
 way: `filename_containing_the_function_tested.test.ts`.

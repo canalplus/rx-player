@@ -116,9 +116,7 @@ async function removePreviousBuildArtefacts() {
  */
 async function compile(opts) {
   // Sadly TypeScript compiler API seems to be sub-par.
-  // I did not find for example how to exclude some files (our unit tests)
-  // easily by running typescript directly from NodeJS.
-  // So we just spawn a separate process running tsc:
+  // We just spawn a separate process running tsc:
 
   console.log(" ⚙️ Compiling project with TypeScript...");
   const es6Build = spawnShellProm(
