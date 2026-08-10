@@ -34,12 +34,9 @@ export function generateContentSteeringAttrParser(
         break;
       }
 
-      case AttributeName.ProxyServerUrl: {
-        contentSteeringAttrs.attributes.proxyServerUrl = parseString(
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+      case AttributeName.ClientRequirement: {
+        contentSteeringAttrs.attributes.clientRequirement =
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       }
     }

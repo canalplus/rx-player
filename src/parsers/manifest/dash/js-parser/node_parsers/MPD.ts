@@ -26,7 +26,9 @@ import type {
 import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
 import parseContentSteering from "./ContentSteering.ts";
+import parseDescriptor from "./Descriptor.ts";
 import { createPeriodIntermediateRepresentation } from "./Period.ts";
+import parseServiceDescription from "./ServiceDescription.ts";
 import {
   parseDateTime,
   parseDuration,
@@ -51,6 +53,9 @@ function parseMPDChildren(
     UTCTiming: [],
     ContentProtection: [],
     ContentSteering: [],
+    ServiceDescription: [],
+    EssentialProperty: [],
+    SupplementalProperty: [],
   };
 
   let warnings: Error[] = [];
@@ -76,6 +81,14 @@ function parseMPDChildren(
           ret.ContentSteering.push(contentSteeringObj);
         }
         warnings = warnings.concat(contentSteeringWarnings);
+        break;
+      }
+
+      case "ServiceDescription": {
+        const [serviceDescription, serviceDescriptionWarnings] =
+          parseServiceDescription(currentNode);
+        ret.ServiceDescription.push(serviceDescription);
+        warnings.push(...serviceDescriptionWarnings);
         break;
       }
 
@@ -109,6 +122,14 @@ function parseMPDChildren(
         if (contentProtection !== undefined) {
           ret.ContentProtection.push(contentProtection);
         }
+        break;
+      }
+
+      case "EssentialProperty":
+      case "SupplementalProperty": {
+        const [property, propertyWarnings] = parseDescriptor(currentNode);
+        ret[currentNode.tagName].push(property);
+        warnings.push(...propertyWarnings);
         break;
       }
     }

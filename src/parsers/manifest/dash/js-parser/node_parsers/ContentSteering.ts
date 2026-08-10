@@ -15,7 +15,7 @@ export default function parseContentSteering(
   const attributes: {
     defaultServiceLocation?: string;
     queryBeforeStart?: boolean;
-    proxyServerUrl?: string;
+    clientRequirement?: boolean;
   } = {};
   const value = typeof root === "string" ? root : textContent(root.children);
   const warnings: Error[] = [];
@@ -40,8 +40,11 @@ export default function parseContentSteering(
         });
         break;
 
-      case "proxyServerUrl":
-        attributes.proxyServerUrl = attributeVal;
+      case "clientRequirement":
+        parseValue(attributeVal, {
+          parser: parseBoolean,
+          name: "clientRequirement",
+        });
         break;
     }
   }

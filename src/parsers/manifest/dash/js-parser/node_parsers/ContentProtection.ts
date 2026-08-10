@@ -36,6 +36,7 @@ function parseContentProtectionChildren(
   const cencPssh: Array<{ value: Uint8Array }> = [];
   for (let i = 0; i < contentProtectionChildren.length; i++) {
     const currentElement = contentProtectionChildren[i];
+    // TODO Support other XML prefixes also linked to the CENC namespace.
     if (typeof currentElement !== "string" && currentElement.tagName === "cenc:pssh") {
       const content = textContent(currentElement.children);
       if (content !== null && content.length > 0) {

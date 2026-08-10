@@ -120,6 +120,15 @@ export const enum TagName {
 
   /// Indicate a <ContentSteering> node
   ContentSteering = 24,
+
+  /// Indicate a `<UrlQueryInfo>` node.
+  UrlQueryInfo = 25,
+
+  /// Indicate an `<ExtUrlQueryInfo>` node.
+  ExtUrlQueryInfo = 26,
+
+  /// Indicate a `<ServiceDescription>` node.
+  ServiceDescription = 27,
 }
 
 /**
@@ -298,7 +307,7 @@ export const enum AttributeName {
 
   QueryBeforeStart = 73, // Boolean
 
-  ProxyServerUrl = 74, // String
+  ClientRequirement = 74, // Boolean
 
   DefaultServiceLocation = 75,
 
@@ -306,4 +315,12 @@ export const enum AttributeName {
   EndNumber = 76, // f64
 
   SupplementalCodecs = 77, // String
+
+  QueryTemplate = 81, // String
+
+  IncludeInRequests = 82, // String
+
+  UseMpdUrlQuery = 83, // Boolean
+
+  QueryString = 84, // String
 }
