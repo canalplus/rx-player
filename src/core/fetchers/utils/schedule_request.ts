@@ -21,6 +21,7 @@ import {
 } from "../../../errors/index.ts";
 import log from "../../../log.ts";
 import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
+import type { IRequestCdnMetadata } from "../../../transports/types.ts";
 import cancellableSleep from "../../../utils/cancellable_sleep.ts";
 import getFuzzedDelay from "../../../utils/get_fuzzed_delay.ts";
 import getTimestamp from "../../../utils/monotonic_timestamp.ts";
@@ -157,7 +158,7 @@ export async function scheduleRequestWithCdns<T>(
   cdns: ICdnMetadata[] | null,
   cdnPrioritizer: CdnPrioritizer | null,
   performRequest: (
-    cdn: ICdnMetadata | null,
+    cdn: IRequestCdnMetadata | null,
     cancellationSignal: CancellationSignal,
   ) => Promise<T>,
   options: IBackoffSettings,
@@ -173,7 +174,7 @@ export async function scheduleRequestWithCdns<T>(
     log.warn("utils", "No CDN given to `scheduleRequestWithCdns`.");
   }
 
-  const missedAttempts: Map<ICdnMetadata | null, ICdnAttemptMetadata> = new Map();
+  const missedAttempts: Map<IRequestCdnMetadata | null, ICdnAttemptMetadata> = new Map();
   const cdnsResponse = getCdnToRequest();
   let initialCdnToRequest;
   if (cdnsResponse.syncValue === null) {
@@ -199,7 +200,9 @@ export async function scheduleRequestWithCdns<T>(
    * the resource.
    * @returns {Object|null|undefined}
    */
-  function getCdnToRequest(): ISyncOrAsyncValue<ICdnMetadata | "no-http" | undefined> {
+  function getCdnToRequest(): ISyncOrAsyncValue<
+    IRequestCdnMetadata | "no-http" | undefined
+  > {
     if (cdns === null) {
       const nullAttemptObject = missedAttempts.get(null);
       if (nullAttemptObject !== undefined && nullAttemptObject.isBlacklisted) {
@@ -235,9 +238,12 @@ export async function scheduleRequestWithCdns<T>(
    * @param {string|null} cdn
    * @returns {Promise}
    */
-  async function requestCdn(cdn: ICdnMetadata | null): Promise<T> {
+  async function requestCdn(cdn: IRequestCdnMetadata | null): Promise<T> {
     try {
       const res = await performRequest(cdn, cancellationSignal);
+      if (cdn !== null) {
+        cdnPrioritizer?.recordCdnUsage(cdn);
+      }
       return res;
     } catch (error: unknown) {
       if (TaskCanceller.isCancellationError(error)) {
@@ -332,7 +338,7 @@ export async function scheduleRequestWithCdns<T>(
    * @returns {Promise}
    */
   function waitPotentialBackoffAndRequest(
-    nextWantedCdn: ICdnMetadata | null,
+    nextWantedCdn: IRequestCdnMetadata | null,
     prevRequestError: unknown,
   ): Promise<T> {
     const nextCdnAttemptObj = missedAttempts.get(nextWantedCdn);
@@ -409,8 +415,8 @@ export async function scheduleRequestWithCdns<T>(
    * @returns {Object|undefined}
    */
   function getPrioritaryRequestableCdnFromSortedList(
-    sortedCdns: ICdnMetadata[],
-  ): ICdnMetadata | undefined {
+    sortedCdns: IRequestCdnMetadata[],
+  ): IRequestCdnMetadata | undefined {
     if (missedAttempts.size === 0) {
       return sortedCdns[0];
     }
@@ -419,9 +425,9 @@ export async function scheduleRequestWithCdns<T>(
       .filter((c) => missedAttempts.get(c)?.isBlacklisted !== true)
       .reduce(
         (
-          acc: [ICdnMetadata, number | undefined] | undefined,
-          x: ICdnMetadata,
-        ): [ICdnMetadata, number | undefined] => {
+          acc: [IRequestCdnMetadata, number | undefined] | undefined,
+          x: IRequestCdnMetadata,
+        ): [IRequestCdnMetadata, number | undefined] => {
           let blockedUntil = missedAttempts.get(x)?.blockedUntil;
           if (blockedUntil !== undefined && blockedUntil <= now) {
             blockedUntil = undefined;

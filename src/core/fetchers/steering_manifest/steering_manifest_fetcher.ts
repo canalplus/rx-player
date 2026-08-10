@@ -65,7 +65,7 @@ export default class SteeringManifestFetcher {
     url: string,
     onRetry: (error: IPlayerError) => void,
     cancelSignal: CancellationSignal,
-  ): Promise<ISteeringManifestParser> {
+  ): Promise<{ parse: ISteeringManifestParser; url: string }> {
     const pipelines = this._pipelines;
     const backoffSettings = this._getBackoffSetting((err) => {
       onRetry(errorSelector(err));
@@ -76,8 +76,11 @@ export default class SteeringManifestFetcher {
       backoffSettings,
       cancelSignal,
     );
-    return (onWarnings: (error: IPlayerError[]) => void) => {
-      return this._parseSteeringManifest(response, onWarnings);
+    return {
+      url: response.url ?? url,
+      parse: (onWarnings: (error: IPlayerError[]) => void) => {
+        return this._parseSteeringManifest(response, onWarnings);
+      },
     };
   }
 

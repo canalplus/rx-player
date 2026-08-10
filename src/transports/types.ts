@@ -31,6 +31,17 @@ import type {
 import type { CancellationSignal } from "../utils/task_canceller.ts";
 import type TaskCanceller from "../utils/task_canceller.ts";
 
+/** CDN metadata enriched for a specific resource request. */
+export interface IRequestCdnMetadata extends ICdnMetadata {
+  /** URI replacement to apply when this CDN represents a synthesized pathway. */
+  pathwayClone?:
+    | {
+        host?: string | undefined;
+        params?: Record<string, string> | undefined;
+      }
+    | undefined;
+}
+
 /**
  * Interface returned by any transport implementation.
  * @param {Object} options - Options allowing to configure the transport's
@@ -294,7 +305,7 @@ export interface ISegmentPipeline<TLoadedFormat, TParsedSegmentDataFormat> {
  * the segment.
  */
 export type ISegmentLoader<TLoadedFormat> = (
-  wantedCdn: ICdnMetadata | null,
+  wantedCdn: IRequestCdnMetadata | null,
   context: ISegmentContext,
   options: ISegmentLoaderOptions,
   cancelSignal: CancellationSignal,
@@ -398,7 +409,7 @@ export interface IThumbnailPipeline {
 }
 
 export type IThumbnailLoader = (
-  wantedCdn: ICdnMetadata | null,
+  wantedCdn: IRequestCdnMetadata | null,
   thumbnail: ISegment,
   options: IThumbnailLoaderOptions,
   cancelSignal: CancellationSignal,
@@ -508,9 +519,19 @@ export interface IManifestParserResult {
 
 export interface IDASHContentSteeringManifest {
   VERSION: number; // REQUIRED, must be an integer
-  TTL?: number; // REQUIRED, number of seconds
+  TTL: number; // REQUIRED, number of seconds
   ["RELOAD-URI"]?: string; // OPTIONAL, URI
-  ["SERVICE-LOCATION-PRIORITY"]: string[]; // REQUIRED, array of ServiceLocation
+  ["PATHWAY-PRIORITY"]?: string[];
+  ["PATHWAY-CLONES"]?: Array<{
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    "BASE-ID": string;
+    ID: string;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    "URI-REPLACEMENT": {
+      HOST?: string;
+      PARAMS?: Record<string, string>;
+    };
+  }>;
 }
 
 /**

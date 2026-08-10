@@ -1,9 +1,9 @@
 import type { ISegment } from "../../manifest/index.ts";
-import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
 import request from "../../utils/request/xhr.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   IRequestedData,
+  IRequestCdnMetadata,
   IThumbnailContext,
   IThumbnailLoaderOptions,
   IThumbnailResponse,
@@ -21,7 +21,7 @@ import constructSegmentUrl from "./construct_segment_url.ts";
  * @returns {Promise}
  */
 export async function loadThumbnail(
-  wantedCdn: ICdnMetadata | null,
+  wantedCdn: IRequestCdnMetadata | null,
   thumbnail: ISegment,
   options: IThumbnailLoaderOptions,
   cancelSignal: CancellationSignal,

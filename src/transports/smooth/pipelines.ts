@@ -17,7 +17,6 @@
 import log from "../../log.ts";
 import Manifest from "../../manifest/classes/index.ts";
 import { getMDAT } from "../../parsers/containers/isobmff/index.ts";
-import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
 import createSmoothManifestParser from "../../parsers/manifest/smooth/index.ts";
 import globalScope from "../../utils/global_scope.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
@@ -28,6 +27,7 @@ import type {
   IChunkTimeInfo,
   ILoadedAudioVideoSegmentFormat,
   ILoadedTextSegmentFormat,
+  IRequestCdnMetadata,
   IManifestParserOptions,
   IManifestParserResult,
   IRequestedData,
@@ -96,7 +96,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
      * @returns {Promise}
      */
     loadSegment(
-      wantedCdn: ICdnMetadata | null,
+      wantedCdn: IRequestCdnMetadata | null,
       context: ISegmentContext,
       loaderOptions: ISegmentLoaderOptions,
       cancelSignal: CancellationSignal,
@@ -192,7 +192,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
 
   const textTrackPipeline = {
     loadSegment(
-      wantedCdn: ICdnMetadata | null,
+      wantedCdn: IRequestCdnMetadata | null,
       context: ISegmentContext,
       loaderOptions: ISegmentLoaderOptions,
       cancelSignal: CancellationSignal,

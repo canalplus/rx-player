@@ -18,6 +18,7 @@ import config from "../../../config.ts";
 import { formatError } from "../../../errors/index.ts";
 import log from "../../../log.ts";
 import Manifest from "../../../manifest/classes/index.ts";
+import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
 import type {
   IInitialManifest,
   ILoadedManifestFormat,
@@ -35,9 +36,14 @@ import getMonotonicTimeStamp from "../../../utils/monotonic_timestamp.ts";
 import noop from "../../../utils/noop.ts";
 import TaskCanceller from "../../../utils/task_canceller.ts";
 import type CmcdDataBuilder from "../../cmcd/index.ts";
+import type CdnPrioritizer from "../cdn_prioritizer.ts";
+import { applyPathwayCloneToUrl } from "../cdn_prioritizer.ts";
 import errorSelector from "../utils/error_selector.ts";
 import type { IBackoffSettings } from "../utils/schedule_request.ts";
-import { scheduleRequestPromise } from "../utils/schedule_request.ts";
+import {
+  scheduleRequestPromise,
+  scheduleRequestWithCdns,
+} from "../utils/schedule_request.ts";
 
 /**
  * Class allowing to facilitate the task of loading and parsing a Manifest, as
@@ -86,6 +92,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    * the next Manifest fetching operation, it can then be reset to `null`.
    */
   private _prioritizedContentUrl: string | undefined | null;
+  private _cdnPrioritizer: CdnPrioritizer | null;
 
   /**
    * Construct a new ManifestFetcher.
@@ -101,6 +108,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     urls: string[] | undefined,
     pipelines: ITransportPipelines,
     settings: IManifestFetcherSettings,
+    cdnPrioritizer: CdnPrioritizer | null = null,
   ) {
     super();
     this.scheduleManualRefresh = noop;
@@ -108,6 +116,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     this._pipelines = pipelines.manifest;
     this._transportName = pipelines.transportName;
     this._settings = settings;
+    this._cdnPrioritizer = cdnPrioritizer;
     this._canceller = new TaskCanceller("ManifestFetcher");
     this._isStarted = false;
     this._isRefreshPending = false;
@@ -154,7 +163,11 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         undefined,
       );
     } else {
-      manifestProm = this._fetchManifest(undefined).then((val) => {
+      const initialCdns =
+        this._manifestUrls === undefined || this._manifestUrls.length === 0
+          ? null
+          : this._manifestUrls.map((baseUrl) => ({ baseUrl }));
+      manifestProm = this._fetchManifest(initialCdns).then((val) => {
         return val.parse({ previousManifest: null, unsafeMode: false });
       });
     }
@@ -198,30 +211,33 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
    * This method does not yet parse it, parsing will then be available through
    * a callback available on the response.
    *
-   * You can set an `url` on which that Manifest will be requested.
-   * If not set, the regular Manifest url - defined on the `ManifestFetcher`
-   * instanciation - will be used instead.
-   *
-   * @param {string | undefined} url
+   * @param {Array.<Object> | null} cdns
    * @returns {Promise}
    */
   private async _fetchManifest(
-    url: string | undefined,
+    cdns: ICdnMetadata[] | null,
   ): Promise<IManifestFetcherResponse> {
     const cancelSignal = this._canceller.signal;
     const settings = this._settings;
     const transportName = this._transportName;
     const pipelines = this._pipelines;
 
-    // TODO Better handle multiple Manifest URLs
-    const requestUrl = url ?? this._manifestUrls?.[0];
-
     const backoffSettings = this._getBackoffSetting((err) => {
       this.trigger("warning", errorSelector(err));
     });
 
     try {
-      const response = await callLoaderWithRetries(requestUrl);
+      const { response, requestUrl } = await scheduleRequestWithCdns(
+        cdns,
+        this._cdnPrioritizer,
+        async (cdn) => {
+          const selectedUrl = cdn === null ? undefined : applyPathwayCloneToUrl(cdn);
+          const loaded = await callLoader(selectedUrl);
+          return { response: loaded, requestUrl: selectedUrl };
+        },
+        backoffSettings,
+        cancelSignal,
+      );
       return {
         parse: (parserOptions: IManifestFetcherParserOptions) => {
           return this._parseLoadedManifest(response, parserOptions, requestUrl);
@@ -232,13 +248,11 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     }
 
     /**
-     * Call the loader part of the pipeline, retrying if it fails according
-     * to the current settings.
-     * Returns the Promise of the last attempt.
+     * Call the loader part of the pipeline.
      * @param {string | undefined} manifestUrl
      * @returns {Promise}
      */
-    function callLoaderWithRetries(
+    function callLoader(
       manifestUrl: string | undefined,
     ): Promise<IRequestedData<ILoadedManifestFormat>> {
       const { loadManifest } = pipelines;
@@ -264,8 +278,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         connectionTimeout,
         cmcdPayload: settings.cmcdDataBuilder?.getCmcdDataForManifest(transportName),
       };
-      const callLoader = () => loadManifest(manifestUrl, requestOptions, cancelSignal);
-      return scheduleRequestPromise(callLoader, backoffSettings, cancelSignal);
+      return loadManifest(manifestUrl, requestOptions, cancelSignal);
     }
   }
 
@@ -612,20 +625,24 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
   ) {
     const manifestUpdateUrl = manifest.updateUrl;
     let fullRefresh: boolean;
-    let refreshURL: string | undefined;
+    let refreshCdns: ICdnMetadata[] | null;
     if (this._prioritizedContentUrl !== null) {
       // `updateContentUrls` explicitly requested that the next refresh uses that
       // URL. This override is one-shot on purpose.
       fullRefresh = true;
-      refreshURL = this._prioritizedContentUrl;
+      refreshCdns =
+        this._prioritizedContentUrl === undefined
+          ? null
+          : [{ baseUrl: this._prioritizedContentUrl }];
       this._prioritizedContentUrl = null;
     } else {
-      // Outside of that explicit one-shot override, prefer the URLs currently
-      // exposed by the Manifest itself. This allows parser/content-level URL
-      // updates (e.g. redirects or manifest-provided alternatives) to stay the
-      // source of truth after the refresh completed.
-      fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
-      refreshURL = fullRefresh ? manifest.getRefreshUrls()[0] : manifestUpdateUrl;
+      if (!enablePartialRefresh || manifestUpdateUrl === undefined) {
+        fullRefresh = true;
+        refreshCdns = manifest.cdnMetadata;
+      } else {
+        fullRefresh = false;
+        refreshCdns = [{ baseUrl: manifestUpdateUrl }];
+      }
     }
     const externalClockOffset = manifest.clockOffset;
 
@@ -651,7 +668,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       return;
     }
     this._isRefreshPending = true;
-    this._fetchManifest(refreshURL)
+    this._fetchManifest(refreshCdns)
       .then((res) =>
         res.parse({
           externalClockOffset,

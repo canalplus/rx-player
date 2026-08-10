@@ -15,7 +15,6 @@
  */
 
 import { CustomLoaderError } from "../../errors/index.ts";
-import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
 import type {
   ILocalManifestInitSegmentLoader,
   ILocalManifestSegmentLoader,
@@ -25,6 +24,7 @@ import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import type {
   ISegmentContext,
+  IRequestCdnMetadata,
   ISegmentLoaderCallbacks,
   ISegmentLoaderOptions,
   ISegmentLoaderResultSegmentLoaded,
@@ -180,7 +180,7 @@ function loadSegment(
  * @returns {Promise}
  */
 export default function segmentLoader(
-  _wantedCdn: ICdnMetadata | null,
+  _wantedCdn: IRequestCdnMetadata | null,
   content: ISegmentContext,
   _loaderOptions: ISegmentLoaderOptions, // TODO use timeout?
   cancelSignal: CancellationSignal,

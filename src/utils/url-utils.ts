@@ -309,6 +309,70 @@ function parseQueryString(query: string): Array<[string, string]> {
 }
 
 /**
+ * Append an already-encoded query string to an URL without parsing or
+ * normalizing either the existing query or the appended one.
+ */
+function appendURLQueryString(url: string, queryString: string): string {
+  if (queryString.length === 0) {
+    return url;
+  }
+  const urlParts = parseURL(url);
+  const query =
+    urlParts.query.length === 0 ? queryString : `${urlParts.query}&${queryString}`;
+  return formatURL({ ...urlParts, query });
+}
+
+/**
+ * Set decoded query-string parameters on an URL.
+ *
+ * Existing unrelated parameters keep their original representation and order.
+ * If a parameter is already present, its first occurrence is replaced and
+ * further occurrences are removed.
+ */
+function setURLQueryParameters(url: string, parameters: Array<[string, string]>): string {
+  if (parameters.length === 0) {
+    return url;
+  }
+  const urlParts = parseURL(url);
+  const queryParts = urlParts.query.length === 0 ? [] : urlParts.query.split("&");
+  for (const [key, value] of parameters) {
+    const encodedParameter = `${encodeQueryComponent(key)}=${encodeQueryComponent(value)}`;
+    let firstIndex = -1;
+    for (let i = 0; i < queryParts.length; i++) {
+      const part = queryParts[i];
+      const equalIndex = part.indexOf("=");
+      const encodedKey = equalIndex < 0 ? part : part.substring(0, equalIndex);
+      if (decodeQueryComponent(encodedKey) === key) {
+        if (firstIndex < 0) {
+          firstIndex = i;
+        } else {
+          queryParts.splice(i, 1);
+          i--;
+        }
+      }
+    }
+    if (firstIndex < 0) {
+      queryParts.push(encodedParameter);
+    } else {
+      queryParts[firstIndex] = encodedParameter;
+    }
+  }
+  return formatURL({ ...urlParts, query: queryParts.join("&") });
+}
+
+/** Replace the host component of an URL without normalizing its other components. */
+function replaceURLHost(url: string, host: string): string {
+  const urlParts = parseURL(url);
+  if (urlParts.authority.length === 0) {
+    return url;
+  }
+  const userInfoEnd = urlParts.authority.lastIndexOf("@");
+  const userInfo =
+    userInfoEnd < 0 ? "" : urlParts.authority.substring(0, userInfoEnd + 1);
+  return formatURL({ ...urlParts, authority: userInfo + host });
+}
+
+/**
  * Decodes a string from a URL query component, reversing
  * `application/x-www-form-urlencoded` encoding.
  *
@@ -340,6 +404,40 @@ function decodeQueryComponent(value: string): string {
   } catch (_) {
     return value;
   }
+}
+
+/**
+ *
+ * Encodes a string for safe use as a URL query component.
+ *
+ * Produces a percent-encoded string suitable for use as a query parameter key or value.
+ *
+ * How it works:
+ *
+ * 1. Calls `encodeURIComponent`, which encodes all characters except A–Z, a–z,
+ *    0–9, -, _, ., !, ~, *, ', (, ).
+ * 2. Additionally percent-encodes the characters !, ', (, ), and *, which
+ *    `encodeURIComponent` leaves unescaped.
+ *    This produces a more conservative encoding that avoids edge cases with
+ *    certain servers and proxies.
+ *
+ * @example
+ * ```
+ * encodeQueryComponent("hello world"); // "hello%20world"
+ * encodeQueryComponent("café");        // "caf%C3%A9"
+ * encodeQueryComponent("a(b)c");       // "a%28b%29c"
+ * encodeQueryComponent("it's");        // "it%27s"
+ * encodeQueryComponent("50%off");      // "50%25off"
+ * ```
+ *
+ * @param {string} value - The raw string to encode.
+ * @returns - The percent-encoded string.
+ */
+function encodeQueryComponent(value: string): string {
+  return encodeURIComponent(value).replace(
+    /[!'()*]/g,
+    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
 }
 
 /**
@@ -424,10 +522,13 @@ function resolveURL(...args: Array<string | undefined>): string {
 }
 
 export {
+  appendURLQueryString,
   getFilenameIndexInUrl,
   getRelativeUrl,
   getQueryString,
   isAbsoluteURL,
   parseQueryString,
+  replaceURLHost,
   resolveURL,
+  setURLQueryParameters,
 };
