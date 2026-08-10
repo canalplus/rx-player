@@ -135,16 +135,17 @@ export default function parseMpdIr(
   if (isNullOrUndefined(args.externalClockOffset)) {
     const isDynamic: boolean = rootAttributes.type === "dynamic";
 
-    const directTiming = arrayFind(rootChildren.utcTimings, (utcTiming) => {
+    const directTiming = arrayFind(rootChildren.UTCTiming, (utcTiming) => {
       return (
-        utcTiming.schemeIdUri === "urn:mpeg:dash:utc:direct:2014" &&
-        !isNullOrUndefined(utcTiming.value)
+        utcTiming.attributes.schemeIdUri === "urn:mpeg:dash:utc:direct:2014" &&
+        !isNullOrUndefined(utcTiming.attributes.value)
       );
     });
 
     const clockOffsetFromDirectUTCTiming =
-      !isNullOrUndefined(directTiming) && !isNullOrUndefined(directTiming.value)
-        ? getClockOffset(directTiming.value)
+      !isNullOrUndefined(directTiming) &&
+      !isNullOrUndefined(directTiming.attributes.value)
+        ? getClockOffset(directTiming.attributes.value)
         : undefined;
     const clockOffset =
       !isNullOrUndefined(clockOffsetFromDirectUTCTiming) &&
@@ -184,8 +185,9 @@ export default function parseMpdIr(
   }
 
   const xlinksToLoad: Array<{ index: number; ressource: string }> = [];
-  for (let i = 0; i < rootChildren.periods.length; i++) {
-    const { xlinkHref, xlinkActuate } = rootChildren.periods[i].attributes;
+  for (let i = 0; i < rootChildren.Period.length; i++) {
+    const xlinkHref = rootChildren.Period[i].attributes["xlink:href"];
+    const xlinkActuate = rootChildren.Period[i].attributes["xlink:actuate"];
     if (!isNullOrUndefined(xlinkHref) && xlinkActuate === "onLoad") {
       xlinksToLoad.push({ index: i, ressource: xlinkHref });
     }
@@ -225,7 +227,7 @@ export default function parseMpdIr(
           }
 
           // replace original "xlinked" periods by the real deal
-          rootChildren.periods.splice(index, 1, ...periodsIR);
+          rootChildren.Period.splice(index, 1, ...periodsIR);
         }
         return parseMpdIr(mpdIR, args, warnings, hasLoadedClock, xlinkInfos);
       },
@@ -253,7 +255,7 @@ function parseCompleteIntermediateRepresentation(
     args.url !== undefined
       ? [{ url: args.url.substring(0, getFilenameIndexInUrl(args.url)) }]
       : [];
-  const mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.baseURLs);
+  const mpdBaseUrls = resolveBaseURLs(initialBaseUrl, rootChildren.BaseURL);
   const availabilityStartTime = parseAvailabilityStartTime(
     rootAttributes,
     args.referenceDateTime,
@@ -270,13 +272,13 @@ function parseCompleteIntermediateRepresentation(
     serverTimestampOffset: externalClockOffset,
   });
   const contentProtectionParser = new ContentProtectionParser();
-  contentProtectionParser.addReferences(rootChildren.contentProtections ?? []);
+  contentProtectionParser.addReferences(rootChildren.ContentProtection);
   const manifestInfos = {
     availabilityStartTime,
     baseURLs: mpdBaseUrls,
     clockOffset,
     contentProtectionParser,
-    duration: rootAttributes.duration,
+    duration: rootAttributes.mediaPresentationDuration,
     isDynamic,
     manifestBoundsCalculator,
     manifestProfiles: mpdIR.attributes.profiles,
@@ -285,9 +287,9 @@ function parseCompleteIntermediateRepresentation(
     xlinkInfos,
     xmlNamespaces: mpdIR.attributes.namespaces,
   };
-  const parsedPeriods = parsePeriods(rootChildren.periods, manifestInfos);
+  const parsedPeriods = parsePeriods(rootChildren.Period, manifestInfos);
   contentProtectionParser.finalize();
-  const mediaPresentationDuration = rootAttributes.duration;
+  const mediaPresentationDuration = rootAttributes.mediaPresentationDuration;
 
   let lifetime: number | undefined;
   let minimumTime: number | undefined;
@@ -416,7 +418,7 @@ function parseCompleteIntermediateRepresentation(
     !isDynamic ||
     (mpdIR.attributes.minimumUpdatePeriod === undefined &&
       (parsedPeriods[parsedPeriods.length - 1]?.end !== undefined ||
-        mpdIR.attributes.duration !== undefined));
+        mpdIR.attributes.mediaPresentationDuration !== undefined));
 
   const parsedMPD: IParsedManifest = {
     availabilityStartTime,
@@ -435,8 +437,8 @@ function parseCompleteIntermediateRepresentation(
     },
     lifetime,
     uris: isNullOrUndefined(args.url)
-      ? rootChildren.locations
-      : [args.url, ...rootChildren.locations],
+      ? rootChildren.Location.map((l) => l.value)
+      : [args.url, ...rootChildren.Location.map((l) => l.value)],
   };
 
   return { type: "done", value: { parsed: parsedMPD, warnings } };

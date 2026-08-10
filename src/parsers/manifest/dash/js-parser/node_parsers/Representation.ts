@@ -44,10 +44,15 @@ function parseRepresentationChildren(
   representationChildren: Array<string | ITNode>,
 ): [IRepresentationChildren, Error[]] {
   const children: IRepresentationChildren = {
-    baseURLs: [],
+    BaseURL: [],
+    ContentProtection: [],
+    InbandEventStream: [],
+    SegmentTemplate: [],
+    SegmentBase: [],
+    SegmentList: [],
+    SupplementalProperty: [],
+    EssentialProperty: [],
   };
-  const contentProtections = [];
-
   let warnings: Error[] = [];
   for (let i = 0; i < representationChildren.length; i++) {
     const currentElement = representationChildren[i];
@@ -59,36 +64,31 @@ function parseRepresentationChildren(
       case "BaseURL": {
         const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
         if (baseURLObj !== undefined) {
-          children.baseURLs.push(baseURLObj);
+          children.BaseURL.push(baseURLObj);
         }
         warnings = warnings.concat(baseURLWarnings);
         break;
       }
       case "InbandEventStream":
-        if (children.inbandEventStreams === undefined) {
-          children.inbandEventStreams = [];
-        }
-        children.inbandEventStreams.push(parseScheme(currentElement));
+        children.InbandEventStream.push(parseScheme(currentElement));
         break;
       case "SegmentBase": {
         const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentElement);
-        children.segmentBase = segmentBase;
-        if (segmentBaseWarnings.length > 0) {
-          warnings = warnings.concat(segmentBaseWarnings);
-        }
+        warnings = warnings.concat(segmentBaseWarnings);
+        children.SegmentBase.push(segmentBase);
         break;
       }
       case "SegmentList": {
         const [segmentList, segmentListWarnings] = parseSegmentList(currentElement);
         warnings = warnings.concat(segmentListWarnings);
-        children.segmentList = segmentList;
+        children.SegmentList.push(segmentList);
         break;
       }
       case "SegmentTemplate": {
         const [segmentTemplate, segmentTemplateWarnings] =
           parseSegmentTemplate(currentElement);
         warnings = warnings.concat(segmentTemplateWarnings);
-        children.segmentTemplate = segmentTemplate;
+        children.SegmentTemplate.push(segmentTemplate);
         break;
       }
 
@@ -99,28 +99,17 @@ function parseRepresentationChildren(
           warnings = warnings.concat(contentProtectionWarnings);
         }
         if (contentProtection !== undefined) {
-          contentProtections.push(contentProtection);
+          children.ContentProtection.push(contentProtection);
         }
         break;
       }
       case "EssentialProperty":
-        if (isNullOrUndefined(children.essentialProperties)) {
-          children.essentialProperties = [parseScheme(currentElement)];
-        } else {
-          children.essentialProperties.push(parseScheme(currentElement));
-        }
+        children.EssentialProperty.push(parseScheme(currentElement));
         break;
       case "SupplementalProperty":
-        if (isNullOrUndefined(children.supplementalProperties)) {
-          children.supplementalProperties = [parseScheme(currentElement)];
-        } else {
-          children.supplementalProperties.push(parseScheme(currentElement));
-        }
+        children.SupplementalProperty.push(parseScheme(currentElement));
         break;
     }
-  }
-  if (contentProtections.length > 0) {
-    children.contentProtections = contentProtections;
   }
   return [children, warnings];
 }
@@ -148,9 +137,8 @@ function parseRepresentationAttributes(
 
       case "bandwidth":
         parseValue(attributeVal, {
-          asKey: "bitrate",
           parser: parseMPDInteger,
-          dashName: "bandwidth",
+          name: "bandwidth",
         });
         break;
 
@@ -160,25 +148,22 @@ function parseRepresentationAttributes(
 
       case "codingDependency":
         parseValue(attributeVal, {
-          asKey: "codingDependency",
           parser: parseBoolean,
-          dashName: "codingDependency",
+          name: "codingDependency",
         });
         break;
 
       case "frameRate":
         parseValue(attributeVal, {
-          asKey: "frameRate",
           parser: parseMaybeDividedNumber,
-          dashName: "frameRate",
+          name: "frameRate",
         });
         break;
 
       case "height":
         parseValue(attributeVal, {
-          asKey: "height",
           parser: parseMPDInteger,
-          dashName: "height",
+          name: "height",
         });
         break;
 
@@ -188,17 +173,15 @@ function parseRepresentationAttributes(
 
       case "maxPlayoutRate":
         parseValue(attributeVal, {
-          asKey: "maxPlayoutRate",
           parser: parseMPDFloat,
-          dashName: "maxPlayoutRate",
+          name: "maxPlayoutRate",
         });
         break;
 
       case "maximumSAPPeriod":
         parseValue(attributeVal, {
-          asKey: "maximumSAPPeriod",
           parser: parseMPDFloat,
-          dashName: "maximumSAPPeriod",
+          name: "maximumSAPPeriod",
         });
         break;
 
@@ -212,14 +195,13 @@ function parseRepresentationAttributes(
 
       case "qualityRanking":
         parseValue(attributeVal, {
-          asKey: "qualityRanking",
           parser: parseMPDInteger,
-          dashName: "qualityRanking",
+          name: "qualityRanking",
         });
         break;
 
       case "scte214:supplementalCodecs":
-        attributes.supplementalCodecs = attributeVal;
+        attributes["scte214:supplementalCodecs"] = attributeVal;
         break;
 
       case "segmentProfiles":
@@ -228,30 +210,27 @@ function parseRepresentationAttributes(
 
       case "width":
         parseValue(attributeVal, {
-          asKey: "width",
           parser: parseMPDInteger,
-          dashName: "width",
+          name: "width",
         });
         break;
 
       case "availabilityTimeOffset":
         parseValue(attributeVal, {
-          asKey: "availabilityTimeOffset",
           parser: parseMPDFloat,
-          dashName: "availabilityTimeOffset",
+          name: "availabilityTimeOffset",
         });
         break;
 
       case "availabilityTimeComplete":
         parseValue(attributeVal, {
-          asKey: "availabilityTimeComplete",
           parser: parseBoolean,
-          dashName: "availabilityTimeComplete",
+          name: "availabilityTimeComplete",
         });
         break;
     }
   }
-  if (attributes.bitrate === undefined) {
+  if (attributes.bandwidth === undefined) {
     warnings.push(new MPDError("No bitrate found on a Representation"));
   }
   return [attributes, warnings];

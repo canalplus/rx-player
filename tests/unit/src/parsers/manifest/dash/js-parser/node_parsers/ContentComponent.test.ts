@@ -11,21 +11,25 @@ function testStringAttribute(attributeName: string, variableName?: string): void
       `<contentComponent ${attributeName}="foobar" />`,
     )[0] as ITNode;
     expect(parseContentComponent(element1)).toEqual({
-      [_variableName]: "foobar",
+      attributes: {
+        [_variableName]: "foobar",
+      },
     });
 
     const element2 = parseXml(`<contentComponent ${attributeName}="" />`)[0] as ITNode;
-    expect(parseContentComponent(element2)).toEqual({ [_variableName]: "" });
+    expect(parseContentComponent(element2)).toEqual({
+      attributes: { [_variableName]: "" },
+    });
   });
 }
 
 describe("DASH Node Parsers - ContentComponent", () => {
   it("should correctly parse a ContentComponent element without attributes", () => {
     const element = parseXml("<Content />")[0] as ITNode;
-    expect(parseContentComponent(element)).toEqual({});
+    expect(parseContentComponent(element)).toEqual({ attributes: {} });
   });
   testStringAttribute("id");
-  testStringAttribute("lang", "language");
+  testStringAttribute("lang", "lang");
   testStringAttribute("contentType");
   testStringAttribute("par");
 
@@ -39,10 +43,12 @@ describe("DASH Node Parsers - ContentComponent", () => {
         />`,
     )[0] as ITNode;
     expect(parseContentComponent(element)).toEqual({
-      id: "foo",
-      language: "bar",
-      contentType: "audio/mp5",
-      par: "3/4",
+      attributes: {
+        id: "foo",
+        lang: "bar",
+        contentType: "audio/mp5",
+        par: "3/4",
+      },
     });
   });
 });

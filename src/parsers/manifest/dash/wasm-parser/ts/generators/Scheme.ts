@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { IScheme } from "../../../node_parser_types.ts";
+import type { ISchemeAttributes } from "../../../node_parser_types.ts";
 import type { IAttributeParser } from "../parsers_stack.ts";
 import { AttributeName } from "../types.ts";
 import { parseString } from "../utils.ts";
@@ -26,7 +26,7 @@ import { parseString } from "../utils.ts";
  * @returns {Function}
  */
 export function generateSchemeAttrParser(
-  schemeAttrs: IScheme,
+  schemeAttrs: ISchemeAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
   const textDecoder = new TextDecoder();

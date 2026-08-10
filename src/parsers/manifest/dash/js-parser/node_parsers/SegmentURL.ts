@@ -28,9 +28,9 @@ import { parseByteRange, ValueParser } from "./utils.ts";
 export default function parseSegmentURL(
   root: ITNode,
 ): [ISegmentUrlIntermediateRepresentation, Error[]] {
-  const parsedSegmentURL: ISegmentUrlIntermediateRepresentation = {};
+  const parsedSegmentURL: ISegmentUrlIntermediateRepresentation = { attributes: {} };
   const warnings: Error[] = [];
-  const parseValue = ValueParser(parsedSegmentURL, warnings);
+  const parseValue = ValueParser(parsedSegmentURL.attributes, warnings);
   for (const attributeName of Object.keys(root.attributes)) {
     const attributeVal = root.attributes[attributeName];
     if (isNullOrUndefined(attributeVal)) {
@@ -38,26 +38,24 @@ export default function parseSegmentURL(
     }
     switch (attributeName) {
       case "media":
-        parsedSegmentURL.media = attributeVal;
+        parsedSegmentURL.attributes.media = attributeVal;
         break;
 
       case "indexRange":
         parseValue(attributeVal, {
-          asKey: "indexRange",
           parser: parseByteRange,
-          dashName: "indexRange",
+          name: "indexRange",
         });
         break;
 
       case "index":
-        parsedSegmentURL.index = attributeVal;
+        parsedSegmentURL.attributes.index = attributeVal;
         break;
 
       case "mediaRange":
         parseValue(attributeVal, {
-          asKey: "mediaRange",
           parser: parseByteRange,
-          dashName: "mediaRange",
+          name: "mediaRange",
         });
         break;
     }

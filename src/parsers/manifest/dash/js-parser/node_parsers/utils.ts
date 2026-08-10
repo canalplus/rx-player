@@ -22,7 +22,7 @@ import { base64ToBytes } from "../../../../../utils/base64.ts";
 import isNonEmptyString from "../../../../../utils/is_non_empty_string.ts";
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
 import { toContentString, type ITNode } from "../../../../../utils/xml-parser.ts";
-import type { IScheme } from "../../node_parser_types.ts";
+import type { ISchemeIntermediateRepresentation } from "../../node_parser_types.ts";
 
 const iso8601Duration =
   /^P(([\d.]*)Y)?(([\d.]*)M)?(([\d.]*)D)?T?(([\d.]*)H)?(([\d.]*)M)?(([\d.]*)S)?/;
@@ -288,7 +288,7 @@ function parseMaybeDividedNumber(
  * @param {Object} root
  * @returns {Object}
  */
-function parseScheme(root: ITNode): IScheme {
+function parseScheme(root: ITNode): ISchemeIntermediateRepresentation {
   let schemeIdUri: string | undefined;
   let value: string | undefined;
   for (const attributeName of Object.keys(root.attributes)) {
@@ -306,7 +306,7 @@ function parseScheme(root: ITNode): IScheme {
     }
   }
 
-  return { schemeIdUri, value };
+  return { attributes: { schemeIdUri, value } };
 }
 
 /**
@@ -322,34 +322,33 @@ function ValueParser<T>(dest: T, warnings: Error[]) {
    * Parse a single value and add it to the `dest` objects.
    * If an error arised while parsing, add it at the end of the `warnings` array.
    * @param {string} val - The value found in the MPD which we should parse.
-   * @param {Function} parsingFn - The parsing function adapted for this value.
-   * This is used only in error formatting,
+   * @param {Object} obj
+   * @param {Function} obj.parser - The parsing function adapted for this value.
+   * @param {string} obj.name - The name of the key as it appears in the MPD.
    */
   return function (
     val: string,
     {
-      asKey,
       parser,
-      dashName,
+      name,
     }: {
-      asKey: keyof T;
       parser: (
         value: string,
-        displayName: string,
+        displayName: keyof T,
       ) => [T[keyof T] | null, MPDError | null];
-      dashName: string;
+      name: keyof T;
     },
   ): void {
-    const [parsingResult, parsingError] = parser(val, dashName);
+    const [parsingResult, parsingError] = parser(val, name);
     if (parsingError !== null) {
       log.warn("dash", "failed to parse DASH value:", parsingError.message, {
-        dashName,
+        name: name as string,
       });
       warnings.push(parsingError);
     }
 
     if (parsingResult !== null) {
-      dest[asKey] = parsingResult;
+      dest[name] = parsingResult;
     }
   };
 }

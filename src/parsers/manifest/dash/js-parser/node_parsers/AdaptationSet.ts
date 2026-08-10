@@ -48,10 +48,20 @@ function parseAdaptationSetChildren(
   adaptationSetChildren: Array<ITNode | string>,
 ): [IAdaptationSetChildren, Error[]] {
   const children: IAdaptationSetChildren = {
-    baseURLs: [],
-    representations: [],
+    BaseURL: [],
+    Representation: [],
+    Accessibility: [],
+    ContentComponent: [],
+    ContentProtection: [],
+    EssentialProperty: [],
+    InbandEventStream: [],
+    Role: [],
+    SupplementalProperty: [],
+    SegmentBase: [],
+    SegmentList: [],
+    SegmentTemplate: [],
+    Label: [],
   };
-  const contentProtections = [];
   let warnings: Error[] = [];
   for (let i = 0; i < adaptationSetChildren.length; i++) {
     const currentNode = adaptationSetChildren[i];
@@ -60,17 +70,13 @@ function parseAdaptationSetChildren(
     }
     switch (currentNode.tagName) {
       case "Accessibility":
-        if (children.accessibilities === undefined) {
-          children.accessibilities = [parseScheme(currentNode)];
-        } else {
-          children.accessibilities.push(parseScheme(currentNode));
-        }
+        children.Accessibility.push(parseScheme(currentNode));
         break;
 
       case "BaseURL": {
         const [baseURLObj, baseURLWarnings] = parseBaseURL(currentNode);
         if (baseURLObj !== undefined) {
-          children.baseURLs.push(baseURLObj);
+          children.BaseURL.push(baseURLObj);
         }
         if (baseURLWarnings.length > 0) {
           warnings = warnings.concat(baseURLWarnings);
@@ -79,29 +85,21 @@ function parseAdaptationSetChildren(
       }
 
       case "ContentComponent":
-        children.contentComponent = parseContentComponent(currentNode);
+        children.ContentComponent.push(parseContentComponent(currentNode));
         break;
 
       case "EssentialProperty":
-        if (isNullOrUndefined(children.essentialProperties)) {
-          children.essentialProperties = [parseScheme(currentNode)];
-        } else {
-          children.essentialProperties.push(parseScheme(currentNode));
-        }
+        children.EssentialProperty.push(parseScheme(currentNode));
         break;
 
       case "InbandEventStream":
-        if (children.inbandEventStreams === undefined) {
-          children.inbandEventStreams = [];
-        }
-        children.inbandEventStreams.push(parseScheme(currentNode));
+        children.InbandEventStream.push(parseScheme(currentNode));
         break;
 
       case "Label": {
         const label = textContent(currentNode.children);
-
         if (label !== null && label !== undefined) {
-          children.label = label;
+          children.Label.push({ value: label });
         }
         break;
       }
@@ -109,7 +107,7 @@ function parseAdaptationSetChildren(
       case "Representation": {
         const [representation, representationWarnings] =
           createRepresentationIntermediateRepresentation(currentNode);
-        children.representations.push(representation);
+        children.Representation.push(representation);
         if (representationWarnings.length > 0) {
           warnings = warnings.concat(representationWarnings);
         }
@@ -117,24 +115,16 @@ function parseAdaptationSetChildren(
       }
 
       case "Role":
-        if (isNullOrUndefined(children.roles)) {
-          children.roles = [parseScheme(currentNode)];
-        } else {
-          children.roles.push(parseScheme(currentNode));
-        }
+        children.Role.push(parseScheme(currentNode));
         break;
 
       case "SupplementalProperty":
-        if (isNullOrUndefined(children.supplementalProperties)) {
-          children.supplementalProperties = [parseScheme(currentNode)];
-        } else {
-          children.supplementalProperties.push(parseScheme(currentNode));
-        }
+        children.SupplementalProperty.push(parseScheme(currentNode));
         break;
 
       case "SegmentBase": {
         const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentNode);
-        children.segmentBase = segmentBase;
+        children.SegmentBase.push(segmentBase);
         if (segmentBaseWarnings.length > 0) {
           warnings = warnings.concat(segmentBaseWarnings);
         }
@@ -143,7 +133,7 @@ function parseAdaptationSetChildren(
 
       case "SegmentList": {
         const [segmentList, segmentListWarnings] = parseSegmentList(currentNode);
-        children.segmentList = segmentList;
+        children.SegmentList.push(segmentList);
         if (segmentListWarnings.length > 0) {
           warnings = warnings.concat(segmentListWarnings);
         }
@@ -153,7 +143,7 @@ function parseAdaptationSetChildren(
       case "SegmentTemplate": {
         const [segmentTemplate, segmentTemplateWarnings] =
           parseSegmentTemplate(currentNode);
-        children.segmentTemplate = segmentTemplate;
+        children.SegmentTemplate.push(segmentTemplate);
         if (segmentTemplateWarnings.length > 0) {
           warnings = warnings.concat(segmentTemplateWarnings);
         }
@@ -167,22 +157,19 @@ function parseAdaptationSetChildren(
           warnings = warnings.concat(contentProtectionWarnings);
         }
         if (contentProtection !== undefined) {
-          contentProtections.push(contentProtection);
+          children.ContentProtection.push(contentProtection);
         }
         break;
       }
 
       // case "Rating":
-      //   children.rating = currentNode;
+      //   children.Rating.push(currentNode);
       //   break;
 
       // case "Viewpoint":
-      //   children.viewpoint = currentNode;
+      //   children.Viewpoint.push(currentNode);
       //   break;
     }
-  }
-  if (contentProtections.length > 0) {
-    children.contentProtections = contentProtections;
   }
   return [children, warnings];
 }
@@ -210,14 +197,13 @@ function parseAdaptationSetAttributes(root: ITNode): [IAdaptationSetAttributes, 
 
       case "group":
         parseValue(attributeVal, {
-          asKey: "group",
           parser: parseMPDInteger,
-          dashName: "group",
+          name: "group",
         });
         break;
 
       case "lang":
-        parsedAdaptation.language = attributeVal;
+        parsedAdaptation.lang = attributeVal;
         break;
 
       case "contentType":
@@ -230,97 +216,85 @@ function parseAdaptationSetAttributes(root: ITNode): [IAdaptationSetAttributes, 
 
       case "minBandwidth":
         parseValue(attributeVal, {
-          asKey: "minBitrate",
           parser: parseMPDInteger,
-          dashName: "minBandwidth",
+          name: "minBandwidth",
         });
         break;
 
       case "maxBandwidth":
         parseValue(attributeVal, {
-          asKey: "maxBitrate",
           parser: parseMPDInteger,
-          dashName: "maxBandwidth",
+          name: "maxBandwidth",
         });
         break;
 
       case "minWidth":
         parseValue(attributeVal, {
-          asKey: "minWidth",
           parser: parseMPDInteger,
-          dashName: "minWidth",
+          name: "minWidth",
         });
         break;
 
       case "maxWidth":
         parseValue(attributeVal, {
-          asKey: "maxWidth",
           parser: parseMPDInteger,
-          dashName: "maxWidth",
+          name: "maxWidth",
         });
         break;
 
       case "minHeight":
         parseValue(attributeVal, {
-          asKey: "minHeight",
           parser: parseMPDInteger,
-          dashName: "minHeight",
+          name: "minHeight",
         });
         break;
 
       case "maxHeight":
         parseValue(attributeVal, {
-          asKey: "maxHeight",
           parser: parseMPDInteger,
-          dashName: "maxHeight",
+          name: "maxHeight",
         });
         break;
 
       case "minFrameRate":
         parseValue(attributeVal, {
-          asKey: "minFrameRate",
           parser: parseMaybeDividedNumber,
-          dashName: "minFrameRate",
+          name: "minFrameRate",
         });
         break;
 
       case "maxFrameRate":
         parseValue(attributeVal, {
-          asKey: "maxFrameRate",
           parser: parseMaybeDividedNumber,
-          dashName: "maxFrameRate",
+          name: "maxFrameRate",
         });
         break;
 
       case "selectionPriority":
         parseValue(attributeVal, {
-          asKey: "selectionPriority",
           parser: parseMPDInteger,
-          dashName: "selectionPriority",
-        });
-        break;
-
-      case "segmentAlignment":
-        parseValue(attributeVal, {
-          asKey: "segmentAlignment",
-          parser: parseIntOrBoolean,
-          dashName: "segmentAlignment",
+          name: "selectionPriority",
         });
         break;
 
       case "subsegmentAlignment":
         parseValue(attributeVal, {
-          asKey: "subsegmentAlignment",
           parser: parseIntOrBoolean,
-          dashName: "subsegmentAlignment",
+          name: "subsegmentAlignment",
+        });
+        break;
+
+      case "segmentAlignment":
+        parseValue(attributeVal, {
+          parser: parseIntOrBoolean,
+          name: "segmentAlignment",
         });
         break;
 
       case "bitstreamSwitching":
         parseValue(attributeVal, {
-          asKey: "bitstreamSwitching",
           parser: parseBoolean,
-          dashName: "bitstreamSwitching",
+          name: "bitstreamSwitching",
         });
         break;
 
@@ -333,46 +307,41 @@ function parseAdaptationSetAttributes(root: ITNode): [IAdaptationSetAttributes, 
         break;
 
       case "scte214:supplementalCodecs":
-        parsedAdaptation.supplementalCodecs = attributeVal;
+        parsedAdaptation["scte214:supplementalCodecs"] = attributeVal;
         break;
 
       case "codingDependency":
         parseValue(attributeVal, {
-          asKey: "codingDependency",
           parser: parseBoolean,
-          dashName: "codingDependency",
+          name: "codingDependency",
         });
         break;
 
       case "frameRate":
         parseValue(attributeVal, {
-          asKey: "frameRate",
           parser: parseMaybeDividedNumber,
-          dashName: "frameRate",
+          name: "frameRate",
         });
         break;
 
       case "height":
         parseValue(attributeVal, {
-          asKey: "height",
           parser: parseMPDInteger,
-          dashName: "height",
+          name: "height",
         });
         break;
 
       case "maxPlayoutRate":
         parseValue(attributeVal, {
-          asKey: "maxPlayoutRate",
           parser: parseMPDFloat,
-          dashName: "maxPlayoutRate",
+          name: "maxPlayoutRate",
         });
         break;
 
       case "maximumSAPPeriod":
         parseValue(attributeVal, {
-          asKey: "maximumSAPPeriod",
           parser: parseMPDFloat,
-          dashName: "maximumSAPPeriod",
+          name: "maximumSAPPeriod",
         });
         break;
 
@@ -390,25 +359,22 @@ function parseAdaptationSetAttributes(root: ITNode): [IAdaptationSetAttributes, 
 
       case "width":
         parseValue(attributeVal, {
-          asKey: "width",
           parser: parseMPDInteger,
-          dashName: "width",
+          name: "width",
         });
         break;
 
       case "availabilityTimeOffset":
         parseValue(attributeVal, {
-          asKey: "availabilityTimeOffset",
           parser: parseMPDFloat,
-          dashName: "availabilityTimeOffset",
+          name: "availabilityTimeOffset",
         });
         break;
 
       case "availabilityTimeComplete":
         parseValue(attributeVal, {
-          asKey: "availabilityTimeComplete",
           parser: parseBoolean,
-          dashName: "availabilityTimeComplete",
+          name: "availabilityTimeComplete",
         });
         break;
     }

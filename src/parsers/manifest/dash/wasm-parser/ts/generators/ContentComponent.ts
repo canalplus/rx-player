@@ -37,7 +37,7 @@ export function generateContentComponentAttrParser(
         break;
 
       case AttributeName.Language:
-        ccAttrs.language = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        ccAttrs.lang = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.ContentType:

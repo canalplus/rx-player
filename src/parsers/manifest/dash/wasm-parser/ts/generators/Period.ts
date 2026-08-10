@@ -34,7 +34,10 @@ import {
   generateEventStreamAttrParser,
   generateEventStreamChildrenParser,
 } from "./EventStream.ts";
-import { generateSegmentTemplateAttrParser } from "./SegmentTemplate.ts";
+import {
+  generateSegmentTemplateAttrParser,
+  generateSegmentTemplateChildrenParser,
+} from "./SegmentTemplate.ts";
 
 /**
  * Generate a "children parser" once inside a `Perod` node.
@@ -54,10 +57,24 @@ export function generatePeriodChildrenParser(
     switch (nodeId) {
       case TagName.AdaptationSet: {
         const adaptationObj = {
-          children: { baseURLs: [], representations: [] },
+          children: {
+            BaseURL: [],
+            Representation: [],
+            Accessibility: [],
+            ContentComponent: [],
+            ContentProtection: [],
+            EssentialProperty: [],
+            InbandEventStream: [],
+            Role: [],
+            SupplementalProperty: [],
+            SegmentBase: [],
+            SegmentList: [],
+            SegmentTemplate: [],
+            Label: [],
+          },
           attributes: {},
         };
-        periodChildren.adaptations.push(adaptationObj);
+        periodChildren.AdaptationSet.push(adaptationObj);
         const childrenParser = generateAdaptationSetChildrenParser(
           adaptationObj.children,
           linearMemory,
@@ -73,7 +90,7 @@ export function generatePeriodChildrenParser(
 
       case TagName.BaseURL: {
         const baseUrl = { value: "", attributes: {} };
-        periodChildren.baseURLs.push(baseUrl);
+        periodChildren.BaseURL.push(baseUrl);
         const childrenParser = noop;
         const attributeParser = generateBaseUrlAttrParser(baseUrl, linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
@@ -82,10 +99,10 @@ export function generatePeriodChildrenParser(
 
       case TagName.EventStream: {
         const eventStream: IEventStreamIntermediateRepresentation = {
-          children: { events: [] },
+          children: { Event: [] },
           attributes: {},
         };
-        periodChildren.eventStreams.push(eventStream);
+        periodChildren.EventStream.push(eventStream);
         const childrenParser = generateEventStreamChildrenParser(
           eventStream.children,
           linearMemory,
@@ -101,11 +118,15 @@ export function generatePeriodChildrenParser(
       }
 
       case TagName.SegmentTemplate: {
-        const stObj = {};
-        periodChildren.segmentTemplate = stObj;
+        const stObj = { children: { Initialization: [] }, attributes: {} };
+        periodChildren.SegmentTemplate.push(stObj);
         parsersStack.pushParsers(
           nodeId,
-          noop, // SegmentTimeline as treated like an attribute
+          generateSegmentTemplateChildrenParser(
+            stObj.children,
+            linearMemory,
+            parsersStack,
+          ),
           generateSegmentTemplateAttrParser(stObj, linearMemory),
         );
         break;
@@ -113,13 +134,10 @@ export function generatePeriodChildrenParser(
 
       case TagName.ContentProtection: {
         const contentProtection = {
-          children: { cencPssh: [] },
+          children: { ["cenc:pssh"]: [] },
           attributes: {},
         };
-        if (periodChildren.contentProtections === undefined) {
-          periodChildren.contentProtections = [];
-        }
-        periodChildren.contentProtections.push(contentProtection);
+        periodChildren.ContentProtection.push(contentProtection);
         const contentProtAttrParser = generateContentProtectionAttrParser(
           contentProtection,
           linearMemory,
@@ -163,10 +181,15 @@ export function generatePeriodAttrParser(
           new DataView(linearMemory.buffer).getUint8(0) === 0;
         break;
       case AttributeName.XLinkHref:
-        periodAttrs.xlinkHref = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        periodAttrs["xlink:href"] = parseString(
+          textDecoder,
+          linearMemory.buffer,
+          ptr,
+          len,
+        );
         break;
       case AttributeName.XLinkActuate:
-        periodAttrs.xlinkActuate = parseString(
+        periodAttrs["xlink:actuate"] = parseString(
           textDecoder,
           linearMemory.buffer,
           ptr,

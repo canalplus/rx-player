@@ -18,13 +18,17 @@ import type {
   IRepresentationIndex,
   IRepresentation,
 } from "../../../../manifest/index.ts";
+import getLastItemFromArray from "../../../../utils/get_last_item_from_array.ts";
 import objectAssign from "../../../../utils/object_assign.ts";
 import type { IEMSG } from "../../../containers/isobmff/index.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
+  IInitializationIntermediateRepresentation,
   IRepresentationIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
-  IScheme,
+  ISchemeIntermediateRepresentation,
+  ISegmentTemplateAttributes,
+  ISegmentTemplateChildren,
 } from "../node_parser_types.ts";
 import type {
   IBaseIndexContextArgument,
@@ -38,6 +42,7 @@ import {
   TemplateRepresentationIndex,
   TimelineRepresentationIndex,
 } from "./indexes/index.ts";
+import type { ITimelineIndexIndexArgument } from "./indexes/timeline/timeline_representation_index.ts";
 import type ManifestBoundsCalculator from "./manifest_bounds_calculator.ts";
 import type { IResolvedBaseUrl } from "./resolve_base_urls.ts";
 
@@ -69,7 +74,7 @@ export default function parseRepresentationIndex(
       return false;
     }
     return inbandEventStreams.some(
-      ({ schemeIdUri }) => schemeIdUri === inbandEvent.schemeIdUri,
+      ({ attributes }) => attributes.schemeIdUri === inbandEvent.schemeIdUri,
     );
   };
   const reprIndexCtxt:
@@ -87,61 +92,123 @@ export default function parseRepresentationIndex(
     periodEnd,
     periodStart,
     receivedTime,
-    representationBitrate: representation.attributes.bitrate,
+    representationBitrate: representation.attributes.bandwidth,
     representationId: representation.attributes.id,
   };
   let representationIndex: IRepresentationIndex;
-  if (representation.children.segmentBase !== undefined) {
-    const { segmentBase } = representation.children;
-    representationIndex = new BaseRepresentationIndex(segmentBase, reprIndexCtxt);
-  } else if (representation.children.segmentList !== undefined) {
-    const { segmentList } = representation.children;
-    representationIndex = new ListRepresentationIndex(segmentList, reprIndexCtxt);
-  } else if (
-    representation.children.segmentTemplate !== undefined ||
-    context.parentSegmentTemplates.length > 0
-  ) {
-    const segmentTemplates = context.parentSegmentTemplates.slice();
-    const childSegmentTemplate = representation.children.segmentTemplate;
-    if (childSegmentTemplate !== undefined) {
-      segmentTemplates.push(childSegmentTemplate);
+  const segmentBase = getLastItemFromArray(representation.children.SegmentBase);
+  const segmentList = getLastItemFromArray(representation.children.SegmentList);
+  const segmentTemplate = getLastItemFromArray(representation.children.SegmentTemplate);
+  if (segmentBase !== undefined) {
+    representationIndex = new BaseRepresentationIndex(
+      {
+        ...segmentBase.attributes,
+        initialization: parseInitializationElement(segmentBase.children.Initialization),
+      },
+      reprIndexCtxt,
+    );
+  } else if (segmentList !== undefined) {
+    representationIndex = new ListRepresentationIndex(
+      {
+        ...segmentList.attributes,
+        list: segmentList.children.SegmentURL.map((u) => u.attributes),
+        initialization: parseInitializationElement(segmentList.children.Initialization),
+      },
+      reprIndexCtxt,
+    );
+  } else if (segmentTemplate !== undefined || context.parentSegmentTemplates.length > 0) {
+    const segmentTemplates: ISegmentTemplateIntermediateRepresentation[] =
+      context.parentSegmentTemplates.slice();
+    if (segmentTemplate !== undefined) {
+      segmentTemplates.push(segmentTemplate);
     }
-    const segmentTemplate = objectAssign(
+    const combinedTimelines: Pick<
+      ISegmentTemplateChildren,
+      "timeline" | "timelineParser"
+    > = segmentTemplates.reduce(
+      (
+        acc: Pick<ISegmentTemplateChildren, "timeline" | "timelineParser">,
+        s: ISegmentTemplateIntermediateRepresentation,
+      ) => {
+        if (s.children.timeline !== undefined) {
+          acc.timeline = s.children.timeline;
+        } else if (s.children.timelineParser !== undefined) {
+          acc.timelineParser = s.children.timelineParser;
+        }
+        return acc;
+      },
       {},
-      ...(segmentTemplates as [
-        ISegmentTemplateIntermediateRepresentation,
-      ]) /* Ugly TS Hack */,
+    );
+    const combinedAttributes: ISegmentTemplateAttributes = objectAssign(
+      {},
+      ...segmentTemplates.map((s) => s.attributes),
     );
     if (
-      segmentTemplate.availabilityTimeOffset !== undefined ||
+      combinedAttributes.availabilityTimeOffset !== undefined ||
       context.availabilityTimeOffset !== undefined
     ) {
       reprIndexCtxt.availabilityTimeOffset =
-        (segmentTemplate.availabilityTimeOffset ?? 0) +
+        (combinedAttributes.availabilityTimeOffset ?? 0) +
         (context.availabilityTimeOffset ?? 0);
     }
-
     if (
-      segmentTemplate.availabilityTimeComplete !== undefined ||
+      combinedAttributes.availabilityTimeComplete !== undefined ||
       context.availabilityTimeComplete !== undefined
     ) {
       reprIndexCtxt.availabilityTimeComplete =
-        segmentTemplate.availabilityTimeComplete ?? context.availabilityTimeComplete;
+        combinedAttributes.availabilityTimeComplete ?? context.availabilityTimeComplete;
     }
 
+    let initialization: { media?: string; range?: [number, number] } | undefined;
+    for (const currentSegmentTemplate of segmentTemplates) {
+      const initializationElement = parseInitializationElement(
+        currentSegmentTemplate.children.Initialization,
+      );
+      if (initializationElement !== undefined) {
+        initialization = initializationElement;
+      } else if (currentSegmentTemplate.attributes.initialization !== undefined) {
+        initialization = {
+          media: currentSegmentTemplate.attributes.initialization,
+        };
+      }
+    }
+    const resultTemplateIdx: ITimelineIndexIndexArgument = {
+      ...combinedAttributes,
+      timeline: combinedTimelines.timeline,
+      timelineParser: combinedTimelines.timelineParser,
+      initialization,
+    };
+
     representationIndex = TimelineRepresentationIndex.isTimelineIndexArgument(
-      segmentTemplate,
+      resultTemplateIdx,
     )
-      ? new TimelineRepresentationIndex(segmentTemplate, reprIndexCtxt)
-      : new TemplateRepresentationIndex(segmentTemplate, reprIndexCtxt);
+      ? new TimelineRepresentationIndex(resultTemplateIdx, reprIndexCtxt)
+      : new TemplateRepresentationIndex(resultTemplateIdx, reprIndexCtxt);
   } else {
     const adaptationChildren = context.adaptation.children;
-    if (adaptationChildren.segmentBase !== undefined) {
-      const { segmentBase } = adaptationChildren;
-      representationIndex = new BaseRepresentationIndex(segmentBase, reprIndexCtxt);
-    } else if (adaptationChildren.segmentList !== undefined) {
-      const { segmentList } = adaptationChildren;
-      representationIndex = new ListRepresentationIndex(segmentList, reprIndexCtxt);
+    const adapSegmentBase = getLastItemFromArray(adaptationChildren.SegmentBase);
+    const adapSegmentList = getLastItemFromArray(adaptationChildren.SegmentList);
+    if (adapSegmentBase !== undefined) {
+      representationIndex = new BaseRepresentationIndex(
+        {
+          ...adapSegmentBase.attributes,
+          initialization: parseInitializationElement(
+            adapSegmentBase.children.Initialization,
+          ),
+        },
+        reprIndexCtxt,
+      );
+    } else if (adapSegmentList !== undefined) {
+      representationIndex = new ListRepresentationIndex(
+        {
+          ...adapSegmentList.attributes,
+          list: adapSegmentList.children.SegmentURL.map((u) => u.attributes),
+          initialization: parseInitializationElement(
+            adapSegmentList.children.Initialization,
+          ),
+        },
+        reprIndexCtxt,
+      );
     } else {
       representationIndex = new TemplateRepresentationIndex(
         {
@@ -155,6 +222,24 @@ export default function parseRepresentationIndex(
     }
   }
   return representationIndex;
+}
+
+function parseInitializationElement(
+  initializations: IInitializationIntermediateRepresentation[],
+): { media?: string; range?: [number, number] } | undefined {
+  const initialization = getLastItemFromArray(initializations);
+  if (initialization === undefined) {
+    return undefined;
+  }
+
+  const result: { media?: string; range?: [number, number] } = {};
+  if (initialization.attributes.sourceURL !== undefined) {
+    result.media = initialization.attributes.sourceURL;
+  }
+  if (initialization.attributes.range !== undefined) {
+    result.range = initialization.attributes.range;
+  }
+  return result;
 }
 
 /** Supplementary context needed to parse a RepresentationIndex. */
@@ -185,7 +270,7 @@ export interface IRepresentationIndexContext {
   /** End time of the current Period, in seconds. */
   end?: number | undefined;
   /** List of inband event streams that are present on the representation */
-  inbandEventStreams: IScheme[] | undefined;
+  inbandEventStreams: ISchemeIntermediateRepresentation[] | undefined;
   /**
    * Set to `true` if the linked Period is the chronologically last one in the
    * Manifest.

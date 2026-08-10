@@ -34,12 +34,17 @@ export function generateSegmentUrlAttrParser(
   return function onSegmentUrlAttribute(attr, ptr, len) {
     switch (attr) {
       case AttributeName.Index:
-        segmentUrlAttrs.index = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        segmentUrlAttrs.attributes.index = parseString(
+          textDecoder,
+          linearMemory.buffer,
+          ptr,
+          len,
+        );
         break;
 
       case AttributeName.IndexRange: {
         const dataView = new DataView(linearMemory.buffer);
-        segmentUrlAttrs.indexRange = [
+        segmentUrlAttrs.attributes.indexRange = [
           dataView.getFloat64(ptr, true),
           dataView.getFloat64(ptr + 8, true),
         ];
@@ -47,12 +52,17 @@ export function generateSegmentUrlAttrParser(
       }
 
       case AttributeName.Media:
-        segmentUrlAttrs.media = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        segmentUrlAttrs.attributes.media = parseString(
+          textDecoder,
+          linearMemory.buffer,
+          ptr,
+          len,
+        );
         break;
 
       case AttributeName.MediaRange: {
         const dataView = new DataView(linearMemory.buffer);
-        segmentUrlAttrs.mediaRange = [
+        segmentUrlAttrs.attributes.mediaRange = [
           dataView.getFloat64(ptr, true),
           dataView.getFloat64(ptr + 8, true),
         ];

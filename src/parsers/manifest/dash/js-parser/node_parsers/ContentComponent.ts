@@ -16,15 +16,17 @@
 
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
 import type { ITNode } from "../../../../../utils/xml-parser.ts";
-import type { IContentComponentAttributes } from "../../node_parser_types.ts";
+import type { IContentComponentIntermediateRepresentation } from "../../node_parser_types.ts";
 
 /**
  * Parse a "ContentComponent" Element in a DASH MPD.
  * @param {Object} root
  * @returns {Object}
  */
-export default function parseContentComponent(root: ITNode): IContentComponentAttributes {
-  const ret: IContentComponentAttributes = {};
+export default function parseContentComponent(
+  root: ITNode,
+): IContentComponentIntermediateRepresentation {
+  const ret: IContentComponentIntermediateRepresentation = { attributes: {} };
   for (const attributeName of Object.keys(root.attributes)) {
     const attributeVal = root.attributes[attributeName];
     if (isNullOrUndefined(attributeVal)) {
@@ -32,16 +34,16 @@ export default function parseContentComponent(root: ITNode): IContentComponentAt
     }
     switch (attributeName) {
       case "id":
-        ret.id = attributeVal;
+        ret.attributes.id = attributeVal;
         break;
       case "lang":
-        ret.language = attributeVal;
+        ret.attributes.lang = attributeVal;
         break;
       case "contentType":
-        ret.contentType = attributeVal;
+        ret.attributes.contentType = attributeVal;
         break;
       case "par":
-        ret.par = attributeVal;
+        ret.attributes.par = attributeVal;
         break;
     }
   }

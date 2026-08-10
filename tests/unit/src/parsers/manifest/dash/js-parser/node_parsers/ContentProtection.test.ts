@@ -20,13 +20,16 @@ function testStringAttribute(attributeName: string, variableName?: string): void
       `<ContentProtection ${attributeName}="foobar" />`,
     )[0] as ITNode;
     expect(parseContentProtection(element1)).toEqual([
-      { attributes: { [_variableName]: "foobar" }, children: { cencPssh: [] } },
+      {
+        attributes: { [_variableName]: "foobar" },
+        children: { ["cenc:pssh"]: [] },
+      },
       [],
     ]);
 
     const element2 = parseXml(`<ContentProtection ${attributeName}="" />`)[0] as ITNode;
     expect(parseContentProtection(element2)).toEqual([
-      { attributes: { [_variableName]: "" }, children: { cencPssh: [] } },
+      { attributes: { [_variableName]: "" }, children: { ["cenc:pssh"]: [] } },
       [],
     ]);
   });
@@ -43,7 +46,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
   it("should correctly parse a ContentProtection element without attributes", () => {
     const element = parseXml("<ContentProtection />")[0] as ITNode;
     expect(parseContentProtection(element)).toEqual([
-      { attributes: {}, children: { cencPssh: [] } },
+      { attributes: {}, children: { ["cenc:pssh"]: [] } },
       [],
     ]);
   });
@@ -61,7 +64,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
     )[0] as ITNode;
 
     expect(parseContentProtection(element1)).toEqual([
-      { attributes: { keyId }, children: { cencPssh: [] } },
+      { attributes: { ["cenc:default_KID"]: keyId }, children: { ["cenc:pssh"]: [] } },
       [],
     ]);
     expect(mocks.hexToBytes).toHaveBeenCalledTimes(1);
@@ -82,8 +85,8 @@ describe("DASH Node Parsers - ContentProtection", () => {
     )[0] as ITNode;
     expect(parseContentProtection(element)).toEqual([
       {
-        attributes: { keyId, schemeIdUri: "foo", value: "bar" },
-        children: { cencPssh: [] },
+        attributes: { ["cenc:default_KID"]: keyId, schemeIdUri: "foo", value: "bar" },
+        children: { ["cenc:pssh"]: [] },
       },
       [],
     ]);
@@ -102,7 +105,14 @@ describe("DASH Node Parsers - ContentProtection", () => {
       {
         attributes: {},
         children: {
-          cencPssh: [new Uint8Array([0, 0, 65, 8]), new Uint8Array([0, 0, 1, 0])],
+          ["cenc:pssh"]: [
+            {
+              value: new Uint8Array([0, 0, 65, 8]),
+            },
+            {
+              value: new Uint8Array([0, 0, 1, 0]),
+            },
+          ],
         },
       },
       [],
@@ -126,9 +136,16 @@ describe("DASH Node Parsers - ContentProtection", () => {
     )[0] as ITNode;
     expect(parseContentProtection(element)).toEqual([
       {
-        attributes: { keyId, schemeIdUri: "foo", value: "bar" },
+        attributes: { ["cenc:default_KID"]: keyId, schemeIdUri: "foo", value: "bar" },
         children: {
-          cencPssh: [new Uint8Array([0, 0, 65, 8]), new Uint8Array([0, 0, 1, 0])],
+          ["cenc:pssh"]: [
+            {
+              value: new Uint8Array([0, 0, 65, 8]),
+            },
+            {
+              value: new Uint8Array([0, 0, 1, 0]),
+            },
+          ],
         },
       },
       [],
@@ -145,7 +162,7 @@ describe("DASH Node Parsers - ContentProtection", () => {
     const parsed = parseContentProtection(element);
     expect(parsed[0]).toEqual({
       attributes: {},
-      children: { cencPssh: [new Uint8Array([0, 0, 1, 0])] },
+      children: { ["cenc:pssh"]: [{ value: new Uint8Array([0, 0, 1, 0]) }] },
     });
     expect(parsed[1]).not.toBe(null);
     expect(parsed[1]).toHaveLength(1);

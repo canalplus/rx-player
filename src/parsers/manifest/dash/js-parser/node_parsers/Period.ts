@@ -18,14 +18,9 @@ import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
 import startsWith from "../../../../../utils/starts_with.ts";
 import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
-  IAdaptationSetIntermediateRepresentation,
-  IBaseUrlIntermediateRepresentation,
-  IContentProtectionIntermediateRepresentation,
-  IEventStreamIntermediateRepresentation,
   IPeriodAttributes,
   IPeriodChildren,
   IPeriodIntermediateRepresentation,
-  ISegmentTemplateIntermediateRepresentation,
 } from "../../node_parser_types.ts";
 import { createAdaptationSetIntermediateRepresentation } from "./AdaptationSet.ts";
 import parseBaseURL from "./BaseURL.ts";
@@ -43,13 +38,14 @@ function parsePeriodChildren(
   periodChildren: Array<ITNode | string>,
   fullMpd: string,
 ): [IPeriodChildren, Error[]] {
-  const baseURLs: IBaseUrlIntermediateRepresentation[] = [];
-  const adaptations: IAdaptationSetIntermediateRepresentation[] = [];
-  let segmentTemplate: ISegmentTemplateIntermediateRepresentation | undefined;
-  const contentProtections: IContentProtectionIntermediateRepresentation[] = [];
-
+  const ret: IPeriodChildren = {
+    AdaptationSet: [],
+    BaseURL: [],
+    ContentProtection: [],
+    SegmentTemplate: [],
+    EventStream: [],
+  };
   let warnings: Error[] = [];
-  const eventStreams: IEventStreamIntermediateRepresentation[] = [];
   for (let i = 0; i < periodChildren.length; i++) {
     const currentElement = periodChildren[i];
     if (typeof currentElement === "string") {
@@ -59,7 +55,7 @@ function parsePeriodChildren(
       case "BaseURL": {
         const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
         if (baseURLObj !== undefined) {
-          baseURLs.push(baseURLObj);
+          ret.BaseURL.push(baseURLObj);
         }
         warnings = warnings.concat(baseURLWarnings);
         break;
@@ -68,7 +64,7 @@ function parsePeriodChildren(
       case "AdaptationSet": {
         const [adaptation, adaptationWarnings] =
           createAdaptationSetIntermediateRepresentation(currentElement);
-        adaptations.push(adaptation);
+        ret.AdaptationSet.push(adaptation);
         warnings = warnings.concat(adaptationWarnings);
         break;
       }
@@ -76,7 +72,7 @@ function parsePeriodChildren(
       case "EventStream": {
         const [eventStream, eventStreamWarnings] =
           createEventStreamIntermediateRepresentation(currentElement, fullMpd);
-        eventStreams.push(eventStream);
+        ret.EventStream.push(eventStream);
         warnings = warnings.concat(eventStreamWarnings);
         break;
       }
@@ -84,7 +80,7 @@ function parsePeriodChildren(
       case "SegmentTemplate": {
         const [parsedSegmentTemplate, segmentTemplateWarnings] =
           parseSegmentTemplate(currentElement);
-        segmentTemplate = parsedSegmentTemplate;
+        ret.SegmentTemplate.push(parsedSegmentTemplate);
         if (segmentTemplateWarnings.length > 0) {
           warnings = warnings.concat(segmentTemplateWarnings);
         }
@@ -98,17 +94,14 @@ function parsePeriodChildren(
           warnings = warnings.concat(contentProtectionWarnings);
         }
         if (contentProtection !== undefined) {
-          contentProtections.push(contentProtection);
+          ret.ContentProtection.push(contentProtection);
         }
         break;
       }
     }
   }
 
-  return [
-    { baseURLs, adaptations, eventStreams, segmentTemplate, contentProtections },
-    warnings,
-  ];
+  return [ret, warnings];
 }
 
 /**
@@ -131,34 +124,31 @@ function parsePeriodAttributes(root: ITNode): [IPeriodAttributes, Error[]] {
 
       case "start":
         parseValue(attributeVal, {
-          asKey: "start",
           parser: parseDuration,
-          dashName: "start",
+          name: "start",
         });
         break;
 
       case "duration":
         parseValue(attributeVal, {
-          asKey: "duration",
           parser: parseDuration,
-          dashName: "duration",
+          name: "duration",
         });
         break;
 
       case "bitstreamSwitching":
         parseValue(attributeVal, {
-          asKey: "bitstreamSwitching",
           parser: parseBoolean,
-          dashName: "bitstreamSwitching",
+          name: "bitstreamSwitching",
         });
         break;
 
       case "xlink:href":
-        res.xlinkHref = attributeVal;
+        res["xlink:href"] = attributeVal;
         break;
 
       case "xlink:actuate":
-        res.xlinkActuate = attributeVal;
+        res["xlink:actuate"] = attributeVal;
         break;
 
       default:

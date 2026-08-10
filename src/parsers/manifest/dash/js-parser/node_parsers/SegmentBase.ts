@@ -34,17 +34,22 @@ import {
 export default function parseSegmentBase(
   root: ITNode,
 ): [ISegmentBaseIntermediateRepresentation, Error[]] {
-  const attributes: ISegmentBaseIntermediateRepresentation = {};
+  const ret: ISegmentBaseIntermediateRepresentation = {
+    children: {
+      Initialization: [],
+    },
+    attributes: {},
+  };
 
   let warnings: Error[] = [];
-  const parseValue = ValueParser(attributes, warnings);
+  const parseValue = ValueParser(ret.attributes, warnings);
   const segmentBaseChildren = root.children;
   for (let i = 0; i < segmentBaseChildren.length; i++) {
     const currentNode = segmentBaseChildren[i];
     if (typeof currentNode !== "string") {
       if (currentNode.tagName === "Initialization") {
         const [initialization, initializationWarnings] = parseInitialization(currentNode);
-        attributes.initialization = initialization;
+        ret.children.Initialization.push(initialization);
         warnings = warnings.concat(initializationWarnings);
       }
     }
@@ -58,77 +63,67 @@ export default function parseSegmentBase(
     switch (attributeName) {
       case "timescale":
         parseValue(attributeVal, {
-          asKey: "timescale",
           parser: parseMPDInteger,
-          dashName: "timescale",
+          name: "timescale",
         });
         break;
 
       case "presentationTimeOffset":
         parseValue(attributeVal, {
-          asKey: "presentationTimeOffset",
           parser: parseMPDFloat,
-          dashName: "presentationTimeOffset",
+          name: "presentationTimeOffset",
         });
         break;
 
       case "indexRange":
         parseValue(attributeVal, {
-          asKey: "indexRange",
           parser: parseByteRange,
-          dashName: "indexRange",
+          name: "indexRange",
         });
         break;
 
       case "indexRangeExact":
         parseValue(attributeVal, {
-          asKey: "indexRangeExact",
           parser: parseBoolean,
-          dashName: "indexRangeExact",
+          name: "indexRangeExact",
         });
         break;
 
       case "availabilityTimeOffset":
         parseValue(attributeVal, {
-          asKey: "availabilityTimeOffset",
           parser: parseMPDFloat,
-          dashName: "availabilityTimeOffset",
+          name: "availabilityTimeOffset",
         });
         break;
 
       case "availabilityTimeComplete":
         parseValue(attributeVal, {
-          asKey: "availabilityTimeComplete",
           parser: parseBoolean,
-          dashName: "availabilityTimeComplete",
+          name: "availabilityTimeComplete",
         });
         break;
 
       case "duration":
         parseValue(attributeVal, {
-          asKey: "duration",
           parser: parseMPDInteger,
-          dashName: "duration",
+          name: "duration",
         });
         break;
 
       case "startNumber":
         parseValue(attributeVal, {
-          asKey: "startNumber",
           parser: parseMPDInteger,
-          dashName: "startNumber",
+          name: "startNumber",
         });
         break;
 
       case "endNumber":
         parseValue(attributeVal, {
-          asKey: "endNumber",
           parser: parseMPDInteger,
-          dashName: "endNumber",
+          name: "endNumber",
         });
         break;
     }
   }
-
-  return [attributes, warnings];
+  return [ret, warnings];
 }

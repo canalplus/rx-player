@@ -18,13 +18,9 @@ import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
 import startsWith from "../../../../../utils/starts_with.ts";
 import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type {
-  IBaseUrlIntermediateRepresentation,
-  IContentProtectionIntermediateRepresentation,
   IMPDAttributes,
   IMPDChildren,
   IMPDIntermediateRepresentation,
-  IPeriodIntermediateRepresentation,
-  IScheme,
 } from "../../node_parser_types.ts";
 import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
@@ -46,11 +42,13 @@ function parseMPDChildren(
   mpdChildren: Array<ITNode | string>,
   fullMpd: string,
 ): [IMPDChildren, Error[]] {
-  const baseURLs: IBaseUrlIntermediateRepresentation[] = [];
-  const locations: string[] = [];
-  const periods: IPeriodIntermediateRepresentation[] = [];
-  const utcTimings: IScheme[] = [];
-  const contentProtections: IContentProtectionIntermediateRepresentation[] = [];
+  const ret: IMPDChildren = {
+    BaseURL: [],
+    Location: [],
+    Period: [],
+    UTCTiming: [],
+    ContentProtection: [],
+  };
 
   let warnings: Error[] = [];
   for (let i = 0; i < mpdChildren.length; i++) {
@@ -62,14 +60,14 @@ function parseMPDChildren(
       case "BaseURL": {
         const [baseURLObj, baseURLWarnings] = parseBaseURL(currentNode);
         if (baseURLObj !== undefined) {
-          baseURLs.push(baseURLObj);
+          ret.BaseURL.push(baseURLObj);
         }
         warnings = warnings.concat(baseURLWarnings);
         break;
       }
 
       case "Location":
-        locations.push(textContent(currentNode.children));
+        ret.Location.push({ value: textContent(currentNode.children) });
         break;
 
       case "Period": {
@@ -77,14 +75,14 @@ function parseMPDChildren(
           currentNode,
           fullMpd,
         );
-        periods.push(period);
+        ret.Period.push(period);
         warnings = warnings.concat(periodWarnings);
         break;
       }
 
       case "UTCTiming": {
         const utcTiming = parseScheme(currentNode);
-        utcTimings.push(utcTiming);
+        ret.UTCTiming.push(utcTiming);
         break;
       }
 
@@ -95,13 +93,13 @@ function parseMPDChildren(
           warnings = warnings.concat(contentProtectionWarnings);
         }
         if (contentProtection !== undefined) {
-          contentProtections.push(contentProtection);
+          ret.ContentProtection.push(contentProtection);
         }
         break;
       }
     }
   }
-  return [{ baseURLs, locations, periods, utcTimings, contentProtections }, warnings];
+  return [ret, warnings];
 }
 
 /**
@@ -131,72 +129,62 @@ function parseMPDAttributes(root: ITNode): [IMPDAttributes, Error[]] {
 
       case "availabilityStartTime":
         parseValue(attributeVal, {
-          asKey: "availabilityStartTime",
           parser: parseDateTime,
-          dashName: "availabilityStartTime",
+          name: "availabilityStartTime",
         });
         break;
       case "availabilityEndTime":
         parseValue(attributeVal, {
-          asKey: "availabilityEndTime",
           parser: parseDateTime,
-          dashName: "availabilityEndTime",
+          name: "availabilityEndTime",
         });
         break;
       case "publishTime":
         parseValue(attributeVal, {
-          asKey: "publishTime",
           parser: parseDateTime,
-          dashName: "publishTime",
+          name: "publishTime",
         });
         break;
       case "mediaPresentationDuration":
         parseValue(attributeVal, {
-          asKey: "duration",
           parser: parseDuration,
-          dashName: "mediaPresentationDuration",
+          name: "mediaPresentationDuration",
         });
         break;
       case "minimumUpdatePeriod":
         parseValue(attributeVal, {
-          asKey: "minimumUpdatePeriod",
           parser: parseDuration,
-          dashName: "minimumUpdatePeriod",
+          name: "minimumUpdatePeriod",
         });
         break;
       case "minBufferTime":
         parseValue(attributeVal, {
-          asKey: "minBufferTime",
           parser: parseDuration,
-          dashName: "minBufferTime",
+          name: "minBufferTime",
         });
         break;
       case "timeShiftBufferDepth":
         parseValue(attributeVal, {
-          asKey: "timeShiftBufferDepth",
           parser: parseDuration,
-          dashName: "timeShiftBufferDepth",
+          name: "timeShiftBufferDepth",
         });
         break;
       case "suggestedPresentationDelay":
         parseValue(attributeVal, {
-          asKey: "suggestedPresentationDelay",
           parser: parseDuration,
-          dashName: "suggestedPresentationDelay",
+          name: "suggestedPresentationDelay",
         });
         break;
       case "maxSegmentDuration":
         parseValue(attributeVal, {
-          asKey: "maxSegmentDuration",
           parser: parseDuration,
-          dashName: "maxSegmentDuration",
+          name: "maxSegmentDuration",
         });
         break;
       case "maxSubsegmentDuration":
         parseValue(attributeVal, {
-          asKey: "maxSubsegmentDuration",
           parser: parseDuration,
-          dashName: "maxSubsegmentDuration",
+          name: "maxSubsegmentDuration",
         });
         break;
 

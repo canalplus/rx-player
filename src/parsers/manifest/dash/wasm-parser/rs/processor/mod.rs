@@ -87,7 +87,10 @@ impl MPDProcessor {
                         TagName::SegmentBase.report_tag_open();
                         attributes::report_segment_base_attrs(&tag);
                     }
-                    b"Initialization" => attributes::report_initialization_attrs(&tag),
+                    b"Initialization" => {
+                        TagName::Initialization.report_tag_open();
+                        attributes::report_initialization_attrs(&tag);
+                    }
                     b"SegmentTemplate" => {
                         TagName::SegmentTemplate.report_tag_open();
                         attributes::report_segment_template_attrs(&tag);
@@ -144,6 +147,7 @@ impl MPDProcessor {
                     b"SegmentList" => TagName::SegmentList.report_tag_close(),
                     b"SegmentURL" => TagName::SegmentUrl.report_tag_close(),
                     b"SegmentTemplate" => TagName::SegmentTemplate.report_tag_close(),
+                    b"Initialization" => TagName::Initialization.report_tag_close(),
                     b"UTCTiming" => TagName::UtcTiming.report_tag_close(),
                     _ => {}
                 },

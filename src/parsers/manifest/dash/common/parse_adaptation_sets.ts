@@ -31,6 +31,7 @@ import type {
 } from "../../types.ts";
 import type {
   IAdaptationSetIntermediateRepresentation,
+  ISchemeIntermediateRepresentation,
   ISegmentTemplateIntermediateRepresentation,
 } from "../node_parser_types.ts";
 import attachTrickModeTrack from "./attach_trickmode_track.ts";
@@ -85,21 +86,19 @@ interface IAdaptationSwitchingInfos {
  * @returns {Boolean}
  */
 function isVisuallyImpaired(
-  accessibility:
-    | { schemeIdUri?: string | undefined; value?: string | undefined }
-    | undefined,
+  accessibility: ISchemeIntermediateRepresentation | undefined,
 ): boolean {
   if (accessibility === undefined) {
     return false;
   }
 
   const isVisuallyImpairedAudioDvbDash =
-    accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-    accessibility.value === "1";
+    accessibility.attributes.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+    accessibility.attributes.value === "1";
 
   const isVisuallyImpairedDashIf =
-    accessibility.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-    accessibility.value === "description";
+    accessibility.attributes.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+    accessibility.attributes.value === "description";
 
   return isVisuallyImpairedAudioDvbDash || isVisuallyImpairedDashIf;
 }
@@ -113,18 +112,15 @@ function isVisuallyImpaired(
  * @returns {Boolean}
  */
 function isCaptionning(
-  accessibilities:
-    | Array<{ schemeIdUri?: string | undefined; value?: string | undefined }>
-    | undefined,
-  roles:
-    | Array<{ schemeIdUri?: string | undefined; value?: string | undefined }>
-    | undefined,
+  accessibilities: ISchemeIntermediateRepresentation[] | undefined,
+  roles: ISchemeIntermediateRepresentation[] | undefined,
 ): boolean {
   if (accessibilities !== undefined) {
     const hasDvbClosedCaptionSignaling = accessibilities.some(
       (accessibility) =>
-        accessibility.schemeIdUri === "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
-        accessibility.value === "2",
+        accessibility.attributes.schemeIdUri ===
+          "urn:tva:metadata:cs:AudioPurposeCS:2007" &&
+        accessibility.attributes.value === "2",
     );
     if (hasDvbClosedCaptionSignaling) {
       return true;
@@ -133,7 +129,8 @@ function isCaptionning(
   if (roles !== undefined) {
     const hasDashCaptionSinaling = roles.some(
       (role) =>
-        role.schemeIdUri === "urn:mpeg:dash:role:2011" && role.value === "caption",
+        role.attributes.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+        role.attributes.value === "caption",
     );
     if (hasDashCaptionSinaling) {
       return true;
@@ -150,17 +147,15 @@ function isCaptionning(
  * @returns {Boolean}
  */
 function hasSignLanguageInterpretation(
-  accessibility:
-    | { schemeIdUri?: string | undefined; value?: string | undefined }
-    | undefined,
+  accessibility: ISchemeIntermediateRepresentation | undefined,
 ): boolean {
   if (accessibility === undefined) {
     return false;
   }
 
   return (
-    accessibility.schemeIdUri === "urn:mpeg:dash:role:2011" &&
-    accessibility.value === "sign"
+    accessibility.attributes.schemeIdUri === "urn:mpeg:dash:role:2011" &&
+    accessibility.attributes.value === "sign"
   );
 }
 
@@ -195,8 +190,8 @@ function getAdaptationID(
   } = infos;
 
   let idString = type;
-  if (isNonEmptyString(adaptation.attributes.language)) {
-    idString += `-${adaptation.attributes.language}`;
+  if (isNonEmptyString(adaptation.attributes.lang)) {
+    idString += `-${adaptation.attributes.lang}`;
   }
   if (isClosedCaption === true) {
     idString += "-cc";
@@ -236,15 +231,15 @@ function getAdaptationID(
 function getAdaptationSetSwitchingIDs(
   adaptation: IAdaptationSetIntermediateRepresentation,
 ): string[] {
-  if (!isNullOrUndefined(adaptation.children.supplementalProperties)) {
-    const { supplementalProperties } = adaptation.children;
+  if (adaptation.children.SupplementalProperty.length > 0) {
+    const supplementalProperties = adaptation.children.SupplementalProperty;
     for (const supplementalProperty of supplementalProperties) {
       if (
-        supplementalProperty.schemeIdUri ===
+        supplementalProperty.attributes.schemeIdUri ===
           "urn:mpeg:dash:adaptation-set-switching:2016" &&
-        !isNullOrUndefined(supplementalProperty.value)
+        !isNullOrUndefined(supplementalProperty.attributes.value)
       ) {
-        return supplementalProperty.value
+        return supplementalProperty.attributes.value
           .split(",")
           .map((id) => id.trim())
           .filter((id) => isNonEmptyString(id));
@@ -286,14 +281,16 @@ export default function parseAdaptationSets(
   for (let adaptationIdx = 0; adaptationIdx < adaptationsIR.length; adaptationIdx++) {
     const adaptation = adaptationsIR[adaptationIdx];
     const adaptationChildren = adaptation.children;
-    const { essentialProperties, roles, label } = adaptationChildren;
+    const essentialProperties = adaptationChildren.EssentialProperty;
+    const roles = adaptationChildren.Role;
+    const labels = adaptationChildren.Label;
 
     const isMainAdaptation =
       Array.isArray(roles) &&
-      roles.some((role) => role.value === "main") &&
-      roles.some((role) => role.schemeIdUri === "urn:mpeg:dash:role:2011");
+      roles.some((role) => role.attributes.value === "main") &&
+      roles.some((role) => role.attributes.schemeIdUri === "urn:mpeg:dash:role:2011");
 
-    const representationsIR = adaptation.children.representations;
+    const representationsIR = adaptation.children.Representation;
 
     const availabilityTimeComplete =
       adaptation.attributes.availabilityTimeComplete ?? context.availabilityTimeComplete;
@@ -310,6 +307,7 @@ export default function parseAdaptationSets(
 
     const type = inferAdaptationType(adaptation, representationsIR);
     if (type === undefined) {
+      log.warn("dash", "unable to infer type, skip AdaptationSet");
       continue;
     }
 
@@ -320,14 +318,18 @@ export default function parseAdaptationSets(
     if (context.segmentTemplate !== undefined) {
       parentSegmentTemplates.push(context.segmentTemplate);
     }
-    if (adaptation.children.segmentTemplate !== undefined) {
-      parentSegmentTemplates.push(adaptation.children.segmentTemplate);
+    if (adaptation.children.SegmentTemplate.length > 0) {
+      parentSegmentTemplates.push(
+        adaptation.children.SegmentTemplate[
+          adaptation.children.SegmentTemplate.length - 1
+        ],
+      );
     }
 
     const reprCtxt: IRepresentationContext = {
       availabilityTimeComplete,
       availabilityTimeOffset,
-      baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.baseURLs),
+      baseURLs: resolveBaseURLs(context.baseURLs, adaptationChildren.BaseURL),
       contentProtectionParser: context.contentProtectionParser,
       manifestBoundsCalculator: context.manifestBoundsCalculator,
       end: context.end,
@@ -342,19 +344,21 @@ export default function parseAdaptationSets(
 
     const trickModeProperty = Array.isArray(essentialProperties)
       ? arrayFind(essentialProperties, (scheme) => {
-          return scheme.schemeIdUri === "http://dashif.org/guidelines/trickmode";
+          return (
+            scheme.attributes.schemeIdUri === "http://dashif.org/guidelines/trickmode"
+          );
         })
       : undefined;
 
     const trickModeAttachedAdaptationIds: string[] | undefined =
-      trickModeProperty?.value?.split(" ");
+      trickModeProperty?.attributes.value?.split(" ");
 
     const isTrickModeTrack = trickModeAttachedAdaptationIds !== undefined;
 
-    const { accessibilities } = adaptationChildren;
+    const accessibilities = adaptationChildren.Accessibility;
 
     let isDub: boolean | undefined;
-    if (roles !== undefined && roles.some((role) => role.value === "dub")) {
+    if (roles !== undefined && roles.some((role) => role.attributes.value === "dub")) {
       isDub = true;
     }
 
@@ -370,7 +374,9 @@ export default function parseAdaptationSets(
       type === "text" &&
       roles !== undefined &&
       roles.some(
-        (role) => role.value === "forced-subtitle" || role.value === "forced_subtitle",
+        (role) =>
+          role.attributes.value === "forced-subtitle" ||
+          role.attributes.value === "forced_subtitle",
       )
     ) {
       isForcedSubtitle = true;
@@ -426,8 +432,8 @@ export default function parseAdaptationSets(
       type,
       isTrickModeTrack,
     };
-    if (!isNullOrUndefined(adaptation.attributes.language)) {
-      parsedAdaptationSet.language = adaptation.attributes.language;
+    if (!isNullOrUndefined(adaptation.attributes.lang)) {
+      parsedAdaptationSet.language = adaptation.attributes.lang;
     }
     if (!isNullOrUndefined(isClosedCaption)) {
       parsedAdaptationSet.closedCaption = isClosedCaption;
@@ -445,8 +451,8 @@ export default function parseAdaptationSets(
       parsedAdaptationSet.isSignInterpreted = true;
     }
 
-    if (label !== undefined) {
-      parsedAdaptationSet.label = label;
+    if (labels.length > 0) {
+      parsedAdaptationSet.label = labels[labels.length - 1].value;
     }
 
     if (trickModeAttachedAdaptationIds !== undefined) {
@@ -561,7 +567,7 @@ function createThumbnailTracks(
       }
       const tileInfo = getThumbnailAdaptationSetInfo(
         adaptation,
-        adaptation.children.representations[i],
+        adaptation.children.Representation[i],
       );
       if (tileInfo === null) {
         continue;

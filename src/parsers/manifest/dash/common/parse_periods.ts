@@ -82,7 +82,7 @@ export default function parsePeriods(
     const isLastPeriod = i === periodsIR.length - 1;
     const periodIR = periodsIR[i];
     const xlinkInfos = context.xlinkInfos.get(periodIR);
-    const periodBaseURLs = resolveBaseURLs(context.baseURLs, periodIR.children.baseURLs);
+    const periodBaseURLs = resolveBaseURLs(context.baseURLs, periodIR.children.BaseURL);
 
     const { periodStart, periodDuration, periodEnd } = periodsTimeInformation[i];
 
@@ -110,8 +110,9 @@ export default function parsePeriods(
     const availabilityTimeComplete = periodIR.attributes.availabilityTimeComplete;
     const availabilityTimeOffset = periodIR.attributes.availabilityTimeOffset;
     const { manifestProfiles, contentProtectionParser } = context;
-    const { segmentTemplate } = periodIR.children;
-    contentProtectionParser.addReferences(periodIR.children.contentProtections ?? []);
+    const segmentTemplate =
+      periodIR.children.SegmentTemplate[periodIR.children.SegmentTemplate.length - 1];
+    contentProtectionParser.addReferences(periodIR.children.ContentProtection);
     const adapCtxt: IAdaptationSetContext = {
       availabilityTimeComplete,
       availabilityTimeOffset,
@@ -128,7 +129,7 @@ export default function parsePeriods(
       unsafelyBaseOnPreviousPeriod,
     };
     const { adaptations, thumbnailTracks } = parseAdaptationSets(
-      periodIR.children.adaptations,
+      periodIR.children.AdaptationSet,
       adapCtxt,
     );
 
@@ -136,7 +137,7 @@ export default function parsePeriods(
       periodIR.attributes.namespaces ?? [],
     );
     const streamEvents = generateStreamEvents(
-      periodIR.children.eventStreams,
+      periodIR.children.EventStream,
       periodStart,
       namespaces,
     );
@@ -308,7 +309,7 @@ function generateStreamEvents(
     const { schemeIdUri = "", timescale = 1 } = eventStreamIr.attributes;
     const allNamespaces = xmlNamespaces.concat(eventStreamIr.attributes.namespaces ?? []);
 
-    for (const eventIr of eventStreamIr.children.events) {
+    for (const eventIr of eventStreamIr.children.Event) {
       if (eventIr.eventStreamData !== undefined) {
         const start = (eventIr.presentationTime ?? 0) / timescale + periodStart;
         const end =

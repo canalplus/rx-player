@@ -18,12 +18,16 @@ import type { IMPDIntermediateRepresentation } from "../node_parser_types.ts";
 
 type ISupportedHttpUtcTimingScheme =
   | {
-      schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014";
-      value: string;
+      attributes: {
+        schemeIdUri: "urn:mpeg:dash:utc:http-iso:2014";
+        value: string;
+      };
     }
   | {
-      schemeIdUri: "urn:mpeg:dash:utc:http-xsdate:2014";
-      value: string;
+      attributes: {
+        schemeIdUri: "urn:mpeg:dash:utc:http-xsdate:2014";
+        value: string;
+      };
     };
 
 /**
@@ -33,12 +37,12 @@ type ISupportedHttpUtcTimingScheme =
 export default function getHTTPUTCTimingURL(
   mpdIR: IMPDIntermediateRepresentation,
 ): string | undefined {
-  const UTCTimingHTTP = mpdIR.children.utcTimings.filter(
+  const UTCTimingHTTP = mpdIR.children.UTCTiming.filter(
     (utcTiming): utcTiming is ISupportedHttpUtcTimingScheme =>
-      (utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014" ||
-        utcTiming.schemeIdUri === "urn:mpeg:dash:utc:http-xsdate:2014") &&
-      utcTiming.value !== undefined,
+      (utcTiming.attributes.schemeIdUri === "urn:mpeg:dash:utc:http-iso:2014" ||
+        utcTiming.attributes.schemeIdUri === "urn:mpeg:dash:utc:http-xsdate:2014") &&
+      utcTiming.attributes.value !== undefined,
   );
 
-  return UTCTimingHTTP.length > 0 ? UTCTimingHTTP[0].value : undefined;
+  return UTCTimingHTTP.length > 0 ? UTCTimingHTTP[0].attributes.value : undefined;
 }

@@ -16,7 +16,7 @@
 
 import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
 import type { ITNode } from "../../../../../utils/xml-parser.ts";
-import type { IInitializationAttributes } from "../../node_parser_types.ts";
+import type { IInitializationIntermediateRepresentation } from "../../node_parser_types.ts";
 import { parseByteRange, ValueParser } from "./utils.ts";
 
 /**
@@ -25,10 +25,12 @@ import { parseByteRange, ValueParser } from "./utils.ts";
  */
 export default function parseInitialization(
   root: ITNode,
-): [IInitializationAttributes, Error[]] {
-  const parsedInitialization: IInitializationAttributes = {};
+): [IInitializationIntermediateRepresentation, Error[]] {
+  const parsedInitialization: IInitializationIntermediateRepresentation = {
+    attributes: {},
+  };
   const warnings: Error[] = [];
-  const parseValue = ValueParser(parsedInitialization, warnings);
+  const parseValue = ValueParser(parsedInitialization.attributes, warnings);
   for (const attributeName of Object.keys(root.attributes)) {
     const attributeVal = root.attributes[attributeName];
     if (isNullOrUndefined(attributeVal)) {
@@ -37,14 +39,13 @@ export default function parseInitialization(
     switch (attributeName) {
       case "range":
         parseValue(attributeVal, {
-          asKey: "range",
           parser: parseByteRange,
-          dashName: "range",
+          name: "range",
         });
         break;
 
       case "sourceURL":
-        parsedInitialization.media = attributeVal;
+        parsedInitialization.attributes.sourceURL = attributeVal;
         break;
     }
   }

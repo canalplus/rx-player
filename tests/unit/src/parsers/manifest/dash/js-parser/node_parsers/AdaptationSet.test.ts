@@ -14,7 +14,21 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: true },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -23,7 +37,21 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: false },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -41,7 +69,21 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: false },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [error1],
     ]);
@@ -51,7 +93,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
       "dash",
       "failed to parse DASH value:",
       error1.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
@@ -61,7 +103,21 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: false },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [error2],
     ]);
@@ -71,7 +127,7 @@ function testBooleanAttribute(attributeName: string, variableName?: string): voi
       "dash",
       "failed to parse DASH value:",
       error2.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
     spyLog.mockRestore();
   });
@@ -86,7 +142,21 @@ function testStringAttribute(attributeName: string, variableName?: string): void
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: "foobar" },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -95,7 +165,21 @@ function testStringAttribute(attributeName: string, variableName?: string): void
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: "" },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -113,7 +197,21 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: 12.4 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -122,7 +220,21 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: 0 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -131,7 +243,21 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
       {
         attributes: { [_variableName]: 13.5 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -145,7 +271,24 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
     const element1 = parseXml(`<AdaptationSet ${attributeName}="toto" />`)[0] as ITNode;
     const error1 = new MPDError(`\`${attributeName}\` property is invalid: "toto"`);
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error1],
     ]);
 
@@ -155,13 +298,30 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
       "dash",
       "failed to parse DASH value:",
       error1.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(`\`${attributeName}\` property is invalid: "PT5M"`);
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error2],
     ]);
 
@@ -171,14 +331,31 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
       "dash",
       "failed to parse DASH value:",
       error2.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(`\`${attributeName}\` property is invalid: ""`);
 
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error3],
     ]);
 
@@ -188,7 +365,7 @@ function testMaybeDividedNumber(attributeName: string, variableName?: string): v
       "dash",
       "failed to parse DASH value:",
       error3.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
     spyLog.mockRestore();
   });
@@ -203,7 +380,21 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: 12 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -212,7 +403,21 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: 0 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -221,7 +426,21 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
       {
         attributes: { [_variableName]: -50.12 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -235,7 +454,24 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
     const element1 = parseXml(`<AdaptationSet ${attributeName}="toto" />`)[0] as ITNode;
     const error1 = new MPDError(`\`${attributeName}\` property is invalid: "toto"`);
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error1],
     ]);
 
@@ -245,13 +481,30 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
       "dash",
       "failed to parse DASH value:",
       error1.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
     const error2 = new MPDError(`\`${attributeName}\` property is invalid: "PT5M"`);
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error2],
     ]);
 
@@ -261,14 +514,31 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
       "dash",
       "failed to parse DASH value:",
       error2.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
     const error3 = new MPDError(`\`${attributeName}\` property is invalid: ""`);
 
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error3],
     ]);
 
@@ -278,7 +548,7 @@ function testFloatAttribute(attributeName: string, variableName?: string): void 
       "dash",
       "failed to parse DASH value:",
       error3.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
     spyLog.mockRestore();
   });
@@ -293,7 +563,21 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: 12 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -302,7 +586,21 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: 0 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -311,7 +609,21 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
       {
         attributes: { [_variableName]: -50 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -327,7 +639,24 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
       `\`${attributeName}\` property is not an integer value but "toto"`,
     );
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error1],
     ]);
 
@@ -337,7 +666,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
       "dash",
       "failed to parse DASH value:",
       error1.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
@@ -345,7 +674,24 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
       `\`${attributeName}\` property is not an integer value but "PT5M"`,
     );
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error2],
     ]);
 
@@ -355,7 +701,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
       "dash",
       "failed to parse DASH value:",
       error2.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
@@ -364,7 +710,24 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
     );
 
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error3],
     ]);
 
@@ -374,7 +737,7 @@ function testIntegerAttribute(attributeName: string, variableName?: string): voi
       "dash",
       "failed to parse DASH value:",
       error3.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
     spyLog.mockRestore();
   });
@@ -392,7 +755,21 @@ function testNumberOrBooleanAttribute(
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: 12 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -401,7 +778,21 @@ function testNumberOrBooleanAttribute(
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: 0 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -410,7 +801,21 @@ function testNumberOrBooleanAttribute(
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
       {
         attributes: { [_variableName]: -50 },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -426,7 +831,24 @@ function testNumberOrBooleanAttribute(
       `\`${attributeName}\` property is not a boolean nor an integer but "toto"`,
     );
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error1],
     ]);
 
@@ -436,7 +858,7 @@ function testNumberOrBooleanAttribute(
       "dash",
       "failed to parse DASH value:",
       error1.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element2 = parseXml(`<AdaptationSet ${attributeName}="PT5M" />`)[0] as ITNode;
@@ -444,7 +866,24 @@ function testNumberOrBooleanAttribute(
       `\`${attributeName}\` property is not a boolean nor an integer but "PT5M"`,
     );
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error2],
     ]);
 
@@ -454,7 +893,7 @@ function testNumberOrBooleanAttribute(
       "dash",
       "failed to parse DASH value:",
       error2.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     const element3 = parseXml(`<AdaptationSet ${attributeName}="" />`)[0] as ITNode;
@@ -463,7 +902,24 @@ function testNumberOrBooleanAttribute(
     );
 
     expect(createAdaptationSetIntermediateRepresentation(element3)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [error3],
     ]);
 
@@ -473,7 +929,7 @@ function testNumberOrBooleanAttribute(
       "dash",
       "failed to parse DASH value:",
       error3.message,
-      { dashName: attributeName },
+      { name: attributeName },
     );
 
     spyLog.mockRestore();
@@ -485,7 +941,21 @@ function testNumberOrBooleanAttribute(
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: { [_variableName]: true },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -494,7 +964,21 @@ function testNumberOrBooleanAttribute(
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: { [_variableName]: false },
-        children: { baseURLs: [], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
@@ -508,7 +992,24 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   it("should correctly parse an AdaptationSet element without attributes nor children", () => {
     const element = parseXml("<AdaptationSet />")[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [],
     ]);
   });
@@ -522,15 +1023,15 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   testIntegerAttribute("group");
   testIntegerAttribute("height");
   testStringAttribute("id");
-  testStringAttribute("lang", "language");
-  testIntegerAttribute("maxBandwidth", "maxBitrate");
+  testStringAttribute("lang");
+  testIntegerAttribute("maxBandwidth");
   testMaybeDividedNumber("maxFrameRate");
   testIntegerAttribute("maxHeight");
   testFloatAttribute("maxPlayoutRate");
   testIntegerAttribute("maxWidth");
   testFloatAttribute("maximumSAPPeriod");
   testStringAttribute("mimeType");
-  testIntegerAttribute("minBandwidth", "minBitrate");
+  testIntegerAttribute("minBandwidth");
   testMaybeDividedNumber("minFrameRate");
   testIntegerAttribute("minHeight");
   testIntegerAttribute("minWidth");
@@ -542,10 +1043,27 @@ describe("DASH Node Parsers - AdaptationSet", () => {
   testIntegerAttribute("width");
   testFloatAttribute("availabilityTimeOffset");
 
-  it("should correctly parse an empty baseURLs", () => {
+  it("should correctly parse an empty BaseURL", () => {
     const element1 = parseXml("<AdaptationSet><BaseURL /></AdaptationSet>")[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [],
     ]);
 
@@ -553,19 +1071,50 @@ describe("DASH Node Parsers - AdaptationSet", () => {
       "<AdaptationSet><BaseURL></BaseURLs</AdaptationSet>",
     )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
-      { attributes: {}, children: { baseURLs: [], representations: [] } },
+      {
+        attributes: {},
+        children: {
+          Accessibility: [],
+          BaseURL: [],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
+      },
       [],
     ]);
   });
 
-  it("should correctly parse a non-empty baseURLs", () => {
+  it("should correctly parse a non-empty BaseURL", () => {
     const element1 = parseXml(
       '<AdaptationSet><BaseURL serviceLocation="foo">a</BaseURL></AdaptationSet>',
     )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element1)).toEqual([
       {
         attributes: {},
-        children: { baseURLs: [{ value: "a" }], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [{ value: "a" }],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+          Representation: [],
+        },
       },
       [],
     ]);
@@ -576,13 +1125,27 @@ describe("DASH Node Parsers - AdaptationSet", () => {
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: {},
-        children: { baseURLs: [{ value: "foo bar" }], representations: [] },
+        children: {
+          Accessibility: [],
+          BaseURL: [{ value: "foo bar" }],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
+        },
       },
       [],
     ]);
   });
 
-  it("should correctly parse multiple non-empty baseURLs", () => {
+  it("should correctly parse multiple non-empty BaseURL", () => {
     const element1 = parseXml(
       '<AdaptationSet><BaseURL serviceLocation="">a</BaseURL><BaseURL serviceLocation="http://test.com">b</BaseURL></AdaptationSet>',
     )[0] as ITNode;
@@ -590,8 +1153,19 @@ describe("DASH Node Parsers - AdaptationSet", () => {
       {
         attributes: {},
         children: {
-          baseURLs: [{ value: "a" }, { value: "b" }],
-          representations: [],
+          Accessibility: [],
+          BaseURL: [{ value: "a" }, { value: "b" }],
+          Representation: [],
+          ContentComponent: [],
+          ContentProtection: [],
+          EssentialProperty: [],
+          InbandEventStream: [],
+          Label: [],
+          Role: [],
+          SegmentBase: [],
+          SegmentList: [],
+          SegmentTemplate: [],
+          SupplementalProperty: [],
         },
       },
       [],

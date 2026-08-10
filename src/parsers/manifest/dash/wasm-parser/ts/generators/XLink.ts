@@ -39,7 +39,13 @@ export function generateXLinkChildrenParser(
     switch (nodeId) {
       case TagName.Period: {
         const period = {
-          children: { adaptations: [], baseURLs: [], eventStreams: [] },
+          children: {
+            AdaptationSet: [],
+            BaseURL: [],
+            SegmentTemplate: [],
+            EventStream: [],
+            ContentProtection: [],
+          },
           attributes: {},
         };
         xlinkObj.periods.push(period);
