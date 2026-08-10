@@ -15,7 +15,6 @@
  */
 
 import { CustomLoaderError } from "../../errors/index.ts";
-import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
 import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types.ts";
 import request, { fetchIsSupported } from "../../utils/request/index.ts";
 import type {
@@ -25,6 +24,7 @@ import type {
 import warnOnce from "../../utils/warn_once.ts";
 import type {
   ILoadedAudioVideoSegmentFormat,
+  IRequestCdnMetadata,
   ISegmentContext,
   ISegmentLoader,
   ISegmentLoaderCallbacks,
@@ -151,7 +151,7 @@ export default function generateSegmentLoader({
    * @returns {Promise.<Object>}
    */
   function segmentLoader(
-    wantedCdn: ICdnMetadata | null,
+    wantedCdn: IRequestCdnMetadata | null,
     context: ISegmentContext,
     options: ISegmentLoaderOptions,
     cancelSignal: CancellationSignal,

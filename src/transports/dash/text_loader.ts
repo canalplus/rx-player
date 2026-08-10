@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
 import request, { fetchIsSupported } from "../../utils/request/index.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import warnOnce from "../../utils/warn_once.ts";
 import type {
   ILoadedTextSegmentFormat,
+  IRequestCdnMetadata,
   ISegmentContext,
   ISegmentLoader,
   ISegmentLoaderCallbacks,
@@ -61,7 +61,7 @@ export default function generateTextTrackLoader({
    * @returns {Promise}
    */
   async function textTrackLoader(
-    wantedCdn: ICdnMetadata | null,
+    wantedCdn: IRequestCdnMetadata | null,
     context: ISegmentContext,
     options: ISegmentLoaderOptions,
     cancelSignal: CancellationSignal,

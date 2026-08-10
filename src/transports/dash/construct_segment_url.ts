@@ -15,18 +15,56 @@
  */
 
 import type { ISegment } from "../../manifest/index.ts";
-import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
-import { resolveURL } from "../../utils/url-utils.ts";
+import {
+  replaceURLHost,
+  resolveURL,
+  setURLQueryParameters,
+} from "../../utils/url-utils.ts";
+import type { IRequestCdnMetadata } from "../types.ts";
 
 export default function constructSegmentUrl(
-  wantedCdn: ICdnMetadata | null,
+  wantedCdn: IRequestCdnMetadata | null,
   segment: ISegment,
 ): string | null {
   if (wantedCdn === null) {
     return null;
   }
   if (segment.url === null) {
-    return wantedCdn.baseUrl;
+    return applyPathwayClone(wantedCdn.baseUrl, wantedCdn.pathwayClone);
   }
-  return resolveURL(wantedCdn.baseUrl, segment.url);
+  return applyPathwayClone(
+    resolveURL(wantedCdn.baseUrl, segment.url),
+    wantedCdn.pathwayClone,
+  );
+}
+
+function applyPathwayClone(
+  url: string,
+  replacement: IRequestCdnMetadata["pathwayClone"],
+): string {
+  if (replacement === undefined) {
+    return url;
+  }
+  let clonedUrl = url;
+  if (replacement.host !== undefined) {
+    clonedUrl = replaceURLHost(clonedUrl, replacement.host);
+  }
+  if (replacement.params !== undefined) {
+    const parameters = Object.entries(replacement.params).map(
+      ([key, value]): [string, string] => [
+        decodeUriComponent(key),
+        decodeUriComponent(value),
+      ],
+    );
+    clonedUrl = setURLQueryParameters(clonedUrl, parameters);
+  }
+  return clonedUrl;
+}
+
+function decodeUriComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch (_) {
+    return value;
+  }
 }

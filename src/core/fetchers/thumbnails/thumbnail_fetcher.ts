@@ -2,9 +2,9 @@ import config from "../../../config.ts";
 import { formatError } from "../../../errors/index.ts";
 import log from "../../../log.ts";
 import type { ISegment, IThumbnailTrack } from "../../../manifest/index.ts";
-import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
 import type { IPeriod } from "../../../public_types.ts";
 import type {
+  IRequestCdnMetadata,
   IRequestedData,
   IThumbnailLoader,
   IThumbnailLoaderOptions,
@@ -237,7 +237,7 @@ export default function createThumbnailFetcher(
      * @returns {Promise}
      */
     function callLoaderWithUrl(
-      cdnMetadata: ICdnMetadata | null,
+      cdnMetadata: IRequestCdnMetadata | null,
     ): ReturnType<IThumbnailLoader> {
       return loadThumbnail(
         cdnMetadata,

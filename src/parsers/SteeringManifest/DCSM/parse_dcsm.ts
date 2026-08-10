@@ -1,4 +1,4 @@
-import type { ISteeringManifest } from "../types.ts";
+import type { IPathwayClone, ISteeringManifest } from "../types.ts";
 
 export default function parseDashContentSteeringManifest(
   input: string | Partial<Record<string, unknown>>,
@@ -15,30 +15,31 @@ export default function parseDashContentSteeringManifest(
     throw new Error("Unhandled DCSM version. Only `1` can be proccessed.");
   }
 
-  const initialPriorities = json["SERVICE-LOCATION-PRIORITY"];
+  const initialPriorities = json["PATHWAY-PRIORITY"] ?? [];
   if (!Array.isArray(initialPriorities)) {
-    throw new Error("The DCSM's SERVICE-LOCATION-URI in in the wrong format");
-  } else if (initialPriorities.length === 0) {
+    throw new Error("The DCSM's PATHWAY-PRIORITY is in the wrong format");
+  } else if (json["PATHWAY-PRIORITY"] !== undefined && initialPriorities.length === 0) {
     warnings.push(
-      new Error("The DCSM's SERVICE-LOCATION-URI should contain at least one element"),
+      new Error("The DCSM's PATHWAY-PRIORITY should contain at least one element"),
     );
   }
 
-  const priorities: string[] = initialPriorities.filter(
-    (elt): elt is string => typeof elt === "string",
-  );
+  const priorities: string[] = [];
+  for (const priority of initialPriorities) {
+    if (typeof priority === "string" && priorities.indexOf(priority) < 0) {
+      priorities.push(priority);
+    }
+  }
   if (priorities.length !== initialPriorities.length) {
     warnings.push(
-      new Error("The DCSM's SERVICE-LOCATION-URI contains URI in a wrong format"),
+      new Error("The DCSM's PATHWAY-PRIORITY contains invalid or duplicate IDs"),
     );
   }
-  let lifetime = 300;
 
-  if (typeof json.TTL === "number") {
-    lifetime = json.TTL;
-  } else if (json.TTL !== undefined) {
-    warnings.push(new Error("The DCSM's TTL in in the wrong format"));
+  if (typeof json.TTL !== "number" || !Number.isFinite(json.TTL) || json.TTL < 0) {
+    throw new Error("The DCSM's mandatory TTL is in the wrong format");
   }
+  const lifetime = json.TTL;
 
   let reloadUri;
   if (typeof json["RELOAD-URI"] === "string") {
@@ -47,5 +48,64 @@ export default function parseDashContentSteeringManifest(
     warnings.push(new Error("The DCSM's RELOAD-URI in in the wrong format"));
   }
 
-  return [{ lifetime, reloadUri, priorities }, warnings];
+  const pathwayClones: IPathwayClone[] = [];
+  const initialClones = json["PATHWAY-CLONES"];
+  if (initialClones !== undefined && !Array.isArray(initialClones)) {
+    warnings.push(new Error("The DCSM's PATHWAY-CLONES is in the wrong format"));
+  } else if (Array.isArray(initialClones)) {
+    for (const clone of initialClones) {
+      const parsedClone = parsePathwayClone(clone);
+      if (parsedClone === null || pathwayClones.some(({ id }) => id === parsedClone.id)) {
+        warnings.push(new Error("The DCSM contains an invalid pathway clone"));
+      } else {
+        pathwayClones.push(parsedClone);
+      }
+    }
+  }
+
+  return [{ lifetime, reloadUri, priorities, pathwayClones }, warnings];
+}
+
+function parsePathwayClone(value: unknown): IPathwayClone | null {
+  if (typeof value !== "object" || value === null) {
+    return null;
+  }
+  const clone = value as Partial<Record<string, unknown>>;
+  const replacement = clone["URI-REPLACEMENT"];
+  if (
+    typeof clone["BASE-ID"] !== "string" ||
+    typeof clone.ID !== "string" ||
+    clone.ID === clone["BASE-ID"] ||
+    typeof replacement !== "object" ||
+    replacement === null
+  ) {
+    return null;
+  }
+  const replacementObject = replacement as Partial<Record<string, unknown>>;
+  const host = replacementObject.HOST;
+  const initialParams = replacementObject.PARAMS;
+  if (host !== undefined && typeof host !== "string") {
+    return null;
+  }
+  let params: Record<string, string> | undefined;
+  if (initialParams !== undefined) {
+    if (typeof initialParams !== "object" || initialParams === null) {
+      return null;
+    }
+    params = {};
+    for (const [key, val] of Object.entries(initialParams)) {
+      if (typeof val !== "string") {
+        return null;
+      }
+      params[key] = val;
+    }
+  }
+  if (host === undefined && params === undefined) {
+    return null;
+  }
+  return {
+    baseId: clone["BASE-ID"],
+    id: clone.ID,
+    uriReplacement: { host, params },
+  };
 }

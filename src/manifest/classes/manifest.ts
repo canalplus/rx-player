@@ -18,6 +18,7 @@ import { MediaError } from "../../errors/index.ts";
 import log from "../../log.ts";
 import { getCodecsWithUnknownSupport } from "../../main_thread/init/utils/update_manifest_codec_support.ts";
 import type {
+  ICdnMetadata,
   IContentSteeringMetadata,
   IParsedManifest,
 } from "../../parsers/manifest/index.ts";
@@ -176,6 +177,9 @@ export default class Manifest
    * Listed from the most important to the least important.
    */
   public refreshUrls: string[];
+
+  /** CDN metadata for the resources through which this Manifest can be refreshed. */
+  public cdnMetadata: ICdnMetadata[] | null;
 
   /** Optional URL that points to a shorter version of the Manifest used
    * for updates only. */
@@ -358,6 +362,8 @@ export default class Manifest
     this.isLive = parsedManifest.isLive;
     this.isLastPeriodKnown = parsedManifest.isLastPeriodKnown;
     this.refreshUrls = parsedManifest.refreshUrls.map((r) => r.baseUrl);
+    this.cdnMetadata =
+      parsedManifest.refreshUrls.length === 0 ? null : parsedManifest.refreshUrls;
 
     this.updateUrl = manifestUpdateUrl;
     this.lifetime = parsedManifest.lifetime;
@@ -697,6 +703,7 @@ export default class Manifest
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       this.timeBounds = newManifest.timeBounds;
       this.refreshUrls = newManifest.refreshUrls;
+      this.cdnMetadata = newManifest.cdnMetadata;
       updatedPeriodsResult = replacePeriods(this.periods, newManifest.periods);
     } else {
       this.timeBounds.maximumTimeData = newManifest.timeBounds.maximumTimeData;

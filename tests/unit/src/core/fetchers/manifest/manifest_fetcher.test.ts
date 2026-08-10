@@ -16,6 +16,7 @@ const {
   mockLoadManifest,
   mockParseManifest,
   mockScheduleRequestPromise,
+  mockScheduleRequestWithCdns,
   mockErrorSelector,
   MockManifest,
 } = vi.hoisted(() => {
@@ -24,6 +25,7 @@ const {
     lifetime: number | undefined = undefined;
     clockOffset: number | undefined = undefined;
     updateUrl: string | undefined = undefined;
+    cdnMetadata = [{ baseUrl: "http://example.com/manifest" }];
     replace = vi.fn();
     update = vi.fn();
     getRefreshUrls = vi.fn(() => ["http://example.com/manifest"]);
@@ -36,7 +38,10 @@ const {
     mockLogDebug: vi.fn(),
     mockLoadManifest: vi.fn(),
     mockParseManifest: vi.fn(),
-    mockScheduleRequestPromise: vi.fn((fn: () => Promise<unknown>) => fn()),
+    mockScheduleRequestPromise: vi.fn(
+      (fn: () => Promise<unknown>, _options?: unknown, _signal?: unknown) => fn(),
+    ),
+    mockScheduleRequestWithCdns: vi.fn(),
     mockErrorSelector: vi.fn((e: unknown) => e),
     MockManifest: MockManifestImplem,
   };
@@ -55,6 +60,7 @@ vi.mock("../../../../../../src/core/fetchers/utils/error_selector", () => ({
 }));
 vi.mock("../../../../../../src/core/fetchers/utils/schedule_request", () => ({
   scheduleRequestPromise: mockScheduleRequestPromise,
+  scheduleRequestWithCdns: mockScheduleRequestWithCdns,
 }));
 
 const DEFAULT_CONFIG = {
@@ -105,7 +111,28 @@ describe("ManifestFetcher", () => {
     mockConfigGetCurrent.mockReturnValue(DEFAULT_CONFIG);
     mockFormatError.mockImplementation((e: unknown) => e);
     mockErrorSelector.mockImplementation((e: unknown) => e);
-    mockScheduleRequestPromise.mockImplementation((fn: () => Promise<unknown>) => fn());
+    mockScheduleRequestPromise.mockImplementation(
+      (fn: () => Promise<unknown>, _options?: unknown, _signal?: unknown) => fn(),
+    );
+    mockScheduleRequestWithCdns.mockImplementation(
+      (
+        cdns: Array<{ baseUrl: string }> | null,
+        _prioritizer: unknown,
+        performRequest: (
+          cdn: { baseUrl: string } | null,
+          cancellationSignal: unknown,
+        ) => Promise<unknown>,
+        options: unknown,
+        cancellationSignal: unknown,
+      ) => {
+        const cdn = cdns === null ? null : cdns[0];
+        return mockScheduleRequestPromise(
+          () => performRequest(cdn, cancellationSignal),
+          options,
+          cancellationSignal,
+        );
+      },
+    );
   });
 
   afterEach(() => {

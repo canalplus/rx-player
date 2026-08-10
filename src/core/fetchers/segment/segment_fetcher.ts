@@ -25,10 +25,10 @@ import type {
   IRepresentation,
 } from "../../../manifest/index.ts";
 import { getLoggableSegmentId } from "../../../manifest/index.ts";
-import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
 import type { IPlayerError } from "../../../public_types.ts";
 import type {
   IChunkCompleteInformation,
+  IRequestCdnMetadata,
   ISegmentContext,
   ISegmentLoader,
   ISegmentLoaderOptions,
@@ -134,6 +134,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
      * Stays to `undefined` when the request is still pending.
      */
     let requestInfo: IChunkCompleteInformation | null | undefined;
+    let currentCdn: IRequestCdnMetadata | null = null;
 
     /**
      * Array containing one entry per loaded chunk, in chronological order.
@@ -282,8 +283,9 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
      * @returns {Promise}
      */
     function callLoaderWithUrl(
-      cdnMetadata: ICdnMetadata | null,
+      cdnMetadata: IRequestCdnMetadata | null,
     ): ReturnType<ISegmentLoader<TLoadedFormat>> {
+      currentCdn = cdnMetadata;
       pipelineRequestOptions.cmcdPayload =
         cmcdDataBuilder?.getCmcdDataForSegmentRequest(content);
       return loadSegment(
@@ -367,6 +369,16 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
         parsedChunks.every((isParsed) => isParsed)
       ) {
         metricsSent = true;
+        if (
+          cdnPrioritizer !== null &&
+          currentCdn !== null &&
+          requestInfo.requestDuration > 0
+        ) {
+          cdnPrioritizer.recordCdnThroughput(
+            currentCdn,
+            (requestInfo.size * 8 * 1000) / requestInfo.requestDuration,
+          );
+        }
         eventListeners.onMetrics?.({
           size: requestInfo.size,
           requestDuration: requestInfo.requestDuration,

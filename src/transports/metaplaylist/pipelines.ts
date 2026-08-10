@@ -20,7 +20,7 @@ import Manifest from "../../manifest/classes/index.ts";
 import type { IMetaPlaylistPrivateInfos, ISegment } from "../../manifest/index.ts";
 import type { IParserResponse as IMPLParserResponse } from "../../parsers/manifest/metaplaylist/index.ts";
 import parseMetaPlaylist from "../../parsers/manifest/metaplaylist/index.ts";
-import type { ICdnMetadata, IParsedManifest } from "../../parsers/manifest/types.ts";
+import type { IParsedManifest } from "../../parsers/manifest/types.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
 import objectAssign from "../../utils/object_assign.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
@@ -28,6 +28,7 @@ import type {
   IChunkTimeInfo,
   ILoadedAudioVideoSegmentFormat,
   ILoadedTextSegmentFormat,
+  IRequestCdnMetadata,
   IManifestParserOptions,
   IManifestParserRequestScheduler,
   IManifestParserResult,
@@ -257,7 +258,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
 
   const audioPipeline = {
     loadSegment(
-      wantedCdn: ICdnMetadata | null,
+      wantedCdn: IRequestCdnMetadata | null,
       context: ISegmentContext,
       loaderOptions: ISegmentLoaderOptions,
       cancelToken: CancellationSignal,
@@ -305,7 +306,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
 
   const videoPipeline = {
     loadSegment(
-      wantedCdn: ICdnMetadata | null,
+      wantedCdn: IRequestCdnMetadata | null,
       context: ISegmentContext,
       loaderOptions: ISegmentLoaderOptions,
       cancelToken: CancellationSignal,
@@ -352,7 +353,7 @@ export default function (options: ITransportOptions): ITransportPipelines {
 
   const textTrackPipeline = {
     loadSegment(
-      wantedCdn: ICdnMetadata | null,
+      wantedCdn: IRequestCdnMetadata | null,
       context: ISegmentContext,
       loaderOptions: ISegmentLoaderOptions,
       cancelToken: CancellationSignal,
