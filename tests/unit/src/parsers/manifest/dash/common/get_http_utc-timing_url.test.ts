@@ -16,6 +16,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
         UTCTiming: [],
         ContentProtection: [],
         ContentSteering: [],
+        EssentialProperty: [],
+        SupplementalProperty: [],
+        ServiceDescription: [],
       },
       attributes: {},
     };
@@ -44,6 +47,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
         ],
         ContentProtection: [],
         ContentSteering: [],
+        EssentialProperty: [],
+        SupplementalProperty: [],
+        ServiceDescription: [],
       },
       attributes: {},
     };
@@ -76,6 +82,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
           },
         ],
         ContentSteering: [],
+        EssentialProperty: [],
+        SupplementalProperty: [],
+        ServiceDescription: [],
       },
       attributes: {},
     };
@@ -98,6 +107,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
           },
         ],
         ContentSteering: [],
+        EssentialProperty: [],
+        SupplementalProperty: [],
+        ServiceDescription: [],
       },
       attributes: {},
     };
@@ -132,6 +144,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
           },
         ],
         ContentSteering: [],
+        EssentialProperty: [],
+        SupplementalProperty: [],
+        ServiceDescription: [],
       },
       attributes: {},
     };
@@ -178,6 +193,9 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
           },
         ],
         ContentSteering: [],
+        EssentialProperty: [],
+        SupplementalProperty: [],
+        ServiceDescription: [],
       },
       attributes: {},
     };

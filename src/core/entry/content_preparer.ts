@@ -2,12 +2,14 @@ import BROWSER_GLOBALS from "../../compat/browser_compatibility_types.ts";
 import features from "../../features/index.ts";
 import log from "../../log.ts";
 import type { IContentInitializationData } from "../../main_thread/types.ts";
-import type { IManifest } from "../../manifest/index.ts";
+import type { IManifest, IRepresentation } from "../../manifest/index.ts";
 import type { IMediaSourceInterface } from "../../mse/index.ts";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface.ts";
 import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface.ts";
 import type { IPlayerError } from "../../public_types.ts";
 import idGenerator from "../../utils/id_generator.ts";
+import type { IReadOnlySharedReference } from "../../utils/reference.ts";
+import SharedReference from "../../utils/reference.ts";
 import type {
   CancellationError,
   CancellationSignal,
@@ -142,6 +144,10 @@ export default class ContentPreparer {
 
       const cmcdDataBuilder =
         context.cmcd === undefined ? null : new CmcdDataBuilder(context.cmcd);
+      const cdnPrioritizer = new CdnPrioritizer(
+        transportPipelines,
+        contentCanceller.signal,
+      );
       const manifestFetcher = new ManifestFetcher(
         url === undefined ? undefined : [url],
         transportPipelines,
@@ -149,8 +155,9 @@ export default class ContentPreparer {
           cmcdDataBuilder,
           ...context.manifestRetryOptions,
         },
+        cdnPrioritizer,
       );
-      const representationEstimator = createAdaptiveRepresentationSelector({
+      const adaptiveRepresentationEstimator = createAdaptiveRepresentationSelector({
         initialBitrates: {
           audio: context.initialAudioBitrate ?? 0,
           video: context.initialVideoBitrate ?? 0,
@@ -158,7 +165,26 @@ export default class ContentPreparer {
         lowLatencyMode: transportOptions.lowLatencyMode,
         throttlers,
       });
-
+      const representationEstimator: IRepresentationEstimator = (
+        estimatorContext,
+        currentRepresentation,
+        representations,
+        playbackObserver,
+        cancellationSignal,
+      ) => {
+        const filteredRepresentations = createSteeredRepresentationReference(
+          representations,
+          cdnPrioritizer,
+          cancellationSignal,
+        );
+        return adaptiveRepresentationEstimator(
+          estimatorContext,
+          currentRepresentation,
+          filteredRepresentations,
+          playbackObserver,
+          cancellationSignal,
+        );
+      };
       const unbindRejectOnCancellation = currentMediaSourceCanceller.signal.register(
         (error: CancellationError) => {
           rej(error);
@@ -227,12 +253,7 @@ export default class ContentPreparer {
             return;
           }
           manifest = man;
-
-          const cdnPrioritizer = new CdnPrioritizer(
-            manifest,
-            transportPipelines,
-            contentCanceller.signal,
-          );
+          cdnPrioritizer.start(manifest);
           const segmentQueueCreator = new SegmentQueueCreator({
             cdnPrioritizer,
             transportPipelines,
@@ -381,6 +402,31 @@ export default class ContentPreparer {
     this._contentCanceller.cancel(reason);
     this._contentCanceller = new TaskCanceller("ContentPreparer");
   }
+}
+
+function createSteeredRepresentationReference(
+  representations: IReadOnlySharedReference<IRepresentation[]>,
+  cdnPrioritizer: CdnPrioritizer,
+  cancellationSignal: CancellationSignal,
+): IReadOnlySharedReference<IRepresentation[]> {
+  const filteredRepresentations = new SharedReference(
+    cdnPrioritizer.filterRepresentationsByPreferredPathway(representations.getValue()),
+    cancellationSignal,
+  );
+  const updateRepresentations = () => {
+    filteredRepresentations.setValue(
+      cdnPrioritizer.filterRepresentationsByPreferredPathway(representations.getValue()),
+    );
+  };
+  representations.onUpdate(updateRepresentations, {
+    clearSignal: cancellationSignal,
+  });
+  cdnPrioritizer.addEventListener(
+    "priorityChange",
+    updateRepresentations,
+    cancellationSignal,
+  );
+  return filteredRepresentations;
 }
 
 /**

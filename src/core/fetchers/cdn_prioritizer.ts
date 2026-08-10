@@ -17,23 +17,29 @@
 import config from "../../config.ts";
 import { formatError } from "../../errors/index.ts";
 import log from "../../log.ts";
-import type { IManifest } from "../../manifest/index.ts";
+import type { IManifest, IRepresentation } from "../../manifest/index.ts";
 import type {
   ICdnMetadata,
   IContentSteeringMetadata,
 } from "../../parsers/manifest/index.ts";
 import type { ISteeringManifest } from "../../parsers/SteeringManifest/index.ts";
 import type { IPlayerError } from "../../public_types.ts";
-import type { ITransportPipelines } from "../../transports/index.ts";
+import type { IRequestCdnMetadata, ITransportPipelines } from "../../transports/index.ts";
 import arrayFindIndex from "../../utils/array_find_index.ts";
-import arrayIncludes from "../../utils/array_includes.ts";
 import EventEmitter from "../../utils/event_emitter.ts";
 import globalScope from "../../utils/global_scope.ts";
 import SharedReference from "../../utils/reference.ts";
+import { RequestError } from "../../utils/request/index.ts";
 import SyncOrAsync from "../../utils/sync_or_async.ts";
 import type { ISyncOrAsyncValue } from "../../utils/sync_or_async.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import TaskCanceller, { CancellationError } from "../../utils/task_canceller.ts";
+import {
+  appendURLQueryString,
+  replaceURLHost,
+  resolveURL,
+  setURLQueryParameters,
+} from "../../utils/url-utils.ts";
 import SteeringManifestFetcher from "./steering_manifest/index.ts";
 
 /**
@@ -63,7 +69,14 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
    */
   private _lastSteeringManifest: ISteeringManifest | null;
 
-  private _defaultCdnId: string | undefined;
+  private _defaultCdnIds: string[];
+
+  private _currentContentSteering: IContentSteeringMetadata | null;
+  private _steeringManifestFetcher: SteeringManifestFetcher | null;
+  private _destroySignal: CancellationSignal;
+  private _isStarted: boolean;
+  private _usedPathways: string[];
+  private _pathwayThroughputs: Map<string, number>;
 
   /**
    * Structure keeping a list of CDN currently downgraded.
@@ -98,27 +111,51 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
   private _readyState: SharedReference<ICdnPrioritizerReadyState>;
 
   /**
-   * @param {Object} manifest
    * @param {Object} transport
    * @param {Object} destroySignal
    */
-  constructor(
-    manifest: IManifest,
-    transport: ITransportPipelines,
-    destroySignal: CancellationSignal,
-  ) {
+  constructor(transport: ITransportPipelines, destroySignal: CancellationSignal) {
     super();
     this._lastSteeringManifest = null;
     this._downgradedCdnList = { metadata: [], timeouts: [] };
     this._steeringManifestUpdateCanceller = null;
-    this._defaultCdnId = manifest.contentSteering?.defaultId;
-
-    const steeringManifestFetcher =
+    this._currentContentSteering = null;
+    this._defaultCdnIds = [];
+    this._destroySignal = destroySignal;
+    this._isStarted = false;
+    this._usedPathways = [];
+    this._pathwayThroughputs = new Map();
+    this._readyState = new SharedReference<ICdnPrioritizerReadyState>("ready");
+    this._steeringManifestFetcher =
       transport.steeringManifest === null
         ? null
         : new SteeringManifestFetcher(transport.steeringManifest, {
             maxRetry: undefined,
           });
+    destroySignal.register(() => {
+      this._readyState.setValue("disposed");
+      this._readyState.finish();
+      this._steeringManifestUpdateCanceller?.cancel("CdnPrioritizer disposed");
+      this._steeringManifestUpdateCanceller = null;
+      this._lastSteeringManifest = null;
+      this._usedPathways = [];
+      this._pathwayThroughputs.clear();
+      for (const timeout of this._downgradedCdnList.timeouts) {
+        clearTimeout(timeout);
+      }
+      this._downgradedCdnList = { metadata: [], timeouts: [] };
+    });
+  }
+
+  /** Start prioritizing resources described by the given Manifest. */
+  public start(manifest: IManifest): void {
+    if (this._isStarted || this._destroySignal.cancellationError !== null) {
+      return;
+    }
+    this._isStarted = true;
+    this._currentContentSteering = manifest.contentSteering;
+    this._defaultCdnIds = manifest.contentSteering?.defaultIds ?? [];
+    const steeringManifestFetcher = this._steeringManifestFetcher;
 
     let currentContentSteering = manifest.contentSteering;
 
@@ -127,8 +164,11 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
       () => {
         const prevContentSteering = currentContentSteering;
         currentContentSteering = manifest.contentSteering;
+        this._currentContentSteering = currentContentSteering;
+        this._defaultCdnIds = currentContentSteering?.defaultIds ?? [];
         if (prevContentSteering === null) {
           if (currentContentSteering !== null) {
+            this.trigger("priorityChange", null);
             if (steeringManifestFetcher === null) {
               log.warn("Core", "Steering manifest declared but no way to fetch it");
             } else {
@@ -136,6 +176,7 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
               this._autoRefreshSteeringManifest(
                 steeringManifestFetcher,
                 currentContentSteering,
+                currentContentSteering.url,
               );
             }
           }
@@ -145,10 +186,9 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
             "new MPD removed ContentSteering",
           );
           this._steeringManifestUpdateCanceller = null;
-        } else if (
-          prevContentSteering.url !== currentContentSteering.url ||
-          prevContentSteering.proxyUrl !== currentContentSteering.proxyUrl
-        ) {
+          this._lastSteeringManifest = null;
+          this.trigger("priorityChange", null);
+        } else if (prevContentSteering.url !== currentContentSteering.url) {
           log.info("Core", "A Steering Manifest's information changed in a new Manifest");
           this._steeringManifestUpdateCanceller?.cancel(
             "new MPD updated ContentSteering URL",
@@ -157,44 +197,36 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
           if (steeringManifestFetcher === null) {
             log.warn("Core", "Steering manifest changed but no way to fetch it");
           } else {
+            this._lastSteeringManifest = null;
+            this.trigger("priorityChange", null);
             this._autoRefreshSteeringManifest(
               steeringManifestFetcher,
               currentContentSteering,
+              currentContentSteering.url,
             );
           }
+        } else {
+          this.trigger("priorityChange", null);
         }
       },
-      destroySignal,
+      this._destroySignal,
     );
 
     if (manifest.contentSteering !== null) {
       if (steeringManifestFetcher === null) {
         log.warn("Core", "Steering Manifest initially present but no way to fetch it.");
-        this._readyState = new SharedReference<ICdnPrioritizerReadyState>("ready");
       } else {
         const readyState = manifest.contentSteering.queryBeforeStart
           ? "not-ready"
           : "ready";
-        this._readyState = new SharedReference<ICdnPrioritizerReadyState>(readyState);
+        this._readyState.setValue(readyState);
         this._autoRefreshSteeringManifest(
           steeringManifestFetcher,
           manifest.contentSteering,
+          manifest.contentSteering.url,
         );
       }
-    } else {
-      this._readyState = new SharedReference<ICdnPrioritizerReadyState>("ready");
     }
-    destroySignal.register(() => {
-      this._readyState.setValue("disposed");
-      this._readyState.finish();
-      this._steeringManifestUpdateCanceller?.cancel("CdnPrioritizer disposed");
-      this._steeringManifestUpdateCanceller = null;
-      this._lastSteeringManifest = null;
-      for (const timeout of this._downgradedCdnList.timeouts) {
-        clearTimeout(timeout);
-      }
-      this._downgradedCdnList = { metadata: [], timeouts: [] };
-    });
   }
 
   /**
@@ -221,15 +253,15 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
    */
   public getCdnPreferenceForResource(
     everyCdnForResource: ICdnMetadata[],
-  ): ISyncOrAsyncValue<ICdnMetadata[]> {
-    if (everyCdnForResource.length <= 1) {
+  ): ISyncOrAsyncValue<IRequestCdnMetadata[]> {
+    if (everyCdnForResource.length <= 1 && this._currentContentSteering === null) {
       // The huge majority of contents have only one CDN available.
       // Here, prioritizing make no sense.
       return SyncOrAsync.createSync(everyCdnForResource);
     }
 
     if (this._readyState.getValue() === "not-ready") {
-      const val = new Promise<ICdnMetadata[]>((res, rej) => {
+      const val = new Promise<IRequestCdnMetadata[]>((res, rej) => {
         this._readyState.onUpdate(
           (readyState) => {
             if (readyState === "ready") {
@@ -282,9 +314,59 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
         this._removeIndexFromDowngradeList(newIndex);
       }
       this.trigger("priorityChange", null);
-    }, downgradeTime);
+    }, downgradeTime * 1000);
     this._downgradedCdnList.timeouts.push(timeout);
     this.trigger("priorityChange", null);
+  }
+
+  /** Record that a resource request is using the given pathway. */
+  public recordCdnUsage(metadata: ICdnMetadata): void {
+    if (metadata.id !== undefined) {
+      if (this._usedPathways.indexOf(metadata.id) < 0) {
+        this._usedPathways.push(metadata.id);
+      }
+    }
+  }
+
+  /** Store a measured throughput for a pathway, in integer bits per second. */
+  public recordCdnThroughput(metadata: ICdnMetadata, throughput: number): void {
+    if (metadata.id !== undefined && Number.isFinite(throughput) && throughput >= 0) {
+      this._pathwayThroughputs.set(metadata.id, Math.round(throughput));
+    }
+  }
+
+  /** Keep Representations available on the highest usable pathway. */
+  public filterRepresentationsByPreferredPathway(
+    representations: IRepresentation[],
+  ): IRepresentation[] {
+    const priorities = this._lastSteeringManifest?.priorities ?? this._defaultCdnIds;
+    if (priorities.length === 0) {
+      return representations;
+    }
+    let downgradedMatch: IRepresentation[] | undefined;
+    for (const pathway of priorities) {
+      const matching = representations.filter((representation) => {
+        const cdns = representation.cdnMetadata;
+        return (
+          cdns !== null &&
+          synthesizePathwayClones(
+            cdns,
+            this._lastSteeringManifest ?? {
+              lifetime: 0,
+              priorities: [],
+              pathwayClones: [],
+            },
+          ).some(({ id }) => id === pathway)
+        );
+      });
+      if (matching.length > 0) {
+        if (!this._downgradedCdnList.metadata.some(({ id }) => id === pathway)) {
+          return matching;
+        }
+        downgradedMatch ??= matching;
+      }
+    }
+    return downgradedMatch ?? representations;
   }
 
   /**
@@ -307,14 +389,20 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
    */
   private _innerGetCdnPreferenceForResource(
     everyCdnForResource: ICdnMetadata[],
-  ): ICdnMetadata[] {
+  ): IRequestCdnMetadata[] {
     let cdnBase;
     if (this._lastSteeringManifest !== null) {
       const priorities = this._lastSteeringManifest.priorities;
-      const inSteeringManifest = everyCdnForResource.filter(
-        (available) =>
-          available.id !== undefined && arrayIncludes(priorities, available.id),
+      const availableCdns = synthesizePathwayClones(
+        everyCdnForResource,
+        this._lastSteeringManifest,
       );
+      const inSteeringManifest: IRequestCdnMetadata[] = [];
+      for (const priority of priorities) {
+        inSteeringManifest.push(
+          ...availableCdns.filter((available) => available.id === priority),
+        );
+      }
       if (inSteeringManifest.length > 0) {
         cdnBase = inSteeringManifest;
       }
@@ -323,26 +411,32 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
     // (If using the SteeringManifest gave nothing, or if it just didn't exist.) */
     if (cdnBase === undefined) {
       // (If a default CDN was indicated, try to use it) */
-      if (this._defaultCdnId !== undefined) {
-        const indexOf = arrayFindIndex(
-          everyCdnForResource,
-          (x) => x.id !== undefined && x.id === this._defaultCdnId,
-        );
-        if (indexOf >= 0) {
-          const elem = everyCdnForResource.splice(indexOf, 1)[0];
-          everyCdnForResource.unshift(elem);
+      if (this._defaultCdnIds.length > 0) {
+        const remainingCdns = everyCdnForResource.slice();
+        const defaultCdns: IRequestCdnMetadata[] = [];
+        for (const defaultId of this._defaultCdnIds) {
+          const matching = remainingCdns.filter(({ id }) => id === defaultId);
+          defaultCdns.push(...matching);
+          for (let index = remainingCdns.length - 1; index >= 0; index--) {
+            if (remainingCdns[index].id === defaultId) {
+              remainingCdns.splice(index, 1);
+            }
+          }
         }
+        cdnBase = defaultCdns.concat(remainingCdns);
       }
 
       if (cdnBase === undefined) {
-        cdnBase = everyCdnForResource;
+        cdnBase = everyCdnForResource.slice();
       }
     }
     const [allowedInOrder, downgradedInOrder] = cdnBase.reduce(
-      (acc: [ICdnMetadata[], ICdnMetadata[]], elt: ICdnMetadata) => {
+      (acc: [IRequestCdnMetadata[], IRequestCdnMetadata[]], elt: IRequestCdnMetadata) => {
         if (
-          this._downgradedCdnList.metadata.some(
-            (c) => c.id === elt.id && c.baseUrl === elt.baseUrl,
+          this._downgradedCdnList.metadata.some((c) =>
+            elt.id !== undefined
+              ? c.id === elt.id
+              : c.id === undefined && c.baseUrl === elt.baseUrl,
           )
         ) {
           acc[1].push(elt);
@@ -359,6 +453,7 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
   private _autoRefreshSteeringManifest(
     steeringManifestFetcher: SteeringManifestFetcher,
     contentSteering: IContentSteeringMetadata,
+    steeringUrl: string,
   ) {
     if (this._steeringManifestUpdateCanceller === null) {
       const steeringManifestUpdateCanceller = new TaskCanceller(
@@ -367,38 +462,44 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
       this._steeringManifestUpdateCanceller = steeringManifestUpdateCanceller;
     }
     const canceller: TaskCanceller = this._steeringManifestUpdateCanceller;
+    const requestUrl = this._addSteeringRequestQueryParameters(
+      steeringUrl,
+      contentSteering,
+    );
     steeringManifestFetcher
       .fetch(
-        contentSteering.url,
+        requestUrl,
         (err: IPlayerError) => this.trigger("warnings", [err]),
         canceller.signal,
       )
-      .then((parse) => {
+      .then(({ parse, url: responseUrl }) => {
         const parsed = parse((errs) => this.trigger("warnings", errs));
-        const prevSteeringManifest = this._lastSteeringManifest;
-        this._lastSteeringManifest = parsed;
-        if (parsed.lifetime > 0) {
-          const timeout = globalScope.setTimeout(() => {
-            canceller.signal.deregister(onTimeoutEnd);
-            this._autoRefreshSteeringManifest(steeringManifestFetcher, contentSteering);
-          }, parsed.lifetime * 1000);
-          const onTimeoutEnd = () => {
-            clearTimeout(timeout);
-          };
-          canceller.signal.register(onTimeoutEnd);
-        }
-        if (this._readyState.getValue() === "not-ready") {
-          this._readyState.setValue("ready");
-        }
         if (canceller.isUsed()) {
           return;
+        }
+        const prevSteeringManifest = this._lastSteeringManifest;
+        this._lastSteeringManifest = parsed;
+        const nextUrl =
+          parsed.reloadUri === undefined
+            ? responseUrl
+            : resolveURL(responseUrl, parsed.reloadUri);
+        this._scheduleSteeringRefresh(
+          steeringManifestFetcher,
+          nextUrl,
+          parsed.lifetime,
+          canceller,
+        );
+        if (this._readyState.getValue() === "not-ready") {
+          this._readyState.setValue("ready");
         }
         if (
           prevSteeringManifest === null ||
           prevSteeringManifest.priorities.length !== parsed.priorities.length ||
           prevSteeringManifest.priorities.some(
             (val, idx) => val !== parsed.priorities[idx],
-          )
+          ) ||
+          JSON.stringify(prevSteeringManifest.pathwayClones) !==
+            JSON.stringify(parsed.pathwayClones)
         ) {
           this.trigger("priorityChange", null);
         }
@@ -412,7 +513,72 @@ export default class CdnPrioritizer extends EventEmitter<ICdnPrioritizerEvents> 
           defaultReason: "Unknown error when fetching and parsing the steering Manifest",
         });
         this.trigger("warnings", [formattedError]);
+        if (this._readyState.getValue() === "not-ready") {
+          this._readyState.setValue("ready");
+        }
+
+        if (err instanceof RequestError && err.status === 410) {
+          if (this._lastSteeringManifest === null) {
+            this.trigger("priorityChange", null);
+          }
+          return;
+        }
+        if (err instanceof Error && err.message.indexOf("Unhandled DCSM version") >= 0) {
+          this._lastSteeringManifest = null;
+          this.trigger("priorityChange", null);
+          return;
+        }
+        if (err instanceof RequestError && err.status === 429) {
+          // TODO Handle the Retry-After response header once request errors expose it.
+        }
+        this._scheduleSteeringRefresh(
+          steeringManifestFetcher,
+          steeringUrl,
+          this._lastSteeringManifest?.lifetime ?? 300,
+          canceller,
+        );
       });
+  }
+
+  private _scheduleSteeringRefresh(
+    steeringManifestFetcher: SteeringManifestFetcher,
+    steeringUrl: string,
+    delayInSeconds: number,
+    canceller: TaskCanceller,
+  ): void {
+    const timeout = globalScope.setTimeout(() => {
+      canceller.signal.deregister(onTimeoutEnd);
+      const latestContentSteering = this._currentContentSteering;
+      if (latestContentSteering === null) {
+        return;
+      }
+      this._autoRefreshSteeringManifest(
+        steeringManifestFetcher,
+        latestContentSteering,
+        steeringUrl,
+      );
+    }, delayInSeconds * 1000);
+    const onTimeoutEnd = () => clearTimeout(timeout);
+    canceller.signal.register(onTimeoutEnd);
+  }
+
+  private _addSteeringRequestQueryParameters(
+    steeringUrl: string,
+    contentSteering: IContentSteeringMetadata,
+  ): string {
+    let url = appendURLQueryString(steeringUrl, contentSteering.queryString);
+    const queryParameters: Array<[string, string]> = [];
+    if (this._usedPathways.length > 0) {
+      const pathways = this._usedPathways.slice();
+      queryParameters.push(["_DASH_pathway", `"${pathways.join(",")}"`]);
+      const throughputs = pathways.map(
+        (pathway) => this._pathwayThroughputs.get(pathway)?.toString() ?? "",
+      );
+      queryParameters.push(["_DASH_throughput", throughputs.join(",")]);
+      this._usedPathways = [pathways[pathways.length - 1]];
+    }
+    url = setURLQueryParameters(url, queryParameters);
+    return url;
   }
 
   /**
@@ -454,4 +620,75 @@ function indexOfMetadata(arr: ICdnMetadata[], elt: ICdnMetadata): number {
   return elt.id !== undefined
     ? arrayFindIndex(arr, (m) => m.id === elt.id)
     : arrayFindIndex(arr, (m) => m.baseUrl === elt.baseUrl);
+}
+
+function synthesizePathwayClones(
+  cdns: ICdnMetadata[],
+  steeringManifest: ISteeringManifest,
+): IRequestCdnMetadata[] {
+  const allCdns: IRequestCdnMetadata[] = cdns.slice();
+  const byId = new Map<string, IRequestCdnMetadata[]>();
+  for (const cdn of cdns) {
+    if (cdn.id !== undefined) {
+      const current = byId.get(cdn.id);
+      if (current === undefined) {
+        byId.set(cdn.id, [cdn]);
+      } else {
+        current.push(cdn);
+      }
+    }
+  }
+  for (const clone of steeringManifest.pathwayClones) {
+    if (byId.has(clone.id)) {
+      continue;
+    }
+    const baseCdns = byId.get(clone.baseId);
+    if (baseCdns === undefined) {
+      continue;
+    }
+    const clonedCdns = baseCdns.map(
+      (baseCdn): IRequestCdnMetadata => ({
+        baseUrl: baseCdn.baseUrl,
+        id: clone.id,
+        pathwayClone: {
+          host: clone.uriReplacement.host ?? baseCdn.pathwayClone?.host,
+          params: {
+            ...baseCdn.pathwayClone?.params,
+            ...clone.uriReplacement.params,
+          },
+        },
+      }),
+    );
+    byId.set(clone.id, clonedCdns);
+    allCdns.push(...clonedCdns);
+  }
+  return allCdns;
+}
+
+export function applyPathwayCloneToUrl(metadata: IRequestCdnMetadata): string {
+  if (metadata.pathwayClone === undefined) {
+    return metadata.baseUrl;
+  }
+  let url = metadata.baseUrl;
+  if (metadata.pathwayClone.host !== undefined) {
+    url = replaceURLHost(url, metadata.pathwayClone.host);
+  }
+  if (metadata.pathwayClone.params !== undefined) {
+    const parameters = Object.entries(metadata.pathwayClone.params).map(
+      ([key, value]): [string, string] => [
+        safeDecodeUriComponent(key),
+        safeDecodeUriComponent(value),
+      ],
+    );
+    url = setURLQueryParameters(url, parameters);
+  }
+  return url;
+}
+
+function safeDecodeUriComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch (_) {
+    return value;
+  }
 }

@@ -15,8 +15,8 @@
  */
 
 import type { ISegment, IRepresentation } from "../../manifest/index.ts";
-import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
 import { resolveURL } from "../../utils/url-utils.ts";
+import type { IRequestCdnMetadata } from "../types.ts";
 
 /**
  * Returns `true` if the given Representation refers to segments in an MP4
@@ -32,7 +32,7 @@ function isMP4EmbeddedTrack(representation: IRepresentation): boolean {
 }
 
 function constructSegmentUrl(
-  wantedCdn: ICdnMetadata | null,
+  wantedCdn: IRequestCdnMetadata | null,
   segment: ISegment,
 ): string | null {
   if (wantedCdn === null) {
