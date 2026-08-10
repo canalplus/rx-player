@@ -17,6 +17,7 @@
 import noop from "../../../../../../utils/noop.ts";
 import type {
   IContentProtectionIntermediateRepresentation,
+  IDescriptorIntermediateRepresentation,
   ILocationIntermediateRepresentation,
   IMPDAttributes,
   IMPDChildren,
@@ -29,9 +30,11 @@ import { parseString } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
 import { generateContentSteeringAttrParser } from "./ContentSteering.ts";
+import { generateDescriptorParsers } from "./Descriptor.ts";
 import { generateLocationAttrParser } from "./Location.ts";
 import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
+import { generateServiceDescriptionParsers } from "./ServiceDescription.ts";
 
 /**
  * Generate a "children parser" once inside an `MPD` node.
@@ -84,6 +87,21 @@ export function generateMPDChildrenParser(
         break;
       }
 
+      case TagName.ServiceDescription: {
+        const serviceDescription = {
+          attributes: {},
+          children: { ContentSteering: [] },
+        };
+        mpdChildren.ServiceDescription.push(serviceDescription);
+        const parsers = generateServiceDescriptionParsers(
+          serviceDescription,
+          linearMemory,
+          parsersStack,
+        );
+        parsersStack.pushParsers(nodeId, parsers.children, parsers.attributes);
+        break;
+      }
+
       case TagName.Period: {
         const period: IPeriodIntermediateRepresentation = {
           children: {
@@ -131,6 +149,22 @@ export function generateMPDChildrenParser(
           linearMemory,
         );
         parsersStack.pushParsers(nodeId, noop, contentProtAttrParser);
+        break;
+      }
+
+      case TagName.EssentialProperty:
+      case TagName.SupplementalProperty: {
+        const property: IDescriptorIntermediateRepresentation = {
+          attributes: {},
+          children: { UrlQueryInfo: [], ExtUrlQueryInfo: [] },
+        };
+        const destination =
+          nodeId === TagName.EssentialProperty
+            ? mpdChildren.EssentialProperty
+            : mpdChildren.SupplementalProperty;
+        destination.push(property);
+        const parsers = generateDescriptorParsers(property, linearMemory, parsersStack);
+        parsersStack.pushParsers(nodeId, parsers.children, parsers.attributes);
         break;
       }
 

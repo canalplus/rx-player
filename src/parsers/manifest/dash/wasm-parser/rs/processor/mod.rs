@@ -69,7 +69,7 @@ impl MPDProcessor {
                     }
                     b"EssentialProperty" => {
                         TagName::EssentialProperty.report_tag_open();
-                        attributes::report_scheme_attrs(&tag);
+                        attributes::report_descriptor_attrs(&tag);
                     }
                     b"InbandEventStream" => {
                         TagName::InbandEventStream.report_tag_open();
@@ -81,7 +81,7 @@ impl MPDProcessor {
                     }
                     b"SupplementalProperty" => {
                         TagName::SupplementalProperty.report_tag_open();
-                        attributes::report_scheme_attrs(&tag);
+                        attributes::report_descriptor_attrs(&tag);
                     }
                     b"SegmentBase" => {
                         TagName::SegmentBase.report_tag_open();
@@ -120,6 +120,11 @@ impl MPDProcessor {
                         attributes::report_content_steering_attrs(&tag);
                         self.process_content_steering_element();
                     }
+                    b"ServiceDescription" => {
+                        TagName::ServiceDescription.report_tag_open();
+                        attributes::report_service_description_attrs(&tag);
+                    }
+                    // TODO Support arbitrary prefixes bound to the CENC namespace.
                     b"cenc:pssh" => self.process_cenc_element(),
                     b"Location" => {
                         TagName::Location.report_tag_open();
@@ -138,8 +143,18 @@ impl MPDProcessor {
                         self.process_event_stream_element();
                     }
 
+                    // TODO Support other XML prefixes also linked to the up namespace.
+                    b"up:UrlQueryInfo" => {
+                        TagName::UrlQueryInfo.report_tag_open();
+                        attributes::report_url_query_info_attrs(&tag);
+                    }
+                    b"up:ExtUrlQueryInfo" => {
+                        TagName::ExtUrlQueryInfo.report_tag_open();
+                        attributes::report_url_query_info_attrs(&tag);
+                    }
                     _ => {}
                 },
+
                 Ok(Event::End(tag)) => match tag.name().as_ref() {
                     b"MPD" => TagName::MPD.report_tag_close(),
                     b"Period" => TagName::Period.report_tag_close(),
@@ -158,6 +173,10 @@ impl MPDProcessor {
                     b"SegmentTemplate" => TagName::SegmentTemplate.report_tag_close(),
                     b"Initialization" => TagName::Initialization.report_tag_close(),
                     b"UTCTiming" => TagName::UtcTiming.report_tag_close(),
+                    b"ServiceDescription" => TagName::ServiceDescription.report_tag_close(),
+                    // TODO Support other XML prefixes also linked to the up namespace.
+                    b"up:UrlQueryInfo" => TagName::UrlQueryInfo.report_tag_close(),
+                    b"up:ExtUrlQueryInfo" => TagName::ExtUrlQueryInfo.report_tag_close(),
                     _ => {}
                 },
                 Ok(Event::Eof) => {

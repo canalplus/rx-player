@@ -26,6 +26,7 @@ import { AttributeName, TagName } from "../types.ts";
 import { parseString } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
+import { generateDescriptorParsers } from "./Descriptor.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
 import {
   generateSegmentBaseAttrParser,
@@ -87,25 +88,19 @@ export function generateRepresentationChildrenParser(
         break;
       }
 
-      case TagName.EssentialProperty: {
-        const essentialProperty = { attributes: {} };
-        childrenObj.EssentialProperty.push(essentialProperty);
-        const attributeParser = generateSchemeAttrParser(
-          essentialProperty.attributes,
-          linearMemory,
-        );
-        parsersStack.pushParsers(nodeId, noop, attributeParser);
-        break;
-      }
-
+      case TagName.EssentialProperty:
       case TagName.SupplementalProperty: {
-        const supplementalProperty = { attributes: {} };
-        childrenObj.SupplementalProperty.push(supplementalProperty);
-        const attributeParser = generateSchemeAttrParser(
-          supplementalProperty.attributes,
-          linearMemory,
-        );
-        parsersStack.pushParsers(nodeId, noop, attributeParser);
+        const descriptor = {
+          attributes: {},
+          children: { UrlQueryInfo: [], ExtUrlQueryInfo: [] },
+        };
+        const destination =
+          nodeId === TagName.EssentialProperty
+            ? childrenObj.EssentialProperty
+            : childrenObj.SupplementalProperty;
+        destination.push(descriptor);
+        const parsers = generateDescriptorParsers(descriptor, linearMemory, parsersStack);
+        parsersStack.pushParsers(nodeId, parsers.children, parsers.attributes);
         break;
       }
 

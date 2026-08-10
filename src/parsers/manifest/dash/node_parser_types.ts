@@ -48,6 +48,12 @@ export interface IMPDChildren {
    * content.
    */
   ContentSteering: IContentSteeringIntermediateRepresentation[];
+  /** Root-level `<ServiceDescription>` elements. */
+  ServiceDescription: IServiceDescriptionIntermediateRepresentation[];
+  /** Root-level `<EssentialProperty>` elements. */
+  EssentialProperty: IDescriptorIntermediateRepresentation[];
+  /** Root-level `<SupplementalProperty>` elements. */
+  SupplementalProperty: IDescriptorIntermediateRepresentation[];
   /**
    * Location(s) at which the Manifest can be refreshed.
    *
@@ -72,6 +78,26 @@ export interface IMPDChildren {
   UTCTiming: ISchemeIntermediateRepresentation[];
   /** Encryption-related metadata. */
   ContentProtection: IContentProtectionIntermediateRepresentation[];
+}
+
+/** Represents both a parsed `<UrlQueryInfo>` or `<ExtUrlQueryInfo>` element. */
+export interface IUrlQueryInfoIntermediateRepresentation {
+  attributes: {
+    queryString?: string | undefined;
+    queryTemplate?: string | undefined;
+    includeInRequests?: string | undefined;
+    useMpdUrlQuery?: boolean | undefined;
+  };
+}
+
+/** Represents a parsed `<ServiceDescription>` element. */
+export interface IServiceDescriptionIntermediateRepresentation {
+  attributes: {
+    id?: string | undefined;
+  };
+  children: {
+    ContentSteering: IContentSteeringIntermediateRepresentation[];
+  };
 }
 
 /* Intermediate representation for the root's attributes. */
@@ -197,10 +223,10 @@ export interface IAdaptationSetChildren {
   ContentComponent: IContentComponentIntermediateRepresentation[];
   /** Encryption-related metadata. */
   ContentProtection: IContentProtectionIntermediateRepresentation[];
-  EssentialProperty: ISchemeIntermediateRepresentation[];
+  EssentialProperty: IDescriptorIntermediateRepresentation[];
   InbandEventStream: ISchemeIntermediateRepresentation[];
   Role: ISchemeIntermediateRepresentation[];
-  SupplementalProperty: ISchemeIntermediateRepresentation[];
+  SupplementalProperty: IDescriptorIntermediateRepresentation[];
   SegmentBase: ISegmentBaseIntermediateRepresentation[];
   SegmentList: ISegmentListIntermediateRepresentation[];
   SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
@@ -256,8 +282,8 @@ export interface IRepresentationChildren {
   SegmentBase: ISegmentBaseIntermediateRepresentation[];
   SegmentList: ISegmentListIntermediateRepresentation[];
   SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
-  SupplementalProperty: ISchemeIntermediateRepresentation[];
-  EssentialProperty: ISchemeIntermediateRepresentation[];
+  SupplementalProperty: IDescriptorIntermediateRepresentation[];
+  EssentialProperty: IDescriptorIntermediateRepresentation[];
 }
 
 /* Intermediate representation for A Representation node's attributes. */
@@ -456,19 +482,27 @@ export interface IContentSteeringIntermediateRepresentation {
      * first resources depending on it are loaded.
      */
     queryBeforeStart?: boolean;
-    /**
-     * If set, a proxy URL has been configured.
-     * Requests for the Content Steering Manifest should actually go through
-     * this proxy, the node URL being added to an `url` query parameter
-     * alongside potential other query parameters.
-     */
-    proxyServerUrl?: string;
+    /** Whether we are required to apply steering. */
+    clientRequirement?: boolean;
   };
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */
 export interface ISchemeIntermediateRepresentation {
   attributes: ISchemeAttributes;
+}
+
+/** Shared format for `<EssentialProperty>` and `<SupplementalProperty>`. */
+export interface IDescriptorIntermediateRepresentation {
+  attributes: IDescriptorAttributes;
+  children: {
+    UrlQueryInfo: IUrlQueryInfoIntermediateRepresentation[];
+    ExtUrlQueryInfo: IUrlQueryInfoIntermediateRepresentation[];
+  };
+}
+
+export interface IDescriptorAttributes extends ISchemeAttributes {
+  id?: string | undefined;
 }
 
 export interface ISchemeAttributes {

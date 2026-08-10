@@ -280,6 +280,68 @@ function isAbsoluteURL(url: string): boolean {
   return parseURL(url).scheme.length > 0;
 }
 
+/** Return the query string of an URL, without the leading question mark. */
+function getQueryString(url: string): string {
+  return parseURL(url).query;
+}
+
+/**
+ * Parse a query string into decoded key-value pairs.
+ *
+ * Contrary to the platform's `URLSearchParams`, this function does not require
+ * constructing an absolute URL and only touches the query string it is given.
+ */
+function parseQueryString(query: string): Array<[string, string]> {
+  if (query.length === 0) {
+    return [];
+  }
+  const parameters: Array<[string, string]> = [];
+  for (const part of query.split("&")) {
+    if (part.length === 0) {
+      continue;
+    }
+    const equalIndex = part.indexOf("=");
+    const key = equalIndex < 0 ? part : part.substring(0, equalIndex);
+    const value = equalIndex < 0 ? "" : part.substring(equalIndex + 1);
+    parameters.push([decodeQueryComponent(key), decodeQueryComponent(value)]);
+  }
+  return parameters;
+}
+
+/**
+ * Decodes a string from a URL query component, reversing
+ * `application/x-www-form-urlencoded` encoding.
+ *
+ * How it works:
+ *
+ * 1. It replaces all `+` characters with spaces (as + represents a space in query strings).
+ * 2. It calls decodeURIComponent to convert %XX escape sequences back to their original
+ *    characters.
+ *
+ * If the input contains a malformed percent-encoding (e.g., %ZZ or a trailing %),
+ * `decodeURIComponent` would throw a URIError.
+ *
+ * This function catches this and returns the original, unmodified value instead.
+ *
+ * @example
+ * ```
+ * decodeQueryComponent("hello+world");   // "hello world"
+ * decodeQueryComponent("hello%20world"); // "hello world"
+ * decodeQueryComponent("caf%C3%A9");     // "café"
+ * decodeQueryComponent("50%off");        // "50%off" (malformed %, returns as-is)
+ * ```
+ *
+ * @param {string} value - The encoded query component to decode.
+ * @returns - The decoded string, or the original input if decoding fails.
+ */
+function decodeQueryComponent(value: string): string {
+  try {
+    return decodeURIComponent(value.replace(/\+/g, " "));
+  } catch (_) {
+    return value;
+  }
+}
+
 /**
  * Removes "." and ".." from the URL path, as described by the algorithm
  * in RFC 3986 Section 5.2.4. Remove Dot Segments
@@ -361,4 +423,11 @@ function resolveURL(...args: Array<string | undefined>): string {
   }
 }
 
-export { getFilenameIndexInUrl, getRelativeUrl, isAbsoluteURL, resolveURL };
+export {
+  getFilenameIndexInUrl,
+  getRelativeUrl,
+  getQueryString,
+  isAbsoluteURL,
+  parseQueryString,
+  resolveURL,
+};
