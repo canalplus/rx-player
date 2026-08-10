@@ -44,6 +44,9 @@ export function generateRootChildrenParser(
             UTCTiming: [],
             ContentProtection: [],
             ContentSteering: [],
+            ServiceDescription: [],
+            EssentialProperty: [],
+            SupplementalProperty: [],
           },
           attributes: {},
         };

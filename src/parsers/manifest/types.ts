@@ -466,7 +466,11 @@ export interface IParsedManifest {
 
 export interface IContentSteeringMetadata {
   url: string;
-  defaultId: string | undefined;
+  defaultIds: string[];
   queryBeforeStart: boolean;
-  proxyUrl: string | undefined;
+  /*
+   * Query string (generated from DASH Annex I instructions) to add to content
+   * steering manifest requests.
+   */
+  queryString: string;
 }
