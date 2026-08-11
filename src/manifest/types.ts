@@ -1,4 +1,5 @@
 import type {
+  ICdnMetadata,
   IContentProtections,
   IManifestStreamEvent,
 } from "../parsers/manifest/index.ts";
@@ -92,7 +93,7 @@ export interface IManifestMetadata {
   isLastPeriodKnown: boolean;
 
   /** URLs through which the Manifest can be refreshed, by order of importance. */
-  refreshUrls: string[];
+  refreshUrls: ICdnMetadata[];
 
   /**
    * Minimum time, in seconds, at which a segment defined in the Manifest

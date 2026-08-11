@@ -176,10 +176,7 @@ export default class Manifest
    * They can be used for refreshing the Manifest.
    * Listed from the most important to the least important.
    */
-  public refreshUrls: string[];
-
-  /** CDN metadata for the resources through which this Manifest can be refreshed. */
-  public cdnMetadata: ICdnMetadata[] | null;
+  public refreshUrls: ICdnMetadata[];
 
   /** Optional URL that points to a shorter version of the Manifest used
    * for updates only. */
@@ -361,9 +358,7 @@ export default class Manifest
     this.isDynamic = parsedManifest.isDynamic;
     this.isLive = parsedManifest.isLive;
     this.isLastPeriodKnown = parsedManifest.isLastPeriodKnown;
-    this.refreshUrls = parsedManifest.refreshUrls.map((r) => r.baseUrl);
-    this.cdnMetadata =
-      parsedManifest.refreshUrls.length === 0 ? null : parsedManifest.refreshUrls;
+    this.refreshUrls = parsedManifest.refreshUrls;
 
     this.updateUrl = manifestUpdateUrl;
     this.lifetime = parsedManifest.lifetime;
@@ -460,7 +455,7 @@ export default class Manifest
    * @returns {Array.<string>}
    */
   public getRefreshUrls(): string[] {
-    return this.refreshUrls;
+    return this.refreshUrls.map(({ baseUrl }) => baseUrl);
   }
 
   /**
@@ -703,11 +698,10 @@ export default class Manifest
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       this.timeBounds = newManifest.timeBounds;
       this.refreshUrls = newManifest.refreshUrls;
-      this.cdnMetadata = newManifest.cdnMetadata;
       updatedPeriodsResult = replacePeriods(this.periods, newManifest.periods);
     } else {
       this.timeBounds.maximumTimeData = newManifest.timeBounds.maximumTimeData;
-      this.updateUrl = newManifest.refreshUrls[0];
+      this.updateUrl = newManifest.refreshUrls[0]?.baseUrl;
       updatedPeriodsResult = updatePeriods(this.periods, newManifest.periods);
 
       // Partial updates do not remove old Periods.

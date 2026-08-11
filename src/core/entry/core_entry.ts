@@ -621,11 +621,7 @@ function loadPreparedContent(
     > = new Map();
 
     const preparedContent = contentPreparer.getCurrentContent();
-    if (
-      preparedContent === null ||
-      preparedContent.manifest === null ||
-      preparedContent.segmentQueueCreator === null
-    ) {
+    if (preparedContent === null || preparedContent.manifest === null) {
       const error = new OtherError("NONE", "Loading content when none is prepared");
       sendMessage({
         type: CoreMessageType.Error,
@@ -1212,7 +1208,6 @@ function sendThumbnailData(
   if (
     preparedContent === null ||
     preparedContent.manifest === null ||
-    preparedContent.fetchThumbnailData === null ||
     preparedContent.contentId !== msg.contentId
   ) {
     return respondWithError(new Error("Content changed"));

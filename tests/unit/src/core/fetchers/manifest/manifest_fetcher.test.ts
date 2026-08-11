@@ -25,7 +25,7 @@ const {
     lifetime: number | undefined = undefined;
     clockOffset: number | undefined = undefined;
     updateUrl: string | undefined = undefined;
-    cdnMetadata = [{ baseUrl: "http://example.com/manifest" }];
+    refreshUrls = [{ baseUrl: "http://example.com/manifest" }];
     replace = vi.fn();
     update = vi.fn();
     getRefreshUrls = vi.fn(() => ["http://example.com/manifest"]);
