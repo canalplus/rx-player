@@ -228,7 +228,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
 
     try {
       const { response, requestUrl } = await scheduleRequestWithCdns(
-        cdns,
+        cdns === null || cdns.length === 0 ? null : cdns,
         this._cdnPrioritizer,
         async (cdn) => {
           const selectedUrl = cdn === null ? undefined : applyPathwayCloneToUrl(cdn);
@@ -638,7 +638,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
     } else {
       if (!enablePartialRefresh || manifestUpdateUrl === undefined) {
         fullRefresh = true;
-        refreshCdns = manifest.cdnMetadata;
+        refreshCdns = manifest.refreshUrls;
       } else {
         fullRefresh = false;
         refreshCdns = [{ baseUrl: manifestUpdateUrl }];

@@ -1749,7 +1749,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       return originalUrl === undefined ? undefined : [originalUrl];
     }
     if (manifest !== null) {
-      return manifest.refreshUrls;
+      return manifest.refreshUrls.map(({ baseUrl }) => baseUrl);
     }
     return undefined;
   }
