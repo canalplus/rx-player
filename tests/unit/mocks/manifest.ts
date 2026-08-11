@@ -55,7 +55,6 @@ export const DummyManifest = makeMockedClass<Manifest>(
     isLive: false,
     isLastPeriodKnown: true,
     refreshUrls: [],
-    cdnMetadata: [],
     updateUrl: undefined,
     suggestedPresentationDelay: undefined,
     lifetime: undefined,

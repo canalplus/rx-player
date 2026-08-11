@@ -352,7 +352,10 @@ describe("Manifest - Manifest", () => {
       },
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
-    expect(manifest.refreshUrls).toEqual(["url1", "url2"]);
+    expect(manifest.refreshUrls).toEqual([
+      { baseUrl: "url1" },
+      { baseUrl: "url2" },
+    ]);
     expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
     expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
