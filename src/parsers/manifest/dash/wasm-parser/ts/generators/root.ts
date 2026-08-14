@@ -53,7 +53,6 @@ export function generateRootChildrenParser(
           fullMpd,
         );
         const attributeParser = generateMPDAttrParser(
-          rootObj.mpd.children,
           rootObj.mpd.attributes,
           linearMemory,
         );

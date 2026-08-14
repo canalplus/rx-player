@@ -22,4 +22,54 @@ describe("parseFromString", () => {
       });
     }).toThrow("document root should be MPD");
   });
+
+  it("uses the manifest URL as refresh URL when no Location is present", () => {
+    const response = parseFromString("<MPD><Period /></MPD>", {
+      url: "https://example.com/path/manifest.mpd",
+      unsafelyBaseOnPreviousManifest: null,
+    });
+
+    expect(response.type).toBe("done");
+    if (response.type === "done") {
+      expect(response.value.parsed.refreshUrls).toEqual([
+        { baseUrl: "https://example.com/path/manifest.mpd", id: undefined },
+      ]);
+    }
+  });
+
+  it("uses Locations instead of the manifest URL for refreshes", () => {
+    const response = parseFromString(
+      '<MPD><Location serviceLocation="first">refresh.mpd</Location>' +
+        '<Location serviceLocation="second">https://other.example/manifest.mpd</Location>' +
+        "<Period /></MPD>",
+      {
+        url: "https://example.com/path/manifest.mpd",
+        unsafelyBaseOnPreviousManifest: null,
+      },
+    );
+
+    expect(response.type).toBe("done");
+    if (response.type === "done") {
+      expect(response.value.parsed.refreshUrls).toEqual([
+        { baseUrl: "https://example.com/path/refresh.mpd", id: "first" },
+        { baseUrl: "https://other.example/manifest.mpd", id: "second" },
+      ]);
+    }
+  });
+
+  it("keeps Location values unresolved when the manifest URL is unknown", () => {
+    const response = parseFromString(
+      "<MPD><Location>refresh.mpd</Location><Period /></MPD>",
+      {
+        unsafelyBaseOnPreviousManifest: null,
+      },
+    );
+
+    expect(response.type).toBe("done");
+    if (response.type === "done") {
+      expect(response.value.parsed.refreshUrls).toEqual([
+        { baseUrl: "refresh.mpd", id: undefined },
+      ]);
+    }
+  });
 });
