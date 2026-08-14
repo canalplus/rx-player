@@ -31,9 +31,6 @@ export default function parseBaseURL(
   const attributes: { serviceLocation?: string } = {};
   const value = typeof root === "string" ? root : textContent(root.children);
   const warnings: Error[] = [];
-  if (value === null || value.length === 0) {
-    return [undefined, warnings];
-  }
 
   for (const attributeName of Object.keys(root.attributes)) {
     const attributeVal = root.attributes[attributeName];
