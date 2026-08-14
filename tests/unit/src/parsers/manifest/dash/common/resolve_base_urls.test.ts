@@ -2,6 +2,15 @@ import { describe, expect, it } from "vitest";
 import resolveBaseURLs from "../../../../../../../src/parsers/manifest/dash/common/resolve_base_urls.ts";
 
 describe("resolveBaseURLs", () => {
+  it("resolves an empty BaseURL to its parent and preserves its serviceLocation", () => {
+    expect(
+      resolveBaseURLs(
+        [{ url: "https://example.com/path/", serviceLocation: "parent-cdn" }],
+        [{ value: "", attributes: { serviceLocation: "child-cdn" } }],
+      ),
+    ).toEqual([{ url: "https://example.com/path/", serviceLocation: "child-cdn" }]);
+  });
+
   it("keeps the serviceLocation of newly encountered BaseURLs", () => {
     expect(
       resolveBaseURLs(
