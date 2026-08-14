@@ -116,7 +116,11 @@ impl MPDProcessor {
                         self.process_base_url_element();
                     }
                     b"cenc:pssh" => self.process_cenc_element(),
-                    b"Location" => self.process_location_element(),
+                    b"Location" => {
+                        TagName::Location.report_tag_open();
+                        attributes::report_location_attrs(&tag);
+                        self.process_location_element();
+                    }
                     b"Label" => {
                         TagName::Label.report_tag_open();
                         self.process_label_element();
@@ -243,7 +247,7 @@ impl MPDProcessor {
                 Ok(Event::Text(t)) => {
                     if t.len() > 0 {
                         match t.unescape() {
-                            Ok(unescaped) => AttributeName::Location.report(unescaped),
+                            Ok(unescaped) => AttributeName::Text.report(unescaped),
                             Err(err) => ParsingError::from(err).report_err(),
                         }
                     }
@@ -253,6 +257,7 @@ impl MPDProcessor {
                     if inner_tag > 0 {
                         inner_tag -= 1;
                     } else {
+                        TagName::Location.report_tag_close();
                         break;
                     }
                 }
