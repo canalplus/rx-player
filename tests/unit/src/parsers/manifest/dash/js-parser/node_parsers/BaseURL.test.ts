@@ -4,6 +4,15 @@ import type { ITNode } from "../../../../../../../../src/utils/xml-parser.ts";
 import { parseXml } from "../../../../../../../../src/utils/xml-parser.ts";
 
 describe("DASH Node Parsers - BaseURL", () => {
+  it("should preserve an empty BaseURL and its serviceLocation", () => {
+    const element = parseXml('<BaseURL serviceLocation="cdn-a" />')[0] as ITNode;
+
+    expect(parseBaseURL(element)).toEqual([
+      { value: "", attributes: { serviceLocation: "cdn-a" } },
+      [],
+    ]);
+  });
+
   it("should correctly parse a BaseURL and its serviceLocation", () => {
     const element = parseXml(
       '<BaseURL serviceLocation="cdn-a" ignored="value">https://cdn.example/</BaseURL>',
