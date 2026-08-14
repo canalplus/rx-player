@@ -36,7 +36,7 @@ export default function resolveBaseURLs(
   }
 
   const newBaseUrls: IResolvedBaseUrl[] = newBaseUrlsIR.map((ir) => {
-    return { url: ir.value };
+    return { url: ir.value, serviceLocation: ir.attributes.serviceLocation };
   });
   if (currentBaseURLs.length === 0) {
     return newBaseUrls;

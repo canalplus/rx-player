@@ -20,7 +20,7 @@ import type { IManifest } from "../../../../manifest/index.ts";
 import arrayFind from "../../../../utils/array_find.ts";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
-import { getFilenameIndexInUrl } from "../../../../utils/url-utils.ts";
+import { getFilenameIndexInUrl, resolveURL } from "../../../../utils/url-utils.ts";
 import type { IParsedManifest } from "../../types.ts";
 import type {
   IMPDIntermediateRepresentation,
@@ -420,9 +420,18 @@ function parseCompleteIntermediateRepresentation(
       (parsedPeriods[parsedPeriods.length - 1]?.end !== undefined ||
         mpdIR.attributes.mediaPresentationDuration !== undefined));
 
+  const refreshUrls = rootChildren.Location.map((location) => ({
+    baseUrl:
+      args.url === undefined ? location.value : resolveURL(args.url, location.value),
+    id: location.attributes.serviceLocation,
+  }));
+  if (refreshUrls.length === 0 && args.url !== undefined) {
+    refreshUrls.push({ baseUrl: args.url, id: undefined });
+  }
   const parsedMPD: IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
+    refreshUrls,
     isDynamic,
     isLive: isDynamic,
     isLastPeriodKnown,
@@ -436,9 +445,6 @@ function parseCompleteIntermediateRepresentation(
       maximumTimeData,
     },
     lifetime,
-    uris: isNullOrUndefined(args.url)
-      ? rootChildren.Location.map((l) => l.value)
-      : [args.url, ...rootChildren.Location.map((l) => l.value)],
   };
 
   return { type: "done", value: { parsed: parsedMPD, warnings } };
