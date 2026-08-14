@@ -275,6 +275,11 @@ function formatURL(parts: IParsedURL): string {
   return url;
 }
 
+/** Returns `true` when the given URL contains an RFC 3986 scheme. */
+function isAbsoluteURL(url: string): boolean {
+  return parseURL(url).scheme.length > 0;
+}
+
 /**
  * Removes "." and ".." from the URL path, as described by the algorithm
  * in RFC 3986 Section 5.2.4. Remove Dot Segments
@@ -356,4 +361,4 @@ function resolveURL(...args: Array<string | undefined>): string {
   }
 }
 
-export { getFilenameIndexInUrl, getRelativeUrl, resolveURL };
+export { getFilenameIndexInUrl, getRelativeUrl, isAbsoluteURL, resolveURL };
