@@ -2,8 +2,24 @@ import { describe, it, expect } from "vitest";
 import {
   getFilenameIndexInUrl,
   getRelativeUrl,
+  isAbsoluteURL,
   resolveURL,
 } from "../../../../src/utils/url-utils.ts";
+
+describe(`utils - isAbsoluteURL ${isAbsoluteURL.name}`, () => {
+  it("should identify URLs containing an RFC 3986 scheme", () => {
+    expect(isAbsoluteURL("https://example.com/manifest.mpd")).toBe(true);
+    expect(isAbsoluteURL("urn:mpeg:dash:schema:mpd:2011")).toBe(true);
+    expect(isAbsoluteURL("custom+scheme:value")).toBe(true);
+  });
+
+  it("should reject relative and scheme-relative URLs", () => {
+    expect(isAbsoluteURL("refresh.mpd")).toBe(false);
+    expect(isAbsoluteURL("/refresh.mpd")).toBe(false);
+    expect(isAbsoluteURL("//example.com/refresh.mpd")).toBe(false);
+    expect(isAbsoluteURL("")).toBe(false);
+  });
+});
 
 describe(`utils - resolveURL ${resolveURL.name}`, () => {
   it("should return an empty string if no argument is given", () => {
