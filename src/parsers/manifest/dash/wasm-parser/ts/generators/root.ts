@@ -39,6 +39,8 @@ export function generateRootChildrenParser(
         rootObj.mpd = {
           children: {
             BaseURL: [],
+            ContentSteering: [],
+            ServiceDescription: [],
             EssentialProperty: [],
             SupplementalProperty: [],
             RequestParam: [],

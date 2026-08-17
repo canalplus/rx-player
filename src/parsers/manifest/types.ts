@@ -459,4 +459,12 @@ export interface IParsedManifest {
    * Here only the `baseUrl` allows to construct the URL.
    */
   refreshUrls: ICdnMetadata[];
+  contentSteering: IContentSteeringMetadata | null;
+}
+
+export interface IContentSteeringMetadata {
+  url: string;
+  defaultIds: string[];
+  queryBeforeStart: boolean;
+  queryString: string;
 }

@@ -123,6 +123,14 @@ impl MPDProcessor {
                         TagName::RequestParam.report_tag_open();
                         attributes::report_url_query_info_attrs(&tag);
                     }
+                    b"ContentSteering" => {
+                        TagName::ContentSteering.report_tag_open();
+                        attributes::report_content_steering_attrs(&tag);
+                    }
+                    b"ServiceDescription" => {
+                        TagName::ServiceDescription.report_tag_open();
+                        attributes::report_service_description_attrs(&tag);
+                    }
 
                     b"BaseURL" => {
                         TagName::BaseURL.report_tag_open();
@@ -170,6 +178,8 @@ impl MPDProcessor {
                     b"up:UrlQueryInfo" => TagName::UrlQueryInfo.report_tag_close(),
                     b"up:ExtUrlQueryInfo" => TagName::ExtUrlQueryInfo.report_tag_close(),
                     b"RequestParam" => TagName::RequestParam.report_tag_close(),
+                    b"ContentSteering" => TagName::ContentSteering.report_tag_close(),
+                    b"ServiceDescription" => TagName::ServiceDescription.report_tag_close(),
                     _ => {}
                 },
                 Ok(Event::Eof) => {

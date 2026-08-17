@@ -104,6 +104,12 @@ pub enum TagName {
 
     /// Indicate a `<RequestParam>` node.
     RequestParam = 26,
+
+    /// Indicate a `<ContentSteering>` node.
+    ContentSteering = 27,
+
+    /// Indicate a `<ServiceDescription>` node.
+    ServiceDescription = 28,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -293,6 +299,12 @@ pub enum AttributeName {
     Namespace = 70,
 
     ServiceLocation = 72, // String
+
+    QueryBeforeStart = 73, // Boolean
+
+    ClientRequirement = 74, // Boolean
+
+    DefaultServiceLocation = 75,
 
     // SegmentTemplate
     EndNumber = 76, // f64

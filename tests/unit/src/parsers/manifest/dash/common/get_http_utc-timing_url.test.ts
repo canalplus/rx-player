@@ -11,6 +11,8 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         BaseURL: [],
+        ContentSteering: [],
+        ServiceDescription: [],
         EssentialProperty: [],
         SupplementalProperty: [],
         RequestParam: [],
@@ -28,6 +30,8 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         BaseURL: [],
+        ContentSteering: [],
+        ServiceDescription: [],
         EssentialProperty: [],
         SupplementalProperty: [],
         RequestParam: [],
@@ -58,6 +62,8 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         BaseURL: [],
+        ContentSteering: [],
+        ServiceDescription: [],
         EssentialProperty: [],
         SupplementalProperty: [],
         RequestParam: [],
@@ -92,6 +98,8 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         BaseURL: [],
+        ContentSteering: [],
+        ServiceDescription: [],
         EssentialProperty: [],
         SupplementalProperty: [],
         RequestParam: [],
@@ -116,6 +124,8 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         BaseURL: [],
+        ContentSteering: [],
+        ServiceDescription: [],
         EssentialProperty: [],
         SupplementalProperty: [],
         RequestParam: [],
@@ -152,6 +162,8 @@ describe("DASH Parser - getHTTPUTCTimingURL", () => {
     const mpdIR: IMPDIntermediateRepresentation = {
       children: {
         BaseURL: [],
+        ContentSteering: [],
+        ServiceDescription: [],
         EssentialProperty: [],
         SupplementalProperty: [],
         RequestParam: [],

@@ -126,6 +126,12 @@ export const enum TagName {
 
   /// Indicate a `<RequestParam>` node.
   RequestParam = 26,
+
+  /// Indicate a `<ContentSteering>` node.
+  ContentSteering = 27,
+
+  /// Indicate a `<ServiceDescription>` node.
+  ServiceDescription = 28,
 }
 
 /**
@@ -304,7 +310,7 @@ export const enum AttributeName {
 
   QueryBeforeStart = 73, // Boolean
 
-  ProxyServerUrl = 74, // String
+  ClientRequirement = 74, // Boolean
 
   DefaultServiceLocation = 75,
 

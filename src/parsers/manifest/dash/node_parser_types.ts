@@ -43,6 +43,10 @@ export interface IMPDChildren {
    * from the first encountered to the last encountered.
    */
   BaseURL: IBaseUrlIntermediateRepresentation[];
+  /** Content steering declarations directly under the MPD. */
+  ContentSteering: IContentSteeringIntermediateRepresentation[];
+  /** Root-level service descriptions. */
+  ServiceDescription: IServiceDescriptionIntermediateRepresentation[];
   /** Root-level `<EssentialProperty>` descriptors. */
   EssentialProperty: IDescriptorIntermediateRepresentation[];
   /** Root-level `<SupplementalProperty>` descriptors. */
@@ -442,6 +446,20 @@ export interface ILocationIntermediateRepresentation {
     /** Value of the `serviceLocation` attribute. */
     serviceLocation?: string | undefined;
   };
+}
+
+export interface IContentSteeringIntermediateRepresentation {
+  value: string;
+  attributes: {
+    defaultServiceLocation?: string | undefined;
+    queryBeforeStart?: boolean | undefined;
+    clientRequirement?: boolean | undefined;
+  };
+}
+
+export interface IServiceDescriptionIntermediateRepresentation {
+  attributes: { id?: string | undefined };
+  children: { ContentSteering: IContentSteeringIntermediateRepresentation[] };
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */

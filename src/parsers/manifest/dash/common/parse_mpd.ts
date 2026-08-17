@@ -23,10 +23,14 @@ import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
 import {
   getFilenameIndexInUrl,
   isAbsoluteURL,
+  getQueryString,
+  parseQueryString,
   resolveURL,
 } from "../../../../utils/url-utils.ts";
-import type { IParsedManifest } from "../../types.ts";
+import type { IContentSteeringMetadata, IParsedManifest } from "../../types.ts";
 import type {
+  IContentSteeringIntermediateRepresentation,
+  IDescriptorIntermediateRepresentation,
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
 } from "../node_parser_types.ts";
@@ -305,6 +309,41 @@ function parseCompleteIntermediateRepresentation(
     time: number;
   };
 
+  let contentSteering: IContentSteeringMetadata | null = null;
+  const nestedContentSteering = rootChildren.ServiceDescription.reduce<
+    IContentSteeringIntermediateRepresentation[]
+  >(
+    (acc, serviceDescription) => acc.concat(serviceDescription.children.ContentSteering),
+    [],
+  );
+  const contentSteeringElements =
+    rootChildren.ContentSteering.concat(nestedContentSteering);
+  if (contentSteeringElements.length > 1) {
+    warnings.push(
+      new Error("DASH parser: Only one ContentSteering element can be applied"),
+    );
+  }
+  const contentSteeringElement = contentSteeringElements[0];
+  if (contentSteeringElement !== undefined) {
+    const defaultServiceLocation =
+      contentSteeringElement.attributes.defaultServiceLocation?.trim();
+    contentSteering = {
+      url:
+        args.url === undefined
+          ? contentSteeringElement.value
+          : resolveURL(args.url, contentSteeringElement.value),
+      defaultIds:
+        defaultServiceLocation === undefined || defaultServiceLocation.length === 0
+          ? []
+          : defaultServiceLocation.split(/ +/),
+      queryBeforeStart: contentSteeringElement.attributes.queryBeforeStart === true,
+      queryString: parseSteeringQueryString(
+        rootChildren.EssentialProperty.concat(rootChildren.SupplementalProperty),
+        args.url,
+      ),
+    };
+  }
+
   if (
     rootAttributes.minimumUpdatePeriod !== undefined &&
     rootAttributes.minimumUpdatePeriod >= 0
@@ -451,6 +490,7 @@ function parseCompleteIntermediateRepresentation(
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
     refreshUrls,
+    contentSteering,
     isDynamic,
     isLive: isDynamic,
     isLastPeriodKnown,
@@ -467,4 +507,78 @@ function parseCompleteIntermediateRepresentation(
   };
 
   return { type: "done", value: { parsed: parsedMPD, warnings } };
+}
+
+function parseSteeringQueryString(
+  properties: IDescriptorIntermediateRepresentation[],
+  mpdUrl: string | undefined,
+): string {
+  const result: string[] = [];
+  if (mpdUrl === undefined) {
+    // XXX TODO: logwarn?
+    return "";
+  }
+  const mpdQuery = getQueryString(mpdUrl);
+  for (const property of properties) {
+    const schemeIdUri = property.attributes.schemeIdUri;
+    let queryInfoElements;
+    if (schemeIdUri === "urn:mpeg:dash:urlparam:2014") {
+      queryInfoElements = property.children.UrlQueryInfo;
+    } else if (schemeIdUri === "urn:mpeg:dash:urlparam:2016") {
+      queryInfoElements = property.children.ExtUrlQueryInfo;
+    } else {
+      continue;
+    }
+    for (const queryInfoElement of queryInfoElements) {
+      const instruction = queryInfoElement.attributes;
+      const requestTypes = instruction.includeInRequests?.split(/ +/) ?? [];
+      if (requestTypes.indexOf("steering") < 0 && requestTypes.indexOf("*") < 0) {
+        continue;
+      }
+      const template = instruction.queryTemplate;
+      if (template === undefined) {
+        continue;
+      }
+      const initialParts: string[] = [];
+      if (instruction.useMpdUrlQuery === true) {
+        initialParts.push(mpdQuery);
+      }
+      if (instruction.queryString !== undefined) {
+        initialParts.push(instruction.queryString);
+      }
+      const initialQuery = initialParts.filter((part) => part.length > 0).join("&");
+      if (initialQuery.length === 0) {
+        continue;
+      }
+      const queryData = new Map(parseQueryString(initialQuery));
+      const substituted = template
+        .split("&")
+        .map((parameter) => {
+          if (parameter === "$querypart$") {
+            // "querypart" means we keep the original query string
+            return initialQuery;
+          }
+          return parameter.replace(
+            /\$\$|\$query:([^$]+)\$|\$[^$]+\$/g,
+            (identifier, queryParameterName: string | undefined) => {
+              if (identifier === "$$") {
+                return "$";
+              }
+              if (queryParameterName !== undefined) {
+                return queryData.get(queryParameterName) ?? "";
+              }
+              // Annex I specifies that unknown identifiers are replaced by an
+              // empty string.
+              return "";
+            },
+          );
+        })
+        .filter((part) => part.length > 0)
+        .join("&");
+      if (substituted.length > 0) {
+        result.push(substituted);
+      }
+    }
+  }
+  return result.join("&");
 }

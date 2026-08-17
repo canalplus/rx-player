@@ -108,6 +108,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [],
       refreshUrls: [],
+      contentSteering: null,
     };
 
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -151,6 +152,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [period1, period2],
       refreshUrls: [],
+      contentSteering: null,
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IPeriod) {
@@ -203,6 +205,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [period1, period2],
       refreshUrls: [],
+      contentSteering: null,
     };
 
     const representationFilter = function () {
@@ -258,6 +261,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [period1, period2],
       refreshUrls: [],
+      contentSteering: null,
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
@@ -302,6 +306,7 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       periods: [oldPeriod1, oldPeriod2],
+      contentSteering: null,
       timeBounds: {
         minimumSafePosition: 5,
         timeshiftDepth: null,
@@ -380,6 +385,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [oldPeriod1, oldPeriod2],
+      contentSteering: null,
       suggestedPresentationDelay: 99,
       refreshUrls: [{ baseUrl: "url1" }, { baseUrl: "url2" }],
     };
@@ -412,6 +418,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       refreshUrls: [],
+      contentSteering: null,
     };
     const manifest2 = new Manifest(oldManifestArgs2, {});
     expect(manifest2.getRefreshUrls()).toEqual([]);
@@ -439,6 +446,7 @@ describe("Manifest - Manifest", () => {
       isLive: false,
       lifetime: 13,
       periods: [oldPeriod1, oldPeriod2],
+      contentSteering: null,
       timeBounds: {
         minimumSafePosition: 7,
         timeshiftDepth: 10,
@@ -495,6 +503,7 @@ describe("Manifest - Manifest", () => {
       },
       periods: [newPeriod1, newPeriod2],
       refreshUrls: [{ baseUrl: "url3" }, { baseUrl: "url4" }],
+      contentSteering: null,
     } as unknown as Manifest;
 
     manifest.replace(newManifest);

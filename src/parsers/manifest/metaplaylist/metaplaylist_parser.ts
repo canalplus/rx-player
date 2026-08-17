@@ -346,6 +346,7 @@ function createManifest(
     isDynamic,
     isLastPeriodKnown,
     refreshUrls: isNullOrUndefined(url) ? [] : [{ baseUrl: url }],
+    contentSteering: null,
 
     // TODO more precize time bounds?
     timeBounds: {

@@ -25,8 +25,10 @@ import type {
 } from "../../node_parser_types.ts";
 import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
+import parseContentSteering from "./ContentSteering.ts";
 import parseDescriptor from "./Descriptor.ts";
 import { createPeriodIntermediateRepresentation } from "./Period.ts";
+import parseServiceDescription from "./ServiceDescription.ts";
 import parseRequestParam from "./UrlQueryInfo.ts";
 import {
   parseDateTime,
@@ -47,6 +49,8 @@ function parseMPDChildren(
 ): [IMPDChildren, Error[]] {
   const ret: IMPDChildren = {
     BaseURL: [],
+    ContentSteering: [],
+    ServiceDescription: [],
     EssentialProperty: [],
     SupplementalProperty: [],
     RequestParam: [],
@@ -76,6 +80,24 @@ function parseMPDChildren(
         const [descriptor, descriptorWarnings] = parseDescriptor(currentNode);
         ret.EssentialProperty.push(descriptor);
         warnings.push(...descriptorWarnings);
+        break;
+      }
+
+      case "ContentSteering": {
+        const [contentSteering, contentSteeringWarnings] =
+          parseContentSteering(currentNode);
+        if (contentSteering !== undefined) {
+          ret.ContentSteering.push(contentSteering);
+        }
+        warnings.push(...contentSteeringWarnings);
+        break;
+      }
+
+      case "ServiceDescription": {
+        const [serviceDescription, serviceDescriptionWarnings] =
+          parseServiceDescription(currentNode);
+        ret.ServiceDescription.push(serviceDescription);
+        warnings.push(...serviceDescriptionWarnings);
         break;
       }
 

@@ -280,6 +280,37 @@ function isAbsoluteURL(url: string): boolean {
   return parseURL(url).scheme.length > 0;
 }
 
+/** Return the query string of a URL, without its leading question mark. */
+function getQueryString(url: string): string {
+  return parseURL(url).query;
+}
+
+/** Parse an application/x-www-form-urlencoded query string. */
+function parseQueryString(query: string): Array<[string, string]> {
+  if (query.length === 0) {
+    return [];
+  }
+  const parameters: Array<[string, string]> = [];
+  for (const part of query.split("&")) {
+    if (part.length === 0) {
+      continue;
+    }
+    const equalIndex = part.indexOf("=");
+    const key = equalIndex < 0 ? part : part.substring(0, equalIndex);
+    const value = equalIndex < 0 ? "" : part.substring(equalIndex + 1);
+    parameters.push([decodeQueryComponent(key), decodeQueryComponent(value)]);
+  }
+  return parameters;
+}
+
+function decodeQueryComponent(value: string): string {
+  try {
+    return decodeURIComponent(value.replace(/\+/g, " "));
+  } catch (_) {
+    return value;
+  }
+}
+
 /**
  * Removes "." and ".." from the URL path, as described by the algorithm
  * in RFC 3986 Section 5.2.4. Remove Dot Segments
@@ -361,4 +392,11 @@ function resolveURL(...args: Array<string | undefined>): string {
   }
 }
 
-export { getFilenameIndexInUrl, getRelativeUrl, isAbsoluteURL, resolveURL };
+export {
+  getFilenameIndexInUrl,
+  getQueryString,
+  getRelativeUrl,
+  isAbsoluteURL,
+  parseQueryString,
+  resolveURL,
+};

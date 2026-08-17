@@ -695,6 +695,7 @@ function createSmoothStreamingParser(
       suggestedPresentationDelay,
       transportType: "smooth",
       refreshUrls: isNullOrUndefined(url) ? [] : [{ baseUrl: url }],
+      contentSteering: null,
     };
     checkManifestIDs(manifest);
     return manifest;
