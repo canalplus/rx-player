@@ -281,6 +281,9 @@ export default function parseAdaptationSets(
   for (let adaptationIdx = 0; adaptationIdx < adaptationsIR.length; adaptationIdx++) {
     const adaptation = adaptationsIR[adaptationIdx];
     const adaptationChildren = adaptation.children;
+    // NOTE: we only interpret known EssentialProperty elements.
+    // We do not filter on unknown ones: some MPD authors use them for information
+    // already present in the media, such as `TransferCharacteristics`.
     const essentialProperties = adaptationChildren.EssentialProperty;
     const roles = adaptationChildren.Role;
     const labels = adaptationChildren.Label;

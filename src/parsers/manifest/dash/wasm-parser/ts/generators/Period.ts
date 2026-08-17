@@ -30,6 +30,7 @@ import {
 } from "./AdaptationSet.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
+import { generateDescriptorParsers } from "./Descriptor.ts";
 import {
   generateEventStreamAttrParser,
   generateEventStreamChildrenParser,
@@ -143,6 +144,21 @@ export function generatePeriodChildrenParser(
           linearMemory,
         );
         parsersStack.pushParsers(nodeId, noop, contentProtAttrParser);
+        break;
+      }
+
+      case TagName.SupplementalProperty: {
+        const descriptor = {
+          attributes: {},
+          children: { UrlQueryInfo: [], ExtUrlQueryInfo: [] },
+        };
+        periodChildren.SupplementalProperty.push(descriptor);
+        const parsers = generateDescriptorParsers(
+          descriptor,
+          linearMemory,
+          parsersStack,
+        );
+        parsersStack.pushParsers(nodeId, parsers.children, parsers.attributes);
         break;
       }
 

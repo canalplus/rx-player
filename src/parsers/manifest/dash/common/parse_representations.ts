@@ -80,6 +80,9 @@ function getHDRInformation({
       return { colorDepth: 10, eotf: "pq", colorSpace: "rec2020" };
     }
   }
+  // NOTE: we only interpret known EssentialProperty elements.
+  // We do not filter on unknown ones: some MPD authors use them for information
+  // already present in the media, such as `TransferCharacteristics`.
   const transferCharacteristicScheme = arrayFind(
     [...(essentialProperties ?? []), ...(supplementalProperties ?? [])],
     (p) => p.attributes.schemeIdUri === "urn:mpeg:mpegB:cicp:TransferCharacteristics",

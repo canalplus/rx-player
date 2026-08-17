@@ -69,7 +69,7 @@ impl MPDProcessor {
                     }
                     b"EssentialProperty" => {
                         TagName::EssentialProperty.report_tag_open();
-                        attributes::report_scheme_attrs(&tag);
+                        attributes::report_descriptor_attrs(&tag);
                     }
                     b"InbandEventStream" => {
                         TagName::InbandEventStream.report_tag_open();
@@ -81,7 +81,7 @@ impl MPDProcessor {
                     }
                     b"SupplementalProperty" => {
                         TagName::SupplementalProperty.report_tag_open();
-                        attributes::report_scheme_attrs(&tag);
+                        attributes::report_descriptor_attrs(&tag);
                     }
                     b"SegmentBase" => {
                         TagName::SegmentBase.report_tag_open();
@@ -108,6 +108,16 @@ impl MPDProcessor {
                     b"UTCTiming" => {
                         TagName::UtcTiming.report_tag_open();
                         attributes::report_scheme_attrs(&tag);
+                    }
+
+                    // TODO Support other XML prefixes also linked to the `up` namespace.
+                    b"up:UrlQueryInfo" => {
+                        TagName::UrlQueryInfo.report_tag_open();
+                        attributes::report_url_query_info_attrs(&tag);
+                    }
+                    b"up:ExtUrlQueryInfo" => {
+                        TagName::ExtUrlQueryInfo.report_tag_open();
+                        attributes::report_url_query_info_attrs(&tag);
                     }
 
                     b"BaseURL" => {
@@ -153,6 +163,8 @@ impl MPDProcessor {
                     b"SegmentTemplate" => TagName::SegmentTemplate.report_tag_close(),
                     b"Initialization" => TagName::Initialization.report_tag_close(),
                     b"UTCTiming" => TagName::UtcTiming.report_tag_close(),
+                    b"up:UrlQueryInfo" => TagName::UrlQueryInfo.report_tag_close(),
+                    b"up:ExtUrlQueryInfo" => TagName::ExtUrlQueryInfo.report_tag_close(),
                     _ => {}
                 },
                 Ok(Event::Eof) => {
