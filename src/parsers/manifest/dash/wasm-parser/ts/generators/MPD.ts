@@ -31,6 +31,7 @@ import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
 import { generateDescriptorParsers } from "./Descriptor.ts";
 import { generateLocationAttrParser } from "./Location.ts";
 import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period.ts";
+import pushRequestParamParser from "./RequestParam.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
 
 /**
@@ -89,6 +90,15 @@ export function generateMPDChildrenParser(
         break;
       }
 
+      case TagName.RequestParam:
+        pushRequestParamParser(
+          mpdChildren.RequestParam,
+          nodeId,
+          linearMemory,
+          parsersStack,
+        );
+        break;
+
       case TagName.Period: {
         const period: IPeriodIntermediateRepresentation = {
           children: {
@@ -98,6 +108,7 @@ export function generateMPDChildrenParser(
             EventStream: [],
             ContentProtection: [],
             SupplementalProperty: [],
+            RequestParam: [],
           },
           attributes: {},
         };

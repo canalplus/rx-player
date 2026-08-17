@@ -29,6 +29,7 @@ import { createRepresentationIntermediateRepresentation } from "./Representation
 import parseSegmentBase from "./SegmentBase.ts";
 import parseSegmentList from "./SegmentList.ts";
 import parseSegmentTemplate from "./SegmentTemplate.ts";
+import parseRequestParam from "./UrlQueryInfo.ts";
 import {
   parseBoolean,
   parseIntOrBoolean,
@@ -58,6 +59,7 @@ function parseAdaptationSetChildren(
     InbandEventStream: [],
     Role: [],
     SupplementalProperty: [],
+    RequestParam: [],
     SegmentBase: [],
     SegmentList: [],
     SegmentTemplate: [],
@@ -126,6 +128,13 @@ function parseAdaptationSetChildren(
         const [descriptor, descriptorWarnings] = parseDescriptor(currentNode);
         children.SupplementalProperty.push(descriptor);
         warnings.push(...descriptorWarnings);
+        break;
+      }
+
+      case "RequestParam": {
+        const [requestParam, requestParamWarnings] = parseRequestParam(currentNode);
+        children.RequestParam.push(requestParam);
+        warnings.push(...requestParamWarnings);
         break;
       }
 

@@ -41,6 +41,7 @@ export function generateRootChildrenParser(
             BaseURL: [],
             EssentialProperty: [],
             SupplementalProperty: [],
+            RequestParam: [],
             Location: [],
             Period: [],
             UTCTiming: [],

@@ -31,6 +31,18 @@ export default function parseUrlQueryInfo(
           name: "useMpdUrlQuery",
         });
         break;
+      case "headerParamSource":
+        attributes.headerParamSource = attributeValue;
+        break;
+      case "sameOriginOnly":
+        parseValue(attributeValue, {
+          parser: parseBoolean,
+          name: "sameOriginOnly",
+        });
+        break;
+      case "header":
+        attributes.header = attributeValue;
+        break;
     }
   }
   return [{ attributes }, warnings];

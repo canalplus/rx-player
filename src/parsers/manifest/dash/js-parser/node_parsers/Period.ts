@@ -28,6 +28,7 @@ import parseContentProtection from "./ContentProtection.ts";
 import parseDescriptor from "./Descriptor.ts";
 import { createEventStreamIntermediateRepresentation } from "./EventStream.ts";
 import parseSegmentTemplate from "./SegmentTemplate.ts";
+import parseRequestParam from "./UrlQueryInfo.ts";
 import { parseBoolean, parseDuration, ValueParser } from "./utils.ts";
 
 /**
@@ -44,6 +45,7 @@ function parsePeriodChildren(
     BaseURL: [],
     ContentProtection: [],
     SupplementalProperty: [],
+    RequestParam: [],
     SegmentTemplate: [],
     EventStream: [],
   };
@@ -105,6 +107,14 @@ function parsePeriodChildren(
         const [descriptor, descriptorWarnings] = parseDescriptor(currentElement);
         ret.SupplementalProperty.push(descriptor);
         warnings.push(...descriptorWarnings);
+        break;
+      }
+
+      case "RequestParam": {
+        const [requestParam, requestParamWarnings] =
+          parseRequestParam(currentElement);
+        ret.RequestParam.push(requestParam);
+        warnings.push(...requestParamWarnings);
         break;
       }
     }

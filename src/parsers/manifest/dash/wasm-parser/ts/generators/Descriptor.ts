@@ -54,7 +54,7 @@ export function generateDescriptorAttrParser(
   };
 }
 
-function generateUrlQueryInfoAttrParser(
+export function generateUrlQueryInfoAttrParser(
   attributes: IUrlQueryInfoIntermediateRepresentation["attributes"],
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
@@ -77,6 +77,21 @@ function generateUrlQueryInfoAttrParser(
         break;
       case AttributeName.UseMpdUrlQuery:
         attributes.useMpdUrlQuery = new DataView(linearMemory.buffer).getUint8(0) === 0;
+        break;
+      case AttributeName.HeaderParamSource:
+        attributes.headerParamSource = parseString(
+          textDecoder,
+          linearMemory.buffer,
+          ptr,
+          len,
+        );
+        break;
+      case AttributeName.SameOriginOnly:
+        attributes.sameOriginOnly =
+          new DataView(linearMemory.buffer).getUint8(0) === 0;
+        break;
+      case AttributeName.Header:
+        attributes.header = parseString(textDecoder, linearMemory.buffer, ptr, len);
         break;
     }
   };

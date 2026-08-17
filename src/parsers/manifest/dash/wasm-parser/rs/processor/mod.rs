@@ -119,6 +119,10 @@ impl MPDProcessor {
                         TagName::ExtUrlQueryInfo.report_tag_open();
                         attributes::report_url_query_info_attrs(&tag);
                     }
+                    b"RequestParam" => {
+                        TagName::RequestParam.report_tag_open();
+                        attributes::report_url_query_info_attrs(&tag);
+                    }
 
                     b"BaseURL" => {
                         TagName::BaseURL.report_tag_open();
@@ -165,6 +169,7 @@ impl MPDProcessor {
                     b"UTCTiming" => TagName::UtcTiming.report_tag_close(),
                     b"up:UrlQueryInfo" => TagName::UrlQueryInfo.report_tag_close(),
                     b"up:ExtUrlQueryInfo" => TagName::ExtUrlQueryInfo.report_tag_close(),
+                    b"RequestParam" => TagName::RequestParam.report_tag_close(),
                     _ => {}
                 },
                 Ok(Event::Eof) => {

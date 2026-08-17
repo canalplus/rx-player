@@ -27,6 +27,7 @@ import parseDescriptor from "./Descriptor.ts";
 import parseSegmentBase from "./SegmentBase.ts";
 import parseSegmentList from "./SegmentList.ts";
 import parseSegmentTemplate from "./SegmentTemplate.ts";
+import parseRequestParam from "./UrlQueryInfo.ts";
 import {
   MPDError,
   parseBoolean,
@@ -53,6 +54,7 @@ function parseRepresentationChildren(
     SegmentList: [],
     SupplementalProperty: [],
     EssentialProperty: [],
+    RequestParam: [],
   };
   let warnings: Error[] = [];
   for (let i = 0; i < representationChildren.length; i++) {
@@ -114,6 +116,13 @@ function parseRepresentationChildren(
         const [descriptor, descriptorWarnings] = parseDescriptor(currentElement);
         children.SupplementalProperty.push(descriptor);
         warnings.push(...descriptorWarnings);
+        break;
+      }
+      case "RequestParam": {
+        const [requestParam, requestParamWarnings] =
+          parseRequestParam(currentElement);
+        children.RequestParam.push(requestParam);
+        warnings.push(...requestParamWarnings);
         break;
       }
     }

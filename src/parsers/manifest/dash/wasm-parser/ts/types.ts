@@ -123,6 +123,9 @@ export const enum TagName {
 
   /// Indicate an `<ExtUrlQueryInfo>` node.
   ExtUrlQueryInfo = 25,
+
+  /// Indicate a `<RequestParam>` node.
+  RequestParam = 26,
 }
 
 /**
@@ -314,4 +317,7 @@ export const enum AttributeName {
   IncludeInRequests = 82, // String
   UseMpdUrlQuery = 83, // Boolean
   QueryString = 84, // String
+  HeaderParamSource = 85, // String
+  SameOriginOnly = 86, // Boolean
+  Header = 87, // String
 }

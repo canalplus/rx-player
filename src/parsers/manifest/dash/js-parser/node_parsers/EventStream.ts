@@ -22,6 +22,7 @@ import type {
   IEventStreamEventIntermediateRepresentation,
   IEventStreamIntermediateRepresentation,
 } from "../../node_parser_types.ts";
+import parseRequestParam from "./UrlQueryInfo.ts";
 import { parseMPDInteger, ValueParser } from "./utils.ts";
 
 /**
@@ -80,8 +81,13 @@ export function createEventStreamIntermediateRepresentation(
 ): [IEventStreamIntermediateRepresentation, Error[]] {
   const [attributes, warnings] = parseEventStreamAttributes(root);
   const events: IEventStreamEventIntermediateRepresentation[] = [];
+  const requestParams = [];
   for (const child of root.children) {
-    if (typeof child !== "string" && child.tagName === "Event") {
+    if (typeof child !== "string" && child.tagName === "RequestParam") {
+      const [requestParam, requestParamWarnings] = parseRequestParam(child);
+      requestParams.push(requestParam);
+      warnings.push(...requestParamWarnings);
+    } else if (typeof child !== "string" && child.tagName === "Event") {
       const data: IEventStreamEventIntermediateRepresentation = {};
       if (!isNullOrUndefined(child.attributes.id)) {
         data.id = child.attributes.id;
@@ -118,5 +124,8 @@ export function createEventStreamIntermediateRepresentation(
     }
   }
 
-  return [{ children: { Event: events }, attributes }, warnings];
+  return [
+    { children: { Event: events, RequestParam: requestParams }, attributes },
+    warnings,
+  ];
 }

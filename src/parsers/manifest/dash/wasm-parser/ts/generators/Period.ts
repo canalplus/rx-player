@@ -35,6 +35,7 @@ import {
   generateEventStreamAttrParser,
   generateEventStreamChildrenParser,
 } from "./EventStream.ts";
+import pushRequestParamParser from "./RequestParam.ts";
 import {
   generateSegmentTemplateAttrParser,
   generateSegmentTemplateChildrenParser,
@@ -68,6 +69,7 @@ export function generatePeriodChildrenParser(
             InbandEventStream: [],
             Role: [],
             SupplementalProperty: [],
+            RequestParam: [],
             SegmentBase: [],
             SegmentList: [],
             SegmentTemplate: [],
@@ -100,7 +102,7 @@ export function generatePeriodChildrenParser(
 
       case TagName.EventStream: {
         const eventStream: IEventStreamIntermediateRepresentation = {
-          children: { Event: [] },
+          children: { Event: [], RequestParam: [] },
           attributes: {},
         };
         periodChildren.EventStream.push(eventStream);
@@ -161,6 +163,15 @@ export function generatePeriodChildrenParser(
         parsersStack.pushParsers(nodeId, parsers.children, parsers.attributes);
         break;
       }
+
+      case TagName.RequestParam:
+        pushRequestParamParser(
+          periodChildren.RequestParam,
+          nodeId,
+          linearMemory,
+          parsersStack,
+        );
+        break;
 
       default:
         // Allows to make sure we're not mistakenly closing a re-opened

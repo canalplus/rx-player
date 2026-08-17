@@ -27,6 +27,7 @@ import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
 import parseDescriptor from "./Descriptor.ts";
 import { createPeriodIntermediateRepresentation } from "./Period.ts";
+import parseRequestParam from "./UrlQueryInfo.ts";
 import {
   parseDateTime,
   parseDuration,
@@ -48,6 +49,7 @@ function parseMPDChildren(
     BaseURL: [],
     EssentialProperty: [],
     SupplementalProperty: [],
+    RequestParam: [],
     Location: [],
     Period: [],
     UTCTiming: [],
@@ -81,6 +83,13 @@ function parseMPDChildren(
         const [descriptor, descriptorWarnings] = parseDescriptor(currentNode);
         ret.SupplementalProperty.push(descriptor);
         warnings.push(...descriptorWarnings);
+        break;
+      }
+
+      case "RequestParam": {
+        const [requestParam, requestParamWarnings] = parseRequestParam(currentNode);
+        ret.RequestParam.push(requestParam);
+        warnings.push(...requestParamWarnings);
         break;
       }
 

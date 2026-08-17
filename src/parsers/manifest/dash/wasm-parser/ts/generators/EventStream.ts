@@ -24,6 +24,7 @@ import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
 import { parseString } from "../utils.ts";
+import pushRequestParamParser from "./RequestParam.ts";
 
 /**
  * Generate a "children parser" once inside a `EventStream` node.
@@ -48,6 +49,15 @@ export function generateEventStreamChildrenParser(
         parsersStack.pushParsers(nodeId, noop, attrParser);
         break;
       }
+
+      case TagName.RequestParam:
+        pushRequestParamParser(
+          childrenObj.RequestParam,
+          nodeId,
+          linearMemory,
+          parsersStack,
+        );
+        break;
 
       default:
         // Allows to make sure we're not mistakenly closing a re-opened

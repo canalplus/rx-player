@@ -47,6 +47,8 @@ export interface IMPDChildren {
   EssentialProperty: IDescriptorIntermediateRepresentation[];
   /** Root-level `<SupplementalProperty>` descriptors. */
   SupplementalProperty: IDescriptorIntermediateRepresentation[];
+  /** DASH 2025 extended HTTP request parameter instructions. */
+  RequestParam: IRequestParameterIntermediateRepresentation[];
   /**
    * Location(s) at which the Manifest can be refreshed.
    *
@@ -149,6 +151,7 @@ export interface IPeriodChildren {
   ContentProtection: IContentProtectionIntermediateRepresentation[];
   /** Period-level `<SupplementalProperty>` descriptors. */
   SupplementalProperty: IDescriptorIntermediateRepresentation[];
+  RequestParam: IRequestParameterIntermediateRepresentation[];
 }
 
 /* Intermediate representation for A Period node's attributes. */
@@ -202,6 +205,7 @@ export interface IAdaptationSetChildren {
   InbandEventStream: ISchemeIntermediateRepresentation[];
   Role: ISchemeIntermediateRepresentation[];
   SupplementalProperty: IDescriptorIntermediateRepresentation[];
+  RequestParam: IRequestParameterIntermediateRepresentation[];
   SegmentBase: ISegmentBaseIntermediateRepresentation[];
   SegmentList: ISegmentListIntermediateRepresentation[];
   SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
@@ -259,6 +263,7 @@ export interface IRepresentationChildren {
   SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
   SupplementalProperty: IDescriptorIntermediateRepresentation[];
   EssentialProperty: IDescriptorIntermediateRepresentation[];
+  RequestParam: IRequestParameterIntermediateRepresentation[];
 }
 
 /* Intermediate representation for A Representation node's attributes. */
@@ -454,14 +459,20 @@ export interface IDescriptorIntermediateRepresentation {
 }
 
 /** Parsed DASH Annex I URL query information. */
-export interface IUrlQueryInfoIntermediateRepresentation {
+export interface IRequestParameterIntermediateRepresentation {
   attributes: {
     queryString?: string | undefined;
     queryTemplate?: string | undefined;
     includeInRequests?: string | undefined;
     useMpdUrlQuery?: boolean | undefined;
+    headerParamSource?: string | undefined;
+    sameOriginOnly?: boolean | undefined;
+    header?: string | undefined;
   };
 }
+
+export type IUrlQueryInfoIntermediateRepresentation =
+  IRequestParameterIntermediateRepresentation;
 
 export interface IDescriptorAttributes extends ISchemeAttributes {
   id?: string | undefined;
@@ -501,6 +512,7 @@ export interface IEventStreamAttributes {
 
 export interface IEventStreamChildren {
   Event: IEventStreamEventIntermediateRepresentation[];
+  RequestParam: IRequestParameterIntermediateRepresentation[];
 }
 
 export interface IEventStreamEventIntermediateRepresentation {

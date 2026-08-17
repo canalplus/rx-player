@@ -33,6 +33,7 @@ import {
   generateRepresentationAttrParser,
   generateRepresentationChildrenParser,
 } from "./Representation.ts";
+import pushRequestParamParser from "./RequestParam.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
 import {
   generateSegmentBaseAttrParser,
@@ -118,6 +119,15 @@ export function generateAdaptationSetChildrenParser(
         break;
       }
 
+      case TagName.RequestParam:
+        pushRequestParamParser(
+          adaptationSetChildren.RequestParam,
+          nodeId,
+          linearMemory,
+          parsersStack,
+        );
+        break;
+
       case TagName.InbandEventStream: {
         const inbandEvent = { attributes: {} };
         adaptationSetChildren.InbandEventStream.push(inbandEvent);
@@ -142,6 +152,7 @@ export function generateAdaptationSetChildrenParser(
             SegmentTemplate: [],
             SupplementalProperty: [],
             EssentialProperty: [],
+            RequestParam: [],
           },
           attributes: {},
         };

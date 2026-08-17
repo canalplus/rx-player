@@ -27,6 +27,7 @@ import { parseString } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
 import { generateDescriptorParsers } from "./Descriptor.ts";
+import pushRequestParamParser from "./RequestParam.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
 import {
   generateSegmentBaseAttrParser,
@@ -103,6 +104,15 @@ export function generateRepresentationChildrenParser(
         parsersStack.pushParsers(nodeId, parsers.children, parsers.attributes);
         break;
       }
+
+      case TagName.RequestParam:
+        pushRequestParamParser(
+          childrenObj.RequestParam,
+          nodeId,
+          linearMemory,
+          parsersStack,
+        );
+        break;
 
       case TagName.SegmentBase: {
         const segmentBaseObj = { children: { Initialization: [] }, attributes: {} };
