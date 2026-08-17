@@ -43,6 +43,7 @@ export default function initSegmentLoader(
   options: ISegmentLoaderOptions,
   cancelSignal: CancellationSignal,
   callbacks: ISegmentLoaderCallbacks<ArrayBuffer | Uint8Array<ArrayBuffer>>,
+  segmentRequestHeaders?: Record<string, string> | undefined,
 ): Promise<
   | ISegmentLoaderResultSegmentLoaded<ArrayBuffer | Uint8Array<ArrayBuffer>>
   | ISegmentLoaderResultSegmentCreated<ArrayBuffer | Uint8Array<ArrayBuffer>>
@@ -58,7 +59,10 @@ export default function initSegmentLoader(
     return request({
       url,
       responseType: "arraybuffer",
-      headers: cmcdHeaders,
+      headers:
+        segmentRequestHeaders === undefined && cmcdHeaders === undefined
+          ? undefined
+          : { ...segmentRequestHeaders, ...cmcdHeaders },
       timeout: options.timeout,
       connectionTimeout: options.connectionTimeout,
       cancelSignal,
@@ -70,6 +74,7 @@ export default function initSegmentLoader(
     return request({
       url,
       headers: {
+        ...segmentRequestHeaders,
         ...cmcdHeaders,
         Range: byteRange(segment.range),
       },
@@ -86,6 +91,7 @@ export default function initSegmentLoader(
     return request({
       url,
       headers: {
+        ...segmentRequestHeaders,
         ...cmcdHeaders,
         Range: byteRange([segment.range[0], segment.indexRange[1]]),
       },
@@ -100,6 +106,7 @@ export default function initSegmentLoader(
   const rangeRequest$ = request({
     url,
     headers: {
+      ...segmentRequestHeaders,
       ...cmcdHeaders,
       Range: byteRange(segment.range),
     },
@@ -112,6 +119,7 @@ export default function initSegmentLoader(
   const indexRequest$ = request({
     url,
     headers: {
+      ...segmentRequestHeaders,
       ...cmcdHeaders,
       Range: byteRange(segment.indexRange),
     },

@@ -908,6 +908,7 @@ export interface ITransportOptions {
   referenceDateTime?: number | undefined;
   representationFilter?: IRepresentationFilter | undefined;
   segmentLoader?: ICustomSegmentLoader | undefined;
+  segmentRequestHeaders?: Record<string, string> | undefined;
   serverSyncInfos?: IServerSyncInfos | undefined;
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
