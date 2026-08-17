@@ -28,6 +28,7 @@ import { AttributeName, TagName } from "../types.ts";
 import { parseString } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
+import { generateDescriptorParsers } from "./Descriptor.ts";
 import { generateLocationAttrParser } from "./Location.ts";
 import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
@@ -58,6 +59,22 @@ export function generateMPDChildrenParser(
         break;
       }
 
+      case TagName.EssentialProperty:
+      case TagName.SupplementalProperty: {
+        const descriptor = {
+          attributes: {},
+          children: { UrlQueryInfo: [], ExtUrlQueryInfo: [] },
+        };
+        const destination =
+          nodeId === TagName.EssentialProperty
+            ? mpdChildren.EssentialProperty
+            : mpdChildren.SupplementalProperty;
+        destination.push(descriptor);
+        const parsers = generateDescriptorParsers(descriptor, linearMemory, parsersStack);
+        parsersStack.pushParsers(nodeId, parsers.children, parsers.attributes);
+        break;
+      }
+
       case TagName.Location: {
         const location: ILocationIntermediateRepresentation = {
           value: "",
@@ -80,6 +97,7 @@ export function generateMPDChildrenParser(
             SegmentTemplate: [],
             EventStream: [],
             ContentProtection: [],
+            SupplementalProperty: [],
           },
           attributes: {},
         };
