@@ -1050,7 +1050,7 @@ describe("DASH Node Parsers - AdaptationSet", () => {
         attributes: {},
         children: {
           Accessibility: [],
-          BaseURL: [],
+          BaseURL: [{ value: "", attributes: {} }],
           Representation: [],
           ContentComponent: [],
           ContentProtection: [],
@@ -1068,14 +1068,14 @@ describe("DASH Node Parsers - AdaptationSet", () => {
     ]);
 
     const element2 = parseXml(
-      "<AdaptationSet><BaseURL></BaseURLs</AdaptationSet>",
+      "<AdaptationSet><BaseURL></BaseURL></AdaptationSet>",
     )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: {},
         children: {
           Accessibility: [],
-          BaseURL: [],
+          BaseURL: [{ value: "", attributes: {} }],
           Representation: [],
           ContentComponent: [],
           ContentProtection: [],
