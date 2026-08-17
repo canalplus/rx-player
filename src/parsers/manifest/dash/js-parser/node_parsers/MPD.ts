@@ -25,6 +25,7 @@ import type {
 } from "../../node_parser_types.ts";
 import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
+import parseDescriptor from "./Descriptor.ts";
 import { createPeriodIntermediateRepresentation } from "./Period.ts";
 import {
   parseDateTime,
@@ -45,6 +46,8 @@ function parseMPDChildren(
 ): [IMPDChildren, Error[]] {
   const ret: IMPDChildren = {
     BaseURL: [],
+    EssentialProperty: [],
+    SupplementalProperty: [],
     Location: [],
     Period: [],
     UTCTiming: [],
@@ -60,6 +63,20 @@ function parseMPDChildren(
     switch (currentNode.tagName) {
       case "BaseURL": {
         ret.BaseURL.push(parseBaseURL(currentNode));
+        break;
+      }
+
+      case "EssentialProperty": {
+        const [descriptor, descriptorWarnings] = parseDescriptor(currentNode);
+        ret.EssentialProperty.push(descriptor);
+        warnings.push(...descriptorWarnings);
+        break;
+      }
+
+      case "SupplementalProperty": {
+        const [descriptor, descriptorWarnings] = parseDescriptor(currentNode);
+        ret.SupplementalProperty.push(descriptor);
+        warnings.push(...descriptorWarnings);
         break;
       }
 
