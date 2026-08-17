@@ -281,6 +281,35 @@ pub fn report_scheme_attrs(element: &crate::xml::Element) {
     }
 }
 
+pub fn report_descriptor_attrs(element: &crate::xml::Element) {
+    for res_attr in element.attributes() {
+        match res_attr {
+            Ok(attr) => match attr.key {
+                b"id" => Id.try_report_as_string(&attr),
+                b"schemeIdUri" => SchemeIdUri.try_report_as_string(&attr),
+                b"value" => SchemeValue.try_report_as_string(&attr),
+                _ => {}
+            },
+            Err(err) => err.report_err(),
+        };
+    }
+}
+
+pub fn report_url_query_info_attrs(element: &crate::xml::Element) {
+    for res_attr in element.attributes() {
+        match res_attr {
+            Ok(attr) => match attr.key {
+                b"queryTemplate" => QueryTemplate.try_report_as_string(&attr),
+                b"queryString" => QueryString.try_report_as_string(&attr),
+                b"includeInRequests" => IncludeInRequests.try_report_as_string(&attr),
+                b"useMPDUrlQuery" => UseMpdUrlQuery.try_report_as_bool(&attr),
+                _ => {}
+            },
+            Err(err) => err.report_err(),
+        };
+    }
+}
+
 pub fn report_segment_url_attrs(element: &crate::xml::Element) {
     for res_attr in element.attributes() {
         match res_attr {
