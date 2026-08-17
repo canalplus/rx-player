@@ -132,7 +132,6 @@ export function generateMPDChildrenParser(
 }
 
 export function generateMPDAttrParser(
-  mpdChildren: IMPDChildren,
   mpdAttrs: IMPDAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
