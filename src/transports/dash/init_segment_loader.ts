@@ -60,8 +60,8 @@ export default function initSegmentLoader(
       url,
       responseType: "arraybuffer",
       headers:
-        segmentRequestHeaders === undefined && cmcdHeaders === undefined
-          ? undefined
+        segmentRequestHeaders === undefined
+          ? cmcdHeaders
           : { ...segmentRequestHeaders, ...cmcdHeaders },
       timeout: options.timeout,
       connectionTimeout: options.connectionTimeout,

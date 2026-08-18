@@ -569,10 +569,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     referenceDateTime: options.referenceDateTime,
     representationFilter,
     segmentLoader,
-    segmentRequestHeaders:
-      options.segmentRequestHeaders === undefined
-        ? undefined
-        : { ...options.segmentRequestHeaders },
+    segmentRequestHeaders: options.segmentRequestHeaders,
     serverSyncInfos: options.serverSyncInfos,
     startAt,
     textTrackElement: textTrackElement as HTMLElement,
