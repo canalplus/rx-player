@@ -435,7 +435,7 @@ export type ISegmentLoader = (
   // second argument: callbacks
   callbacks: {
     resolve: (rArgs: {
-      data: ArrayBuffer | Uint8Array;
+      data: ArrayBuffer | Uint8Array | null;
       sendingTime?: number | undefined;
       receivingTime?: number | undefined;
       size?: number | undefined;
@@ -443,7 +443,8 @@ export type ISegmentLoader = (
     }) => void;
 
     reject: (err?: unknown) => void;
-    fallback: () => void;
+    fallback: (options?: { headers?: Record<string, string> | undefined }) => void;
+    data: (args: { data: ArrayBuffer | Uint8Array }) => void;
     progress: (info: {
       duration: number;
       size: number;
@@ -490,7 +491,11 @@ export interface ISegmentLoaderContext {
    * order.
    */
   byteRanges?: Array<[number, number]> | undefined;
-  /** Type of the corresponding track. */
+  /**
+   * Type of the corresponding track.
+   * Other values may be added in future versions, applications should not
+   * assume that only the currently documented values can be encountered.
+   */
   trackType: ITrackType;
   /**
    * Optional "Common Media Client Data" (CMCD) payload that may be added to
