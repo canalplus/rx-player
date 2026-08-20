@@ -361,32 +361,6 @@ describe("scheduleRequestPromise", () => {
     });
   });
 
-  it("uses a Retry-After HTTP-date on 429 HTTP errors", async () => {
-    const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(1000);
-    try {
-      const error = new RequestError(
-        "url",
-        429,
-        NetworkErrorTypes.ERROR_HTTP_CODE,
-        { retryAfter: new Date(4000).toUTCString() },
-      );
-      const performRequest = vi
-        .fn()
-        .mockRejectedValueOnce(error)
-        .mockResolvedValueOnce("ok");
-
-      await scheduleRequestPromise(
-        performRequest,
-        defaultOptions,
-        new TaskCanceller("test").signal,
-      );
-
-      expect(mockCancellableSleep).toHaveBeenCalledWith(3000, expect.anything());
-    } finally {
-      dateNowSpy.mockRestore();
-    }
-  });
-
   it("caps too long Retry-After delays and logs a warning", async () => {
     mockConfigGetCurrent.mockReturnValue({ MAX_RETRY_AFTER_DELAY: 1_000 });
     const retryAfter = "10000";

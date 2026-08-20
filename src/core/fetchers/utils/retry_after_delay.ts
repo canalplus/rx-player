@@ -1,7 +1,6 @@
 import config from "../../../config.ts";
 import { CustomLoaderError, NetworkErrorTypes } from "../../../errors/index.ts";
 import log from "../../../log.ts";
-import parseHttpDate from "../../../utils/parse_http_date.ts";
 import { RequestError } from "../../../utils/request/index.ts";
 
 /** Read the raw Retry-After value carried by an HTTP 429 error, if any. */
@@ -39,19 +38,12 @@ function getRetryAfter(error: unknown): string | null {
 /** Parse a Retry-After delay-seconds value into milliseconds. */
 function parseRetryAfter(retryAfter: string): number | undefined {
   const trimmedRetryAfter = retryAfter.trim();
-  if (/^\d+$/.test(trimmedRetryAfter)) {
-    const delaySeconds = Number(trimmedRetryAfter);
-    return isFinite(delaySeconds) ? delaySeconds * 1000 : undefined;
-  }
-
-  const currentTimestamp = Date.now();
-  const retryTimestamp = parseHttpDate(trimmedRetryAfter, currentTimestamp);
-  if (retryTimestamp === undefined) {
+  if (!/^\d+$/.test(trimmedRetryAfter)) {
     return undefined;
   }
 
-  const delay = retryTimestamp - currentTimestamp;
-  return delay >= 0 ? delay : undefined;
+  const delaySeconds = Number(trimmedRetryAfter);
+  return Number.isFinite(delaySeconds) ? delaySeconds * 1000 : undefined;
 }
 
 /**
