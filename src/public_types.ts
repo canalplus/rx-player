@@ -568,7 +568,7 @@ export type IManifestLoader = (
     }) => void;
 
     reject: (err?: Error) => void;
-    fallback: () => void;
+    fallback: (options?: { headers?: Record<string, string> | undefined }) => void;
   },
 ) => (() => void) | void; // returns either the aborting callback or nothing
 
