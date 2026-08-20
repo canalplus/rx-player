@@ -25,6 +25,7 @@ import type {
 } from "../types.ts";
 import addQueryString from "./add_query_string.ts";
 import callCustomManifestLoader from "./call_custom_manifest_loader.ts";
+import mergeRequestHeaders from "./merge_request_headers.ts";
 
 /**
  * Manifest loader triggered if there was no custom-defined one in the API.
@@ -40,7 +41,9 @@ function generateRegularManifestLoader(
 ) => Promise<IRequestedData<ILoadedManifestFormat>> {
   return function regularManifestLoader(
     initialUrl: string | undefined,
-    loaderOptions: IManifestLoaderOptions,
+    loaderOptions: IManifestLoaderOptions & {
+      headers?: Record<string, string> | undefined;
+    },
     cancelSignal: CancellationSignal,
   ): Promise<IRequestedData<ILoadedManifestFormat>> {
     if (initialUrl === undefined) {
@@ -56,6 +59,7 @@ function generateRegularManifestLoader(
       loaderOptions.cmcdPayload?.type === "headers"
         ? loaderOptions.cmcdPayload.value
         : undefined;
+    const headers = mergeRequestHeaders(cmcdHeaders, loaderOptions.headers);
 
     // What follows could be written in a single line, but TypeScript wouldn't
     // shut up.
@@ -64,7 +68,7 @@ function generateRegularManifestLoader(
       case "arraybuffer":
         return request({
           url,
-          headers: cmcdHeaders,
+          headers,
           responseType: "arraybuffer",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -73,7 +77,7 @@ function generateRegularManifestLoader(
       case "text":
         return request({
           url,
-          headers: cmcdHeaders,
+          headers,
           responseType: "text",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
@@ -82,7 +86,7 @@ function generateRegularManifestLoader(
       case "document":
         return request({
           url,
-          headers: cmcdHeaders,
+          headers,
           responseType: "document",
           timeout: loaderOptions.timeout,
           connectionTimeout: loaderOptions.connectionTimeout,
