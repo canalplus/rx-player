@@ -40,7 +40,8 @@ describe("DASH Node Parsers - Descriptor", () => {
     const element = parseXml(
       `<EssentialProperty>
         <up:UrlQueryInfo queryString="token=1" useMPDUrlQuery="true" />
-        <up:ExtUrlQueryInfo queryTemplate="$querypart$" includeInRequests="mpd segment" />
+        <up:ExtUrlQueryInfo queryTemplate="$querypart$" includeInRequests="mpd segment"
+                            sameOriginOnly="true" />
       </EssentialProperty>`,
     )[0] as ITNode;
 
@@ -52,6 +53,7 @@ describe("DASH Node Parsers - Descriptor", () => {
           attributes: {
             queryTemplate: "$querypart$",
             includeInRequests: "mpd segment",
+            sameOriginOnly: true,
           },
         },
       ],
@@ -62,6 +64,15 @@ describe("DASH Node Parsers - Descriptor", () => {
   it("forwards warnings from Annex I children", () => {
     const element = parseXml(
       '<EssentialProperty><up:UrlQueryInfo useMPDUrlQuery="invalid" /></EssentialProperty>',
+    )[0] as ITNode;
+
+    const [, warnings] = parseDescriptor(element);
+    expect(warnings).toHaveLength(1);
+  });
+
+  it("forwards warnings from an invalid sameOriginOnly attribute", () => {
+    const element = parseXml(
+      '<SupplementalProperty><up:ExtUrlQueryInfo sameOriginOnly="invalid" /></SupplementalProperty>',
     )[0] as ITNode;
 
     const [, warnings] = parseDescriptor(element);

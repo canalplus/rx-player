@@ -161,7 +161,11 @@ export default function generateSegmentLoader({
     | ISegmentLoaderResultSegmentCreated<ILoadedAudioVideoSegmentFormat>
     | ISegmentLoaderResultChunkedComplete
   > {
-    const url = constructSegmentUrl(wantedCdn, context.segment);
+    const url = constructSegmentUrl(
+      wantedCdn,
+      context.segment,
+      context.segment.isInit ? options.requestData?.init : options.requestData?.segment,
+    );
     if (url === null) {
       return Promise.resolve({
         resultType: "segment-created",

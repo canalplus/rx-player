@@ -41,6 +41,7 @@ import inferAdaptationType, {
 } from "./infer_adaptation_type.ts";
 import type { IRepresentationContext } from "./parse_representations.ts";
 import parseRepresentations from "./parse_representations.ts";
+import { parseUrlQueryInfo } from "./parse_url_query_info.ts";
 import resolveBaseURLs from "./resolve_base_urls.ts";
 
 /**
@@ -326,6 +327,11 @@ export default function parseAdaptationSets(
       );
     }
 
+    const adaptationUrlQueryInfo = parseUrlQueryInfo(
+      adaptationChildren.EssentialProperty,
+      adaptationChildren.SupplementalProperty,
+      context.mpdUrl,
+    );
     const reprCtxt: IRepresentationContext = {
       availabilityTimeComplete,
       availabilityTimeOffset,
@@ -336,10 +342,15 @@ export default function parseAdaptationSets(
       isDynamic: context.isDynamic,
       isLastPeriod: context.isLastPeriod,
       manifestProfiles: context.manifestProfiles,
+      mpdUrl: context.mpdUrl,
       parentSegmentTemplates,
       receivedTime: context.receivedTime,
       start: context.start,
       unsafelyBaseOnPreviousAdaptation: null,
+      urlQueryInfo:
+        adaptationUrlQueryInfo === undefined
+          ? context.urlQueryInfo
+          : context.urlQueryInfo.concat(adaptationUrlQueryInfo),
     };
 
     const trickModeProperty = Array.isArray(essentialProperties)
@@ -595,6 +606,7 @@ function createThumbnailTracks(
       tracks.push({
         id: representation.id,
         cdnMetadata: representation.cdnMetadata,
+        requestData: representation.requestData,
         index: representation.index,
         mimeType: representation.mimeType,
         height: representation.height,

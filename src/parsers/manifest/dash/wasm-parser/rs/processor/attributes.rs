@@ -303,6 +303,7 @@ pub fn report_url_query_info_attrs(element: &crate::xml::Element) {
                 b"queryString" => QueryString.try_report_as_string(&attr),
                 b"includeInRequests" => IncludeInRequests.try_report_as_string(&attr),
                 b"useMPDUrlQuery" => UseMpdUrlQuery.try_report_as_bool(&attr),
+                b"sameOriginOnly" => SameOriginOnly.try_report_as_bool(&attr),
                 _ => {}
             },
             Err(err) => err.report_err(),
