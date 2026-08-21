@@ -73,7 +73,11 @@ export default function generateTextTrackLoader({
   > {
     const { segment } = context;
 
-    const initialUrl = constructSegmentUrl(wantedCdn, segment);
+    const initialUrl = constructSegmentUrl(
+      wantedCdn,
+      segment,
+      segment.isInit ? options.requestData?.init : options.requestData?.segment,
+    );
     if (initialUrl === null) {
       return Promise.resolve({
         resultType: "segment-created",

@@ -118,6 +118,8 @@ export interface IParsedThumbnailTrack {
    * no resource can be loaded in that situation.
    */
   cdnMetadata: ICdnMetadata[] | null;
+  /** Transport-specific data used when requesting this track's resources. */
+  requestData?: IRequestData | undefined;
   /** Interface allowing to get timed thumbnail metadata to then be able to fetch them. */
   index: IRepresentationIndex;
   /**
@@ -168,6 +170,8 @@ export interface IParsedThumbnailTrack {
 export interface IParsedRepresentation {
   /** Maximum bitrate the Representation is available in, in bits per seconds. */
   bitrate: number;
+  /** Transport-specific data used when requesting this Representation's resources. */
+  requestData?: IRequestData | undefined;
   /**
    * Information on the CDN(s) on which requests should be done to request this
    * Representation's initialization and media segments.
@@ -227,6 +231,29 @@ export interface IParsedRepresentation {
   isSpatialAudio?: boolean | undefined;
 
   supplementalCodecs?: string | undefined;
+}
+
+/** Parameters to add to an HTTP request. */
+export interface IRequestParameters {
+  /** Query strings to append to the request URL. */
+  urlQuery?: Array<{
+    /** Query string without its leading question mark. */
+    value: string;
+    /** Only add the query string when requesting its source origin. */
+    sameOriginOnly: boolean;
+    /** URL from which the query string was obtained. */
+    sourceUrl?: string | undefined;
+  }>;
+  /** HTTP headers to add to the request. Reserved for future use. */
+  headers?: Record<string, string> | undefined;
+}
+
+/** Transport-specific request parameters, indexed by request category. */
+export interface IRequestData {
+  /** Parameters for media segment requests. */
+  segment?: IRequestParameters | undefined;
+  /** Parameters for initialization segment requests. */
+  init?: IRequestParameters | undefined;
 }
 
 /** Every possible types an Adaptation can have. */
