@@ -1,10 +1,49 @@
 import { describe, it, expect } from "vitest";
 import {
+  appendURLQueryString,
+  areSameOrigin,
   getFilenameIndexInUrl,
+  getQueryString,
   getRelativeUrl,
   isAbsoluteURL,
   resolveURL,
 } from "../../../../src/utils/url-utils.ts";
+
+describe("utils - DASH Annex I URL helpers", () => {
+  it("extracts an encoded query string without its fragment", () => {
+    expect(getQueryString("https://example.com/a.mpd?a=1%262&b=3#fragment")).toBe(
+      "a=1%262&b=3",
+    );
+    expect(getQueryString("https://example.com/a.mpd#fragment")).toBe("");
+  });
+
+  it("appends an encoded query string before a URL fragment", () => {
+    expect(
+      appendURLQueryString(
+        "https://example.com/segment.m4s?existing=1#fragment",
+        "added=a%26b",
+      ),
+    ).toBe("https://example.com/segment.m4s?existing=1&added=a%26b#fragment");
+  });
+
+  it("compares HTTP origins with normalized hosts and default ports", () => {
+    expect(
+      areSameOrigin(
+        "https://USER@example.COM/manifest.mpd",
+        "https://example.com:443/segment.m4s",
+      ),
+    ).toBe(true);
+    expect(areSameOrigin("http://example.com/a", "http://EXAMPLE.com:80/b")).toBe(true);
+  });
+
+  it("rejects different and unknown origins", () => {
+    expect(areSameOrigin("https://example.com/a", "http://example.com/a")).toBe(false);
+    expect(areSameOrigin("https://example.com/a", "https://example.com:444/a")).toBe(
+      false,
+    );
+    expect(areSameOrigin("/relative-a", "/relative-b")).toBe(false);
+  });
+});
 
 describe(`utils - isAbsoluteURL ${isAbsoluteURL.name}`, () => {
   it("should identify URLs containing an RFC 3986 scheme", () => {

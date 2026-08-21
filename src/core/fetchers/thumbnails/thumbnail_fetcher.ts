@@ -141,6 +141,7 @@ export default function createThumbnailFetcher(
         requestOptions.requestTimeout < 0 ? undefined : requestOptions.requestTimeout,
       connectionTimeout,
       cmcdPayload: undefined,
+      requestData: thumbnailTrack.requestData,
     };
 
     /**

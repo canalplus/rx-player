@@ -104,7 +104,7 @@ describe("DASH parser intermediate-representation equivalence", () => {
             <MPD xmlns:up="urn:mpeg:dash:schema:urlparam:2016">
               <EssentialProperty schemeIdUri="urn:mpeg:dash:urlparam:2016">
                 <up:${element} queryString="key=value" queryTemplate="$querypart$"
-                    useMPDUrlQuery="${value}"
+                    useMPDUrlQuery="${value}" sameOriginOnly="${value}"
                     ${selfClosing ? "/>" : `></up:${element}>`}
               </EssentialProperty>
             </MPD>`);

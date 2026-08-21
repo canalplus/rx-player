@@ -17,7 +17,7 @@
 import type { IInbandEvent } from "../core/types.ts";
 import type { IManifest, ISegment } from "../manifest/index.ts";
 import type { IThumbnailTrackMetadata } from "../manifest/types.ts";
-import type { ICdnMetadata } from "../parsers/manifest/index.ts";
+import type { ICdnMetadata, IRequestData } from "../parsers/manifest/index.ts";
 import type {
   ITrackType,
   ILoadedManifestFormat,
@@ -245,6 +245,8 @@ export interface ISegmentLoaderOptions {
    * the request.
    */
   cmcdPayload: ICmcdPayload | undefined;
+  /** Transport-specific parameters associated with the resource's requests. */
+  requestData: IRequestData | undefined;
 }
 
 /**

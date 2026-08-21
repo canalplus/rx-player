@@ -26,7 +26,11 @@ export async function loadThumbnail(
   options: IThumbnailLoaderOptions,
   cancelSignal: CancellationSignal,
 ): Promise<IRequestedData<ArrayBuffer>> {
-  const initialUrl = constructSegmentUrl(wantedCdn, thumbnail);
+  const initialUrl = constructSegmentUrl(
+    wantedCdn,
+    thumbnail,
+    options.requestData?.segment,
+  );
   if (initialUrl === null) {
     return Promise.reject(new Error("Cannot load thumbnail: no URL"));
   }
