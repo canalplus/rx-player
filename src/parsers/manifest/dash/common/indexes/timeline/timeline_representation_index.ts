@@ -71,18 +71,19 @@ export interface ITimelineIndex {
    * ```
    */
   indexTimeOffset: number;
-  /** Information on the initialization segment. */
-  initialization?:
-    | {
-        /**
-         * URL path, to add to the wanted CDN, to access the initialization segment.
-         * `null` if no URL exists.
-         */
-        url: string | null;
-        /** possible byte range to request it. */
-        range?: [number, number] | undefined;
-      }
-    | undefined;
+  /**
+   * Information on the initialization segment.
+   * `null` if this index has no initialization segment.
+   */
+  initialization: {
+    /**
+     * URL path, to add to the wanted CDN, to access the initialization segment.
+     * `null` if no URL exists.
+     */
+    url: string | null;
+    /** possible byte range to request it. */
+    range?: [number, number] | undefined;
+  } | null;
   /**
    * Template for the URL suffix (to concatenate to the wanted CDN), to access any
    * media segment.
@@ -358,7 +359,7 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
       indexRange: index.indexRange,
       indexTimeOffset,
       initialization: isNullOrUndefined(index.initialization)
-        ? undefined
+        ? null
         : {
             url: initializationUrl,
             range: index.initialization.range,
@@ -383,10 +384,11 @@ export default class TimelineRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * Construct init Segment.
-   * @returns {Object}
+   * Construct the metadata object for the init Segment linked to that index.
+   * Returns `null` if no initialization segment appears to be linked to that index.
+   * @returns {Object|null}
    */
-  getInitSegment(): ISegment {
+  getInitSegment(): ISegment | null {
     return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
