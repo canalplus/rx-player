@@ -63,6 +63,11 @@
       "require": "./dist/commonjs/features/list/index.js",
       "default": "./dist/es2017/features/list/index.js"
     },
+    "./features/embeds": {
+      "import": "./dist/es2017/__GENERATED_CODE/index.js",
+      "require": "./dist/commonjs/__GENERATED_CODE/index.js",
+      "default": "./dist/es2017/__GENERATED_CODE/index.js"
+    },
     "./features/*": {
       "import": "./dist/es2017/features/list/*.js",
       "require": "./dist/commonjs/features/list/*.js",
@@ -123,6 +128,9 @@
       ],
       "features": [
         "./dist/es2017/features/list/index.d.ts"
+      ],
+      "features/embeds": [
+        "./dist/es2017/__GENERATED_CODE/index.d.ts"
       ],
       "features/*": [
         "./dist/es2017/features/list/*.d.ts"
