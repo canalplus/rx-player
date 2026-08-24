@@ -16,7 +16,7 @@
 
 import { describe, it, beforeEach, afterEach, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
-import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
+import { MULTI_THREAD } from "../../../dist/es2017/features/list/index.js";
 import { EMBEDDED_DASH_WASM } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import TestWorkerEmbed from "../../embedded_worker_bundle";
 import { manifestInfos } from "../../contents/static/DASH_static_SegmentTimeline";

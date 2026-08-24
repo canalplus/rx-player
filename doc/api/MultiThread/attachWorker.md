@@ -38,13 +38,13 @@ This `attachWorker` method then returns a Promise which:
 // default import)
 import RxPlayer from "rx-player/minimal";
 
-// Import the MULTI_THREAD experimental feature
-import { MULTI_THREAD } from "rx-player/experimental/features";
+// Import the MULTI_THREAD feature
+import { MULTI_THREAD } from "rx-player/features";
 
 // To simplify this example, we'll directly import an "embedded" version of the
 // supplementary code loaded by the `MULTI_THREAD` feature.
 // We could also load it on demand through a URL
-import { EMBEDDED_WORKER } from "rx-player/experimental/features/embeds";
+import { EMBEDDED_WORKER } from "rx-player/features/embeds";
 
 // Add the MULTI_THREAD feature, like any other feature
 RxPlayer.addFeatures([MULTI_THREAD]);

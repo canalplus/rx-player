@@ -62,7 +62,7 @@ import { DASH_WASM } from "rx-player/features";
 
 // For this example, we will include the "embedded version" of the WebAssembly file
 // You can also load it as a separate file for more efficiency
-import { EMBEDDED_DASH_WASM } from "rx-player/experimental/features/embeds";
+import { EMBEDDED_DASH_WASM } from "rx-player/features/embeds";
 
 // Link parser to the WebAssembly file.
 // This function can be called at any point in time.
@@ -93,10 +93,10 @@ parser.
 You can find it at any of the following places:
 
 - The easiest way is to just import in your application its "embedded" version, exported
-  through the `"rx-player/experimental/features/embeds"` path:
+  through the `"rx-player/features/embeds"` path:
 
   ```js
-  import { EMBEDDED_DASH_WASM } from "rx-player/experimental/features/embeds";
+  import { EMBEDDED_DASH_WASM } from "rx-player/features/embeds";
   ```
 
   This allows to bypass the need to store and serve this file separately. Note however

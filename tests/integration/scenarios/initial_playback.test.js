@@ -15,7 +15,7 @@
  */
 
 import RxPlayer from "../../../src/index.ts";
-import { MULTI_THREAD } from "../../../src/experimental/features";
+import { MULTI_THREAD } from "../../../src/features/list/index.ts";
 import { EMBEDDED_DASH_WASM } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import TestWorkerEmbed from "../../embedded_worker_bundle";
 import { manifestInfos } from "../../contents/static/DASH_static_SegmentTimeline";
