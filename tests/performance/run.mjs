@@ -31,13 +31,12 @@ const DEFAULT_TEST_PAGE_PORT = 8080;
 const DEFAULT_RESULT_SERVER_PORT = 6789;
 
 /**
- * Number of times test are runs on each browser/RxPlayer configuration.
- * More iterations means (much) more time to perform tests, but also produce
- * better estimates.
+ * Number of fresh browser processes used by the A/A control and A/B treatment.
  *
  * TODO: GitHub actions fails when running the 128th browser. Find out why.
  */
-const TEST_ITERATIONS = 100;
+const CONTROL_ITERATIONS = 40;
+const TREATMENT_ITERATIONS = 40;
 
 /**
  * `ChildProcess` instance of the current browser being run.
@@ -46,10 +45,7 @@ const TEST_ITERATIONS = 100;
 let currentBrowser;
 
 /**
- * Contains "tasks" which are function each run inside a new browser process.
- * Task are added by groups of two:
- *   - the first one testing the current player build
- *   - the second one testing the last RxPlayer production version.
+ * Contains tasks which each run inside a fresh browser process.
  */
 const tasks = [];
 
@@ -338,7 +334,8 @@ function formatResultAsMarkdownTable(results) {
   const meanResult = results.map(
     (r) =>
       `${r.previousMean.toFixed(2)}ms -> ${r.currentMean.toFixed(2)}ms ` +
-      `(${r.meanDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
+      `(corrected: ${r.meanDifferenceMs.toFixed(3)}ms, ` +
+      `A/A bias: ${r.controlDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
   );
   const medianResult = results.map(
     (r) => `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms`,
@@ -412,6 +409,10 @@ function formatResultAsMarkdownTable(results) {
 /**
  * Initialize and start all tests on a browser..
  * @param {Object} params
+ * @param {"control"|"treatment"} params.experiment - Whether both slots load
+ * the previous build or the current slot loads the current build.
+ * @param {number} params.processIteration - Identifier attached to every sample
+ * produced by this browser process.
  * @param {string} [params.browser="chrome"] - The browser to run the tests on.
  * "chrome" by default. Can be either "chrome" or "firefox".
  * @param {number} params.contentServerPort - The port through which test
@@ -586,6 +587,10 @@ async function prepareLastRxPlayerTests({ branchName, contentServerPort, remoteG
     minify: true,
     production: true,
   });
+  await fsProm.copyFile(
+    path.join(currentDirectory, "previous.js"),
+    path.join(currentDirectory, "control-current.js"),
+  );
 }
 
 /**
@@ -663,13 +668,28 @@ async function linkRxPlayerBranch({ branchName, remoteGitUrl }) {
  */
 async function startAllTests({ browser, testPagePort, resultServerPort }) {
   tasks.length = 0;
-  for (let i = 0; i < TEST_ITERATIONS; i++) {
+  const iterations = [];
+  for (const [experiment, count] of [
+    ["control", CONTROL_ITERATIONS],
+    ["treatment", TREATMENT_ITERATIONS],
+  ]) {
+    for (let i = 0; i < count; i++) {
+      iterations.push({ experiment, startWithCurrent: i % 2 === 0 });
+    }
+  }
+  for (let i = iterations.length - 1; i > 0; i--) {
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+    [iterations[i], iterations[randomIndex]] = [iterations[randomIndex], iterations[i]];
+  }
+  for (const [index, { experiment, startWithCurrent }] of iterations.entries()) {
     tasks.push(() =>
       startIteration({
         browser,
-        startWithCurrent: i % 2 === 0,
-        iteration: i + 1,
-        total: TEST_ITERATIONS,
+        experiment,
+        processIteration: index + 1,
+        startWithCurrent,
+        iteration: index + 1,
+        total: iterations.length,
         testPagePort,
         resultServerPort,
       }),
@@ -700,7 +720,7 @@ function startNextTaskOrFinish(onFinished) {
   const nextTask = tasks.shift();
   if (nextTask === undefined) {
     onFinished();
-    return;
+    return Promise.resolve();
   }
   return nextTask();
 }
@@ -723,6 +743,8 @@ function startNextTaskOrFinish(onFinished) {
  */
 async function startIteration({
   browser,
+  experiment,
+  processIteration,
   startWithCurrent,
   iteration,
   total,
@@ -732,9 +754,11 @@ async function startIteration({
   if (currentBrowser !== undefined) {
     currentBrowser.kill("SIGKILL");
   }
-  const url = startWithCurrent
-    ? `http://localhost:${testPagePort}/current.html#p=${resultServerPort};`
-    : `http://localhost:${testPagePort}/previous.html#p=${resultServerPort};`;
+  const pagePrefix = experiment === "control" ? "control-" : "";
+  const page = startWithCurrent ? "current" : "previous";
+  const url =
+    `http://localhost:${testPagePort}/${pagePrefix}${page}.html` +
+    `#p=${resultServerPort};e=${experiment};o=${processIteration};`;
   if (browser === "firefox") {
     // eslint-disable-next-line no-console
     console.log(`Running tests on Firefox (${iteration}/${total})`);
@@ -799,9 +823,6 @@ function createResultServer({ port, onFinished, onError }) {
             if (currentBrowser !== undefined) {
               currentBrowser.kill("SIGKILL");
               currentBrowser = undefined;
-            }
-            if (allSamples.previous.length > 0 && allSamples.current.length > 0) {
-              compareSamples();
             }
             startNextTaskOrFinish(onFinished).catch(onError);
           } else if (parsedBody.type === "value") {
@@ -899,9 +920,15 @@ function rankSamples(list) {
  */
 function compareSamples() {
   const samplesPerScenario = {
-    current: getSamplePerScenarios(allSamples.current),
-    previous: getSamplePerScenarios(allSamples.previous),
+    current: getSamplePerScenarios(
+      allSamples.current.filter((sample) => sample.experiment === "treatment"),
+    ),
+    previous: getSamplePerScenarios(
+      allSamples.previous.filter((sample) => sample.experiment === "treatment"),
+    ),
   };
+  const treatmentDifferences = getProcessDifferences("treatment");
+  const controlDifferences = getProcessDifferences("control");
 
   const results = {
     worse: [],
@@ -916,14 +943,23 @@ function compareSamples() {
       console.error("Error: second result misses a scenario:", testName);
       continue;
     }
+    const treatmentSample = treatmentDifferences[testName];
+    const controlSample = controlDifferences[testName];
+    if (treatmentSample === undefined || controlSample === undefined) {
+      // eslint-disable-next-line no-console
+      console.error("Error: control or treatment results miss a scenario:", testName);
+      continue;
+    }
     const resultCurrent = getResultsForSample(sampleCurrent);
     const resultPrevious = getResultsForSample(samplePrevious);
+    const resultTreatment = getResultsForSample(treatmentSample);
+    const resultControl = getResultsForSample(controlSample);
 
-    const medianDiffMs = resultPrevious.median - resultCurrent.median;
-    const meanDiffMs = resultPrevious.mean - resultCurrent.mean;
-    const uValue = getUValueFromSamples(sampleCurrent, samplePrevious);
+    const medianDiffMs = resultTreatment.median - resultControl.median;
+    const meanDiffMs = resultTreatment.mean - resultControl.mean;
+    const uValue = getUValueFromSamples(treatmentSample, controlSample);
     const zScore = Math.abs(
-      calculateZScore(uValue, sampleCurrent.length, samplePrevious.length),
+      calculateZScore(uValue, treatmentSample.length, controlSample.length),
     );
     // For p-value of 5%
     // const isSignificant = zScore > 1.96;
@@ -951,7 +987,11 @@ function compareSamples() {
     console.log(`      moe: ${resultPrevious.moe}`);
     console.log("");
     console.log("    Results");
-    console.log(`      mean difference time (negative is slower): ${meanDiffMs} ms`);
+    console.log(`      A/A mean slot difference: ${resultControl.mean} ms`);
+    console.log(`      A/B mean difference: ${resultTreatment.mean} ms`);
+    console.log(
+      `      bias-corrected mean difference (negative is slower): ${meanDiffMs} ms`,
+    );
     if (isSignificant) {
       console.log(`      The difference is significant (z: ${zScore})`);
       if (meanDiffMs < -2 && medianDiffMs < -2) {
@@ -962,6 +1002,7 @@ function compareSamples() {
           previousMedian: resultPrevious.median,
           currentMedian: resultCurrent.median,
           meanDifferenceMs: meanDiffMs,
+          controlDifferenceMs: resultControl.mean,
           zScore,
         });
       } else if (meanDiffMs > 2 && medianDiffMs > 2) {
@@ -972,6 +1013,7 @@ function compareSamples() {
           previousMedian: resultPrevious.median,
           currentMedian: resultCurrent.median,
           meanDifferenceMs: meanDiffMs,
+          controlDifferenceMs: resultControl.mean,
           zScore,
         });
       } else {
@@ -982,6 +1024,7 @@ function compareSamples() {
           previousMedian: resultPrevious.median,
           currentMedian: resultCurrent.median,
           meanDifferenceMs: meanDiffMs,
+          controlDifferenceMs: resultControl.mean,
           zScore,
         });
       }
@@ -994,6 +1037,7 @@ function compareSamples() {
         previousMedian: resultPrevious.median,
         currentMedian: resultCurrent.median,
         meanDifferenceMs: meanDiffMs,
+        controlDifferenceMs: resultControl.mean,
         zScore,
       });
     }
@@ -1003,6 +1047,43 @@ function compareSamples() {
   return results;
   function calculateZScore(u, len1, len2) {
     return (u - (len1 * len2) / 2) / Math.sqrt((len1 * len2 * (len1 + len2 + 1)) / 12);
+  }
+
+  /**
+   * Return one previous-minus-current mean difference per browser process and scenario.
+   * @param {"control"|"treatment"} experiment
+   * @returns {Object.<string, Array.<number>>}
+   */
+  function getProcessDifferences(experiment) {
+    const valuesPerProcess = new Map();
+    for (const page of ["current", "previous"]) {
+      for (const sample of allSamples[page]) {
+        if (sample.experiment !== experiment) {
+          continue;
+        }
+        const key = `${sample.processIteration}:${sample.name}`;
+        let values = valuesPerProcess.get(key);
+        if (values === undefined) {
+          values = { name: sample.name, current: [], previous: [] };
+          valuesPerProcess.set(key, values);
+        }
+        values[page].push(sample.value);
+      }
+    }
+
+    const differences = {};
+    for (const { name, current, previous } of valuesPerProcess.values()) {
+      if (current.length === 0 || previous.length === 0) {
+        continue;
+      }
+      const currentMean = getResultsForSample(current).mean;
+      const previousMean = getResultsForSample(previous).mean;
+      if (differences[name] === undefined) {
+        differences[name] = [];
+      }
+      differences[name].push(previousMean - currentMean);
+    }
+    return differences;
   }
 }
 
@@ -1240,7 +1321,8 @@ function formatResultAsHtmlTable(results) {
   const meanResult = results.map(
     (r) =>
       `${r.previousMean.toFixed(2)}ms -> ${r.currentMean.toFixed(2)}ms ` +
-      `(${r.meanDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
+      `(corrected: ${r.meanDifferenceMs.toFixed(3)}ms, ` +
+      `A/A bias: ${r.controlDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
   );
   const medianResult = results.map(
     (r) => `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms`,

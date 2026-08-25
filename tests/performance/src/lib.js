@@ -22,6 +22,9 @@ let areTestsAlreadyRunning = false;
 const hashComponents = parseUrlHash();
 const resultServerPort = parseInt(hashComponents.p);
 const tryAttempt = hashComponents.t === undefined ? 1 : parseInt(hashComponents.t);
+const experiment = hashComponents.e;
+const processIteration = parseInt(hashComponents.o);
+const INNER_ITERATIONS = 20;
 
 if (isNaN(resultServerPort)) {
   throw new Error("The current page should have a valid result server port in its URL");
@@ -36,9 +39,15 @@ if (isNaN(resultServerPort)) {
  *     compare.
  */
 let page;
-if (location.pathname === "/previous.html") {
+if (
+  location.pathname === "/previous.html" ||
+  location.pathname === "/control-previous.html"
+) {
   page = "previous";
-} else if (location.pathname === "/current.html") {
+} else if (
+  location.pathname === "/current.html" ||
+  location.pathname === "/control-current.html"
+) {
   page = "current";
 } else {
   error("Unknown launched page: " + location.pathname);
@@ -175,7 +184,13 @@ function reportResult(testName, testResult) {
     body: JSON.stringify({
       type: "value",
       page,
-      data: { name: testName, value: testResult },
+      data: {
+        name: testName,
+        value: testResult,
+        experiment,
+        processIteration,
+        attempt: tryAttempt,
+      },
     }),
   }).catch((err) => {
     log("ERROR: Failed to send results for ", testName, err.toString());
@@ -187,13 +202,15 @@ function reportResult(testName, testResult) {
  * page or indicates to the server that it's finished if it is.
  */
 function done() {
-  if (tryAttempt < 100) {
+  if (tryAttempt < INNER_ITERATIONS) {
     hashComponents.t = tryAttempt + 1;
     updateUrlHash(hashComponents);
     if (page === "previous") {
-      location.pathname = "/current.html";
+      location.pathname =
+        experiment === "control" ? "/control-current.html" : "/current.html";
     } else {
-      location.pathname = "/previous.html";
+      location.pathname =
+        experiment === "control" ? "/control-previous.html" : "/previous.html";
     }
   } else {
     sendDone();
