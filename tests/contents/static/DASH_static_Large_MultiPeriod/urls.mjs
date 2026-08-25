@@ -2,19 +2,62 @@
 
 const BASE_MEDIA_URL = "/DASH_static_SegmentTimeline/media/dash/";
 const PERIOD_COUNT = 100;
-const VIDEO_ADAPTATION_COUNT = 5;
-const REPRESENTATION_COUNT = 12;
+const VIDEO_ADAPTATION_COUNT = 4;
+const VIDEO_REPRESENTATION_COUNT = 10;
+const AUDIO_ADAPTATION_COUNT = 4;
+const AUDIO_REPRESENTATION_COUNT = 4;
+const TEXT_ADAPTATION_COUNT = 4;
+const TEXT_REPRESENTATION_COUNT = 2;
+const LANGUAGES = ["en", "fr", "de", "es"];
 
 let periods = "";
 for (let periodIndex = 0; periodIndex < PERIOD_COUNT; periodIndex++) {
-  let adaptations = `
-    <AdaptationSet id="audio-${periodIndex}" contentType="audio" mimeType="audio/mp4" codecs="mp4a.40.2" audioSamplingRate="44100">
+  let adaptations = "";
+  for (
+    let adaptationIndex = 0;
+    adaptationIndex < AUDIO_ADAPTATION_COUNT;
+    adaptationIndex++
+  ) {
+    let representations = "";
+    for (
+      let representationIndex = 0;
+      representationIndex < AUDIO_REPRESENTATION_COUNT;
+      representationIndex++
+    ) {
+      representations += `
+      <Representation id="audio-${periodIndex}-${adaptationIndex}-${representationIndex}" bandwidth="${96000 + representationIndex * 16000}" />`;
+    }
+    adaptations += `
+    <AdaptationSet id="audio-${periodIndex}-${adaptationIndex}" contentType="audio" lang="${LANGUAGES[adaptationIndex]}" mimeType="audio/mp4" codecs="mp4a.40.2" audioSamplingRate="44100">
       <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
       <SegmentTemplate timescale="44100" initialization="${BASE_MEDIA_URL}ateam-audio=128000.dash" media="${BASE_MEDIA_URL}ateam-audio=128000-$Time$.dash">
         <SegmentTimeline><S t="0" d="177341" /></SegmentTimeline>
-      </SegmentTemplate>
-      <Representation id="audio-${periodIndex}" bandwidth="128000" />
+      </SegmentTemplate>${representations}
     </AdaptationSet>`;
+  }
+
+  for (
+    let adaptationIndex = 0;
+    adaptationIndex < TEXT_ADAPTATION_COUNT;
+    adaptationIndex++
+  ) {
+    let representations = "";
+    for (
+      let representationIndex = 0;
+      representationIndex < TEXT_REPRESENTATION_COUNT;
+      representationIndex++
+    ) {
+      representations += `
+      <Representation id="text-${periodIndex}-${adaptationIndex}-${representationIndex}" bandwidth="256" mimeType="text/vtt" />`;
+    }
+    adaptations += `
+    <AdaptationSet id="text-${periodIndex}-${adaptationIndex}" contentType="text" lang="${LANGUAGES[adaptationIndex]}" subsegmentAlignment="true">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="${adaptationIndex % 2 === 0 ? "main" : "alternate"}" />
+      <SegmentTemplate timescale="1" media="${BASE_MEDIA_URL}ateam-text-$Time$.dash">
+        <SegmentTimeline><S t="0" d="10" /></SegmentTimeline>
+      </SegmentTemplate>${representations}
+    </AdaptationSet>`;
+  }
 
   for (
     let adaptationIndex = 0;
@@ -24,7 +67,7 @@ for (let periodIndex = 0; periodIndex < PERIOD_COUNT; periodIndex++) {
     let representations = "";
     for (
       let representationIndex = 0;
-      representationIndex < REPRESENTATION_COUNT;
+      representationIndex < VIDEO_REPRESENTATION_COUNT;
       representationIndex++
     ) {
       representations += `
