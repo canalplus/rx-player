@@ -26,6 +26,15 @@ const experiment = hashComponents.e;
 const processIteration = parseInt(hashComponents.o);
 const INNER_ITERATIONS = 20;
 
+/**
+ * Return `true` for the first current/previous pair of a browser process.
+ * Expensive scenarios can use this to keep the overall CI duration bounded.
+ * @returns {boolean}
+ */
+export function shouldRunExtendedTests() {
+  return tryAttempt <= 2;
+}
+
 if (isNaN(resultServerPort)) {
   throw new Error("The current page should have a valid result server port in its URL");
 }
