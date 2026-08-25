@@ -1268,7 +1268,7 @@ function formatHtmlReport(reportObj) {
 
   const { firstRun, secondRun } = reportObj;
   if (firstRun.worse.length > 0) {
-    str += "\n<p>No significative change in performance for tests:</p>\n\n";
+    str += "\n<p>Worse performance for tests:</p>\n\n";
     str += formatResultAsHtmlTable(firstRun.worse);
   }
 
@@ -1285,9 +1285,9 @@ function formatHtmlReport(reportObj) {
 
   if (secondRun) {
     str += "\n";
-    str += "<h2>Performance tests 2st run output</h2>\n";
+    str += "<h2>Performance tests 2nd run output</h2>\n";
     if (secondRun.worse.length > 0) {
-      str += "\n<p>No significative change in performance for tests:</p>\n\n";
+      str += "\n<p>Worse performance for tests:</p>\n\n";
       str += formatResultAsHtmlTable(secondRun.worse);
     }
 

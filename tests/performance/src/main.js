@@ -30,8 +30,9 @@ declareTestGroup(
     // --- 2: seek ---
 
     testStart("seeking");
+    const seekFinished = waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     player.seekTo(20);
-    await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    await seekFinished;
     testEnd("seeking");
     await sleep(10);
 
@@ -135,8 +136,9 @@ declareTestGroup(
     // --- 2: seek ---
 
     testStart("seeking multithread");
+    const seekFinished = waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     player.seekTo(20);
-    await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    await seekFinished;
     testEnd("seeking multithread");
     await sleep(10);
 

@@ -32,7 +32,7 @@ const INNER_ITERATIONS = 20;
  * @returns {boolean}
  */
 export function shouldRunExtendedTests() {
-  return tryAttempt <= 2;
+  return tryAttempt <= 4;
 }
 
 if (isNaN(resultServerPort)) {
