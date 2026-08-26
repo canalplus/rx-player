@@ -48,17 +48,17 @@ index aa173eee7..bba6ad77c 100644
      } else if (secondExtent[2] === "c") {
        addClassName(element, "proportional-style");
        element.setAttribute("data-proportional-height", secondExtent[1]);
-diff --git a/src/parsers/texttracks/ttml/html/apply_line_height.ts b/src/parsers/texttracks/ttml/html/apply_line_height.ts
-index 63c98bbfc..92a8796e0 100644
+diff --git src/parsers/texttracks/ttml/html/apply_line_height.ts src/parsers/texttracks/ttml/html/apply_line_height.ts
+index 85e28552f..0eb0d12bf 100644
 --- a/src/parsers/texttracks/ttml/html/apply_line_height.ts
 +++ b/src/parsers/texttracks/ttml/html/apply_line_height.ts
 @@ -14,15 +14,14 @@
   * limitations under the License.
   */
  
--import addClassName from "../../../../compat/add_class_name";
- import log from "../../../../log";
- import { REGXP_LENGTH } from "../regexps";
+-import addClassName from "../../../../compat/add_class_name.ts";
+ import log from "../../../../log.ts";
+ import { REGXP_LENGTH } from "../regexps.ts";
  
  /**
 - * @param {HTMLElement} element
@@ -70,7 +70,7 @@ index 63c98bbfc..92a8796e0 100644
    const trimmedLineHeight = lineHeight.trim();
    const splittedLineHeight = trimmedLineHeight.split(" ");
  
-@@ -54,10 +53,10 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
+@@ -53,10 +52,10 @@ export default function applyLineHeight(element: HTMLElement, lineHeight: string
      // firstLineHeight[2] === "%" ||
      firstLineHeight[2] === "em"
    ) {
