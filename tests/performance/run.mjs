@@ -199,8 +199,14 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       let results2 = null;
       if (results.worse.length > 0) {
         console.warn(
-          "\nWorse performance for tests:\n\n" +
+          "\nMedian performance regressions (CI blocking):\n\n" +
             formatResultAsMarkdownTable(results.worse),
+        );
+      }
+      if (results.meanOnlyWorse.length > 0) {
+        console.warn(
+          "\nMean-only performance regressions (warning):\n\n" +
+            formatResultAsMarkdownTable(results.meanOnlyWorse),
         );
       }
       if (results.better.length > 0) {
@@ -230,6 +236,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
         testPagePort,
       });
       console.error("\nFinal result after 2 attempts\n-----------------------------\n");
+
+      if (results2.meanOnlyWorse.length > 0) {
+        console.warn(
+          "\nMean-only performance regressions on second attempt (warning):\n\n" +
+            formatResultAsMarkdownTable(results2.meanOnlyWorse),
+        );
+      }
 
       // Collect all regressions from both runs
       const allRegressions = new Map();
@@ -330,15 +343,24 @@ function formatResultAsMarkdownTable(results) {
   if (results.length === 0) {
     return "";
   }
-  const testNames = results.map((r) => r.testName);
+  const testNames = results.map((r) =>
+    r.regressionSignals === undefined
+      ? r.testName
+      : `${r.testName} (${r.regressionSignals})`,
+  );
   const meanResult = results.map(
     (r) =>
       `${r.previousMean.toFixed(2)}ms -> ${r.currentMean.toFixed(2)}ms ` +
       `(corrected: ${r.meanDifferenceMs.toFixed(3)}ms, ` +
-      `A/A bias: ${r.controlDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
+      `A/A bias: ${r.controlMeanDifferenceMs.toFixed(3)}ms, ` +
+      `z: ${r.meanZScore.toFixed(5)})`,
   );
   const medianResult = results.map(
-    (r) => `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms`,
+    (r) =>
+      `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms ` +
+      `(corrected: ${r.medianDifferenceMs.toFixed(3)}ms, ` +
+      `A/A bias: ${r.controlMedianDifferenceMs.toFixed(3)}ms, ` +
+      `z: ${r.medianZScore.toFixed(5)})`,
   );
 
   const nameColumnInnerLength = Math.max(
@@ -932,6 +954,7 @@ function compareSamples() {
 
   const results = {
     worse: [],
+    meanOnlyWorse: [],
     better: [],
     notSignificative: [],
   };
@@ -943,28 +966,60 @@ function compareSamples() {
       console.error("Error: second result misses a scenario:", testName);
       continue;
     }
-    const treatmentSample = treatmentDifferences[testName];
-    const controlSample = controlDifferences[testName];
-    if (treatmentSample === undefined || controlSample === undefined) {
+    const treatmentSamples = treatmentDifferences[testName];
+    const controlSamples = controlDifferences[testName];
+    if (treatmentSamples === undefined || controlSamples === undefined) {
       // eslint-disable-next-line no-console
       console.error("Error: control or treatment results miss a scenario:", testName);
       continue;
     }
     const resultCurrent = getResultsForSample(sampleCurrent);
     const resultPrevious = getResultsForSample(samplePrevious);
-    const resultTreatment = getResultsForSample(treatmentSample);
-    const resultControl = getResultsForSample(controlSample);
+    const resultTreatmentMean = getResultsForSample(treatmentSamples.mean);
+    const resultControlMean = getResultsForSample(controlSamples.mean);
+    const resultTreatmentMedian = getResultsForSample(treatmentSamples.median);
+    const resultControlMedian = getResultsForSample(controlSamples.median);
 
-    const medianDiffMs = resultTreatment.median - resultControl.median;
-    const meanDiffMs = resultTreatment.mean - resultControl.mean;
-    const uValue = getUValueFromSamples(treatmentSample, controlSample);
-    const zScore = Math.abs(
-      calculateZScore(uValue, treatmentSample.length, controlSample.length),
+    const meanDiffMs = resultTreatmentMean.mean - resultControlMean.mean;
+    const medianDiffMs = resultTreatmentMedian.median - resultControlMedian.median;
+    const meanUValue = getUValueFromSamples(treatmentSamples.mean, controlSamples.mean);
+    const meanZScore = Math.abs(
+      calculateZScore(
+        meanUValue,
+        treatmentSamples.mean.length,
+        controlSamples.mean.length,
+      ),
     );
-    // For p-value of 5%
-    // const isSignificant = zScore > 1.96;
-    // For p-value of 1%
-    const isSignificant = zScore > 2.575829;
+    const medianUValue = getUValueFromSamples(
+      treatmentSamples.median,
+      controlSamples.median,
+    );
+    const medianZScore = Math.abs(
+      calculateZScore(
+        medianUValue,
+        treatmentSamples.median.length,
+        controlSamples.median.length,
+      ),
+    );
+    const isMeanSignificant = meanZScore > 2.575829;
+    const isMedianSignificant = medianZScore > 2.575829;
+    const isMeanWorse = isMeanSignificant && meanDiffMs < -2;
+    const isMedianWorse = isMedianSignificant && medianDiffMs < -2;
+    const isMedianBetter = isMedianSignificant && medianDiffMs > 2;
+
+    const result = {
+      testName,
+      previousMean: resultPrevious.mean,
+      currentMean: resultCurrent.mean,
+      previousMedian: resultPrevious.median,
+      currentMedian: resultCurrent.median,
+      meanDifferenceMs: meanDiffMs,
+      medianDifferenceMs: medianDiffMs,
+      controlMeanDifferenceMs: resultControlMean.mean,
+      controlMedianDifferenceMs: resultControlMedian.median,
+      meanZScore,
+      medianZScore,
+    };
 
     /* eslint-disable no-console */
     console.log("");
@@ -987,59 +1042,29 @@ function compareSamples() {
     console.log(`      moe: ${resultPrevious.moe}`);
     console.log("");
     console.log("    Results");
-    console.log(`      A/A mean slot difference: ${resultControl.mean} ms`);
-    console.log(`      A/B mean difference: ${resultTreatment.mean} ms`);
+    console.log(`      A/A mean slot difference: ${resultControlMean.mean} ms`);
+    console.log(`      A/B mean difference: ${resultTreatmentMean.mean} ms`);
     console.log(
       `      bias-corrected mean difference (negative is slower): ${meanDiffMs} ms`,
     );
-    if (isSignificant) {
-      console.log(`      The difference is significant (z: ${zScore})`);
-      if (meanDiffMs < -2 && medianDiffMs < -2) {
-        results.worse.push({
-          testName,
-          previousMean: resultPrevious.mean,
-          currentMean: resultCurrent.mean,
-          previousMedian: resultPrevious.median,
-          currentMedian: resultCurrent.median,
-          meanDifferenceMs: meanDiffMs,
-          controlDifferenceMs: resultControl.mean,
-          zScore,
-        });
-      } else if (meanDiffMs > 2 && medianDiffMs > 2) {
-        results.better.push({
-          testName,
-          previousMean: resultPrevious.mean,
-          currentMean: resultCurrent.mean,
-          previousMedian: resultPrevious.median,
-          currentMedian: resultCurrent.median,
-          meanDifferenceMs: meanDiffMs,
-          controlDifferenceMs: resultControl.mean,
-          zScore,
-        });
-      } else {
-        results.notSignificative.push({
-          testName,
-          previousMean: resultPrevious.mean,
-          currentMean: resultCurrent.mean,
-          previousMedian: resultPrevious.median,
-          currentMedian: resultCurrent.median,
-          meanDifferenceMs: meanDiffMs,
-          controlDifferenceMs: resultControl.mean,
-          zScore,
-        });
-      }
+    console.log(`      Mean z-score: ${meanZScore}`);
+    console.log(`      A/A median slot difference: ${resultControlMedian.median} ms`);
+    console.log(`      A/B median difference: ${resultTreatmentMedian.median} ms`);
+    console.log(
+      `      bias-corrected median difference (negative is slower): ${medianDiffMs} ms`,
+    );
+    console.log(`      Median z-score: ${medianZScore}`);
+
+    if (isMedianWorse) {
+      result.regressionSignals = isMeanWorse ? "mean + median" : "median";
+      results.worse.push(result);
+    } else if (isMeanWorse) {
+      result.regressionSignals = "mean only";
+      results.meanOnlyWorse.push(result);
+    } else if (isMedianBetter) {
+      results.better.push(result);
     } else {
-      console.log(`      The difference is not significant (z: ${zScore})`);
-      results.notSignificative.push({
-        testName,
-        previousMean: resultPrevious.mean,
-        currentMean: resultCurrent.mean,
-        previousMedian: resultPrevious.median,
-        currentMedian: resultCurrent.median,
-        meanDifferenceMs: meanDiffMs,
-        controlDifferenceMs: resultControl.mean,
-        zScore,
-      });
+      results.notSignificative.push(result);
     }
     console.log("");
   }
@@ -1050,9 +1075,10 @@ function compareSamples() {
   }
 
   /**
-   * Return one previous-minus-current mean difference per browser process and scenario.
+   * Return one previous-minus-current mean and median difference per browser process
+   * and scenario.
    * @param {"control"|"treatment"} experiment
-   * @returns {Object.<string, Array.<number>>}
+   * @returns {Object.<string, {mean: Array.<number>, median: Array.<number>}>}
    */
   function getProcessDifferences(experiment) {
     const valuesPerProcess = new Map();
@@ -1079,9 +1105,12 @@ function compareSamples() {
       const currentMean = getResultsForSample(current).mean;
       const previousMean = getResultsForSample(previous).mean;
       if (differences[name] === undefined) {
-        differences[name] = [];
+        differences[name] = { mean: [], median: [] };
       }
-      differences[name].push(previousMean - currentMean);
+      const currentMedian = getResultsForSample(current).median;
+      const previousMedian = getResultsForSample(previous).median;
+      differences[name].mean.push(previousMean - currentMean);
+      differences[name].median.push(previousMedian - currentMedian);
     }
     return differences;
   }
@@ -1268,8 +1297,13 @@ function formatHtmlReport(reportObj) {
 
   const { firstRun, secondRun } = reportObj;
   if (firstRun.worse.length > 0) {
-    str += "\n<p>Worse performance for tests:</p>\n\n";
+    str += "\n<p>Median performance regressions (CI blocking):</p>\n\n";
     str += formatResultAsHtmlTable(firstRun.worse);
+  }
+
+  if (firstRun.meanOnlyWorse.length > 0) {
+    str += "\n<p>Mean-only performance regressions (warning):</p>\n\n";
+    str += formatResultAsHtmlTable(firstRun.meanOnlyWorse);
   }
 
   if (firstRun.better.length > 0) {
@@ -1287,8 +1321,13 @@ function formatHtmlReport(reportObj) {
     str += "\n";
     str += "<h2>Performance tests 2nd run output</h2>\n";
     if (secondRun.worse.length > 0) {
-      str += "\n<p>Worse performance for tests:</p>\n\n";
+      str += "\n<p>Median performance regressions (CI blocking):</p>\n\n";
       str += formatResultAsHtmlTable(secondRun.worse);
+    }
+
+    if (secondRun.meanOnlyWorse.length > 0) {
+      str += "\n<p>Mean-only performance regressions (warning):</p>\n\n";
+      str += formatResultAsHtmlTable(secondRun.meanOnlyWorse);
     }
 
     if (secondRun.better.length > 0) {
@@ -1317,15 +1356,24 @@ function formatResultAsHtmlTable(results) {
   if (results.length === 0) {
     return "";
   }
-  const testNames = results.map((r) => r.testName);
+  const testNames = results.map((r) =>
+    r.regressionSignals === undefined
+      ? r.testName
+      : `${r.testName} (${r.regressionSignals})`,
+  );
   const meanResult = results.map(
     (r) =>
       `${r.previousMean.toFixed(2)}ms -> ${r.currentMean.toFixed(2)}ms ` +
       `(corrected: ${r.meanDifferenceMs.toFixed(3)}ms, ` +
-      `A/A bias: ${r.controlDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
+      `A/A bias: ${r.controlMeanDifferenceMs.toFixed(3)}ms, ` +
+      `z: ${r.meanZScore.toFixed(5)})`,
   );
   const medianResult = results.map(
-    (r) => `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms`,
+    (r) =>
+      `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms ` +
+      `(corrected: ${r.medianDifferenceMs.toFixed(3)}ms, ` +
+      `A/A bias: ${r.controlMedianDifferenceMs.toFixed(3)}ms, ` +
+      `z: ${r.medianZScore.toFixed(5)})`,
   );
 
   let str;
