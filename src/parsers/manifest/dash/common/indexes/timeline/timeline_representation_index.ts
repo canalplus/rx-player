@@ -128,8 +128,7 @@ export interface ITimelineIndex {
 export interface ITimelineIndexIndexArgument {
   indexRange?: [number, number] | undefined;
   initialization?:
-    | { media?: string | undefined; range?: [number, number] | undefined }
-    | undefined;
+    { media?: string | undefined; range?: [number, number] | undefined } | undefined;
   media?: string | undefined;
   startNumber?: number | undefined;
   endNumber?: number | undefined;

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
 
 import { exec, spawn } from "child_process";
 import * as fs from "fs";
@@ -843,7 +842,7 @@ function rankSamples(list) {
     };
   });
 
-  for (let i = 0; i < withRank.length; ) {
+  for (let i = 0; i < withRank.length;) {
     let count = 1;
     let total = withRank[i].rank;
 

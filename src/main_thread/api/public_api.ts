@@ -2071,10 +2071,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   seekTo(
     time:
-      | number
-      | { relative: number }
-      | { position: number }
-      | { wallClockTime: number },
+      number | { relative: number } | { position: number } | { wallClockTime: number },
   ): number {
     if (this.videoElement === null) {
       throw new Error("Disposed player");

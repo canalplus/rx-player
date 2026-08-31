@@ -2,8 +2,7 @@ import { describe, afterEach, it, expect, vi, beforeEach } from "vitest";
 import probeHDCPPolicy from "../../../../../../../src/experimental/tools/mediaCapabilitiesProber/probers/HDCPPolicy.ts";
 
 type IRequestMediaKeySystemAccess =
-  | ((...args: unknown[]) => Promise<unknown>)
-  | undefined;
+  ((...args: unknown[]) => Promise<unknown>) | undefined;
 
 const compatEmeMock: {
   default: { requestMediaKeySystemAccess: IRequestMediaKeySystemAccess };

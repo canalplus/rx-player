@@ -133,9 +133,7 @@ player.attachWorker({ workerUrl: EMBEDDED_WORKER }).catch((err) => {
 
 // Any further call to `loadVideo` may rely on WebWorker if possible (see
 // limitations below)
-player.loadVideo({
-  /* ... */
-});
+player.loadVideo({/* ... */});
 
 // As a long as a content is loaded (or even loading or reloading), you can know
 // if we rely on a WebWorker to play it by calling:
@@ -354,9 +352,7 @@ optionally the `mpd-parser.wasm` file if you wanted WebAssembly capabilities) by
 either its URL (obtained in step 1) or its embedded version:
 
 ```js
-const player = new RxPlayer({
-  /* ... */
-});
+const player = new RxPlayer({/* ... */});
 player
   .attachWorker({ workerUrl: URL_TO_WORKER_FILE })
   .then(() => console.log("Worker succesfully attached!"))
@@ -390,9 +386,7 @@ can be considered safer and simpler to just await `attachWorker`'s returned Prom
 loading a content:
 
 ```js
-const player = new RxPlayer({
-  /* ... */
-});
+const player = new RxPlayer({/* ... */});
 try {
   await player.attachWorker({
     workerUrl: URL_TO_WORKER_FILE,
@@ -405,9 +399,7 @@ try {
 
 // This loaded content may only load in "multithread" mode if `attachWorker`
 // succeeded
-player.loadVideo({
-  /* ... */
-});
+player.loadVideo({/* ... */});
 ```
 
 ### Step 4: Load a content

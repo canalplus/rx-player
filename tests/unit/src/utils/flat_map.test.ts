@@ -2,7 +2,7 @@ import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import flatMap from "../../../../src/utils/flat_map.ts";
 
 type ICustomArrayProto = Omit<typeof Array.prototype, "flatMap"> & {
-  flatMap?: typeof Array.prototype.flatMap | undefined;
+  flatMap?: unknown;
 };
 
 const proto: ICustomArrayProto = Array.prototype;

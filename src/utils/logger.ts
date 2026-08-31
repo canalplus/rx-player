@@ -24,9 +24,7 @@ export type ILogFormat = "standard" | "full";
 
 type IAcceptedLogValueBase = boolean | string | number | null | undefined;
 export type IAcceptedLogValue =
-  | IAcceptedLogValueBase
-  | Error
-  | Partial<Record<string, IAcceptedLogValueBase>>;
+  IAcceptedLogValueBase | Error | Partial<Record<string, IAcceptedLogValueBase>>;
 
 /**
  * Area of the code the log is linked to.

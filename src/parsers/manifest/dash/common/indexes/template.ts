@@ -103,8 +103,7 @@ export interface ITemplateIndexIndexArgument {
   duration?: number | undefined;
   indexRange?: [number, number] | undefined;
   initialization?:
-    | { media?: string | undefined; range?: [number, number] | undefined }
-    | undefined;
+    { media?: string | undefined; range?: [number, number] | undefined } | undefined;
   media?: string | undefined;
   presentationTimeOffset?: number | undefined;
   startNumber?: number | undefined;

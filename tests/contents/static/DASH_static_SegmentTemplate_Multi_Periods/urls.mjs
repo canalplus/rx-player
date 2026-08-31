@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 import * as path from "path";
 import flatMap from "../utils/flatMap.mjs";
 import patchSegmentWithTimeOffset from "../utils/patchSegmentWithTimeOffset.mjs";

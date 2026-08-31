@@ -221,7 +221,7 @@ export default function SessionEventsListener(
                 `"getLicense" timeout exceeded (${getLicenseTimeout} ms)`,
               ),
             );
-          }, getLicenseTimeout) as unknown as number;
+          }, getLicenseTimeout);
         }
         Promise.resolve(getLicense).then(clearTimeoutAndResolve, clearTimeoutAndReject);
       } catch (err) {

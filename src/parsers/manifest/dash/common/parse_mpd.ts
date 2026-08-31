@@ -112,9 +112,7 @@ export interface IIrParserResponseDone {
 }
 
 export type IIrParserResponse =
-  | IIrParserResponseNeedsClock
-  | IIrParserResponseNeedsXlinks
-  | IIrParserResponseDone;
+  IIrParserResponseNeedsClock | IIrParserResponseNeedsXlinks | IIrParserResponseDone;
 
 /**
  * Checks if xlinks needs to be loaded before actually parsing the manifest.

@@ -160,8 +160,7 @@ interface IParsedLoadVideoOptionsHTML extends IParsedLoadVideoOptionsBase {
  * `loadVideo` method.
  */
 export type IParsedLoadVideoOptions =
-  | IParsedLoadVideoOptionsNative
-  | IParsedLoadVideoOptionsHTML;
+  IParsedLoadVideoOptionsNative | IParsedLoadVideoOptionsHTML;
 
 /**
  * Parse options given to the API constructor and set default options as found

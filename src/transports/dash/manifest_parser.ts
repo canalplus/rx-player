@@ -122,8 +122,7 @@ export default function generateManifestParser(
      * @returns {Object|Promise.<Object>}
      */
     function runDefaultJsParser():
-      | IManifestParserResult
-      | Promise<IManifestParserResult> {
+      IManifestParserResult | Promise<IManifestParserResult> {
       if (parsers.js !== null) {
         const manifestStr = getManifestAsString(responseData);
         const parsedManifest = parsers.js(manifestStr, dashParserOpts);

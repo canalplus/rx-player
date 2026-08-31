@@ -25,8 +25,7 @@ interface IWebKitMediaKeysConstructor {
 }
 
 export default function getWebKitMediaKeysConstructor():
-  | undefined
-  | IWebKitMediaKeysConstructor {
+  undefined | IWebKitMediaKeysConstructor {
   const { WebKitMediaKeys } = globalScope as typeof globalThis & {
     WebKitMediaKeys?: IWebKitMediaKeysConstructor;
   };

@@ -536,8 +536,7 @@ export interface ITransportTextSegmentPipeline {
 }
 
 export type ITransportSegmentPipeline =
-  | ITransportAudioVideoSegmentPipeline
-  | ITransportTextSegmentPipeline;
+  ITransportAudioVideoSegmentPipeline | ITransportTextSegmentPipeline;
 
 export type ITransportPipeline = ITransportManifestPipeline | ITransportSegmentPipeline;
 
@@ -707,10 +706,7 @@ export type ILoadedAudioVideoSegmentFormat = Uint8Array<ArrayBuffer> | ArrayBuff
 
 /** Format of a loaded text segment before parsing. */
 export type ILoadedTextSegmentFormat =
-  | Uint8Array<ArrayBuffer>
-  | ArrayBuffer
-  | string
-  | null;
+  Uint8Array<ArrayBuffer> | ArrayBuffer | string | null;
 
 /**
  * Result returned by a segment parser when it parsed a chunk from an init

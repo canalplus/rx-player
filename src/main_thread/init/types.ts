@@ -267,5 +267,4 @@ export type IStallingSituation =
 // a decryption key)
 
 export type ITextDisplayerOptions =
-  | { textTrackMode?: "native" }
-  | { textTrackMode: "html"; textTrackElement: HTMLElement };
+  { textTrackMode?: "native" } | { textTrackMode: "html"; textTrackElement: HTMLElement };

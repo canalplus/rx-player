@@ -27,8 +27,7 @@ export type ICodeWithAdaptationType =
   | "MANIFEST_INCOMPATIBLE_CODECS_ERROR";
 
 export type ICodeWithManifestPositionError =
-  | "MEDIA_TIME_BEFORE_MANIFEST"
-  | "MEDIA_TIME_AFTER_MANIFEST";
+  "MEDIA_TIME_BEFORE_MANIFEST" | "MEDIA_TIME_AFTER_MANIFEST";
 
 interface ITimeInfo {
   position: number;

@@ -31,9 +31,14 @@ describe("renderThumbnail", () => {
       class FakeImage {
         public onload: null | (() => void) = null;
         public onerror: null | (() => void) = null;
+        value: string = "";
 
-        set src(_value: string) {
+        set src(value: string) {
+          this.value = value;
           imageInstances.push(this);
+        }
+        get src(): string {
+          return this.value;
         }
       },
     );

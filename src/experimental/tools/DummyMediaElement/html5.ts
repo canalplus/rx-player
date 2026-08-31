@@ -41,8 +41,7 @@ export interface IDummyMediaElementOptions {
   drmOptions?:
     | {
         requestMediaKeySystemAccessConfig?:
-          | IRequestMediaKeySystemAccessConfig
-          | undefined;
+          IRequestMediaKeySystemAccessConfig | undefined;
       }
     | undefined;
 }

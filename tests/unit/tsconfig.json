@@ -3,6 +3,7 @@
   "compilerOptions": {
     "rootDir": "../..",
     "module": "es2020",
+    "lib": ["es2020", "dom"],
     "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "typeRoots": ["../../node_modules/@types"]

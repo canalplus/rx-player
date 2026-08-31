@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 /**
  * Update the decode time of ISOBMFF segments.
  * @param {Uint8Array} segmentData - The ISOBMFF segment.

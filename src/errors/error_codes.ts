@@ -18,10 +18,7 @@ import type { IRequestErrorType } from "../utils/request/index.ts";
 import { RequestErrorTypes } from "../utils/request/index.ts";
 
 export type IErrorType =
-  | "NETWORK_ERROR"
-  | "MEDIA_ERROR"
-  | "ENCRYPTED_MEDIA_ERROR"
-  | "OTHER_ERROR";
+  "NETWORK_ERROR" | "MEDIA_ERROR" | "ENCRYPTED_MEDIA_ERROR" | "OTHER_ERROR";
 
 export type IEncryptedMediaErrorCode =
   | "INCOMPATIBLE_KEYSYSTEMS"
@@ -71,16 +68,10 @@ export type INetworkErrorType = IRequestErrorType;
 export const NetworkErrorTypes = RequestErrorTypes;
 
 export type IOtherErrorCode =
-  | "PIPELINE_LOAD_ERROR"
-  | "PIPELINE_PARSE_ERROR"
-  | "INTEGRITY_ERROR"
-  | "NONE";
+  "PIPELINE_LOAD_ERROR" | "PIPELINE_PARSE_ERROR" | "INTEGRITY_ERROR" | "NONE";
 
 export type IErrorCode =
-  | INetworkErrorCode
-  | IMediaErrorCode
-  | IEncryptedMediaErrorCode
-  | IOtherErrorCode;
+  INetworkErrorCode | IMediaErrorCode | IEncryptedMediaErrorCode | IOtherErrorCode;
 
 const ErrorTypes = {
   NETWORK_ERROR: "NETWORK_ERROR",

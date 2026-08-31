@@ -152,9 +152,7 @@ export default class TextSegmentSink extends SegmentSink {
 /** Data of chunks that should be pushed to the HTMLTextSegmentSink. */
 export interface ITextTracksBufferSegmentData<
   T extends string | Uint8Array<ArrayBuffer> | ArrayBuffer =
-    | string
-    | Uint8Array<ArrayBuffer>
-    | ArrayBuffer,
+    string | Uint8Array<ArrayBuffer> | ArrayBuffer,
 > {
   /** The text track data, in the format indicated in `type`. */
   data: T;

@@ -1,9 +1,7 @@
 import errorMessage from "./error_message.ts";
 
 type IWorkerInitializationErrorCode =
-  | "UNKNOWN_ERROR"
-  | "SETUP_ERROR"
-  | "INCOMPATIBLE_ERROR";
+  "UNKNOWN_ERROR" | "SETUP_ERROR" | "INCOMPATIBLE_ERROR";
 
 /**
  * Error linked to the WebWorker initialization.

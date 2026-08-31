@@ -107,8 +107,8 @@ async function removePreviousBuildArtefacts() {
 }
 
 /**
- * Compile ES2017 and CommonJS builds by spawning tsc, also transpile CommonJS
- * to ES5 with swc.
+ * Compile the ES2017 build with tsc, then transpile its JavaScript files to
+ * ES5/CommonJS with swc.
  * @param {Object} opts
  * @param {boolean} opts.devMode
  * @param {boolean} opts.noCheck
@@ -119,36 +119,27 @@ async function compile(opts) {
   // We just spawn a separate process running tsc:
 
   console.log(" ⚙️ Compiling project with TypeScript...");
-  const es6Build = spawnShellProm(
+  await spawnShellProm(
     "npx tsc -p " +
       path.join(ROOT_DIR, opts.devMode ? "tsconfig.dev.json" : "tsconfig.json") +
       (opts.noCheck ? " --noCheck" : ""),
     /** @param {number|null} code */
     (code) => new Error(`es2017 compilation process exited with code ${code}`),
   );
-  const commonJsBuild = spawnShellProm(
-    "npx tsc -p " +
-      path.join(
-        ROOT_DIR,
-        opts.devMode ? "tsconfig.dev.commonjs.json" : "tsconfig.commonjs.json",
-      ) +
-      (opts.noCheck ? " --noCheck" : ""),
+
+  console.log(" 🔄 Creating commonjs build with swc...");
+  await spawnShellProm(
+    "npx swc es2017 -d commonjs --strip-leading-paths --copy-files --extensions .js " +
+      "--config jsc.target=es5 --config module.type=commonjs --quiet",
     /** @param {number|null} code */
-    (code) => new Error(`CommonJS compilation process exited with code ${code}`),
+    (code) => new Error(`swc transpilation process exited with code ${code}`),
+    { cwd: path.join(ROOT_DIR, "dist") },
   );
 
-  await Promise.all([
-    es6Build,
-    commonJsBuild.then(async () => {
-      // Transpile the CommonJS directory from ES2017 to ES5 using swc
-      console.log(" 🔄 Transpiling CommonJS files to ES5...");
-      await spawnShellProm(
-        `npx swc dist/commonjs -d dist --strip-leading-paths --config jsc.target=es5 --config module.type=commonjs --quiet`,
-        /** @param {number|null} code */
-        (code) => new Error(`swc transpilation process exited with code ${code}`),
-      );
-    }),
-  ]);
+  fs.writeFileSync(
+    path.join(ROOT_DIR, "dist/commonjs/package.json"),
+    '{\n  "type": "commonjs"\n}\n',
+  );
 }
 
 /**
@@ -160,11 +151,17 @@ async function compile(opts) {
  * @param {Function} errorOnCode - Callback which will be called if the command
  * has an exit code different than `0`, with the exit code in argument. The
  * value returned by that callback will be the value rejected by the Promise.
+ * @param {Object} [options]
+ * @param {string|undefined} [options.cwd]
  * @returns {Promise.<void>}
  */
-function spawnShellProm(command, errorOnCode) {
+function spawnShellProm(command, errorOnCode, options = {}) {
   return new Promise((res, rej) => {
-    const childProcess = spawn(command, { shell: true, stdio: "inherit" });
+    const childProcess = spawn(command, {
+      cwd: options.cwd,
+      shell: true,
+      stdio: "inherit",
+    });
     childProcess.on("close", (code) => {
       if (code !== 0) {
         rej(errorOnCode(code));

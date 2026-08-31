@@ -530,9 +530,7 @@ export interface IResetTextDisplayerCoreMessage {
 type ISentLogValueBase = boolean | string | number | null | undefined;
 
 export type ISentLogValue =
-  | ISentLogValueBase
-  | ISentError
-  | Partial<Record<string, ISentLogValueBase>>;
+  ISentLogValueBase | ISentError | Partial<Record<string, ISentLogValueBase>>;
 
 export interface ILogMessageCoreMessage {
   type: CoreMessageType.LogMessage;
