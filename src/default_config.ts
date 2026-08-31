@@ -326,6 +326,15 @@ const DEFAULT_CONFIG = {
   },
 
   /**
+   * Maximum delay that can be applied from a Retry-After response field, in
+   * milliseconds.
+   *
+   * Longer delays will be capped to avoid blocking request retries for too long.
+   * @type {Number}
+   */
+  MAX_RETRY_AFTER_DELAY: 60 * 1000,
+
+  /**
    * Minimum interval at which playback information samples will be taken. This
    * variable is for the "regular" mediasource strategy (that is, not for the
    * directfile API.

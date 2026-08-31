@@ -2292,15 +2292,18 @@ function bindNumberReferencesToCore(
 
 function formatCoreError(sentError: ISentError): IPlayerError {
   switch (sentError.name) {
-    case "NetworkError":
+    case "NetworkError": {
+      const retryAfter = sentError.baseError.retryAfter;
       return new NetworkError(
         sentError.code,
         new RequestError(
           sentError.baseError.url,
           sentError.baseError.status,
           sentError.baseError.type,
+          retryAfter === undefined ? undefined : { retryAfter },
         ),
       );
+    }
     case "MediaError":
       return deserializeMediaError(sentError);
     case "EncryptedMediaError":

@@ -25,6 +25,20 @@ describe("errors - RequestError", () => {
     expect(requestError.url).toBe("foo");
     expect(requestError.status).toBe(0);
     expect(requestError.type).toBe("TIMEOUT");
+    expect(requestError.retryAfter).toBeUndefined();
     expect(requestError.message).toBe("The request timed out");
+  });
+
+  it("should serialize Retry-After header information when available", () => {
+    const requestError = new RequestError("foo", 429, "ERROR_HTTP_CODE", {
+      retryAfter: "3",
+    });
+    expect(requestError.retryAfter).toBe("3");
+    expect(requestError.serialize()).toEqual({
+      url: "foo",
+      status: 429,
+      type: "ERROR_HTTP_CODE",
+      retryAfter: "3",
+    });
   });
 });

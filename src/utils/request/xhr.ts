@@ -206,7 +206,15 @@ export default function request<T>(
             responseData,
           });
         } else {
-          reject(new RequestError(url, xhr.status, RequestErrorTypes.ERROR_HTTP_CODE));
+          const retryAfter = xhr.getResponseHeader("Retry-After");
+          reject(
+            new RequestError(
+              url,
+              xhr.status,
+              RequestErrorTypes.ERROR_HTTP_CODE,
+              retryAfter === null ? undefined : { retryAfter },
+            ),
+          );
         }
       }
     };
