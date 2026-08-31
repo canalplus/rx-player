@@ -204,10 +204,15 @@ jobs:
       - name: Update version for dev release
         run: npm run update-version "${{ steps.get_version.outputs.version }}"
 
-      - name: Build and publish dev version
+      - name: Build, check and publish dev version
         run: |
           npm run build
-          npm publish --tag dev --provenance
+          PACKAGE_DIRECTORY="$RUNNER_TEMP/rx-player-dev-package"
+          mkdir -p "$PACKAGE_DIRECTORY"
+          PACKAGE_NAME=$(npm pack --ignore-scripts --pack-destination "$PACKAGE_DIRECTORY")
+          PACKAGE_PATH="$PACKAGE_DIRECTORY/$PACKAGE_NAME"
+          node scripts/check_package_build.mjs --package "$PACKAGE_PATH"
+          npm publish "$PACKAGE_PATH" --ignore-scripts --tag dev --provenance
 
       - name: Apply Canal+ patch
         run: git apply ./scripts/canal-release.patch
@@ -215,10 +220,15 @@ jobs:
       - name: Update version for canal release
         run: npm run update-version "${{ steps.get_version.outputs.canal_version }}"
 
-      - name: Build and publish Canal version
+      - name: Build, check and publish Canal version
         run: |
           npm run build
-          npm publish --tag canal --provenance
+          PACKAGE_DIRECTORY="$RUNNER_TEMP/rx-player-canal-package"
+          mkdir -p "$PACKAGE_DIRECTORY"
+          PACKAGE_NAME=$(npm pack --ignore-scripts --pack-destination "$PACKAGE_DIRECTORY")
+          PACKAGE_PATH="$PACKAGE_DIRECTORY/$PACKAGE_NAME"
+          node scripts/check_package_build.mjs --package "$PACKAGE_PATH"
+          npm publish "$PACKAGE_PATH" --ignore-scripts --tag canal --provenance
 
   publish_official:
     if: needs.determine_release_type.outputs.release_type == 'official'
@@ -261,6 +271,16 @@ jobs:
       - name: Install RxPlayer dependencies
         run: npm ci
 
+      - name: Build and check official package
+        run: |
+          npm run build
+          PACKAGE_DIRECTORY="$RUNNER_TEMP/rx-player-official-package"
+          mkdir -p "$PACKAGE_DIRECTORY"
+          PACKAGE_NAME=$(npm pack --ignore-scripts --pack-destination "$PACKAGE_DIRECTORY")
+          PACKAGE_PATH="$PACKAGE_DIRECTORY/$PACKAGE_NAME"
+          node scripts/check_package_build.mjs --package "$PACKAGE_PATH"
+          echo "PACKAGE_PATH=$PACKAGE_PATH" >> "$GITHUB_ENV"
+
       - name: Merge on stable branch
         run: |
           git config user.name "github-actions[bot]"
@@ -287,7 +307,5 @@ jobs:
           git checkout stable # go back to stable for publish
           git push origin stable
 
-      - name: Build and publish official release
-        run: |
-          npm run build
-          npm publish --provenance
+      - name: Publish official release
+        run: npm publish "$PACKAGE_PATH" --ignore-scripts --provenance
