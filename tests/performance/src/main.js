@@ -6,7 +6,7 @@ import sleep from "../../utils/sleep";
 import waitForPlayerState, {
   waitForLoadedStateAfterLoadVideo,
 } from "../../utils/waitForPlayerState";
-import { declareTestGroup, testEnd, testStart } from "./lib";
+import { declareTestGroup, shouldRunExtendedTests, testEnd, testStart } from "./lib";
 
 declareTestGroup(
   "content loading monothread",
@@ -30,8 +30,9 @@ declareTestGroup(
     // --- 2: seek ---
 
     testStart("seeking");
+    const seekFinished = waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     player.seekTo(20);
-    await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    await seekFinished;
     testEnd("seeking");
     await sleep(10);
 
@@ -56,6 +57,57 @@ declareTestGroup(
   },
   20000,
 );
+
+if (shouldRunExtendedTests()) {
+  declareTestGroup(
+    "extended loading scenarios",
+    async () => {
+      const player = new RxPlayer({
+        initialVideoBitrate: Infinity,
+        initialAudioBitrate: Infinity,
+        videoElement: document.getElementsByTagName("video")[0],
+      });
+
+      player.loadVideo({
+        url: multiAdaptationSetsInfos.url,
+        transport: multiAdaptationSetsInfos.transport,
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+
+      testStart("loading over active content");
+      player.loadVideo({
+        url: multiAdaptationSetsInfos.url,
+        transport: multiAdaptationSetsInfos.transport,
+      });
+      await waitForLoadedStateAfterLoadVideo(player);
+      testEnd("loading over active content");
+      player.dispose();
+      await sleep(10);
+
+      const largeManifestPlayer = new RxPlayer({
+        videoElement: document.getElementsByTagName("video")[0],
+      });
+      const manifestParsed = new Promise((resolve) => {
+        largeManifestPlayer.addEventListener("newAvailablePeriods", resolve);
+      });
+      testStart("large multi-period manifest");
+      largeManifestPlayer.loadVideo({
+        url:
+          "http://" +
+          __TEST_CONTENT_SERVER__.URL +
+          ":" +
+          __TEST_CONTENT_SERVER__.PORT +
+          "/DASH_static_Large_MultiPeriod/manifest.mpd",
+        transport: "dash",
+      });
+      await manifestParsed;
+      testEnd("large multi-period manifest");
+      largeManifestPlayer.dispose();
+      await sleep(10);
+    },
+    20000,
+  );
+}
 
 declareTestGroup(
   "content loading multithread",
@@ -84,8 +136,9 @@ declareTestGroup(
     // --- 2: seek ---
 
     testStart("seeking multithread");
+    const seekFinished = waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
     player.seekTo(20);
-    await waitForPlayerState(player, "PAUSED", ["SEEKING", "BUFFERING"]);
+    await seekFinished;
     testEnd("seeking multithread");
     await sleep(10);
 

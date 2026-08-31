@@ -11,6 +11,7 @@
 /tests/performance/node_modules
 /tests/performance/previous.js
 /tests/performance/current.js
+/tests/performance/control-current.js
 /tests/performance/package.json
 /tests/performance/package-lock.json
 

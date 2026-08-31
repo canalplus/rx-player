@@ -30,13 +30,12 @@ const DEFAULT_TEST_PAGE_PORT = 8080;
 const DEFAULT_RESULT_SERVER_PORT = 6789;
 
 /**
- * Number of times test are runs on each browser/RxPlayer configuration.
- * More iterations means (much) more time to perform tests, but also produce
- * better estimates.
+ * Number of fresh browser processes used by the A/A control and A/B treatment.
  *
  * TODO: GitHub actions fails when running the 128th browser. Find out why.
  */
-const TEST_ITERATIONS = 30;
+const CONTROL_ITERATIONS = 40;
+const TREATMENT_ITERATIONS = 40;
 
 /**
  * `ChildProcess` instance of the current browser being run.
@@ -45,10 +44,7 @@ const TEST_ITERATIONS = 30;
 let currentBrowser;
 
 /**
- * Contains "tasks" which are function each run inside a new browser process.
- * Task are added by groups of two:
- *   - the first one testing the current player build
- *   - the second one testing the last RxPlayer production version.
+ * Contains tasks which each run inside a fresh browser process.
  */
 const tasks = [];
 
@@ -202,8 +198,14 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       let results2 = null;
       if (results.worse.length > 0) {
         console.warn(
-          "\nWorse performance for tests:\n\n" +
+          "\nMedian performance regressions (CI blocking):\n\n" +
             formatResultAsMarkdownTable(results.worse),
+        );
+      }
+      if (results.meanOnlyWorse.length > 0) {
+        console.warn(
+          "\nMean-only performance regressions (warning):\n\n" +
+            formatResultAsMarkdownTable(results.meanOnlyWorse),
         );
       }
       if (results.better.length > 0) {
@@ -226,32 +228,56 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 
       console.warn("\nRetrying one time just to check if unlucky...");
 
-      results2 = await runPerformanceTests(browser);
+      results2 = await runPerformanceTests({
+        browser,
+        contentServerPort,
+        resultServerPort,
+        testPagePort,
+      });
       console.error("\nFinal result after 2 attempts\n-----------------------------\n");
 
-      if (results.better.length > 0) {
-        console.error(
-          "\nBetter performance at first attempt for tests:\n\n" +
-            formatResultAsMarkdownTable(results.better),
-        );
-      }
-      if (results2.better.length > 0) {
-        console.error(
-          "\nBetter performance at second attempt for tests:\n\n" +
-            formatResultAsMarkdownTable(results2.better),
+      if (results2.meanOnlyWorse.length > 0) {
+        console.warn(
+          "\nMean-only performance regressions on second attempt (warning):\n\n" +
+            formatResultAsMarkdownTable(results2.meanOnlyWorse),
         );
       }
 
-      if (results.worse.length > 0) {
+      // Collect all regressions from both runs
+      const allRegressions = new Map();
+      for (const failure of results.worse) {
+        allRegressions.set(failure.testName, { first: failure, second: null });
+      }
+      for (const failure of results2.worse) {
+        const existing = allRegressions.get(failure.testName);
+        if (existing) {
+          existing.second = failure;
+        } else {
+          allRegressions.set(failure.testName, { first: null, second: failure });
+        }
+      }
+
+      const confirmedRegressions = [];
+      const inconsistentResults = [];
+
+      for (const [_testName, { first, second }] of allRegressions) {
+        if (first && second) {
+          confirmedRegressions.push(first);
+        } else {
+          inconsistentResults.push(first || second);
+        }
+      }
+
+      if (confirmedRegressions.length > 0) {
         console.error(
           "\nWorse performance at first attempt for tests:\n\n" +
-            formatResultAsMarkdownTable(results.worse),
+            formatResultAsMarkdownTable(confirmedRegressions),
         );
       }
-      if (results2.worse.length > 0) {
+      if (inconsistentResults.length > 0) {
         console.warn(
-          "\nWorse performance at second attempt for tests:\n\n" +
-            formatResultAsMarkdownTable(results.worse),
+          "\nInconsistent results for tests (failed only one run):\n\n" +
+            formatResultAsMarkdownTable(inconsistentResults),
         );
       }
 
@@ -280,10 +306,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
             }
             const htmlReport = formatHtmlReport({
               success:
-                results.worse.length === 0 &&
-                (results2 === undefined ||
-                  results2 === null ||
-                  results2.worse.length === 0),
+                results.worse.length === 0 ||
+                (results2 !== null &&
+                  !results.worse.some((firstResult) =>
+                    results2.worse.some(
+                      (secondResult) => secondResult.testName === firstResult.testName,
+                    ),
+                  )),
               baseBranch: branchName,
               commitSha,
               firstRun: results,
@@ -313,14 +342,24 @@ function formatResultAsMarkdownTable(results) {
   if (results.length === 0) {
     return "";
   }
-  const testNames = results.map((r) => r.testName);
+  const testNames = results.map((r) =>
+    r.regressionSignals === undefined
+      ? r.testName
+      : `${r.testName} (${r.regressionSignals})`,
+  );
   const meanResult = results.map(
     (r) =>
       `${r.previousMean.toFixed(2)}ms -> ${r.currentMean.toFixed(2)}ms ` +
-      `(${r.meanDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
+      `(corrected: ${r.meanDifferenceMs.toFixed(3)}ms, ` +
+      `A/A bias: ${r.controlMeanDifferenceMs.toFixed(3)}ms, ` +
+      `z: ${r.meanZScore.toFixed(5)})`,
   );
   const medianResult = results.map(
-    (r) => `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms`,
+    (r) =>
+      `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms ` +
+      `(corrected: ${r.medianDifferenceMs.toFixed(3)}ms, ` +
+      `A/A bias: ${r.controlMedianDifferenceMs.toFixed(3)}ms, ` +
+      `z: ${r.medianZScore.toFixed(5)})`,
   );
 
   const nameColumnInnerLength = Math.max(
@@ -391,6 +430,10 @@ function formatResultAsMarkdownTable(results) {
 /**
  * Initialize and start all tests on a browser..
  * @param {Object} params
+ * @param {"control"|"treatment"} params.experiment - Whether both slots load
+ * the previous build or the current slot loads the current build.
+ * @param {number} params.processIteration - Identifier attached to every sample
+ * produced by this browser process.
  * @param {string} [params.browser="chrome"] - The browser to run the tests on.
  * "chrome" by default. Can be either "chrome" or "firefox".
  * @param {number} params.contentServerPort - The port through which test
@@ -407,6 +450,8 @@ function runPerformanceTests({
   resultServerPort = DEFAULT_RESULT_SERVER_PORT,
   testPagePort = DEFAULT_TEST_PAGE_PORT,
 }) {
+  allSamples.current.length = 0;
+  allSamples.previous.length = 0;
   return new Promise((resolve, reject) => {
     let isFinished = false;
     let contentServer;
@@ -563,6 +608,10 @@ async function prepareLastRxPlayerTests({ branchName, contentServerPort, remoteG
     minify: true,
     production: true,
   });
+  await fsProm.copyFile(
+    path.join(currentDirectory, "previous.js"),
+    path.join(currentDirectory, "control-current.js"),
+  );
 }
 
 /**
@@ -640,13 +689,28 @@ async function linkRxPlayerBranch({ branchName, remoteGitUrl }) {
  */
 async function startAllTests({ browser, testPagePort, resultServerPort }) {
   tasks.length = 0;
-  for (let i = 0; i < TEST_ITERATIONS; i++) {
+  const iterations = [];
+  for (const [experiment, count] of [
+    ["control", CONTROL_ITERATIONS],
+    ["treatment", TREATMENT_ITERATIONS],
+  ]) {
+    for (let i = 0; i < count; i++) {
+      iterations.push({ experiment, startWithCurrent: i % 2 === 0 });
+    }
+  }
+  for (let i = iterations.length - 1; i > 0; i--) {
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+    [iterations[i], iterations[randomIndex]] = [iterations[randomIndex], iterations[i]];
+  }
+  for (const [index, { experiment, startWithCurrent }] of iterations.entries()) {
     tasks.push(() =>
       startIteration({
         browser,
-        startWithCurrent: i % 2 === 0,
-        iteration: i + 1,
-        total: TEST_ITERATIONS,
+        experiment,
+        processIteration: index + 1,
+        startWithCurrent,
+        iteration: index + 1,
+        total: iterations.length,
         testPagePort,
         resultServerPort,
       }),
@@ -677,6 +741,7 @@ function startNextTaskOrFinish(onFinished) {
   const nextTask = tasks.shift();
   if (nextTask === undefined) {
     onFinished();
+    return Promise.resolve();
   }
   return nextTask();
 }
@@ -699,6 +764,8 @@ function startNextTaskOrFinish(onFinished) {
  */
 async function startIteration({
   browser,
+  experiment,
+  processIteration,
   startWithCurrent,
   iteration,
   total,
@@ -708,9 +775,11 @@ async function startIteration({
   if (currentBrowser !== undefined) {
     currentBrowser.kill("SIGKILL");
   }
-  const url = startWithCurrent
-    ? `http://localhost:${testPagePort}/current.html#p=${resultServerPort};`
-    : `http://localhost:${testPagePort}/previous.html#p=${resultServerPort};`;
+  const pagePrefix = experiment === "control" ? "control-" : "";
+  const page = startWithCurrent ? "current" : "previous";
+  const url =
+    `http://localhost:${testPagePort}/${pagePrefix}${page}.html` +
+    `#p=${resultServerPort};e=${experiment};o=${processIteration};`;
   if (browser === "firefox") {
     // eslint-disable-next-line no-console
     console.log(`Running tests on Firefox (${iteration}/${total})`);
@@ -775,9 +844,6 @@ function createResultServer({ port, onFinished, onError }) {
             if (currentBrowser !== undefined) {
               currentBrowser.kill("SIGKILL");
               currentBrowser = undefined;
-            }
-            if (allSamples.previous.length > 0 && allSamples.current.length > 0) {
-              compareSamples();
             }
             startNextTaskOrFinish(onFinished).catch(onError);
           } else if (parsedBody.type === "value") {
@@ -875,12 +941,19 @@ function rankSamples(list) {
  */
 function compareSamples() {
   const samplesPerScenario = {
-    current: getSamplePerScenarios(allSamples.current),
-    previous: getSamplePerScenarios(allSamples.previous),
+    current: getSamplePerScenarios(
+      allSamples.current.filter((sample) => sample.experiment === "treatment"),
+    ),
+    previous: getSamplePerScenarios(
+      allSamples.previous.filter((sample) => sample.experiment === "treatment"),
+    ),
   };
+  const treatmentDifferences = getProcessDifferences("treatment");
+  const controlDifferences = getProcessDifferences("control");
 
   const results = {
     worse: [],
+    meanOnlyWorse: [],
     better: [],
     notSignificative: [],
   };
@@ -892,19 +965,60 @@ function compareSamples() {
       console.error("Error: second result misses a scenario:", testName);
       continue;
     }
+    const treatmentSamples = treatmentDifferences[testName];
+    const controlSamples = controlDifferences[testName];
+    if (treatmentSamples === undefined || controlSamples === undefined) {
+      // eslint-disable-next-line no-console
+      console.error("Error: control or treatment results miss a scenario:", testName);
+      continue;
+    }
     const resultCurrent = getResultsForSample(sampleCurrent);
     const resultPrevious = getResultsForSample(samplePrevious);
+    const resultTreatmentMean = getResultsForSample(treatmentSamples.mean);
+    const resultControlMean = getResultsForSample(controlSamples.mean);
+    const resultTreatmentMedian = getResultsForSample(treatmentSamples.median);
+    const resultControlMedian = getResultsForSample(controlSamples.median);
 
-    const medianDiffMs = resultPrevious.median - resultCurrent.median;
-    const meanDiffMs = resultPrevious.mean - resultCurrent.mean;
-    const uValue = getUValueFromSamples(sampleCurrent, samplePrevious);
-    const zScore = Math.abs(
-      calculateZScore(uValue, sampleCurrent.length, samplePrevious.length),
+    const meanDiffMs = resultTreatmentMean.mean - resultControlMean.mean;
+    const medianDiffMs = resultTreatmentMedian.median - resultControlMedian.median;
+    const meanUValue = getUValueFromSamples(treatmentSamples.mean, controlSamples.mean);
+    const meanZScore = Math.abs(
+      calculateZScore(
+        meanUValue,
+        treatmentSamples.mean.length,
+        controlSamples.mean.length,
+      ),
     );
-    // For p-value of 5%
-    // const isSignificant = zScore > 1.96;
-    // For p-value of 1%
-    const isSignificant = zScore > 2.575829;
+    const medianUValue = getUValueFromSamples(
+      treatmentSamples.median,
+      controlSamples.median,
+    );
+    const medianZScore = Math.abs(
+      calculateZScore(
+        medianUValue,
+        treatmentSamples.median.length,
+        controlSamples.median.length,
+      ),
+    );
+    const isMeanSignificant = meanZScore > 2.575829;
+    const isMedianSignificant = medianZScore > 2.575829;
+    const isMeanWorse = isMeanSignificant && meanDiffMs < -2;
+    const isMedianWorse = isMedianSignificant && medianDiffMs < -2;
+    const isMedianBetter = isMedianSignificant && medianDiffMs > 2;
+
+    const result = {
+      testName,
+      previousMean: resultPrevious.mean,
+      currentMean: resultCurrent.mean,
+      previousMedian: resultPrevious.median,
+      currentMedian: resultCurrent.median,
+      meanDifferenceMs: meanDiffMs,
+      medianDifferenceMs: medianDiffMs,
+      controlMeanDifferenceMs: resultControlMean.mean,
+      controlMedianDifferenceMs: resultControlMedian.median,
+      meanZScore,
+      medianZScore,
+    };
 
     /* eslint-disable no-console */
     console.log("");
@@ -927,51 +1041,29 @@ function compareSamples() {
     console.log(`      moe: ${resultPrevious.moe}`);
     console.log("");
     console.log("    Results");
-    console.log(`      mean difference time (negative is slower): ${meanDiffMs} ms`);
-    if (isSignificant) {
-      console.log(`      The difference is significant (z: ${zScore})`);
-      if (meanDiffMs < -2 && medianDiffMs < -2) {
-        results.worse.push({
-          testName,
-          previousMean: resultPrevious.mean,
-          currentMean: resultCurrent.mean,
-          previousMedian: resultPrevious.median,
-          currentMedian: resultCurrent.median,
-          meanDifferenceMs: meanDiffMs,
-          zScore,
-        });
-      } else if (meanDiffMs > 2 && medianDiffMs > 2) {
-        results.better.push({
-          testName,
-          previousMean: resultPrevious.mean,
-          currentMean: resultCurrent.mean,
-          previousMedian: resultPrevious.median,
-          currentMedian: resultCurrent.median,
-          meanDifferenceMs: meanDiffMs,
-          zScore,
-        });
-      } else {
-        results.notSignificative.push({
-          testName,
-          previousMean: resultPrevious.mean,
-          currentMean: resultCurrent.mean,
-          previousMedian: resultPrevious.median,
-          currentMedian: resultCurrent.median,
-          meanDifferenceMs: meanDiffMs,
-          zScore,
-        });
-      }
+    console.log(`      A/A mean slot difference: ${resultControlMean.mean} ms`);
+    console.log(`      A/B mean difference: ${resultTreatmentMean.mean} ms`);
+    console.log(
+      `      bias-corrected mean difference (negative is slower): ${meanDiffMs} ms`,
+    );
+    console.log(`      Mean z-score: ${meanZScore}`);
+    console.log(`      A/A median slot difference: ${resultControlMedian.median} ms`);
+    console.log(`      A/B median difference: ${resultTreatmentMedian.median} ms`);
+    console.log(
+      `      bias-corrected median difference (negative is slower): ${medianDiffMs} ms`,
+    );
+    console.log(`      Median z-score: ${medianZScore}`);
+
+    if (isMedianWorse) {
+      result.regressionSignals = isMeanWorse ? "mean + median" : "median";
+      results.worse.push(result);
+    } else if (isMeanWorse) {
+      result.regressionSignals = "mean only";
+      results.meanOnlyWorse.push(result);
+    } else if (isMedianBetter) {
+      results.better.push(result);
     } else {
-      console.log(`      The difference is not significant (z: ${zScore})`);
-      results.notSignificative.push({
-        testName,
-        previousMean: resultPrevious.mean,
-        currentMean: resultCurrent.mean,
-        previousMedian: resultPrevious.median,
-        currentMedian: resultCurrent.median,
-        meanDifferenceMs: meanDiffMs,
-        zScore,
-      });
+      results.notSignificative.push(result);
     }
     console.log("");
   }
@@ -979,6 +1071,47 @@ function compareSamples() {
   return results;
   function calculateZScore(u, len1, len2) {
     return (u - (len1 * len2) / 2) / Math.sqrt((len1 * len2 * (len1 + len2 + 1)) / 12);
+  }
+
+  /**
+   * Return one previous-minus-current mean and median difference per browser process
+   * and scenario.
+   * @param {"control"|"treatment"} experiment
+   * @returns {Object.<string, {mean: Array.<number>, median: Array.<number>}>}
+   */
+  function getProcessDifferences(experiment) {
+    const valuesPerProcess = new Map();
+    for (const page of ["current", "previous"]) {
+      for (const sample of allSamples[page]) {
+        if (sample.experiment !== experiment) {
+          continue;
+        }
+        const key = `${sample.processIteration}:${sample.name}`;
+        let values = valuesPerProcess.get(key);
+        if (values === undefined) {
+          values = { name: sample.name, current: [], previous: [] };
+          valuesPerProcess.set(key, values);
+        }
+        values[page].push(sample.value);
+      }
+    }
+
+    const differences = {};
+    for (const { name, current, previous } of valuesPerProcess.values()) {
+      if (current.length === 0 || previous.length === 0) {
+        continue;
+      }
+      const currentMean = getResultsForSample(current).mean;
+      const previousMean = getResultsForSample(previous).mean;
+      if (differences[name] === undefined) {
+        differences[name] = { mean: [], median: [] };
+      }
+      const currentMedian = getResultsForSample(current).median;
+      const previousMedian = getResultsForSample(previous).median;
+      differences[name].mean.push(previousMean - currentMean);
+      differences[name].median.push(previousMedian - currentMedian);
+    }
+    return differences;
   }
 }
 
@@ -1027,14 +1160,14 @@ function getUValueFromSamples(sampleCurrent, samplePrevious) {
  * @returns {Object}
  */
 function getResultsForSample(sample) {
-  sample.sort();
+  sample.sort((a, b) => a - b);
   let median;
   if (sample.length === 0) {
     median = 0;
   } else {
     median =
       sample.length % 2 === 0
-        ? sample[sample.length / 2 - 1] + sample[sample.length / 2] / 2
+        ? (sample[sample.length / 2 - 1] + sample[sample.length / 2]) / 2
         : sample[Math.floor(sample.length / 2)];
   }
   const mean = sample.reduce((acc, x) => acc + x, 0) / sample.length;
@@ -1163,8 +1296,13 @@ function formatHtmlReport(reportObj) {
 
   const { firstRun, secondRun } = reportObj;
   if (firstRun.worse.length > 0) {
-    str += "\n<p>No significative change in performance for tests:</p>\n\n";
+    str += "\n<p>Median performance regressions (CI blocking):</p>\n\n";
     str += formatResultAsHtmlTable(firstRun.worse);
+  }
+
+  if (firstRun.meanOnlyWorse.length > 0) {
+    str += "\n<p>Mean-only performance regressions (warning):</p>\n\n";
+    str += formatResultAsHtmlTable(firstRun.meanOnlyWorse);
   }
 
   if (firstRun.better.length > 0) {
@@ -1180,10 +1318,15 @@ function formatHtmlReport(reportObj) {
 
   if (secondRun) {
     str += "\n";
-    str += "<h2>Performance tests 2st run output</h2>\n";
+    str += "<h2>Performance tests 2nd run output</h2>\n";
     if (secondRun.worse.length > 0) {
-      str += "\n<p>No significative change in performance for tests:</p>\n\n";
+      str += "\n<p>Median performance regressions (CI blocking):</p>\n\n";
       str += formatResultAsHtmlTable(secondRun.worse);
+    }
+
+    if (secondRun.meanOnlyWorse.length > 0) {
+      str += "\n<p>Mean-only performance regressions (warning):</p>\n\n";
+      str += formatResultAsHtmlTable(secondRun.meanOnlyWorse);
     }
 
     if (secondRun.better.length > 0) {
@@ -1212,14 +1355,24 @@ function formatResultAsHtmlTable(results) {
   if (results.length === 0) {
     return "";
   }
-  const testNames = results.map((r) => r.testName);
+  const testNames = results.map((r) =>
+    r.regressionSignals === undefined
+      ? r.testName
+      : `${r.testName} (${r.regressionSignals})`,
+  );
   const meanResult = results.map(
     (r) =>
       `${r.previousMean.toFixed(2)}ms -> ${r.currentMean.toFixed(2)}ms ` +
-      `(${r.meanDifferenceMs.toFixed(3)}ms, z: ${r.zScore.toFixed(5)})`,
+      `(corrected: ${r.meanDifferenceMs.toFixed(3)}ms, ` +
+      `A/A bias: ${r.controlMeanDifferenceMs.toFixed(3)}ms, ` +
+      `z: ${r.meanZScore.toFixed(5)})`,
   );
   const medianResult = results.map(
-    (r) => `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms`,
+    (r) =>
+      `${r.previousMedian.toFixed(2)}ms -> ${r.currentMedian.toFixed(2)}ms ` +
+      `(corrected: ${r.medianDifferenceMs.toFixed(3)}ms, ` +
+      `A/A bias: ${r.controlMedianDifferenceMs.toFixed(3)}ms, ` +
+      `z: ${r.medianZScore.toFixed(5)})`,
   );
 
   let str;
