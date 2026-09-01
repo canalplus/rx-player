@@ -21,7 +21,7 @@
 import { MediaError, SourceBufferError } from "../../../../errors/index.ts";
 import log from "../../../../log.ts";
 import { toTaggedTrack } from "../../../../manifest/index.ts";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer/index.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../../../media_element_monitor/index.ts";
 import type { IRange } from "../../../../utils/ranges.ts";
 import type { IReadOnlySharedReference } from "../../../../utils/reference.ts";
 import sleep from "../../../../utils/sleep.ts";
@@ -32,13 +32,13 @@ import type {
   IPushChunkInfos,
   SegmentSink,
 } from "../../../segment_sinks/index.ts";
-import type { IRepresentationStreamPlaybackObservation } from "../types.ts";
+import type { IRepresentationStreamMediaObservation } from "../types.ts";
 
 /**
  * Append a segment to the given segmentSink.
  * If it leads to an Error due to a full buffer, try to run our custom range
  * _garbage collector_ then retry.
- * @param {Object} playbackObserver
+ * @param {Object} mediaElementMonitor
  * @param {Object} segmentSink
  * @param {Object} dataInfos
  * @param {number} bufferGoal
@@ -46,7 +46,7 @@ import type { IRepresentationStreamPlaybackObservation } from "../types.ts";
  * @returns {Promise}
  */
 export default async function appendSegmentToBuffer<T>(
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>,
   segmentSink: SegmentSink,
   dataInfos: IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
   bufferGoal: IReadOnlySharedReference<number>,
@@ -66,7 +66,7 @@ export default async function appendSegmentToBuffer<T>(
         tracks: [toTaggedTrack(dataInfos.inventoryInfos.adaptation)],
       });
     }
-    const { position } = playbackObserver.getReference().getValue();
+    const { position } = mediaElementMonitor.getReference().getValue();
     const currentPos = position.getWanted();
     try {
       log.warn("Stream", "Running garbage collector");

@@ -15,7 +15,7 @@ import StreamOrchestrator from "../../../../../../src/core/stream/orchestrator/s
 import type {
   IPeriodStreamClearedPayload,
   IStreamOrchestratorCallbacks,
-  IStreamOrchestratorPlaybackObservation,
+  IStreamOrchestratorMediaObservation,
 } from "../../../../../../src/core/stream/orchestrator/stream_orchestrator.ts";
 import type {
   IPeriodStreamArguments,
@@ -43,8 +43,8 @@ import {
 } from "../../../../mocks/manifest.ts";
 import {
   DummyObservationPosition,
-  makeReadyOnlyPlaybackObserver,
-} from "../../../../mocks/playback_observer.ts";
+  makeReadyOnlyMediaElementMonitor,
+} from "../../../../mocks/media_element_monitor.ts";
 import { DummySegmentSink } from "../../../../mocks/segment_sinks.ts";
 import { makeMockedClass } from "../../../../mocks/utils.ts";
 
@@ -99,8 +99,8 @@ describe("StreamOrchestrator", () => {
   let period: IPeriod;
   let nextPeriod: IPeriod;
   let manifestEventEmitter: TestManifestEventEmitter;
-  let playbackObserver: ReturnType<
-    typeof makeReadyOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>
+  let mediaElementMonitor: ReturnType<
+    typeof makeReadyOnlyMediaElementMonitor<IStreamOrchestratorMediaObservation>
   >;
   let segmentSink: SegmentSink;
   let removeBufferSpy: ReturnType<typeof vi.fn<SegmentSink["removeBuffer"]>>;
@@ -152,8 +152,8 @@ describe("StreamOrchestrator", () => {
     });
     vi.spyOn(manifest, "getNextPeriod").mockReturnValue(undefined);
 
-    playbackObserver =
-      makeReadyOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>({
+    mediaElementMonitor =
+      makeReadyOnlyMediaElementMonitor<IStreamOrchestratorMediaObservation>({
         position: new DummyObservationPosition({
           getWanted: () => 5,
           getPolled: () => 5,
@@ -204,7 +204,7 @@ describe("StreamOrchestrator", () => {
 
   afterEach(() => {
     orchestratorCanceller.cancel("cleanup");
-    playbackObserver.reset();
+    mediaElementMonitor.reset();
     vi.resetAllMocks();
   });
 
@@ -212,7 +212,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -247,7 +247,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -282,7 +282,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -301,7 +301,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -324,7 +324,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -353,7 +353,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -364,7 +364,7 @@ describe("StreamOrchestrator", () => {
       makePeriodStreamReadyPayload(period),
     );
 
-    playbackObserver.emit(makeObservationAt(15));
+    mediaElementMonitor.emit(makeObservationAt(15));
 
     expect(periodStreamClearedSpy).toHaveBeenCalledWith({
       type: "video",
@@ -382,7 +382,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -408,7 +408,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -452,7 +452,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       boundedPeriod,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -460,7 +460,7 @@ describe("StreamOrchestrator", () => {
       orchestratorCanceller,
     );
 
-    playbackObserver.emit(makeObservationAt(12));
+    mediaElementMonitor.emit(makeObservationAt(12));
 
     expect(periodStreamClearedSpy).toHaveBeenCalledWith({
       type: "video",
@@ -474,7 +474,7 @@ describe("StreamOrchestrator", () => {
     startOrchestrator(
       manifest,
       period,
-      playbackObserver,
+      mediaElementMonitor,
       representationEstimator,
       segmentSinksStore,
       segmentQueueCreator,
@@ -521,8 +521,8 @@ class TestManifestEventEmitter extends EventEmitter<IManifestEvents> {
 function startOrchestrator(
   manifest: IManifest,
   initialPeriod: IPeriod,
-  playbackObserver: ReturnType<
-    typeof makeReadyOnlyPlaybackObserver<IStreamOrchestratorPlaybackObservation>
+  mediaElementMonitor: ReturnType<
+    typeof makeReadyOnlyMediaElementMonitor<IStreamOrchestratorMediaObservation>
   >,
   representationEstimator: IRepresentationEstimator,
   segmentSinksStore: SegmentSinksStore,
@@ -532,7 +532,7 @@ function startOrchestrator(
 ): void {
   StreamOrchestrator(
     { manifest, initialPeriod },
-    playbackObserver.observer,
+    mediaElementMonitor.observer,
     representationEstimator,
     segmentSinksStore,
     segmentQueueCreator,
@@ -642,7 +642,7 @@ function makeManifestUpdateRemovingNextPeriod(nextPeriod: IPeriod): IPeriodsUpda
   };
 }
 
-function makeObservationAt(position: number): IStreamOrchestratorPlaybackObservation {
+function makeObservationAt(position: number): IStreamOrchestratorMediaObservation {
   return {
     position: new DummyObservationPosition({
       getWanted: () => position,

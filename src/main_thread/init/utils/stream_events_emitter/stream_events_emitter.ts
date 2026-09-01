@@ -17,10 +17,10 @@
 import config from "../../../../config.ts";
 import type { IManifestMetadata } from "../../../../manifest/index.ts";
 import type {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
-} from "../../../../playback_observer/index.ts";
-import { SeekingState } from "../../../../playback_observer/index.ts";
+  IMediaObservation,
+  IReadOnlyMediaElementMonitor,
+} from "../../../../media_element_monitor/index.ts";
+import { SeekingState } from "../../../../media_element_monitor/index.ts";
 import EventEmitter from "../../../../utils/event_emitter.ts";
 import SharedReference from "../../../../utils/reference.ts";
 import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
@@ -43,7 +43,7 @@ interface IStreamEventsEmitterEvent {
  */
 export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitterEvent> {
   /** Regularly emit playback metrics such as the position. */
-  private _playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>;
+  private _mediaElementMonitor: IReadOnlyMediaElementMonitor<IMediaObservation>;
   /** Current stream events tracked for the whole content. */
   private _scheduledEventsRef: SharedReference<
     Array<IStreamEventPayload | INonFiniteStreamEventPayload>
@@ -66,11 +66,11 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
   private _canceller: TaskCanceller | null;
 
   /**
-   * @param {Object} playbackObserver
+   * @param {Object} mediaElementMonitor
    */
-  constructor(playbackObserver: IReadOnlyPlaybackObserver<IPlaybackObservation>) {
+  constructor(mediaElementMonitor: IReadOnlyMediaElementMonitor<IMediaObservation>) {
     super();
-    this._playbackObserver = playbackObserver;
+    this._mediaElementMonitor = mediaElementMonitor;
     this._canceller = null;
     this._scheduledEventsRef = new SharedReference<
       Array<IStreamEventPayload | INonFiniteStreamEventPayload>
@@ -147,7 +147,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
           checkStreamEvents,
           STREAM_EVENT_EMITTER_POLL_INTERVAL,
         );
-        this._playbackObserver.listen(checkStreamEvents, {
+        this._mediaElementMonitor.listen(checkStreamEvents, {
           includeLastObservation: false,
           clearSignal: cancelCurrentPolling.signal,
         });
@@ -207,7 +207,7 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
 
   /**
    * Construct observation object relied on by the `StreamEventsEmitted` by
-   * generating it from this instance's `PlaybackObserver`.
+   * generating it from this instance's `MediaElementMonitor`.
    */
   private _constructObservation(): {
     /** Current media position that is being played. */
@@ -215,16 +215,16 @@ export default class StreamEventsEmitter extends EventEmitter<IStreamEventsEmitt
     /** If `true`, we're currently seeking in the media. */
     isSeeking: boolean;
   } {
-    const lastObservation = this._playbackObserver.getReference().getValue();
+    const lastObservation = this._mediaElementMonitor.getReference().getValue();
     const currentTime =
-      this._playbackObserver.getCurrentTime() ??
-      this._playbackObserver.getReference().getValue().position.getPolled();
+      this._mediaElementMonitor.getCurrentTime() ??
+      this._mediaElementMonitor.getReference().getValue().position.getPolled();
     const isSeeking = lastObservation.seeking !== SeekingState.None;
     return { currentTime, isSeeking };
   }
 
   /**
-   * Examine playback situation from playback observations to emit stream events and
+   * Examine playback situation from media observations to emit stream events and
    * prepare `onExit` callbacks if needed.
    * @param {Array.<Object>} scheduledEvents
    * @param {Object} oldObservation

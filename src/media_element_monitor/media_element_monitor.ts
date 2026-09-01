@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../compat/browser_compatibility_types.ts";
+import { type IMediaElement } from "../compat/browser_compatibility_types.ts";
+import clearElementSrc from "../compat/clear_element_src.ts";
+import disableRemotePlaybackOnManagedMediaSource from "../compat/disable_remote_playback_on_managed_media_source.ts";
 import isSeekingApproximate from "../compat/is_seeking_approximate.ts";
+import resetMediaElement from "../compat/reset_media_element.ts";
 import config from "../config.ts";
 import ManualTimeRanges from "../core/segment_sinks/implementations/utils/manual_time_ranges.ts";
 import log from "../log.ts";
@@ -25,22 +28,22 @@ import objectAssign from "../utils/object_assign.ts";
 import { getBufferedTimeRange } from "../utils/ranges.ts";
 import type { IReadOnlySharedReference } from "../utils/reference.ts";
 import SharedReference from "../utils/reference.ts";
-import type { CancellationSignal } from "../utils/task_canceller.ts";
 import TaskCanceller from "../utils/task_canceller.ts";
+import type { CancellationSignal } from "../utils/task_canceller.ts";
 import type {
   IMediaInfos,
-  IPlaybackObservation,
-  IPlaybackObserverEventType,
-  IReadOnlyPlaybackObserver,
+  IMediaObservation,
+  IMediaElementMonitorEventType,
+  IReadOnlyMediaElementMonitor,
   IRebufferingStatus,
   IFreezingStatus,
 } from "./types.ts";
 import { SeekingState } from "./types.ts";
-import generateReadOnlyObserver from "./utils/generate_read_only_observer.ts";
+import generateReadOnlyMonitor from "./utils/generate_read_only_monitor.ts";
 import ObservationPosition from "./utils/observation_position.ts";
 
 /**
- * HTMLMediaElement Events for which playback observations are calculated and
+ * HTMLMediaElement Events for which media observations are calculated and
  * emitted.
  */
 const SCANNED_MEDIA_ELEMENTS_EVENTS = [
@@ -59,15 +62,15 @@ const SCANNED_MEDIA_ELEMENTS_EVENTS = [
  * then able to react upon them.
  *
  * This is a central class of the RxPlayer as many modules rely on the
- * `PlaybackObserver` to know the current state of the media being played.
+ * `MediaElementMonitor` to know the current state of the media being played.
  *
- * You can use the PlaybackObserver to either get the last observation
+ * You can use the MediaElementMonitor to either get the last observation
  * performed, get the current media state or listen to media observation sent
  * at a regular interval.
  *
- * @class {PlaybackObserver}
+ * @class {MediaElementMonitor}
  */
-export default class PlaybackObserver {
+export default class MediaElementMonitor {
   /** HTMLMediaElement which we want to observe. */
   private _mediaElementRef: SharedReference<IMediaElement | null>;
 
@@ -94,7 +97,7 @@ export default class PlaybackObserver {
    * the RxPlayer's internal logic vs when it was sourced from an outside
    * application code.
    *
-   * To implement this in the PlaybackObserver, we maintain this counter
+   * To implement this in the MediaElementMonitor, we maintain this counter
    * allowing to know when a "seeking" event received from a `HTMLMediaElement`
    * was due to an "internal seek" or an external seek:
    *   - This counter is incremented each time an "internal seek" (seek from the
@@ -107,9 +110,9 @@ export default class PlaybackObserver {
   private _internalSeeksIncoming: number[];
 
   /**
-   * Stores the last playback observation produced by the `PlaybackObserver`.:
+   * Stores the last media observation produced by the `MediaElementMonitor`.:
    */
-  private _observationRef: SharedReference<IPlaybackObservation>;
+  private _observationRef: SharedReference<IMediaObservation>;
 
   /**
    * `TaskCanceller` allowing to free all resources and stop producing playback
@@ -137,30 +140,30 @@ export default class PlaybackObserver {
 
   /**
    * If `true` seek operations asked through the
-   * `MediaElementPlaybackObserver` will not be performed now but after the
+   * `MediaElementMonitor` will not be performed now but after the
    * `unblockSeeking` method is called.
    */
   private _isSeekBlocked: boolean;
 
   /**
-   * Create a new `PlaybackObserver`, which allows to produce new "playback
+   * Create a new `MediaElementMonitor`, which allows to produce new "playback
    * observations" on various media events and intervals.
    *
-   * Once a `PlaybackObserver` is created, you will want to "attach" the
+   * Once a `MediaElementMonitor` is created, you will want to "attach" the
    * media element to it through the `attachMediaElement` method once that
    * element is ready to play your content.
    *
-   * Note that creating a `PlaybackObserver` lead to the usage of resources,
-   * such as event listeners which will only be freed once the `stop` method is
-   * called.
+   * Note that creating a `MediaElementMonitor` lead to the usage of resources,
+   * such as event listeners which will only be freed once the `destroy` method
+   * is called.
    * @param {Object} options
    */
-  constructor(options: IPlaybackObserverOptions) {
+  constructor(options: IMediaElementMonitorOptions) {
     this._internalSeeksIncoming = [];
     this._mediaElementRef = new SharedReference<IMediaElement | null>(null);
     this._withMediaSource = options.withMediaSource;
     this._lowLatencyMode = options.lowLatencyMode;
-    this._canceller = new TaskCanceller("MediaElementPlaybackObserver");
+    this._canceller = new TaskCanceller("MediaElementMonitor");
     this._expectedSeekingPosition = null;
     this._pendingSeek = null;
     this._isSeekBlocked = false;
@@ -172,7 +175,7 @@ export default class PlaybackObserver {
   }
 
   /**
-   * "Link" the actual `HTMLMediaElement` to this `PlaybackObserver`.
+   * "Link" the actual `HTMLMediaElement` to this `MediaElementMonitor`.
    *
    * This is done in a step separate from the constructor to allow complex
    * situations where you want to inialize the polling logic before the media
@@ -185,8 +188,9 @@ export default class PlaybackObserver {
   public attachMediaElement(mediaElement: IMediaElement): void {
     const prevMediaElement = this._mediaElementRef.getValue();
     if (prevMediaElement !== null) {
-      throw new Error("A media element was already attached to this PlaybackObserver");
+      throw new Error("A media element was already attached to this MediaElementMonitor");
     }
+    clearElementSrc(mediaElement);
     this._mediaElementRef.setValue(mediaElement);
     if (this._canceller.isUsed()) {
       return;
@@ -205,19 +209,81 @@ export default class PlaybackObserver {
   }
 
   /**
-   * Stop the `PlaybackObserver` from emitting playback observations and free all
+   * Get direct access to the `HTMLMediaElement`.
+   *
+   * `null` if not already attached.
+   * @returns {HTMLMediaElement|null}
+   */
+  public getMediaElement(): IMediaElement | null {
+    return this._mediaElementRef.getValue();
+  }
+
+  public addMediaErrorListener(
+    cb: (error: MediaError | null) => void,
+    cancelSignal: CancellationSignal,
+  ): void {
+    this._mediaElementRef.onUpdate(
+      (mediaElement: IMediaElement | null, stopListening) => {
+        if (mediaElement === null) {
+          return;
+        }
+        stopListening();
+        const onError = () => {
+          cb(mediaElement.error);
+        };
+        mediaElement.addEventListener("error", onError);
+        cancelSignal.register(() => {
+          mediaElement.removeEventListener("error", onError);
+        });
+      },
+      { emitCurrentValue: true, clearSignal: cancelSignal },
+    );
+  }
+
+  public linkUrl(
+    value: string | MediaProvider,
+    isMediaSource: boolean,
+    cancelSignal: CancellationSignal,
+  ): void {
+    this._mediaElementRef.onUpdate(
+      (mediaElement: IMediaElement | null, stopListening) => {
+        if (mediaElement === null) {
+          return;
+        }
+        stopListening();
+        if (typeof value === "string") {
+          mediaElement.src = value;
+          cancelSignal.register(() => {
+            resetMediaElement(mediaElement, value);
+          });
+        } else {
+          mediaElement.srcObject = value;
+          cancelSignal.register(() => {
+            mediaElement.srcObject = null;
+          });
+        }
+        if (isMediaSource) {
+          disableRemotePlaybackOnManagedMediaSource(mediaElement, cancelSignal);
+        }
+      },
+      { emitCurrentValue: true, clearSignal: cancelSignal },
+    );
+  }
+
+  /**
+   * Stop the `MediaElementMonitor` from emitting media observations and free all
    * resources reserved to emitting them such as event listeners and intervals.
    *
-   * Once `stop` is called, no new playback observation will ever be emitted.
+   * Once `destroy` is called, no new media observation will ever be emitted.
    *
-   * Note that it is important to call stop once the `PlaybackObserver` is no
-   * more needed to avoid unnecessarily leaking resources.
+   * Note that it is important to call `destroy` once the `MediaElementMonitor` is
+   * no more needed to avoid unnecessarily leaking resources.
    * @param {string | undefined} reason - Human-inspectable reason behind the
    * stop. Used for debugging matters, especially for debug log
    * inspection.
    */
-  public stop(reason: string | undefined) {
-    this._canceller.cancel(reason ?? "MediaElementPlaybackObserver stop");
+  public destroy(reason: string | undefined) {
+    this._canceller.cancel(reason ?? "MediaElementMonitor destroy");
   }
 
   /**
@@ -258,7 +324,7 @@ export default class PlaybackObserver {
 
   /**
    * Prevent seeking operations from being performed from inside the
-   * `MediaElementPlaybackObserver` until the `unblockSeeking` method is called.
+   * `MediaElementMonitor` until the `unblockSeeking` method is called.
    *
    * You might want to call this method when you want to ensure that the next
    * seek operation on the media element happens at a specific, controlled,
@@ -272,7 +338,7 @@ export default class PlaybackObserver {
    * Remove seeking block created by the `blockSeeking` method if it was called.
    *
    * If a seek operation was requested while the block was active, the
-   * `MediaElementPlaybackObserver` will seek at the last seeked position as
+   * `MediaElementMonitor` will seek at the last seeked position as
    * soon as possible (either right now, or when the `readyState` of the
    * `HTMLMediaElement` will have at least reached the `"HAVE_METADATA"` state).
    */
@@ -371,21 +437,21 @@ export default class PlaybackObserver {
   }
 
   /**
-   * Returns an `IReadOnlySharedReference` storing the last playback observation
-   * produced by the `PlaybackObserver` and updated each time a new one is
+   * Returns an `IReadOnlySharedReference` storing the last media observation
+   * produced by the `MediaElementMonitor` and updated each time a new one is
    * produced.
    *
    * This value can then be for example listened to to be notified of future
-   * playback observations.
+   * media observations.
    *
    * @returns {Object}
    */
-  public getReference(): IReadOnlySharedReference<IPlaybackObservation> {
+  public getReference(): IReadOnlySharedReference<IMediaObservation> {
     return this._observationRef;
   }
 
   /**
-   * Register a callback so it regularly receives playback observations.
+   * Register a callback so it regularly receives media observations.
    * @param {Function} cb
    * @param {Object} params - Configuration parameters:
    *   - `includeLastObservation`: If set to `true` the last observation will
@@ -394,7 +460,7 @@ export default class PlaybackObserver {
    *     CancellationSignal emits.
    */
   public listen(
-    cb: (observation: IPlaybackObservation, stopListening: () => void) => void,
+    cb: (observation: IMediaObservation, stopListening: () => void) => void,
     params: {
       includeLastObservation?: boolean | undefined;
       clearSignal: CancellationSignal;
@@ -410,12 +476,12 @@ export default class PlaybackObserver {
   }
 
   /**
-   * Generate a new playback observer which can listen to other
+   * Generate a new `MediaElementMonitor` which can listen to other
    * properties and which can only be accessed to read observations (e.g.
    * it cannot ask to perform a seek).
    *
-   * The object returned will respect the `IReadOnlyPlaybackObserver` interface
-   * and will inherit this `PlaybackObserver`'s lifecycle: it will emit when
+   * The object returned will respect the `IReadOnlyMediaElementMonitor` interface
+   * and will inherit this `MediaElementMonitor`'s lifecycle: it will emit when
    * the latter emits.
    *
    * As argument, this method takes a function which will allow to produce
@@ -423,13 +489,13 @@ export default class PlaybackObserver {
    * @param {Function} transform
    * @returns {Object}
    */
-  public deriveReadOnlyObserver<TDest>(
+  public deriveReadOnlyMonitor<TDest>(
     transform: (
-      observationRef: IReadOnlySharedReference<IPlaybackObservation>,
+      observationRef: IReadOnlySharedReference<IMediaObservation>,
       cancellationSignal: CancellationSignal,
     ) => IReadOnlySharedReference<TDest>,
-  ): IReadOnlyPlaybackObserver<TDest> {
-    return generateReadOnlyObserver(this, transform, this._canceller.signal);
+  ): IReadOnlyMediaElementMonitor<TDest> {
+    return generateReadOnlyMonitor(this, transform, this._canceller.signal);
   }
 
   private _actuallySetCurrentTime(
@@ -449,7 +515,7 @@ export default class PlaybackObserver {
    * observations.
    * @returns {Object}
    */
-  private _createSharedReference(): SharedReference<IPlaybackObservation> {
+  private _createSharedReference(): SharedReference<IMediaObservation> {
     if (this._observationRef !== undefined) {
       return this._observationRef;
     }
@@ -475,10 +541,10 @@ export default class PlaybackObserver {
   }
 
   private _getCurrentObservation(
-    event: IPlaybackObserverEventType,
-  ): IPlaybackObservation {
+    event: IMediaElementMonitorEventType,
+  ): IMediaObservation {
     /** Actual event emitted through an observation. */
-    let tmpEvt: IPlaybackObserverEventType = event;
+    let tmpEvt: IMediaElementMonitorEventType = event;
     const mediaElement = this._mediaElementRef.getValue();
 
     // NOTE: `this._observationRef` may be `undefined` because we might here be
@@ -490,14 +556,14 @@ export default class PlaybackObserver {
 
     /**
      * If `true`, there is a seek operation ongoing but it was done from the
-     * `PlaybackObserver`'s `setCurrentTime` method, not from external code.
+     * `MediaElementMonitor`'s `setCurrentTime` method, not from external code.
      */
     let isInternalSeeking = false;
 
     /** If set, the position for which we plan to seek to as soon as possible. */
     let pendingPosition: number | null = this._pendingSeek?.position ?? null;
 
-    /** Initially-polled playback observation, before adjustments. */
+    /** Initially-polled media observation, before adjustments. */
     const mediaTimings =
       mediaElement === null ? getEmptyMediaInfo() : getMediaInfos(mediaElement);
     const { buffered, readyState, position, seeking } = mediaTimings;
@@ -612,7 +678,7 @@ export default class PlaybackObserver {
       seekingState = SeekingState.None;
     }
 
-    const timings: IPlaybackObservation = objectAssign({}, mediaTimings, {
+    const timings: IMediaObservation = objectAssign({}, mediaTimings, {
       position: new ObservationPosition(mediaTimings.position, pendingPosition),
       event: tmpEvt,
       seeking: seekingState,
@@ -640,7 +706,7 @@ export default class PlaybackObserver {
     return timings;
   }
 
-  private _generateObservationForEvent(event: IPlaybackObserverEventType): void {
+  private _generateObservationForEvent(event: IMediaElementMonitorEventType): void {
     const newObservation = this._getCurrentObservation(event);
     if (log.hasLevel("DEBUG")) {
       log.debug(
@@ -768,7 +834,7 @@ function hasLoadedUntilTheEnd(
 
 /**
  * Get polled media metrics for when the `HTMLMediaElement` is not yet "attached"
- * to the `PlaybackObserver`.
+ * to the `MediaElementMonitor`.
  *
  * Those metrics actually corresponds to an idle media element.
  * @returns {Object}
@@ -829,8 +895,8 @@ function getRebufferingStatus({
   bufferGap,
   fullyLoaded,
 }: {
-  /** Previous Playback Observation produced. */
-  previousObservation: IPlaybackObservation;
+  /** Previous media observation produced. */
+  previousObservation: IMediaObservation;
   /** New media information collected. */
   currentObservation: IMediaInfos;
   /**
@@ -841,7 +907,7 @@ function getRebufferingStatus({
    */
   basePosition: number;
   /** Name of the event that triggers this new observation. */
-  observationEvent: IPlaybackObserverEventType;
+  observationEvent: IMediaElementMonitorEventType;
   /**
    * If `true`, we're relying on MSE API for the current content, if `false`,
    * we're relying on regular HTML5 video playback handled by the browser.
@@ -989,9 +1055,9 @@ function getRebufferingStatus({
  * @returns {Object|null}
  */
 function getFreezingStatus(
-  prevObservation: IPlaybackObservation,
+  prevObservation: IMediaObservation,
   currentInfo: IMediaInfos,
-  currentEvt: IPlaybackObserverEventType,
+  currentEvt: IMediaElementMonitorEventType,
   bufferGap: number | undefined,
 ): IFreezingStatus | null {
   const { MINIMUM_BUFFER_AMOUNT_BEFORE_FREEZING } = config.getCurrent();
@@ -1020,7 +1086,7 @@ function getFreezingStatus(
     : null;
 }
 
-export interface IPlaybackObserverOptions {
+export interface IMediaElementMonitorOptions {
   withMediaSource: boolean;
   lowLatencyMode: boolean;
 }
@@ -1086,12 +1152,12 @@ function prettyPrintBuffered(buffered: TimeRanges, currentTime: number): string 
 }
 
 /**
- * Generate the initial playback observation for when no event has yet been
+ * Generate the initial media observation for when no event has yet been
  * emitted to lead to one.
  * @param {HTMLMediaElement} mediaElement
  * @returns {Object}
  */
-function getInitialObservation(mediaElement: IMediaElement | null): IPlaybackObservation {
+function getInitialObservation(mediaElement: IMediaElement | null): IMediaObservation {
   const mediaTimings =
     mediaElement === null ? getEmptyMediaInfo() : getMediaInfos(mediaElement);
   return objectAssign(mediaTimings, {

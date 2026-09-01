@@ -19,8 +19,8 @@ import shouldPerformInitialSeekToZero from "../../../compat/should_seek_at_zero.
 import shouldValidateMetadata from "../../../compat/should_validate_metadata.ts";
 import { MediaError } from "../../../errors/index.ts";
 import log from "../../../log.ts";
-import type { IMediaElementPlaybackObserver } from "../../../playback_observer/index.ts";
-import { SeekingState } from "../../../playback_observer/index.ts";
+import type { IMediaElementMonitor } from "../../../media_element_monitor/index.ts";
+import { SeekingState } from "../../../media_element_monitor/index.ts";
 import type { IPlayerError } from "../../../public_types.ts";
 import type { IReadOnlySharedReference } from "../../../utils/reference.ts";
 import SharedReference from "../../../utils/reference.ts";
@@ -62,15 +62,13 @@ export interface IInitialSeekAndPlayObject {
  */
 export default function performInitialSeekAndPlay(
   {
-    mediaElement,
-    playbackObserver,
+    mediaElementMonitor,
     startTime,
     mustAutoPlay,
     isDirectfile,
     onWarning,
   }: {
-    mediaElement: IMediaElement;
-    playbackObserver: IMediaElementPlaybackObserver;
+    mediaElementMonitor: IMediaElementMonitor;
     startTime: number | (() => number | undefined);
     mustAutoPlay: boolean;
     isDirectfile: boolean;
@@ -89,11 +87,11 @@ export default function performInitialSeekAndPlay(
         return;
       }
 
-      /** `true` if we asked the `PlaybackObserver` to perform an initial seek. */
+      /** `true` if we asked the `MediaElementMonitor` to perform an initial seek. */
       let hasAskedForInitialSeek = false;
 
       const performInitialSeek = (initialSeekTime: number) => {
-        const pendingSeek = playbackObserver.getPendingSeekInformation();
+        const pendingSeek = mediaElementMonitor.getPendingSeekInformation();
 
         /*
          * NOTE: The user might have asked for a seek before the media element
@@ -103,10 +101,10 @@ export default function performInitialSeekAndPlay(
          * last one.
          */
         if (pendingSeek === null || pendingSeek.isInternal) {
-          playbackObserver.setCurrentTime(initialSeekTime);
+          mediaElementMonitor.setCurrentTime(initialSeekTime);
         }
         hasAskedForInitialSeek = true;
-        playbackObserver.unblockSeeking();
+        mediaElementMonitor.unblockSeeking();
       };
 
       // `startTime` defined as a function might depend on metadata to make its
@@ -122,11 +120,11 @@ export default function performInitialSeekAndPlay(
         if (initiallySeekedTime !== 0 && initiallySeekedTime !== undefined) {
           performInitialSeek(initiallySeekedTime);
         } else {
-          playbackObserver.unblockSeeking();
+          mediaElementMonitor.unblockSeeking();
         }
         waitForSeekable();
       } else {
-        playbackObserver.listen(
+        mediaElementMonitor.listen(
           (obs, stopListening) => {
             const initiallySeekedTime =
               typeof startTime === "number" ? startTime : startTime();
@@ -152,7 +150,7 @@ export default function performInitialSeekAndPlay(
               ) {
                 performInitialSeek(initiallySeekedTime);
               } else {
-                playbackObserver.unblockSeeking();
+                mediaElementMonitor.unblockSeeking();
               }
               waitForSeekable();
             }
@@ -163,7 +161,7 @@ export default function performInitialSeekAndPlay(
 
       /**
        * Logic that should be run once the initial seek has been asked to the
-       * PlaybackObserver.
+       * MediaElementMonitor.
        *
        * Actually wait until the seek has been performed, wait for the right moment
        * to perform autoplay, resolve the promise once everything has been done and
@@ -176,8 +174,13 @@ export default function performInitialSeekAndPlay(
          * seek arised.
          */
         let hasStartedSeeking = false;
-        playbackObserver.listen(
+        mediaElementMonitor.listen(
           (obs, stopListening) => {
+            const mediaElement = mediaElementMonitor.getMediaElement();
+            if (mediaElement === null) {
+              // media element not yet attached
+              return;
+            }
             if (
               !hasStartedSeeking &&
               (obs.seeking !== SeekingState.None ||
@@ -201,7 +204,7 @@ export default function performInitialSeekAndPlay(
             if (cancelSignal.isCancelled()) {
               return;
             }
-            waitForPlayable();
+            waitForPlayable(mediaElement);
           },
           { includeLastObservation: false, clearSignal: cancelSignal },
         );
@@ -214,8 +217,8 @@ export default function performInitialSeekAndPlay(
        * if asked. Potentially send warning if a minor issue has been detected while
        * doing so.
        */
-      function waitForPlayable() {
-        playbackObserver.listen(
+      function waitForPlayable(mediaElement: IMediaElement) {
+        mediaElementMonitor.listen(
           (observation, stopListening) => {
             if (
               observation.seeking === SeekingState.None &&
@@ -223,7 +226,7 @@ export default function performInitialSeekAndPlay(
               observation.readyState >= 1
             ) {
               stopListening();
-              onPlayable();
+              onPlayable(mediaElement);
             }
           },
           { includeLastObservation: true, clearSignal: cancelSignal },
@@ -237,7 +240,7 @@ export default function performInitialSeekAndPlay(
        * Promise when done.
        * Might also send warnings if minor issues arise.
        */
-      function onPlayable() {
+      function onPlayable(mediaElement: IMediaElement) {
         log.info("Init", "Can begin to play content");
         if (!mustAutoPlay) {
           if (mediaElement.autoplay) {
