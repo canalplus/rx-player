@@ -24,6 +24,7 @@ import type {
 import parseBaseURL from "./BaseURL.ts";
 import parseContentComponent from "./ContentComponent.ts";
 import parseContentProtection from "./ContentProtection.ts";
+import parseDescriptor from "./Descriptor.ts";
 import { createRepresentationIntermediateRepresentation } from "./Representation.ts";
 import parseSegmentBase from "./SegmentBase.ts";
 import parseSegmentList from "./SegmentList.ts";
@@ -88,9 +89,12 @@ function parseAdaptationSetChildren(
         children.ContentComponent.push(parseContentComponent(currentNode));
         break;
 
-      case "EssentialProperty":
-        children.EssentialProperty.push(parseScheme(currentNode));
+      case "EssentialProperty": {
+        const [descriptor, descriptorWarnings] = parseDescriptor(currentNode);
+        children.EssentialProperty.push(descriptor);
+        warnings.push(...descriptorWarnings);
         break;
+      }
 
       case "InbandEventStream":
         children.InbandEventStream.push(parseScheme(currentNode));
@@ -118,9 +122,12 @@ function parseAdaptationSetChildren(
         children.Role.push(parseScheme(currentNode));
         break;
 
-      case "SupplementalProperty":
-        children.SupplementalProperty.push(parseScheme(currentNode));
+      case "SupplementalProperty": {
+        const [descriptor, descriptorWarnings] = parseDescriptor(currentNode);
+        children.SupplementalProperty.push(descriptor);
+        warnings.push(...descriptorWarnings);
         break;
+      }
 
       case "SegmentBase": {
         const [segmentBase, segmentBaseWarnings] = parseSegmentBase(currentNode);

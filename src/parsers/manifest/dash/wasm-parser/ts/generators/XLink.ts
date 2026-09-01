@@ -45,6 +45,7 @@ export function generateXLinkChildrenParser(
             SegmentTemplate: [],
             EventStream: [],
             ContentProtection: [],
+            SupplementalProperty: [],
           },
           attributes: {},
         };

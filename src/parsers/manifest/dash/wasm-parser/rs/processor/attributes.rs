@@ -269,6 +269,35 @@ pub fn report_scheme_attrs(tag_bs: &quick_xml::events::BytesStart) {
     }
 }
 
+pub fn report_descriptor_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    for res_attr in tag_bs.attributes() {
+        match res_attr {
+            Ok(attr) => match attr.key.as_ref() {
+                b"id" => Id.try_report_as_string(&attr),
+                b"schemeIdUri" => SchemeIdUri.try_report_as_string(&attr),
+                b"value" => SchemeValue.try_report_as_string(&attr),
+                _ => {}
+            },
+            Err(err) => ParsingError::from(err).report_err(),
+        };
+    }
+}
+
+pub fn report_url_query_info_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    for res_attr in tag_bs.attributes() {
+        match res_attr {
+            Ok(attr) => match attr.key.as_ref() {
+                b"queryTemplate" => QueryTemplate.try_report_as_string(&attr),
+                b"queryString" => QueryString.try_report_as_string(&attr),
+                b"includeInRequests" => IncludeInRequests.try_report_as_string(&attr),
+                b"useMPDUrlQuery" => UseMpdUrlQuery.try_report_as_bool(&attr),
+                _ => {}
+            },
+            Err(err) => ParsingError::from(err).report_err(),
+        };
+    }
+}
+
 pub fn report_segment_url_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
