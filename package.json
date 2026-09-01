@@ -236,7 +236,8 @@
     "semver": "7.8.5",
     "typescript": "6.0.2",
     "typescript-eslint": "^8.40.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "webdriverio": "^9.30.0"
   },
   "scripts-list": {
     " INFO ": "---- This field is read by the `list` npm script and allows to guide you through the RxPlayer's npm scripts ----",
