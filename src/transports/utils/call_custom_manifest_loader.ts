@@ -27,7 +27,9 @@ export default function callCustomManifestLoader(
   customManifestLoader: IManifestLoader,
   fallbackManifestLoader: (
     url: string | undefined,
-    loaderOptions: IManifestLoaderOptions,
+    loaderOptions: IManifestLoaderOptions & {
+      headers?: Record<string, string> | undefined;
+    },
     cancelSignal: CancellationSignal,
   ) => Promise<IRequestedData<ILoadedManifestFormat>>,
 ): (
@@ -112,13 +114,19 @@ export default function callCustomManifestLoader(
        * Callback triggered when the custom manifest loader wants to fallback to
        * the "regular" implementation
        */
-      const fallback = () => {
+      const fallback = (fallbackOptions?: {
+        headers?: Record<string, string> | undefined;
+      }) => {
         if (hasFinished || cancelSignal.isCancelled()) {
           return;
         }
         hasFinished = true;
         cancelSignal.deregister(abortCustomLoader);
-        fallbackManifestLoader(url, loaderOptions, cancelSignal).then(res, rej);
+        fallbackManifestLoader(
+          url,
+          { ...loaderOptions, headers: fallbackOptions?.headers },
+          cancelSignal,
+        ).then(res, rej);
       };
 
       const callbacks = { reject, resolve, fallback };
