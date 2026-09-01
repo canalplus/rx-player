@@ -66,6 +66,7 @@ Here is the annotated exhaustive list (notes are at the bottom of the table):
 | `NATIVE_TTML_PARSER` [3] | Parse TTML text tracks for the `"native"` `textTrackMode` |
 | `NATIVE_SAMI_PARSER` [3] | Parse SAMI text tracks for the `"native"` `textTrackMode` |
 | `DEBUG_ELEMENT`          | Allows to use the `createDebugElement` RxPlayer method    |
+| `MULTI_THREAD` [7]       | Allows to run the RxPlayer's core logic in another thread |
 | `DASH_WASM` [1] [2] [5]  | Enable DASH playback using a WebAssembly-based MPD parser |
 | `LOCAL_MANIFEST` [4]     | Enable playback of "local" contents                       |
 | `METAPLAYLIST` [4]       | Enable playback of "metaplaylist" contents                |

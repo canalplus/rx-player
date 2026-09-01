@@ -20,6 +20,7 @@ import {
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
+  MULTI_THREAD,
   NATIVE_SAMI_PARSER,
   NATIVE_SRT_PARSER,
   NATIVE_TEXT_BUFFER,
@@ -27,6 +28,7 @@ import {
   NATIVE_VTT_PARSER,
   SMOOTH,
 } from "../../../../../src/features/list/index.ts";
+import { MULTI_THREAD as MULTI_THREAD_FEATURE } from "../../../../../src/features/list/multi_thread.ts";
 import { NATIVE_SAMI_PARSER as NATIVE_SAMI_PARSER_FEATURE } from "../../../../../src/features/list/native_sami_parser.ts";
 import { NATIVE_SRT_PARSER as NATIVE_SRT_PARSER_FEATURE } from "../../../../../src/features/list/native_srt_parser.ts";
 import { NATIVE_TEXT_BUFFER as NATIVE_TEXT_BUFFER_FEATURE } from "../../../../../src/features/list/native_text_buffer.ts";
@@ -45,6 +47,7 @@ describe("Features list", () => {
     expect(HTML_TEXT_BUFFER).toBe(HTML_TEXT_BUFFER_FEATURE);
     expect(HTML_TTML_PARSER).toBe(HTML_TTML_PARSER_FEATURE);
     expect(HTML_VTT_PARSER).toBe(HTML_VTT_PARSER_FEATURE);
+    expect(MULTI_THREAD).toBe(MULTI_THREAD_FEATURE);
     expect(NATIVE_SAMI_PARSER).toBe(NATIVE_SAMI_PARSER_FEATURE);
     expect(NATIVE_SRT_PARSER).toBe(NATIVE_SRT_PARSER_FEATURE);
     expect(NATIVE_TEXT_BUFFER).toBe(NATIVE_TEXT_BUFFER_FEATURE);
