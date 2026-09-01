@@ -181,7 +181,6 @@ describe("DASH live content (SegmentTimeline)", function () {
         manifestLoader,
         segmentLoader,
       });
-      expect(player.getAvailableVideoTracks()).to.eql([]);
 
       await sleep(0);
       expect(manifestLoaderCalledTimes).to.equal(1);

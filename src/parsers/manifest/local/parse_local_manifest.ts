@@ -74,6 +74,7 @@ export default function parseLocalManifest(
       },
     },
     periods: parsedPeriods,
+    chainedManifests: null,
   };
 }
 

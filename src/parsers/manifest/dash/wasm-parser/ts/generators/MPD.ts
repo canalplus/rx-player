@@ -20,6 +20,7 @@ import type {
   IMPDAttributes,
   IMPDChildren,
   IPeriodIntermediateRepresentation,
+  ISchemeAttributes,
 } from "../../../node_parser_types.ts";
 import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
@@ -103,6 +104,28 @@ export function generateMPDChildrenParser(
           linearMemory,
         );
         parsersStack.pushParsers(nodeId, noop, contentProtAttrParser);
+        break;
+      }
+
+      case TagName.EssentialProperty: {
+        const schemeAttrs: ISchemeAttributes = {};
+        if (mpdChildren.EssentialProperty === undefined) {
+          mpdChildren.EssentialProperty = [];
+        }
+        mpdChildren.EssentialProperty.push({ attributes: schemeAttrs });
+        const attributeParser = generateSchemeAttrParser(schemeAttrs, linearMemory);
+        parsersStack.pushParsers(nodeId, noop, attributeParser);
+        break;
+      }
+
+      case TagName.SupplementalProperty: {
+        const schemeAttrs = {};
+        if (mpdChildren.SupplementalProperty === undefined) {
+          mpdChildren.SupplementalProperty = [];
+        }
+        mpdChildren.SupplementalProperty.push({ attributes: schemeAttrs });
+        const attributeParser = generateSchemeAttrParser(schemeAttrs, linearMemory);
+        parsersStack.pushParsers(nodeId, noop, attributeParser);
         break;
       }
 
