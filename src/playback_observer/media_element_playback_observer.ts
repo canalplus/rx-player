@@ -15,7 +15,10 @@
  */
 
 import type { IMediaElement } from "../compat/browser_compatibility_types.ts";
+import clearElementSrc from "../compat/clear_element_src.ts";
+import disableRemotePlaybackOnManagedMediaSource from "../compat/disable_remote_playback_on_managed_media_source.ts";
 import isSeekingApproximate from "../compat/is_seeking_approximate.ts";
+import resetMediaElement from "../compat/reset_media_element.ts";
 import config from "../config.ts";
 import ManualTimeRanges from "../core/segment_sinks/implementations/utils/manual_time_ranges.ts";
 import log from "../log.ts";
@@ -187,6 +190,7 @@ export default class PlaybackObserver {
     if (prevMediaElement !== null) {
       throw new Error("A media element was already attached to this PlaybackObserver");
     }
+    clearElementSrc(mediaElement);
     this._mediaElementRef.setValue(mediaElement);
     if (this._canceller.isUsed()) {
       return;
@@ -202,6 +206,68 @@ export default class PlaybackObserver {
     if (mediaElement.readyState >= 1) {
       this._onLoadedMetadataEvent();
     }
+  }
+
+  /**
+   * Get direct access to the `HTMLMediaElement`.
+   *
+   * `null` if not already attached.
+   * @returns {HTMLMediaElement|null}
+   */
+  public getMediaElement(): IMediaElement | null {
+    return this._mediaElementRef.getValue();
+  }
+
+  public addMediaErrorListener(
+    cb: (error: MediaError | null) => void,
+    cancelSignal: CancellationSignal,
+  ): void {
+    this._mediaElementRef.onUpdate(
+      (mediaElement: IMediaElement | null, stopListening) => {
+        if (mediaElement === null) {
+          return;
+        }
+        stopListening();
+        const onError = () => {
+          cb(mediaElement.error);
+        };
+        mediaElement.addEventListener("error", onError);
+        cancelSignal.register(() => {
+          mediaElement.removeEventListener("error", onError);
+        });
+      },
+      { emitCurrentValue: true, clearSignal: cancelSignal },
+    );
+  }
+
+  public linkUrl(
+    value: string | MediaProvider,
+    isMediaSource: boolean,
+    cancelSignal: CancellationSignal,
+  ): void {
+    this._mediaElementRef.onUpdate(
+      (mediaElement: IMediaElement | null, stopListening) => {
+        if (mediaElement === null) {
+          return;
+        }
+        stopListening();
+        if (typeof value === "string") {
+          mediaElement.src = value;
+          cancelSignal.register(() => {
+            resetMediaElement(mediaElement, value);
+          });
+        } else {
+          mediaElement.srcObject = value;
+          cancelSignal.register(() => {
+            mediaElement.srcObject = null;
+          });
+        }
+        if (isMediaSource) {
+          disableRemotePlaybackOnManagedMediaSource(mediaElement, cancelSignal);
+        }
+      },
+      { emitCurrentValue: true, clearSignal: cancelSignal },
+    );
   }
 
   /**

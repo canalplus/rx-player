@@ -18,7 +18,6 @@ import type {
   ISentLogValue,
 } from "../../core/types.ts";
 import { CoreMessageType } from "../../core/types.ts";
-import type { MediaError } from "../../errors/index.ts";
 import {
   deserializeMediaError,
   EncryptedMediaError,
@@ -72,13 +71,13 @@ import type { ITextDisplayerOptions } from "./types.ts";
 import { ContentInitializer } from "./types.ts";
 import type { ICorePlaybackObservation } from "./utils/create_core_playback_observer.ts";
 import createCorePlaybackObserver from "./utils/create_core_playback_observer.ts";
+import formatMediaError from "./utils/format_media_error.ts";
 import type { IInitialTimeOptions } from "./utils/get_initial_time.ts";
 import getInitialTime from "./utils/get_initial_time.ts";
 import getLoadedReference from "./utils/get_loaded_reference.ts";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play.ts";
 import RebufferingController from "./utils/rebuffering_controller.ts";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter.ts";
-import listenToMediaError from "./utils/throw_on_media_error.ts";
 import { updateManifestCodecSupport } from "./utils/update_manifest_codec_support.ts";
 
 const generateContentId = idGenerator();
@@ -385,11 +384,9 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     });
 
     /** Translate errors coming from the media element into RxPlayer errors. */
-    listenToMediaError(
-      mediaElement,
-      (error: MediaError) => this._onFatalError(error),
-      this._initCanceller.signal,
-    );
+    playbackObserver.addMediaErrorListener((mediaError) => {
+      this._onFatalError(formatMediaError(mediaError));
+    }, this._initCanceller.signal);
 
     /**
      * Send content protection initialization data.
@@ -1684,7 +1681,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const {
       initialTime,
       autoPlay,
-      mediaElement,
       textDisplayer,
       playbackObserver,
       streamEventsEmitter,
@@ -1695,7 +1691,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
     const { autoPlayResult, initialPlayPerformed } = performInitialSeekAndPlay(
       {
-        mediaElement,
         playbackObserver,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
