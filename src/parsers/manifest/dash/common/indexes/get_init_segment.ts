@@ -15,26 +15,50 @@
  */
 
 import type { IPrivateInfos, ISegment } from "../../../../../manifest/index.ts";
-import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
 import type { IEMSG } from "../../../../containers/isobmff/index.ts";
 
 /**
- * Construct init segment for the given index.
+ * Construct the metadata object for the init Segment linked to that index.
+ * Returns `null` if no initialization segment appears to be linked to that index.
  * @param {Object} index
  * @param {function} isEMSGWhitelisted
- * @returns {Object}
+ * @returns {Object|null}
  */
 export default function getInitSegment(
   index: {
+    /** Convert time numbers into seconds (`ticks / timescale == seconds`). */
     timescale: number;
-    initialization?:
-      { url: string | null; range?: [number, number] | undefined } | undefined;
+    /**
+     * Information on the initialization segment present on the index.
+     * `null` if there's no such information.
+     */
+    initialization: { url: string | null; range?: [number, number] | undefined } | null;
+    /** Optional range for the index segment (e.g. ISOBMFF's sidx). */
     indexRange?: [number, number] | undefined;
+    /**
+     * Temporal offset, in the current timescale (see timescale), to add to the
+     * presentation time (time a segment has at decoding time) to obtain the
+     * corresponding media time (original time of the media segment in the index
+     * and on the media file).
+     * For example, to look for a segment beginning at a second `T` on a
+     * HTMLMediaElement, we actually will look for a segment in the index
+     * beginning at:
+     * ```
+     * T * timescale + indexTimeOffset
+     * ```
+     */
     indexTimeOffset: number;
   },
+  /**
+   * Callback returning `true` if the corresponding inband event is supposed to
+   * be listened to.
+   */
   isEMSGWhitelisted?: (inbandEvent: IEMSG) => boolean,
-): ISegment {
+): ISegment | null {
   const { initialization } = index;
+  if (initialization === null) {
+    return null;
+  }
   const privateInfos: IPrivateInfos = {};
   if (isEMSGWhitelisted !== undefined) {
     privateInfos.isEMSGWhitelisted = isEMSGWhitelisted;
@@ -47,9 +71,9 @@ export default function getInitSegment(
     end: 0,
     duration: 0,
     timescale: 1,
-    range: !isNullOrUndefined(initialization) ? initialization.range : undefined,
+    range: initialization.range,
     indexRange: index.indexRange,
-    url: initialization?.url ?? null,
+    url: initialization.url,
     complete: true,
     privateInfos,
     timestampOffset: -(index.indexTimeOffset / index.timescale),

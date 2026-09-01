@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  type="static"
+  mediaPresentationDuration="PT10S"
+  minBufferTime="PT1S">
+  <Period id="period" duration="PT10S">
+    <AdaptationSet
+      id="video"
+      contentType="video"
+      mimeType="video/mp4"
+      codecs="avc1.42c00d"
+      segmentAlignment="true">
+      <Representation
+        id="video-representation"
+        bandwidth="50842"
+        width="320"
+        height="180">
+        <SegmentTemplate
+          timescale="1"
+          duration="10"
+          startNumber="1"
+          initialization="../../DASH_static_SegmentTemplate_Multi_Periods/media/mp4-live-periods-h264bl_low-.mp4"
+          media="../../DASH_static_SegmentTemplate_Multi_Periods/media/mp4-live-periods-h264bl_low-$Number$.m4s" />
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="text-template"
+      contentType="text"
+      lang="en"
+      mimeType="text/vtt">
+      <Representation id="text-template-representation" bandwidth="256">
+        <SegmentTemplate
+          timescale="1"
+          duration="10"
+          startNumber="1"
+          media="text-template-$Number$.vtt" />
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="text-timeline"
+      contentType="text"
+      lang="fr"
+      mimeType="text/vtt">
+      <Representation id="text-timeline-representation" bandwidth="256">
+        <SegmentTemplate timescale="1" media="text-timeline-$Time$.vtt">
+          <SegmentTimeline>
+            <S t="0" d="10" />
+          </SegmentTimeline>
+        </SegmentTemplate>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="text-list"
+      contentType="text"
+      lang="de"
+      mimeType="text/vtt">
+      <Representation id="text-list-representation" bandwidth="256">
+        <SegmentList timescale="1" duration="10">
+          <SegmentURL media="text-list.vtt" />
+        </SegmentList>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>
