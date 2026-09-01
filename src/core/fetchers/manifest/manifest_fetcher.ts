@@ -625,7 +625,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
       // updates (e.g. redirects or manifest-provided alternatives) to stay the
       // source of truth after the refresh completed.
       fullRefresh = !enablePartialRefresh || manifestUpdateUrl === undefined;
-      refreshURL = fullRefresh ? manifest.getUrls()[0] : manifestUpdateUrl;
+      refreshURL = fullRefresh ? manifest.getRefreshUrls()[0] : manifestUpdateUrl;
     }
     const externalClockOffset = manifest.clockOffset;
 

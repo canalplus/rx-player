@@ -20,7 +20,11 @@ import type { IManifest } from "../../../../manifest/index.ts";
 import arrayFind from "../../../../utils/array_find.ts";
 import isNullOrUndefined from "../../../../utils/is_null_or_undefined.ts";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
-import { getFilenameIndexInUrl } from "../../../../utils/url-utils.ts";
+import {
+  getFilenameIndexInUrl,
+  isAbsoluteURL,
+  resolveURL,
+} from "../../../../utils/url-utils.ts";
 import type { IParsedManifest } from "../../types.ts";
 import type {
   IMPDIntermediateRepresentation,
@@ -418,9 +422,33 @@ function parseCompleteIntermediateRepresentation(
       (parsedPeriods[parsedPeriods.length - 1]?.end !== undefined ||
         mpdIR.attributes.mediaPresentationDuration !== undefined));
 
+  const refreshUrls = [];
+  const manifestUrl =
+    args.url !== undefined && args.url.length > 0 ? args.url : undefined;
+  for (const location of rootChildren.Location) {
+    if (manifestUrl === undefined && !isAbsoluteURL(location.value)) {
+      warnings.push(
+        new Error(
+          `DASH Parser: Cannot resolve relative <Location> URL without a manifest URL: "${location.value}"`,
+        ),
+      );
+      continue;
+    }
+    refreshUrls.push({
+      baseUrl:
+        manifestUrl === undefined
+          ? location.value
+          : resolveURL(manifestUrl, location.value),
+      id: location.attributes.serviceLocation,
+    });
+  }
+  if (refreshUrls.length === 0 && manifestUrl !== undefined) {
+    refreshUrls.push({ baseUrl: manifestUrl, id: undefined });
+  }
   const parsedMPD: IParsedManifest = {
     availabilityStartTime,
     clockOffset: args.externalClockOffset,
+    refreshUrls,
     isDynamic,
     isLive: isDynamic,
     isLastPeriodKnown,
@@ -434,9 +462,6 @@ function parseCompleteIntermediateRepresentation(
       maximumTimeData,
     },
     lifetime,
-    uris: isNullOrUndefined(args.url)
-      ? rootChildren.Location.map((l) => l.value)
-      : [args.url, ...rootChildren.Location.map((l) => l.value)],
   };
 
   return { type: "done", value: { parsed: parsedMPD, warnings } };

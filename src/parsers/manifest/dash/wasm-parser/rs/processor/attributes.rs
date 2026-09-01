@@ -284,6 +284,18 @@ pub fn report_segment_url_attrs(tag_bs: &quick_xml::events::BytesStart) {
     }
 }
 
+pub fn report_location_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    for res_attr in tag_bs.attributes() {
+        match res_attr {
+            Ok(attr) => match attr.key.as_ref() {
+                b"serviceLocation" => ServiceLocation.try_report_as_string(&attr),
+                _ => {}
+            },
+            Err(err) => ParsingError::from(err).report_err(),
+        };
+    }
+}
+
 pub fn report_event_stream_attrs(tag_bs: &quick_xml::events::BytesStart) {
     for res_attr in tag_bs.attributes() {
         match res_attr {
