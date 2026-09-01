@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
     setMediaKeys: vi.fn(),
     getInitData: vi.fn(),
     generateKeyRequest: vi.fn(),
+    sessionEventsListener: vi.fn(),
   };
 });
 vi.mock("../../../../src/compat/should_renew_media_key_system_access", () => ({
@@ -35,6 +36,10 @@ vi.mock("../../../../src/compat/eme", () => ({
   closeSession: vi.fn(),
   loadSession: vi.fn(),
 }));
+vi.mock("../../../../src/main_thread/decrypt/session_events_listener.ts", () => ({
+  default: mocks.sessionEventsListener,
+  BlacklistedSessionError: class BlacklistedSessionError extends Error {},
+}));
 
 describe("content_decryptor - blacklist missing key Ids", () => {
   beforeEach(() => {
@@ -47,6 +52,7 @@ describe("content_decryptor - blacklist missing key Ids", () => {
     mocks.setMediaKeys.mockReset();
     mocks.getInitData.mockReset();
     mocks.generateKeyRequest.mockReset();
+    mocks.sessionEventsListener.mockReset();
   });
 
   it("should return an empty array if actualKeyIds contains all expectedKeyIds", () => {
@@ -97,6 +103,7 @@ describe("content_decryptor - session decommissioning", () => {
     mocks.setMediaKeys.mockReset();
     mocks.getInitData.mockReset();
     mocks.generateKeyRequest.mockReset();
+    mocks.sessionEventsListener.mockReset();
   });
 
   it("should only remove the decommissioned session from tracked sessions", async () => {
@@ -104,15 +111,11 @@ describe("content_decryptor - session decommissioning", () => {
     const videoElt = document.createElement("video");
     mockCompat(mocks);
     const sessionCallbacks: Array<{ onError: (err: unknown) => void }> = [];
-    vi.doMock("../../../../src/main_thread/decrypt/session_events_listener", () => ({
-      __esModule: true,
-      default: vi.fn(
-        (_session: unknown, _options: unknown, _access: unknown, callbacks: unknown) => {
-          sessionCallbacks.push(callbacks as { onError: (err: unknown) => void });
-        },
-      ),
-      BlacklistedSessionError: class BlacklistedSessionError extends Error {},
-    }));
+    mocks.sessionEventsListener.mockImplementation(
+      (_session: unknown, _options: unknown, _access: unknown, callbacks: unknown) => {
+        sessionCallbacks.push(callbacks as { onError: (err: unknown) => void });
+      },
+    );
     const { DecommissionedSessionError } =
       await import("../../../../src/main_thread/decrypt/utils/check_key_statuses.ts");
     const { default: ContentDecryptor } =

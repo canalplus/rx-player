@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type {
   IMediaElement,
   IMediaSourceClass,
@@ -88,54 +88,49 @@ function generateFakeManifestWithRepresentations(
 
   return manifest;
 }
-beforeAll(() => {
-  // Mock EME APIs
-  vi.mock("../../../../../../src/compat/eme/eme-api-implementation", () => ({
-    default: () => ({
-      requestMediaKeySystemAccess(
-        keyType: string,
-        config: MediaKeySystemConfiguration[],
-      ) {
-        return {
-          keySystem: keyType,
-          getConfiguration: () => ({
-            ...config[0],
-            videoCapabilities: [
-              // Notice that all other codecs such as hevc are not listed in the videoCapabilities
-              // meanings that the EME implementation does not support them.
-              {
-                contentType: 'video/mp4;codecs="avc1.4d401e"',
-                robustness: "HW_SECURE_ALL",
-              },
-            ],
-            audioCapabilities: [
-              // Notice that all other codecs such as ec-3 are not listed in the audioCapabilities
-              // meanings that the EME implementation does not support them.
-              {
-                contentType: 'audio/mp4;codecs="mp4a.40.2"',
-                robustness: "HW_SECURE_ALL",
-              },
-            ],
-          }),
-          createMediaKeys: () => Promise.resolve({}),
-        };
-      },
-      onEncrypted: (
-        _target: unknown,
-        _listener: (evt: unknown) => void,
-        _cancelSignal: unknown,
-      ) => {
-        return;
-      },
-      setMediaKeys: (
-        _mediaElement: IMediaElement,
-        _mediaKeys: unknown,
-      ): Promise<unknown> => {
-        return Promise.resolve();
-      },
-    }),
-  }));
-});
+// Mock EME APIs
+vi.mock("../../../../../../src/compat/eme/eme-api-implementation", () => ({
+  default: () => ({
+    requestMediaKeySystemAccess(keyType: string, config: MediaKeySystemConfiguration[]) {
+      return {
+        keySystem: keyType,
+        getConfiguration: () => ({
+          ...config[0],
+          videoCapabilities: [
+            // Notice that all other codecs such as hevc are not listed in the videoCapabilities
+            // meanings that the EME implementation does not support them.
+            {
+              contentType: 'video/mp4;codecs="avc1.4d401e"',
+              robustness: "HW_SECURE_ALL",
+            },
+          ],
+          audioCapabilities: [
+            // Notice that all other codecs such as ec-3 are not listed in the audioCapabilities
+            // meanings that the EME implementation does not support them.
+            {
+              contentType: 'audio/mp4;codecs="mp4a.40.2"',
+              robustness: "HW_SECURE_ALL",
+            },
+          ],
+        }),
+        createMediaKeys: () => Promise.resolve({}),
+      };
+    },
+    onEncrypted: (
+      _target: unknown,
+      _listener: (evt: unknown) => void,
+      _cancelSignal: unknown,
+    ) => {
+      return;
+    },
+    setMediaKeys: (
+      _mediaElement: IMediaElement,
+      _mediaKeys: unknown,
+    ): Promise<unknown> => {
+      return Promise.resolve();
+    },
+  }),
+}));
 describe("init - utils - updateManifestCodecSupport", () => {
   it("should return the codecs with result true/false if it's supported by the device", async () => {
     const representationAVC: IRepresentationMetadata = {
