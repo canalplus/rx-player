@@ -18,14 +18,14 @@ import type {
   ISentLogValue,
 } from "../../core/types.ts";
 import { CoreMessageType } from "../../core/types.ts";
-import type { MediaError } from "../../errors/index.ts";
+import { SourceBufferError } from "../../errors/internal/index.ts";
+import type { MediaError } from "../../errors/public_api/index.ts";
 import {
   deserializeMediaError,
   EncryptedMediaError,
   NetworkError,
   OtherError,
-  SourceBufferError,
-} from "../../errors/index.ts";
+} from "../../errors/public_api/index.ts";
 import features from "../../features/index.ts";
 import log from "../../log.ts";
 import type { IManifestMetadata } from "../../manifest/index.ts";

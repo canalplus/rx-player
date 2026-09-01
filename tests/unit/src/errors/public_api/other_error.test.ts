@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import OtherError from "../../../../src/errors/other_error.ts";
+import OtherError from "../../../../../src/errors/public_api/other_error.ts";
 
 describe("errors - OtherError", () => {
   it("should format an OtherError", () => {

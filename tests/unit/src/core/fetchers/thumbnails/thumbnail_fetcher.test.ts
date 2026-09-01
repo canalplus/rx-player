@@ -22,7 +22,7 @@ const {
   mockConfig,
   mockLog,
   mockScheduleRequestWithCdns,
-  mockFormatError,
+  mockFormatApiError,
   mockErrorSelector,
 } = vi.hoisted(() => {
   return {
@@ -57,7 +57,7 @@ const {
         return performRequest(cdns?.[0] ?? null, new TaskCanceller("test task").signal);
       },
     ),
-    mockFormatError: vi.fn((err: unknown): any => err),
+    mockFormatApiError: vi.fn((err: unknown): any => err),
     mockErrorSelector: vi.fn((err: unknown): any => err),
   };
 });
@@ -67,7 +67,9 @@ vi.mock("../../../../../../src/log", () => ({ default: mockLog }));
 vi.mock("../../../../../../src/core/fetchers/utils/schedule_request", () => ({
   scheduleRequestWithCdns: mockScheduleRequestWithCdns,
 }));
-vi.mock("../../../../../../src/errors", () => ({ formatError: mockFormatError }));
+vi.mock("../../../../../../src/errors/public_api", () => ({
+  formatApiError: mockFormatApiError,
+}));
 vi.mock("../../../../../../src/core/fetchers/utils/error_selector", () => ({
   default: mockErrorSelector,
 }));
@@ -382,7 +384,7 @@ describe("createThumbnailFetcher", () => {
       pipeline.parseThumbnail.mockImplementation(() => {
         throw parseError;
       });
-      mockFormatError.mockReturnValue(formattedParseError);
+      mockFormatApiError.mockReturnValue(formattedParseError);
 
       const fetcher = createThumbnailFetcher(pipeline, null);
       const canceller = new TaskCanceller("test");
@@ -390,7 +392,7 @@ describe("createThumbnailFetcher", () => {
       await expect(fetcher(makeThumbnailContext(), canceller.signal)).rejects.toBe(
         formattedParseError,
       );
-      expect(mockFormatError).toHaveBeenCalledWith(
+      expect(mockFormatApiError).toHaveBeenCalledWith(
         parseError,
         expect.objectContaining({
           defaultCode: "PIPELINE_PARSE_ERROR",

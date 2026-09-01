@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import type { ITaggedTrack } from "../manifest/index.ts";
-import assert from "../utils/assert.ts";
+import type { ITaggedTrack } from "../../manifest/index.ts";
+import assert from "../../utils/assert.ts";
+import errorMessage from "../utils/error_message.ts";
 import type { IMediaErrorCode } from "./error_codes.ts";
 import { ErrorTypes } from "./error_codes.ts";
-import errorMessage from "./error_message.ts";
 
 export type ICodeWithAdaptationType =
   | "BUFFER_APPEND_ERROR"

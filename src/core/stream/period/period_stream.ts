@@ -15,7 +15,7 @@
  */
 
 import config from "../../../config.ts";
-import { formatError, MediaError } from "../../../errors/index.ts";
+import { formatApiError, MediaError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { IAdaptation, IPeriod } from "../../../manifest/index.ts";
 import { toTaggedTrack } from "../../../manifest/index.ts";
@@ -385,7 +385,7 @@ export default function PeriodStream(
         );
         segmentSinksStore.disposeSegmentSink(bufferType, "AdaptationStream err");
 
-        const formattedError = formatError(error, {
+        const formattedError = formatApiError(error, {
           defaultCode: "NONE",
           defaultReason: "Unknown `AdaptationStream` error",
         });

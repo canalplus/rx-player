@@ -1,6 +1,6 @@
 import { describe, beforeEach, it, expect, vi } from "vitest";
 import getEmeApiImplementation from "../../../../src/compat/eme/index.ts";
-import { EncryptedMediaError } from "../../../../src/errors/index.ts";
+import { EncryptedMediaError } from "../../../../src/errors/public_api/index.ts";
 import { getMissingKeyIds } from "../../../../src/main_thread/decrypt/content_decryptor.ts";
 import { ContentDecryptorState } from "../../../../src/main_thread/decrypt/types.ts";
 import type { IKeySystemOption } from "../../../../src/public_types.ts";

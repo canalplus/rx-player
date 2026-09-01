@@ -22,7 +22,7 @@
 import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
 import clearElementSrc from "../../compat/clear_element_src.ts";
 import getStartDate from "../../compat/get_start_date.ts";
-import type { MediaError } from "../../errors/index.ts";
+import type { MediaError } from "../../errors/public_api/index.ts";
 import log from "../../log.ts";
 import type { IMediaElementPlaybackObserver } from "../../playback_observer/index.ts";
 import type { IKeySystemOption, IPlayerError } from "../../public_types.ts";

@@ -1,5 +1,5 @@
 import BROWSER_GLOBALS from "../../compat/browser_compatibility_types.ts";
-import { formatError } from "../../errors/index.ts";
+import { formatApiError } from "../../errors/public_api/index.ts";
 import type { ICorePlaybackObservation } from "../../main_thread/init/utils/create_core_playback_observer.ts";
 import type Manifest from "../../manifest/classes/index.ts";
 import { createRepresentationFilterFromFnString } from "../../manifest/index.ts";
@@ -32,7 +32,7 @@ export interface ICorePlugins {
  * @returns {Object} - A serialization-safe error format
  */
 export function formatErrorForSender(error: unknown): ISentError {
-  const formattedError = formatError(error, {
+  const formattedError = formatApiError(error, {
     defaultCode: "NONE",
     defaultReason: "An unknown error stopped content playback.",
   });

@@ -18,7 +18,8 @@ import type {
   IMediaKeys,
   IMediaKeySystemAccess,
 } from "../../compat/browser_compatibility_types.ts";
-import { EncryptedMediaError, isKnownError } from "../../errors/index.ts";
+import { isApiError } from "../../errors/index.ts";
+import { EncryptedMediaError } from "../../errors/public_api/index.ts";
 import log from "../../log.ts";
 import type { IPlayerError } from "../../public_types.ts";
 import ServerCertificateStore from "./utils/server_certificate_store.ts";
@@ -120,7 +121,7 @@ export default async function trySettingServerCertificate(
     ServerCertificateStore.set(mediaKeys, serverCertificate);
     return { type: "success", value: result };
   } catch (error) {
-    const formattedErr = isKnownError(error)
+    const formattedErr = isApiError(error)
       ? error
       : new EncryptedMediaError(
           "LICENSE_SERVER_CERTIFICATE_ERROR",
