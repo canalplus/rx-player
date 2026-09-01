@@ -166,7 +166,8 @@ export interface IReadOnlyPlaybackObserver<TObservationType> {
   /**
    * Get the current playing position, in seconds.
    * Returns `undefined` when this cannot be known, such as when the playback
-   * observer is running in a WebWorker.
+   * observer is running in a WebWorker or when an `HTMLMediaElement` is not
+   * yet attached to the PlaybackObserver.
    * @returns {number|undefined}
    */
   getCurrentTime(): number | undefined;
