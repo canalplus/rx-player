@@ -145,7 +145,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
       baseCodecs: ["avc1.4d401e"],
       chosenCodec: "avc1.4d401e",
       mimeType: "video/mp4",
-      isSupported: undefined,
+      isCodecSupported: undefined,
     };
 
     const representationHEVC: IRepresentationMetadata = {
@@ -155,7 +155,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
       baseCodecs: ["hvc1.2.4.L153.B0"],
       chosenCodec: "hvc1.2.4.L153.B0",
       mimeType: "video/mp4",
-      isSupported: undefined,
+      isCodecSupported: undefined,
     };
 
     const representationVP9: IRepresentationMetadata = {
@@ -165,7 +165,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
       baseCodecs: ["vp9"],
       chosenCodec: "vp9",
       mimeType: "video/mp4",
-      isSupported: undefined,
+      isCodecSupported: undefined,
     };
 
     const representationMP4A: IRepresentationMetadata = {
@@ -175,7 +175,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
       baseCodecs: ["mp4a.40.2"],
       chosenCodec: "mp4a.40.2",
       mimeType: "audio/mp4",
-      isSupported: undefined,
+      isCodecSupported: undefined,
     };
 
     const representationEC3: IRepresentationMetadata = {
@@ -185,7 +185,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
       baseCodecs: ["ec-3"],
       chosenCodec: "ec-3",
       mimeType: "audio/mp4",
-      isSupported: undefined,
+      isCodecSupported: undefined,
     };
 
     const manifest = generateFakeManifestWithRepresentations(
@@ -207,11 +207,11 @@ describe("init - utils - updateManifestCodecSupport", () => {
     assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, [keySystem1]);
     updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
-    expect(representationAVC.isSupported).toBe(true);
-    expect(representationHEVC.isSupported).toBe(true);
-    expect(representationVP9.isSupported).toBe(false); // Not Supported by MSE
-    expect(representationMP4A.isSupported).toBe(true);
-    expect(representationEC3.isSupported).toBe(true);
+    expect(representationAVC.isCodecSupported).toBe(true);
+    expect(representationHEVC.isCodecSupported).toBe(true);
+    expect(representationVP9.isCodecSupported).toBe(false); // Not Supported by MSE
+    expect(representationMP4A.isCodecSupported).toBe(true);
+    expect(representationEC3.isCodecSupported).toBe(true);
   });
 
   it("should take into consideration the supported codecs by the CDM", async () => {
@@ -298,11 +298,11 @@ describe("init - utils - updateManifestCodecSupport", () => {
     await sleep(100);
     contentDecryptor.attach();
     updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
-    expect(encryptedRepresentationAVC.isSupported).toBe(true);
-    expect(encryptedRepresentationHEVC.isSupported).toBe(false); // Not supported by EME
-    expect(encryptedRepresentationVP9.isSupported).toBe(false); // Not supported by MSE
-    expect(encryptedRepresentationMP4A.isSupported).toBe(true);
-    expect(encryptedRepresentationEC3.isSupported).toBe(false); // Not supported by EME
+    expect(encryptedRepresentationAVC.isCodecSupported).toBe(true);
+    expect(encryptedRepresentationHEVC.isCodecSupported).toBe(false); // Not supported by EME
+    expect(encryptedRepresentationVP9.isCodecSupported).toBe(false); // Not supported by MSE
+    expect(encryptedRepresentationMP4A.isCodecSupported).toBe(true);
+    expect(encryptedRepresentationEC3.isCodecSupported).toBe(false); // Not supported by EME
   });
 
   it("should update to false if the codec is not usable with MSE in worker", async () => {
@@ -313,7 +313,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
       baseCodecs: ["avc1.4d401e"],
       chosenCodec: "avc1.4d401e",
       mimeType: "video/mp4",
-      isSupported: undefined,
+      isCodecSupported: undefined,
       isCodecSupportedInWebWorker: undefined,
     };
     const representationHEVC: IRepresentationMetadata = {
@@ -323,7 +323,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
       baseCodecs: ["hvc1.2.4.L153.B0"],
       chosenCodec: "hvc1.2.4.L153.B0",
       mimeType: "video/mp4",
-      isSupported: undefined,
+      isCodecSupported: undefined,
       isCodecSupportedInWebWorker: false,
     };
 
@@ -334,7 +334,7 @@ describe("init - utils - updateManifestCodecSupport", () => {
       baseCodecs: ["mp4a.40.2"],
       chosenCodec: "mp4a.40.2",
       mimeType: "audio/mp4",
-      isSupported: undefined,
+      isCodecSupported: undefined,
       isCodecSupportedInWebWorker: true,
     };
     const manifest = generateFakeManifestWithRepresentations(
@@ -350,8 +350,8 @@ describe("init - utils - updateManifestCodecSupport", () => {
     assert(emeImplem !== null);
     const contentDecryptor = new ContentDecryptor(emeImplem, video, []);
     updateManifestCodecSupport(FakeMediaSourceClass, manifest, contentDecryptor, true);
-    expect(representationAVC.isSupported).toBe(true);
-    expect(representationHEVC.isSupported).toBe(false); // not supported with MSE in worker
-    expect(representationMP4A.isSupported).toBe(true);
+    expect(representationAVC.isCodecSupported).toBe(true);
+    expect(representationHEVC.isCodecSupported).toBe(false); // not supported with MSE in worker
+    expect(representationMP4A.isCodecSupported).toBe(true);
   });
 });
