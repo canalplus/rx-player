@@ -30,6 +30,8 @@ import { convertSupplementalCodecsToRFC6381 } from "./convert_supplemental_codec
 import { getWEBMHDRInformation } from "./get_hdr_information.ts";
 import type { IRepresentationIndexContext } from "./parse_representation_index.ts";
 import parseRepresentationIndex from "./parse_representation_index.ts";
+import type { IDashUrlQueryInfo } from "./parse_url_query_info.ts";
+import { combineUrlQueryInfo, parseUrlQueryInfo } from "./parse_url_query_info.ts";
 import resolveBaseURLs from "./resolve_base_urls.ts";
 
 /**
@@ -209,12 +211,48 @@ export default function parseRepresentations(
           }));
 
     // Construct Representation Base
+    const representationUrlQueryInfo = parseUrlQueryInfo(
+      representation.children.EssentialProperty,
+      representation.children.SupplementalProperty,
+      context.mpdUrl,
+    );
+    const urlQueryInfo =
+      representationUrlQueryInfo === undefined
+        ? context.urlQueryInfo
+        : context.urlQueryInfo.concat(representationUrlQueryInfo);
+    const segmentUrlQuery = combineUrlQueryInfo(
+      urlQueryInfo.filter((info) => info.appliesTo.segment),
+    );
+    const initUrlQuery = combineUrlQueryInfo(
+      urlQueryInfo.filter((info) => info.appliesTo.init),
+    );
     const parsedRepresentation: IParsedRepresentation = {
       bitrate: representationBitrate,
       cdnMetadata,
       index: representationIndex,
       id: representationID,
     };
+    if (segmentUrlQuery.length > 0 || initUrlQuery.length > 0) {
+      parsedRepresentation.requestData = {};
+      if (segmentUrlQuery.length > 0) {
+        parsedRepresentation.requestData.segment = {
+          urlQuery: segmentUrlQuery.map((info) => ({
+            value: info.queryString,
+            sameOriginOnly: info.sameOriginOnly,
+            sourceUrl: info.sourceUrl,
+          })),
+        };
+      }
+      if (initUrlQuery.length > 0) {
+        parsedRepresentation.requestData.init = {
+          urlQuery: initUrlQuery.map((info) => ({
+            value: info.queryString,
+            sameOriginOnly: info.sameOriginOnly,
+            sourceUrl: info.sourceUrl,
+          })),
+        };
+      }
+    }
 
     if (
       representation.children.SupplementalProperty.length > 0 &&
@@ -300,6 +338,10 @@ export default function parseRepresentations(
 export interface IRepresentationContext extends IInheritedRepresentationIndexContext {
   /** Manifest DASH profiles used for signalling some features */
   manifestProfiles?: string | undefined;
+  /** URL of the MPD from which Annex I parameters may be inherited. */
+  mpdUrl?: string | undefined;
+  /** Annex I URL query instructions inherited from upper MPD levels. */
+  urlQueryInfo: IDashUrlQueryInfo[];
   /**
    * The parser should take this Adaptation - which is from a previously parsed
    * Manifest for the same dynamic content - as a base to speed-up the parsing

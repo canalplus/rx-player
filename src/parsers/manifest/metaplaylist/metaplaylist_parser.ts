@@ -242,6 +242,7 @@ function createManifest(
                 bitrate: currentRepresentation.bitrate,
                 index: newIndex,
                 cdnMetadata: currentRepresentation.cdnMetadata,
+                requestData: currentRepresentation.requestData,
                 id: currentRepresentation.id,
                 height: currentRepresentation.height,
                 width: currentRepresentation.width,

@@ -15,18 +15,42 @@
  */
 
 import type { ISegment } from "../../manifest/index.ts";
-import type { ICdnMetadata } from "../../parsers/manifest/index.ts";
-import { resolveURL } from "../../utils/url-utils.ts";
+import type { ICdnMetadata, IRequestParameters } from "../../parsers/manifest/index.ts";
+import {
+  appendURLQueryString,
+  areSameOrigin,
+  resolveURL,
+} from "../../utils/url-utils.ts";
 
 export default function constructSegmentUrl(
   wantedCdn: ICdnMetadata | null,
   segment: ISegment,
+  requestParameters?: IRequestParameters | undefined,
 ): string | null {
   if (wantedCdn === null) {
     return null;
   }
   if (segment.url === null) {
-    return wantedCdn.baseUrl;
+    return appendQueryString(wantedCdn.baseUrl, requestParameters);
   }
-  return resolveURL(wantedCdn.baseUrl, segment.url);
+  return appendQueryString(resolveURL(wantedCdn.baseUrl, segment.url), requestParameters);
+}
+
+/** Append a raw query string while preserving a possible URL fragment. */
+function appendQueryString(
+  url: string,
+  requestParameters: IRequestParameters | undefined,
+): string {
+  const queryStrings = requestParameters?.urlQuery
+    ?.filter(
+      (query) =>
+        !query.sameOriginOnly ||
+        (query.sourceUrl !== undefined && areSameOrigin(query.sourceUrl, url)),
+    )
+    .map((query) => query.value)
+    .filter((query) => query.length > 0);
+  if (queryStrings === undefined || queryStrings.length === 0) {
+    return url;
+  }
+  return appendURLQueryString(url, queryStrings.join("&"));
 }

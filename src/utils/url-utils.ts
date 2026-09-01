@@ -280,6 +280,73 @@ function isAbsoluteURL(url: string): boolean {
   return parseURL(url).scheme.length > 0;
 }
 
+/** Return the query string of a URL, without its leading question mark. */
+function getQueryString(url: string): string {
+  return parseURL(url).query;
+}
+
+/**
+ * Append an already-encoded query string to a URL without parsing or
+ * normalizing either the existing query or the appended one.
+ */
+function appendURLQueryString(url: string, queryString: string): string {
+  if (queryString.length === 0) {
+    return url;
+  }
+  const urlParts = parseURL(url);
+  const query =
+    urlParts.query.length === 0 ? queryString : `${urlParts.query}&${queryString}`;
+  return formatURL({ ...urlParts, query });
+}
+
+/** Compare the RFC 6454 origins of two absolute URLs. */
+function areSameOrigin(firstUrl: string, secondUrl: string): boolean {
+  const first = parseURL(firstUrl);
+  const second = parseURL(secondUrl);
+  if (
+    first.scheme.length === 0 ||
+    first.authority.length === 0 ||
+    second.scheme.length === 0 ||
+    second.authority.length === 0
+  ) {
+    return false;
+  }
+  const firstScheme = first.scheme.toLowerCase();
+  const secondScheme = second.scheme.toLowerCase();
+  return (
+    firstScheme === secondScheme &&
+    normalizeAuthority(firstScheme, first.authority) ===
+      normalizeAuthority(secondScheme, second.authority)
+  );
+}
+
+function normalizeAuthority(scheme: string, authority: string): string {
+  const authorityWithoutUserInfo = authority.substring(authority.lastIndexOf("@") + 1);
+  let host: string;
+  let port: string;
+  if (authorityWithoutUserInfo[0] === "[") {
+    const closingBracket = authorityWithoutUserInfo.indexOf("]");
+    if (closingBracket < 0) {
+      return authorityWithoutUserInfo.toLowerCase();
+    }
+    host = authorityWithoutUserInfo.substring(0, closingBracket + 1);
+    port = authorityWithoutUserInfo.substring(closingBracket + 1);
+  } else {
+    const colonIndex = authorityWithoutUserInfo.lastIndexOf(":");
+    if (colonIndex < 0) {
+      host = authorityWithoutUserInfo;
+      port = "";
+    } else {
+      host = authorityWithoutUserInfo.substring(0, colonIndex);
+      port = authorityWithoutUserInfo.substring(colonIndex);
+    }
+  }
+  if ((scheme === "http" && port === ":80") || (scheme === "https" && port === ":443")) {
+    port = "";
+  }
+  return host.toLowerCase() + port;
+}
+
 /**
  * Removes "." and ".." from the URL path, as described by the algorithm
  * in RFC 3986 Section 5.2.4. Remove Dot Segments
@@ -361,4 +428,12 @@ function resolveURL(...args: Array<string | undefined>): string {
   }
 }
 
-export { getFilenameIndexInUrl, getRelativeUrl, isAbsoluteURL, resolveURL };
+export {
+  appendURLQueryString,
+  areSameOrigin,
+  getFilenameIndexInUrl,
+  getQueryString,
+  getRelativeUrl,
+  isAbsoluteURL,
+  resolveURL,
+};

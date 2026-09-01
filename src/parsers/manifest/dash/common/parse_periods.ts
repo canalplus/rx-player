@@ -37,6 +37,8 @@ import flattenOverlappingPeriods from "./flatten_overlapping_periods.ts";
 import getPeriodsTimeInformation from "./get_periods_time_infos.ts";
 import type { IAdaptationSetContext } from "./parse_adaptation_sets.ts";
 import parseAdaptationSets from "./parse_adaptation_sets.ts";
+import type { IDashUrlQueryInfo } from "./parse_url_query_info.ts";
+import { parseUrlQueryInfo } from "./parse_url_query_info.ts";
 import resolveBaseURLs from "./resolve_base_urls.ts";
 
 const generatePeriodID = idGenerator();
@@ -113,6 +115,11 @@ export default function parsePeriods(
     const segmentTemplate =
       periodIR.children.SegmentTemplate[periodIR.children.SegmentTemplate.length - 1];
     contentProtectionParser.addReferences(periodIR.children.ContentProtection);
+    const periodUrlQueryInfo = parseUrlQueryInfo(
+      [],
+      periodIR.children.SupplementalProperty,
+      context.mpdUrl,
+    );
     const adapCtxt: IAdaptationSetContext = {
       availabilityTimeComplete,
       availabilityTimeOffset,
@@ -123,10 +130,15 @@ export default function parsePeriods(
       isDynamic,
       isLastPeriod,
       manifestProfiles,
+      mpdUrl: context.mpdUrl,
       receivedTime,
       segmentTemplate,
       start: periodStart,
       unsafelyBaseOnPreviousPeriod,
+      urlQueryInfo:
+        periodUrlQueryInfo === undefined
+          ? context.urlQueryInfo
+          : context.urlQueryInfo.concat(periodUrlQueryInfo),
     };
     const { adaptations, thumbnailTracks } = parseAdaptationSets(
       periodIR.children.AdaptationSet,
@@ -359,6 +371,10 @@ export interface IPeriodContext extends IInheritedAdaptationContext {
   clockOffset?: number | undefined;
   /** Duration (mediaPresentationDuration) of the whole MPD, in seconds. */
   duration?: number | undefined;
+  /** URL of the MPD from which Annex I parameters may be inherited. */
+  mpdUrl?: string | undefined;
+  /** Annex I URL query instructions inherited from the MPD level. */
+  urlQueryInfo: IDashUrlQueryInfo[];
   /**
    * The parser should take this Manifest - which is a previously parsed
    * Manifest for the same dynamic content - as a base to speed-up the parsing

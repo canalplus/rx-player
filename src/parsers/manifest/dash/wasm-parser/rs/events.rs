@@ -300,6 +300,7 @@ pub enum AttributeName {
     IncludeInRequests = 82, // String
     UseMpdUrlQuery = 83,    // Boolean
     QueryString = 84,       // String
+    SameOriginOnly = 85,    // Boolean
 }
 
 impl TagName {

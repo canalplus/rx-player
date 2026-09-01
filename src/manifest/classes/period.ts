@@ -19,6 +19,7 @@ import type {
   IManifestStreamEvent,
   IParsedAdaptations,
   IParsedPeriod,
+  IParsedThumbnailTrack,
 } from "../../parsers/manifest/index.ts";
 import type { ITrackType, IRepresentationFilter } from "../../public_types.ts";
 import arrayFind from "../../utils/array_find.ts";
@@ -97,6 +98,7 @@ export default class Period implements IPeriodMetadata {
       mimeType: thumbnailTrack.mimeType,
       index: thumbnailTrack.index,
       cdnMetadata: thumbnailTrack.cdnMetadata,
+      requestData: thumbnailTrack.requestData,
       height: thumbnailTrack.height,
       width: thumbnailTrack.width,
       horizontalTiles: thumbnailTrack.horizontalTiles,
@@ -264,6 +266,8 @@ export interface IThumbnailTrack {
   mimeType: string;
   /** CDN(s) on which the thumbnails may be loaded. */
   cdnMetadata: ICdnMetadata[] | null;
+  /** Transport-specific data used when requesting this track's resources. */
+  requestData?: IParsedThumbnailTrack["requestData"];
   /**
    * A loaded thumbnail's height in pixels. Note that there can be multiple actual
    * thumbnails per loaded thumbnail resource (see `horizontalTiles` and

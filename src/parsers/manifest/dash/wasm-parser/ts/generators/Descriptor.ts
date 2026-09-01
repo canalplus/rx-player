@@ -83,6 +83,9 @@ function generateUrlQueryInfoAttrParser(
       case AttributeName.UseMpdUrlQuery:
         attributes.useMpdUrlQuery = new DataView(linearMemory.buffer).getUint8(0) === 0;
         break;
+      case AttributeName.SameOriginOnly:
+        attributes.sameOriginOnly = new DataView(linearMemory.buffer).getUint8(0) === 0;
+        break;
     }
   };
 }
