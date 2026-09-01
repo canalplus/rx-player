@@ -113,6 +113,37 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     text: "error" | "continue";
   };
 
+  /**
+   * Optionally indicate a preferred "codec family" for the next audio and
+   * video track we encounter. The "codec family" is here just the string
+   * indicating the codec identifier without the profile/level part if it exists
+   * (e.g.: mp4a.40.2 => mp4a, avc1.64001e => avc1 etc.).
+   *
+   * Reasoning: For future audio / video periods without explicit settings, we
+   * have to make our own choices for the initial track.
+   *
+   * Historically, we went from an order deduced only from the content (the
+   * Manifest attributes and / or ordering), but there are also legitimate
+   * reasons to also decide based on codec compatibility: e.g. to allow codec
+   * continuity (with the possible other Periods we played until now with that
+   * content).
+   *
+   * Doing this allows to reduce the probability of having decoding glitches,
+   * temporary reloading, weird user experience changes etc.
+   */
+  private _preferredCodecFamily: {
+    /**
+     * The preferred audio "codec family", e.g. `ec-3`, `mp4a` etc.
+     * `null` if there's no preference.
+     */
+    audio: string | null;
+    /**
+     * The preferred video "codec family", e.g. `avc1`, `hev1`, `vp8` etc.
+     * `null` if there's no preference.
+     */
+    video: string | null;
+  };
+
   constructor(args: {
     preferTrickModeTracks: boolean;
     defaultAudioTrackSwitchingMode: IAudioTrackSwitchingMode | undefined;
@@ -133,6 +164,10 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       args.defaultAudioTrackSwitchingMode ??
       config.getCurrent().DEFAULT_AUDIO_TRACK_SWITCHING_MODE;
     this.onTracksNotPlayableForType = args.onTracksNotPlayableForType;
+    this._preferredCodecFamily = {
+      audio: null,
+      video: null,
+    };
   }
 
   /**
@@ -386,12 +421,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
     }
 
     const periodItem = getPeriodItem(this._storedPeriodInfo, periodInfo.period.id);
-    if (
-      periodItem !== undefined &&
-      periodItem.isPeriodAdvertised &&
-      periodItem[type].storedSettings === null
-    ) {
-      periodItem[type].dispatcher?.updateTrack(null);
+    if (periodItem !== undefined && periodItem.isPeriodAdvertised) {
+      this._dispatchTrackSetting(periodItem[type], null);
     }
   }
 
@@ -543,12 +574,48 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         !trackObj.dispatcher.hasSetTrack() &&
         trackObj.storedSettings !== undefined
       ) {
-        trackObj.dispatcher.updateTrack(trackObj.storedSettings);
+        // Just ensure we set it
+        this._dispatchTrackSetting(trackObj, trackObj.storedSettings);
       }
       if (this._isDisposed) {
         return;
       }
     }
+  }
+
+  /**
+   * Update the track chosen by signaling it to the rest of the RxPlayer.
+   *
+   * Takes a `checkedSettings` argument as a safeguard: there's many API and
+   * re-entrancy potential that easily lead to state desynchonization in our track
+   * handling logic, so the idea is to re-check with what you expect the "settings"
+   * to be: if not equal it will be assumed that another piece of code already took
+   * care of track update since.
+   *
+   * @param {Object} periodInfo - The track object for the corresponding Period/type.
+   * @param {Object} checkedSetting - The setting expected to be set. `null` for no
+   * track. Will be re-checked against the state.
+   */
+  private _dispatchTrackSetting(
+    periodInfo: IVideoPeriodInfo | IAudioPeriodInfo | ITextPeriodInfo,
+    checkedSetting:
+      IVideoStoredSettings | IAudioStoredSettings | ITextStoredSettings | null,
+  ): void {
+    if (
+      this._isDisposed ||
+      periodInfo.dispatcher === null ||
+      periodInfo.storedSettings !== checkedSetting
+    ) {
+      return;
+    }
+
+    if (periodInfo.type === "video" || periodInfo.type === "audio") {
+      this._preferredCodecFamily[periodInfo.type] =
+        checkedSetting === null
+          ? null
+          : (getCodecFamily(checkedSetting.adaptation) ?? null);
+    }
+    periodInfo.dispatcher.updateTrack(checkedSetting);
   }
 
   /**
@@ -642,11 +709,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       if (this._isDisposed) {
         return; // Someone disposed the `TracksStore` on the previous side-effect
       }
-
-      // Check again that no track change occurred in the meantime
-      if (typeInfo.storedSettings === storedSettings) {
-        typeInfo.dispatcher?.updateTrack(storedSettings);
-      }
+      this._dispatchTrackSetting(typeInfo, storedSettings);
     } else if (fallbackTrack === null && !noSourceMedia) {
       this.trigger("noPlayableTrack", {
         trackType,
@@ -676,14 +739,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
             reason: "no-playable-representation",
           });
         }
-        if (typeInfo.storedSettings !== null || this._isDisposed) {
-          // The previous "trackUpdate" event might have caused changes,
-          // so we re-check to see if the selected track has been updated.
-          // If it has, we exit early because the API consumer likely adjusted the settings,
-          // and throwing an error now would be out of sync with their changes.
-        } else {
-          typeInfo.dispatcher?.updateTrack(null);
-        }
+        this._dispatchTrackSetting(typeInfo, null);
       } else if (fallbackBehavior === "error") {
         const noRepErr = new MediaError(
           "NO_PLAYABLE_REPRESENTATION",
@@ -707,14 +763,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
           reason: "no-playable-representation",
         });
       }
-      if (typeInfo.storedSettings !== null || this._isDisposed) {
-        // The previous "trackUpdate" event might have caused changes,
-        // so we re-check to see if the selected track has been updated.
-        // If it has, we exit early because the API consumer likely adjusted the settings,
-        // and throwing an error now would be out of sync with their changes.
-      } else {
-        typeInfo.dispatcher?.updateTrack(null);
-      }
+      this._dispatchTrackSetting(typeInfo, null);
     }
 
     // The previous event trigger could have had side-effects, so we
@@ -994,11 +1043,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       return; // Someone disposed the `TracksStore` on the previous side-effect
     }
     const newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
-    if (
-      newPeriodItem !== undefined &&
-      newPeriodItem[bufferType].storedSettings === storedSettings
-    ) {
-      newPeriodItem[bufferType].dispatcher?.updateTrack(storedSettings);
+    const trackObj = newPeriodItem?.[bufferType];
+    if (trackObj !== undefined) {
+      this._dispatchTrackSetting(trackObj, storedSettings);
     }
   }
 
@@ -1086,11 +1133,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       return; // Someone disposed the `TracksStore` on the previous side-effect
     }
     const newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
-    if (
-      newPeriodItem !== undefined &&
-      newPeriodItem.video.storedSettings === storedSettings
-    ) {
-      newPeriodItem.video.dispatcher?.updateTrack(storedSettings);
+    if (newPeriodItem !== undefined) {
+      this._dispatchTrackSetting(newPeriodItem.video, storedSettings);
     }
   }
 
@@ -1131,11 +1175,9 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
       return; // Someone disposed the `TracksStore` on the previous side-effect
     }
     const newPeriodItem = getPeriodItem(this._storedPeriodInfo, periodObj.period.id);
-    if (
-      newPeriodItem !== undefined &&
-      newPeriodItem[bufferType].storedSettings === null
-    ) {
-      newPeriodItem[bufferType].dispatcher?.updateTrack(null);
+    const trackObj = newPeriodItem?.[bufferType];
+    if (trackObj !== undefined) {
+      this._dispatchTrackSetting(trackObj, null);
     }
 
     if (newPeriodItem !== undefined) {
@@ -1451,12 +1493,8 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
           return; // Someone disposed the `TracksStore` on the previous side-effect
         }
         const newPeriodItem = getPeriodItem(this._storedPeriodInfo, period.id);
-        if (
-          newPeriodItem !== undefined &&
-          newPeriodItem.isPeriodAdvertised &&
-          newPeriodItem.video.storedSettings === storedSettings
-        ) {
-          newPeriodItem.video.dispatcher?.updateTrack(storedSettings);
+        if (newPeriodItem !== undefined && newPeriodItem.isPeriodAdvertised) {
+          this._dispatchTrackSetting(newPeriodItem.video, storedSettings);
         }
       }
     }
@@ -1527,10 +1565,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         continue;
       }
 
-      const audioAdaptation: IAdaptationMetadata | undefined = getSupportedAdaptations(
+      const audioAdaptation = getInitialAdaptation(
         period,
         "audio",
-      )[0];
+        this._preferredCodecFamily.audio,
+      );
       if (audioAdaptation === undefined) {
         trackStorePeriod.audio.storedSettings = null;
         this.handleMissingOrUnplayableTrack(period, "audio", true);
@@ -1545,8 +1584,11 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
         };
       }
 
-      const baseVideoAdaptation: IAdaptationMetadata | undefined =
-        getSupportedAdaptations(period, "video")[0];
+      const baseVideoAdaptation = getInitialAdaptation(
+        period,
+        "video",
+        this._preferredCodecFamily.video,
+      );
       if (baseVideoAdaptation === undefined) {
         trackStorePeriod.video.storedSettings = null;
         this.handleMissingOrUnplayableTrack(period, "video", true);
@@ -1623,7 +1665,7 @@ export default class TracksStore extends EventEmitter<ITracksStoreEvents> {
           trackInfo.storedSettings !== undefined &&
           !trackInfo.dispatcher.hasSetTrack()
         ) {
-          trackInfo.dispatcher.updateTrack(trackInfo.storedSettings);
+          this._dispatchTrackSetting(trackInfo, trackInfo.storedSettings);
           if (this._isDisposed) {
             return;
           }
@@ -1725,9 +1767,9 @@ function generatePeriodInfo(
     inManifest,
     isPeriodAdvertised: false,
     isRemoved: false,
-    audio: { storedSettings: undefined, dispatcher: null },
-    video: { storedSettings: undefined, dispatcher: null },
-    text: { storedSettings: undefined, dispatcher: null },
+    audio: { type: "audio", storedSettings: undefined, dispatcher: null },
+    video: { type: "video", storedSettings: undefined, dispatcher: null },
+    text: { type: "text", storedSettings: undefined, dispatcher: null },
   };
 }
 
@@ -1833,6 +1875,7 @@ export interface ITSPeriodObject {
  * the Manifest.
  */
 interface IAudioPeriodInfo {
+  type: "audio";
   /**
    * Information on the last audio track settings wanted by the user.
    * `null` if no audio track is wanted.
@@ -1869,26 +1912,13 @@ interface IAudioStoredSettings {
  * the Manifest.
  */
 export interface ITextPeriodInfo {
+  type: "text";
   /**
    * Information on the last text track settings wanted.
    * `null` if no text track is wanted.
    * `undefined` if not set yet.
    */
-  storedSettings:
-    | {
-        /** Contains the last `Adaptation` wanted by the user. */
-        adaptation: IAdaptationMetadata;
-        /** "Switching mode" in which the track switch should happen. */
-        switchingMode: "direct";
-        /**
-         * Contains the last locked `Representation`s for this `Adaptation` wanted
-         * by the user.
-         * `null` if no Representation is locked.
-         */
-        lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
-      }
-    | null
-    | undefined;
+  storedSettings: ITextStoredSettings | null | undefined;
   /**
    * Tracks are internally emitted through RxJS's `Subject`s.
    * A `TrackDispatcher` allows to facilitate and centralize the management of
@@ -1901,11 +1931,25 @@ export interface ITextPeriodInfo {
   dispatcher: TrackDispatcher | null;
 }
 
+interface ITextStoredSettings {
+  /** Contains the last `Adaptation` wanted by the user. */
+  adaptation: IAdaptationMetadata;
+  /** "Switching mode" in which the track switch should happen. */
+  switchingMode: "direct";
+  /**
+   * Contains the last locked `Representation`s for this `Adaptation` wanted
+   * by the user.
+   * `null` if no Representation is locked.
+   */
+  lockedRepresentations: SharedReference<IRepresentationsChoice | null>;
+}
+
 /**
  * Internal representation of video track preferences for a given `Period` of
  * the Manifest.
  */
 export interface IVideoPeriodInfo {
+  type: "video";
   /**
    * Information on the `id` of the last video track settings wanted.
    * `null` if no video track is wanted.
@@ -1966,4 +2010,55 @@ export interface IAudioRepresentationsLockSettings {
 export interface IVideoRepresentationsLockSettings {
   representations: string[];
   switchingMode?: IVideoRepresentationsSwitchingMode | undefined;
+}
+
+/**
+ * Determine a good initial Adaptation to start from in the given Period when
+ * you don't have a preference.
+ * @param {Object} period - The period Object on which `Adaptation` objects are
+ * announced.
+ * @param {string} trackType - e.g. "audio" or "video".
+ * @param {string|null} preferredCodecFamily - If set, you would prefer the
+ * Adaptation to have the given "codec family" (initial part of the codec
+ * identifier, e.g. `avc1`), but no obligation.
+ * @returns {Object|undefined} - The selected initial track. If `undefined`,
+ * there's no playable track in that Period for that type.
+ */
+function getInitialAdaptation(
+  period: IPeriodMetadata,
+  trackType: ITrackType,
+  preferredCodecFamily: string | null,
+): IAdaptationMetadata | undefined {
+  const supportedAdaptations = getSupportedAdaptations(period, trackType);
+
+  let adaptation: IAdaptationMetadata | undefined;
+  if (preferredCodecFamily !== null) {
+    adaptation = arrayFind(
+      supportedAdaptations,
+      (a) => getCodecFamily(a) === preferredCodecFamily,
+    );
+  }
+  return adaptation ?? supportedAdaptations[0];
+}
+
+/**
+ * From the given track, returns what we will call its "codec family".
+ * This allows to return e.g. `avc1`, `hvc1`, `vp9` etc. without profile and
+ * level considerations.
+ * Returns `undefined` if this cannot be determined.
+ *
+ * The logic is only a naive algorithm and may produce false negatives
+ * @param {Object} a - The track to extract the codec family from.
+ * @returns {string|undefined}
+ */
+function getCodecFamily(a: IAdaptationMetadata): string | undefined {
+  const codec = a.representations[0]?.chosenCodec;
+  if (codec === undefined || codec === "") {
+    return undefined;
+  }
+  const initialPart = codec.split(".")[0];
+  if (initialPart === undefined || initialPart === "") {
+    return undefined;
+  }
+  return initialPart;
 }
