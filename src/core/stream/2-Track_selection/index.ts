@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import AdaptationStream from "./adaptation_stream.ts";
+import TrackSelectorStream from "./track_selector_stream.ts";
 export type * from "./types.ts";
 
-export default AdaptationStream;
+export default TrackSelectorStream;

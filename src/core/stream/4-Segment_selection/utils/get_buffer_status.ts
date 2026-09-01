@@ -29,7 +29,7 @@ import type {
 import SegmentSinksStore, { SegmentSinkOperation } from "../../../segment_sinks/index.ts";
 import type {
   IBufferDiscontinuity,
-  IRepresentationStreamPlaybackObservation,
+  ISegmentSelectorPlaybackObservation,
   IQueuedSegment,
 } from "../types.ts";
 import checkForDiscontinuity from "./check_for_discontinuity.ts";
@@ -92,7 +92,7 @@ export default function getBufferStatus(
     representation: IRepresentation;
   },
   initialWantedTime: number,
-  playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>,
+  playbackObserver: IReadOnlyPlaybackObserver<ISegmentSelectorPlaybackObservation>,
   fastSwitchThreshold: number | undefined,
   bufferGoal: number,
   maxBufferSize: number,
@@ -163,7 +163,7 @@ export default function getBufferStatus(
   }));
 
   /**
-   * `true` if the current `RepresentationStream` has loaded all the
+   * `true` if the current `SegmentSelector` has loaded all the
    * needed segments for this Representation until the end of the Period.
    */
   const hasFinishedLoading =
