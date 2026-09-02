@@ -242,6 +242,12 @@ export interface ILoadVideoOptions {
          * have issues being decoded on the current device.
          */
         enableRepresentationAvoidance: boolean | undefined;
+        /**
+         * Update playback rate (speed) when the buffer is close to empty, to avoid
+         * rebuffering.
+         */
+        playbackRateBasedRebufferingAvoidanceSettings?:
+          IPlaybackRateBasedRebufferingAvoidanceSettings | null | undefined;
       }
     | undefined;
 }
@@ -1455,4 +1461,27 @@ export interface IThumbnailRenderingOptions {
    * This is mainly useful when encountering multiple thumbnail track qualities.
    */
   thumbnailTrackId?: string | undefined;
+}
+
+/**
+ * Configuration on a rebuffering avoidance mechanism where the playback rate
+ * (i.e. the speed at which the content plays) is lowered when there's not a lot
+ * of data in the buffer.
+ */
+export interface IPlaybackRateBasedRebufferingAvoidanceSettings {
+  /**
+   * Once the player is below this amount of seconds in the buffer before
+   * rebuffering, it will start updating the "regular" `playbackRate`
+   * ("regular" here meaning: the `playbackRate` is currently set to the
+   * default value `1`) to the `minPlaybackRate` value below.
+   */
+  onBufferGapSize: number;
+
+  /**
+   * The playbackRate that should be set if there's less than
+   * `onBufferGapSize` seconds in the buffer and if the player is currently
+   * doing a regular `playbackRate` ("regular" here meaning: the
+   * `playbackRate` is currently set to the default value `1`)
+   */
+  minPlaybackRate: number;
 }
