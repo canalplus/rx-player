@@ -122,6 +122,7 @@ JavaScript re-implementations.
 This concerns the following static methods:
 
 - `Object.assign`: use `src/utils/object_assign.ts` instead
+- `Object.entries`: use `src/utils/object_entries.ts` instead
 - `Object.values`: use `src/utils/object_values.ts` instead
 
 And the following methods:
