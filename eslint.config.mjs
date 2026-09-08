@@ -93,6 +93,15 @@ const rulesJS = {
   "prefer-object-spread": "error",
   "prefer-template": "off",
 
+  "no-restricted-globals": [
+    "error",
+    {
+      name: "WeakSet",
+      message:
+        "Not available in some older browsers, use a `WeakMap` with `true` values instead.",
+    },
+  ],
+
   "no-restricted-properties": [
     "error",
     {

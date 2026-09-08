@@ -206,9 +206,9 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   /**
    * Store all video elements currently in use by an RxPlayer instance.
    * This is used to check that a video element is not shared between multiple instances.
-   * Use of a WeakSet ensure the object is garbage collected if it's not used anymore.
+   * Use of a WeakMap ensures the object is garbage collected if it's not used anymore.
    */
-  private static _priv_currentlyUsedVideoElements = new WeakSet<IMediaElement>();
+  private static _priv_currentlyUsedVideoElements = new WeakMap<IMediaElement, true>();
 
   /**
    * Media element attached to the RxPlayer.
@@ -411,7 +411,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
        * throw new Error(errorMessage);
        */
     }
-    Player._priv_currentlyUsedVideoElements.add(videoElement);
+    Player._priv_currentlyUsedVideoElements.set(videoElement, true);
   }
 
   /**

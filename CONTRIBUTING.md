@@ -119,6 +119,10 @@ Some native functions, methods or classes should never be used to ensure compati
 with most browsers. To work around those, we usually rely on "ponyfills" which are
 JavaScript re-implementations.
 
+This concerns the following classes:
+
+- `WeakSet`: use a `WeakMap` with `true` values instead
+
 This concerns the following static methods:
 
 - `Object.assign`: use `src/utils/object_assign.ts` instead
