@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Validate the instructions in the final DASH parser WebAssembly artifact.
-# Its supported feature contract is WebAssembly MVP plus bulk-memory operations.
+# Its supported feature contract is the WebAssembly MVP.
 
 set -euo pipefail
 
@@ -10,8 +10,7 @@ help() {
 check_wasm_features.sh
 ----------------------
 
-Validate that a WebAssembly file only uses MVP instructions and bulk-memory
-operations.
+Validate that a WebAssembly file only uses MVP instructions.
 
 Usage: $0 [WASM_FILE]
 
@@ -44,12 +43,10 @@ fi
 
 # Rust and LLVM emit a target_features custom section. Strip that declaration
 # before validating the output so that it cannot enable features outside this
-# allowlist. This pass changes metadata only, not executable instructions.
+# MVP allowlist. This pass changes metadata only, not executable instructions.
 "$wasm_opt" "$wasm_file" \
   --strip-target-features \
   --mvp-features \
-  --enable-bulk-memory \
-  --enable-bulk-memory-opt \
   -o /dev/null
 
-echo "Validated $wasm_file: WebAssembly MVP + bulk memory"
+echo "Validated $wasm_file: WebAssembly MVP"

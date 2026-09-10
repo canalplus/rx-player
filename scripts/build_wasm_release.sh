@@ -76,6 +76,10 @@ elif ! wasmopt_loc="$(type -p "wasm-opt")" || [[ -z $wasmopt_loc ]]; then
   print_toolchain_installation_notice
   sleep 1
   ./scripts/install_rust_toolchain.sh --no-confirmation
+  # The installer always installs both Rust and Binaryen. Prefer that complete
+  # local Rust toolchain too: unlike a pre-existing global Cargo installation,
+  # it is guaranteed to contain nightly, rust-src and the WASM target.
+  has_local_cargo=true
   has_local_wasmopt=true
   has_installed=true
 fi
@@ -86,7 +90,7 @@ if ! cd ./src/parsers/manifest/dash/wasm-parser; then
   exit 1
 fi
 echo " 🦀 Building mpd-parser WebAssembly file with Cargo..."
-readonly wasm_rustflags="-Ctarget-cpu=mvp -Ctarget-feature=+bulk-memory"
+readonly wasm_rustflags="-Ctarget-cpu=mvp"
 if $has_local_cargo; then
   echo "NOTE: Relying on local cargo in ./tmp/cargo/bin/cargo"
   RUSTFLAGS="$wasm_rustflags" \
@@ -112,8 +116,6 @@ if $has_local_wasmopt; then
   PATH="../../../../../tmp/binaryen/bin:$PATH" ../../../../../tmp/binaryen/bin/wasm-opt \
     target/wasm32-unknown-unknown/release/mpd_node_parser.wasm \
     --mvp-features \
-    --enable-bulk-memory \
-    --enable-bulk-memory-opt \
     --strip-dwarf \
     --strip-target-features \
     -O4 \
@@ -121,8 +123,6 @@ if $has_local_wasmopt; then
 else
   wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm \
     --mvp-features \
-    --enable-bulk-memory \
-    --enable-bulk-memory-opt \
     --strip-dwarf \
     --strip-target-features \
     -O4 \
