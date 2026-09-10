@@ -16,6 +16,7 @@
 
 import arrayFind from "../../../utils/array_find.ts";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
+import objectEntries from "../../../utils/object_entries.ts";
 import type { IMediaConfiguration } from "./types.ts";
 
 export type ICapabilities = Array<string | { [key: string]: ICapabilities }>;
@@ -36,7 +37,7 @@ export function extend(target: ICapabilities, objects: ICapabilities[]): ICapabi
           target.push(element);
         }
       } else {
-        const entry = Object.entries(element)[0];
+        const entry = objectEntries(element)[0];
         const [key, value] = entry;
         const foundTargetElement = arrayFind(
           target,
@@ -89,7 +90,7 @@ export function filterConfigurationWithCapabilities(
         )[capability];
       }
     } else {
-      const [key, value] = Object.entries(capability)[0];
+      const [key, value] = objectEntries(capability)[0];
       const newConfiguration =
         (configuration as { [id: string]: IMediaConfiguration })[key] === undefined
           ? {}

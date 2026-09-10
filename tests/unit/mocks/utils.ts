@@ -1,3 +1,5 @@
+import objectEntries from "../../../src/utils/object_entries.ts";
+
 /**
  * Util useful to create mocked versions of classes with each of their methods
  * and properties replaced, while being properly checked by TypeScript.
@@ -31,7 +33,7 @@ export function makeMockedClass<T>(
       }
     }
   }
-  for (const [name, fn] of Object.entries(methods)) {
+  for (const [name, fn] of objectEntries(methods)) {
     // @ts-expect-error dynamic assignment
     Dummy.prototype[name as keyof typeof Dummy.prototype] = fn;
   }

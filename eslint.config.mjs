@@ -93,6 +93,15 @@ const rulesJS = {
   "prefer-object-spread": "error",
   "prefer-template": "off",
 
+  "no-restricted-globals": [
+    "error",
+    {
+      name: "WeakSet",
+      message:
+        "Not available in some older browsers, use a `WeakMap` with `true` values instead.",
+    },
+  ],
+
   "no-restricted-properties": [
     "error",
     {
@@ -109,28 +118,34 @@ const rulesJS = {
     {
       object: "Object",
       property: "assign",
-      message: "Not available in IE11, use `objectAssign` utils instead.",
+      message: "Not available in older browsers, use `objectAssign` utils instead.",
+    },
+    {
+      object: "Object",
+      property: "entries",
+      message: "Not available in older browsers, use `objectEntries` utils instead.",
     },
     {
       object: "Object",
       property: "values",
-      message: "Not available in IE11, use `objectValues` utils instead.",
+      message: "Not available in older browsers, use `objectValues` utils instead.",
     },
     {
       property: "includes",
-      message: "Not available in IE11, use another method such as `indexOf` instead.",
+      message:
+        "Not available in older browsers, use another method such as `indexOf` instead.",
     },
     {
       property: "find",
-      message: "Not available in IE11, use `arrayFind` utils instead.",
+      message: "Not available in older browsers, use `arrayFind` utils instead.",
     },
     {
       property: "findIndex",
-      message: "Not available in IE11, use `arrayFindIndex` utils instead.",
+      message: "Not available in older browsers, use `arrayFindIndex` utils instead.",
     },
     {
       property: "startsWith",
-      message: "Not available in IE11, use `startsWith` utils instead.",
+      message: "Not available in older browsers, use `startsWith` utils instead.",
     },
     {
       property: "substr",

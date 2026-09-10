@@ -23,6 +23,7 @@ import type {
 import type { ITrackType, IRepresentationFilter } from "../../public_types.ts";
 import arrayFind from "../../utils/array_find.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
+import objectEntries from "../../utils/object_entries.ts";
 import type { IAdaptationMetadata, IPeriodMetadata } from "../types.ts";
 import { getAdaptations, getSupportedAdaptations, periodContainsTime } from "../utils.ts";
 import Adaptation from "./adaptation.ts";
@@ -324,7 +325,7 @@ function createAdaptationsObject(
   representationFilter: IRepresentationFilter | undefined,
 ): Partial<Record<ITrackType, Adaptation[]>> {
   const manifestAdaptations: IManifestAdaptations = {};
-  for (const [type, adaptationsForType] of Object.entries(adaptations)) {
+  for (const [type, adaptationsForType] of objectEntries(adaptations)) {
     if (isNullOrUndefined(adaptationsForType)) {
       continue;
     }
