@@ -151,10 +151,6 @@ export default class DashWasmParser {
 
     const imports = {
       env: {
-        memoryBase: 0,
-        tableBase: 0,
-        memory: new WebAssembly.Memory({ initial: 10 }),
-        table: new WebAssembly.Table({ initial: 1, element: "anyfunc" }),
         onTagOpen,
         onCustomEvent,
         onAttribute,
