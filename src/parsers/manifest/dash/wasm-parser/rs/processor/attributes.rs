@@ -162,7 +162,7 @@ pub fn report_segment_template_attrs(tag_bs: &quick_xml::events::BytesStart) {
                 b"timescale" => TimeScale.try_report_as_u64(&attr),
                 b"presentationTimeOffset" => PresentationTimeOffset.try_report_as_f64(&attr),
                 b"indexRange" => IndexRange.try_report_as_range(&attr),
-                b"IndexRangeExact" => IndexRangeExact.try_report_as_bool(&attr),
+                b"indexRangeExact" => IndexRangeExact.try_report_as_bool(&attr),
                 b"availabilityTimeOffset" => match attr.value.as_ref() {
                     b"INF" => AvailabilityTimeOffset.report(f64::INFINITY),
                     _ => AvailabilityTimeOffset.try_report_as_f64(&attr),

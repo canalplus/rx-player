@@ -318,7 +318,7 @@ export function generateAdaptationSetAttrParser(
         );
         break;
       case AttributeName.BitstreamSwitching:
-        adaptationAttrs.bitstreamSwitching = dataView.getFloat64(ptr, true) !== 0;
+        adaptationAttrs.bitstreamSwitching = dataView.getUint8(ptr) !== 0;
         break;
       case AttributeName.AudioSamplingRate:
         adaptationAttrs.audioSamplingRate = parseString(
@@ -364,7 +364,7 @@ export function generateAdaptationSetAttrParser(
         );
         break;
       case AttributeName.CodingDependency:
-        adaptationAttrs.codingDependency = dataView.getFloat64(ptr, true) !== 0;
+        adaptationAttrs.codingDependency = dataView.getUint8(ptr) !== 0;
         break;
       case AttributeName.FrameRate:
         adaptationAttrs.frameRate = dataView.getFloat64(ptr, true);
@@ -385,7 +385,7 @@ export function generateAdaptationSetAttrParser(
         adaptationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.AvailabilityTimeComplete:
-        adaptationAttrs.availabilityTimeComplete = dataView.getUint8(0) === 0;
+        adaptationAttrs.availabilityTimeComplete = dataView.getUint8(ptr) !== 0;
         break;
     }
   };
