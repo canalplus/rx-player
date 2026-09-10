@@ -37,8 +37,9 @@ print_toolchain_installation_notice() {
   echo "   We will thus now install one locally in the following temporary directory:"
   echo "   $(pwd)/tmp "
   echo ""
-  echo "   If you intend to develop or build the RxPlayer regularly, you can install rustup or"
-  echo "   cargo globally (with the \"wasm32-unknown-unknown\" target) as well as binaryen."
+  echo "   If you intend to develop or build the RxPlayer regularly, you can install rustup"
+  echo "   globally, a nightly toolchain with rust-src and the \"wasm32-unknown-unknown\""
+  echo "   target, as well as binaryen."
   echo "   Once done, this \"tmp\" directory can be removed."
   echo ""
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
@@ -85,18 +86,48 @@ if ! cd ./src/parsers/manifest/dash/wasm-parser; then
   exit 1
 fi
 echo " 🦀 Building mpd-parser WebAssembly file with Cargo..."
+readonly wasm_rustflags="-Ctarget-cpu=mvp -Ctarget-feature=+bulk-memory"
 if $has_local_cargo; then
   echo "NOTE: Relying on local cargo in ./tmp/cargo/bin/cargo"
-  . ../../../../../tmp/cargo/env | true
-  PATH="../../../../../tmp/cargo/bin:$PATH" ../../../../../tmp/cargo/bin/cargo build --target wasm32-unknown-unknown --release -q
+  RUSTFLAGS="$wasm_rustflags" \
+    PATH="../../../../../tmp/cargo/bin:$PATH" \
+    RUSTUP_HOME="../../../../../tmp/rustup" \
+    CARGO_HOME="../../../../../tmp/cargo" \
+    ../../../../../tmp/cargo/bin/cargo +nightly build \
+      -Zbuild-std=std,panic_abort \
+      --target wasm32-unknown-unknown \
+      --release \
+      -q
 else
-  cargo build --target wasm32-unknown-unknown --release -q
+  RUSTFLAGS="$wasm_rustflags" cargo +nightly build \
+    -Zbuild-std=std,panic_abort \
+    --target wasm32-unknown-unknown \
+    --release \
+    -q
 fi
 
 echo " 🪚 Optimizing mpd-parser WebAssembly build..."
 if $has_local_wasmopt; then
   echo "NOTE: Relying on local wasm-opt in ./tmp/binaryen/bin/wasm-opt"
-  PATH="../../../../../tmp/binaryen/bin:$PATH" ../../../../../tmp/binaryen/bin/wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm --signext-lowering --strip-dwarf -O4 -o ../../../../../dist/mpd-parser.wasm
+  PATH="../../../../../tmp/binaryen/bin:$PATH" ../../../../../tmp/binaryen/bin/wasm-opt \
+    target/wasm32-unknown-unknown/release/mpd_node_parser.wasm \
+    --mvp-features \
+    --enable-bulk-memory \
+    --enable-bulk-memory-opt \
+    --strip-dwarf \
+    --strip-target-features \
+    -O4 \
+    -o ../../../../../dist/mpd-parser.wasm
 else
-  wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm --signext-lowering --strip-dwarf -O4 -o ../../../../../dist/mpd-parser.wasm
+  wasm-opt target/wasm32-unknown-unknown/release/mpd_node_parser.wasm \
+    --mvp-features \
+    --enable-bulk-memory \
+    --enable-bulk-memory-opt \
+    --strip-dwarf \
+    --strip-target-features \
+    -O4 \
+    -o ../../../../../dist/mpd-parser.wasm
 fi
+
+cd ../../../../../
+./scripts/check_wasm_features.sh dist/mpd-parser.wasm
