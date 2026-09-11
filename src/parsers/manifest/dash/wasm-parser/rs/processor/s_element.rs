@@ -42,7 +42,7 @@ impl SegmentObject {
         let mut segment_obj = SegmentObject::default();
         let mut has_t = false;
 
-        for res_attr in e.attributes() {
+        for res_attr in e.attributes().with_checks(false) {
             match res_attr {
                 Ok(attr) => {
                     let key = attr.key;
