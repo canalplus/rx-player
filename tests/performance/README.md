@@ -21,6 +21,13 @@ following command compares the current code to the `stable` branch on Firefox:
 npm run test:performance -- --branch stable --browser firefox
 ```
 
+By default, every JavaScript file in `src/suites` is included. Pass test file or directory
+paths to only run those tests:
+
+```sh
+npm run test:performance -- tests/performance/src/suites/dash_parsers.js
+```
+
 ## Dependencies
 
 Performance tests rely on:
@@ -46,7 +53,8 @@ this directory. Those generated files are ignored by git.
 
 ## How tests are performed
 
-Before running tests, `run.mjs` builds two production, minified test bundles:
+Before running tests, `run.mjs` builds the selected test files into two production,
+minified bundles:
 
 - `previous.js`, relying on the RxPlayer built from the branch we want to compare to;
 
@@ -109,7 +117,7 @@ the first four page loads of each browser process, to keep the global duration r
   fresh browser processes, collects samples, compares them and optionally generates a
   report.
 
-- `src/main.js` declares the tested scenarios. New measurements should be delimited by
+- `src/suites` contains the tested scenarios. New measurements should be delimited by
   calls to `testStart` and `testEnd` with the same unique name.
 
 - `src/lib.js` contains browser-side test utilities. It registers and runs test groups,
@@ -122,6 +130,6 @@ the first four page loads of each browser process, to keep the global duration r
 - `control-current.html` and `control-previous.html` are the A/A control pages. They load
   two copies of the generated bundle for the compared branch.
 
-When adding a scenario, keep in mind that the same `src/main.js` file is bundled against
-both revisions. It consequently has to stay compatible with the branch given to
-`--branch`, including for the RxPlayer API and imported test files it relies on.
+When adding a scenario, keep in mind that the same selected suite files are bundled
+against both revisions. They consequently have to stay compatible with the branch given to
+`--branch`, including for the RxPlayer API and imported test files they rely on.
