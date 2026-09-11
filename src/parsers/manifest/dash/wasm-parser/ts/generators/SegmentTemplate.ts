@@ -96,7 +96,7 @@ export function generateSegmentTemplateAttrParser(
 
       case AttributeName.AvailabilityTimeComplete: {
         segmentTemplateAttrs.attributes.availabilityTimeComplete =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       }
 
@@ -126,7 +126,7 @@ export function generateSegmentTemplateAttrParser(
 
       case AttributeName.IndexRangeExact: {
         segmentTemplateAttrs.attributes.indexRangeExact =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       }
 
@@ -141,7 +141,7 @@ export function generateSegmentTemplateAttrParser(
 
       case AttributeName.BitstreamSwitching: {
         segmentTemplateAttrs.attributes.bitstreamSwitching =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       }
 

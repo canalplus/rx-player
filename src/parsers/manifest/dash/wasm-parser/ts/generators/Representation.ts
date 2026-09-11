@@ -215,7 +215,7 @@ export function generateRepresentationAttrParser(
         break;
       case AttributeName.CodingDependency:
         representationAttrs.codingDependency =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       case AttributeName.FrameRate:
         representationAttrs.frameRate = dataView.getFloat64(ptr, true);
@@ -263,7 +263,7 @@ export function generateRepresentationAttrParser(
         representationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.AvailabilityTimeComplete:
-        representationAttrs.availabilityTimeComplete = dataView.getUint8(0) === 0;
+        representationAttrs.availabilityTimeComplete = dataView.getUint8(ptr) !== 0;
         break;
     }
   };
