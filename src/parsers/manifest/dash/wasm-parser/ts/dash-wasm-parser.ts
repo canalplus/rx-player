@@ -313,7 +313,7 @@ export default class DashWasmParser {
     mpd: ArrayBufferLike,
     args: IMPDParserArguments,
   ): IDashParserResponse<string> | IDashParserResponse<ArrayBuffer> {
-    const [mpdIR, warnings] = this._parseMpd(mpd);
+    const [mpdIR, warnings] = this.parseToIntermediateRepresentation(mpd);
     if (mpdIR === null) {
       throw new Error("DASH Parser: Unknown error while parsing the MPD");
     }
@@ -331,7 +331,8 @@ export default class DashWasmParser {
     return hasWebassembly && typeof globalScope.TextDecoder === "function";
   }
 
-  private _parseMpd(
+  /** @internal Build the parser-independent DASH intermediate representation from XML bytes. */
+  public parseToIntermediateRepresentation(
     mpd: ArrayBufferLike,
   ): [IMPDIntermediateRepresentation | null, Error[]] {
     if (this._instance === null) {
