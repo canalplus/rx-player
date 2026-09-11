@@ -133,13 +133,8 @@ export function error(...logs) {
   });
 }
 
-/**
- * All `declareTestGroup` calls should be done at file evaluation, so we could
- * just schedule a micro-task running them when done.
- *
- * We wait a little more just in case the current page is not following exactly
- * that principle.
- */
+// Dynamically-imported suites register their groups before this runs. Keep a
+// small delay so the page also has time to settle before measurements begin.
 setTimeout(async () => {
   areTestsAlreadyRunning = true;
   if (groups.length === 0) {
