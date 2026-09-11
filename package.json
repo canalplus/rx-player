@@ -164,7 +164,7 @@
   "scripts": {
     "build": "node ./scripts/generate_build.mjs",
     "build:all": "bash ./scripts/make_all_builds.sh",
-    "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && cargo build --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm",
+    "build:wasm:debug": "mkdir -p dist && cd ./src/parsers/manifest/dash/wasm-parser && RUSTFLAGS=\"-Ctarget-cpu=mvp\" cargo +nightly build -Zbuild-std=std,panic_abort --target wasm32-unknown-unknown && cp target/wasm32-unknown-unknown/debug/mpd_node_parser.wasm ../../../../../dist/mpd-parser.wasm && cd ../../../../../ && bash ./scripts/check_wasm_features.sh dist/mpd-parser.wasm",
     "build:wasm:release": "bash ./scripts/build_wasm_release.sh",
     "bundle": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer default bundle\" -o dist/rx-player.js",
     "bundle:min": "node ./scripts/run_bundler.mjs src/index.ts --production-mode --globals --name \"RxPlayer minified bundle\" -o dist/rx-player.min.js --minify",
@@ -172,6 +172,7 @@
     "check": "npm run types && npm run lint",
     "check:all": "npm run types:all && npm run lint:all",
     "check:demo": "npm run types:demo && npm run lint:demo",
+    "check:wasm": "bash ./scripts/check_wasm_features.sh",
     "clean": "node ./scripts/utils/remove_dir.mjs dist",
     "demo": "node ./scripts/build_demo.mjs --production-mode",
     "doc": "readme.doc --clean --input doc/ --output doc/generated -p \"$(cat VERSION)\"",

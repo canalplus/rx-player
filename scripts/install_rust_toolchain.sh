@@ -49,7 +49,7 @@ log() {
 err() {
   log "ERROR: $1" >&2
   echo ""
-  echo "Please install a rust toolchain (with the \"wasm32-unknown-unknown\" target) and binaryen manually" >&2
+  echo "Please install a nightly Rust toolchain (with rust-src and the \"wasm32-unknown-unknown\" target) and binaryen manually" >&2
   exit 1
 }
 
@@ -95,7 +95,8 @@ fi
 
 ensure mkdir -p tmp
 
-# Install RustUp in tmp directory with the right target
+# Install RustUp in tmp directory. The nightly rust-src component is needed to
+# rebuild std with the same restricted WebAssembly feature set as the parser.
 log "Fetching rustup..."
 
 if ! curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | CARGO_HOME=./tmp/cargo RUSTUP_HOME=./tmp/rustup RUSTUP_INIT_SKIP_PATH_CHECK=yes sh -s -- --no-modify-path --profile minimal --target wasm32-unknown-unknown -y; then
@@ -107,8 +108,12 @@ if ! [ -f tmp/cargo/bin/cargo ]; then
 fi
 
 # Should normally not be needed but CI have shown weird results
-ensure tmp/cargo/bin/rustup default stable
-ensure tmp/cargo/bin/rustup target add wasm32-unknown-unknown
+ensure env CARGO_HOME="$(pwd)/tmp/cargo" RUSTUP_HOME="$(pwd)/tmp/rustup" \
+  tmp/cargo/bin/rustup default stable
+ensure env CARGO_HOME="$(pwd)/tmp/cargo" RUSTUP_HOME="$(pwd)/tmp/rustup" \
+  tmp/cargo/bin/rustup toolchain install nightly --profile minimal --component rust-src
+ensure env CARGO_HOME="$(pwd)/tmp/cargo" RUSTUP_HOME="$(pwd)/tmp/rustup" \
+  tmp/cargo/bin/rustup target add --toolchain nightly wasm32-unknown-unknown
 
 ostype="$(uname -s)"
 cpuarch="$(uname -m)"
