@@ -10,6 +10,9 @@ There are different types of tests in the RxPlayer:
 
   They are written in the `unit` directory.
 
+- parser tests: tests linked to specific parser implementations (like those for DASH
+  manifests, subtitle formats etc.).
+
 - integration tests: they test the player globally, by simulating different "scenarios"
   (like playing a content and seeking to an un-buffered part).
 

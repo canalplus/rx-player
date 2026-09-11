@@ -205,6 +205,7 @@
     "test:memory:chrome:watch": "npm run --silent test:integration:notice && cross-env BROWSER_CONFIG=chrome vitest watch tests/memory",
     "test:performance": "node ./tests/performance/run.mjs",
     "test:unit": "vitest --config vitest.config.unit.mjs",
+    "test:parsers": "npm run build:wasm:release && vitest run --config vitest.config.parsers.mjs",
     "types": "tsc --noEmit --project .",
     "types:all": "npm run types && npm run types:demo && npm run types:unit_tests && npm run types:scripts",
     "types:demo": "tsc --noEmit --project demo/",
