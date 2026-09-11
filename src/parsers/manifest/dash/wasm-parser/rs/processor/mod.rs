@@ -25,7 +25,7 @@ impl MPDProcessor {
     /// * `reader` - A BufReader allowing to read the MPD document
     pub fn new(reader: BufReader<MPDReader>) -> Self {
         let mut reader = Reader::from_reader(reader);
-        reader.expand_empty_elements(true);
+        reader.expand_empty_elements(false);
         reader.trim_text(true);
         reader.check_end_names(false);
         MPDProcessor {
@@ -129,6 +129,115 @@ impl MPDProcessor {
                         self.process_event_stream_element();
                     }
 
+                    _ => {}
+                },
+                // Keep empty XML elements as a single quick-xml event. Expanding each one into
+                // synthetic Start and End events adds substantial work on large explicit
+                // SegmentTimelines, where every `<S />` is empty.
+                Ok(Event::Empty(tag)) => match tag.name().as_ref() {
+                    b"MPD" => {
+                        TagName::MPD.report_tag_open();
+                        attributes::report_mpd_attrs(&tag);
+                        TagName::MPD.report_tag_close();
+                    }
+                    b"Period" => {
+                        TagName::Period.report_tag_open();
+                        attributes::report_period_attrs(&tag);
+                        TagName::Period.report_tag_close();
+                    }
+                    b"AdaptationSet" => {
+                        TagName::AdaptationSet.report_tag_open();
+                        attributes::report_adaptation_set_attrs(&tag);
+                        TagName::AdaptationSet.report_tag_close();
+                    }
+                    b"Representation" => {
+                        TagName::Representation.report_tag_open();
+                        attributes::report_representation_attrs(&tag);
+                        TagName::Representation.report_tag_close();
+                    }
+                    b"Accessibility" => {
+                        TagName::Accessibility.report_tag_open();
+                        attributes::report_scheme_attrs(&tag);
+                        TagName::Accessibility.report_tag_close();
+                    }
+                    b"ContentComponent" => {
+                        TagName::ContentComponent.report_tag_open();
+                        attributes::report_content_component_attrs(&tag);
+                        TagName::ContentComponent.report_tag_close();
+                    }
+                    b"ContentProtection" => {
+                        TagName::ContentProtection.report_tag_open();
+                        attributes::report_content_protection_attrs(&tag);
+                        TagName::ContentProtection.report_tag_close();
+                    }
+                    b"EssentialProperty" => {
+                        TagName::EssentialProperty.report_tag_open();
+                        attributes::report_scheme_attrs(&tag);
+                        TagName::EssentialProperty.report_tag_close();
+                    }
+                    b"InbandEventStream" => {
+                        TagName::InbandEventStream.report_tag_open();
+                        attributes::report_scheme_attrs(&tag);
+                        TagName::InbandEventStream.report_tag_close();
+                    }
+                    b"Role" => {
+                        TagName::Role.report_tag_open();
+                        attributes::report_scheme_attrs(&tag);
+                        TagName::Role.report_tag_close();
+                    }
+                    b"SupplementalProperty" => {
+                        TagName::SupplementalProperty.report_tag_open();
+                        attributes::report_scheme_attrs(&tag);
+                        TagName::SupplementalProperty.report_tag_close();
+                    }
+                    b"SegmentBase" => {
+                        TagName::SegmentBase.report_tag_open();
+                        attributes::report_segment_base_attrs(&tag);
+                        TagName::SegmentBase.report_tag_close();
+                    }
+                    b"Initialization" => {
+                        TagName::Initialization.report_tag_open();
+                        attributes::report_initialization_attrs(&tag);
+                        TagName::Initialization.report_tag_close();
+                    }
+                    b"SegmentTemplate" => {
+                        TagName::SegmentTemplate.report_tag_open();
+                        attributes::report_segment_template_attrs(&tag);
+                        TagName::SegmentTemplate.report_tag_close();
+                    }
+                    b"SegmentList" => {
+                        TagName::SegmentList.report_tag_open();
+                        attributes::report_segment_base_attrs(&tag);
+                        TagName::SegmentList.report_tag_close();
+                    }
+                    b"SegmentURL" => {
+                        TagName::SegmentUrl.report_tag_open();
+                        attributes::report_segment_url_attrs(&tag);
+                        TagName::SegmentUrl.report_tag_close();
+                    }
+                    b"UTCTiming" => {
+                        TagName::UtcTiming.report_tag_open();
+                        attributes::report_scheme_attrs(&tag);
+                        TagName::UtcTiming.report_tag_close();
+                    }
+                    b"BaseURL" => {
+                        TagName::BaseURL.report_tag_open();
+                        attributes::report_base_url_attrs(&tag);
+                        TagName::BaseURL.report_tag_close();
+                    }
+                    b"Label" => {
+                        TagName::Label.report_tag_open();
+                        TagName::Label.report_tag_close();
+                    }
+                    b"SegmentTimeline" => {
+                        AttributeName::SegmentTimeline.report(&[] as &[SegmentObject])
+                    }
+                    b"EventStream" => {
+                        TagName::EventStream.report_tag_open();
+                        attributes::report_event_stream_attrs(&tag);
+                        TagName::EventStream.report_tag_close();
+                    }
+                    // Empty Location and cenc:pssh elements have no content to report.
                     _ => {}
                 },
                 Ok(Event::End(tag)) => match tag.name().as_ref() {
