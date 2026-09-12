@@ -22,6 +22,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -36,13 +38,30 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
 
+      - name: Select performance suites
+        run: |
+          suites="tests/performance/src/suites/general.js"
+          changed_files="$(git diff --name-only \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}")"
+
+          if grep -Eq \
+            '^(src/parsers/manifest/dash/|tests/performance/|tests/contents/|scripts/|package\.json$|package-lock\.json$|\.github/workflows/perfs\.yml$)' \
+            <<< "$changed_files"
+          then
+            suites="$suites tests/performance/src/suites/dash_parsers.js"
+          fi
+
+          echo "PERFORMANCE_SUITES=$suites" >> "$GITHUB_ENV"
+
       - name: Run performance tests
         run: |
           export DISPLAY=:99
           sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
           npm run test:performance -- --branch $GITHUB_BASE_REF \
             --remote-git-url https://github.com/canalplus/rx-player.git \
-            --report perf-report.md
+            --report perf-report.md \
+            $PERFORMANCE_SUITES
 
       - name: Post comment
         if: always()
