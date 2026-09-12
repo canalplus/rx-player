@@ -107,12 +107,16 @@ describe("base64ToBytes – non-native fallback", () => {
 
   it("decodes base64 with a single trailing padding char", () => {
     // "TWE=" => "Ma"
-    expect(base64ToBytes("TWE=")).toEqual(new Uint8Array([0x4d, 0x61]));
+    const result = base64ToBytes("TWE=");
+    expect(result).toEqual(new Uint8Array([0x4d, 0x61]));
+    expect(result.buffer.byteLength).toBe(result.byteLength);
   });
 
   it("decodes base64 with double trailing padding chars", () => {
     // "TQ==" => "M"
-    expect(base64ToBytes("TQ==")).toEqual(new Uint8Array([0x4d]));
+    const result = base64ToBytes("TQ==");
+    expect(result).toEqual(new Uint8Array([0x4d]));
+    expect(result.buffer.byteLength).toBe(result.byteLength);
   });
 
   it("decodes an empty string to an empty Uint8Array", () => {
@@ -130,6 +134,7 @@ describe("base64ToBytes – non-native fallback", () => {
     const result = base64ToBytes("TWE");
     expect(mockWarn).toHaveBeenCalledOnce();
     expect(result).toEqual(new Uint8Array([0x4d, 0x61]));
+    expect(result.buffer.byteLength).toBe(result.byteLength);
   });
 
   it("warns and recovers when 2 padding chars are missing (length % 4 === 2)", () => {
@@ -137,6 +142,7 @@ describe("base64ToBytes – non-native fallback", () => {
     const result = base64ToBytes("TQ");
     expect(mockWarn).toHaveBeenCalledOnce();
     expect(result).toEqual(new Uint8Array([0x4d]));
+    expect(result.buffer.byteLength).toBe(result.byteLength);
   });
 
   it("does not warn when input is already correctly padded", () => {
