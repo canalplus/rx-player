@@ -21,13 +21,17 @@ import type {
   ISourceBufferInterface,
   SourceBufferType,
 } from "../../../../mse/index.ts";
+import assert from "../../../../utils/assert.ts";
 import getMonotonicTimeStamp from "../../../../utils/monotonic_timestamp.ts";
 import type { IRange } from "../../../../utils/ranges.ts";
 import type {
   ICompleteSegmentInfo,
   IPushChunkInfos,
   IPushedChunkData,
+  IPushOperation,
+  IRemoveOperation,
   ISBOperation,
+  ISignalCompleteSegmentOperation,
 } from "../types.ts";
 import { SegmentSink, SegmentSinkOperation } from "../types.ts";
 
@@ -42,13 +46,46 @@ import { SegmentSink, SegmentSinkOperation } from "../types.ts";
  */
 export default class AudioVideoSegmentSink extends SegmentSink {
   /** "Type" of the buffer concerned. */
-  public readonly bufferType: "audio" | "video";
-
-  /** SourceBuffer implementation. */
-  private readonly _sourceBuffer: ISourceBufferInterface;
+  public readonly bufferType: SourceBufferType;
 
   /**
-   * Queue of awaited buffer "operations".
+   * `SourceBuffer` implementation.
+   *
+   * `null` if the `SourceBuffer` is not yet linked to this SegmentSink, in
+   * which cases operations (push, remove etc.) are left pending and stored
+   * in `_inMemoryBuffer`.
+   */
+  private _sourceBuffer: ISourceBufferInterface | null;
+
+  /**
+   * Queues of operations that have not yet been performed on a `SourceBuffer`
+   * because it was not available yet.
+   *
+   * Once `_sourceBuffer` is set, those operations should all be executed and
+   * this property shouldn't be relied on anymore.
+   */
+  private _inMemoryBuffer: {
+    freeInitSegments: string[];
+    operationQueue: Array<
+      | (IPushOperation<unknown> & {
+          resolve: (range: IRange[] | undefined) => void;
+          reject: (err: unknown) => void;
+        })
+      | (IRemoveOperation & {
+          resolve: (range: IRange[] | undefined) => void;
+          reject: (err: unknown) => void;
+        })
+      | (ISignalCompleteSegmentOperation & {
+          resolve: () => void;
+          reject: (err: unknown) => void;
+        })
+    >;
+  };
+
+  /**
+   * Queue of awaited buffer "operations" that have been called on the
+   * `SourceBuffer` but have not yet finished.
+   *
    * The first element in this array will be the first performed.
    */
   private _pendingOperations: Array<{
@@ -79,26 +116,77 @@ export default class AudioVideoSegmentSink extends SegmentSink {
   private _initSegmentsMap: Map<string, BufferSource>;
 
   /**
+   * Mimetype+codec combination the SegmentSink is currently working with.
+   * Depending on the implementation, segments with a different codecs could be
+   * incompatible.
+   *
+   * `undefined` if unknown and if this property does not matter for this
+   * SegmentSink implementation.
+   */
+  public codec: string;
+
+  /**
    * @constructor
    * @param {string} bufferType
    * @param {string} codec
-   * @param {Object} mediaSource
    */
-  constructor(
-    bufferType: SourceBufferType,
-    codec: string,
-    mediaSource: IMediaSourceInterface,
-  ) {
+  constructor(bufferType: SourceBufferType, codec: string) {
     super();
     log.info("Stream", "calling `mediaSource.addSourceBuffer`", { codec });
-    const sourceBuffer = mediaSource.addSourceBuffer(bufferType, codec);
 
     this.bufferType = bufferType;
-    this._sourceBuffer = sourceBuffer;
+    this._sourceBuffer = null;
+    this._inMemoryBuffer = {
+      freeInitSegments: [],
+      operationQueue: [],
+    };
     this._lastInitSegmentUniqueId = null;
     this.codec = codec;
     this._initSegmentsMap = new Map();
     this._pendingOperations = [];
+  }
+
+  public linkToMediaSource(
+    mediaSourceInterface: IMediaSourceInterface,
+  ): Promise<unknown> {
+    log.info("Stream", "Linking MediaSource to SegmentSink", {
+      bufferType: this.bufferType,
+    });
+    const sourceBuffer = mediaSourceInterface.addSourceBuffer(
+      this.bufferType,
+      this.codec,
+    );
+    this._sourceBuffer = sourceBuffer;
+    const proms: Array<Promise<unknown>> = [];
+    const { freeInitSegments, operationQueue } = this._inMemoryBuffer;
+    this._inMemoryBuffer = {
+      freeInitSegments: [],
+      operationQueue: [],
+    };
+    for (const item of operationQueue) {
+      switch (item.type) {
+        case SegmentSinkOperation.Push:
+          proms.push(this.pushChunk(item.value).then(item.resolve, item.reject));
+          break;
+        case SegmentSinkOperation.Remove:
+          proms.push(
+            this.removeBuffer(item.value.start, item.value.end).then(
+              item.resolve,
+              item.reject,
+            ),
+          );
+          break;
+        case SegmentSinkOperation.SignalSegmentComplete:
+          proms.push(
+            this.signalSegmentComplete(item.value).then(item.resolve, item.reject),
+          );
+          break;
+      }
+    }
+    for (const initSegId of freeInitSegments) {
+      this.freeInitSegment(initSegId);
+    }
+    return Promise.all(proms);
   }
 
   /** @see SegmentSink */
@@ -109,7 +197,11 @@ export default class AudioVideoSegmentSink extends SegmentSink {
 
   /** @see SegmentSink */
   public freeInitSegment(uniqueId: string): void {
-    this._initSegmentsMap.delete(uniqueId);
+    if (this._sourceBuffer === null) {
+      this._inMemoryBuffer.freeInitSegments.push(uniqueId);
+    } else {
+      this._initSegmentsMap.delete(uniqueId);
+    }
   }
 
   /**
@@ -137,9 +229,24 @@ export default class AudioVideoSegmentSink extends SegmentSink {
    * @param {Object} infos
    * @returns {Promise}
    */
-  public async pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[]> {
+  public async pushChunk(infos: IPushChunkInfos<unknown>): Promise<IRange[] | undefined> {
     assertDataIsBufferSource(infos.data.chunk);
     log.debug("Stream", "queuing push order", getLoggableSegmentId(infos.inventoryInfos));
+
+    const sourceBuffer = this._sourceBuffer;
+    if (sourceBuffer === null) {
+      log.debug("Stream", "No SourceBuffer yet, pushing in-memory");
+      // XXX TODO: replace already buffered + range
+      return new Promise((resolve, reject) => {
+        this._inMemoryBuffer.operationQueue.push({
+          type: SegmentSinkOperation.Push,
+          value: infos,
+          resolve,
+          reject,
+        });
+      });
+    }
+
     const dataToPush = this._getActualDataToPush(
       infos.data as IPushedChunkData<BufferSource>,
     );
@@ -167,7 +274,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
       dataToPush.map((data) => {
         const { codec, timestampOffset, appendWindow } = infos.data;
         log.debug("Stream", "now pushing", getLoggableSegmentId(infos.inventoryInfos));
-        return this._sourceBuffer.appendBuffer(data, {
+        return sourceBuffer.appendBuffer(data, {
           codec,
           timestampOffset,
           appendWindow,
@@ -197,24 +304,42 @@ export default class AudioVideoSegmentSink extends SegmentSink {
       );
     }
     const ranges = res[res.length - 1];
-    this._segmentInventory.synchronizeBuffered(ranges);
+    if (ranges !== undefined) {
+      this._segmentInventory.synchronizeBuffered(ranges);
+    }
     return ranges;
   }
 
   /** @see SegmentSink */
-  public async removeBuffer(start: number, end: number): Promise<IRange[]> {
+  public async removeBuffer(start: number, end: number): Promise<IRange[] | undefined> {
     log.debug("Stream", "queuing remove order", {
       bufferType: this.bufferType,
       start,
       end,
     });
+
+    if (this._sourceBuffer === null) {
+      log.debug("Stream", "No SourceBuffer yet, removing in-memory");
+      // XXX TODO: evict+range?
+      return new Promise((resolve, reject) => {
+        this._inMemoryBuffer.operationQueue.push({
+          type: SegmentSinkOperation.Remove,
+          value: { start, end },
+          resolve,
+          reject,
+        });
+      });
+    }
+
     const promise = this._sourceBuffer.remove(start, end);
     this._addToOperationQueue(promise, {
       type: SegmentSinkOperation.Remove,
       value: { start, end },
     });
     const ranges = await promise;
-    this._segmentInventory.synchronizeBuffered(ranges);
+    if (ranges !== undefined) {
+      this._segmentInventory.synchronizeBuffered(ranges);
+    }
     return ranges;
   }
 
@@ -228,6 +353,17 @@ export default class AudioVideoSegmentSink extends SegmentSink {
    * @returns {Promise}
    */
   public async signalSegmentComplete(infos: ICompleteSegmentInfo): Promise<void> {
+    if (this._sourceBuffer === null) {
+      return new Promise((resolve, reject) => {
+        this._inMemoryBuffer.operationQueue.push({
+          type: SegmentSinkOperation.SignalSegmentComplete,
+          value: infos,
+          resolve,
+          reject,
+        });
+      });
+    }
+
     if (this._pendingOperations.length > 0) {
       // Only validate after preceding operation
       const { promise } = this._pendingOperations[this._pendingOperations.length - 1];
@@ -250,6 +386,14 @@ export default class AudioVideoSegmentSink extends SegmentSink {
    * @returns {Array.<Object>}
    */
   public getPendingOperations(): Array<ISBOperation<unknown>> {
+    if (this._inMemoryBuffer.operationQueue.length > 0) {
+      assert(this._pendingOperations.length === 0);
+      return this._inMemoryBuffer.operationQueue.map((p) => ({
+        ...p,
+        resolve: undefined,
+        reject: undefined,
+      }));
+    }
     return this._pendingOperations.map((p) => p.operation);
   }
 
@@ -257,7 +401,7 @@ export default class AudioVideoSegmentSink extends SegmentSink {
   public dispose(reason: string | undefined): void {
     try {
       log.debug("Stream", "Calling `dispose` on the SourceBufferInterface");
-      this._sourceBuffer.dispose(reason);
+      this._sourceBuffer?.dispose(reason);
     } catch (e) {
       log.debug(
         "Stream",

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store.ts";
 import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types.ts";
 import type {
@@ -69,21 +68,11 @@ export abstract class ContentInitializer extends EventEmitter<IContentInitialize
    * phase before `start` is called (the `ContentInitializer` should stay
    * resilient in both scenarios).
    *
-   * @param {HTMLMediaElement} mediaElement - `HTMLMediaElement` on which the
-   * content will play. This is given to `start` (and not sooner) to ensure
-   * that no prior step influence the `HTMLMediaElement`, on which a previous
-   * content could have been playing until then.
-   *
-   * If a content was already playing on that `HTMLMediaElement`, it will be
-   * stopped.
-   * @param {Object} playbackObserver - Interface allowing to poll playback
-   * information on what's playing on the `HTMLMediaElement` at regular
-   * intervals.
+   * @param {Object} playbackObserver - Interface allowing to interact with
+   * the media element on the page, most notably to poll playback information
+   * on what's playing on the `HTMLMediaElement` at regular intervals.
    */
-  public abstract start(
-    mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
-  ): void;
+  public abstract start(playbackObserver: IMediaElementPlaybackObserver): void;
 
   /**
    * Update URL of the content currently being played (e.g. DASH's MPD).
