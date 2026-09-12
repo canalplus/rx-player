@@ -75,6 +75,7 @@ import createCorePlaybackObserver from "./utils/create_core_playback_observer.ts
 import type { IInitialTimeOptions } from "./utils/get_initial_time.ts";
 import getInitialTime from "./utils/get_initial_time.ts";
 import getLoadedReference from "./utils/get_loaded_reference.ts";
+import handleTooMuchMediaKeySessions from "./utils/handle_too_much_media_key_sessions.ts";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play.ts";
 import RebufferingController from "./utils/rebuffering_controller.ts";
 import StreamEventsEmitter from "./utils/stream_events_emitter/stream_events_emitter.ts";
@@ -404,6 +405,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     const { statusRef: drmInitializationStatus, contentDecryptor } =
       this._initializeContentDecryption(
         mediaElement,
+        playbackObserver,
         lastContentProtection,
         mediaSourceStatus,
         () => notifyAndStartMediaSourceReload(0, undefined, undefined),
@@ -1367,6 +1369,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
 
   private _initializeContentDecryption(
     mediaElement: IMediaElement,
+    playbackObserver: IMediaElementPlaybackObserver,
     lastContentProtection: IReadOnlySharedReference<null | IContentProtection>,
     mediaSourceStatus: SharedReference<MediaSourceInitializationStatus>,
     reloadMediaSource: () => void,
@@ -1524,6 +1527,20 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
         });
         contentDecryptor.removeEventListener("stateChange");
       }
+    });
+
+    contentDecryptor.addEventListener("tooMuchSessions", (payload) => {
+      const manifest = this._currentContentInfo?.manifest;
+      if (isNullOrUndefined(manifest)) {
+        log.error("Init", "Received tooMuchSessions error before getting a Manifest");
+        return;
+      }
+      handleTooMuchMediaKeySessions(
+        contentDecryptor,
+        manifest,
+        playbackObserver,
+        payload,
+      );
     });
 
     contentDecryptor.addEventListener("error", (error) => {
