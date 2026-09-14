@@ -126,8 +126,8 @@ const base64codes = [
   47, 48, 49, 50, 51,
 ];
 
-// Not yet in ECMAScript, but present in most browsers
-// (2024 for SpiderMonkey, 2025 for V8)
+// Standardized in ECMAScript 2026, but absent from older browsers and from the
+// TypeScript libraries targeted by the RxPlayer.
 declare global {
   interface Uint8Array {
     // https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tobase64
@@ -227,9 +227,12 @@ export function base64ToBytes(str: string): Uint8Array<ArrayBuffer> {
   // eslint-disable-next-line no-nested-ternary
   const missingOctets = paddedStr.endsWith("==") ? 2 : paddedStr.endsWith("=") ? 1 : 0;
   const n = paddedStr.length;
-  const result = new Uint8Array((n / 4) * 3);
+  const result = new Uint8Array((n / 4) * 3 - missingOctets);
   let buffer: number;
-  for (let i = 0, j = 0; i < n; i += 4, j += 3) {
+  let i = 0;
+  let j = 0;
+  const completeLength = missingOctets === 0 ? n : n - 4;
+  for (; i < completeLength; i += 4, j += 3) {
     buffer =
       (getBase64Code(paddedStr.charCodeAt(i)) << 18) |
       (getBase64Code(paddedStr.charCodeAt(i + 1)) << 12) |
@@ -239,5 +242,16 @@ export function base64ToBytes(str: string): Uint8Array<ArrayBuffer> {
     result[j + 1] = (buffer >> 8) & 0xff;
     result[j + 2] = buffer & 0xff;
   }
-  return result.subarray(0, result.length - missingOctets);
+  if (missingOctets !== 0) {
+    buffer =
+      (getBase64Code(paddedStr.charCodeAt(i)) << 18) |
+      (getBase64Code(paddedStr.charCodeAt(i + 1)) << 12) |
+      (getBase64Code(paddedStr.charCodeAt(i + 2)) << 6) |
+      getBase64Code(paddedStr.charCodeAt(i + 3));
+    result[j] = buffer >> 16;
+    if (missingOctets === 1) {
+      result[j + 1] = (buffer >> 8) & 0xff;
+    }
+  }
+  return result;
 }
