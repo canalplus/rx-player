@@ -14,11 +14,19 @@ import runBundler from "../../scripts/run_bundler.mjs";
 import createContentServer from "../contents/server.mjs";
 
 /**
+ * Source file kept in memory, with a path used to resolve its relative imports.
+ * @typedef {Object} VirtualFile
+ * @property {string} text
+ * @property {string} virtualPath
+ */
+
+/**
  * Path to the directory this script is currently in.
  * The same path should contain the `./current.html` and `./previous.js` pages
  * and will contain our `./current.js` and `./previous.js` test page bundles.
  */
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+const performanceSuitesDirectory = path.join(currentDirectory, "src", "suites");
 
 /** Default port of the HTTP server which will serve local contents. */
 const DEFAULT_CONTENT_SERVER_PORT = 3000;
@@ -70,6 +78,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   let branchName;
   let remote;
   let reportFile;
+  const requestedTestPaths = [];
   /**
    * @param {string|undefined} input
    * @param {string} flagName
@@ -173,10 +182,15 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
         break;
 
       case "--":
+        requestedTestPaths.push(...args.slice(argOffset + 1));
         argOffset = args.length;
         break;
 
       default:
+        if (!currentArg.startsWith("-")) {
+          requestedTestPaths.push(currentArg);
+          break;
+        }
         // eslint-disable-next-line no-console
         console.error("ERROR: Unrecognized flag:", currentArg);
         displayHelp();
@@ -184,10 +198,20 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     }
   }
 
+  let performanceTestFiles;
+  try {
+    performanceTestFiles = getPerformanceTestFiles(requestedTestPaths);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("ERROR:", err.message);
+    process.exit(1);
+  }
+
   initializePerformanceTestsPages({
     branchName: branchName ?? "dev",
     remoteGitUrl: remote,
     contentServerPort,
+    performanceTestFiles,
   })
     .then(() =>
       runPerformanceTests({ browser, contentServerPort, resultServerPort, testPagePort }),
@@ -566,9 +590,16 @@ async function initializePerformanceTestsPages({
   branchName,
   remoteGitUrl,
   contentServerPort,
+  performanceTestFiles,
 }) {
-  await prepareLastRxPlayerTests({ branchName, remoteGitUrl, contentServerPort });
-  await prepareCurrentRxPlayerTests({ contentServerPort });
+  const performanceTestsEntry = createPerformanceTestsEntry(performanceTestFiles);
+  await prepareLastRxPlayerTests({
+    branchName,
+    remoteGitUrl,
+    contentServerPort,
+    performanceTestsEntry,
+  });
+  await prepareCurrentRxPlayerTests({ contentServerPort, performanceTestsEntry });
 }
 
 /**
@@ -576,13 +607,15 @@ async function initializePerformanceTestsPages({
  * @param {Object} params
  * @param {number} params.contentServerPort - Port on which media content is
  * served.
+ * @param {VirtualFile} params.performanceTestsEntry
  * @returns {Promise}
  */
-async function prepareCurrentRxPlayerTests({ contentServerPort }) {
+async function prepareCurrentRxPlayerTests({ contentServerPort, performanceTestsEntry }) {
   await linkCurrentRxPlayer();
   await createBundle({
     output: "current.js",
     contentServerPort,
+    input: performanceTestsEntry,
     minify: true,
     production: true,
   });
@@ -597,13 +630,20 @@ async function prepareCurrentRxPlayerTests({ contentServerPort }) {
  * served.
  * @param {string} [opts.remoteGitUrl] - The git URL where the current
  * repository can be cloned for comparisons.
+ * @param {VirtualFile} opts.performanceTestsEntry
  * The one for the current git repository by default.
  * @returns {Promise}
  */
-async function prepareLastRxPlayerTests({ branchName, contentServerPort, remoteGitUrl }) {
+async function prepareLastRxPlayerTests({
+  branchName,
+  contentServerPort,
+  remoteGitUrl,
+  performanceTestsEntry,
+}) {
   await linkRxPlayerBranch({ branchName, remoteGitUrl });
   await createBundle({
     contentServerPort,
+    input: performanceTestsEntry,
     output: "previous.js",
     minify: true,
     production: true,
@@ -1208,6 +1248,7 @@ function getSamplePerScenarios(samplesObj) {
  * @param {Object} options.output - The output file
  * @param {number} options.contentServerPort - Port on which media content is
  * served.
+ * @param {VirtualFile} options.input
  * @param {boolean} [options.minify] - If `true`, the output will be minified.
  * @param {boolean} [options.production=true] - If `false`, the code will be compiled
  * in "development" mode, which has supplementary assertions.
@@ -1216,7 +1257,7 @@ function getSamplePerScenarios(samplesObj) {
 async function createBundle(options) {
   const minify = !!options.minify;
   try {
-    await runBundler(path.join(currentDirectory, "src", "main.js"), {
+    await runBundler(options.input, {
       minify,
       silent: true,
       globalScope: false,
@@ -1399,13 +1440,75 @@ function formatResultAsHtmlTable(results) {
 }
 
 /**
+ * @param {string[]} requestedPaths
+ * @returns {string[]}
+ */
+function getPerformanceTestFiles(requestedPaths) {
+  const pathsToInspect =
+    requestedPaths.length === 0 ? [performanceSuitesDirectory] : requestedPaths;
+  const testFiles = [];
+
+  for (const requestedPath of pathsToInspect) {
+    const resolvedPath = path.resolve(requestedPath);
+    const relativePath = path.relative(performanceSuitesDirectory, resolvedPath);
+    if (relativePath.startsWith(".." + path.sep) || path.isAbsolute(relativePath)) {
+      throw new Error(`Performance test path is outside src/suites: ${requestedPath}`);
+    }
+    let stats;
+    try {
+      stats = fs.statSync(resolvedPath);
+    } catch {
+      throw new Error(`Performance test path does not exist: ${requestedPath}`);
+    }
+    if (stats.isDirectory()) {
+      for (const entry of fs.readdirSync(resolvedPath, { withFileTypes: true })) {
+        testFiles.push(...getPerformanceTestFiles([path.join(resolvedPath, entry.name)]));
+      }
+    } else if (stats.isFile() && path.extname(resolvedPath) === ".js") {
+      testFiles.push(resolvedPath);
+    }
+  }
+
+  const uniqueTestFiles = [...new Set(testFiles)].sort();
+  if (uniqueTestFiles.length === 0) {
+    throw new Error("No JavaScript performance test file found");
+  }
+  return uniqueTestFiles;
+}
+
+/**
+ * @param {string[]} testFiles
+ * @returns {VirtualFile}
+ */
+function createPerformanceTestsEntry(testFiles) {
+  const imports = testFiles.map((testFile) => {
+    const relativePath =
+      "./" + path.relative(currentDirectory, testFile).split(path.sep).join("/");
+    return `  import(${JSON.stringify(relativePath)})`;
+  });
+  const text = `import { error } from "./src/lib.js";
+
+// Keep those imports dynamic so esbuild does not tree-shake the test suites.
+Promise.all([
+${imports.join(",\n")}
+]).catch((err) => {
+  error("Could not load performance tests:", err instanceof Error ? err.toString() : "Unknown error");
+});
+`;
+  return {
+    text,
+    virtualPath: path.join(currentDirectory, "performance_tests.js"),
+  };
+}
+
+/**
  * Display through `console.log` an helping message relative to how to run this
  * script.
  */
 function displayHelp() {
   /* eslint-disable-next-line no-console */
   console.log(
-    `Usage: node run.mjs [options]
+    `Usage: node run.mjs [options] [test paths]
 Available options:
   -h, --help                        Display this help message
   -b <branch>, --branch <branch>    Specify the branch name the performance results should be compared to.
@@ -1420,6 +1523,9 @@ Available options:
                                     ${DEFAULT_TEST_PAGE_PORT} by default.
   --content-port <NUMBER>           Configure the port used to serve test contents.
                                     ${DEFAULT_CONTENT_SERVER_PORT} by default.
-  -r <path>, --report <path>        Optional path to HTML file where a report will be written in once done.`,
+  -r <path>, --report <path>        Optional path to HTML file where a report will be written in once done.
+
+Every JavaScript file in tests/performance/src/suites is run by default. Test file or
+directory paths can be passed to only run those tests.`,
   );
 }

@@ -21,6 +21,15 @@ import getHumanReadableHours from "./utils/get_human_readable_hours.mjs";
 import PROJECT_ROOT_DIRECTORY from "./utils/project_root_directory.mjs";
 
 /**
+ * Source file kept in memory instead of being read from the filesystem.
+ * `virtualPath` is not written: it gives the source a name and indicates from
+ * which directory its relative imports should be resolved.
+ * @typedef {Object} VirtualFile
+ * @property {string} text - File contents.
+ * @property {string} virtualPath - Path the file should be considered to have.
+ */
+
+/**
  * @typedef {{
  *   name?: string;
  *   minify?: boolean;
@@ -51,11 +60,11 @@ import PROJECT_ROOT_DIRECTORY from "./utils/project_root_directory.mjs";
 
 /**
  * Run bundler with the given options.
- * @param {string} inputFile
+ * @param {string|VirtualFile} input
  * @param {RunBundlerOptions} options
  * @returns {Promise.<void>}
  */
-export default async function runBundler(inputFile, options) {
+export default async function runBundler(input, options) {
   const name = options.name;
   const minify = !!options.minify;
   const watch = !!options.watch;
@@ -63,7 +72,8 @@ export default async function runBundler(inputFile, options) {
   const isSilent = options.silent;
   const outfile = options.outfile;
   const globals = options.globals;
-  const relativeInFile = path.relative(PROJECT_ROOT_DIRECTORY, inputFile);
+  const inputPath = typeof input === "string" ? input : input.virtualPath;
+  const relativeInFile = path.relative(PROJECT_ROOT_DIRECTORY, inputPath);
   const relativeOutfile =
     outfile === undefined ? undefined : path.relative(PROJECT_ROOT_DIRECTORY, outfile);
   const globalScope = !!options.globalScope;
@@ -87,7 +97,7 @@ export default async function runBundler(inputFile, options) {
         if (result.errors.length > 0 || result.warnings.length > 0) {
           const { errors, warnings } = result;
           logWarning(
-            `Re-bundling for "${name ?? inputFile}" failed with ${errors.length} error(s) and ` +
+            `Re-bundling for "${name ?? inputPath}" failed with ${errors.length} error(s) and ` +
               ` ${warnings.length} warning(s) `,
           );
           return;
@@ -105,7 +115,15 @@ export default async function runBundler(inputFile, options) {
 
   try {
     const buildOptions = {
-      entryPoints: [inputFile],
+      ...(typeof input === "string"
+        ? { entryPoints: [input] }
+        : {
+            stdin: {
+              contents: input.text,
+              resolveDir: path.dirname(input.virtualPath),
+              sourcefile: path.basename(input.virtualPath),
+            },
+          }),
       bundle: true,
       target: "es2017",
       minify,
@@ -130,7 +148,7 @@ export default async function runBundler(inputFile, options) {
     }
     await esbuild.build(buildOptions);
   } catch (err) {
-    logError(`Bundling failed for "${name ?? inputFile}": ${String(err)}`);
+    logError(`Bundling failed for "${name ?? inputPath}": ${String(err)}`);
     throw err;
   }
 
