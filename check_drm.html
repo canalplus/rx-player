@@ -222,6 +222,12 @@
     }
 
     const initDataClearKey = (new TextEncoder()).encode('{"kids":["LwVHf8JLtPrv2GUXFW2v_A"]}');
+
+    // Nagra PRM initData (sanitized test PSSH)
+    const initDataNagra = Uint8Array.from(
+      atob("AAAAmHBzc2gAAAAArbQcJC2/Sm2Vi0RXwNJ7lQAAAHhleUpqYjI1MFpXNTBTV1FpT2lJd01VRlNXak5PUkVWTFZGTldORkpTUmtaUk5qbEhOVVpCVmlJc0ltdGxlVWxrSWpvaU1USXpORFUyTnpndE1USXpOQzAwWVdKakxUaGtaV1l0TVRJek5EVTJOemc1TUdGaUluMD0="),
+      (char) => char.charCodeAt(0)
+    );
     // const r = Array.from(initDataPlayReady).map(i2hex).join("");
 
     const DEFAULT_API_TIMEOUT_MS = 10000;
@@ -404,6 +410,10 @@
       else if (keySystemIdentifier.includes("clearkey")) {
         initData = initDataClearKey;
         initDataType = 'keyids'
+      }
+      else if (keySystemIdentifier === "com.nagra.prm") {
+        initData = initDataNagra;
+        initDataType = 'cenc'
       }
       if (initData === undefined) {
         // this page does not handle initData for the particular keySystem,
