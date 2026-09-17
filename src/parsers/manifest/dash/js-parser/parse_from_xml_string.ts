@@ -22,7 +22,10 @@ import type {
   IMPDParserArguments,
 } from "../common/index.ts";
 import parseMpdIr from "../common/index.ts";
-import type { IPeriodIntermediateRepresentation } from "../node_parser_types.ts";
+import type {
+  IMPDIntermediateRepresentation,
+  IPeriodIntermediateRepresentation,
+} from "../node_parser_types.ts";
 import type { IDashParserResponse, ILoadedResource } from "../parsers_types.ts";
 import { createMPDIntermediateRepresentation } from "./node_parsers/MPD.ts";
 import { createPeriodIntermediateRepresentation } from "./node_parsers/Period.ts";
@@ -37,17 +40,7 @@ export default function parseFromString(
   xml: string,
   args: IMPDParserArguments,
 ): IDashParserResponse<string> {
-  const root = parseXml(xml);
-  const lastChild = root[root.length - 1];
-  if (
-    lastChild === undefined ||
-    typeof lastChild === "string" ||
-    lastChild.tagName !== "MPD"
-  ) {
-    throw new Error("DASH Parser: document root should be MPD");
-  }
-
-  const [mpdIR, warnings] = createMPDIntermediateRepresentation(lastChild, xml);
+  const [mpdIR, warnings] = parseToIntermediateRepresentation(xml);
   const ret = parseMpdIr(mpdIR, args, warnings);
   return processReturn(ret);
 
@@ -136,4 +129,21 @@ export default function parseFromString(
       assertUnreachable(initialRes);
     }
   }
+}
+
+/** @internal Build the parser-independent DASH intermediate representation from XML. */
+export function parseToIntermediateRepresentation(
+  xml: string,
+): [IMPDIntermediateRepresentation, Error[]] {
+  const root = parseXml(xml);
+  const lastChild = root[root.length - 1];
+  if (
+    lastChild === undefined ||
+    typeof lastChild === "string" ||
+    lastChild.tagName !== "MPD"
+  ) {
+    throw new Error("DASH Parser: document root should be MPD");
+  }
+
+  return createMPDIntermediateRepresentation(lastChild, xml);
 }
