@@ -1,16 +1,19 @@
+import addStableMultiThreadFeature from "../../features/list/multi_thread.ts";
 import type { IFeaturesObject } from "../../features/types.ts";
-import { WorkerCoreInterface } from "../../main_thread/core_interface/multithread.ts";
-import MediaSourceContentInitializer from "../../main_thread/init/media_source_content_initializer.ts";
 
 /**
  * Add ability to run the RxPlayer's main buffering logic in a WebMultiThread.
  * @param {Object} features
  */
 function addMultiThreadFeature(features: IFeaturesObject): void {
-  features.multithread = {
-    init: MediaSourceContentInitializer,
-    coreInterface: WorkerCoreInterface,
-  };
+  /* eslint-disable-next-line no-console */
+  console.warn(
+    "RxPlayer: `MULTI_THREAD` is no longer experimental.\n" +
+      'You should now import it through the "rx-player/features" path. ' +
+      "If you also rely on embedded worker assets, you should now import them through " +
+      'the "rx-player/features/embeds" path.',
+  );
+  addStableMultiThreadFeature(features);
 }
 
 export { addMultiThreadFeature as MULTI_THREAD };

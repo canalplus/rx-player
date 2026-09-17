@@ -1,6 +1,6 @@
 import { describe, afterEach, beforeEach, it, expect } from "vitest";
 import RxPlayer from "../../../dist/es2017";
-import { MULTI_THREAD } from "../../../dist/es2017/experimental/features/index.js";
+import { MULTI_THREAD } from "../../../dist/es2017/features/list/index.js";
 import { EMBEDDED_DASH_WASM } from "../../../dist/es2017/__GENERATED_CODE/index.js";
 import TestWorkerEmbed from "../../embedded_worker_bundle";
 import sleep from "../../utils/sleep.js";
