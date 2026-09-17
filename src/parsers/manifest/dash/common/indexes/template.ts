@@ -44,17 +44,18 @@ export interface ITemplateIndex {
   timescale: number;
   /** Byte range for a possible index of segments in the server. */
   indexRange?: [number, number] | undefined;
-  /** Information on the initialization segment. */
-  initialization?:
-    | {
-        /**
-         * URL path, to add to the wanted CDN, to access the initialization segment.
-         */
-        url: string | null;
-        /** possible byte range to request it. */
-        range?: [number, number] | undefined;
-      }
-    | undefined;
+  /**
+   * Information on the initialization segment.
+   * `null` if this index has no initialization segment.
+   */
+  initialization: {
+    /**
+     * URL path, to add to the wanted CDN, to access the initialization segment.
+     */
+    url: string | null;
+    /** possible byte range to request it. */
+    range?: [number, number] | undefined;
+  } | null;
   /**
    * URL base to access any segment.
    * Can contain token to replace to convert it to real URLs.
@@ -214,7 +215,7 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
       indexRange: index.indexRange,
       indexTimeOffset,
       initialization: isNullOrUndefined(index.initialization)
-        ? undefined
+        ? null
         : { url: initializationUrl, range: index.initialization.range },
       url: segmentUrlTemplate,
       presentationTimeOffset,
@@ -229,10 +230,11 @@ export default class TemplateRepresentationIndex implements IRepresentationIndex
   }
 
   /**
-   * Construct init Segment.
-   * @returns {Object}
+   * Construct the metadata object for the init Segment linked to that index.
+   * Returns `null` if no initialization segment appears to be linked to that index.
+   * @returns {Object|null}
    */
-  getInitSegment(): ISegment {
+  getInitSegment(): ISegment | null {
     return getInitSegment(this._index, this._isEMSGWhitelisted);
   }
 
