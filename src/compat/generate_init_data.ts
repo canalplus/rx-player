@@ -1,3 +1,4 @@
+import { base64ToBytes } from "../utils/base64.ts";
 import { itole4, itobe4, itole2, concat } from "../utils/byte_parsing.ts";
 import { strToUtf8, strToUtf16LE, hexToBytes } from "../utils/string_parsing.ts";
 
@@ -8,6 +9,27 @@ import { strToUtf8, strToUtf16LE, hexToBytes } from "../utils/string_parsing.ts"
  */
 export const DUMMY_PLAY_READY_HEADER =
   '<WRMHEADER xmlns="http://schemas.microsoft.com/DRM/2007/03/PlayReadyHeader" version="4.0.0.0"><DATA><PROTECTINFO><KEYLEN>16</KEYLEN><ALGID>AESCTR</ALGID></PROTECTINFO><KID>ckB07BNLskeUq0qd83fTbA==</KID><DS_ID>yYIPDBca1kmMfL60IsfgAQ==</DS_ID><CUSTOMATTRIBUTES xmlns=""><encryptionref>312_4024_2018127108</encryptionref></CUSTOMATTRIBUTES><CHECKSUM>U/tsUYRgMzw=</CHECKSUM></DATA></WRMHEADER>';
+
+/** A sanitized Nagra PRM PSSH used only to test license-request generation. */
+const DUMMY_NAGRA_INIT_DATA_BASE64 =
+  "AAAAmHBzc2gAAAAArbQcJC2/Sm2Vi0RXwNJ7lQAAAHhleUpqYjI1MFpXNTBTV1FpT2lJd01VRlNXak5PUkVWTFZGTldORkpTUmtaUk5qbEhOVVpCVmlJc0ltdGxlVWxrSWpvaU1USXpORFUyTnpndE1USXpOQzAwWVdKakxUaGtaV1l0TVRJek5EVTJOemc1TUdGaUluMD0=";
+
+/**
+ * Return dummy "cenc" initialization data suitable for the given key system.
+ * This data is only intended to check that a CDM can generate a license request.
+ * @param keySystem - The key system for which initialization data is needed.
+ * @returns Initialization data suitable for that key system.
+ * @throws If no initialization data is available for the given key system.
+ */
+export function getDummyInitDataForKeySystem(keySystem: string): Uint8Array<ArrayBuffer> {
+  if (keySystem.indexOf("playready") !== -1) {
+    return generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+  }
+  if (keySystem.indexOf("nagra") !== -1 || keySystem === "com.tvkey.drm") {
+    return getDummyNagraInitData();
+  }
+  throw new Error(`No dummy initialization data for key system "${keySystem}"`);
+}
 
 /**
  * Generate the "cenc" init data for playready from the PlayreadyHeader string.
@@ -39,6 +61,14 @@ export function generatePlayReadyInitData(
   const playreadySystemId = hexToBytes("9a04f07998404286ab92e65be0885f95");
 
   return generateInitData(playReadyObject, playreadySystemId);
+}
+
+/**
+ * Return dummy "cenc" initialization data for Nagra key systems.
+ * @returns Initialization data suitable for a Nagra key system.
+ */
+function getDummyNagraInitData(): Uint8Array<ArrayBuffer> {
+  return base64ToBytes(DUMMY_NAGRA_INIT_DATA_BASE64);
 }
 
 /**
