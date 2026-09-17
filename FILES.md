@@ -175,6 +175,9 @@ The rx-player contains multiple type of tests:
     Those should implement in a type-sound way modules and utils that unit tests often
     rely on.
 
+- parser tests: tests linked to specific parser implementations (like those for DASH
+  manifests, subtitle formats etc.).
+
 - memory tests: test the memory usage of the player.
 
   They are entirely written in the `tests/memory` subdirectory.

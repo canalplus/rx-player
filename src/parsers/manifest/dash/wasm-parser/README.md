@@ -225,18 +225,22 @@ There are several ways this can be done, with the easiest way generally being:
 1. Install [rustup](https://rustup.rs/), which is a tool intended to facilitate the
    installation of Rust toolchains
 
-2. Install and rely on the stable toolchain:
+2. Install the stable toolchain for regular Rust tooling, and a nightly toolchain with the
+   Rust standard-library sources for the WebAssembly build:
 
    ```sh
    rustup default stable
+   rustup toolchain install nightly --profile minimal --component rust-src
    ```
 
-3. Add the WebAssembly compiler target:
+3. Add the WebAssembly compiler target to the nightly toolchain:
 
    ```sh
-   rustup target add wasm32-unknown-unknown
+   rustup target add --toolchain nightly wasm32-unknown-unknown
    ```
 
 4. Now install [binaryen](https://github.com/WebAssembly/binaryen)
 
-That should be it!
+The final parser intentionally targets the WebAssembly MVP feature set. Both debug and
+release builds rebuild the Rust standard library for that target and validate the final
+artifact after all build and optimization steps.
