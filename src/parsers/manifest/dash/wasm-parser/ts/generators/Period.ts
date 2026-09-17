@@ -178,7 +178,7 @@ export function generatePeriodAttrParser(
         break;
       case AttributeName.BitstreamSwitching:
         periodAttrs.bitstreamSwitching =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       case AttributeName.XLinkHref:
         periodAttrs["xlink:href"] = parseString(
@@ -204,7 +204,7 @@ export function generatePeriodAttrParser(
         break;
       case AttributeName.AvailabilityTimeComplete:
         periodAttrs.availabilityTimeComplete =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       case AttributeName.Namespace: {
         const xmlNs = { key: "", value: "" };

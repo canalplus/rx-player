@@ -61,7 +61,7 @@ export function generateSegmentBaseAttrParser(
 
       case AttributeName.AvailabilityTimeComplete: {
         segmentBaseAttrs.attributes.availabilityTimeComplete =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       }
 
@@ -91,7 +91,7 @@ export function generateSegmentBaseAttrParser(
 
       case AttributeName.IndexRangeExact: {
         segmentBaseAttrs.attributes.indexRangeExact =
-          new DataView(linearMemory.buffer).getUint8(0) === 0;
+          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       }
 
