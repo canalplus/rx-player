@@ -72,6 +72,22 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
+  parser_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Install WebAssembly build tools
+        run: ./scripts/install_rust_toolchain.sh --no-confirmation
+      - name: Run parser tests
+        run: npm run test:parsers
+
   integration_linux_chrome:
     uses: ./.github/workflows/integration_tests_base.yml
     with: { os: "ubuntu-latest", browser: "chrome" }
