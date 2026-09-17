@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { generatePlayReadyInitData } from "../../../../src/compat/generate_init_data.ts";
+import {
+  DUMMY_PLAY_READY_HEADER,
+  generatePlayReadyInitData,
+  getDummyInitDataForKeySystem,
+} from "../../../../src/compat/generate_init_data.ts";
 import { utf16LEToStr } from "../../../../src/utils/string_parsing.ts";
 
 describe("utils - generatePlayReadyInitData", () => {
@@ -16,5 +20,23 @@ describe("utils - generatePlayReadyInitData", () => {
 
   it("has the playerReadyHeader in it", () => {
     expect(decodedInitDataUtf16LE).toMatch(playReadyHeader);
+  });
+});
+
+describe("getDummyInitDataForKeySystem", () => {
+  it("returns PlayReady initialization data for a PlayReady key system", () => {
+    expect(
+      getDummyInitDataForKeySystem("com.microsoft.playready.recommendation"),
+    ).toEqual(generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER));
+  });
+
+  it("return Nagra InitData for tvkey keysystem", () => {
+    expect(getDummyInitDataForKeySystem("com.tvkey.drm")).toBeInstanceOf(Uint8Array);
+  });
+
+  it("throws when no initialization data is available for the key system", () => {
+    expect(() => getDummyInitDataForKeySystem("com.widevine.alpha")).toThrow(
+      'No dummy initialization data for key system "com.widevine.alpha"',
+    );
   });
 });

@@ -35,8 +35,13 @@ import EnvDetector from "./env_detector.ts";
  *
  * - On Firefox v.137:
  *   Similar issue with requestMediaKeySystemAccess that resolves correctly with
- *   'com.microsoft.playready.recommendation.3000' but fail at the `createMediaKeys``
- *   step with error `WMFCDMProxy: Init: WMFCDM init error`
+ *   'com.microsoft.playready.recommendation.3000' but fail at the `createMediaKeys`
+ *    step with error `WMFCDMProxy: Init: WMFCDM init error`
+ *
+ * On Samsung TVs with the "com.tvkey.drm" keySystem:
+ * - `requestMediaKeySystemAccess` resolves successfully, but `generateRequest`
+ *   fails on models manufactured between 2018 and 2022. This keySystem is only
+ *   expected to work on recent Samsung TVs manufactured in 2023 or later.
  *
  * @param keySystem - The key system in use.
  * @returns {boolean}
@@ -51,6 +56,9 @@ export function canRelyOnRequestMediaKeySystemAccess(keySystem: string): boolean
       EnvDetector.browser === EnvDetector.BROWSERS.Firefox) &&
     keySystem.indexOf("playready") !== -1
   ) {
+    return false;
+  }
+  if (keySystem === "com.tvkey.drm") {
     return false;
   }
   return true;

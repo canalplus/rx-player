@@ -20,10 +20,7 @@ import type {
 } from "../../compat/browser_compatibility_types.ts";
 import { canRelyOnRequestMediaKeySystemAccess } from "../../compat/can_rely_on_request_media_key_system_access.ts";
 import type { IEmeApiImplementation } from "../../compat/eme/index.ts";
-import {
-  generatePlayReadyInitData,
-  DUMMY_PLAY_READY_HEADER,
-} from "../../compat/generate_init_data.ts";
+import { getDummyInitDataForKeySystem } from "../../compat/generate_init_data.ts";
 import shouldRenewMediaKeySystemAccess from "../../compat/should_renew_media_key_system_access.ts";
 import config from "../../config.ts";
 import { EncryptedMediaError } from "../../errors/index.ts";
@@ -575,7 +572,7 @@ export async function testKeySystem(
     try {
       const mediaKeys = await keySystemAccess.createMediaKeys();
       const session = mediaKeys.createSession();
-      const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+      const initData = getDummyInitDataForKeySystem(keyType);
       await session.generateRequest("cenc", initData);
       session.close().catch(() => {
         log.warn("DRM", "Failed to close the dummy session");

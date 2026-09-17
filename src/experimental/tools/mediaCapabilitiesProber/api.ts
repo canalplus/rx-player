@@ -16,10 +16,7 @@
 
 import { canRelyOnRequestMediaKeySystemAccess } from "../../../compat/can_rely_on_request_media_key_system_access.ts";
 import getEmeApiImplementation from "../../../compat/eme/index.ts";
-import {
-  DUMMY_PLAY_READY_HEADER,
-  generatePlayReadyInitData,
-} from "../../../compat/generate_init_data.ts";
+import { getDummyInitDataForKeySystem } from "../../../compat/generate_init_data.ts";
 import log from "./log.ts";
 import probeDecodingInfos from "./probers/decodingInfo.ts";
 import probeHDCPPolicy from "./probers/HDCPPolicy.ts";
@@ -83,7 +80,7 @@ const mediaCapabilitiesProber = {
       try {
         const mediaKeys = await mksa.createMediaKeys();
         const session = mediaKeys.createSession();
-        const initData = generatePlayReadyInitData(DUMMY_PLAY_READY_HEADER);
+        const initData = getDummyInitDataForKeySystem(keySystemType);
         await session.generateRequest("cenc", initData);
         session.close().catch(() => {
           log.warn("MediaCapabilitiesProber", "Failed to close the dummy session");
@@ -96,7 +93,7 @@ const mediaCapabilitiesProber = {
         );
         return Promise.reject(
           new Error(
-            "Failed to generare a license-request with this keySystem: " +
+            "Failed to generate a license request with this keySystem: " +
               (err instanceof Error ? err.toString() : "Unknown Error"),
           ),
         );
