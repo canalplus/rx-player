@@ -536,6 +536,7 @@ export default function AdaptationStream(
     );
 
     // reload if the Representation disappears from the Manifest
+    manifest.removeEventListener("manifestUpdate");
     manifest.addEventListener(
       "manifestUpdate",
       (updates) => {
