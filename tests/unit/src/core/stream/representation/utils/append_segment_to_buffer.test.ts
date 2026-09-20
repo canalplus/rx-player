@@ -4,7 +4,7 @@ import type {
   IPushChunkInfos,
   SegmentSink,
 } from "../../../../../../../src/core/segment_sinks/index.ts";
-import type { IRepresentationStreamPlaybackObservation } from "../../../../../../../src/core/stream/representation/types.ts";
+import type { IRepresentationStreamMediaObservation } from "../../../../../../../src/core/stream/representation/types.ts";
 import appendSegmentToBuffer from "../../../../../../../src/core/stream/representation/utils/append_segment_to_buffer.ts";
 import { MediaError, SourceBufferError } from "../../../../../../../src/errors/index.ts";
 import SharedReference from "../../../../../../../src/utils/reference.ts";
@@ -18,9 +18,9 @@ import {
   createSegment,
 } from "../../../../../mocks/manifest.ts";
 import {
-  makeReadyOnlyPlaybackObserver,
+  makeReadyOnlyMediaElementMonitor,
   DummyObservationPosition,
-} from "../../../../../mocks/playback_observer.ts";
+} from "../../../../../mocks/media_element_monitor.ts";
 import { DummySegmentSink } from "../../../../../mocks/segment_sinks.ts";
 
 vi.mock("../../../../../../../src/log", () => ({
@@ -34,8 +34,8 @@ vi.mock("../../../../../../../src/utils/sleep", () => ({
 }));
 
 describe("appendSegmentToBuffer", () => {
-  const mockedPlaybackObserver =
-    makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>({
+  const mockedMediaElementMonitor =
+    makeReadyOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>({
       position: new DummyObservationPosition({
         getWanted: vi.fn(() => 10),
       }),
@@ -91,14 +91,14 @@ describe("appendSegmentToBuffer", () => {
   afterEach(() => {
     mockBufferGoal.finish();
     mockTaskCanceller.cancel("test end");
-    mockedPlaybackObserver.reset();
+    mockedMediaElementMonitor.reset();
     vi.resetAllMocks();
   });
 
   describe("successful append", () => {
     it("should push chunk successfully on first try", async () => {
       const result = await appendSegmentToBuffer(
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
@@ -124,7 +124,7 @@ describe("appendSegmentToBuffer", () => {
         .mockResolvedValueOnce([{ start: 0, end: 10 }]);
 
       const result = await appendSegmentToBuffer(
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
@@ -148,7 +148,7 @@ describe("appendSegmentToBuffer", () => {
         .mockResolvedValueOnce([{ start: 0, end: 10 }]);
 
       await appendSegmentToBuffer(
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
@@ -173,7 +173,7 @@ describe("appendSegmentToBuffer", () => {
       mockBufferGoal.setValue(30);
 
       await appendSegmentToBuffer(
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
@@ -195,7 +195,7 @@ describe("appendSegmentToBuffer", () => {
         .mockRejectedValueOnce(bufferFullError)
         .mockResolvedValueOnce([{ start: 0, end: 10 }]);
 
-      mockedPlaybackObserver.emit({
+      mockedMediaElementMonitor.emit({
         position: new DummyObservationPosition({
           getWanted: vi.fn(() => 3),
         }),
@@ -207,7 +207,7 @@ describe("appendSegmentToBuffer", () => {
         canStream: true,
       });
       await appendSegmentToBuffer(
-        mockedPlaybackObserver.observer,
+        mockedMediaElementMonitor.observer,
         mockSegmentSink,
         mockDataInfos,
         mockBufferGoal,
@@ -234,7 +234,7 @@ describe("appendSegmentToBuffer", () => {
 
       await expect(
         appendSegmentToBuffer(
-          mockedPlaybackObserver.observer,
+          mockedMediaElementMonitor.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -250,7 +250,7 @@ describe("appendSegmentToBuffer", () => {
       mockPushChunk.mockRejectedValueOnce(error);
       await expect(
         appendSegmentToBuffer(
-          mockedPlaybackObserver.observer,
+          mockedMediaElementMonitor.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -277,7 +277,7 @@ describe("appendSegmentToBuffer", () => {
 
       await expect(
         appendSegmentToBuffer(
-          mockedPlaybackObserver.observer,
+          mockedMediaElementMonitor.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -291,7 +291,7 @@ describe("appendSegmentToBuffer", () => {
 
       await expect(
         appendSegmentToBuffer(
-          mockedPlaybackObserver.observer,
+          mockedMediaElementMonitor.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -309,7 +309,7 @@ describe("appendSegmentToBuffer", () => {
 
       await expect(
         appendSegmentToBuffer(
-          mockedPlaybackObserver.observer,
+          mockedMediaElementMonitor.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -330,7 +330,7 @@ describe("appendSegmentToBuffer", () => {
 
       await expect(
         appendSegmentToBuffer(
-          mockedPlaybackObserver.observer,
+          mockedMediaElementMonitor.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,
@@ -354,7 +354,7 @@ describe("appendSegmentToBuffer", () => {
 
       await expect(
         appendSegmentToBuffer(
-          mockedPlaybackObserver.observer,
+          mockedMediaElementMonitor.observer,
           mockSegmentSink,
           mockDataInfos,
           mockBufferGoal,

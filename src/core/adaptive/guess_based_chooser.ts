@@ -70,7 +70,7 @@ export default class GuessBasedChooser {
    * GuessBasedChooser can choose from, sorted by bitrate ascending.
    * /!\ It is very important that Representation in that Array are sorted by
    * bitrate ascending for this method to work as intented.
-   * @param {Object} observation - Last playback observation performed.
+   * @param {Object} observation - Last media observation performed.
    * @param {Object} currentRepresentation - The Representation currently
    * loading.
    * @param {number} incomingBestBitrate - The bitrate of the Representation

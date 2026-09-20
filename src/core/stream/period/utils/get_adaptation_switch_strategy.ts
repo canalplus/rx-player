@@ -16,7 +16,7 @@
 
 import config from "../../../../config.ts";
 import type { IAdaptation, IPeriod } from "../../../../manifest/index.ts";
-import type { IReadOnlyPlaybackObserver } from "../../../../playback_observer/index.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../../../media_element_monitor/index.ts";
 import areCodecsCompatible from "../../../../utils/are_codecs_compatible.ts";
 import type { IRange } from "../../../../utils/ranges.ts";
 import { excludeFromRanges, insertInto } from "../../../../utils/ranges.ts";
@@ -27,7 +27,7 @@ import {
   SegmentSinkOperation,
 } from "../../../segment_sinks/index.ts";
 import type { ITrackSwitchingMode } from "../../adaptation/index.ts";
-import type { IPeriodStreamPlaybackObservation } from "../types.ts";
+import type { IPeriodStreamMediaObservation } from "../types.ts";
 
 export type IAdaptationSwitchStrategy =
   /** Do nothing special. */
@@ -56,7 +56,7 @@ export interface IAdaptationSwitchOptions {
  * @param {Object} segmentSink
  * @param {Object} period
  * @param {Object} adaptation
- * @param {Object} playbackObserver
+ * @param {Object} mediaElementMonitor
  * @returns {Object}
  */
 export default function getAdaptationSwitchStrategy(
@@ -64,7 +64,7 @@ export default function getAdaptationSwitchStrategy(
   period: IPeriod,
   adaptation: IAdaptation,
   switchingMode: ITrackSwitchingMode,
-  playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IPeriodStreamMediaObservation>,
   options: IAdaptationSwitchOptions,
 ): IAdaptationSwitchStrategy {
   if (
@@ -105,7 +105,7 @@ export default function getAdaptationSwitchStrategy(
   }
 
   if (switchingMode === "reload") {
-    const readyState = playbackObserver.getReadyState();
+    const readyState = mediaElementMonitor.getReadyState();
     if (readyState === undefined || readyState > 1) {
       return { type: "needs-reload", value: undefined };
     }
@@ -141,10 +141,10 @@ export default function getAdaptationSwitchStrategy(
     const paddingBefore = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].before ?? 0;
     const paddingAfter = ADAP_REP_SWITCH_BUFFER_PADDINGS[bufferType].after ?? 0;
 
-    let currentTime = playbackObserver.getCurrentTime();
+    let currentTime = mediaElementMonitor.getCurrentTime();
     if (currentTime === undefined) {
       // TODO current position might be old. A better solution should be found.
-      const lastObservation = playbackObserver.getReference().getValue();
+      const lastObservation = mediaElementMonitor.getReference().getValue();
       currentTime = lastObservation.position.getPolled();
     }
 

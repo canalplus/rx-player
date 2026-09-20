@@ -34,10 +34,10 @@ import type SegmentSinksStore from "./segment_sinks/index.ts";
 import type { ISegmentSinkMetrics } from "./segment_sinks/segment_sinks_store.ts";
 import type {
   IAdaptationChoice,
-  IPausedPlaybackObservation,
+  IPausedMediaObservation,
   IInbandEvent,
   IRepresentationsChoice,
-  IStreamOrchestratorPlaybackObservation,
+  IStreamOrchestratorMediaObservation,
   ITrackSwitchingMode,
 } from "./stream/index.ts";
 
@@ -62,8 +62,8 @@ export type {
   // Stream Metadata
   IAdaptationChoice,
   IInbandEvent,
-  IPausedPlaybackObservation,
-  IStreamOrchestratorPlaybackObservation,
+  IPausedMediaObservation,
+  IStreamOrchestratorMediaObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
 

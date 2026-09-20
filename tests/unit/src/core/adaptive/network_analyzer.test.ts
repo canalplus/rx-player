@@ -16,7 +16,7 @@ import {
   DummyManifest,
   createSegment,
 } from "../../../mocks/manifest.ts";
-import { DummyObservationPosition } from "../../../mocks/playback_observer.ts";
+import { DummyObservationPosition } from "../../../mocks/media_element_monitor.ts";
 import { makeMockedClass } from "../../../mocks/utils.ts";
 
 vi.mock("../../../../../src/log", () => ({

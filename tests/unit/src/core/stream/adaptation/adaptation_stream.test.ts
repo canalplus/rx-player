@@ -19,7 +19,7 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../../../../src/manifest/index.ts";
-import type { ObservationPosition } from "../../../../../../src/playback_observer/index.ts";
+import type { ObservationPosition } from "../../../../../../src/media_element_monitor/index.ts";
 import SharedReference from "../../../../../../src/utils/reference.ts";
 import TaskCanceller, {
   CancellationError,
@@ -33,8 +33,8 @@ import {
 } from "../../../../mocks/manifest.ts";
 import {
   DummyObservationPosition,
-  makeReadyOnlyPlaybackObserver,
-} from "../../../../mocks/playback_observer.ts";
+  makeReadyOnlyMediaElementMonitor,
+} from "../../../../mocks/media_element_monitor.ts";
 import { DummySegmentSink } from "../../../../mocks/segment_sinks.ts";
 import { makeMockedClass } from "../../../../mocks/utils.ts";
 
@@ -90,7 +90,7 @@ const DummySegmentQueueCreator = makeMockedClass<SegmentQueueCreator>(
 
 describe("AdaptationStream", () => {
   let manifest: IManifest;
-  interface IPlaybackObservation {
+  interface IMediaObservation {
     position: ObservationPosition;
     paused: { last: boolean; pending: undefined };
     speed: number;
@@ -109,8 +109,8 @@ describe("AdaptationStream", () => {
   let adaptation: IAdaptation;
   let representation: IRepresentation;
   let parentCanceller: TaskCanceller;
-  let playbackObserver: ReturnType<
-    typeof makeReadyOnlyPlaybackObserver<IPlaybackObservation>
+  let mediaElementMonitor: ReturnType<
+    typeof makeReadyOnlyMediaElementMonitor<IMediaObservation>
   >;
   let manifestUpdateListener: ((updates: IPeriodsUpdateResult) => void) | undefined;
 
@@ -121,7 +121,7 @@ describe("AdaptationStream", () => {
     representation = new DummyRepresentation({ id: "rep-1", bitrate: 1000 });
     parentCanceller = new TaskCanceller("test");
     manifestUpdateListener = undefined;
-    const initialObservation: IPlaybackObservation = {
+    const initialObservation: IMediaObservation = {
       position: new DummyObservationPosition({
         getPolled: () => 10,
         getWanted: () => 10,
@@ -133,9 +133,9 @@ describe("AdaptationStream", () => {
       duration: 100,
       maximumPosition: 100,
     };
-    playbackObserver = makeReadyOnlyPlaybackObserver(initialObservation);
-    vi.spyOn(playbackObserver.observer, "getCurrentTime").mockReturnValue(10);
-    vi.spyOn(playbackObserver.observer, "getReadyState").mockReturnValue(4);
+    mediaElementMonitor = makeReadyOnlyMediaElementMonitor(initialObservation);
+    vi.spyOn(mediaElementMonitor.observer, "getCurrentTime").mockReturnValue(10);
+    vi.spyOn(mediaElementMonitor.observer, "getReadyState").mockReturnValue(4);
     vi.spyOn(manifest, "addEventListener").mockImplementation((eventName, listener) => {
       if (eventName === "manifestUpdate") {
         manifestUpdateListener = (updates) => {
@@ -153,7 +153,7 @@ describe("AdaptationStream", () => {
 
   afterEach(() => {
     parentCanceller.cancel("cleanup");
-    playbackObserver.reset();
+    mediaElementMonitor.reset();
     vi.resetAllMocks();
   });
 
@@ -272,7 +272,7 @@ describe("AdaptationStream", () => {
     await Promise.resolve();
     expect(waitingMediaSourceReload).toHaveBeenCalledTimes(1);
 
-    playbackObserver.emit({
+    mediaElementMonitor.emit({
       position: new DummyObservationPosition({
         getPolled: () => 11,
         getWanted: () => 11,
@@ -496,7 +496,7 @@ describe("AdaptationStream", () => {
     expect(fastSwitchThresholdRef?.getValue()).toBe(240);
   });
 
-  it("should update segment queue interruption state from playback observations", () => {
+  it("should update segment queue interruption state from media observations", () => {
     const { callbacks } = createCallbacks();
     const segmentQueueCreator = new DummySegmentQueueCreator();
     let interruptionRef: SharedReference<boolean> | undefined;
@@ -524,7 +524,7 @@ describe("AdaptationStream", () => {
     }
     expect(interruptionRef.getValue()).toBe(false);
 
-    playbackObserver.emit({
+    mediaElementMonitor.emit({
       position: new DummyObservationPosition({
         getPolled: () => 12,
         getWanted: () => 12,
@@ -538,7 +538,7 @@ describe("AdaptationStream", () => {
     });
     expect(interruptionRef.getValue()).toBe(true);
 
-    playbackObserver.emit({
+    mediaElementMonitor.emit({
       position: new DummyObservationPosition({
         getPolled: () => 13,
         getWanted: () => 13,
@@ -891,7 +891,7 @@ describe("AdaptationStream", () => {
     };
   }) {
     return {
-      playbackObserver: playbackObserver.observer,
+      mediaElementMonitor: mediaElementMonitor.observer,
       content: {
         manifest,
         period,
@@ -915,7 +915,7 @@ describe("AdaptationStream", () => {
       _context,
       _currentRepresentation,
       _representations,
-      _playbackObserver,
+      _mediaElementMonitor,
       _stopAllEstimates,
     ) => ({
       estimates,

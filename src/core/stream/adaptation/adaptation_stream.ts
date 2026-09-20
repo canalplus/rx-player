@@ -53,7 +53,7 @@ import type { IAdaptationStreamArguments, IAdaptationStreamCallbacks } from "./t
  */
 export default function AdaptationStream(
   {
-    playbackObserver,
+    mediaElementMonitor,
     content,
     options,
     representationEstimator,
@@ -110,13 +110,13 @@ export default function AdaptationStream(
     { manifest, period, adaptation },
     currentRepresentation,
     representationsList,
-    playbackObserver,
+    mediaElementMonitor,
     adapStreamCanceller.signal,
   );
 
   const isMediaSegmentQueueInterrupted = new SharedReference<boolean>(false);
   /** Update the `canLoad` ref on observation update */
-  playbackObserver.listen(
+  mediaElementMonitor.listen(
     (observation) => {
       const observationCanStream = observation.canStream ?? true;
       if (isMediaSegmentQueueInterrupted.getValue() === observationCanStream) {
@@ -227,7 +227,7 @@ export default function AdaptationStream(
       adaptation,
       choice,
       segmentSink,
-      playbackObserver,
+      mediaElementMonitor,
     );
 
     switch (switchStrat.type) {
@@ -239,7 +239,7 @@ export default function AdaptationStream(
         // the next observation (which may reflect very different playback conditions)
         // is actually received.
         return queueMicrotask(() => {
-          playbackObserver.listen(
+          mediaElementMonitor.listen(
             () => {
               if (repsChoiceCancelSignal.isCancelled()) {
                 return;
@@ -510,7 +510,7 @@ export default function AdaptationStream(
     });
     RepresentationStream(
       {
-        playbackObserver,
+        mediaElementMonitor,
         content: { representation, adaptation, period, manifest },
         segmentSink,
         segmentQueue,
