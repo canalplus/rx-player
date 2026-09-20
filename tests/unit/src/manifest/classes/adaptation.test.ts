@@ -18,10 +18,10 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../../../../../src/manifest/classes/representation", () => ({
+vi.mock("../../../../../src/manifest/classes/representation.ts", () => ({
   default: mocks.fakeRepresentation,
 }));
-vi.mock("../../../../../src/utils/languages", () => ({
+vi.mock("../../../../../src/utils/languages/index.ts", () => ({
   default: mocks.normalize,
 }));
 
@@ -82,7 +82,7 @@ const mockDefaultRepresentationImpl = function (arg: IParsedRepresentation) {
   return {
     bitrate: arg.bitrate,
     id: arg.id,
-    isSupported: true,
+    isCodecSupported: true,
     isPlayable() {
       return true;
     },
@@ -102,7 +102,7 @@ describe("Manifest - Adaptation", () => {
 
     const args: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation = new Adaptation(args, codecSupportCache);
+    const adaptation = new Adaptation(args, { codecSupportCache });
     expect(adaptation.id).toBe("12");
     expect(adaptation.representations).toEqual([]);
     expect(adaptation.type).toBe("video");
@@ -110,7 +110,6 @@ describe("Manifest - Adaptation", () => {
     expect(adaptation.isClosedCaption).toBe(undefined);
     expect(adaptation.language).toBe(undefined);
     expect(adaptation.normalizedLanguage).toBe(undefined);
-    expect(adaptation.manuallyAdded).toBe(false);
     expect(adaptation.getRepresentation("")).toBe(undefined);
 
     expect(mocks.fakeRepresentation).not.toHaveBeenCalled();
@@ -127,7 +126,7 @@ describe("Manifest - Adaptation", () => {
       type: "video" as const,
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation1 = new Adaptation(args1, codecSupportCache);
+    const adaptation1 = new Adaptation(args1, { codecSupportCache });
     expect(adaptation1.language).toBe("fr");
     expect(adaptation1.normalizedLanguage).toBe("frfoo");
     expect(mocks.normalize).toHaveBeenCalledTimes(1);
@@ -140,7 +139,7 @@ describe("Manifest - Adaptation", () => {
       language: "toto",
       type: "video" as const,
     };
-    const adaptation2 = new Adaptation(args2, codecSupportCache);
+    const adaptation2 = new Adaptation(args2, { codecSupportCache });
     expect(adaptation2.language).toBe("toto");
     expect(adaptation2.normalizedLanguage).toBe("totofoo");
     expect(mocks.normalize).toHaveBeenCalledTimes(1);
@@ -153,7 +152,7 @@ describe("Manifest - Adaptation", () => {
 
     const args1: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation1 = new Adaptation(args1, codecSupportCache);
+    const adaptation1 = new Adaptation(args1, { codecSupportCache });
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(mocks.normalize).not.toHaveBeenCalled();
@@ -184,27 +183,21 @@ describe("Manifest - Adaptation", () => {
     const args: IParsedAdaptation = { id: "12", representations, type: "text" };
 
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation = new Adaptation(args, codecSupportCache);
+    const adaptation = new Adaptation(args, { codecSupportCache });
     const parsedRepresentations = adaptation.representations;
     expect(mocks.fakeRepresentation).toHaveBeenCalledTimes(3);
-    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(
-      1,
-      rep1,
-      "text",
+    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(1, rep1, {
+      trackType: "text",
       codecSupportCache,
-    );
-    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(
-      2,
-      rep2,
-      "text",
+    });
+    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(2, rep2, {
+      trackType: "text",
       codecSupportCache,
-    );
-    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(
-      3,
-      rep3,
-      "text",
+    });
+    expect(mocks.fakeRepresentation).toHaveBeenNthCalledWith(3, rep3, {
+      trackType: "text",
       codecSupportCache,
-    );
+    });
 
     expect(parsedRepresentations.length).toBe(3);
     expect(parsedRepresentations[0].id).toEqual("rep1");
@@ -219,7 +212,7 @@ describe("Manifest - Adaptation", () => {
       return {
         bitrate: arg.bitrate,
         id: arg.id,
-        isSupported: arg.id !== "rep4",
+        isCodecSupported: arg.id !== "rep4",
         isPlayable() {
           return true;
         },
@@ -287,7 +280,7 @@ describe("Manifest - Adaptation", () => {
       type: "text" as const,
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation = new Adaptation(args, codecSupportCache, { representationFilter });
+    const adaptation = new Adaptation(args, { codecSupportCache, representationFilter });
 
     const parsedRepresentations = adaptation.representations;
     expect(representationFilter).toHaveBeenCalledTimes(6);
@@ -312,7 +305,7 @@ describe("Manifest - Adaptation", () => {
       type: "video",
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation1 = new Adaptation(args1, codecSupportCache);
+    const adaptation1 = new Adaptation(args1, { codecSupportCache });
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isDub).toEqual(false);
@@ -324,7 +317,7 @@ describe("Manifest - Adaptation", () => {
       isDub: true,
       type: "video",
     };
-    const adaptation2 = new Adaptation(args2, codecSupportCache);
+    const adaptation2 = new Adaptation(args2, { codecSupportCache });
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isDub).toEqual(true);
@@ -342,7 +335,7 @@ describe("Manifest - Adaptation", () => {
       type: "video",
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation1 = new Adaptation(args1, codecSupportCache);
+    const adaptation1 = new Adaptation(args1, { codecSupportCache });
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isClosedCaption).toEqual(false);
@@ -354,7 +347,7 @@ describe("Manifest - Adaptation", () => {
       closedCaption: true,
       type: "video",
     };
-    const adaptation2 = new Adaptation(args2, codecSupportCache);
+    const adaptation2 = new Adaptation(args2, { codecSupportCache });
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isClosedCaption).toEqual(true);
@@ -372,7 +365,7 @@ describe("Manifest - Adaptation", () => {
       type: "video",
     };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation1 = new Adaptation(args1, codecSupportCache);
+    const adaptation1 = new Adaptation(args1, { codecSupportCache });
     expect(adaptation1.language).toBe(undefined);
     expect(adaptation1.normalizedLanguage).toBe(undefined);
     expect(adaptation1.isAudioDescription).toEqual(false);
@@ -384,7 +377,7 @@ describe("Manifest - Adaptation", () => {
       audioDescription: true,
       type: "video",
     };
-    const adaptation2 = new Adaptation(args2, codecSupportCache);
+    const adaptation2 = new Adaptation(args2, { codecSupportCache });
     expect(adaptation2.language).toBe(undefined);
     expect(adaptation2.normalizedLanguage).toBe(undefined);
     expect(adaptation2.isAudioDescription).toEqual(true);
@@ -397,7 +390,8 @@ describe("Manifest - Adaptation", () => {
 
     const args1: IParsedAdaptation = { id: "12", representations: [], type: "video" };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation1 = new Adaptation(args1, codecSupportCache, {
+    const adaptation1 = new Adaptation(args1, {
+      codecSupportCache,
       isManuallyAdded: false,
     });
     expect(adaptation1.language).toBe(undefined);
@@ -406,7 +400,8 @@ describe("Manifest - Adaptation", () => {
     expect(mocks.normalize).not.toHaveBeenCalled();
 
     const args2: IParsedAdaptation = { id: "12", representations: [], type: "video" };
-    const adaptation2 = new Adaptation(args2, codecSupportCache, {
+    const adaptation2 = new Adaptation(args2, {
+      codecSupportCache,
       isManuallyAdded: true,
     });
     expect(adaptation2.language).toBe(undefined);
@@ -439,7 +434,7 @@ describe("Manifest - Adaptation", () => {
     const representations = [rep1, rep2, rep3];
     const args: IParsedAdaptation = { id: "12", representations, type: "text" as const };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation = new Adaptation(args, codecSupportCache);
+    const adaptation = new Adaptation(args, { codecSupportCache });
 
     expect(adaptation.getRepresentation("rep1")?.bitrate).toEqual(10);
     expect(adaptation.getRepresentation("rep2")?.bitrate).toEqual(20);
@@ -469,7 +464,7 @@ describe("Manifest - Adaptation", () => {
     const representations = [rep1, rep2, rep3];
     const args: IParsedAdaptation = { id: "12", representations, type: "text" as const };
     const codecSupportCache = new CodecSupportCache([]);
-    const adaptation = new Adaptation(args, codecSupportCache);
+    const adaptation = new Adaptation(args, { codecSupportCache });
 
     expect(adaptation.getRepresentation("rep5")).toBe(undefined);
   });

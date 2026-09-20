@@ -82,6 +82,8 @@ const DEVICES = {
   Other: 110,
   /** DSTtv's Streama STB MPD1001S, which is known to have some quirks. */
   StreamaMdp1001S: 111,
+  /** Hisense manufacturer */
+  Hisense: 112,
 } as const;
 
 /** Interface giving information on the current environment where the RxPlayer runs. */
@@ -229,6 +231,11 @@ function resetEnvironment(): void {
     navigator.userAgent.indexOf("Philips") !== -1
   ) {
     EnvDetector.device = DEVICES.PhilipsNetTv;
+  } else if (
+    navigator.userAgent.indexOf("Hisense") !== -1 &&
+    navigator.userAgent.indexOf("VIDAA") !== -1
+  ) {
+    EnvDetector.device = DEVICES.Hisense;
   } else if (/[Pp]anasonic/.test(navigator.userAgent)) {
     EnvDetector.device = DEVICES.Panasonic;
   } else if (navigator.userAgent.indexOf("Xbox") !== -1) {
