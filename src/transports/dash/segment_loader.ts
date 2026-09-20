@@ -55,6 +55,7 @@ export async function regularSegmentLoader(
   initialUrl: string,
   context: ISegmentContext,
   lowLatencyMode: boolean,
+  segmentRequestHeaders: Record<string, string> | undefined,
   options: ISegmentLoaderOptions,
   callbacks: ISegmentLoaderCallbacks<ILoadedAudioVideoSegmentFormat>,
   cancelSignal: CancellationSignal,
@@ -70,6 +71,7 @@ export async function regularSegmentLoader(
       options,
       cancelSignal,
       callbacks,
+      segmentRequestHeaders,
     );
   }
 
@@ -82,14 +84,18 @@ export async function regularSegmentLoader(
     options.cmcdPayload?.type === "headers" ? options.cmcdPayload.value : undefined;
 
   const { segment } = context;
-  let headers;
+  let headers = segmentRequestHeaders;
   if (segment.range !== undefined) {
     headers = {
+      ...segmentRequestHeaders,
       ...cmcdHeaders,
       Range: byteRange(segment.range),
     };
   } else if (cmcdHeaders !== undefined) {
-    headers = cmcdHeaders;
+    headers = {
+      ...segmentRequestHeaders,
+      ...cmcdHeaders,
+    };
   }
 
   const containerType = inferSegmentContainer(context.type, context.mimeType);
@@ -132,10 +138,12 @@ export async function regularSegmentLoader(
 export default function generateSegmentLoader({
   lowLatencyMode,
   segmentLoader: customSegmentLoader,
+  segmentRequestHeaders,
   checkMediaSegmentIntegrity,
 }: {
   lowLatencyMode: boolean;
   segmentLoader?: ICustomSegmentLoader | undefined;
+  segmentRequestHeaders?: Record<string, string> | undefined;
   checkMediaSegmentIntegrity?: boolean | undefined;
 }): ISegmentLoader<Uint8Array<ArrayBuffer> | ArrayBuffer | null> {
   return checkMediaSegmentIntegrity !== true
@@ -174,6 +182,7 @@ export default function generateSegmentLoader({
         url,
         context,
         lowLatencyMode,
+        segmentRequestHeaders,
         options,
         callbacks,
         cancelSignal,
@@ -276,6 +285,7 @@ export default function generateSegmentLoader({
           url,
           context,
           lowLatencyMode,
+          segmentRequestHeaders,
           options,
           callbacks,
           cancelSignal,

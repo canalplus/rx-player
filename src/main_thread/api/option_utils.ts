@@ -124,6 +124,8 @@ interface IParsedLoadVideoOptionsBase {
         workerId?: string | undefined;
       }
     | undefined;
+  /** @see ILoadVideoOptions.segmentRequestHeaders */
+  segmentRequestHeaders?: Record<string, string> | undefined;
   /** @see ILoadVideoOptions.serverSyncInfos */
   serverSyncInfos?: IServerSyncInfos | undefined;
   /** @see ILoadVideoOptions.mode */
@@ -566,6 +568,7 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     referenceDateTime: options.referenceDateTime,
     representationFilter,
     segmentLoader,
+    segmentRequestHeaders: options.segmentRequestHeaders,
     serverSyncInfos: options.serverSyncInfos,
     startAt,
     textTrackElement: textTrackElement as HTMLElement,
