@@ -62,14 +62,12 @@ export interface IInitialSeekAndPlayObject {
  */
 export default function performInitialSeekAndPlay(
   {
-    mediaElement,
     playbackObserver,
     startTime,
     mustAutoPlay,
     isDirectfile,
     onWarning,
   }: {
-    mediaElement: IMediaElement;
     playbackObserver: IMediaElementPlaybackObserver;
     startTime: number | (() => number | undefined);
     mustAutoPlay: boolean;
@@ -178,6 +176,11 @@ export default function performInitialSeekAndPlay(
         let hasStartedSeeking = false;
         playbackObserver.listen(
           (obs, stopListening) => {
+            const mediaElement = playbackObserver.getMediaElement();
+            if (mediaElement === null) {
+              // media element not yet attached
+              return;
+            }
             if (
               !hasStartedSeeking &&
               (obs.seeking !== SeekingState.None ||
@@ -201,7 +204,7 @@ export default function performInitialSeekAndPlay(
             if (cancelSignal.isCancelled()) {
               return;
             }
-            waitForPlayable();
+            waitForPlayable(mediaElement);
           },
           { includeLastObservation: false, clearSignal: cancelSignal },
         );
@@ -214,7 +217,7 @@ export default function performInitialSeekAndPlay(
        * if asked. Potentially send warning if a minor issue has been detected while
        * doing so.
        */
-      function waitForPlayable() {
+      function waitForPlayable(mediaElement: IMediaElement) {
         playbackObserver.listen(
           (observation, stopListening) => {
             if (
@@ -223,7 +226,7 @@ export default function performInitialSeekAndPlay(
               observation.readyState >= 1
             ) {
               stopListening();
-              onPlayable();
+              onPlayable(mediaElement);
             }
           },
           { includeLastObservation: true, clearSignal: cancelSignal },
@@ -237,7 +240,7 @@ export default function performInitialSeekAndPlay(
        * Promise when done.
        * Might also send warnings if minor issues arise.
        */
-      function onPlayable() {
+      function onPlayable(mediaElement: IMediaElement) {
         log.info("Init", "Can begin to play content");
         if (!mustAutoPlay) {
           if (mediaElement.autoplay) {
