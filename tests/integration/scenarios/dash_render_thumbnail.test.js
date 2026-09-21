@@ -74,6 +74,11 @@ function runDashRenderThumbnailTests({ multithread } = {}) {
           width: 320,
           height: 180,
           mimeType: "image/jpeg",
+          end: 101.568367,
+          lastThumbnailTime: 99,
+          start: 0,
+          thumbnailDuration: 1,
+          thumbnailsPerSegment: 10,
         },
       ]);
 
