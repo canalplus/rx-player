@@ -21,6 +21,7 @@ import type {
   IMPDAttributes,
   IMPDChildren,
   IMPDIntermediateRepresentation,
+  ILocationIntermediateRepresentation,
 } from "../../node_parser_types.ts";
 import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
@@ -66,9 +67,10 @@ function parseMPDChildren(
         break;
       }
 
-      case "Location":
-        ret.Location.push({ value: textContent(currentNode.children) });
+      case "Location": {
+        ret.Location.push(parseLocation(currentNode));
         break;
+      }
 
       case "Period": {
         const [period, periodWarnings] = createPeriodIntermediateRepresentation(
@@ -202,6 +204,18 @@ function parseMPDAttributes(root: ITNode): [IMPDAttributes, Error[]] {
     }
   }
   return [res, warnings];
+}
+
+/** Parse a root-level `<Location>` element. */
+export default function parseLocation(root: ITNode): ILocationIntermediateRepresentation {
+  const location: ILocationIntermediateRepresentation = {
+    value: textContent(root.children),
+    attributes: {},
+  };
+  if (typeof root.attributes.serviceLocation === "string") {
+    location.attributes.serviceLocation = root.attributes.serviceLocation;
+  }
+  return location;
 }
 
 /**

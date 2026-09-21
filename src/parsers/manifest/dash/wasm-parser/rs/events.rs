@@ -92,6 +92,9 @@ pub enum TagName {
 
     /// Indicate an <Initialization> node
     Initialization = 22,
+
+    /// Indicate a `<Location>` node.
+    Location = 23,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -232,8 +235,6 @@ pub enum AttributeName {
 
     Text = 64,
     QualityRanking = 65,
-    Location = 66,
-
     InitializationMedia = 67,
 
     /// Describes an encountered "mediaPresentationDuration" attribute, as found

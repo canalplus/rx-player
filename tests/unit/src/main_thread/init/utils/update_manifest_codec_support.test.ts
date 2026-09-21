@@ -83,7 +83,7 @@ function generateFakeManifestWithRepresentations(
     availabilityStartTime: 0,
     isLastPeriodKnown: true,
     manifestFormat: ManifestMetadataFormat.MetadataObject,
-    uris: [],
+    refreshUrls: [],
   };
 
   return manifest;

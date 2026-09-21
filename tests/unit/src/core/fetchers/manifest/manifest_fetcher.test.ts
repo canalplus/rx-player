@@ -26,7 +26,7 @@ const {
     updateUrl: string | undefined = undefined;
     replace = vi.fn();
     update = vi.fn();
-    getUrls = vi.fn(() => ["http://example.com/manifest"]);
+    getRefreshUrls = vi.fn(() => ["http://example.com/manifest"]);
   }
   return {
     mockConfigGetCurrent: vi.fn(),

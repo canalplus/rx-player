@@ -454,6 +454,9 @@ export interface IParsedManifest {
    * default.
    */
   suggestedPresentationDelay?: number | undefined;
-  /** URIs where the manifest can be refreshed by order of importance. */
-  uris?: string[] | undefined;
+  /**
+   * URLs through which the Manifest can be refreshed, by order of importance.
+   * Here only the `baseUrl` allows to construct the URL.
+   */
+  refreshUrls: ICdnMetadata[];
 }
