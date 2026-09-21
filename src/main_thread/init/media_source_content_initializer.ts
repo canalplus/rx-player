@@ -171,9 +171,16 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
   }
 
   /**
-   * Perform non-destructive preparation steps, to prepare a future content.
+   * Starts loading the content linked to this `ContentInitializer`.
+   *
+   * Will perform non-destructive preparation steps, to prepare a future content
+   * until an `HTMLMediaElement` is attached to it, at which point playback will
+   * begin.
+   * @param {Object} playbackObserver - Interface to the `HTMLMediaElement`,
+   * also allowing to poll playback information from it at regular intervals.
+   * Actual playback will start once an `HTMLMediaElement` is attached to it.
    */
-  public prepare(): void {
+  public start(playbackObserver: IMediaElementPlaybackObserver): void {
     if (this._currentContentInfo !== null || this._initCanceller.isUsed()) {
       return;
     }
@@ -322,6 +329,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       },
       { clearSignal: this._initCanceller.signal, emitCurrentValue: true },
     );
+
+    playbackObserver.onMediaElementAttachment(
+      (mediaElement: IMediaElement) =>
+        this._startPlayback(mediaElement, playbackObserver),
+      this._initCanceller.signal,
+    );
   }
 
   /**
@@ -342,15 +355,24 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
     });
   }
 
+  public dispose(reason: string | undefined): void {
+    this._initCanceller.cancel("Init dispose");
+    if (this._currentContentInfo !== null) {
+      if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
+        this._currentContentInfo.mediaSourceInfo.mediaSource.dispose(reason);
+      }
+      this._currentContentInfo = null;
+    }
+  }
+
   /**
    * @param {HTMLMediaElement} mediaElement
    * @param {Object} playbackObserver
    */
-  public start(
+  private _startPlayback(
     mediaElement: IMediaElement,
     playbackObserver: IMediaElementPlaybackObserver,
   ): void {
-    this.prepare(); // Load Manifest if not already done
     if (this._initCanceller.isUsed()) {
       return;
     }
@@ -1345,16 +1367,6 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       log.debug("Init", "removeEventListener for core message");
       this._settings.coreInterface.removeMessageListener(onmessage);
     });
-  }
-
-  public dispose(reason: string | undefined): void {
-    this._initCanceller.cancel("Init dispose");
-    if (this._currentContentInfo !== null) {
-      if (this._currentContentInfo.mediaSourceInfo?.type === "main") {
-        this._currentContentInfo.mediaSourceInfo.mediaSource.dispose(reason);
-      }
-      this._currentContentInfo = null;
-    }
   }
 
   private _onFatalError(err: unknown) {

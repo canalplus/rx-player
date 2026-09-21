@@ -1465,7 +1465,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     });
 
     // Now, that most events are linked, prepare the next content.
-    initializer.prepare();
+    initializer.start(playbackObserver);
 
     // Now that the content is prepared, stop previous content and reset state
     // This is done after content preparation as `stop` could technically have
@@ -1477,8 +1477,6 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     //   - we can avoid involontarily catching events linked to the previous
     //     content.
     this.stop();
-
-    playbackObserver.attachMediaElement(videoElement);
 
     // Update the RxPlayer's state at the right events
     const playerStateRef = constructPlayerStateReference(
@@ -1634,7 +1632,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           stopListeningToLock();
 
           // start playback!
-          initializer.start(videoElement, playbackObserver);
+          playbackObserver.attachMediaElement(videoElement);
         }
       },
       { emitCurrentValue: true, clearSignal: currentContentCanceller.signal },

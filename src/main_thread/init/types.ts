@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
 import type { ISegmentSinkMetrics } from "../../core/segment_sinks/segment_sinks_store.ts";
 import type { IBufferType, IAdaptationChoice, IInbandEvent } from "../../core/types.ts";
 import type {
@@ -48,42 +47,24 @@ import type {
  */
 export abstract class ContentInitializer extends EventEmitter<IContentInitializerEvents> {
   /**
-   * Prepare the content linked to this `ContentInitializer` in the background,
-   * without actually trying to play it.
-   *
-   * This method may be used for optimization reasons, for example to prepare a
-   * future content without interrupting the previous one playing on a given
-   * `HTMLMediaElement`.
-   */
-  public abstract prepare(): void;
-
-  /**
-   * Actually starts playing the content linked to this `ContentInitializer` on
-   * the given `mediaElement`.
+   * Starts loading the content linked to this `ContentInitializer`.
    *
    * Only a single call to `start` is expected to be performed on each
    * `ContentInitializer`.
    *
-   * A call to `prepare` may or may not have been performed before calling
-   * `start`. If it was, it may or may not have yet finished the preparation
-   * phase before `start` is called (the `ContentInitializer` should stay
-   * resilient in both scenarios).
+   * Note: the `ContentInitializer` will rely on the `HTMLMediaElement`
+   * "attached" to the given `PlaybackObserver`. If a content was already
+   * playing on that `HTMLMediaElement`, it will be stopped.
+   * It's possible to "prepare" some of the content-loading logic (e.g. Manifest
+   * fetching) while a previous content is still playing by just attaching the
+   * corresponding `HTMLMediaElement` to the `PlaybackObserver` *after* calling
+   * this `start` method.
    *
-   * @param {HTMLMediaElement} mediaElement - `HTMLMediaElement` on which the
-   * content will play. This is given to `start` (and not sooner) to ensure
-   * that no prior step influence the `HTMLMediaElement`, on which a previous
-   * content could have been playing until then.
-   *
-   * If a content was already playing on that `HTMLMediaElement`, it will be
-   * stopped.
-   * @param {Object} playbackObserver - Interface allowing to poll playback
-   * information on what's playing on the `HTMLMediaElement` at regular
-   * intervals.
+   * @param {Object} playbackObserver - Interface to the `HTMLMediaElement`,
+   * also allowing to poll playback information from it at regular intervals.
+   * Actual playback will start once an `HTMLMediaElement` is attached to it.
    */
-  public abstract start(
-    mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
-  ): void;
+  public abstract start(playbackObserver: IMediaElementPlaybackObserver): void;
 
   /**
    * Update URL of the content currently being played (e.g. DASH's MPD).
