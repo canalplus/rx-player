@@ -10,17 +10,16 @@ import {
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-const { mockFormatError, mockMediaSource_, mockCreateRepresentationFilter } = vi.hoisted(
-  () => {
+const { mockFormatApiError, mockMediaSource_, mockCreateRepresentationFilter } =
+  vi.hoisted(() => {
     return {
-      mockFormatError: vi.fn(),
+      mockFormatApiError: vi.fn(),
       mockMediaSource_: { isTypeSupported: vi.fn() },
       mockCreateRepresentationFilter: vi.fn(),
     };
-  },
-);
-vi.mock("../../../../../src/errors", () => ({
-  formatError: mockFormatError,
+  });
+vi.mock("../../../../../src/errors/public_api/index.ts", () => ({
+  formatApiError: mockFormatApiError,
 }));
 vi.mock("../../../../../src/compat/browser_compatibility_types", () => ({
   default: {
@@ -40,11 +39,11 @@ describe("formatErrorForSender", () => {
     const mockSerialize = vi
       .fn()
       .mockReturnValue({ code: "NONE", message: "An unknown error" });
-    mockFormatError.mockReturnValue({ serialize: mockSerialize });
+    mockFormatApiError.mockReturnValue({ serialize: mockSerialize });
 
     const result = formatErrorForSender(new Error("test"));
 
-    expect(mockFormatError).toHaveBeenCalledWith(new Error("test"), {
+    expect(mockFormatApiError).toHaveBeenCalledWith(new Error("test"), {
       defaultCode: "NONE",
       defaultReason: "An unknown error stopped content playback.",
     });

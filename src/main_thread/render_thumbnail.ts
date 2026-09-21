@@ -1,5 +1,5 @@
-import errorMessage from "../errors/error_message.ts";
-import { formatError } from "../errors/index.ts";
+import { errorMessage } from "../errors/index.ts";
+import { formatApiError } from "../errors/public_api/index.ts";
 import { getPeriodForTime } from "../manifest/index.ts";
 import type { IThumbnailRenderingOptions } from "../public_types.ts";
 import type { IThumbnailResponse } from "../transports/index.ts";
@@ -225,7 +225,7 @@ export default async function renderThumbnail(
       onFinished();
       throw srcError;
     }
-    const formattedErr = formatError(srcError, {
+    const formattedErr = formatApiError(srcError, {
       defaultCode: "NONE",
       defaultReason: "Unknown error",
     });

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CustomLoaderError } from "../../errors/index.ts";
+import { CustomLoaderError } from "../../errors/internal/index.ts";
 import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types.ts";
 import assert from "../../utils/assert.ts";
 import request from "../../utils/request/index.ts";

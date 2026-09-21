@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { MediaError } from "../../errors/index.ts";
+import { MediaError } from "../../errors/public_api/index.ts";
 import type {
   ICdnMetadata,
   IManifestStreamEvent,

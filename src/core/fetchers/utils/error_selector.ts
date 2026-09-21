@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { formatError, NetworkError } from "../../../errors/index.ts";
+import { formatApiError, NetworkError } from "../../../errors/public_api/index.ts";
 import type { IPlayerError } from "../../../public_types.ts";
 import { RequestError } from "../../../utils/request/index.ts";
 
@@ -27,7 +27,7 @@ export default function errorSelector(error: unknown): IPlayerError {
   if (error instanceof RequestError) {
     return new NetworkError("PIPELINE_LOAD_ERROR", error);
   }
-  return formatError(error, {
+  return formatApiError(error, {
     defaultCode: "PIPELINE_LOAD_ERROR",
     defaultReason: "Unknown error when fetching the Manifest",
   });

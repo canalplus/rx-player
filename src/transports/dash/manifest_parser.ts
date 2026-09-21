@@ -15,7 +15,7 @@
  */
 
 import config from "../../config.ts";
-import { formatError } from "../../errors/index.ts";
+import { formatApiError } from "../../errors/public_api/index.ts";
 import features from "../../features/index.ts";
 import log from "../../log.ts";
 import Manifest from "../../manifest/classes/index.ts";
@@ -199,7 +199,7 @@ export default function generateManifestParser(
             }
           },
           (err) => {
-            const error = formatError(err, {
+            const error = formatApiError(err, {
               defaultCode: "PIPELINE_PARSE_ERROR",
               defaultReason: "An unknown error occured when parsing ressources.",
             });

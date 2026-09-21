@@ -1,5 +1,5 @@
 import config from "../../../config.ts";
-import { formatError } from "../../../errors/index.ts";
+import { formatApiError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { IRepresentation } from "../../../manifest/index.ts";
 import arrayIncludes from "../../../utils/array_includes.ts";
@@ -466,7 +466,7 @@ export default function AdaptationStream(
           return;
         }
         hasEncounteredError = true;
-        const formattedError = formatError(err, {
+        const formattedError = formatApiError(err, {
           defaultCode: "NONE",
           defaultReason: "Unknown `RepresentationStream` error",
         });

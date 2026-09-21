@@ -22,7 +22,7 @@ import type {
 import type { IEmeApiImplementation } from "../../compat/eme/index.ts";
 import { getInitData } from "../../compat/eme/index.ts";
 import config from "../../config.ts";
-import { EncryptedMediaError, OtherError } from "../../errors/index.ts";
+import { EncryptedMediaError, OtherError } from "../../errors/public_api/index.ts";
 import log from "../../log.ts";
 import type { IAdaptationMetadata, IPeriodMetadata } from "../../manifest/index.ts";
 import type { IKeySystemOption, IPlayerError } from "../../public_types.ts";

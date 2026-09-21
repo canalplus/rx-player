@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CustomLoaderError } from "../../errors/index.ts";
+import { CustomLoaderError } from "../../errors/internal/index.ts";
 import type { IManifestLoader, ILoadedManifestFormat } from "../../public_types.ts";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp.ts";
 import type {

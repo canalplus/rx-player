@@ -18,7 +18,7 @@ import type {
   IStreamOrchestratorPlaybackObservation,
   IBufferType,
 } from "../../core/types.ts";
-import { MediaError } from "../../errors/index.ts";
+import { MediaError } from "../../errors/public_api/index.ts";
 import type {
   IManifest,
   IAdaptation,

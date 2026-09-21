@@ -1,5 +1,5 @@
 import config from "../../../config.ts";
-import { formatError } from "../../../errors/index.ts";
+import { formatApiError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { ISegment, IThumbnailTrack } from "../../../manifest/index.ts";
 import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
@@ -211,7 +211,7 @@ export default function createThumbnailFetcher(
           thumbnailTrack,
         });
       } catch (error) {
-        throw formatError(error, {
+        throw formatApiError(error, {
           defaultCode: "PIPELINE_PARSE_ERROR",
           defaultReason: "Unknown parsing error",
         });

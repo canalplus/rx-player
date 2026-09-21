@@ -1,5 +1,5 @@
 import config from "../../config.ts";
-import { MediaError, OtherError } from "../../errors/index.ts";
+import { MediaError, OtherError } from "../../errors/public_api/index.ts";
 import features from "../../features/index.ts";
 import log from "../../log.ts";
 import type {
