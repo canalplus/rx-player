@@ -91,7 +91,7 @@ it:
 Stream (./core/stream)   │                                       │    └──────┐
 ┌────────────────────────┼────────────────────────────────┐      │           │
 │                        ▼                                │      └─────────┐ │
-│ Create PeriodStreams  ┌────────────────────────────┐    │       Ask to   │ │
+│ Create TrackSelectorStreams  ┌────────────────────────────┐    │       Ask to   │ │
 │ based on the position │      StreamOrchestrator    │    │       load     │ │
 │ and settings          │(./core/stream/orchestrator)│    │       and      │ │
 │                       └────────────────────────────┘    │       parse    │ │
@@ -100,7 +100,7 @@ Stream (./core/stream)   │                                       │    └─
 │                          │            │           │     │                │ │
 │                 (audio)  ▼    (video) ▼    (text) ▼     │                │ │
 │ Create the right ┌────────┐   ┌────────┐   ┌────────┐ uses┌────────────┐ │ │
-│ AdaptationStream │        │   │        │   │        │────>│SegmentSinks│ │ │
+│ RepresentationSelector │        │   │        │   │        │────>│SegmentSinks│ │ │
 │ depending on the │ Period │─┐ │ Period │─┐ │ Period │─┐ │ │    Store   │ │ │
 │ wanted track     │ Stream │ │ │ Stream │ │ │ Stream │ │ │ │(./core/segm│ │ │
 │ (One per Period  │        │ │ │        │ │ │        │ │ │ │ent_sinks)  │ │ │

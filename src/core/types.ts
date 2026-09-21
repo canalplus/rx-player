@@ -478,8 +478,8 @@ export interface IInbandEventCoreMessage {
   value: IInbandEvent[];
 }
 
-export interface IPeriodStreamReadyCoreMessage {
-  type: CoreMessageType.PeriodStreamReady;
+export interface IStreamReadyCoreMessage {
+  type: CoreMessageType.StreamReady;
   contentId: string;
   value: {
     /** Period concerned. */
@@ -489,8 +489,8 @@ export interface IPeriodStreamReadyCoreMessage {
   };
 }
 
-export interface IPeriodStreamClearedCoreMessage {
-  type: CoreMessageType.PeriodStreamCleared;
+export interface IStreamClearedCoreMessage {
+  type: CoreMessageType.StreamCleared;
   contentId: string;
   value: {
     /** `id` of the Period concerned. */
@@ -630,8 +630,8 @@ export const enum CoreMessageType {
   ManifestUpdate = "manifest-update",
   NeedsBufferFlush = "needs-buffer-flush",
   NeedsDecipherabilityFlush = "needs-decipherability-flush",
-  PeriodStreamCleared = "period-stream-cleared",
-  PeriodStreamReady = "period-stream-ready",
+  StreamCleared = "stream-cleared",
+  StreamReady = "stream-ready",
   PushTextData = "push-text-data",
   ReloadingMediaSource = "reloading-media-source",
   RemoveTextData = "remove-text-data",
@@ -673,8 +673,8 @@ export type ICoreMessage =
   | IManifestUpdateCoreMessage
   | INeedsBufferFlushCoreMessage
   | INeedsDecipherabilityFlushCoreMessage
-  | IPeriodStreamClearedCoreMessage
-  | IPeriodStreamReadyCoreMessage
+  | IStreamClearedCoreMessage
+  | IStreamReadyCoreMessage
   | IReloadingMediaSourceCoreMessage
   | IRemoveBufferCoreMessage
   | IRemoveTextDataCoreMessage

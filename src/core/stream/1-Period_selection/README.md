@@ -92,7 +92,7 @@ less permissive way than custom ones:
 - An error coming from one of them will lead us to completely stop the content on a fatal
   error
 
-## PeriodStreams
+## TrackSelectorStreams
 
 The _DASH_ streaming technology has a concept called _Period_. Simply put, it allows to
 set various types of content successively in the same manifest.
@@ -126,11 +126,11 @@ As such, they have to be considered separately - in a different Period:
         TV Show               Italian Film            American film
 ```
 
-In the RxPlayer, we create one _PeriodStream_ per Period **and** per type.
+In the RxPlayer, we create one _TrackSelectorStream_ per Period **and** per type.
 
-_PeriodStreams_ are automatically created/destroyed during playback. The job of a single
-_PeriodStream_ is to process and download optimally the content linked to a single
-_Period_ and to a single type:
+_TrackSelectorStreams_ are automatically created/destroyed during playback. The job of a
+single _TrackSelectorStream_ is to process and download optimally the content linked to a
+single _Period_ and to a single type:
 
 ```
 - VIDEO BUFFER -
@@ -159,7 +159,7 @@ _Period_ and to a single type:
 
 To allow smooth transitions between them, we also might want to preload content defined by
 a subsequent _Period_ once we lean towards the end of the content described by the
-previous one. Thus, multiple _PeriodStreams_ might be active at the same time:
+previous one. Thus, multiple _TrackSelectorStreams_ might be active at the same time:
 
 ```
 +----------------------------   AUDIO   ----------------------------------+
@@ -189,16 +189,16 @@ previous one. Thus, multiple _PeriodStreams_ might be active at the same time:
 
 ### Multi-Period management
 
-The creation/destruction of _PeriodStreams_ is actually done in a very precise and optimal
-way, which gives a higher priority to immediate content.
+The creation/destruction of _TrackSelectorStreams_ is actually done in a very precise and
+optimal way, which gives a higher priority to immediate content.
 
 To better grasp how it works, let's imagine a regular use-case, with two periods for a
 single type of buffer:
 
 ---
 
-Let's say that the _PeriodStream_ for the first _Period_ (named P1) is currently actively
-downloading segments (the "^" sign is the current position):
+Let's say that the _TrackSelectorStream_ for the first _Period_ (named P1) is currently
+actively downloading segments (the "^" sign is the current position):
 
 ```
    P1
@@ -214,7 +214,7 @@ Once P1 is full (it has no segment left to download):
    ^
 ```
 
-We will be able to create a new _PeriodStream_, P2, for the second _Period_:
+We will be able to create a new _TrackSelectorStream_, P2, for the second _Period_:
 
 ```
    P1     P2
@@ -259,7 +259,7 @@ Once P1, goes full again, we re-create P2:
 _Note that we still have the segment pushed to P2 available in the corresponding media
 buffer_
 
-When the current position go ahead of a _PeriodStream_ (here ahead of P1):
+When the current position go ahead of a _TrackSelectorStream_ (here ahead of P1):
 
 ```
    P1     P2
@@ -267,7 +267,7 @@ When the current position go ahead of a _PeriodStream_ (here ahead of P1):
         ^
 ```
 
-This _PeriodStream_ is destroyed to free up resources:
+This _TrackSelectorStream_ is destroyed to free up resources:
 
 ```
           P2
@@ -277,7 +277,7 @@ This _PeriodStream_ is destroyed to free up resources:
 
 ---
 
-When the current position goes behind the first currently defined _PeriodStream_:
+When the current position goes behind the first currently defined _TrackSelectorStream_:
 
 ```
           P2
@@ -285,7 +285,7 @@ When the current position goes behind the first currently defined _PeriodStream_
     ^
 ```
 
-Then we destroy all previous _PeriodStreams_ and [re-]create the one needed:
+Then we destroy all previous _TrackSelectorStreams_ and [re-]create the one needed:
 
 ```
    P1
@@ -305,7 +305,8 @@ re-create P2, which will also keep its already-pushed segments:
 ---
 
 For multiple types of buffers (example: _audio_ and _video_) the same logic is repeated
-(and separated) as many times. An _audio_ _PeriodStream_ will not influence a _video_ one:
+(and separated) as many times. An _audio_ _TrackSelectorStream_ will not influence a
+_video_ one:
 
 ```
 ---------------------------   AUDIO   --------------------------------
@@ -324,13 +325,14 @@ For multiple types of buffers (example: _audio_ and _video_) the same logic is r
      ^
 ```
 
-At the end, we should only have _PeriodStream[s]_ for consecutive Period[s]:
+At the end, we should only have _TrackSelectorStream[s]_ for consecutive Period[s]:
 
 - The first chronological one is the one currently seen by the user.
 - The last chronological one is the only one downloading content.
-- In between, we only have full consecutive _PeriodStreams_.
+- In between, we only have full consecutive _TrackSelectorStreams_.
 
 ### Communication with the API
 
-Any "Stream" communicates to the API about creations and destructions of _PeriodStreams_
-respectively through `"periodStreamReady"` and `"periodStreamCleared"` callbacks.
+Any "Stream" communicates to the API about creations and destructions of
+_TrackSelectorStreams_ respectively through `"streamReady"` and `"streamCleared"`
+callbacks.

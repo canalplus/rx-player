@@ -17,11 +17,7 @@
 import config from "../../../config.ts";
 import { MediaError } from "../../../errors/index.ts";
 import log from "../../../log.ts";
-import type {
-  IManifest,
-  IUpdatedRepresentationInfo,
-  IPeriod,
-} from "../../../manifest/index.ts";
+import type { IManifest, IUpdatedRepresentationInfo, IPeriod } from "../../../manifest/index.ts";
 import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";
 import queueMicrotask from "../../../utils/queue_microtask.ts";
@@ -36,15 +32,15 @@ import type { SegmentQueueCreator } from "../../fetchers/index.ts";
 import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
 import type SegmentSinksStore from "../../segment_sinks/index.ts";
 import { BufferGarbageCollector } from "../../segment_sinks/index.ts";
-import type { IWaitingMediaSourceReloadPayload } from "../adaptation/index.ts";
 import type {
-  IPeriodStreamCallbacks,
-  IPeriodStreamOptions,
-  IPeriodStreamPlaybackObservation,
-  IPeriodStreamReadyPayload,
-} from "../period/index.ts";
-import PeriodStream from "../period/index.ts";
-import type { IStreamStatusPayload } from "../representation/index.ts";
+  ITrackSelectorStreamCallbacks,
+  ITrackSelectorStreamOptions,
+  ITrackSelectorStreamPlaybackObservation,
+  IStreamReadyPayload,
+} from "../2-Track_selection/index.ts";
+import TrackSelectorStream from "../2-Track_selection/index.ts";
+import type { IWaitingMediaSourceReloadPayload } from "../3-Representation_selection/index.ts";
+import type { IStreamStatusPayload } from "../4-Segment_selection/index.ts";
 import getTimeRangesForContent from "./get_time_ranges_for_content.ts";
 
 /**
@@ -86,7 +82,7 @@ import getTimeRangesForContent from "./get_time_ranges_for_content.ts";
  * call and may be called until either the `parentCancelSignal` argument is
  * triggered, or until the `error` callback is called, whichever comes first.
  * @param {Object} orchestratorCancelSignal - `CancellationSignal` allowing,
- * when triggered, to immediately stop all operations the `PeriodStream` is
+ * when triggered, to immediately stop all operations the `TrackSelectorStream` is
  * doing.
  */
 export default function StreamOrchestrator(
@@ -139,7 +135,7 @@ export default function StreamOrchestrator(
     };
   });
 
-  // Create automatically the right `PeriodStream` for every possible types
+  // Create automatically the right `TrackSelectorStream` for every possible types
   for (const bufferType of segmentSinksStore.getBufferTypes()) {
     manageEveryStreams(bufferType, initialPeriod);
   }
@@ -148,7 +144,7 @@ export default function StreamOrchestrator(
    * Manage creation and removal of Streams for every Periods for a given type.
    *
    * Works by creating consecutive Streams through the
-   * `manageConsecutivePeriodStreams` function, and restarting it when the
+   * `manageConsecutiveTrackSelectorStreams` function, and restarting it when the
    * current position goes out of the bounds of these Streams.
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
@@ -158,15 +154,15 @@ export default function StreamOrchestrator(
     const periodList = new SortedList<IPeriod>((a, b) => a.start - b.start);
 
     /**
-     * When set to `true`, all the currently active PeriodStream will be destroyed
+     * When set to `true`, all the currently active TrackSelectorStream will be destroyed
      * and re-created from the new current position if we detect it to be out of
      * their bounds.
      * This is set to false when we're in the process of creating the first
-     * PeriodStream, to avoid interferences while no PeriodStream is available.
+     * TrackSelectorStream, to avoid interferences while no TrackSelectorStream is available.
      */
     let enableOutOfBoundsCheck = false;
 
-    /** Cancels all currently created `PeriodStream`s. */
+    /** Cancels all currently created `TrackSelectorStream`s. */
     let allStreamsCanceller = new TaskCanceller(
       "StreamOrchestrator Streams for " + bufferType,
     );
@@ -193,16 +189,16 @@ export default function StreamOrchestrator(
 
         log.info(
           "Stream",
-          "Destroying all PeriodStreams due to out of bounds situation",
+          "Destroying all TrackSelectorStreams due to out of bounds situation",
           { bufferType, time },
         );
         enableOutOfBoundsCheck = false;
         while (periodList.length() > 0) {
           const period = periodList.get(periodList.length() - 1);
           periodList.removeElement(period);
-          callbacks.periodStreamCleared({ type: bufferType, manifest, period });
+          callbacks.streamCleared({ type: bufferType, manifest, period });
         }
-        allStreamsCanceller.cancel("PeriodStream is out of bounds");
+        allStreamsCanceller.cancel("TrackSelectorStream is out of bounds");
         allStreamsCanceller = new TaskCanceller(
           "StreamOrchestrator Streams for " + bufferType,
         );
@@ -244,7 +240,7 @@ export default function StreamOrchestrator(
      * @param {Object} period
      */
     function launchConsecutiveStreamsForPeriod(period: IPeriod): void {
-      const consecutivePeriodStreamCb = {
+      const consecutiveTrackSelectorStreamCb = {
         ...callbacks,
         waitingMediaSourceReload(payload: IWaitingMediaSourceReloadPayload): void {
           // Only reload the MediaSource when the more immediately required
@@ -263,24 +259,24 @@ export default function StreamOrchestrator(
             });
           }
         },
-        periodStreamReady(payload: IPeriodStreamReadyPayload): void {
+        streamReady(payload: IStreamReadyPayload): void {
           enableOutOfBoundsCheck = true;
           periodList.add(payload.period);
-          callbacks.periodStreamReady(payload);
+          callbacks.streamReady(payload);
         },
-        periodStreamCleared(payload: IPeriodStreamClearedPayload): void {
+        streamCleared(payload: ITrackSelectorStreamClearedPayload): void {
           periodList.removeElement(payload.period);
-          callbacks.periodStreamCleared(payload);
+          callbacks.streamCleared(payload);
         },
         error(err: unknown): void {
-          allStreamsCanceller.cancel("PeriodStream err callback");
+          allStreamsCanceller.cancel("TrackSelectorStream err callback");
           callbacks.error(err);
         },
       };
-      manageConsecutivePeriodStreams(
+      manageConsecutiveTrackSelectorStreams(
         bufferType,
         period,
-        consecutivePeriodStreamCb,
+        consecutiveTrackSelectorStreamCb,
         allStreamsCanceller.signal,
       );
     }
@@ -357,14 +353,19 @@ export default function StreamOrchestrator(
 
       // First close all Stream currently active so they don't continue to
       // load and push segments.
-      log.info("Stream", "Destroying all PeriodStreams for decipherability matters", {
-        bufferType,
-      });
       enableOutOfBoundsCheck = false;
+
+      log.info(
+        "Stream",
+        "Destroying all TrackSelectorStreams for decipherability matters",
+        {
+          bufferType,
+        },
+      );
       while (periodList.length() > 0) {
         const period = periodList.get(periodList.length() - 1);
         periodList.removeElement(period);
-        callbacks.periodStreamCleared({ type: bufferType, manifest, period });
+        callbacks.streamCleared({ type: bufferType, manifest, period });
       }
 
       allStreamsCanceller.cancel("decipherability update");
@@ -454,67 +455,67 @@ export default function StreamOrchestrator(
   }
 
   /**
-   * Create lazily consecutive PeriodStreams:
+   * Create lazily consecutive TrackSelectorStreams:
    *
-   * It first creates the `PeriodStream` for `basePeriod` and - once it becomes
+   * It first creates the `TrackSelectorStream` for `basePeriod` and - once it becomes
    * full - automatically creates the next chronological one.
-   * This process repeats until the `PeriodStream` linked to the last Period is
+   * This process repeats until the `TrackSelectorStream` linked to the last Period is
    * full.
    *
-   * If an "old" `PeriodStream` becomes active again, it destroys all
-   * `PeriodStream` coming after it (from the last chronological one to the
+   * If an "old" `TrackSelectorStream` becomes active again, it destroys all
+   * `TrackSelectorStream` coming after it (from the last chronological one to the
    * first).
    *
-   * To clean-up PeriodStreams, each one of them are also automatically
+   * To clean-up TrackSelectorStreams, each one of them are also automatically
    * destroyed once the current position is superior or equal to the end of
    * the concerned Period.
    *
-   * The "periodStreamReady" callback is alled each times a new `PeriodStream`
+   * The "streamReady" callback is alled each times a new `TrackSelectorStream`
    * is created.
    *
-   * The "periodStreamCleared" callback is called each times a PeriodStream is
+   * The "streamCleared" callback is called each times a TrackSelectorStream is
    * destroyed (this callback is though not called if it was destroyed due to
    * the given `cancelSignal` emitting or due to a fatal error).
    * @param {string} bufferType - e.g. "audio" or "video"
    * @param {Period} basePeriod - Initial Period downloaded.
-   * @param {Object} consecutivePeriodStreamCb - Callbacks called on various
+   * @param {Object} consecutiveTrackSelectorStreamCb - Callbacks called on various
    * events. See type for more information.
    * @param {Object} cancelSignal - `CancellationSignal` allowing to stop
    * everything that this function was doing. Callbacks in
-   * `consecutivePeriodStreamCb` might still be sent as a consequence of this
+   * `consecutiveTrackSelectorStreamCb` might still be sent as a consequence of this
    * signal emitting.
    */
-  function manageConsecutivePeriodStreams(
+  function manageConsecutiveTrackSelectorStreams(
     bufferType: IBufferType,
     basePeriod: IPeriod,
-    consecutivePeriodStreamCb: IPeriodStreamCallbacks & {
-      periodStreamCleared(payload: IPeriodStreamClearedPayload): void;
+    consecutiveTrackSelectorStreamCb: ITrackSelectorStreamCallbacks & {
+      streamCleared(payload: ITrackSelectorStreamClearedPayload): void;
     },
     cancelSignal: CancellationSignal,
   ): void {
-    log.info("Stream", "Creating new PeriodStream", {
+    log.info("Stream", "Creating new TrackSelectorStream", {
       bufferType,
       periodStart: basePeriod.start,
     });
 
     /**
-     * Contains properties linnked to the next chronological `PeriodStream` that
+     * Contains properties linnked to the next chronological `TrackSelectorStream` that
      * may be created here.
      */
     let nextStreamInfo: {
-      /** Emits when the `PeriodStreamfor should be destroyed, if created. */
+      /** Emits when the `TrackSelectorStreamfor should be destroyed, if created. */
       canceller: TaskCanceller;
       /** The `Period` concerned. */
       period: IPeriod;
     } | null = null;
 
-    /** Emits when the `PeriodStream` linked to `basePeriod` should be destroyed. */
+    /** Emits when the `TrackSelectorStream` linked to `basePeriod` should be destroyed. */
     const currentStreamCanceller = new TaskCanceller(
       "StreamOrchestrator current consecutive Streams " + bufferType,
     );
     currentStreamCanceller.linkToSignal(cancelSignal);
 
-    // Stop current PeriodStream when the current position goes over the end of
+    // Stop current TrackSelectorStream when the current position goes over the end of
     // that Period.
     playbackObserver.listen(
       ({ position }, stopListeningObservations) => {
@@ -527,7 +528,7 @@ export default function StreamOrchestrator(
           }
           log.info(
             "Stream",
-            "Destroying PeriodStream as the current playhead moved above it",
+            "Destroying TrackSelectorStream as the current playhead moved above it",
             {
               bufferType,
               periodStart: basePeriod.start,
@@ -536,18 +537,18 @@ export default function StreamOrchestrator(
             },
           );
           stopListeningObservations();
-          consecutivePeriodStreamCb.periodStreamCleared({
+          consecutiveTrackSelectorStreamCb.streamCleared({
             type: bufferType,
             manifest,
             period: basePeriod,
           });
-          currentStreamCanceller.cancel("Position ahead of PeriodStream");
+          currentStreamCanceller.cancel("Position ahead of TrackSelectorStream");
         }
       },
       { clearSignal: cancelSignal, includeLastObservation: true },
     );
 
-    const periodStreamArgs = {
+    const trackSelectorStreamArgs = {
       bufferType,
       content: { manifest, period: basePeriod },
       garbageCollectors,
@@ -559,82 +560,86 @@ export default function StreamOrchestrator(
       representationEstimator,
       wantedBufferAhead,
     };
-    const periodStreamCallbacks: IPeriodStreamCallbacks = {
-      ...consecutivePeriodStreamCb,
+    const trackSelectorStreamCallbacks: ITrackSelectorStreamCallbacks = {
+      ...consecutiveTrackSelectorStreamCb,
       streamStatusUpdate(value: IStreamStatusPayload): void {
         if (value.hasFinishedLoading) {
           const nextPeriod = manifest.getPeriodAfter(basePeriod);
           if (nextPeriod !== null) {
             // current Stream is full, create the next one if not
-            checkOrCreateNextPeriodStream(nextPeriod);
+            checkOrCreateNextTrackSelectorStream(nextPeriod);
           }
         } else if (nextStreamInfo !== null) {
           // current Stream is active, destroy next Stream if created
           log.info(
             "Stream",
-            "Destroying next PeriodStream due to current one being active",
+            "Destroying next TrackSelectorStream due to current one being active",
             {
               bufferType,
               periodStart: basePeriod.start,
               nextPeriodStart: nextStreamInfo.period.start,
             },
           );
-          consecutivePeriodStreamCb.periodStreamCleared({
+          consecutiveTrackSelectorStreamCb.streamCleared({
             type: bufferType,
             manifest,
             period: nextStreamInfo.period,
           });
-          nextStreamInfo.canceller.cancel("previous PeriodStream is active");
+          nextStreamInfo.canceller.cancel("previous TrackSelectorStream is active");
           nextStreamInfo = null;
         }
-        consecutivePeriodStreamCb.streamStatusUpdate(value);
+        consecutiveTrackSelectorStreamCb.streamStatusUpdate(value);
       },
       error(err: unknown): void {
         if (nextStreamInfo !== null) {
-          nextStreamInfo.canceller.cancel("previous PeriodStream err");
+          nextStreamInfo.canceller.cancel("previous TrackSelectorStream err");
           nextStreamInfo = null;
         }
-        currentStreamCanceller.cancel("PeriodStream err");
-        consecutivePeriodStreamCb.error(err);
+        currentStreamCanceller.cancel("TrackSelectorStream err");
+        consecutiveTrackSelectorStreamCb.error(err);
       },
     };
 
-    PeriodStream(periodStreamArgs, periodStreamCallbacks, currentStreamCanceller.signal);
+    TrackSelectorStream(
+      trackSelectorStreamArgs,
+      trackSelectorStreamCallbacks,
+      currentStreamCanceller.signal,
+    );
     handleUnexpectedManifestUpdates(currentStreamCanceller.signal);
 
     /**
-     * Create `PeriodStream` for the next Period, specified under `nextPeriod`.
+     * Create `TrackSelectorStream` for the next Period, specified under `nextPeriod`.
      * @param {Object} nextPeriod
      */
-    function checkOrCreateNextPeriodStream(nextPeriod: IPeriod): void {
+    function checkOrCreateNextTrackSelectorStream(nextPeriod: IPeriod): void {
       if (nextStreamInfo !== null) {
         if (nextStreamInfo.period.id === nextPeriod.id) {
           return;
         }
         log.warn(
           "Stream",
-          "Creating next `PeriodStream` while one was already created.",
+          "Creating next `TrackSelectorStream` while one was already created.",
           {
             bufferType,
             nextPeriodStart: nextPeriod.start,
           },
         );
-        consecutivePeriodStreamCb.periodStreamCleared({
+        consecutiveTrackSelectorStreamCb.streamCleared({
           type: bufferType,
           manifest,
           period: nextStreamInfo.period,
         });
-        nextStreamInfo.canceller.cancel("PeriodStream recreation");
+        nextStreamInfo.canceller.cancel("TrackSelectorStream recreation");
       }
       const nextStreamCanceller = new TaskCanceller(
-        "StreamOrchestrator next PeriodStream " + bufferType,
+        "StreamOrchestrator next TrackSelectorStream " + bufferType,
       );
       nextStreamCanceller.linkToSignal(cancelSignal);
       nextStreamInfo = { canceller: nextStreamCanceller, period: nextPeriod };
-      manageConsecutivePeriodStreams(
+      manageConsecutiveTrackSelectorStreams(
         bufferType,
         nextPeriod,
-        consecutivePeriodStreamCb,
+        consecutiveTrackSelectorStreamCb,
         nextStreamInfo.canceller.signal,
       );
     }
@@ -683,11 +688,15 @@ export default function StreamOrchestrator(
           if (nextStreamInfo !== null) {
             const newNextPeriod = manifest.getPeriodAfter(basePeriod);
             if (newNextPeriod === null || nextStreamInfo.period.id !== newNextPeriod.id) {
-              log.warn("Stream", "Destroying next PeriodStream due to manifest update", {
-                bufferType,
-                nextPeriodStart: nextStreamInfo.period.start,
-              });
-              consecutivePeriodStreamCb.periodStreamCleared({
+              log.warn(
+                "Stream",
+                "Destroying next TrackSelectorStream due to manifest update",
+                {
+                  bufferType,
+                  nextPeriodStart: nextStreamInfo.period.start,
+                },
+              );
+              consecutiveTrackSelectorStreamCb.streamCleared({
                 type: bufferType,
                 manifest,
                 period: nextStreamInfo.period,
@@ -703,10 +712,11 @@ export default function StreamOrchestrator(
   }
 }
 
-export type IStreamOrchestratorPlaybackObservation = IPeriodStreamPlaybackObservation;
+export type IStreamOrchestratorPlaybackObservation =
+  ITrackSelectorStreamPlaybackObservation;
 
 /** Options tweaking the behavior of the StreamOrchestrator. */
-export type IStreamOrchestratorOptions = IPeriodStreamOptions & {
+export type IStreamOrchestratorOptions = ITrackSelectorStreamOptions & {
   wantedBufferAhead: IReadOnlySharedReference<number>;
   maxVideoBufferSize: IReadOnlySharedReference<number>;
   maxBufferAhead: IReadOnlySharedReference<number>;
@@ -714,21 +724,19 @@ export type IStreamOrchestratorOptions = IPeriodStreamOptions & {
 };
 
 /** Callbacks called by the `StreamOrchestrator` on various events. */
-export interface IStreamOrchestratorCallbacks extends Omit<
-  IPeriodStreamCallbacks,
-  "waitingMediaSourceReload"
-> {
+export interface IStreamOrchestratorCallbacks
+  extends Omit<ITrackSelectorStreamCallbacks, "waitingMediaSourceReload"> {
   /**
-   * Called when a `PeriodStream` has been removed.
+   * Called when a `TrackSelectorStream` has been removed.
    * This event can be used for clean-up purposes. For example, you are free to
    * remove from scope the object used to choose a track for that
-   * `PeriodStream`.
+   * `TrackSelectorStream`.
    *
-   * This callback might not be called when a `PeriodStream` is cleared due to
+   * This callback might not be called when a `TrackSelectorStream` is cleared due to
    * an `error` callback or to the `StreamOrchestrator` being cancellated as
-   * both already indicate implicitly that all `PeriodStream` have been cleared.
+   * both already indicate implicitly that all `TrackSelectorStream` have been cleared.
    */
-  periodStreamCleared(payload: IPeriodStreamClearedPayload): void;
+  streamCleared(payload: ITrackSelectorStreamClearedPayload): void;
   /**
    * Called when a situation needs the MediaSource to be reloaded.
    *
@@ -767,22 +775,22 @@ export interface IStreamOrchestratorCallbacks extends Omit<
   needsDecipherabilityFlush(): void;
 }
 
-/** Payload for the `periodStreamCleared` callback. */
-export interface IPeriodStreamClearedPayload {
+/** Payload for the `streamCleared` callback. */
+export interface ITrackSelectorStreamClearedPayload {
   /**
-   * The type of buffer linked to the `PeriodStream` we just removed.
+   * The type of buffer linked to the `TrackSelectorStream` we just removed.
    *
    * The combination of this and `Period` should give you enough information
-   * about which `PeriodStream` has been removed.
+   * about which `TrackSelectorStream` has been removed.
    */
   type: IBufferType;
-  /** The `Manifest` linked to the `PeriodStream` we just cleared. */
+  /** The `Manifest` linked to the `TrackSelectorStream` we just cleared. */
   manifest: IManifest;
   /**
-   * The `Period` linked to the `PeriodStream` we just removed.
+   * The `Period` linked to the `TrackSelectorStream` we just removed.
    *
    * The combination of this and `Period` should give you enough information
-   * about which `PeriodStream` has been removed.
+   * about which `TrackSelectorStream` has been removed.
    */
   period: IPeriod;
 }
