@@ -81,15 +81,20 @@ export default class DirectFileContentInitializer extends ContentInitializer {
   /**
    * Start playback of the content linked to this `DirectFileContentInitializer`
    * on the given `HTMLMediaElement` and its associated `PlaybackObserver`.
-   * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
-   * content will be played.
    * @param {Object} playbackObserver - Object regularly emitting playback
    * information.
    */
-  public start(
-    mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
-  ): void {
+  public start(playbackObserver: IMediaElementPlaybackObserver): void {
+    const mediaElement = playbackObserver.getMediaElement();
+    if (mediaElement === null) {
+      throw new Error(
+        "A directfile content cannot play or preload without a media element",
+      );
+    }
+
+    if (this._initCanceller.isUsed()) {
+      return;
+    }
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
 
@@ -179,6 +184,10 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     );
   }
 
+  public attachMediaElement(_mediaElement: IMediaElement): void {
+    throw new Error("Content preloading not loaded in directfile mode");
+  }
+
   /**
    * Update URL this `ContentIntializer` depends on.
    * @param {Array.<string>|undefined} _urls
@@ -196,6 +205,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    */
   public dispose(reason: string | undefined): void {
     this._initCanceller.cancel(reason ?? "Directfile Init dispose");
+    this._initCanceller = new TaskCanceller("Directfile Init new");
   }
 
   /**
@@ -227,7 +237,6 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     };
     performInitialSeekAndPlay(
       {
-        mediaElement,
         playbackObserver,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
