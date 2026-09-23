@@ -33,9 +33,8 @@
  *
  * == How?
  *
- * For the WebAssembly file, the exact way may seem pretty ugly: We're here
- * converting the whole WebAssembly binary file into a `Uint8Array`
- * construction and then exporting it as an ArrayBuffer
+ * For the WebAssembly file, we encode the whole binary file as base64, decode
+ * it into a `Uint8Array` at module evaluation, and export its `ArrayBuffer`.
  *
  * As for the Worker file, we're here embedding its code into an IFEE.
  * The Worker code is in JavaScript's string form directly to prevent being
@@ -124,11 +123,11 @@ export default async function generateEmbeds({ noWasm, noWorker } = {}) {
 
 async function writeWebAssemblyEmbed() {
   const wasmData = await readFile(originalWasmFilePath, null);
-  const u8Arr = new Uint8Array(wasmData);
   const wasmDataStr =
-    "const wasmArrayBuffer = new Uint8Array([" +
-    u8Arr.toString() +
-    `]).buffer;
+    'import { base64ToBytes } from "../utils/base64.ts";\n\n' +
+    "const wasmArrayBuffer = base64ToBytes(" +
+    JSON.stringify(wasmData.toString("base64")) +
+    `).buffer;
 export { wasmArrayBuffer as EMBEDDED_DASH_WASM };
 export default wasmArrayBuffer;`;
   await writeFile(mpdEmbedPath, wasmDataStr);
