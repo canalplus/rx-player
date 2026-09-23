@@ -563,10 +563,12 @@ export async function testKeySystem(
   keyType: string,
   keySystemConfigurations: MediaKeySystemConfiguration[],
 ): Promise<IMediaKeySystemAccess> {
+  log.debug("DRM", "Calling requestMediaKeySystemAccess", { keyType });
   const keySystemAccess = await eme.requestMediaKeySystemAccess(
     keyType,
     keySystemConfigurations,
   );
+  log.debug("DRM", "requestMediaKeySystemAccess succeeded", { keyType });
 
   if (!canRelyOnRequestMediaKeySystemAccess(keyType)) {
     try {

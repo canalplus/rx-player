@@ -136,7 +136,6 @@ export default function generateKeyRequest(
   initializationDataType: string | undefined,
   initializationData: Uint8Array<ArrayBuffer>,
 ): Promise<unknown> {
-  log.debug("DRM", "Calling generateRequest on the MediaKeySession");
   let patchedInit: Uint8Array<ArrayBuffer>;
   try {
     patchedInit = patchInitData(initializationData);
@@ -144,6 +143,7 @@ export default function generateKeyRequest(
     patchedInit = initializationData;
   }
   const initDataType = initializationDataType ?? "";
+  log.debug("DRM", "Calling generateRequest on the MediaKeySession");
   return session.generateRequest(initDataType, patchedInit).catch((error) => {
     if (initDataType !== "" || !(error instanceof TypeError)) {
       throw error;
@@ -161,5 +161,14 @@ export default function generateKeyRequest(
       error,
     );
     return session.generateRequest("cenc", patchedInit);
-  });
+  }).then(
+    (result) => {
+      log.debug("DRM", "generateRequest succeeded");
+      return result;
+    },
+    (error: unknown) => {
+      log.debug("DRM", "generateRequest failed");
+      throw error;
+    },
+  );
 }

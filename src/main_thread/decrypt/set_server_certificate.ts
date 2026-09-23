@@ -117,9 +117,11 @@ export default async function trySettingServerCertificate(
       log.warn("DRM", "MediaKeys ignored the server certificate. Continuing without it.");
       return { type: "not-supported" };
     }
+    log.info("DRM", "Server certificate set with success");
     ServerCertificateStore.set(mediaKeys, serverCertificate);
     return { type: "success", value: result };
   } catch (error) {
+    log.warn("DRM", "Setting server certificate failed");
     const formattedErr = isKnownError(error)
       ? error
       : new EncryptedMediaError(

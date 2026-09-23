@@ -15,6 +15,7 @@ export function setMediaKeys(
   mediaElement: IMediaElement,
   mediaKeys: IMediaKeys | null,
 ): Promise<unknown> {
+  log.info("DRM", "Calling setMediaKeys", { hasMediaKeys: mediaKeys !== null });
   const prom = emeImplementation
     .setMediaKeys(mediaElement, mediaKeys)
     .then(() => {

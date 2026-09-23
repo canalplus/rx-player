@@ -216,6 +216,7 @@ export default function SessionEventsListener(
 
         if (getLicenseTimeout >= 0) {
           timeoutId = setTimeout(() => {
+            log.warn("DRM", "getLicense timed out", { messageType });
             rej(
               new GetLicenseTimeoutError(
                 `"getLicense" timeout exceeded (${getLicenseTimeout} ms)`,
@@ -231,12 +232,14 @@ export default function SessionEventsListener(
         if (timeoutId !== undefined) {
           clearTimeout(timeoutId);
         }
+        log.debug("DRM", "getLicense succeeded", { messageType });
         res(data);
       }
       function clearTimeoutAndReject(err: unknown) {
         if (timeoutId !== undefined) {
           clearTimeout(timeoutId);
         }
+        log.debug("DRM", "getLicense failed", { messageType });
         rej(err);
       }
     });
