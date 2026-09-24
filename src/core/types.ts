@@ -535,6 +535,7 @@ export type ISentLogValue =
 export interface ILogMessageCoreMessage {
   type: CoreMessageType.LogMessage;
   value: {
+    timestamp: number;
     namespace: ILogNamespace;
     logLevel: ILoggerLevel;
     logs: ISentLogValue[];

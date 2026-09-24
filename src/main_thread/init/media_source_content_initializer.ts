@@ -254,24 +254,12 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
                 assertUnreachable(l);
             }
           });
-          switch (msgData.value.logLevel) {
-            case "NONE":
-              break;
-            case "ERROR":
-              log.error(msgData.value.namespace, ...formatted);
-              break;
-            case "WARNING":
-              log.warn(msgData.value.namespace, ...formatted);
-              break;
-            case "INFO":
-              log.info(msgData.value.namespace, ...formatted);
-              break;
-            case "DEBUG":
-              log.debug(msgData.value.namespace, ...formatted);
-              break;
-            default:
-              assertUnreachable(msgData.value.logLevel);
-          }
+          log.log({
+            timestamp: msgData.value.timestamp,
+            level: msgData.value.logLevel,
+            namespace: msgData.value.namespace,
+            args: formatted,
+          });
           break;
         }
         default:
