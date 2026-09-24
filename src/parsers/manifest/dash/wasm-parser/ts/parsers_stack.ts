@@ -41,11 +41,13 @@ export default class ParsersStack {
     attribute: IAttributeParser;
     children: IChildrenParser;
   }>;
+  private _stackDepth: number;
   constructor() {
     this._currentNodeId = null;
     this.childrenParser = noop;
     this.attributeParser = noop;
     this._stack = [{ nodeId: null, children: noop, attribute: noop }];
+    this._stackDepth = 0;
   }
 
   public pushParsers(
@@ -56,27 +58,43 @@ export default class ParsersStack {
     this._currentNodeId = nodeId;
     this.childrenParser = childrenParser;
     this.attributeParser = attrParser;
-    this._stack.push({
-      nodeId,
-      attribute: attrParser,
-      children: childrenParser,
-    });
+    this._stackDepth++;
+    const frame = this._stack[this._stackDepth];
+    if (frame === undefined) {
+      this._stack.push({ nodeId, attribute: attrParser, children: childrenParser });
+    } else {
+      frame.nodeId = nodeId;
+      frame.attribute = attrParser;
+      frame.children = childrenParser;
+    }
   }
 
   public popIfCurrent(idToPop: number): void {
     if (this._currentNodeId !== idToPop) {
       return;
     }
-    this._stack.pop();
-    const { nodeId, children, attribute } = this._stack[this._stack.length - 1];
+    // Reused frames must not retain parsers capturing the previous node.
+    const oldFrame = this._stack[this._stackDepth];
+    oldFrame.nodeId = null;
+    oldFrame.attribute = noop;
+    oldFrame.children = noop;
+    this._stackDepth--;
+    const { nodeId, children, attribute } = this._stack[this._stackDepth];
     this._currentNodeId = nodeId;
     this.attributeParser = attribute;
     this.childrenParser = children;
   }
 
   public reset(): void {
+    for (let i = 1; i <= this._stackDepth; i++) {
+      const frame = this._stack[i];
+      frame.nodeId = null;
+      frame.attribute = noop;
+      frame.children = noop;
+    }
+    this._currentNodeId = null;
     this.childrenParser = noop;
     this.attributeParser = noop;
-    this._stack = [{ nodeId: null, children: noop, attribute: noop }];
+    this._stackDepth = 0;
   }
 }
