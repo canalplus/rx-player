@@ -20,6 +20,18 @@ describe("DASH WASM AdaptationSet attribute parser", () => {
       return attributes.availabilityTimeComplete;
     });
   });
+
+  it("reads attributes after WebAssembly memory grows", () => {
+    const memory = new WebAssembly.Memory({ initial: 1 });
+    const attributes: IAdaptationSetAttributes = {};
+    const parser = generateAdaptationSetAttrParser(attributes, memory);
+
+    memory.grow(1);
+    new DataView(memory.buffer).setFloat64(32, 1234, true);
+    parser(AttributeName.MaxBandwidth, 32, 8);
+
+    expect(attributes.maxBandwidth).toBe(1234);
+  });
 });
 
 function createBooleanAttributeChecker(

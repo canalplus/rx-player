@@ -257,8 +257,11 @@ export function generateAdaptationSetAttrParser(
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
   const textDecoder = new TextDecoder();
+  let dataView = new DataView(linearMemory.buffer);
   return function onAdaptationSetAttribute(attr: number, ptr: number, len: number) {
-    const dataView = new DataView(linearMemory.buffer);
+    if (dataView.buffer !== linearMemory.buffer) {
+      dataView = new DataView(linearMemory.buffer);
+    }
     switch (attr) {
       case AttributeName.Id:
         adaptationAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);

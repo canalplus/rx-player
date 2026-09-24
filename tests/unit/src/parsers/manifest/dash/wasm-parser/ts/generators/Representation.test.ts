@@ -17,6 +17,18 @@ describe("DASH WASM Representation attribute parser", () => {
       return attributes.availabilityTimeComplete;
     });
   });
+
+  it("reads attributes after WebAssembly memory grows", () => {
+    const memory = new WebAssembly.Memory({ initial: 1 });
+    const attributes: IRepresentationAttributes = {};
+    const parser = generateRepresentationAttrParser(attributes, memory);
+
+    memory.grow(1);
+    new DataView(memory.buffer).setFloat64(32, 1234, true);
+    parser(AttributeName.Bitrate, 32, 8);
+
+    expect(attributes.bandwidth).toBe(1234);
+  });
 });
 
 function createBooleanAttributeChecker(

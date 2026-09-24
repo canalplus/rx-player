@@ -180,8 +180,11 @@ export function generateRepresentationAttrParser(
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
   const textDecoder = new TextDecoder();
+  let dataView = new DataView(linearMemory.buffer);
   return function onRepresentationAttribute(attr: number, ptr: number, len: number) {
-    const dataView = new DataView(linearMemory.buffer);
+    if (dataView.buffer !== linearMemory.buffer) {
+      dataView = new DataView(linearMemory.buffer);
+    }
     switch (attr) {
       case AttributeName.Id:
         representationAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
@@ -214,8 +217,7 @@ export function generateRepresentationAttrParser(
         );
         break;
       case AttributeName.CodingDependency:
-        representationAttrs.codingDependency =
-          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
+        representationAttrs.codingDependency = dataView.getUint8(ptr) !== 0;
         break;
       case AttributeName.FrameRate:
         representationAttrs.frameRate = dataView.getFloat64(ptr, true);
