@@ -20,7 +20,12 @@ import noop from "../../../../../utils/noop.ts";
 export type IChildrenParser = (node: number) => void;
 
 /** Type of the function called when an attribute is encountered. */
-export type IAttributeParser = (attr: number, ptr: number, len: number) => void;
+export type IAttributeParser = (
+  attr: number,
+  ptr: number,
+  len: number,
+  value?: number,
+) => void;
 
 /**
  * Maintains a stack of children and attributes parsers, to easily parse

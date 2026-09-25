@@ -24,7 +24,7 @@ import type {
 import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
-import { parseString } from "../utils.ts";
+import { parseString, readFloat } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
 import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period.ts";
@@ -121,7 +121,7 @@ export function generateMPDAttrParser(
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
   let dataView;
-  return function onMPDAttribute(attr: number, ptr: number, len: number) {
+  return function onMPDAttribute(attr: number, ptr: number, len: number, value?: number) {
     switch (attr) {
       case AttributeName.Id:
         mpdAttrs.id = parseString(linearMemory.buffer, ptr, len);
@@ -148,32 +148,25 @@ export function generateMPDAttrParser(
         break;
       }
       case AttributeName.MediaPresentationDuration:
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.mediaPresentationDuration = dataView.getFloat64(ptr, true);
+        mpdAttrs.mediaPresentationDuration = readFloat(value);
         break;
       case AttributeName.MinimumUpdatePeriod:
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.minimumUpdatePeriod = dataView.getFloat64(ptr, true);
+        mpdAttrs.minimumUpdatePeriod = readFloat(value);
         break;
       case AttributeName.MinBufferTime:
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.minBufferTime = dataView.getFloat64(ptr, true);
+        mpdAttrs.minBufferTime = readFloat(value);
         break;
       case AttributeName.TimeShiftBufferDepth:
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.timeShiftBufferDepth = dataView.getFloat64(ptr, true);
+        mpdAttrs.timeShiftBufferDepth = readFloat(value);
         break;
       case AttributeName.SuggestedPresentationDelay:
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.suggestedPresentationDelay = dataView.getFloat64(ptr, true);
+        mpdAttrs.suggestedPresentationDelay = readFloat(value);
         break;
       case AttributeName.MaxSegmentDuration:
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.maxSegmentDuration = dataView.getFloat64(ptr, true);
+        mpdAttrs.maxSegmentDuration = readFloat(value);
         break;
       case AttributeName.MaxSubsegmentDuration:
-        dataView = new DataView(linearMemory.buffer);
-        mpdAttrs.maxSubsegmentDuration = dataView.getFloat64(ptr, true);
+        mpdAttrs.maxSubsegmentDuration = readFloat(value);
         break;
       case AttributeName.Location: {
         const location = parseString(linearMemory.buffer, ptr, len);

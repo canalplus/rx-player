@@ -41,4 +41,18 @@ function parseFloatOrBool(val: number): number | boolean {
   return val;
 }
 
-export { parseString, parseFloatOrBool };
+function readFloat(directValue: number | undefined): number {
+  if (directValue === undefined) {
+    throw new Error("Missing direct numeric attribute value");
+  }
+  return directValue;
+}
+
+function readBoolean(directValue: number | undefined): boolean {
+  if (directValue === undefined) {
+    throw new Error("Missing direct boolean attribute value");
+  }
+  return directValue !== 0;
+}
+
+export { parseString, parseFloatOrBool, readBoolean, readFloat };
