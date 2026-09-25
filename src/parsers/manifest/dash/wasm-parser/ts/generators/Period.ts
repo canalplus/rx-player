@@ -16,6 +16,7 @@
 
 import noop from "../../../../../../utils/noop.ts";
 import type {
+  IAdaptationSetIntermediateRepresentation,
   IEventStreamIntermediateRepresentation,
   IPeriodAttributes,
   IPeriodChildren,
@@ -34,6 +35,7 @@ import {
   generateEventStreamAttrParser,
   generateEventStreamChildrenParser,
 } from "./EventStream.ts";
+import { emptyChildArray } from "./lazy_child_array.ts";
 import {
   generateSegmentTemplateAttrParser,
   generateSegmentTemplateChildrenParser,
@@ -56,21 +58,21 @@ export function generatePeriodChildrenParser(
   return function onRootChildren(nodeId: number) {
     switch (nodeId) {
       case TagName.AdaptationSet: {
-        const adaptationObj = {
+        const adaptationObj: IAdaptationSetIntermediateRepresentation = {
           children: {
-            BaseURL: [],
-            Representation: [],
-            Accessibility: [],
-            ContentComponent: [],
-            ContentProtection: [],
-            EssentialProperty: [],
-            InbandEventStream: [],
-            Role: [],
-            SupplementalProperty: [],
-            SegmentBase: [],
-            SegmentList: [],
-            SegmentTemplate: [],
-            Label: [],
+            BaseURL: emptyChildArray(),
+            Representation: emptyChildArray(),
+            Accessibility: emptyChildArray(),
+            ContentComponent: emptyChildArray(),
+            ContentProtection: emptyChildArray(),
+            EssentialProperty: emptyChildArray(),
+            InbandEventStream: emptyChildArray(),
+            Role: emptyChildArray(),
+            SupplementalProperty: emptyChildArray(),
+            SegmentBase: emptyChildArray(),
+            SegmentList: emptyChildArray(),
+            SegmentTemplate: emptyChildArray(),
+            Label: emptyChildArray(),
           },
           attributes: {},
         };
