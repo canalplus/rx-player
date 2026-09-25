@@ -20,7 +20,11 @@ import type {
   IAdaptationSetChildren,
   ISegmentListIntermediateRepresentation,
 } from "../../../node_parser_types.ts";
-import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
+import type {
+  IAttributeParser,
+  IChildrenParser,
+  IStaticAttributeParser,
+} from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
 import { parseFloatOrBool, parseString } from "../utils.ts";
@@ -29,7 +33,7 @@ import { generateContentComponentAttrParser } from "./ContentComponent.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
 import { generateLabelElementParser } from "./Label.ts";
 import {
-  generateRepresentationAttrParser,
+  parseRepresentationAttribute,
   generateRepresentationChildrenParser,
 } from "./Representation.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
@@ -147,11 +151,13 @@ export function generateAdaptationSetChildrenParser(
           linearMemory,
           parsersStack,
         );
-        const attributeParser = generateRepresentationAttrParser(
+        parsersStack.pushParsersWithStaticAttribute(
+          nodeId,
+          childrenParser,
+          parseRepresentationAttribute,
           representationObj.attributes,
           linearMemory,
         );
-        parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
       }
 
@@ -256,110 +262,118 @@ export function generateAdaptationSetAttrParser(
   adaptationAttrs: IAdaptationSetAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  return function onAdaptationSetAttribute(attr: number, ptr: number, len: number) {
-    const dataView = new DataView(linearMemory.buffer);
-    switch (attr) {
-      case AttributeName.Id:
-        adaptationAttrs.id = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.Group:
-        adaptationAttrs.group = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.Language:
-        adaptationAttrs.lang = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.ContentType:
-        adaptationAttrs.contentType = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.Par:
-        adaptationAttrs.par = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.MinBandwidth:
-        adaptationAttrs.minBandwidth = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MaxBandwidth:
-        adaptationAttrs.maxBandwidth = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MinWidth:
-        adaptationAttrs.minWidth = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MaxWidth:
-        adaptationAttrs.maxWidth = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MinHeight:
-        adaptationAttrs.minHeight = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MaxHeight:
-        adaptationAttrs.maxHeight = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MinFrameRate:
-        adaptationAttrs.minFrameRate = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MaxFrameRate:
-        adaptationAttrs.maxFrameRate = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.SelectionPriority:
-        adaptationAttrs.selectionPriority = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.SegmentAlignment:
-        adaptationAttrs.segmentAlignment = parseFloatOrBool(
-          dataView.getFloat64(ptr, true),
-        );
-        break;
-      case AttributeName.SubsegmentAlignment:
-        adaptationAttrs.subsegmentAlignment = parseFloatOrBool(
-          dataView.getFloat64(ptr, true),
-        );
-        break;
-      case AttributeName.BitstreamSwitching:
-        adaptationAttrs.bitstreamSwitching = dataView.getUint8(ptr) !== 0;
-        break;
-      case AttributeName.AudioSamplingRate:
-        adaptationAttrs.audioSamplingRate = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.Codecs:
-        adaptationAttrs.codecs = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.SupplementalCodecs:
-        adaptationAttrs["scte214:supplementalCodecs"] = parseString(
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
-        break;
-      case AttributeName.Profiles:
-        adaptationAttrs.profiles = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.SegmentProfiles:
-        adaptationAttrs.segmentProfiles = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.MimeType:
-        adaptationAttrs.mimeType = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.CodingDependency:
-        adaptationAttrs.codingDependency = dataView.getUint8(ptr) !== 0;
-        break;
-      case AttributeName.FrameRate:
-        adaptationAttrs.frameRate = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.Height:
-        adaptationAttrs.height = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.Width:
-        adaptationAttrs.width = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MaxPlayoutRate:
-        adaptationAttrs.maxPlayoutRate = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MaxSAPPeriod:
-        adaptationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.AvailabilityTimeOffset:
-        adaptationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.AvailabilityTimeComplete:
-        adaptationAttrs.availabilityTimeComplete = dataView.getUint8(ptr) !== 0;
-        break;
-    }
-  };
+  return (attr: number, ptr: number, len: number) =>
+    parseAdaptationSetAttribute(adaptationAttrs, linearMemory, attr, ptr, len);
 }
+
+export const parseAdaptationSetAttribute: IStaticAttributeParser = (
+  target,
+  linearMemory,
+  attr,
+  ptr,
+  len,
+) => {
+  const adaptationAttrs = target as IAdaptationSetAttributes;
+  const dataView = new DataView(linearMemory.buffer);
+  switch (attr) {
+    case AttributeName.Id:
+      adaptationAttrs.id = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.Group:
+      adaptationAttrs.group = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.Language:
+      adaptationAttrs.lang = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.ContentType:
+      adaptationAttrs.contentType = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.Par:
+      adaptationAttrs.par = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.MinBandwidth:
+      adaptationAttrs.minBandwidth = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MaxBandwidth:
+      adaptationAttrs.maxBandwidth = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MinWidth:
+      adaptationAttrs.minWidth = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MaxWidth:
+      adaptationAttrs.maxWidth = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MinHeight:
+      adaptationAttrs.minHeight = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MaxHeight:
+      adaptationAttrs.maxHeight = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MinFrameRate:
+      adaptationAttrs.minFrameRate = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MaxFrameRate:
+      adaptationAttrs.maxFrameRate = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.SelectionPriority:
+      adaptationAttrs.selectionPriority = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.SegmentAlignment:
+      adaptationAttrs.segmentAlignment = parseFloatOrBool(dataView.getFloat64(ptr, true));
+      break;
+    case AttributeName.SubsegmentAlignment:
+      adaptationAttrs.subsegmentAlignment = parseFloatOrBool(
+        dataView.getFloat64(ptr, true),
+      );
+      break;
+    case AttributeName.BitstreamSwitching:
+      adaptationAttrs.bitstreamSwitching = dataView.getUint8(ptr) !== 0;
+      break;
+    case AttributeName.AudioSamplingRate:
+      adaptationAttrs.audioSamplingRate = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.Codecs:
+      adaptationAttrs.codecs = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.SupplementalCodecs:
+      adaptationAttrs["scte214:supplementalCodecs"] = parseString(
+        linearMemory.buffer,
+        ptr,
+        len,
+      );
+      break;
+    case AttributeName.Profiles:
+      adaptationAttrs.profiles = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.SegmentProfiles:
+      adaptationAttrs.segmentProfiles = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.MimeType:
+      adaptationAttrs.mimeType = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.CodingDependency:
+      adaptationAttrs.codingDependency = dataView.getUint8(ptr) !== 0;
+      break;
+    case AttributeName.FrameRate:
+      adaptationAttrs.frameRate = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.Height:
+      adaptationAttrs.height = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.Width:
+      adaptationAttrs.width = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MaxPlayoutRate:
+      adaptationAttrs.maxPlayoutRate = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MaxSAPPeriod:
+      adaptationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.AvailabilityTimeOffset:
+      adaptationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.AvailabilityTimeComplete:
+      adaptationAttrs.availabilityTimeComplete = dataView.getUint8(ptr) !== 0;
+      break;
+  }
+};

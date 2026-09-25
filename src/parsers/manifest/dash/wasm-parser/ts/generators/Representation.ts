@@ -20,7 +20,11 @@ import type {
   IRepresentationChildren,
   ISegmentListIntermediateRepresentation,
 } from "../../../node_parser_types.ts";
-import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
+import type {
+  IAttributeParser,
+  IChildrenParser,
+  IStaticAttributeParser,
+} from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
 import { parseString } from "../utils.ts";
@@ -179,69 +183,75 @@ export function generateRepresentationAttrParser(
   representationAttrs: IRepresentationAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  return function onRepresentationAttribute(attr: number, ptr: number, len: number) {
-    const dataView = new DataView(linearMemory.buffer);
-    switch (attr) {
-      case AttributeName.Id:
-        representationAttrs.id = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.AudioSamplingRate:
-        representationAttrs.audioSamplingRate = parseString(
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
-        break;
-      case AttributeName.Bitrate:
-        representationAttrs.bandwidth = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.Codecs:
-        representationAttrs.codecs = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.SupplementalCodecs:
-        representationAttrs["scte214:supplementalCodecs"] = parseString(
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
-        break;
-      case AttributeName.CodingDependency:
-        representationAttrs.codingDependency =
-          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
-        break;
-      case AttributeName.FrameRate:
-        representationAttrs.frameRate = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.Height:
-        representationAttrs.height = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.Width:
-        representationAttrs.width = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MaxPlayoutRate:
-        representationAttrs.maxPlayoutRate = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MaxSAPPeriod:
-        representationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.MimeType:
-        representationAttrs.mimeType = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.Profiles:
-        representationAttrs.profiles = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.QualityRanking:
-        representationAttrs.qualityRanking = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.SegmentProfiles:
-        representationAttrs.segmentProfiles = parseString(linearMemory.buffer, ptr, len);
-        break;
-      case AttributeName.AvailabilityTimeOffset:
-        representationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
-        break;
-      case AttributeName.AvailabilityTimeComplete:
-        representationAttrs.availabilityTimeComplete = dataView.getUint8(ptr) !== 0;
-        break;
-    }
-  };
+  return (attr: number, ptr: number, len: number) =>
+    parseRepresentationAttribute(representationAttrs, linearMemory, attr, ptr, len);
 }
+
+export const parseRepresentationAttribute: IStaticAttributeParser = (
+  target,
+  linearMemory,
+  attr,
+  ptr,
+  len,
+) => {
+  const representationAttrs = target as IRepresentationAttributes;
+  const dataView = new DataView(linearMemory.buffer);
+  switch (attr) {
+    case AttributeName.Id:
+      representationAttrs.id = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.AudioSamplingRate:
+      representationAttrs.audioSamplingRate = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.Bitrate:
+      representationAttrs.bandwidth = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.Codecs:
+      representationAttrs.codecs = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.SupplementalCodecs:
+      representationAttrs["scte214:supplementalCodecs"] = parseString(
+        linearMemory.buffer,
+        ptr,
+        len,
+      );
+      break;
+    case AttributeName.CodingDependency:
+      representationAttrs.codingDependency =
+        new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
+      break;
+    case AttributeName.FrameRate:
+      representationAttrs.frameRate = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.Height:
+      representationAttrs.height = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.Width:
+      representationAttrs.width = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MaxPlayoutRate:
+      representationAttrs.maxPlayoutRate = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MaxSAPPeriod:
+      representationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.MimeType:
+      representationAttrs.mimeType = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.Profiles:
+      representationAttrs.profiles = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.QualityRanking:
+      representationAttrs.qualityRanking = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.SegmentProfiles:
+      representationAttrs.segmentProfiles = parseString(linearMemory.buffer, ptr, len);
+      break;
+    case AttributeName.AvailabilityTimeOffset:
+      representationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
+      break;
+    case AttributeName.AvailabilityTimeComplete:
+      representationAttrs.availabilityTimeComplete = dataView.getUint8(ptr) !== 0;
+      break;
+  }
+};

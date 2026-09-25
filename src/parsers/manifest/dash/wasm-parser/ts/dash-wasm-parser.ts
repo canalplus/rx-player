@@ -248,7 +248,7 @@ export default class DashWasmParser {
      */
     function onAttribute(attr: AttributeName, ptr: number, len: number): void {
       // Call the active "attributeParser"
-      return parsersStack.attributeParser(attr, ptr, len);
+      return parsersStack.parseAttribute(attr, ptr, len);
     }
 
     /**

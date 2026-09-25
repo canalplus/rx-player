@@ -25,8 +25,8 @@ import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
 import { parseString } from "../utils.ts";
 import {
-  generateAdaptationSetAttrParser,
   generateAdaptationSetChildrenParser,
+  parseAdaptationSetAttribute,
 } from "./AdaptationSet.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
@@ -80,11 +80,13 @@ export function generatePeriodChildrenParser(
           linearMemory,
           parsersStack,
         );
-        const attributeParser = generateAdaptationSetAttrParser(
+        parsersStack.pushParsersWithStaticAttribute(
+          nodeId,
+          childrenParser,
+          parseAdaptationSetAttribute,
           adaptationObj.attributes,
           linearMemory,
         );
-        parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
         break;
       }
 
