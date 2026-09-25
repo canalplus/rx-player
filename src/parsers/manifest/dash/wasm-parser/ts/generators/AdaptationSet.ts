@@ -18,6 +18,7 @@ import noop from "../../../../../../utils/noop.ts";
 import type {
   IAdaptationSetAttributes,
   IAdaptationSetChildren,
+  IRepresentationIntermediateRepresentation,
   ISegmentListIntermediateRepresentation,
 } from "../../../node_parser_types.ts";
 import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
@@ -28,6 +29,7 @@ import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentComponentAttrParser } from "./ContentComponent.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
 import { generateLabelElementParser } from "./Label.ts";
+import { emptyChildArray, pushChild } from "./lazy_child_array.ts";
 import {
   generateRepresentationAttrParser,
   generateRepresentationChildrenParser,
@@ -59,7 +61,7 @@ export function generateAdaptationSetChildrenParser(
     switch (nodeId) {
       case TagName.Accessibility: {
         const accessibility = { attributes: {} };
-        adaptationSetChildren.Accessibility.push(accessibility);
+        pushChild(adaptationSetChildren, "Accessibility", accessibility);
         const schemeAttrParser = generateSchemeAttrParser(
           accessibility.attributes,
           linearMemory,
@@ -70,7 +72,7 @@ export function generateAdaptationSetChildrenParser(
 
       case TagName.BaseURL: {
         const baseUrl = { value: "", attributes: {} };
-        adaptationSetChildren.BaseURL.push(baseUrl);
+        pushChild(adaptationSetChildren, "BaseURL", baseUrl);
         const attributeParser = generateBaseUrlAttrParser(baseUrl, linearMemory);
         parsersStack.pushParsers(nodeId, noop, attributeParser);
         break;
@@ -78,7 +80,7 @@ export function generateAdaptationSetChildrenParser(
 
       case TagName.ContentComponent: {
         const contentComponent = { attributes: {} };
-        adaptationSetChildren.ContentComponent.push(contentComponent);
+        pushChild(adaptationSetChildren, "ContentComponent", contentComponent);
         parsersStack.pushParsers(
           nodeId,
           noop,
@@ -92,7 +94,7 @@ export function generateAdaptationSetChildrenParser(
           children: { ["cenc:pssh"]: [] },
           attributes: {},
         };
-        adaptationSetChildren.ContentProtection.push(contentProtection);
+        pushChild(adaptationSetChildren, "ContentProtection", contentProtection);
         const contentProtAttrParser = generateContentProtectionAttrParser(
           contentProtection,
           linearMemory,
@@ -103,7 +105,7 @@ export function generateAdaptationSetChildrenParser(
 
       case TagName.EssentialProperty: {
         const essentialProperty = { attributes: {} };
-        adaptationSetChildren.EssentialProperty.push(essentialProperty);
+        pushChild(adaptationSetChildren, "EssentialProperty", essentialProperty);
 
         const childrenParser = noop; // EssentialProperty have no sub-element
         const attributeParser = generateSchemeAttrParser(
@@ -116,7 +118,7 @@ export function generateAdaptationSetChildrenParser(
 
       case TagName.InbandEventStream: {
         const inbandEvent = { attributes: {} };
-        adaptationSetChildren.InbandEventStream.push(inbandEvent);
+        pushChild(adaptationSetChildren, "InbandEventStream", inbandEvent);
 
         const childrenParser = noop; // InbandEventStream have no sub-element
         const attributeParser = generateSchemeAttrParser(
@@ -128,20 +130,20 @@ export function generateAdaptationSetChildrenParser(
       }
 
       case TagName.Representation: {
-        const representationObj = {
+        const representationObj: IRepresentationIntermediateRepresentation = {
           children: {
-            BaseURL: [],
-            ContentProtection: [],
-            InbandEventStream: [],
-            SegmentBase: [],
-            SegmentList: [],
-            SegmentTemplate: [],
-            SupplementalProperty: [],
-            EssentialProperty: [],
+            BaseURL: emptyChildArray(),
+            ContentProtection: emptyChildArray(),
+            InbandEventStream: emptyChildArray(),
+            SegmentBase: emptyChildArray(),
+            SegmentList: emptyChildArray(),
+            SegmentTemplate: emptyChildArray(),
+            SupplementalProperty: emptyChildArray(),
+            EssentialProperty: emptyChildArray(),
           },
           attributes: {},
         };
-        adaptationSetChildren.Representation.push(representationObj);
+        pushChild(adaptationSetChildren, "Representation", representationObj);
         const childrenParser = generateRepresentationChildrenParser(
           representationObj.children,
           linearMemory,
@@ -157,7 +159,7 @@ export function generateAdaptationSetChildrenParser(
 
       case TagName.Role: {
         const role = { attributes: {} };
-        adaptationSetChildren.Role.push(role);
+        pushChild(adaptationSetChildren, "Role", role);
         const attributeParser = generateSchemeAttrParser(role.attributes, linearMemory);
         parsersStack.pushParsers(nodeId, noop, attributeParser);
         break;
@@ -165,7 +167,7 @@ export function generateAdaptationSetChildrenParser(
 
       case TagName.SupplementalProperty: {
         const supplementalProperty = { attributes: {} };
-        adaptationSetChildren.SupplementalProperty.push(supplementalProperty);
+        pushChild(adaptationSetChildren, "SupplementalProperty", supplementalProperty);
         const attributeParser = generateSchemeAttrParser(
           supplementalProperty.attributes,
           linearMemory,
@@ -176,7 +178,7 @@ export function generateAdaptationSetChildrenParser(
 
       case TagName.SegmentBase: {
         const segmentBaseObj = { children: { Initialization: [] }, attributes: {} };
-        adaptationSetChildren.SegmentBase.push(segmentBaseObj);
+        pushChild(adaptationSetChildren, "SegmentBase", segmentBaseObj);
         const attributeParser = generateSegmentBaseAttrParser(
           segmentBaseObj,
           linearMemory,
@@ -198,7 +200,7 @@ export function generateAdaptationSetChildrenParser(
           },
           attributes: {},
         };
-        adaptationSetChildren.SegmentList.push(segmentListObj);
+        pushChild(adaptationSetChildren, "SegmentList", segmentListObj);
         const childrenParser = generateSegmentListChildrenParser(
           segmentListObj,
           linearMemory,
@@ -216,7 +218,7 @@ export function generateAdaptationSetChildrenParser(
 
       case TagName.SegmentTemplate: {
         const stObj = { children: { Initialization: [] }, attributes: {} };
-        adaptationSetChildren.SegmentTemplate.push(stObj);
+        pushChild(adaptationSetChildren, "SegmentTemplate", stObj);
         parsersStack.pushParsers(
           nodeId,
           generateSegmentTemplateChildrenParser(
