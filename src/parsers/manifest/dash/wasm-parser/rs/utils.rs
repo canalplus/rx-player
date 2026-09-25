@@ -1,4 +1,5 @@
 use crate::errors::{ParsingError, Result};
+use core::convert::TryFrom;
 
 /// Try to parse the given array of bytes into an f64, by first converting
 /// it to the corresponding ASCII (or even here, UTF-8) values.
@@ -8,20 +9,50 @@ pub fn parse_f64(value: &[u8]) -> Result<f64> {
     Ok(res_f64)
 }
 
-/// Try to parse the given array of bytes into an i64, by first converting
-/// it to the corresponding ASCII (or even here, UTF-8) values.
+/// Try to parse the given array of ASCII bytes into an i64.
 pub fn parse_i64(value: &[u8]) -> Result<i64> {
-    let res = std::str::from_utf8(value)?;
-    let res_u64 = res.parse::<i64>()?;
-    Ok(res_u64)
+    let (is_negative, digits) = match value.first() {
+        Some(b'-') => (true, &value[1..]),
+        Some(b'+') => (false, &value[1..]),
+        _ => (false, value),
+    };
+    let magnitude = parse_unsigned_digits(digits)?;
+    if is_negative {
+        if magnitude == (i64::MAX as u64) + 1 {
+            Ok(i64::MIN)
+        } else {
+            let value = i64::try_from(magnitude).map_err(|_| invalid_integer())?;
+            Ok(-value)
+        }
+    } else {
+        i64::try_from(magnitude).map_err(|_| invalid_integer())
+    }
 }
 
-/// Try to parse the given array of bytes into an u64, by first converting
-/// it to the corresponding ASCII (or even here, UTF-8) values.
+/// Try to parse the given array of ASCII bytes into a u64.
 pub fn parse_u64(value: &[u8]) -> Result<u64> {
-    let res = std::str::from_utf8(value)?;
-    let res_u64 = res.parse::<u64>()?;
-    Ok(res_u64)
+    let digits = value.strip_prefix(b"+").unwrap_or(value);
+    parse_unsigned_digits(digits)
+}
+
+fn parse_unsigned_digits(value: &[u8]) -> Result<u64> {
+    if value.is_empty() {
+        return Err(invalid_integer());
+    }
+    let mut result = 0u64;
+    for byte in value {
+        let digit = byte.checked_sub(b'0').filter(|digit| *digit <= 9);
+        let digit = digit.ok_or_else(invalid_integer)?;
+        result = result
+            .checked_mul(10)
+            .and_then(|number| number.checked_add(u64::from(digit)))
+            .ok_or_else(invalid_integer)?;
+    }
+    Ok(result)
+}
+
+fn invalid_integer() -> ParsingError {
+    ParsingError("Invalid integer found in the MPD.".to_owned())
 }
 
 /// Try to parse the given array of bytes into an f64:
@@ -218,6 +249,30 @@ pub fn u32_to_u8_slice_be(x: u32) -> [u8; 4] {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_parse_integers() {
+        assert_eq!(parse_u64(b"0").unwrap(), 0);
+        assert_eq!(parse_u64(b"+42").unwrap(), 42);
+        assert_eq!(parse_u64(b"18446744073709551615").unwrap(), u64::MAX);
+        assert_eq!(parse_i64(b"+42").unwrap(), 42);
+        assert_eq!(parse_i64(b"-42").unwrap(), -42);
+        assert_eq!(parse_i64(b"9223372036854775807").unwrap(), i64::MAX);
+        assert_eq!(parse_i64(b"-9223372036854775808").unwrap(), i64::MIN);
+
+        for invalid in [
+            b"".as_slice(),
+            b"+",
+            b"-",
+            b"12a",
+            b" 12",
+            b"18446744073709551616",
+        ] {
+            assert!(parse_u64(invalid).is_err());
+        }
+        assert!(parse_i64(b"9223372036854775808").is_err());
+        assert!(parse_i64(b"-9223372036854775809").is_err());
+    }
 
     #[test]
     fn test_parse_maybe_division() {
