@@ -26,6 +26,7 @@ import { AttributeName, TagName } from "../types.ts";
 import { parseString } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
+import { pushChild } from "./lazy_child_array.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
 import {
   generateSegmentBaseAttrParser,
@@ -53,7 +54,7 @@ export function generateRepresentationChildrenParser(
     switch (nodeId) {
       case TagName.BaseURL: {
         const baseUrl = { value: "", attributes: {} };
-        childrenObj.BaseURL.push(baseUrl);
+        pushChild(childrenObj, "BaseURL", baseUrl);
         parsersStack.pushParsers(
           nodeId,
           noop,
@@ -67,7 +68,7 @@ export function generateRepresentationChildrenParser(
           children: { ["cenc:pssh"]: [] },
           attributes: {},
         };
-        childrenObj.ContentProtection.push(contentProtection);
+        pushChild(childrenObj, "ContentProtection", contentProtection);
         const contentProtAttrParser = generateContentProtectionAttrParser(
           contentProtection,
           linearMemory,
@@ -78,7 +79,7 @@ export function generateRepresentationChildrenParser(
 
       case TagName.InbandEventStream: {
         const inbandEvent = { attributes: {} };
-        childrenObj.InbandEventStream.push(inbandEvent);
+        pushChild(childrenObj, "InbandEventStream", inbandEvent);
         parsersStack.pushParsers(
           nodeId,
           noop,
@@ -89,7 +90,7 @@ export function generateRepresentationChildrenParser(
 
       case TagName.EssentialProperty: {
         const essentialProperty = { attributes: {} };
-        childrenObj.EssentialProperty.push(essentialProperty);
+        pushChild(childrenObj, "EssentialProperty", essentialProperty);
         const attributeParser = generateSchemeAttrParser(
           essentialProperty.attributes,
           linearMemory,
@@ -100,7 +101,7 @@ export function generateRepresentationChildrenParser(
 
       case TagName.SupplementalProperty: {
         const supplementalProperty = { attributes: {} };
-        childrenObj.SupplementalProperty.push(supplementalProperty);
+        pushChild(childrenObj, "SupplementalProperty", supplementalProperty);
         const attributeParser = generateSchemeAttrParser(
           supplementalProperty.attributes,
           linearMemory,
@@ -111,7 +112,7 @@ export function generateRepresentationChildrenParser(
 
       case TagName.SegmentBase: {
         const segmentBaseObj = { children: { Initialization: [] }, attributes: {} };
-        childrenObj.SegmentBase.push(segmentBaseObj);
+        pushChild(childrenObj, "SegmentBase", segmentBaseObj);
         const attributeParser = generateSegmentBaseAttrParser(
           segmentBaseObj,
           linearMemory,
@@ -130,7 +131,7 @@ export function generateRepresentationChildrenParser(
           children: { Initialization: [], SegmentURL: [] },
           attributes: {},
         };
-        childrenObj.SegmentList.push(segmentListObj);
+        pushChild(childrenObj, "SegmentList", segmentListObj);
         const childrenParser = generateSegmentListChildrenParser(
           segmentListObj,
           linearMemory,
@@ -148,7 +149,7 @@ export function generateRepresentationChildrenParser(
 
       case TagName.SegmentTemplate: {
         const stObj = { children: { Initialization: [] }, attributes: {} };
-        childrenObj.SegmentTemplate.push(stObj);
+        pushChild(childrenObj, "SegmentTemplate", stObj);
         parsersStack.pushParsers(
           nodeId,
           generateSegmentTemplateChildrenParser(
