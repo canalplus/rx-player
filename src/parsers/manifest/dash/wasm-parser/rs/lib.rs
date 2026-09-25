@@ -49,6 +49,12 @@ extern "C" {
     /// * `len` - Length of the data - starting at `ptr` - in bytes.
     fn onAttribute(attr_name: AttributeName, ptr: *const u8, len: usize);
 
+    /// JS callback called when a numeric attribute has been parsed.
+    fn onFloatAttribute(attr_name: AttributeName, value: f64);
+
+    /// JS callback called when a boolean attribute has been parsed.
+    fn onBooleanAttribute(attr_name: AttributeName, value: u32);
+
     /// JS callback for other specific operations, for example logging and warnings.
     ///
     /// # Arguments

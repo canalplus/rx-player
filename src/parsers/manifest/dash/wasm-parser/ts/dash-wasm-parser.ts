@@ -154,6 +154,8 @@ export default class DashWasmParser {
         onTagOpen,
         onCustomEvent,
         onAttribute,
+        onFloatAttribute,
+        onBooleanAttribute,
         readNext,
         onTagClose,
       },
@@ -249,6 +251,14 @@ export default class DashWasmParser {
     function onAttribute(attr: AttributeName, ptr: number, len: number): void {
       // Call the active "attributeParser"
       return parsersStack.attributeParser(attr, ptr, len);
+    }
+
+    function onFloatAttribute(attr: AttributeName, value: number): void {
+      parsersStack.attributeParser(attr, 0, 0, value);
+    }
+
+    function onBooleanAttribute(attr: AttributeName, value: number): void {
+      parsersStack.attributeParser(attr, 0, 0, value);
     }
 
     /**

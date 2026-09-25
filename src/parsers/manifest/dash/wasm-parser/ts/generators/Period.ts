@@ -23,7 +23,7 @@ import type {
 import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
-import { parseString } from "../utils.ts";
+import { parseString, readBoolean, readFloat } from "../utils.ts";
 import {
   generateAdaptationSetAttrParser,
   generateAdaptationSetChildrenParser,
@@ -164,20 +164,19 @@ export function generatePeriodAttrParser(
   periodAttrs: IPeriodAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  return function onPeriodAttribute(attr, ptr, len) {
+  return function onPeriodAttribute(attr, ptr, len, value) {
     switch (attr) {
       case AttributeName.Id:
         periodAttrs.id = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Start:
-        periodAttrs.start = new DataView(linearMemory.buffer).getFloat64(ptr, true);
+        periodAttrs.start = readFloat(value);
         break;
       case AttributeName.Duration:
-        periodAttrs.duration = new DataView(linearMemory.buffer).getFloat64(ptr, true);
+        periodAttrs.duration = readFloat(value);
         break;
       case AttributeName.BitstreamSwitching:
-        periodAttrs.bitstreamSwitching =
-          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
+        periodAttrs.bitstreamSwitching = readBoolean(value);
         break;
       case AttributeName.XLinkHref:
         periodAttrs["xlink:href"] = parseString(linearMemory.buffer, ptr, len);
@@ -186,14 +185,10 @@ export function generatePeriodAttrParser(
         periodAttrs["xlink:actuate"] = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.AvailabilityTimeOffset:
-        periodAttrs.availabilityTimeOffset = new DataView(linearMemory.buffer).getFloat64(
-          ptr,
-          true,
-        );
+        periodAttrs.availabilityTimeOffset = readFloat(value);
         break;
       case AttributeName.AvailabilityTimeComplete:
-        periodAttrs.availabilityTimeComplete =
-          new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
+        periodAttrs.availabilityTimeComplete = readBoolean(value);
         break;
       case AttributeName.Namespace: {
         const xmlNs = { key: "", value: "" };

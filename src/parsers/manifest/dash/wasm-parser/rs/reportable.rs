@@ -1,6 +1,6 @@
 use crate::events::AttributeName;
-use crate::onAttribute;
 use crate::processor::SegmentObject;
+use crate::{onAttribute, onBooleanAttribute, onFloatAttribute};
 use core::mem;
 use std::borrow::Cow;
 
@@ -37,11 +37,8 @@ impl ReportableAttribute for bool {
     fn report_as_attr(&self, attr_name: AttributeName) {
         debug_assert!(attr_name as u64 <= u8::MAX as u64);
 
-        let val: u8 = if *self { 1 } else { 0 };
-        // UNSAFE: We're using FFI, so we don't know how the pointer is used.
-        // Hopefully, the JavaScript-side should clone that value synchronously.
         unsafe {
-            onAttribute(attr_name, &val, 1);
+            onBooleanAttribute(attr_name, u32::from(*self));
         };
     }
 }
@@ -51,16 +48,8 @@ impl ReportableAttribute for f64 {
     fn report_as_attr(&self, attr_name: AttributeName) {
         debug_assert!(attr_name as u64 <= u8::MAX as u64);
 
-        // UNSAFE: We're using FFI, so we don't know how the pointer is used.
-        // Hopefully, the JavaScript-side should clone that value synchronously.
-        //
-        // Also, we're casting so that the f64 value is actually treated as if it
-        // was a *const u8 (immutable raw pointer to an u8) as it's what the JS
-        // callback expects.
-        // This should not matter: Rust types are not communicated to
-        // JavaScript anyway.
         unsafe {
-            onAttribute(attr_name, self as *const f64 as *const u8, 8);
+            onFloatAttribute(attr_name, *self);
         };
     }
 }

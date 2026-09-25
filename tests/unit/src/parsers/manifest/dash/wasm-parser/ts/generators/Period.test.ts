@@ -4,11 +4,11 @@ import { generatePeriodAttrParser } from "../../../../../../../../../src/parsers
 import { AttributeName } from "../../../../../../../../../src/parsers/manifest/dash/wasm-parser/ts/types.ts";
 
 describe("DASH WASM Period attribute parser", () => {
-  it("parses boolean attributes at the supplied pointer", () => {
+  it("parses boolean attributes from their direct value", () => {
     const memory = new WebAssembly.Memory({ initial: 1 });
     const attributes: IPeriodAttributes = {};
     const parser = generatePeriodAttrParser(attributes, memory);
-    const checkBooleanAttribute = createBooleanAttributeChecker(memory, parser);
+    const checkBooleanAttribute = createBooleanAttributeChecker(parser);
 
     checkBooleanAttribute(AttributeName.BitstreamSwitching, () => {
       return attributes.bitstreamSwitching;
@@ -20,18 +20,12 @@ describe("DASH WASM Period attribute parser", () => {
 });
 
 function createBooleanAttributeChecker(
-  memory: WebAssembly.Memory,
   parser: ReturnType<typeof generatePeriodAttrParser>,
 ) {
   return (attribute: AttributeName, readValue: () => boolean | undefined): void => {
-    const bytes = new Uint8Array(memory.buffer);
-    bytes[0] = 1;
-    bytes[32] = 0;
-    parser(attribute, 32, 1);
+    parser(attribute, 0, 0, 0);
     expect(readValue()).toBe(false);
-    bytes[0] = 0;
-    bytes[32] = 1;
-    parser(attribute, 32, 1);
+    parser(attribute, 0, 0, 1);
     expect(readValue()).toBe(true);
   };
 }
