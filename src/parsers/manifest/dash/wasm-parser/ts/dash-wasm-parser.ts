@@ -154,6 +154,7 @@ export default class DashWasmParser {
         onTagOpen,
         onCustomEvent,
         onAttribute,
+        onAttributeBatch,
         readNext,
         onTagClose,
       },
@@ -249,6 +250,21 @@ export default class DashWasmParser {
     function onAttribute(attr: AttributeName, ptr: number, len: number): void {
       // Call the active "attributeParser"
       return parsersStack.attributeParser(attr, ptr, len);
+    }
+
+    /** Dispatch all attributes from one XML element in a single WASM callback. */
+    function onAttributeBatch(ptr: number, len: number): void {
+      const linearMemory = self._linearMemory as WebAssembly.Memory;
+      const dataView = new DataView(linearMemory.buffer);
+      const end = ptr + len;
+      let offset = ptr;
+      while (offset < end) {
+        const attr = dataView.getUint8(offset);
+        const valueLen = dataView.getUint32(offset + 1, true);
+        offset += 5;
+        parsersStack.attributeParser(attr, offset, valueLen);
+        offset += valueLen;
+      }
     }
 
     /**

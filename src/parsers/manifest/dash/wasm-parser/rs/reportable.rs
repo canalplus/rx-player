@@ -1,8 +1,55 @@
 use crate::events::AttributeName;
-use crate::onAttribute;
 use crate::processor::SegmentObject;
+use crate::{onAttribute, onAttributeBatch};
 use core::mem;
 use std::borrow::Cow;
+use std::cell::{Cell, RefCell};
+
+thread_local! {
+    static ATTRIBUTE_BATCH: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
+    static ATTRIBUTE_BATCH_ACTIVE: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Keeps a single temporary allocation whose size is bounded by the largest
+/// attribute list encountered on one XML element.
+pub struct AttributeBatchGuard;
+
+impl AttributeBatchGuard {
+    pub fn new() -> Self {
+        ATTRIBUTE_BATCH.with(|batch| {
+            batch.borrow_mut().clear();
+        });
+        ATTRIBUTE_BATCH_ACTIVE.with(|active| active.set(true));
+        Self
+    }
+}
+
+impl Drop for AttributeBatchGuard {
+    fn drop(&mut self) {
+        ATTRIBUTE_BATCH_ACTIVE.with(|active| active.set(false));
+        ATTRIBUTE_BATCH.with(|batch| {
+            let buffer = batch.borrow();
+            if !buffer.is_empty() {
+                unsafe { onAttributeBatch(buffer.as_ptr(), buffer.len()) };
+            }
+        });
+    }
+}
+
+#[inline(always)]
+fn report_bytes(attr_name: AttributeName, bytes: &[u8]) {
+    let was_batched = ATTRIBUTE_BATCH_ACTIVE.with(|active| active.get());
+    if was_batched {
+        ATTRIBUTE_BATCH.with(|batch| {
+            let mut batch = batch.borrow_mut();
+            batch.push(attr_name as u8);
+            batch.extend((bytes.len() as u32).to_le_bytes());
+            batch.extend(bytes);
+        });
+    } else {
+        unsafe { onAttribute(attr_name, bytes.as_ptr(), bytes.len()) };
+    }
+}
 
 /// Trait implemented for values that can be "reported" as an attribute to the
 /// JS-side.
@@ -40,9 +87,7 @@ impl ReportableAttribute for bool {
         let val: u8 = if *self { 1 } else { 0 };
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe {
-            onAttribute(attr_name, &val, 1);
-        };
+        report_bytes(attr_name, std::slice::from_ref(&val));
     }
 }
 
@@ -59,9 +104,7 @@ impl ReportableAttribute for f64 {
         // callback expects.
         // This should not matter: Rust types are not communicated to
         // JavaScript anyway.
-        unsafe {
-            onAttribute(attr_name, self as *const f64 as *const u8, 8);
-        };
+        report_bytes(attr_name, &self.to_le_bytes());
     }
 }
 
@@ -78,9 +121,10 @@ impl ReportableAttribute for (f64, f64) {
         // callback expects.
         // This should not matter: Rust types are not communicated to
         // JavaScript anyway.
-        unsafe {
-            onAttribute(attr_name, self as *const (f64, f64) as *const u8, 16);
-        };
+        let mut bytes = [0; 16];
+        bytes[..8].copy_from_slice(&self.0.to_le_bytes());
+        bytes[8..].copy_from_slice(&self.1.to_le_bytes());
+        report_bytes(attr_name, &bytes);
     }
 }
 
@@ -91,10 +135,9 @@ impl ReportableAttribute for &[SegmentObject] {
 
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe {
-            let len = self.len() * mem::size_of::<SegmentObject>();
-            onAttribute(attr_name, self.as_ptr() as *const u8, len);
-        }
+        let len = self.len() * mem::size_of::<SegmentObject>();
+        let bytes = unsafe { std::slice::from_raw_parts(self.as_ptr() as *const u8, len) };
+        report_bytes(attr_name, bytes);
     }
 }
 
@@ -114,9 +157,7 @@ impl<'a> ReportableAttribute for (&'a [u8], Cow<'a, str>) {
 
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe {
-            onAttribute(attr_name, msg.as_ptr(), msg.len());
-        };
+        report_bytes(attr_name, &msg);
     }
 }
 
@@ -127,9 +168,7 @@ impl<'a> ReportableAttribute for Cow<'a, [u8]> {
 
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe {
-            onAttribute(attr_name, self.as_ptr(), self.len());
-        };
+        report_bytes(attr_name, self);
     }
 }
 
@@ -140,8 +179,6 @@ impl<'a> ReportableAttribute for Cow<'a, str> {
 
         // UNSAFE: We're using FFI, so we don't know how the pointer is used.
         // Hopefully, the JavaScript-side should clone that value synchronously.
-        unsafe {
-            onAttribute(attr_name, self.as_ptr(), self.len());
-        };
+        report_bytes(attr_name, self.as_bytes());
     }
 }
