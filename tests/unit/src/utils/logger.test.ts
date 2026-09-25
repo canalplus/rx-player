@@ -213,6 +213,67 @@ describe("utils - Logger", () => {
     expect(logger.getFormat()).toEqual("standard");
   });
 
+  it("should preserve a forwarded message timestamp in full format", () => {
+    const logger = new Logger();
+    logger.setLevel("DEBUG", "full");
+    logMsgs.length = 0;
+
+    logger.log({
+      timestamp: 123.456,
+      level: "DEBUG",
+      namespace: "SF",
+      args: ["Beginning request", { bufferType: "video" }],
+    });
+
+    expect(logMsgs).toEqual([
+      ["123.46", "[log]", "SF:", "Beginning request", 'bufferType="video"'],
+    ]);
+  });
+
+  it("should keep level filtering and standard formatting for forwarded messages", () => {
+    const logger = new Logger();
+    logger.setLevel("WARNING", "standard");
+
+    logger.log({
+      timestamp: 123.456,
+      level: "DEBUG",
+      namespace: "SF",
+      args: ["filtered"],
+    });
+    logger.log({
+      timestamp: 123.456,
+      level: "ERROR",
+      namespace: "DRM",
+      args: ["failed"],
+    });
+
+    expect(logMsgs).toHaveLength(0);
+    expect(errorMsgs).toEqual([["DRM:", "failed"]]);
+  });
+
+  it("should use the custom logger for both regular and explicitly timestamped logs", () => {
+    const logger = new Logger();
+    const customLog = vi.fn();
+    logger.setLevel("DEBUG", "full");
+    logger.setLevel("DEBUG", "full", customLog);
+    logMsgs.length = 0;
+
+    logger.debug("SF", "regular");
+    logger.log({
+      timestamp: 123.456,
+      level: "ERROR",
+      namespace: "DRM",
+      args: ["forwarded"],
+    });
+
+    expect(customLog.mock.calls).toEqual([
+      ["DEBUG", "SF", ["regular"]],
+      ["ERROR", "DRM", ["forwarded"]],
+    ]);
+    expect(logMsgs).toHaveLength(0);
+    expect(errorMsgs).toHaveLength(0);
+  });
+
   it('should allow setting a format of "full" or "standard"', () => {
     const logger = new Logger();
     expect(logger.getFormat()).toEqual("standard");
