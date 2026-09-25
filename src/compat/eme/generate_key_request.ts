@@ -144,31 +144,34 @@ export default function generateKeyRequest(
   }
   const initDataType = initializationDataType ?? "";
   log.debug("DRM", "Calling generateRequest on the MediaKeySession");
-  return session.generateRequest(initDataType, patchedInit).catch((error) => {
-    if (initDataType !== "" || !(error instanceof TypeError)) {
-      throw error;
-    }
+  return session
+    .generateRequest(initDataType, patchedInit)
+    .catch((error) => {
+      if (initDataType !== "" || !(error instanceof TypeError)) {
+        throw error;
+      }
 
-    // On newer EME versions of the specification, the initialization data
-    // type given to generateRequest cannot be an empty string (it returns
-    // a rejected promise with a TypeError in that case).
-    // Retry with a default "cenc" value for initialization data type if
-    // we're in that condition.
-    log.warn(
-      "DRM",
-      "error while calling `generateRequest` with an empty " +
-        'initialization data type. Retrying with a default "cenc" value.',
-      error,
+      // On newer EME versions of the specification, the initialization data
+      // type given to generateRequest cannot be an empty string (it returns
+      // a rejected promise with a TypeError in that case).
+      // Retry with a default "cenc" value for initialization data type if
+      // we're in that condition.
+      log.warn(
+        "DRM",
+        "error while calling `generateRequest` with an empty " +
+          'initialization data type. Retrying with a default "cenc" value.',
+        error,
+      );
+      return session.generateRequest("cenc", patchedInit);
+    })
+    .then(
+      (result) => {
+        log.debug("DRM", "generateRequest succeeded");
+        return result;
+      },
+      (error: unknown) => {
+        log.debug("DRM", "generateRequest failed");
+        throw error;
+      },
     );
-    return session.generateRequest("cenc", patchedInit);
-  }).then(
-    (result) => {
-      log.debug("DRM", "generateRequest succeeded");
-      return result;
-    },
-    (error: unknown) => {
-      log.debug("DRM", "generateRequest failed");
-      throw error;
-    },
-  );
 }
