@@ -26,7 +26,7 @@ impl MPDProcessor {
     pub fn new(reader: BufReader<MPDReader>) -> Self {
         let mut reader = Reader::from_reader(reader);
         reader.expand_empty_elements(false);
-        reader.trim_text(true);
+        reader.trim_text(false);
         reader.check_end_names(false);
         MPDProcessor {
             reader,
@@ -349,8 +349,10 @@ impl MPDProcessor {
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Text(t)) => {
-                    if t.len() > 0 {
+                Ok(Event::Text(mut t)) => {
+                    t.inplace_trim_start();
+                    t.inplace_trim_end();
+                    if !t.is_empty() {
                         match t.unescape() {
                             Ok(unescaped) => AttributeName::Location.report(unescaped),
                             Err(err) => ParsingError::from(err).report_err(),
@@ -387,8 +389,10 @@ impl MPDProcessor {
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Text(t)) => {
-                    if t.len() > 0 {
+                Ok(Event::Text(mut t)) => {
+                    t.inplace_trim_start();
+                    t.inplace_trim_end();
+                    if !t.is_empty() {
                         match t.unescape() {
                             Ok(unescaped) => AttributeName::Text.report(unescaped),
                             Err(err) => ParsingError::from(err).report_err(),
@@ -425,8 +429,10 @@ impl MPDProcessor {
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Text(t)) => {
-                    if t.len() > 0 {
+                Ok(Event::Text(mut t)) => {
+                    t.inplace_trim_start();
+                    t.inplace_trim_end();
+                    if !t.is_empty() {
                         match t.unescape() {
                             Ok(unescaped) => AttributeName::Text.report(unescaped),
                             Err(err) => ParsingError::from(err).report_err(),
@@ -463,8 +469,10 @@ impl MPDProcessor {
 
         loop {
             match self.read_next_event() {
-                Ok(Event::Text(t)) => {
-                    if t.len() > 0 {
+                Ok(Event::Text(mut t)) => {
+                    t.inplace_trim_start();
+                    t.inplace_trim_end();
+                    if !t.is_empty() {
                         match t.unescape() {
                             Ok(unescaped) =>
                             // TODO parse from base64 here?
