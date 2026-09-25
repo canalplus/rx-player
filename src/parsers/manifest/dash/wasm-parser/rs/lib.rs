@@ -49,6 +49,9 @@ extern "C" {
     /// * `len` - Length of the data - starting at `ptr` - in bytes.
     fn onAttribute(attr_name: AttributeName, ptr: *const u8, len: usize);
 
+    /// JS callback called once with all attributes parsed for one XML element.
+    fn onAttributeBatch(ptr: *const u8, len: usize);
+
     /// JS callback for other specific operations, for example logging and warnings.
     ///
     /// # Arguments

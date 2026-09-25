@@ -1,7 +1,9 @@
 use crate::errors::ParsingError;
 use crate::events::AttributeName::*;
+use crate::reportable::AttributeBatchGuard;
 
 pub fn report_mpd_attrs(e: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in e.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -40,6 +42,7 @@ pub fn report_mpd_attrs(e: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_period_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -65,6 +68,7 @@ pub fn report_period_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_adaptation_set_attrs(e: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in e.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -110,6 +114,7 @@ pub fn report_adaptation_set_attrs(e: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_representation_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -141,6 +146,7 @@ pub fn report_representation_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_base_url_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => {
@@ -154,6 +160,7 @@ pub fn report_base_url_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_segment_template_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -181,6 +188,7 @@ pub fn report_segment_template_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_segment_base_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -204,6 +212,7 @@ pub fn report_segment_base_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_content_component_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -219,6 +228,7 @@ pub fn report_content_component_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_content_protection_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -238,6 +248,7 @@ pub fn report_content_protection_attrs(tag_bs: &quick_xml::events::BytesStart) {
 
 /// Report attributes encountered in an `<Initialization>` element.
 pub fn report_initialization_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -257,6 +268,7 @@ pub fn report_initialization_attrs(tag_bs: &quick_xml::events::BytesStart) {
 ///   - "schemeIdUri"
 ///   - "value"
 pub fn report_scheme_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -270,6 +282,7 @@ pub fn report_scheme_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_segment_url_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -285,6 +298,7 @@ pub fn report_segment_url_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_event_stream_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
@@ -303,6 +317,7 @@ pub fn report_event_stream_attrs(tag_bs: &quick_xml::events::BytesStart) {
 }
 
 pub fn report_event_stream_event_attrs(tag_bs: &quick_xml::events::BytesStart) {
+    let _batch = AttributeBatchGuard::new();
     for res_attr in tag_bs.attributes().with_checks(false) {
         match res_attr {
             Ok(attr) => match attr.key.as_ref() {
