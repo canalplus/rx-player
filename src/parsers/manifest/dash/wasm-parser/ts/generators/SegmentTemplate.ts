@@ -49,7 +49,6 @@ export function generateSegmentTemplateAttrParser(
   segmentTemplateAttrs: ISegmentTemplateIntermediateRepresentation,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onSegmentTemplateAttribute(attr, ptr, len) {
     switch (attr) {
       case AttributeName.SegmentTimeline: {
@@ -69,7 +68,6 @@ export function generateSegmentTemplateAttrParser(
 
       case AttributeName.InitializationMedia:
         segmentTemplateAttrs.attributes.initialization = parseString(
-          textDecoder,
           linearMemory.buffer,
           ptr,
           len,
@@ -78,7 +76,6 @@ export function generateSegmentTemplateAttrParser(
 
       case AttributeName.Index:
         segmentTemplateAttrs.attributes.index = parseString(
-          textDecoder,
           linearMemory.buffer,
           ptr,
           len,
@@ -132,7 +129,6 @@ export function generateSegmentTemplateAttrParser(
 
       case AttributeName.Media:
         segmentTemplateAttrs.attributes.media = parseString(
-          textDecoder,
           linearMemory.buffer,
           ptr,
           len,

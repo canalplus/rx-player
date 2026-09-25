@@ -256,29 +256,23 @@ export function generateAdaptationSetAttrParser(
   adaptationAttrs: IAdaptationSetAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onAdaptationSetAttribute(attr: number, ptr: number, len: number) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.Id:
-        adaptationAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        adaptationAttrs.id = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Group:
         adaptationAttrs.group = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.Language:
-        adaptationAttrs.lang = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        adaptationAttrs.lang = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.ContentType:
-        adaptationAttrs.contentType = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        adaptationAttrs.contentType = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Par:
-        adaptationAttrs.par = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        adaptationAttrs.par = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.MinBandwidth:
         adaptationAttrs.minBandwidth = dataView.getFloat64(ptr, true);
@@ -321,47 +315,26 @@ export function generateAdaptationSetAttrParser(
         adaptationAttrs.bitstreamSwitching = dataView.getUint8(ptr) !== 0;
         break;
       case AttributeName.AudioSamplingRate:
-        adaptationAttrs.audioSamplingRate = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        adaptationAttrs.audioSamplingRate = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Codecs:
-        adaptationAttrs.codecs = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        adaptationAttrs.codecs = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.SupplementalCodecs:
         adaptationAttrs["scte214:supplementalCodecs"] = parseString(
-          textDecoder,
           linearMemory.buffer,
           ptr,
           len,
         );
         break;
       case AttributeName.Profiles:
-        adaptationAttrs.profiles = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        adaptationAttrs.profiles = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.SegmentProfiles:
-        adaptationAttrs.segmentProfiles = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        adaptationAttrs.segmentProfiles = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.MimeType:
-        adaptationAttrs.mimeType = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        adaptationAttrs.mimeType = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.CodingDependency:
         adaptationAttrs.codingDependency = dataView.getUint8(ptr) !== 0;

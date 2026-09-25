@@ -121,30 +121,29 @@ export function generateMPDAttrParser(
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
   let dataView;
-  const textDecoder = new TextDecoder();
   return function onMPDAttribute(attr: number, ptr: number, len: number) {
     switch (attr) {
       case AttributeName.Id:
-        mpdAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        mpdAttrs.id = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Profiles:
-        mpdAttrs.profiles = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        mpdAttrs.profiles = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Type:
-        mpdAttrs.type = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        mpdAttrs.type = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.AvailabilityStartTime: {
-        const startTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        const startTime = parseString(linearMemory.buffer, ptr, len);
         mpdAttrs.availabilityStartTime = new Date(startTime).getTime() / 1000;
         break;
       }
       case AttributeName.AvailabilityEndTime: {
-        const endTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        const endTime = parseString(linearMemory.buffer, ptr, len);
         mpdAttrs.availabilityEndTime = new Date(endTime).getTime() / 1000;
         break;
       }
       case AttributeName.PublishTime: {
-        const publishTime = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        const publishTime = parseString(linearMemory.buffer, ptr, len);
         mpdAttrs.publishTime = new Date(publishTime).getTime() / 1000;
         break;
       }
@@ -177,7 +176,7 @@ export function generateMPDAttrParser(
         mpdAttrs.maxSubsegmentDuration = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.Location: {
-        const location = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        const location = parseString(linearMemory.buffer, ptr, len);
         mpdChildren.Location.push({ value: location });
         break;
       }
@@ -188,12 +187,12 @@ export function generateMPDAttrParser(
         const keySize = dataView.getUint32(offset);
         offset += 4;
 
-        xmlNs.key = parseString(textDecoder, linearMemory.buffer, offset, keySize);
+        xmlNs.key = parseString(linearMemory.buffer, offset, keySize);
         offset += keySize;
 
         const valSize = dataView.getUint32(offset);
         offset += 4;
-        xmlNs.value = parseString(textDecoder, linearMemory.buffer, offset, valSize);
+        xmlNs.value = parseString(linearMemory.buffer, offset, valSize);
 
         if (mpdAttrs.namespaces === undefined) {
           mpdAttrs.namespaces = [xmlNs];

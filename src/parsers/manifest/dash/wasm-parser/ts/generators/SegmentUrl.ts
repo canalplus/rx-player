@@ -30,16 +30,10 @@ export function generateSegmentUrlAttrParser(
   segmentUrlAttrs: ISegmentUrlIntermediateRepresentation,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onSegmentUrlAttribute(attr, ptr, len) {
     switch (attr) {
       case AttributeName.Index:
-        segmentUrlAttrs.attributes.index = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        segmentUrlAttrs.attributes.index = parseString(linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.IndexRange: {
@@ -52,12 +46,7 @@ export function generateSegmentUrlAttrParser(
       }
 
       case AttributeName.Media:
-        segmentUrlAttrs.attributes.media = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        segmentUrlAttrs.attributes.media = parseString(linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.MediaRange: {
