@@ -25,9 +25,9 @@ impl MPDProcessor {
     /// * `reader` - A BufReader allowing to read the MPD document
     pub fn new(reader: BufReader<MPDReader>) -> Self {
         let mut reader = Reader::from_reader(reader);
-        reader.expand_empty_elements(false);
-        reader.trim_text(true);
-        reader.check_end_names(false);
+        reader.config_mut().expand_empty_elements = false;
+        reader.config_mut().trim_text(true);
+        reader.config_mut().check_end_names = false;
         MPDProcessor {
             reader,
             reader_buf: Vec::new(),
@@ -574,7 +574,7 @@ impl MPDProcessor {
                     if inner_event_tag > 0 {
                         inner_event_tag -= 1;
                     } else {
-                        return Ok(self.reader.buffer_position());
+                        return Ok(self.reader.buffer_position() as usize);
                     }
                 }
                 Event::Eof => {
