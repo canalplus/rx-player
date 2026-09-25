@@ -36,7 +36,7 @@ import ParsersStack from "./parsers_stack.ts";
 import type { AttributeName, TagName } from "./types.ts";
 import { CustomEventType } from "./types.ts";
 
-const MAX_READ_SIZE = 15e3;
+const MAX_READ_SIZE = 32 * 1024;
 
 export default class DashWasmParser {
   /**

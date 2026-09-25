@@ -10,6 +10,8 @@ mod utils;
 
 pub use errors::{ParsingError, Result};
 
+const READER_CAPACITY: usize = 32 * 1024;
+
 use events::*;
 use processor::MPDProcessor;
 use reader::MPDReader;
@@ -80,7 +82,7 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn parse() {
-    let buf_read = BufReader::new(MPDReader {});
+    let buf_read = BufReader::with_capacity(READER_CAPACITY, MPDReader {});
     let mut processor = MPDProcessor::new(buf_read);
     processor.process_tags();
 }
