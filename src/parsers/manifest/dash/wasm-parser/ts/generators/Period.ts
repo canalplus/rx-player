@@ -164,11 +164,10 @@ export function generatePeriodAttrParser(
   periodAttrs: IPeriodAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onPeriodAttribute(attr, ptr, len) {
     switch (attr) {
       case AttributeName.Id:
-        periodAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        periodAttrs.id = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Start:
         periodAttrs.start = new DataView(linearMemory.buffer).getFloat64(ptr, true);
@@ -181,20 +180,10 @@ export function generatePeriodAttrParser(
           new DataView(linearMemory.buffer).getUint8(ptr) !== 0;
         break;
       case AttributeName.XLinkHref:
-        periodAttrs["xlink:href"] = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        periodAttrs["xlink:href"] = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.XLinkActuate:
-        periodAttrs["xlink:actuate"] = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        periodAttrs["xlink:actuate"] = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.AvailabilityTimeOffset:
         periodAttrs.availabilityTimeOffset = new DataView(linearMemory.buffer).getFloat64(
@@ -213,12 +202,12 @@ export function generatePeriodAttrParser(
         const keySize = dataView.getUint32(offset);
         offset += 4;
 
-        xmlNs.key = parseString(textDecoder, linearMemory.buffer, offset, keySize);
+        xmlNs.key = parseString(linearMemory.buffer, offset, keySize);
         offset += keySize;
 
         const valSize = dataView.getUint32(offset);
         offset += 4;
-        xmlNs.value = parseString(textDecoder, linearMemory.buffer, offset, valSize);
+        xmlNs.value = parseString(linearMemory.buffer, offset, valSize);
 
         if (periodAttrs.namespaces === undefined) {
           periodAttrs.namespaces = [xmlNs];

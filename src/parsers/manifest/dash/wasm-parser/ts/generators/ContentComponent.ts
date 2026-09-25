@@ -29,23 +29,22 @@ export function generateContentComponentAttrParser(
   ccAttrs: IContentComponentAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onMPDAttribute(attr: number, ptr: number, len: number) {
     switch (attr) {
       case AttributeName.Id:
-        ccAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        ccAttrs.id = parseString(linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.Language:
-        ccAttrs.lang = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        ccAttrs.lang = parseString(linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.ContentType:
-        ccAttrs.contentType = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        ccAttrs.contentType = parseString(linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.Par:
-        ccAttrs.par = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        ccAttrs.par = parseString(linearMemory.buffer, ptr, len);
         break;
     }
   };

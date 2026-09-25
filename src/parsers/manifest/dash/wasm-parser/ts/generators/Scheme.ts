@@ -29,15 +29,14 @@ export function generateSchemeAttrParser(
   schemeAttrs: ISchemeAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onMPDAttribute(attr: number, ptr: number, len: number) {
     switch (attr) {
       case AttributeName.SchemeIdUri:
-        schemeAttrs.schemeIdUri = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        schemeAttrs.schemeIdUri = parseString(linearMemory.buffer, ptr, len);
         break;
 
       case AttributeName.SchemeValue:
-        schemeAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        schemeAttrs.value = parseString(linearMemory.buffer, ptr, len);
         break;
     }
   };

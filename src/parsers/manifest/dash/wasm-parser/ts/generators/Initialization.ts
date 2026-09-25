@@ -7,7 +7,6 @@ export default function generateInitializationAttrParser(
   initialization: IInitializationIntermediateRepresentation,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onInitializationAttribute(attr, ptr, len) {
     switch (attr) {
       case AttributeName.InitializationRange: {
@@ -20,12 +19,7 @@ export default function generateInitializationAttrParser(
       }
 
       case AttributeName.InitializationMedia:
-        initialization.attributes.sourceURL = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        initialization.attributes.sourceURL = parseString(linearMemory.buffer, ptr, len);
         break;
     }
   };

@@ -67,15 +67,14 @@ export function generateEventStreamAttrParser(
   esAttrs: IEventStreamAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onEventStreamAttribute(attr: number, ptr: number, len: number) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.SchemeIdUri:
-        esAttrs.schemeIdUri = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        esAttrs.schemeIdUri = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.SchemeValue:
-        esAttrs.value = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        esAttrs.value = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.TimeScale:
         esAttrs.timescale = dataView.getFloat64(ptr, true);
@@ -86,12 +85,12 @@ export function generateEventStreamAttrParser(
         const keySize = dataView.getUint32(offset);
         offset += 4;
 
-        xmlNs.key = parseString(textDecoder, linearMemory.buffer, offset, keySize);
+        xmlNs.key = parseString(linearMemory.buffer, offset, keySize);
         offset += keySize;
 
         const valSize = dataView.getUint32(offset);
         offset += 4;
-        xmlNs.value = parseString(textDecoder, linearMemory.buffer, offset, valSize);
+        xmlNs.value = parseString(linearMemory.buffer, offset, valSize);
 
         if (esAttrs.namespaces === undefined) {
           esAttrs.namespaces = [xmlNs];
@@ -115,7 +114,6 @@ function generateEventAttrParser(
   linearMemory: WebAssembly.Memory,
   fullMpd: ArrayBufferLike,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onEventStreamAttribute(attr: number, ptr: number, len: number) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
@@ -126,7 +124,7 @@ function generateEventAttrParser(
         eventAttr.duration = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.Id:
-        eventAttr.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        eventAttr.id = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.EventStreamEltRange: {
         const rangeStart = dataView.getFloat64(ptr, true);

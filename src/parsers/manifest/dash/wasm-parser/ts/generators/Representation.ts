@@ -179,16 +179,14 @@ export function generateRepresentationAttrParser(
   representationAttrs: IRepresentationAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  const textDecoder = new TextDecoder();
   return function onRepresentationAttribute(attr: number, ptr: number, len: number) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.Id:
-        representationAttrs.id = parseString(textDecoder, linearMemory.buffer, ptr, len);
+        representationAttrs.id = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.AudioSamplingRate:
         representationAttrs.audioSamplingRate = parseString(
-          textDecoder,
           linearMemory.buffer,
           ptr,
           len,
@@ -198,16 +196,10 @@ export function generateRepresentationAttrParser(
         representationAttrs.bandwidth = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.Codecs:
-        representationAttrs.codecs = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        representationAttrs.codecs = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.SupplementalCodecs:
         representationAttrs["scte214:supplementalCodecs"] = parseString(
-          textDecoder,
           linearMemory.buffer,
           ptr,
           len,
@@ -233,31 +225,16 @@ export function generateRepresentationAttrParser(
         representationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.MimeType:
-        representationAttrs.mimeType = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        representationAttrs.mimeType = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Profiles:
-        representationAttrs.profiles = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        representationAttrs.profiles = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.QualityRanking:
         representationAttrs.qualityRanking = dataView.getFloat64(ptr, true);
         break;
       case AttributeName.SegmentProfiles:
-        representationAttrs.segmentProfiles = parseString(
-          textDecoder,
-          linearMemory.buffer,
-          ptr,
-          len,
-        );
+        representationAttrs.segmentProfiles = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.AvailabilityTimeOffset:
         representationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
