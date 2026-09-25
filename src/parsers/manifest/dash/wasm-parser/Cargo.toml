@@ -13,4 +13,6 @@ lto = true
 opt-level = 3
 
 [dependencies]
-quick-xml = "0.37.5"
+# Keep this local dependency limited to the performance experiment. It differs
+# from quick-xml 0.37.5 only by forcing its element scanner to be inlined.
+quick-xml = { path = "vendor/quick-xml" }
