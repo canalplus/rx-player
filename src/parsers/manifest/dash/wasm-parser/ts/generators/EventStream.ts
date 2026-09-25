@@ -23,7 +23,7 @@ import type {
 import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
-import { parseString } from "../utils.ts";
+import { parseString, readFloat } from "../utils.ts";
 
 /**
  * Generate a "children parser" once inside a `EventStream` node.
@@ -67,7 +67,12 @@ export function generateEventStreamAttrParser(
   esAttrs: IEventStreamAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  return function onEventStreamAttribute(attr: number, ptr: number, len: number) {
+  return function onEventStreamAttribute(
+    attr: number,
+    ptr: number,
+    len: number,
+    value?: number,
+  ) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.SchemeIdUri:
@@ -77,7 +82,7 @@ export function generateEventStreamAttrParser(
         esAttrs.value = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.TimeScale:
-        esAttrs.timescale = dataView.getFloat64(ptr, true);
+        esAttrs.timescale = readFloat(value);
         break;
       case AttributeName.Namespace: {
         const xmlNs = { key: "", value: "" };
@@ -114,14 +119,19 @@ function generateEventAttrParser(
   linearMemory: WebAssembly.Memory,
   fullMpd: ArrayBufferLike,
 ): IAttributeParser {
-  return function onEventStreamAttribute(attr: number, ptr: number, len: number) {
+  return function onEventStreamAttribute(
+    attr: number,
+    ptr: number,
+    len: number,
+    value?: number,
+  ) {
     const dataView = new DataView(linearMemory.buffer);
     switch (attr) {
       case AttributeName.EventPresentationTime:
-        eventAttr.presentationTime = dataView.getFloat64(ptr, true);
+        eventAttr.presentationTime = readFloat(value);
         break;
       case AttributeName.Duration:
-        eventAttr.duration = dataView.getFloat64(ptr, true);
+        eventAttr.duration = readFloat(value);
         break;
       case AttributeName.Id:
         eventAttr.id = parseString(linearMemory.buffer, ptr, len);
