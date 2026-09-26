@@ -118,21 +118,37 @@ describe("DASH parser intermediate-representation equivalence", () => {
       <!DOCTYPE MPD [<!ELEMENT MPD ANY>]>
       <!-- A comment before the document root. -->
       <MPD id="manifest&amp;id" xmlns="urn:mpeg:dash:schema:mpd:2011"
-           xmlns:custom="urn:example:custom" type="static"
+           xmlns:custom="urn:example:custom?first=1&amp;second=2" type="static"
            mediaPresentationDuration="PT10S">
+        <Location>https://backup.example/manifest.mpd?first=1&amp;second=2</Location>
         <Period id='period&gt;0' duration="PT10S">
           <AdaptationSet id="adaptation" mimeType="video/mp4">
-            <Label> main &amp; &#x41; </Label>
+            <Label><![CDATA[ main & unescaped ]]></Label>
             <BaseURL serviceLocation='origin&amp;backup'>video&gt;main.mp4</BaseURL>
-            <Representation id="video>main" bandwidth="1000" />
+            <Representation id \t = \r\n 'video>main' bandwidth="1000"\t/>
           </AdaptationSet>
           <EventStream schemeIdUri="urn:example:event" timescale="1"
-                       xmlns:custom="urn:example:custom">
-            <!-- Keep the exact byte range of the following element. -->
-            <Event id="évent" presentationTime="1">
+                       xmlns:custom="urn:example:custom?first=1&amp;second=2">
+            <Event id="empty" />
+            <Event id="text" presentationTime="1"><![CDATA[message <raw> & exact]]></Event>
+            <Event id="évent" presentationTime="2">
               <custom:data value="a > b">payload</custom:data>
             </Event>
           </EventStream>
+        </Period>
+      </MPD>`);
+  });
+
+  it("matches XML containing long individual values", () => {
+    const longComment = "comment".repeat(3000);
+    const encodedValue = "value&amp;".repeat(2500);
+    expectEquivalent(`<!--${longComment}-->
+      <MPD id="${encodedValue}" type="static" mediaPresentationDuration="PT10S">
+        <Period duration="PT10S">
+          <AdaptationSet>
+            <Label>${encodedValue}</Label>
+            <Representation id="video" bandwidth="1000" />
+          </AdaptationSet>
         </Period>
       </MPD>`);
   });

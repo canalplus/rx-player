@@ -28,17 +28,24 @@ impl<'a> Name<'a> {
     }
 }
 
-pub struct Text<'a>(&'a [u8]);
+pub struct Text<'a> {
+    data: &'a [u8],
+    should_unescape: bool,
+}
 
 impl<'a> Text<'a> {
     #[inline(always)]
     pub fn len(&self) -> usize {
-        self.0.len()
+        self.data.len()
     }
 
     #[inline]
     pub fn unescape(&self) -> Result<Cow<'a, [u8]>> {
-        unescape(self.0)
+        if self.should_unescape {
+            unescape(self.data)
+        } else {
+            Ok(Cow::Borrowed(self.data))
+        }
     }
 }
 
@@ -155,6 +162,7 @@ enum ParsedEvent {
         end: usize,
         trimmed_start: usize,
         trimmed_end: usize,
+        should_unescape: bool,
     },
     Other {
         end: usize,
@@ -211,9 +219,13 @@ impl<R: Read> Reader<R> {
                 end,
                 trimmed_start,
                 trimmed_end,
+                should_unescape,
             } => {
                 self.offset = end;
-                Ok(Event::Text(Text(&self.buffer[trimmed_start..trimmed_end])))
+                Ok(Event::Text(Text {
+                    data: &self.buffer[trimmed_start..trimmed_end],
+                    should_unescape,
+                }))
             }
             ParsedEvent::Other { end } => {
                 self.offset = end;
@@ -257,6 +269,7 @@ impl<R: Read> Reader<R> {
                             end,
                             trimmed_start,
                             trimmed_end,
+                            should_unescape: true,
                         });
                     }
                     None if self.eof => {
@@ -272,6 +285,7 @@ impl<R: Read> Reader<R> {
                             end,
                             trimmed_start,
                             trimmed_end,
+                            should_unescape: true,
                         });
                     }
                     None => {
@@ -295,8 +309,14 @@ impl<R: Read> Reader<R> {
             }
             if self.buffer[base..].starts_with(b"<![CDATA[") {
                 if let Some(end) = self.find_sequence(b"]]>", base + 9)? {
-                    // quick-xml emits CDATA separately, and the MPD processor ignores it.
-                    return Ok(ParsedEvent::Other { end: end + 3 });
+                    let (trimmed_start, trimmed_end) =
+                        trim_ascii_range(&self.buffer[base + 9..end]);
+                    return Ok(ParsedEvent::Text {
+                        end: end + 3,
+                        trimmed_start: base + 9 + trimmed_start,
+                        trimmed_end: base + 9 + trimmed_end,
+                        should_unescape: false,
+                    });
                 }
                 return self.unclosed("CDATA section");
             }
@@ -537,7 +557,7 @@ impl fmt::Debug for Event<'_> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Event, Reader};
+    use super::{Event, Reader, READ_SIZE};
     use std::io::{self, Read};
 
     #[derive(Debug, PartialEq)]
@@ -679,6 +699,64 @@ mod tests {
                 expected,
                 "different events with {chunk_size}-byte reads"
             );
+        }
+    }
+
+    #[test]
+    fn parses_long_individual_tokens_with_proportional_memory() {
+        let long = "a".repeat(64 * 1024);
+        let document = format!("<!--{long}--><MPD id='{long}'>{long}</MPD>");
+        let mut reader = reader(document.as_bytes(), 37);
+
+        assert!(matches!(reader.read_event().unwrap(), Event::Other));
+        let Event::Start(mpd) = reader.read_event().unwrap() else {
+            panic!("expected MPD start");
+        };
+        assert_eq!(
+            mpd.attributes().next().unwrap().unwrap().value.len(),
+            long.len()
+        );
+        let Event::Text(text) = reader.read_event().unwrap() else {
+            panic!("expected MPD text");
+        };
+        assert_eq!(text.len(), long.len());
+        assert!(matches!(reader.read_event().unwrap(), Event::End(_)));
+        assert!(reader.buffer.capacity() <= 2 * (long.len() + READ_SIZE));
+    }
+
+    #[test]
+    fn arbitrary_bounded_input_terminates_without_invalid_positions() {
+        let chunk_sizes = [1, 2, 3, 7, 31];
+        let mut state = 0x1234_5678u32;
+        for len in 0..=256 {
+            let mut data = Vec::with_capacity(len);
+            for _ in 0..len {
+                state ^= state << 13;
+                state ^= state >> 17;
+                state ^= state << 5;
+                data.push(state as u8);
+            }
+
+            for chunk_size in chunk_sizes {
+                let mut reader = reader(&data, chunk_size);
+                let mut previous_position = 0;
+                let mut terminated = false;
+                for _ in 0..=(data.len() * 2 + 16) {
+                    let reached_end = match reader.read_event() {
+                        Ok(Event::Eof) | Err(_) => true,
+                        Ok(_) => false,
+                    };
+                    let position = reader.buffer_position();
+                    assert!(position >= previous_position);
+                    assert!(position <= data.len());
+                    previous_position = position;
+                    if reached_end {
+                        terminated = true;
+                        break;
+                    }
+                }
+                assert!(terminated, "did not terminate for {} bytes", len);
+            }
         }
     }
 
