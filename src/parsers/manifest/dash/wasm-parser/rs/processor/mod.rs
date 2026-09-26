@@ -26,10 +26,10 @@ impl MPDProcessor {
         }
     }
 
-    pub fn process_tags(&mut self) {
+    pub fn process(&mut self) {
         loop {
-            match self.read_next_event() {
-                Ok(Event::Start(tag)) => match tag.name().as_ref() {
+            match self.reader.read_event() {
+                Ok(Event::Start(tag)) => match tag.name() {
                     b"MPD" => {
                         TagName::MPD.report_tag_open();
                         attributes::report_mpd_attrs(&tag);
@@ -106,7 +106,7 @@ impl MPDProcessor {
                         attributes::report_base_url_attrs(&tag);
                         self.process_base_url_element();
                     }
-                    b"cenc:pssh" => self.process_cenc_element(),
+                    b"cenc:pssh" => self.process_cenc_pssh_element(),
                     b"Location" => self.process_location_element(),
                     b"Label" => {
                         TagName::Label.report_tag_open();
@@ -122,10 +122,10 @@ impl MPDProcessor {
 
                     _ => {}
                 },
-                // Keep empty XML elements as a single quick-xml event. Expanding each one into
-                // synthetic Start and End events adds substantial work on large explicit
-                // SegmentTimelines, where every `<S />` is empty.
-                Ok(Event::Empty(tag)) => match tag.name().as_ref() {
+                // Handle empty elements directly. Expanding them into synthetic Start and End
+                // events adds substantial work on large explicit SegmentTimelines, where every
+                // `<S />` is empty.
+                Ok(Event::Empty(tag)) => match tag.name() {
                     b"MPD" => {
                         TagName::MPD.report_tag_open();
                         attributes::report_mpd_attrs(&tag);
@@ -231,7 +231,7 @@ impl MPDProcessor {
                     // Empty Location and cenc:pssh elements have no content to report.
                     _ => {}
                 },
-                Ok(Event::End(tag)) => match tag.name().as_ref() {
+                Ok(Event::End(tag)) => match tag {
                     b"MPD" => TagName::MPD.report_tag_close(),
                     b"Period" => TagName::Period.report_tag_close(),
                     b"AdaptationSet" => TagName::AdaptationSet.report_tag_close(),
@@ -260,25 +260,12 @@ impl MPDProcessor {
         }
     }
 
-    /// Read the MPD document until an XML event is encountered.
-    ///
-    /// This method is always inlined for optimization reasons as it is both
-    /// short and generally used in loops.
-    #[inline(always)]
-    fn read_next_event<'a>(&'a mut self) -> crate::errors::Result<Event<'a>> {
-        self.reader.read_event()
-    }
-
     /// Loop over a SegmentTimeline's children (to call when a <SegmentTimeline>
     /// node just has been found).
     ///
     /// Report its children tag and attributes until either its corresponding
-    /// closing SegmentTemplate tag has been found or until EOF is encountered.
+    /// closing SegmentTimeline tag has been found or until EOF is encountered.
     fn process_segment_timeline_element(&mut self) {
-        // Count inner SegmentTimeline tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag: u32 = 0;
-
         // Will store the ending timestamp of the previous <S> element, starting
         // at `0`.
         // Most subsequent <S> elements won't explicitly indicate a starting
@@ -287,8 +274,8 @@ impl MPDProcessor {
         let mut curr_time_base: f64 = 0.;
 
         loop {
-            match self.read_next_event() {
-                Ok(Event::Start(tag)) | Ok(Event::Empty(tag)) if tag.name().as_ref() == b"S" => {
+            match self.reader.read_event() {
+                Ok(Event::Start(tag)) | Ok(Event::Empty(tag)) if tag.name() == b"S" => {
                     match SegmentObject::from_s_element(&tag, curr_time_base) {
                         Ok(segment_obj) => {
                             if segment_obj.repeat_count == 0. {
@@ -303,16 +290,9 @@ impl MPDProcessor {
                         Err(err) => err.report_err(),
                     }
                 }
-                Ok(Event::Start(tag)) if tag.name().as_ref() == b"SegmentTimeline" => {
-                    inner_tag += 1
-                }
-                Ok(Event::End(tag)) if tag.name().as_ref() == b"SegmentTimeline" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
-                    } else {
-                        AttributeName::SegmentTimeline.report(self.segment_objs_buf.as_slice());
-                        break;
-                    }
+                Ok(Event::End(name)) if name == b"SegmentTimeline" => {
+                    AttributeName::SegmentTimeline.report(self.segment_objs_buf.as_slice());
+                    break;
                 }
                 Ok(Event::Eof) => {
                     ParsingError("Unexpected end of file in a SegmentTimeline.".to_owned())
@@ -330,153 +310,69 @@ impl MPDProcessor {
     }
 
     fn process_location_element(&mut self) {
-        // Count inner Location tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag: u32 = 0;
-
-        loop {
-            match self.read_next_event() {
-                Ok(Event::Text(t)) => {
-                    if t.len() > 0 {
-                        match t.unescape() {
-                            Ok(unescaped) => AttributeName::Location.report(unescaped),
-                            Err(err) => err.report_err(),
-                        }
-                    }
-                }
-                Ok(Event::Start(tag)) if tag.name().as_ref() == b"Location" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name().as_ref() == b"Location" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
-                    } else {
-                        break;
-                    }
-                }
-                Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a Location tag.".to_owned())
-                        .report_err();
-                    break;
-                }
-                Err(e) => {
-                    e.report_err();
-                    break;
-                }
-                _ => (),
-            }
-        }
+        self.process_text_element(
+            b"Location",
+            AttributeName::Location,
+            None,
+            "Unexpected end of file in a Location tag.",
+        );
     }
 
     fn process_label_element(&mut self) {
-        // Count inner Label tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag: u32 = 0;
-
-        loop {
-            match self.read_next_event() {
-                Ok(Event::Text(t)) => {
-                    if t.len() > 0 {
-                        match t.unescape() {
-                            Ok(unescaped) => AttributeName::Text.report(unescaped),
-                            Err(err) => err.report_err(),
-                        }
-                    }
-                }
-                Ok(Event::Start(tag)) if tag.name().as_ref() == b"Label" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name().as_ref() == b"Label" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
-                    } else {
-                        TagName::Label.report_tag_close();
-                        break;
-                    }
-                }
-                Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a Label tag.".to_owned()).report_err();
-                    break;
-                }
-                Err(e) => {
-                    e.report_err();
-                    break;
-                }
-                _ => (),
-            }
-        }
+        self.process_text_element(
+            b"Label",
+            AttributeName::Text,
+            Some(TagName::Label),
+            "Unexpected end of file in a Label tag.",
+        );
     }
 
     fn process_base_url_element(&mut self) {
-        // Count inner BaseURL tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag: u32 = 0;
-
-        loop {
-            match self.read_next_event() {
-                Ok(Event::Text(t)) => {
-                    if t.len() > 0 {
-                        match t.unescape() {
-                            Ok(unescaped) => AttributeName::Text.report(unescaped),
-                            Err(err) => err.report_err(),
-                        }
-                    }
-                }
-                Ok(Event::Start(tag)) if tag.name().as_ref() == b"BaseURL" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name().as_ref() == b"BaseURL" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
-                    } else {
-                        TagName::BaseURL.report_tag_close();
-                        break;
-                    }
-                }
-                Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a BaseURL.".to_owned()).report_err();
-                    break;
-                }
-                Err(e) => {
-                    e.report_err();
-                    break;
-                }
-                _ => (),
-            }
-        }
+        self.process_text_element(
+            b"BaseURL",
+            AttributeName::Text,
+            Some(TagName::BaseURL),
+            "Unexpected end of file in a BaseURL.",
+        );
     }
 
-    fn process_cenc_element(&mut self) {
-        // Count inner cenc:pssh tags if it exists.
-        // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag: u32 = 0;
+    fn process_cenc_pssh_element(&mut self) {
+        self.process_text_element(
+            b"cenc:pssh",
+            AttributeName::ContentProtectionCencPSSH,
+            None,
+            "Unexpected end of file in a cenc:pssh tag.",
+        );
+    }
 
+    fn process_text_element(
+        &mut self,
+        element_name: &[u8],
+        attribute_name: AttributeName,
+        reported_tag: Option<TagName>,
+        eof_error: &str,
+    ) {
         loop {
-            match self.read_next_event() {
-                Ok(Event::Text(t)) => {
-                    if t.len() > 0 {
-                        match t.unescape() {
-                            Ok(unescaped) =>
-                            // TODO parse from base64 here?
-                            {
-                                AttributeName::ContentProtectionCencPSSH.report(unescaped)
-                            }
-                            Err(err) => err.report_err(),
-                        }
+            match self.reader.read_event() {
+                Ok(Event::Text(text)) if text.len() > 0 => match text.unescape() {
+                    Ok(value) => attribute_name.report(value),
+                    Err(error) => error.report_err(),
+                },
+                Ok(Event::End(name)) if name == element_name => {
+                    if let Some(tag_name) = reported_tag {
+                        tag_name.report_tag_close();
                     }
-                }
-                Ok(Event::Start(tag)) if tag.name().as_ref() == b"cenc:pssh" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name().as_ref() == b"cenc:pssh" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
-                    } else {
-                        break;
-                    }
+                    break;
                 }
                 Ok(Event::Eof) => {
-                    ParsingError("Unexpected end of file in a cenc:pssh tag.".to_owned())
-                        .report_err();
+                    ParsingError(eof_error.to_owned()).report_err();
                     break;
                 }
-                Err(e) => {
-                    e.report_err();
+                Err(error) => {
+                    error.report_err();
                     break;
                 }
-                _ => (),
+                _ => {}
             }
         }
     }
@@ -484,48 +380,39 @@ impl MPDProcessor {
     fn process_event_stream_element(&mut self) {
         // Count inner EventStream tags if it exists.
         // Allowing to not close the current node when it is an inner that is closed
-        let mut inner_tag = 0u32;
+        // A foreign namespace may reuse the EventStream local name inside this element.
+        let mut nested_event_streams = 0u32;
 
         loop {
-            // We need to keep the XML as-is in the JS-side when it comes to
-            // EventStream's `<Event> elements, as this is part of its public API.
-            //
-            // That means that we have to communicate in some way this exact data.
-            // Sadly, quick_xml doesn't seem to have corresponding APIs that would
-            // make this easy.
-            // In the meantime, we will just return the first and last position
-            // in bytes of `<Event>` elements (by recording the position just before
-            // it's opening tag is encountered and just after the closing one is).
-            // It will then be up to the JS-side to slice and decode the
-            // corresponding XML.
-            let initial_buffer_pos = self.reader.buffer_position();
+            // Event contents are exposed through the public API as XML. Report their byte range
+            // so JavaScript can retain the original serialization, including namespaces.
+            let event_start_position = self.reader.position();
 
-            let evt = self.read_next_event();
-            match evt {
-                Ok(Event::Start(tag)) if tag.name().as_ref() == b"Event" => {
+            match self.reader.read_event() {
+                Ok(Event::Start(tag)) if tag.name() == b"Event" => {
                     TagName::EventStreamElt.report_tag_open();
                     attributes::report_event_stream_event_attrs(&tag);
-                    match self.get_event_stream_event_ending_position() {
-                        Ok(ending_pos) => {
+                    match self.read_event_end_position() {
+                        Ok(event_end_position) => {
                             AttributeName::EventStreamEltRange
-                                .report((initial_buffer_pos as f64, ending_pos as f64));
+                                .report((event_start_position as f64, event_end_position as f64));
                         }
                         Err(e) => e.report_err(),
                     }
                     TagName::EventStreamElt.report_tag_close();
                 }
-                Ok(Event::Empty(tag)) if tag.name().as_ref() == b"Event" => {
+                Ok(Event::Empty(tag)) if tag.name() == b"Event" => {
                     TagName::EventStreamElt.report_tag_open();
                     attributes::report_event_stream_event_attrs(&tag);
-                    let curr_pos = self.reader.buffer_position();
+                    let event_end_position = self.reader.position();
                     AttributeName::EventStreamEltRange
-                        .report((initial_buffer_pos as f64, curr_pos as f64));
+                        .report((event_start_position as f64, event_end_position as f64));
                     TagName::EventStreamElt.report_tag_close();
                 }
-                Ok(Event::Start(tag)) if tag.name().as_ref() == b"EventStream" => inner_tag += 1,
-                Ok(Event::End(tag)) if tag.name().as_ref() == b"EventStream" => {
-                    if inner_tag > 0 {
-                        inner_tag -= 1;
+                Ok(Event::Start(tag)) if tag.name() == b"EventStream" => nested_event_streams += 1,
+                Ok(Event::End(tag)) if tag == b"EventStream" => {
+                    if nested_event_streams > 0 {
+                        nested_event_streams -= 1;
                     } else {
                         TagName::EventStream.report_tag_close();
                         break;
@@ -545,18 +432,18 @@ impl MPDProcessor {
         }
     }
 
-    /// Returns the ending position (not included), in bytes in the whole parsed MPD, where the
-    /// current `<Event>` element ends.
-    fn get_event_stream_event_ending_position(&mut self) -> Result<usize, ParsingError> {
-        let mut inner_event_tag = 0u32;
+    /// Read through the current Event and return the position just after its closing tag.
+    fn read_event_end_position(&mut self) -> Result<usize, ParsingError> {
+        // A foreign namespace may reuse the Event local name inside the DASH Event.
+        let mut nested_events = 0u32;
         loop {
-            match self.read_next_event()? {
-                Event::Start(tag) if tag.name().as_ref() == b"Event" => inner_event_tag += 1,
-                Event::End(tag) if tag.name().as_ref() == b"Event" => {
-                    if inner_event_tag > 0 {
-                        inner_event_tag -= 1;
+            match self.reader.read_event()? {
+                Event::Start(tag) if tag.name() == b"Event" => nested_events += 1,
+                Event::End(tag) if tag == b"Event" => {
+                    if nested_events > 0 {
+                        nested_events -= 1;
                     } else {
-                        return Ok(self.reader.buffer_position());
+                        return Ok(self.reader.position());
                     }
                 }
                 Event::Eof => {

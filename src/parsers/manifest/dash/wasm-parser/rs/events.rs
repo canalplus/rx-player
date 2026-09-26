@@ -1,5 +1,5 @@
 use crate::xml::Attribute;
-use crate::{onTagClose, onTagOpen, ParsingError};
+use crate::{onTagClose, onTagOpen};
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -319,9 +319,9 @@ impl AttributeName {
     }
 
     pub fn try_report_as_string(self, attr: &Attribute) {
-        match attr.unescape_value() {
+        match attr.decoded_value() {
             Ok(val) => self.report(val),
-            Err(_) => ParsingError("Could not escape original value".to_owned()).report_err(),
+            Err(error) => error.report_err(),
         }
     }
 
@@ -375,9 +375,9 @@ impl AttributeName {
     }
 
     pub fn try_report_as_key_value(self, key: &[u8], value: &Attribute) {
-        match value.unescape_value() {
+        match value.decoded_value() {
             Ok(val) => self.report((key, val)),
-            Err(_) => ParsingError("Could not escape original value".to_owned()).report_err(),
+            Err(error) => error.report_err(),
         }
     }
 }

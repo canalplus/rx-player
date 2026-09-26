@@ -1,3 +1,9 @@
+//! Streaming XML tokenizer used by the DASH processor.
+//!
+//! It retains only the current token and exposes its absolute byte position so Event payloads can
+//! be sliced from the original MPD. It recognizes the XML constructs an MPD may contain without
+//! building a tree or validating the document against the DASH schema.
+
 use crate::errors::{ParsingError, Result};
 use std::borrow::Cow;
 use std::fmt;
@@ -8,24 +14,10 @@ const READ_SIZE: usize = 8 * 1024;
 pub enum Event<'a> {
     Start(Element<'a>),
     Empty(Element<'a>),
-    End(Name<'a>),
+    End(&'a [u8]),
     Text(Text<'a>),
-    Other,
+    Ignored,
     Eof,
-}
-
-pub struct Name<'a>(&'a [u8]);
-
-impl<'a> Name<'a> {
-    #[inline(always)]
-    pub fn as_ref(&self) -> &'a [u8] {
-        self.0
-    }
-
-    #[inline(always)]
-    pub fn name(&self) -> Name<'a> {
-        Name(self.0)
-    }
 }
 
 pub struct Text<'a> {
@@ -56,8 +48,8 @@ pub struct Element<'a> {
 
 impl<'a> Element<'a> {
     #[inline(always)]
-    pub fn name(&self) -> Name<'a> {
-        Name(&self.data[..self.name_end])
+    pub fn name(&self) -> &'a [u8] {
+        &self.data[..self.name_end]
     }
 
     #[inline(always)]
@@ -76,7 +68,7 @@ pub struct Attribute<'a> {
 
 impl<'a> Attribute<'a> {
     #[inline]
-    pub fn unescape_value(&self) -> Result<Cow<'a, [u8]>> {
+    pub fn decoded_value(&self) -> Result<Cow<'a, [u8]>> {
         unescape(self.value)
     }
 }
@@ -164,7 +156,7 @@ enum ParsedEvent {
         trimmed_end: usize,
         should_unescape: bool,
     },
-    Other {
+    Ignored {
         end: usize,
     },
     Eof,
@@ -182,7 +174,7 @@ impl<R: Read> Reader<R> {
     }
 
     #[inline(always)]
-    pub fn buffer_position(&self) -> usize {
+    pub fn position(&self) -> usize {
         self.absolute_offset + self.offset
     }
 
@@ -213,7 +205,7 @@ impl<R: Read> Reader<R> {
                 name_end,
             } => {
                 self.offset = end + 1;
-                Ok(Event::End(Name(&self.buffer[name_start..name_end])))
+                Ok(Event::End(&self.buffer[name_start..name_end]))
             }
             ParsedEvent::Text {
                 end,
@@ -227,9 +219,9 @@ impl<R: Read> Reader<R> {
                     should_unescape,
                 }))
             }
-            ParsedEvent::Other { end } => {
+            ParsedEvent::Ignored { end } => {
                 self.offset = end;
-                Ok(Event::Other)
+                Ok(Event::Ignored)
             }
             ParsedEvent::Eof => Ok(Event::Eof),
         }
@@ -303,7 +295,7 @@ impl<R: Read> Reader<R> {
 
             if self.buffer[base..].starts_with(b"<!--") {
                 if let Some(end) = self.find_sequence(b"-->", base + 4)? {
-                    return Ok(ParsedEvent::Other { end: end + 3 });
+                    return Ok(ParsedEvent::Ignored { end: end + 3 });
                 }
                 return self.unclosed("XML comment");
             }
@@ -322,13 +314,13 @@ impl<R: Read> Reader<R> {
             }
             if self.buffer[base..].starts_with(b"<?") {
                 if let Some(end) = self.find_sequence(b"?>", base + 2)? {
-                    return Ok(ParsedEvent::Other { end: end + 2 });
+                    return Ok(ParsedEvent::Ignored { end: end + 2 });
                 }
                 return self.unclosed("XML processing instruction");
             }
             if self.buffer[base..].starts_with(b"<!") {
                 if let Some(end) = self.find_declaration_end(base + 2)? {
-                    return Ok(ParsedEvent::Other { end: end + 1 });
+                    return Ok(ParsedEvent::Ignored { end: end + 1 });
                 }
                 return self.unclosed("XML declaration");
             }
@@ -566,7 +558,7 @@ mod tests {
         Empty(Vec<u8>, Vec<(Vec<u8>, Vec<u8>)>),
         End(Vec<u8>),
         Text(Vec<u8>),
-        Other,
+        Ignored,
         Eof,
     }
 
@@ -602,7 +594,7 @@ mod tests {
         loop {
             let event = match reader.read_event().unwrap() {
                 Event::Start(element) => OwnedEvent::Start(
-                    element.name().as_ref().to_vec(),
+                    element.name().to_vec(),
                     element
                         .attributes()
                         .map(|attribute| {
@@ -612,7 +604,7 @@ mod tests {
                         .collect(),
                 ),
                 Event::Empty(element) => OwnedEvent::Empty(
-                    element.name().as_ref().to_vec(),
+                    element.name().to_vec(),
                     element
                         .attributes()
                         .map(|attribute| {
@@ -621,13 +613,13 @@ mod tests {
                         })
                         .collect(),
                 ),
-                Event::End(name) => OwnedEvent::End(name.as_ref().to_vec()),
+                Event::End(name) => OwnedEvent::End(name.to_vec()),
                 Event::Text(text) => OwnedEvent::Text(text.unescape().unwrap().into_owned()),
-                Event::Other => OwnedEvent::Other,
+                Event::Ignored => OwnedEvent::Ignored,
                 Event::Eof => OwnedEvent::Eof,
             };
             let is_eof = event == OwnedEvent::Eof;
-            events.push((reader.buffer_position(), event));
+            events.push((reader.position(), event));
             if is_eof {
                 return events;
             }
@@ -641,7 +633,7 @@ mod tests {
         let Event::Start(mpd) = reader.read_event().unwrap() else {
             panic!("expected MPD start");
         };
-        assert_eq!(mpd.name().as_ref(), b"MPD");
+        assert_eq!(mpd.name(), b"MPD");
         let attributes: Vec<_> = mpd.attributes().map(|attr| attr.unwrap()).collect();
         assert_eq!(attributes[0].key, b"id");
         assert_eq!(attributes[0].value, b"foo>bar");
@@ -649,13 +641,13 @@ mod tests {
         let Event::Empty(period) = reader.read_event().unwrap() else {
             panic!("expected empty Period");
         };
-        assert_eq!(period.name().as_ref(), b"Period");
+        assert_eq!(period.name(), b"Period");
         assert_eq!(period.attributes().next().unwrap().unwrap().value, b"p0");
 
         let Event::End(mpd) = reader.read_event().unwrap() else {
             panic!("expected MPD end");
         };
-        assert_eq!(mpd.as_ref(), b"MPD");
+        assert_eq!(mpd, b"MPD");
         assert!(matches!(reader.read_event().unwrap(), Event::Eof));
     }
 
@@ -670,7 +662,7 @@ mod tests {
             .next()
             .unwrap()
             .unwrap()
-            .unescape_value()
+            .decoded_value()
             .unwrap();
         assert_eq!(value.as_ref(), "a&€".as_bytes());
 
@@ -708,7 +700,7 @@ mod tests {
         let document = format!("<!--{long}--><MPD id='{long}'>{long}</MPD>");
         let mut reader = reader(document.as_bytes(), 37);
 
-        assert!(matches!(reader.read_event().unwrap(), Event::Other));
+        assert!(matches!(reader.read_event().unwrap(), Event::Ignored));
         let Event::Start(mpd) = reader.read_event().unwrap() else {
             panic!("expected MPD start");
         };
@@ -746,7 +738,7 @@ mod tests {
                         Ok(Event::Eof) | Err(_) => true,
                         Ok(_) => false,
                     };
-                    let position = reader.buffer_position();
+                    let position = reader.position();
                     assert!(position >= previous_position);
                     assert!(position <= data.len());
                     previous_position = position;
@@ -765,9 +757,9 @@ mod tests {
         let data = b"<EventStream><!-- x --><Event /></EventStream>";
         let mut reader = reader(data, 4);
         assert!(matches!(reader.read_event().unwrap(), Event::Start(_)));
-        assert_eq!(reader.buffer_position(), b"<EventStream>".len());
-        assert!(matches!(reader.read_event().unwrap(), Event::Other));
-        assert_eq!(reader.buffer_position(), b"<EventStream><!-- x -->".len());
+        assert_eq!(reader.position(), b"<EventStream>".len());
+        assert!(matches!(reader.read_event().unwrap(), Event::Ignored));
+        assert_eq!(reader.position(), b"<EventStream><!-- x -->".len());
         assert!(matches!(reader.read_event().unwrap(), Event::Empty(_)));
     }
 
@@ -783,17 +775,17 @@ mod tests {
         loop {
             match reader.read_event().unwrap() {
                 Event::Start(element) => {
-                    if element.name().as_ref() == b"AdaptationSet" {
+                    if element.name() == b"AdaptationSet" {
                         adaptations += 1;
                     }
-                    stack.push(element.name().as_ref().to_vec());
+                    stack.push(element.name().to_vec());
                 }
                 Event::Empty(element) => {
-                    if element.name().as_ref() == b"AdaptationSet" {
+                    if element.name() == b"AdaptationSet" {
                         adaptations += 1;
                     }
                 }
-                Event::End(element) => assert_eq!(stack.pop().unwrap(), element.as_ref()),
+                Event::End(element) => assert_eq!(stack.pop().unwrap(), element),
                 Event::Eof => break,
                 _ => {}
             }

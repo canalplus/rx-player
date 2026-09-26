@@ -35,11 +35,11 @@ impl SegmentObject {
     /// This function is called very very often on the more large MPDs based
     /// on a SegmentTimeline segment indexing scheme.
     #[inline(always)]
-    pub fn from_s_element(e: &crate::xml::Element, time_base: f64) -> Result<SegmentObject> {
+    pub fn from_s_element(element: &crate::xml::Element, time_base: f64) -> Result<SegmentObject> {
         let mut segment_obj = SegmentObject::default();
         let mut has_t = false;
 
-        for res_attr in e.attributes() {
+        for res_attr in element.attributes() {
             match res_attr {
                 Ok(attr) => {
                     let key = attr.key;

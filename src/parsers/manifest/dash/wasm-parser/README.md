@@ -128,13 +128,11 @@ directory.
 
 Currently, the DASH-WASM parser parses in one go the XML.
 
-1. The XML data is continuously fed to the WebAssembly, which just sees it as an array of
-   bytes, it then goes through the quick-xml dependency - a Rust "crate" (equivalent to a
-   node module).
+1. The XML data is continuously fed to WebAssembly as bytes. A small streaming tokenizer
+   reads XML elements, attributes and text without first building a DOM.
 
-2. As quick-xml encounters new XML elements (it uses an event-driven SAX parser approach
-   which continuously parses the MPD, not a DOM one reading it fully in advance),
-   quick-xml will notify our WebAssembly code that this is the case.
+2. The Rust processor consumes those XML events and handles the parts of the MPD used by
+   the RxPlayer.
 
 3. The WebAssembly code assigns to each recognized element a number (defined as a Rust and
    TypeScript enum).
