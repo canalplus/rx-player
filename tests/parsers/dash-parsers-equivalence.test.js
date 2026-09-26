@@ -112,4 +112,28 @@ describe("DASH parser intermediate-representation equivalence", () => {
         </Period>
       </MPD>`);
   });
+
+  it("matches valid XML constructs", () => {
+    expectEquivalent(`\uFEFF<?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE MPD [<!ELEMENT MPD ANY>]>
+      <!-- A comment before the document root. -->
+      <MPD id="manifest&amp;id" xmlns="urn:mpeg:dash:schema:mpd:2011"
+           xmlns:custom="urn:example:custom" type="static"
+           mediaPresentationDuration="PT10S">
+        <Period id='period&gt;0' duration="PT10S">
+          <AdaptationSet id="adaptation" mimeType="video/mp4">
+            <Label> main &amp; &#x41; </Label>
+            <BaseURL serviceLocation='origin&amp;backup'>video&gt;main.mp4</BaseURL>
+            <Representation id="video>main" bandwidth="1000" />
+          </AdaptationSet>
+          <EventStream schemeIdUri="urn:example:event" timescale="1"
+                       xmlns:custom="urn:example:custom">
+            <!-- Keep the exact byte range of the following element. -->
+            <Event id="évent" presentationTime="1">
+              <custom:data value="a > b">payload</custom:data>
+            </Event>
+          </EventStream>
+        </Period>
+      </MPD>`);
+  });
 });

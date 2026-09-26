@@ -540,6 +540,16 @@ mod tests {
     use super::{Event, Reader};
     use std::io::{self, Read};
 
+    #[derive(Debug, PartialEq)]
+    enum OwnedEvent {
+        Start(Vec<u8>, Vec<(Vec<u8>, Vec<u8>)>),
+        Empty(Vec<u8>, Vec<(Vec<u8>, Vec<u8>)>),
+        End(Vec<u8>),
+        Text(Vec<u8>),
+        Other,
+        Eof,
+    }
+
     struct Chunked<'a> {
         data: &'a [u8],
         offset: usize,
@@ -564,6 +574,44 @@ mod tests {
             offset: 0,
             chunk_size,
         })
+    }
+
+    fn collect_events(data: &[u8], chunk_size: usize) -> Vec<(usize, OwnedEvent)> {
+        let mut reader = reader(data, chunk_size);
+        let mut events = Vec::new();
+        loop {
+            let event = match reader.read_event().unwrap() {
+                Event::Start(element) => OwnedEvent::Start(
+                    element.name().as_ref().to_vec(),
+                    element
+                        .attributes()
+                        .map(|attribute| {
+                            let attribute = attribute.unwrap();
+                            (attribute.key.to_vec(), attribute.value.to_vec())
+                        })
+                        .collect(),
+                ),
+                Event::Empty(element) => OwnedEvent::Empty(
+                    element.name().as_ref().to_vec(),
+                    element
+                        .attributes()
+                        .map(|attribute| {
+                            let attribute = attribute.unwrap();
+                            (attribute.key.to_vec(), attribute.value.to_vec())
+                        })
+                        .collect(),
+                ),
+                Event::End(name) => OwnedEvent::End(name.as_ref().to_vec()),
+                Event::Text(text) => OwnedEvent::Text(text.unescape().unwrap().into_owned()),
+                Event::Other => OwnedEvent::Other,
+                Event::Eof => OwnedEvent::Eof,
+            };
+            let is_eof = event == OwnedEvent::Eof;
+            events.push((reader.buffer_position(), event));
+            if is_eof {
+                return events;
+            }
+        }
     }
 
     #[test]
@@ -610,6 +658,28 @@ mod tests {
             panic!("expected text");
         };
         assert_eq!(text.unescape().unwrap().as_ref(), b"<A");
+    }
+
+    #[test]
+    fn parsing_does_not_depend_on_read_boundaries() {
+        let document = concat!(
+            "\u{feff}<?xml version='1.0'?>",
+            "<!DOCTYPE MPD [<!ELEMENT MPD ANY><!ENTITY ignored 'a>b'>]>",
+            "<!-- before root -->",
+            "<MPD id='a>b' xmlns:x=\"urn:test\">",
+            "<Period><Label> A&amp;&#x20AC; </Label>",
+            "<![CDATA[ignored <data>]]><?inside value?>",
+            "<x:Node value=\"quotes '&quot;\" /></Period>",
+            "</MPD>",
+        );
+        let expected = collect_events(document.as_bytes(), document.len());
+        for chunk_size in 1..=32 {
+            assert_eq!(
+                collect_events(document.as_bytes(), chunk_size),
+                expected,
+                "different events with {chunk_size}-byte reads"
+            );
+        }
     }
 
     #[test]
