@@ -120,6 +120,26 @@ impl<'a> ReportableAttribute for (&'a [u8], Cow<'a, str>) {
     }
 }
 
+// For XML namespace key-value couples that stay encoded as bytes.
+impl<'a> ReportableAttribute for (&'a [u8], Cow<'a, [u8]>) {
+    #[inline(always)]
+    fn report_as_attr(&self, attr_name: AttributeName) {
+        use crate::utils;
+        let len_key = self.0.len() as u32;
+        let len_val = self.1.len() as u32;
+
+        let mut msg = Vec::with_capacity((len_key + len_val + 8) as usize);
+        msg.extend(utils::u32_to_u8_slice_be(len_key));
+        msg.extend(self.0);
+        msg.extend(utils::u32_to_u8_slice_be(len_val));
+        msg.extend(self.1.as_ref());
+
+        unsafe {
+            onAttribute(attr_name, msg.as_ptr(), msg.len());
+        };
+    }
+}
+
 impl<'a> ReportableAttribute for Cow<'a, [u8]> {
     #[inline(always)]
     fn report_as_attr(&self, attr_name: AttributeName) {

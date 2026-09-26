@@ -13,4 +13,3 @@ lto = true
 opt-level = 3
 
 [dependencies]
-quick-xml = "0.30.0"

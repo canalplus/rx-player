@@ -1,3 +1,4 @@
+use crate::xml::Attribute;
 use crate::{onTagClose, onTagOpen, ParsingError};
 
 #[derive(Clone, Copy)]
@@ -317,67 +318,63 @@ impl AttributeName {
         val.report_as_attr(self)
     }
 
-    pub fn try_report_as_string(self, attr: &quick_xml::events::attributes::Attribute) {
+    pub fn try_report_as_string(self, attr: &Attribute) {
         match attr.unescape_value() {
             Ok(val) => self.report(val),
             Err(_) => ParsingError("Could not escape original value".to_owned()).report_err(),
         }
     }
 
-    pub fn try_report_as_f64(self, attr: &quick_xml::events::attributes::Attribute) {
-        match utils::parse_f64(&attr.value) {
+    pub fn try_report_as_f64(self, attr: &Attribute) {
+        match utils::parse_f64(attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_iso_8601_duration(self, attr: &quick_xml::events::attributes::Attribute) {
-        match utils::parse_iso_8601_duration(&attr.value) {
+    pub fn try_report_as_iso_8601_duration(self, attr: &Attribute) {
+        match utils::parse_iso_8601_duration(attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_maybe_division(self, attr: &quick_xml::events::attributes::Attribute) {
-        match utils::parse_maybe_division(&attr.value) {
+    pub fn try_report_as_maybe_division(self, attr: &Attribute) {
+        match utils::parse_maybe_division(attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_u64(self, attr: &quick_xml::events::attributes::Attribute) {
-        match utils::parse_u64(&attr.value) {
+    pub fn try_report_as_u64(self, attr: &Attribute) {
+        match utils::parse_u64(attr.value) {
             Ok(val) => self.report(val as f64),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_u64_or_bool(self, attr: &quick_xml::events::attributes::Attribute) {
-        match utils::parse_u64_or_bool(&attr.value) {
+    pub fn try_report_as_u64_or_bool(self, attr: &Attribute) {
+        match utils::parse_u64_or_bool(attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_bool(self, attr: &quick_xml::events::attributes::Attribute) {
-        match utils::parse_bool(&attr.value) {
+    pub fn try_report_as_bool(self, attr: &Attribute) {
+        match utils::parse_bool(attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_range(self, attr: &quick_xml::events::attributes::Attribute) {
-        match utils::parse_byte_range(&attr.value) {
+    pub fn try_report_as_range(self, attr: &Attribute) {
+        match utils::parse_byte_range(attr.value) {
             Ok(val) => self.report(val),
             Err(error) => error.report_err(),
         }
     }
 
-    pub fn try_report_as_key_value(
-        self,
-        key: &[u8],
-        value: &quick_xml::events::attributes::Attribute,
-    ) {
+    pub fn try_report_as_key_value(self, key: &[u8], value: &Attribute) {
         match value.unescape_value() {
             Ok(val) => self.report((key, val)),
             Err(_) => ParsingError("Could not escape original value".to_owned()).report_err(),

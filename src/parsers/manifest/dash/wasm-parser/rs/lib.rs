@@ -1,19 +1,17 @@
 extern crate core;
-extern crate quick_xml;
-
 mod errors;
 mod events;
 mod processor;
 mod reader;
 mod reportable;
 mod utils;
+mod xml;
 
 pub use errors::{ParsingError, Result};
 
 use events::*;
 use processor::MPDProcessor;
 use reader::MPDReader;
-use std::io::BufReader;
 
 #[cfg_attr(target_family = "wasm", link(wasm_import_module = "env"))]
 extern "C" {
@@ -80,7 +78,6 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn parse() {
-    let buf_read = BufReader::new(MPDReader {});
-    let mut processor = MPDProcessor::new(buf_read);
+    let mut processor = MPDProcessor::new(MPDReader {});
     processor.process_tags();
 }

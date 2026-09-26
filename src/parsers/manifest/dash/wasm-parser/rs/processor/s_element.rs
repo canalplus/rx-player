@@ -1,4 +1,4 @@
-use crate::errors::{ParsingError, Result};
+use crate::errors::Result;
 use crate::utils;
 
 /// Represents a parsed <S> node, itself in a <SegmentTimeline> node from an
@@ -35,33 +35,30 @@ impl SegmentObject {
     /// This function is called very very often on the more large MPDs based
     /// on a SegmentTimeline segment indexing scheme.
     #[inline(always)]
-    pub fn from_s_element(
-        e: &quick_xml::events::BytesStart,
-        time_base: f64,
-    ) -> Result<SegmentObject> {
+    pub fn from_s_element(e: &crate::xml::Element, time_base: f64) -> Result<SegmentObject> {
         let mut segment_obj = SegmentObject::default();
         let mut has_t = false;
 
-        for res_attr in e.attributes().with_checks(false) {
+        for res_attr in e.attributes() {
             match res_attr {
                 Ok(attr) => {
                     let key = attr.key;
-                    match key.as_ref() {
+                    match key {
                         b"t" => {
-                            segment_obj.start = utils::parse_u64(&attr.value)? as f64;
+                            segment_obj.start = utils::parse_u64(attr.value)? as f64;
                             has_t = true;
                         }
                         b"d" => {
-                            segment_obj.duration = utils::parse_u64(&attr.value)? as f64;
+                            segment_obj.duration = utils::parse_u64(attr.value)? as f64;
                         }
                         b"r" => {
                             // Note i64 instead of u64 as r can be equal to "-1"
-                            segment_obj.repeat_count = utils::parse_i64(&attr.value)? as f64;
+                            segment_obj.repeat_count = utils::parse_i64(attr.value)? as f64;
                         }
                         _ => {}
                     }
                 }
-                Err(err) => ParsingError::from(err).report_err(),
+                Err(err) => err.report_err(),
             };
         }
         if !has_t {

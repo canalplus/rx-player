@@ -1,19 +1,15 @@
-use quick_xml::events::Event;
-use quick_xml::Reader;
-use std::io::BufReader;
-
 mod attributes;
 mod s_element;
 
 use crate::errors::ParsingError;
 use crate::events::*;
 use crate::reader::MPDReader;
+use crate::xml::{Event, Reader};
 
 pub use s_element::SegmentObject;
 
 pub struct MPDProcessor {
-    reader: quick_xml::Reader<BufReader<MPDReader>>,
-    reader_buf: Vec<u8>,
+    reader: Reader<MPDReader>,
     segment_objs_buf: Vec<SegmentObject>,
 }
 
@@ -22,15 +18,10 @@ impl MPDProcessor {
     ///
     /// # Arguments
     ///
-    /// * `reader` - A BufReader allowing to read the MPD document
-    pub fn new(reader: BufReader<MPDReader>) -> Self {
-        let mut reader = Reader::from_reader(reader);
-        reader.expand_empty_elements(false);
-        reader.trim_text(true);
-        reader.check_end_names(false);
+    /// * `reader` - Reader allowing to read the MPD document
+    pub fn new(reader: MPDReader) -> Self {
         MPDProcessor {
-            reader,
-            reader_buf: Vec::new(),
+            reader: Reader::new(reader),
             segment_objs_buf: Vec::new(),
         }
     }
@@ -263,23 +254,19 @@ impl MPDProcessor {
                 Ok(Event::Eof) => {
                     break;
                 }
-                Err(e) => ParsingError::from(e).report_err(),
+                Err(e) => e.report_err(),
                 _ => (),
             }
         }
     }
 
-    /// Read the MPD document until an "Event" (@see quick-xml documentation)
-    /// is encountered.
+    /// Read the MPD document until an XML event is encountered.
     ///
     /// This method is always inlined for optimization reasons as it is both
     /// short and generally used in loops.
     #[inline(always)]
-    fn read_next_event<'a>(&'a mut self) -> quick_xml::Result<quick_xml::events::Event<'a>> {
-        if !self.reader_buf.is_empty() {
-            self.reader_buf.clear();
-        }
-        self.reader.read_event_into(&mut self.reader_buf)
+    fn read_next_event<'a>(&'a mut self) -> crate::errors::Result<Event<'a>> {
+        self.reader.read_event()
     }
 
     /// Loop over a SegmentTimeline's children (to call when a <SegmentTimeline>
@@ -333,7 +320,7 @@ impl MPDProcessor {
                     break;
                 }
                 Err(e) => {
-                    ParsingError::from(e).report_err();
+                    e.report_err();
                     break;
                 }
                 _ => (),
@@ -353,7 +340,7 @@ impl MPDProcessor {
                     if t.len() > 0 {
                         match t.unescape() {
                             Ok(unescaped) => AttributeName::Location.report(unescaped),
-                            Err(err) => ParsingError::from(err).report_err(),
+                            Err(err) => err.report_err(),
                         }
                     }
                 }
@@ -371,12 +358,11 @@ impl MPDProcessor {
                     break;
                 }
                 Err(e) => {
-                    ParsingError::from(e).report_err();
+                    e.report_err();
                     break;
                 }
                 _ => (),
             }
-            self.reader_buf.clear();
         }
     }
 
@@ -391,7 +377,7 @@ impl MPDProcessor {
                     if t.len() > 0 {
                         match t.unescape() {
                             Ok(unescaped) => AttributeName::Text.report(unescaped),
-                            Err(err) => ParsingError::from(err).report_err(),
+                            Err(err) => err.report_err(),
                         }
                     }
                 }
@@ -409,12 +395,11 @@ impl MPDProcessor {
                     break;
                 }
                 Err(e) => {
-                    ParsingError::from(e).report_err();
+                    e.report_err();
                     break;
                 }
                 _ => (),
             }
-            self.reader_buf.clear();
         }
     }
 
@@ -429,7 +414,7 @@ impl MPDProcessor {
                     if t.len() > 0 {
                         match t.unescape() {
                             Ok(unescaped) => AttributeName::Text.report(unescaped),
-                            Err(err) => ParsingError::from(err).report_err(),
+                            Err(err) => err.report_err(),
                         }
                     }
                 }
@@ -447,12 +432,11 @@ impl MPDProcessor {
                     break;
                 }
                 Err(e) => {
-                    ParsingError::from(e).report_err();
+                    e.report_err();
                     break;
                 }
                 _ => (),
             }
-            self.reader_buf.clear();
         }
     }
 
@@ -471,7 +455,7 @@ impl MPDProcessor {
                             {
                                 AttributeName::ContentProtectionCencPSSH.report(unescaped)
                             }
-                            Err(err) => ParsingError::from(err).report_err(),
+                            Err(err) => err.report_err(),
                         }
                     }
                 }
@@ -489,12 +473,11 @@ impl MPDProcessor {
                     break;
                 }
                 Err(e) => {
-                    ParsingError::from(e).report_err();
+                    e.report_err();
                     break;
                 }
                 _ => (),
             }
-            self.reader_buf.clear();
         }
     }
 
@@ -554,12 +537,11 @@ impl MPDProcessor {
                     break;
                 }
                 Err(e) => {
-                    ParsingError::from(e).report_err();
+                    e.report_err();
                     break;
                 }
                 _ => (),
             }
-            self.reader_buf.clear();
         }
     }
 
