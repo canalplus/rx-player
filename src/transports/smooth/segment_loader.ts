@@ -17,6 +17,7 @@
 import { CustomLoaderError } from "../../errors/index.ts";
 import type { ISegmentLoader as ICustomSegmentLoader } from "../../public_types.ts";
 import assert from "../../utils/assert.ts";
+import { concat } from "../../utils/byte_parsing.ts";
 import request from "../../utils/request/index.ts";
 import type {
   CancellationError,
@@ -32,6 +33,7 @@ import type {
 import addQueryString from "../utils/add_query_string.ts";
 import byteRange from "../utils/byte_range.ts";
 import checkISOBMFFIntegrity from "../utils/check_isobmff_integrity.ts";
+import mergeRequestHeaders from "../utils/merge_request_headers.ts";
 import isMP4EmbeddedTrack from "./is_mp4_embedded_track.ts";
 import { createAudioInitSegment, createVideoInitSegment } from "./isobmff/index.ts";
 
@@ -49,7 +51,9 @@ async function regularSegmentLoader(
   initialUrl: string,
   context: ISegmentContext,
   callbacks: ISegmentLoaderCallbacks<Uint8Array<ArrayBuffer> | ArrayBuffer | null>,
-  loaderOptions: ISegmentLoaderOptions,
+  loaderOptions: ISegmentLoaderOptions & {
+    headers?: Record<string, string> | undefined;
+  },
   cancelSignal: CancellationSignal,
   checkMediaSegmentIntegrity?: boolean | undefined,
 ): Promise<
@@ -61,15 +65,16 @@ async function regularSegmentLoader(
       : undefined;
   const range = context.segment.range;
 
-  let headers;
+  let generatedHeaders;
   if (Array.isArray(range)) {
-    headers = {
+    generatedHeaders = {
       ...cmcdHeaders,
       Range: byteRange(range),
     };
   } else if (cmcdHeaders !== undefined) {
-    headers = cmcdHeaders;
+    generatedHeaders = cmcdHeaders;
   }
+  const headers = mergeRequestHeaders(generatedHeaders, loaderOptions.headers);
 
   const url =
     loaderOptions.cmcdPayload?.type === "query"
@@ -202,35 +207,64 @@ const generateSegmentLoader =
           checkMediaSegmentIntegrity,
         );
       }
+      const customLoader = segmentLoader;
 
       return new Promise((res, rej) => {
         /** `true` when the custom segmentLoader should not be active anymore. */
         let hasFinished = false;
+        const receivedDataChunks: Uint8Array[] = [];
+
+        const onData = (newData: ArrayBuffer | Uint8Array): void => {
+          if (hasFinished || cancelSignal.isCancelled()) {
+            return;
+          }
+          if (newData.byteLength === 0) {
+            return;
+          }
+          const newDataU8 = new Uint8Array(newData);
+          receivedDataChunks.push(newDataU8);
+        };
 
         /**
          * Callback triggered when the custom segment loader has a response.
          * @param {Object} _args
          */
         const resolve = (_args: {
-          data: ArrayBuffer | Uint8Array;
+          data: ArrayBuffer | Uint8Array | null;
           size?: number | undefined;
           duration?: number | undefined;
         }) => {
           if (hasFinished || cancelSignal.isCancelled()) {
             return;
           }
+          if (receivedDataChunks.length === 0 && _args.data === null) {
+            reject(new Error("No data received when resolving the segment request."));
+            return;
+          }
+          const hadReceivedData = receivedDataChunks.length > 0;
+          if (hadReceivedData && _args.data !== null) {
+            onData(_args.data);
+          }
+          if (hasFinished || cancelSignal.isCancelled()) {
+            return;
+          }
           hasFinished = true;
           cancelSignal.deregister(abortCustomLoader);
+          let responseData: ArrayBuffer | Uint8Array;
+          if (hadReceivedData) {
+            responseData = concat(...receivedDataChunks);
+          } else {
+            responseData = _args.data ?? new ArrayBuffer(0);
+          }
           let data: ArrayBuffer | Uint8Array<ArrayBuffer>;
-          if (_args.data instanceof Uint8Array) {
-            if (_args.data.buffer instanceof ArrayBuffer) {
-              // Typescript is not so smart here for now
-              data = _args.data as Uint8Array<ArrayBuffer>;
+          if (responseData instanceof Uint8Array) {
+            if (responseData.buffer instanceof ArrayBuffer) {
+              data = responseData as Uint8Array<ArrayBuffer>;
             } else {
-              data = _args.data.slice();
+              data = responseData.slice();
             }
           } else {
-            data = _args.data;
+            data = responseData;
           }
 
           const isMP4 = isMP4EmbeddedTrack(context.mimeType);
@@ -300,8 +334,14 @@ const generateSegmentLoader =
           });
         };
 
-        const fallback = () => {
+        const fallback = (fallbackOptions?: {
+          headers?: Record<string, string> | undefined;
+        }) => {
           if (hasFinished || cancelSignal.isCancelled()) {
+            return;
+          }
+          if (receivedDataChunks.length > 0) {
+            reject(new Error("Cannot fallback after sending segment data."));
             return;
           }
           hasFinished = true;
@@ -310,13 +350,19 @@ const generateSegmentLoader =
             url,
             context,
             callbacks,
-            loaderOptions,
+            { ...loaderOptions, headers: fallbackOptions?.headers },
             cancelSignal,
             checkMediaSegmentIntegrity,
           ).then(res, rej);
         };
 
-        const customCallbacks = { reject, resolve, fallback, progress };
+        const customCallbacks = {
+          reject,
+          resolve,
+          fallback,
+          progress,
+          data: (args: { data: ArrayBuffer | Uint8Array }) => onData(args.data),
+        };
 
         let byteRanges: Array<[number, number]> | undefined;
         if (context.segment.range !== undefined) {
@@ -333,9 +379,24 @@ const generateSegmentLoader =
           url,
           cmcdPayload: loaderOptions.cmcdPayload,
         };
-        const abort = segmentLoader(args, customCallbacks);
+        const abort = callCustomSegmentLoader();
+        if (!hasFinished) {
+          cancelSignal.register(abortCustomLoader);
+        }
 
-        cancelSignal.register(abortCustomLoader);
+        /**
+         * Call the custom segment loader and handle synchronous errors.
+         * @returns {Function|undefined}
+         */
+        function callCustomSegmentLoader(): (() => void) | void {
+          try {
+            return customLoader(args, customCallbacks);
+          } catch (err: unknown) {
+            if (!hasFinished) {
+              reject(err);
+            }
+          }
+        }
 
         /**
          * The logic to run when the custom loader is cancelled while pending.
@@ -346,7 +407,7 @@ const generateSegmentLoader =
             return;
           }
           hasFinished = true;
-          if (!hasFinished && typeof abort === "function") {
+          if (typeof abort === "function") {
             abort();
           }
           rej(err);
