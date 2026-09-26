@@ -549,7 +549,7 @@ impl fmt::Debug for Event<'_> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Event, Reader, READ_SIZE};
+    use super::{Event, READ_SIZE, Reader};
     use std::io::{self, Read};
 
     #[derive(Debug, PartialEq)]
