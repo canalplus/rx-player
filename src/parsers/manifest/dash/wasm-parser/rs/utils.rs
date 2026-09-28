@@ -175,7 +175,7 @@ pub fn parse_maybe_division(value: &[u8]) -> Result<f64> {
         let e = ParsingError("Invalid value MPD in the MPD: Denominator set to `0`.".to_owned());
         return Err(e);
     }
-    return Ok(number1 / number2);
+    Ok(number1 / number2)
 }
 
 /// Parse a floating point number, represented by `value` in ASCII, starting at

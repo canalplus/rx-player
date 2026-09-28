@@ -1,6 +1,6 @@
 use std::io::{self, Read};
 
-pub struct MPDReader {}
+pub struct MPDReader;
 
 impl Read for MPDReader {
     #[inline]
