@@ -1429,11 +1429,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     initializer.addEventListener("activePeriodChanged", (periodInfo) =>
       this._priv_onActivePeriodChanged(contentInfos, periodInfo),
     );
-    initializer.addEventListener("periodStreamReady", (periodReadyInfo) =>
-      this._priv_onPeriodStreamReady(contentInfos, periodReadyInfo),
+    initializer.addEventListener("streamReady", (streamInfo) =>
+      this._priv_onStreamReady(contentInfos, streamInfo),
     );
-    initializer.addEventListener("periodStreamCleared", (periodClearedInfo) =>
-      this._priv_onPeriodStreamCleared(contentInfos, periodClearedInfo),
+    initializer.addEventListener("streamCleared", (streamInfo) =>
+      this._priv_onStreamCleared(contentInfos, streamInfo),
     );
     initializer.addEventListener("representationChange", (representationInfo) =>
       this._priv_onRepresentationChange(contentInfos, representationInfo),
@@ -3254,12 +3254,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each times a new "PeriodStream" is ready.
+   * Triggered each times a new "Stream" is ready.
    * Choose the right Adaptation for the Period and emit it.
    * @param {Object} contentInfos
    * @param {Object} value
    */
-  private _priv_onPeriodStreamReady(
+  private _priv_onStreamReady(
     contentInfos: IPublicApiContentInfos,
     value: {
       type: IBufferType;
@@ -3290,11 +3290,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each times we "remove" a PeriodStream.
+   * Triggered each times we "remove" a Stream.
    * @param {Object} contentInfos
    * @param {Object} value
    */
-  private _priv_onPeriodStreamCleared(
+  private _priv_onStreamCleared(
     contentInfos: IPublicApiContentInfos,
     value: { type: IBufferType; periodId: string },
   ): void {
