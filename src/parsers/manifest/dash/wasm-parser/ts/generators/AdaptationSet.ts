@@ -23,7 +23,7 @@ import type {
 import type { IAttributeParser, IChildrenParser } from "../parsers_stack.ts";
 import type ParsersStack from "../parsers_stack.ts";
 import { AttributeName, TagName } from "../types.ts";
-import { parseFloatOrBool, parseString } from "../utils.ts";
+import { parseFloatOrBool, parseString, readBoolean, readFloat } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentComponentAttrParser } from "./ContentComponent.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
@@ -256,14 +256,18 @@ export function generateAdaptationSetAttrParser(
   adaptationAttrs: IAdaptationSetAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
-  return function onAdaptationSetAttribute(attr: number, ptr: number, len: number) {
-    const dataView = new DataView(linearMemory.buffer);
+  return function onAdaptationSetAttribute(
+    attr: number,
+    ptr: number,
+    len: number,
+    value?: number,
+  ) {
     switch (attr) {
       case AttributeName.Id:
         adaptationAttrs.id = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.Group:
-        adaptationAttrs.group = dataView.getFloat64(ptr, true);
+        adaptationAttrs.group = readFloat(value);
         break;
       case AttributeName.Language:
         adaptationAttrs.lang = parseString(linearMemory.buffer, ptr, len);
@@ -275,44 +279,40 @@ export function generateAdaptationSetAttrParser(
         adaptationAttrs.par = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.MinBandwidth:
-        adaptationAttrs.minBandwidth = dataView.getFloat64(ptr, true);
+        adaptationAttrs.minBandwidth = readFloat(value);
         break;
       case AttributeName.MaxBandwidth:
-        adaptationAttrs.maxBandwidth = dataView.getFloat64(ptr, true);
+        adaptationAttrs.maxBandwidth = readFloat(value);
         break;
       case AttributeName.MinWidth:
-        adaptationAttrs.minWidth = dataView.getFloat64(ptr, true);
+        adaptationAttrs.minWidth = readFloat(value);
         break;
       case AttributeName.MaxWidth:
-        adaptationAttrs.maxWidth = dataView.getFloat64(ptr, true);
+        adaptationAttrs.maxWidth = readFloat(value);
         break;
       case AttributeName.MinHeight:
-        adaptationAttrs.minHeight = dataView.getFloat64(ptr, true);
+        adaptationAttrs.minHeight = readFloat(value);
         break;
       case AttributeName.MaxHeight:
-        adaptationAttrs.maxHeight = dataView.getFloat64(ptr, true);
+        adaptationAttrs.maxHeight = readFloat(value);
         break;
       case AttributeName.MinFrameRate:
-        adaptationAttrs.minFrameRate = dataView.getFloat64(ptr, true);
+        adaptationAttrs.minFrameRate = readFloat(value);
         break;
       case AttributeName.MaxFrameRate:
-        adaptationAttrs.maxFrameRate = dataView.getFloat64(ptr, true);
+        adaptationAttrs.maxFrameRate = readFloat(value);
         break;
       case AttributeName.SelectionPriority:
-        adaptationAttrs.selectionPriority = dataView.getFloat64(ptr, true);
+        adaptationAttrs.selectionPriority = readFloat(value);
         break;
       case AttributeName.SegmentAlignment:
-        adaptationAttrs.segmentAlignment = parseFloatOrBool(
-          dataView.getFloat64(ptr, true),
-        );
+        adaptationAttrs.segmentAlignment = parseFloatOrBool(readFloat(value));
         break;
       case AttributeName.SubsegmentAlignment:
-        adaptationAttrs.subsegmentAlignment = parseFloatOrBool(
-          dataView.getFloat64(ptr, true),
-        );
+        adaptationAttrs.subsegmentAlignment = parseFloatOrBool(readFloat(value));
         break;
       case AttributeName.BitstreamSwitching:
-        adaptationAttrs.bitstreamSwitching = dataView.getUint8(ptr) !== 0;
+        adaptationAttrs.bitstreamSwitching = readBoolean(value);
         break;
       case AttributeName.AudioSamplingRate:
         adaptationAttrs.audioSamplingRate = parseString(linearMemory.buffer, ptr, len);
@@ -337,28 +337,28 @@ export function generateAdaptationSetAttrParser(
         adaptationAttrs.mimeType = parseString(linearMemory.buffer, ptr, len);
         break;
       case AttributeName.CodingDependency:
-        adaptationAttrs.codingDependency = dataView.getUint8(ptr) !== 0;
+        adaptationAttrs.codingDependency = readBoolean(value);
         break;
       case AttributeName.FrameRate:
-        adaptationAttrs.frameRate = dataView.getFloat64(ptr, true);
+        adaptationAttrs.frameRate = readFloat(value);
         break;
       case AttributeName.Height:
-        adaptationAttrs.height = dataView.getFloat64(ptr, true);
+        adaptationAttrs.height = readFloat(value);
         break;
       case AttributeName.Width:
-        adaptationAttrs.width = dataView.getFloat64(ptr, true);
+        adaptationAttrs.width = readFloat(value);
         break;
       case AttributeName.MaxPlayoutRate:
-        adaptationAttrs.maxPlayoutRate = dataView.getFloat64(ptr, true);
+        adaptationAttrs.maxPlayoutRate = readFloat(value);
         break;
       case AttributeName.MaxSAPPeriod:
-        adaptationAttrs.maximumSAPPeriod = dataView.getFloat64(ptr, true);
+        adaptationAttrs.maximumSAPPeriod = readFloat(value);
         break;
       case AttributeName.AvailabilityTimeOffset:
-        adaptationAttrs.availabilityTimeOffset = dataView.getFloat64(ptr, true);
+        adaptationAttrs.availabilityTimeOffset = readFloat(value);
         break;
       case AttributeName.AvailabilityTimeComplete:
-        adaptationAttrs.availabilityTimeComplete = dataView.getUint8(ptr) !== 0;
+        adaptationAttrs.availabilityTimeComplete = readBoolean(value);
         break;
     }
   };
