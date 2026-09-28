@@ -2,7 +2,7 @@
 name = "mpd-node-parser"
 version = "0.2.0"
 authors = ["Paul Berberian <paul.berberian@canal-plus.com>"]
-edition = "2018"
+edition = "2024"
 
 [lib]
 path = "rs/lib.rs"

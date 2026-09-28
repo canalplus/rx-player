@@ -14,7 +14,7 @@ use processor::MPDProcessor;
 use reader::MPDReader;
 
 #[cfg_attr(target_family = "wasm", link(wasm_import_module = "env"))]
-extern "C" {
+unsafe extern "C" {
     /// JS callback called each time a new known tag is encountered in the MPD.
     ///
     /// The `tag_name` corresponds to the value of the TagName enum (@see
@@ -82,7 +82,7 @@ extern "C" {
     fn readNext(ptr: *const u8, size: usize) -> usize;
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn parse() {
     let mut processor = MPDProcessor::new(MPDReader);
     processor.process();
