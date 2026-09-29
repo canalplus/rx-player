@@ -1,13 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import addMultiThreadFeature from "../../../../../src/experimental/features/multi_thread.ts";
 import type { IFeaturesObject } from "../../../../../src/features/types.ts";
 import { WorkerCoreInterface } from "../../../../../src/main_thread/core_interface/multithread.ts";
 import MediaSourceContentInitializer from "../../../../../src/main_thread/init/media_source_content_initializer.ts";
 
-describe("Features list - EME", () => {
-  it("should add the ContentDecryptor in the current features", () => {
+describe("Experimental features - MULTI_THREAD compatibility alias", () => {
+  it("should warn and add the multi-thread implementation", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const featureObject: IFeaturesObject = {} as IFeaturesObject;
     addMultiThreadFeature(featureObject);
+    expect(warnSpy).toHaveBeenCalledOnce();
     expect(featureObject).toEqual({
       multithread: {
         init: MediaSourceContentInitializer,

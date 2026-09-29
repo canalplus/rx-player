@@ -17,12 +17,10 @@ import {
   HTML_TEXT_BUFFER,
   HTML_TTML_PARSER,
   HTML_VTT_PARSER,
+  MULTI_THREAD,
   SMOOTH,
 } from "../../../../src/features/list/index.ts";
-import {
-  METAPLAYLIST,
-  MULTI_THREAD,
-} from "../../../../src/experimental/features/index.ts";
+import { METAPLAYLIST } from "../../../../src/experimental/features/index.ts";
 import RxPlayer from "../../../../src/minimal.ts";
 import { linkPlayerEventsToState } from "./events.ts";
 import VideoThumbnailLoader, {

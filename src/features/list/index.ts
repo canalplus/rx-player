@@ -25,6 +25,7 @@ export { HTML_TEXT_BUFFER } from "./html_text_buffer.ts";
 export { HTML_TTML_PARSER } from "./html_ttml_parser.ts";
 export { HTML_VTT_PARSER } from "./html_vtt_parser.ts";
 export { MEDIA_SOURCE_MAIN } from "./media_source_main.ts";
+export { MULTI_THREAD } from "./multi_thread.ts";
 export { NATIVE_SAMI_PARSER } from "./native_sami_parser.ts";
 export { NATIVE_SRT_PARSER } from "./native_srt_parser.ts";
 export { NATIVE_TEXT_BUFFER } from "./native_text_buffer.ts";
