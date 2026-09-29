@@ -45,7 +45,7 @@ export default class ObservationPosition {
 
   /**
    * Returns the playback position actually observed on the media element at
-   * the time the playback observation was made.
+   * the time the media observation was made.
    *
    * Note that it may be different than the position for which media data is
    * wanted in rare scenarios where the goal position is not yet set on the

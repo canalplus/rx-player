@@ -20,11 +20,9 @@
  */
 
 import type { IMediaElement } from "../../compat/browser_compatibility_types.ts";
-import clearElementSrc from "../../compat/clear_element_src.ts";
 import getStartDate from "../../compat/get_start_date.ts";
-import type { MediaError } from "../../errors/index.ts";
 import log from "../../log.ts";
-import type { IMediaElementPlaybackObserver } from "../../playback_observer/index.ts";
+import type { IMediaElementMonitor } from "../../media_element_monitor/index.ts";
 import type { IKeySystemOption, IPlayerError } from "../../public_types.ts";
 import assert from "../../utils/assert.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
@@ -33,12 +31,12 @@ import type { IReadOnlySharedReference } from "../../utils/reference.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import TaskCanceller from "../../utils/task_canceller.ts";
 import { ContentInitializer } from "./types.ts";
+import formatMediaError from "./utils/format_media_error.ts";
 import type { IInitialTimeOptions } from "./utils/get_initial_time.ts";
 import getLoadedReference from "./utils/get_loaded_reference.ts";
 import performInitialSeekAndPlay from "./utils/initial_seek_and_play.ts";
 import initializeContentDecryption from "./utils/initialize_content_decryption.ts";
 import RebufferingController from "./utils/rebuffering_controller.ts";
-import listenToMediaError from "./utils/throw_on_media_error.ts";
 
 /**
  * `ContentIntializer` which will load contents by putting their URL in the
@@ -80,20 +78,18 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
   /**
    * Start playback of the content linked to this `DirectFileContentInitializer`
-   * on the given `HTMLMediaElement` and its associated `PlaybackObserver`.
+   * on the given `HTMLMediaElement` and its associated `MediaElementMonitor`.
    * @param {HTMLMediaElement} mediaElement - HTMLMediaElement on which the
    * content will be played.
-   * @param {Object} playbackObserver - Object regularly emitting playback
+   * @param {Object} mediaElementMonitor - Object regularly emitting playback
    * information.
    */
   public start(
     mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
   ): void {
     const cancelSignal = this._initCanceller.signal;
     const { keySystems, speed, url } = this._settings;
-
-    clearElementSrc(mediaElement);
 
     // Set the autoplay attribute on the mediaElement.
     // On Apple devices, the native HLS player needs autoplay to be set
@@ -113,18 +109,16 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     );
 
     /** Translate errors coming from the media element into RxPlayer errors. */
-    listenToMediaError(
-      mediaElement,
-      (error: MediaError) => this._onFatalError(error),
-      cancelSignal,
-    );
+    mediaElementMonitor.addMediaErrorListener((mediaError) => {
+      this._onFatalError(formatMediaError(mediaError));
+    }, cancelSignal);
 
     /**
      * Class trying to avoid various stalling situations, emitting "stalled"
      * events when it cannot, as well as "unstalled" events when it get out of one.
      */
     const rebufferingController = new RebufferingController(
-      playbackObserver,
+      mediaElementMonitor,
       null,
       speed,
     );
@@ -151,13 +145,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
 
         // Start everything! (Just put the URL in the element's src).
         log.info("Init", "Setting URL to HTMLMediaElement", { url });
-        mediaElement.src = url;
-        cancelSignal.register(() => {
-          log.info("Init", "Removing directfile src from media element", {
-            src: mediaElement.src,
-          });
-          clearElementSrc(mediaElement);
-        });
+        mediaElementMonitor.linkUrl(url, false, cancelSignal);
 
         if (evt.initializationState.type === "awaiting-media-link") {
           evt.initializationState.value.isMediaLinked.setValue(true);
@@ -165,14 +153,14 @@ export default class DirectFileContentInitializer extends ContentInitializer {
             (newDrmStatus, stopListeningToDrmUpdatesAgain) => {
               if (newDrmStatus.initializationState.type === "initialized") {
                 stopListeningToDrmUpdatesAgain();
-                this._seekAndPlay(mediaElement, playbackObserver);
+                this._seekAndPlay(mediaElement, mediaElementMonitor);
               }
             },
             { emitCurrentValue: true, clearSignal: cancelSignal },
           );
         } else {
           assert(evt.initializationState.type === "initialized");
-          this._seekAndPlay(mediaElement, playbackObserver);
+          this._seekAndPlay(mediaElement, mediaElementMonitor);
         }
       },
       { emitCurrentValue: true, clearSignal: cancelSignal },
@@ -211,11 +199,11 @@ export default class DirectFileContentInitializer extends ContentInitializer {
    * Perform the initial seek (to begin playback at an initially-calculated
    * position based on settings) and auto-play if needed when loaded.
    * @param {HTMLMediaElement} mediaElement
-   * @param {Object} playbackObserver
+   * @param {Object} mediaElementMonitor
    */
   private _seekAndPlay(
     mediaElement: IMediaElement,
-    playbackObserver: IMediaElementPlaybackObserver,
+    mediaElementMonitor: IMediaElementMonitor,
   ): void {
     const cancelSignal = this._initCanceller.signal;
     const { autoPlay, startAt } = this._settings;
@@ -227,8 +215,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
     };
     performInitialSeekAndPlay(
       {
-        mediaElement,
-        playbackObserver,
+        mediaElementMonitor,
         startTime: initialTime,
         mustAutoPlay: autoPlay,
         onWarning: (err) => this.trigger("warning", err),
@@ -237,7 +224,7 @@ export default class DirectFileContentInitializer extends ContentInitializer {
       cancelSignal,
     )
       .autoPlayResult.then(() =>
-        getLoadedReference(playbackObserver, true, cancelSignal).onUpdate(
+        getLoadedReference(mediaElementMonitor, true, cancelSignal).onUpdate(
           (isLoaded, stopListening) => {
             if (isLoaded) {
               stopListening();

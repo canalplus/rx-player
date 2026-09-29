@@ -2,10 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import StreamEventsEmitter from "../../../../../../../src/main_thread/init/utils/stream_events_emitter/stream_events_emitter.ts";
 import type { IManifestMetadata } from "../../../../../../../src/manifest/index.ts";
 import type {
-  IPlaybackObservation,
-  IReadOnlyPlaybackObserver,
-} from "../../../../../../../src/playback_observer/index.ts";
-import { SeekingState } from "../../../../../../../src/playback_observer/index.ts";
+  IMediaObservation,
+  IReadOnlyMediaElementMonitor,
+} from "../../../../../../../src/media_element_monitor/index.ts";
+import { SeekingState } from "../../../../../../../src/media_element_monitor/index.ts";
 import SharedReference from "../../../../../../../src/utils/reference.ts";
 import type { CancellationSignal } from "../../../../../../../src/utils/task_canceller.ts";
 import TaskCanceller from "../../../../../../../src/utils/task_canceller.ts";
@@ -19,8 +19,8 @@ describe("init - StreamEventsEmitter", () => {
     vi.useFakeTimers();
 
     const observationRef = new SharedReference(generateObservation(4));
-    const playbackObserver = createPlaybackObserver(observationRef);
-    const streamEventsEmitter = new StreamEventsEmitter(playbackObserver);
+    const mediaElementMonitor = createMediaElementMonitor(observationRef);
+    const streamEventsEmitter = new StreamEventsEmitter(mediaElementMonitor);
     const skippedEvents: unknown[] = [];
     const regularEvents: unknown[] = [];
     const stopCanceller = new TaskCanceller("test");
@@ -61,8 +61,8 @@ describe("init - StreamEventsEmitter", () => {
     vi.useFakeTimers();
 
     const observationRef = new SharedReference(generateObservation(4));
-    const playbackObserver = createPlaybackObserver(observationRef);
-    const streamEventsEmitter = new StreamEventsEmitter(playbackObserver);
+    const mediaElementMonitor = createMediaElementMonitor(observationRef);
+    const streamEventsEmitter = new StreamEventsEmitter(mediaElementMonitor);
     const regularEvents: unknown[] = [];
     const stopCanceller = new TaskCanceller("test");
 
@@ -89,9 +89,9 @@ describe("init - StreamEventsEmitter", () => {
   });
 });
 
-function createPlaybackObserver(
-  observationRef: SharedReference<IPlaybackObservation>,
-): IReadOnlyPlaybackObserver<IPlaybackObservation> {
+function createMediaElementMonitor(
+  observationRef: SharedReference<IMediaObservation>,
+): IReadOnlyMediaElementMonitor<IMediaObservation> {
   return {
     getCurrentTime() {
       return observationRef.getValue().position.getPolled();
@@ -109,7 +109,7 @@ function createPlaybackObserver(
       return observationRef;
     },
     listen(
-      cb: (observation: IPlaybackObservation, stopListening: () => void) => void,
+      cb: (observation: IMediaObservation, stopListening: () => void) => void,
       options: {
         includeLastObservation?: boolean | undefined;
         clearSignal: CancellationSignal;
@@ -120,7 +120,7 @@ function createPlaybackObserver(
         emitCurrentValue: options.includeLastObservation,
       });
     },
-    deriveReadOnlyObserver() {
+    deriveReadOnlyMonitor() {
       throw new Error("unused in this test");
     },
   };
@@ -151,7 +151,7 @@ function generateManifest(): IManifestMetadata {
   } as unknown as IManifestMetadata;
 }
 
-function generateObservation(currentTime: number): IPlaybackObservation {
+function generateObservation(currentTime: number): IMediaObservation {
   return {
     event: "timeupdate",
     seeking: SeekingState.None,
@@ -170,6 +170,6 @@ function generateObservation(currentTime: number): IPlaybackObservation {
       getPolled() {
         return currentTime;
       },
-    } as IPlaybackObservation["position"],
+    } as IMediaObservation["position"],
   };
 }

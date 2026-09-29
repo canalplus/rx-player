@@ -29,7 +29,7 @@ vi.mock("../../../../../src/utils/url-utils", () => ({
 }));
 
 /** Helpers */
-function makePlaybackObserver(
+function makeMediaElementMonitor(
   overrides: Partial<{
     rebuffering: object | null;
     speed: number;
@@ -333,7 +333,7 @@ describe("CmcdDataBuilder", () => {
   describe("startMonitoringPlayback / buffer starvation", () => {
     it("sets bs=true when rebuffering was observed, then clears it on next request", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
-      const observer = makePlaybackObserver({ rebuffering: { timestamp: 0 } });
+      const observer = makeMediaElementMonitor({ rebuffering: { timestamp: 0 } });
       builder.startMonitoringPlayback(observer);
 
       const payload1: any = builder.getCmcdDataForManifest("dash");
@@ -347,9 +347,9 @@ describe("CmcdDataBuilder", () => {
       expect(status2).not.toContain("bs");
     });
 
-    it("includes bl (buffer length) for video when playback observer is set", () => {
+    it("includes bl (buffer length) for video when MediaElementMonitor is set", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
-      const observer = makePlaybackObserver({
+      const observer = makeMediaElementMonitor({
         buffered: {
           video: [{ start: 5, end: 20 }],
           audio: null,
@@ -368,7 +368,7 @@ describe("CmcdDataBuilder", () => {
 
     it("includes pr when playback speed is not 1", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
-      const observer = makePlaybackObserver({ speed: 2, rebuffering: null });
+      const observer = makeMediaElementMonitor({ speed: 2, rebuffering: null });
       builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
@@ -378,7 +378,7 @@ describe("CmcdDataBuilder", () => {
 
     it("does not include pr when speed is 1", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
-      const observer = makePlaybackObserver({ speed: 1, rebuffering: null });
+      const observer = makeMediaElementMonitor({ speed: 1, rebuffering: null });
       builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
@@ -388,7 +388,7 @@ describe("CmcdDataBuilder", () => {
 
     it("does not include pr when playback speed is negative", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
-      const observer = makePlaybackObserver({ speed: -1, rebuffering: null });
+      const observer = makeMediaElementMonitor({ speed: -1, rebuffering: null });
       builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
@@ -398,7 +398,10 @@ describe("CmcdDataBuilder", () => {
 
     it("includes su when rebuffering is active", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
-      const observer = makePlaybackObserver({ rebuffering: { timestamp: 0 }, speed: 1 });
+      const observer = makeMediaElementMonitor({
+        rebuffering: { timestamp: 0 },
+        speed: 1,
+      });
       builder.startMonitoringPlayback(observer);
 
       const payload: any = builder.getCmcdDataForManifest("dash");
@@ -408,7 +411,7 @@ describe("CmcdDataBuilder", () => {
 
     it("does not include dl or rtp when playback speed is 0", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
-      const observer = makePlaybackObserver({
+      const observer = makeMediaElementMonitor({
         buffered: {
           video: [{ start: 5, end: 20 }],
           audio: null,
@@ -429,9 +432,9 @@ describe("CmcdDataBuilder", () => {
   });
 
   describe("stopMonitoringPlayback", () => {
-    it("clears the playback observer so subsequent calls work without observation data", () => {
+    it("clears the MediaElementMonitor so subsequent calls work without observation data", () => {
       const builder = new CmcdDataBuilder({ communicationType: "headers" });
-      const observer = makePlaybackObserver({ speed: 2, rebuffering: null });
+      const observer = makeMediaElementMonitor({ speed: 2, rebuffering: null });
       builder.startMonitoringPlayback(observer);
       builder.stopMonitoringPlayback();
 
