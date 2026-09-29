@@ -692,7 +692,10 @@ describe("AdaptationStream", () => {
 
     streamCallbacks?.addedSegment(payload);
 
-    expect(addedSegment).toHaveBeenCalledWith(payload);
+    expect(addedSegment).toHaveBeenCalledWith({
+      buffered: payload.buffered,
+      content: payload.content,
+    });
   });
 
   it("should forward non-buffer-full errors to the adaptation callbacks", () => {
