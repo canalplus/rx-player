@@ -8,7 +8,7 @@ const representation1 = {
   getMimeTypeString(): string {
     return "";
   },
-  isSupported: true,
+  isCodecSupported: true,
   index: {},
   getProtectionsInitializationData(): [] {
     return [];
@@ -24,7 +24,7 @@ const representation2 = {
   getMimeTypeString(): string {
     return "";
   },
-  isSupported: true,
+  isCodecSupported: true,
   index: {},
   getProtectionsInitializationData(): [] {
     return [];
