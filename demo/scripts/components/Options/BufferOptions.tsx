@@ -9,6 +9,12 @@ const DEFAULT_MAX_BUFFER_AHEAD = DEFAULT_VALUES.player.maxBufferAhead;
 const DEFAULT_MAX_BUFFER_BEHIND = DEFAULT_VALUES.player.maxBufferBehind;
 const DEFAULT_MAX_VIDEO_BUFFER_SIZE = DEFAULT_VALUES.player.maxVideoBufferSize;
 const DEFAULT_WANTED_BUFFER_AHEAD = DEFAULT_VALUES.player.wantedBufferAhead;
+const DEFAULT_REBUFFERING_AVOIDANCE_BUFFER_GAP_SIZE =
+  DEFAULT_VALUES.loadVideo.experimentalOptions
+    .playbackRateBasedRebufferingAvoidanceSettings.onBufferGapSize;
+const DEFAULT_REBUFFERING_AVOIDANCE_MIN_PLAYBACK_RATE =
+  DEFAULT_VALUES.loadVideo.experimentalOptions
+    .playbackRateBasedRebufferingAvoidanceSettings.minPlaybackRate;
 
 /**
  * @param {Object} props
@@ -19,19 +25,27 @@ function BufferOptions({
   maxVideoBufferSize,
   maxBufferAhead,
   maxBufferBehind,
+  rebufferingAvoidanceBufferGapSize,
+  rebufferingAvoidanceMinPlaybackRate,
   onWantedBufferAheadChange,
   onMaxVideoBufferSizeChange,
   onMaxBufferAheadChange,
   onMaxBufferBehindChange,
+  onRebufferingAvoidanceBufferGapSizeChange,
+  onRebufferingAvoidanceMinPlaybackRateChange,
 }: {
   wantedBufferAhead: number;
   maxVideoBufferSize: number;
   maxBufferAhead: number;
   maxBufferBehind: number;
+  rebufferingAvoidanceBufferGapSize: number;
+  rebufferingAvoidanceMinPlaybackRate: number;
   onWantedBufferAheadChange: (newVal: number) => void;
   onMaxVideoBufferSizeChange: (newVal: number) => void;
   onMaxBufferBehindChange: (newVal: number) => void;
   onMaxBufferAheadChange: (newVal: number) => void;
+  onRebufferingAvoidanceBufferGapSizeChange: (newVal: number) => void;
+  onRebufferingAvoidanceMinPlaybackRateChange: (newVal: number) => void;
 }): React.JSX.Element {
   /* Value of the `wantedBufferAhead` input */
   const [wantedBufferAheadStr, setWantedBufferAheadStr] = useState(
@@ -45,6 +59,14 @@ function BufferOptions({
   const [maxBufferBehindStr, setMaxBufferBehindStr] = useState(String(maxBufferBehind));
   /* Value of the `maxBufferAhead` input */
   const [maxBufferAheadStr, setMaxBufferAheadStr] = useState(String(maxBufferAhead));
+  /* Value of the `rebufferingAvoidanceBufferGapSize` input */
+  const [rebufferingAvoidanceBufferGapSizeStr, setRebufferingAvoidanceBufferGapSizeStr] =
+    useState(String(rebufferingAvoidanceBufferGapSize));
+  /* Value of the `rebufferingAvoidanceMinPlaybackRate` input */
+  const [
+    rebufferingAvoidanceMinPlaybackRateStr,
+    setRebufferingAvoidanceMinPlaybackRateStr,
+  ] = useState(String(rebufferingAvoidanceMinPlaybackRate));
   /*
    * Keep track of the "limit maxBufferAhead" toggle:
    * `false` == checkbox enabled
@@ -66,6 +88,7 @@ function BufferOptions({
   const [isMaxVideoBufferSizeLimited, setMaxVideoBufferSizeLimit] = useState(
     maxVideoBufferSize !== Infinity,
   );
+  const isRebufferingAvoidanceEnabled = rebufferingAvoidanceBufferGapSize !== 0;
 
   // Update `wantedBufferAhead` when its linked text change
   useEffect(() => {
@@ -98,6 +121,26 @@ function BufferOptions({
     onMaxBufferBehindChange(newVal);
   }, [maxBufferBehindStr]);
 
+  // Update `rebufferingAvoidanceBufferGapSize` when its linked text change
+  useEffect(() => {
+    // Note that this unnecessarily also run on first render - there seem to be
+    // no quick and easy way to disable this in react.
+    // This is not too problematic so I put up with it.
+    let newVal = parseFloat(rebufferingAvoidanceBufferGapSizeStr);
+    newVal = isNaN(newVal) ? DEFAULT_REBUFFERING_AVOIDANCE_BUFFER_GAP_SIZE : newVal;
+    onRebufferingAvoidanceBufferGapSizeChange(newVal);
+  }, [rebufferingAvoidanceBufferGapSizeStr]);
+
+  // Update `rebufferingAvoidanceMinPlaybackRate` when its linked text change
+  useEffect(() => {
+    // Note that this unnecessarily also run on first render - there seem to be
+    // no quick and easy way to disable this in react.
+    // This is not too problematic so I put up with it.
+    let newVal = parseFloat(rebufferingAvoidanceMinPlaybackRateStr);
+    newVal = isNaN(newVal) ? DEFAULT_REBUFFERING_AVOIDANCE_MIN_PLAYBACK_RATE : newVal;
+    onRebufferingAvoidanceMinPlaybackRateChange(newVal);
+  }, [rebufferingAvoidanceMinPlaybackRateStr]);
+
   const onChangeLimitMaxBufferAhead = useCallback((isNotLimited: boolean) => {
     if (isNotLimited) {
       setMaxBufferAheadLimit(false);
@@ -128,6 +171,14 @@ function BufferOptions({
     }
   }, []);
 
+  const onRebufferingAvoidanceEnableClick = useCallback((isEnabled: boolean) => {
+    if (isEnabled) {
+      setRebufferingAvoidanceBufferGapSizeStr("0");
+    } else {
+      setRebufferingAvoidanceBufferGapSizeStr("1.5");
+    }
+  }, []);
+
   const onWantedBufferAheadResetClick = React.useCallback(() => {
     setWantedBufferAheadStr(String(DEFAULT_WANTED_BUFFER_AHEAD));
   }, []);
@@ -145,6 +196,18 @@ function BufferOptions({
   const onMaxBufferBehindResetClick = React.useCallback(() => {
     setMaxBufferBehindStr(String(DEFAULT_MAX_BUFFER_BEHIND));
     setMaxBufferBehindLimit(DEFAULT_MAX_BUFFER_BEHIND !== Infinity);
+  }, []);
+
+  const onRebufferingAvoidanceBufferGapSizeResetClick = React.useCallback(() => {
+    setRebufferingAvoidanceBufferGapSizeStr(
+      String(DEFAULT_REBUFFERING_AVOIDANCE_BUFFER_GAP_SIZE),
+    );
+  }, []);
+
+  const onRebufferingAvoidanceMinPlaybackRateResetClick = React.useCallback(() => {
+    setRebufferingAvoidanceMinPlaybackRateStr(
+      String(DEFAULT_REBUFFERING_AVOIDANCE_MIN_PLAYBACK_RATE),
+    );
   }, []);
 
   return (
@@ -240,6 +303,54 @@ function BufferOptions({
           {maxBufferBehind === Infinity || !isMaxBufferBehindLimited
             ? "Not manually cleaning buffer behind the current position"
             : `Manually cleaning data ${maxBufferBehind} second(s) behind the current position`}
+        </span>
+      </li>
+      <li>
+        <PlayerOptionNumberInput
+          ariaLabel="Playback Rate Based Rebuffering Avoidance Buffer Size option"
+          label="playbackRateBasedRebufferingAvoidanceBufferSize"
+          title="Rebuffering Avoidance: Buffer Size"
+          valueAsString={rebufferingAvoidanceBufferGapSizeStr}
+          defaultValueAsNumber={DEFAULT_REBUFFERING_AVOIDANCE_BUFFER_GAP_SIZE}
+          isDisabled={!isRebufferingAvoidanceEnabled}
+          onUpdateValue={setRebufferingAvoidanceBufferGapSizeStr}
+          onResetClick={onRebufferingAvoidanceBufferGapSizeResetClick}
+        />
+        <Checkbox
+          className="playerOptionsCheckBox"
+          ariaLabel="Do not enable Playback Rate-Based Rebuffering Avoidance"
+          name="rebufferingAvoidanceEnable"
+          checked={!isRebufferingAvoidanceEnabled}
+          onChange={onRebufferingAvoidanceEnableClick}
+        >
+          Disable
+        </Checkbox>
+        <span className="option-desc">
+          {rebufferingAvoidanceBufferGapSize <= 0 || !isRebufferingAvoidanceEnabled
+            ? "No triggering Playback-Rate-based rebuffering Avoidance"
+            : `Starting rebuffering avoidance strategy once ${rebufferingAvoidanceBufferGapSize} second(s) is left in the buffer`}
+        </span>
+        <span
+          style={{
+            marginTop: "5px",
+            borderBottom: "1px solid #999",
+            marginBottom: "5px",
+          }}
+        ></span>
+        <PlayerOptionNumberInput
+          ariaLabel="Playback Rate Based Rebuffering Avoidance Min Playback Rate option"
+          label="playbackRateBasedRebufferingAvoidanceMinPlaybackRate"
+          title="Rebuffering Avoidance: Playback Rate"
+          valueAsString={rebufferingAvoidanceMinPlaybackRateStr}
+          defaultValueAsNumber={DEFAULT_REBUFFERING_AVOIDANCE_MIN_PLAYBACK_RATE}
+          isDisabled={!isRebufferingAvoidanceEnabled}
+          onUpdateValue={setRebufferingAvoidanceMinPlaybackRateStr}
+          onResetClick={onRebufferingAvoidanceMinPlaybackRateResetClick}
+        />
+        <span className="option-desc">
+          {rebufferingAvoidanceBufferGapSize <= 0 || !isRebufferingAvoidanceEnabled
+            ? "No triggering Playback-Rate-based rebuffering Avoidance"
+            : `Rebuffering avoidance strategies will play at ${rebufferingAvoidanceMinPlaybackRate}x the speed once ${rebufferingAvoidanceBufferGapSize} second(s) is left in the buffer`}
         </span>
       </li>
     </Fragment>
