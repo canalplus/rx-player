@@ -1,6 +1,5 @@
 import RxPlayer from "rx-player";
-// TODO: Remove `/experimental/` next release
-import { MULTI_THREAD } from "rx-player/experimental/features";
+import { MULTI_THREAD } from "rx-player/features";
 import { EMBEDDED_WORKER } from "rx-player/experimental/features/embeds";
 import { multiAdaptationSetsInfos } from "../../../contents/static/DASH_static_SegmentTimeline";
 import sleep from "../../../utils/sleep";
