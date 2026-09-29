@@ -4,7 +4,7 @@ import type {
   ISourceBuffer,
   ISourceBufferList,
 } from "../../../../src/compat/browser_compatibility_types.ts";
-import { SourceBufferError } from "../../../../src/errors/index.ts";
+import { SourceBufferError } from "../../../../src/errors/internal/index.ts";
 import MainMediaSourceInterface, {
   MainSourceBufferInterface,
 } from "../../../../src/mse/main_media_source_interface.ts";
@@ -179,7 +179,7 @@ const {
   };
 });
 
-vi.mock("../../../../src/compat/browser_compatibility_types", () => {
+vi.mock("../../../../src/compat/browser_compatibility_types.ts", () => {
   return {
     default: {
       MediaSource_: MockMediaSource,
@@ -187,17 +187,17 @@ vi.mock("../../../../src/compat/browser_compatibility_types", () => {
   };
 });
 
-vi.mock("../../../../src/compat/change_source_buffer_type", () => ({
+vi.mock("../../../../src/compat/change_source_buffer_type.ts", () => ({
   default: mockTryToChangeSourceBufferType,
 }));
 
-vi.mock("../../../../src/compat/event_listeners", () => ({
+vi.mock("../../../../src/compat/event_listeners.ts", () => ({
   onSourceOpen: mockOnSourceOpen,
   onSourceEnded: mockOnSourceEnded,
   onSourceClose: mockOnSourceClose,
 }));
 
-vi.mock("../../../../src/log", () => ({
+vi.mock("../../../../src/log.ts", () => ({
   default: {
     info: vi.fn(),
     debug: vi.fn(),
@@ -206,7 +206,7 @@ vi.mock("../../../../src/log", () => ({
   },
 }));
 
-vi.mock("../../../../src/mse/utils/end_of_stream", () => ({
+vi.mock("../../../../src/mse/utils/end_of_stream.ts", () => ({
   maintainEndOfStream: mockMaintainEndOfStream,
 }));
 

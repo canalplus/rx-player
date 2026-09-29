@@ -17,7 +17,7 @@
 import isSeekingApproximate from "../../../compat/is_seeking_approximate.ts";
 import config from "../../../config.ts";
 import type { IBufferType } from "../../../core/types.ts";
-import { MediaError } from "../../../errors/index.ts";
+import { MediaError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { IManifestMetadata, IPeriodMetadata } from "../../../manifest/index.ts";
 import { getPeriodAfter } from "../../../manifest/index.ts";

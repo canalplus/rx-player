@@ -9,7 +9,7 @@ import TaskCanceller from "../../../../../../src/utils/task_canceller.ts";
 
 const {
   mockConfigGetCurrent,
-  mockFormatError,
+  mockFormatApiError,
   mockLogInfo,
   mockLogWarn,
   mockLogDebug,
@@ -30,7 +30,7 @@ const {
   }
   return {
     mockConfigGetCurrent: vi.fn(),
-    mockFormatError: vi.fn((e: unknown) => e),
+    mockFormatApiError: vi.fn((e: unknown) => e),
     mockLogInfo: vi.fn(),
     mockLogWarn: vi.fn(),
     mockLogDebug: vi.fn(),
@@ -45,7 +45,9 @@ const {
 vi.mock("../../../../../../src/config", () => ({
   default: { getCurrent: mockConfigGetCurrent },
 }));
-vi.mock("../../../../../../src/errors", () => ({ formatError: mockFormatError }));
+vi.mock("../../../../../../src/errors/public_api", () => ({
+  formatApiError: mockFormatApiError,
+}));
 vi.mock("../../../../../../src/log", () => ({
   default: { info: mockLogInfo, warn: mockLogWarn, debug: mockLogDebug },
 }));
@@ -103,7 +105,7 @@ function makeLoadResponse(overrides: Record<string, unknown> = {}) {
 describe("ManifestFetcher", () => {
   beforeEach(() => {
     mockConfigGetCurrent.mockReturnValue(DEFAULT_CONFIG);
-    mockFormatError.mockImplementation((e: unknown) => e);
+    mockFormatApiError.mockImplementation((e: unknown) => e);
     mockErrorSelector.mockImplementation((e: unknown) => e);
     mockScheduleRequestPromise.mockImplementation((fn: () => Promise<unknown>) => fn());
   });
@@ -352,7 +354,7 @@ describe("ManifestFetcher", () => {
     it("emits error when parseManifest throws", async () => {
       mockLoadManifest.mockResolvedValue(makeLoadResponse());
       const parseError = new Error("parse failure");
-      mockFormatError.mockReturnValue(parseError);
+      mockFormatApiError.mockReturnValue(parseError);
       mockParseManifest.mockImplementation(() => {
         throw parseError;
       });
@@ -828,7 +830,7 @@ describe("ManifestFetcher", () => {
       );
 
       const parseWarning = new Error("minor issue");
-      mockFormatError.mockReturnValue(parseWarning);
+      mockFormatApiError.mockReturnValue(parseWarning);
 
       const fetcher = new ManifestFetcher(
         ["http://example.com/manifest"],

@@ -7,7 +7,7 @@ import type {
   ITrackSwitchingMode,
 } from "../core/types.ts";
 import type { IDefaultConfig } from "../default_config.ts";
-import type { ISerializedSourceBufferError } from "../errors/source_buffer_error.ts";
+import type { ISerializedSourceBufferError } from "../errors/internal/index.ts";
 import type { SourceBufferType } from "../mse/index.ts";
 import type { IFreezingStatus, IRebufferingStatus } from "../playback_observer/index.ts";
 import type {

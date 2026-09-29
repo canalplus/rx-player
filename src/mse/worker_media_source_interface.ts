@@ -11,8 +11,8 @@ import type {
   IUpdateMediaSourceDurationCoreMessage,
 } from "../core/types.ts";
 import { CoreMessageType } from "../core/types.ts";
-import { SourceBufferError } from "../errors/index.ts";
-import type { ISerializedSourceBufferError } from "../errors/source_buffer_error.ts";
+import { SourceBufferError } from "../errors/internal/index.ts";
+import type { ISerializedSourceBufferError } from "../errors/internal/index.ts";
 import log from "../log.ts";
 import EventEmitter from "../utils/event_emitter.ts";
 import idGenerator from "../utils/id_generator.ts";

@@ -38,7 +38,7 @@ import TaskCanceller, {
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 const mockGetCurrent = vi.hoisted(() => vi.fn());
-const mockFormatError = vi.hoisted(() => vi.fn((err: unknown) => err));
+const mockFormatApiError = vi.hoisted(() => vi.fn((err: unknown) => err));
 const mockLog = vi.hoisted(() => ({
   debug: vi.fn(),
 }));
@@ -77,7 +77,9 @@ const mockInitializationSegmentCache = vi.hoisted(
 vi.mock("../../../../../../src/config", () => ({
   default: { getCurrent: mockGetCurrent },
 }));
-vi.mock("../../../../../../src/errors", () => ({ formatError: mockFormatError }));
+vi.mock("../../../../../../src/errors/public_api", () => ({
+  formatApiError: mockFormatApiError,
+}));
 vi.mock("../../../../../../src/log", () => ({ default: mockLog }));
 vi.mock("../../../../../../src/manifest", () => ({
   getLoggableSegmentId: mockGetLoggableSegmentId,
@@ -613,10 +615,10 @@ describe("createSegmentFetcher", () => {
       expect(onRetry).toHaveBeenCalledWith(retryError);
     });
 
-    it("wraps parse errors with formatError", async () => {
+    it("wraps parse errors with formatApiError", async () => {
       const parseError = new Error("parse fail");
       const wrappedError = new Error("PIPELINE_PARSE_ERROR");
-      mockFormatError.mockReturnValue(wrappedError);
+      mockFormatApiError.mockReturnValue(wrappedError);
 
       const pipeline = makePipeline();
       pipeline.parseSegment.mockImplementation(() => {
@@ -637,7 +639,7 @@ describe("createSegmentFetcher", () => {
 
       const parseFn = onChunk.mock.calls[0][0];
       expect(() => parseFn(undefined)).toThrow(wrappedError);
-      expect(mockFormatError).toHaveBeenCalledWith(parseError, {
+      expect(mockFormatApiError).toHaveBeenCalledWith(parseError, {
         defaultCode: "PIPELINE_PARSE_ERROR",
         defaultReason: "Unknown parsing error",
       });

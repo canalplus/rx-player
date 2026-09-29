@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { CoreMessageType } from "../../../../src/core/types.ts";
-import { SourceBufferError } from "../../../../src/errors/index.ts";
+import { SourceBufferError } from "../../../../src/errors/internal/index.ts";
 import { SourceBufferType } from "../../../../src/mse/types.ts";
 import WorkerMediaSourceInterface, {
   WorkerSourceBufferInterface,
@@ -18,7 +18,7 @@ const { mockLog } = vi.hoisted(() => {
   };
 });
 
-vi.mock("../../../../src/log", () => ({ default: mockLog }));
+vi.mock("../../../../src/log.ts", () => ({ default: mockLog }));
 
 function makeMessageSender() {
   return vi.fn();

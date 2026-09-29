@@ -5,7 +5,7 @@ import type {
   ISerializedNetworkError,
   ISerializedEncryptedMediaError,
   ISerializedOtherError,
-} from "../errors/index.ts";
+} from "../errors/public_api/index.ts";
 import type { IContentProtection, ITextDisplayerData } from "../main_thread/types.ts";
 import type { IManifestMetadata, IPeriodsUpdateResult } from "../manifest/index.ts";
 import type {
