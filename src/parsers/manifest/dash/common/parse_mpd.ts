@@ -39,6 +39,7 @@ import ManifestBoundsCalculator from "./manifest_bounds_calculator.ts";
 import parseAvailabilityStartTime from "./parse_availability_start_time.ts";
 import type { IXLinkInfos } from "./parse_periods.ts";
 import parsePeriods from "./parse_periods.ts";
+import { parseUrlQueryInfo } from "./parse_url_query_info.ts";
 import type { IResolvedBaseUrl } from "./resolve_base_urls.ts";
 import resolveBaseURLs from "./resolve_base_urls.ts";
 
@@ -275,6 +276,11 @@ function parseCompleteIntermediateRepresentation(
   });
   const contentProtectionParser = new ContentProtectionParser();
   contentProtectionParser.addReferences(rootChildren.ContentProtection);
+  const mpdUrlQueryInfo = parseUrlQueryInfo(
+    rootChildren.EssentialProperty,
+    rootChildren.SupplementalProperty,
+    args.url,
+  );
   const manifestInfos = {
     availabilityStartTime,
     baseURLs: mpdBaseUrls,
@@ -284,7 +290,9 @@ function parseCompleteIntermediateRepresentation(
     isDynamic,
     manifestBoundsCalculator,
     manifestProfiles: mpdIR.attributes.profiles,
+    mpdUrl: args.url,
     receivedTime: args.manifestReceivedTime,
+    urlQueryInfo: mpdUrlQueryInfo === undefined ? [] : [mpdUrlQueryInfo],
     unsafelyBaseOnPreviousManifest,
     xlinkInfos,
     xmlNamespaces: mpdIR.attributes.namespaces,

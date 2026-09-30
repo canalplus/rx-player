@@ -31,6 +31,12 @@ export default function parseUrlQueryInfo(
           name: "useMpdUrlQuery",
         });
         break;
+      case "sameOriginOnly":
+        parseValue(attributeValue, {
+          parser: parseBoolean,
+          name: "sameOriginOnly",
+        });
+        break;
     }
   }
   return [{ attributes }, warnings];

@@ -94,6 +94,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
       requestOptions.requestTimeout < 0 ? undefined : requestOptions.requestTimeout,
     connectionTimeout,
     cmcdPayload: undefined,
+    requestData: undefined,
   };
 
   /**
@@ -286,6 +287,7 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
     ): ReturnType<ISegmentLoader<TLoadedFormat>> {
       pipelineRequestOptions.cmcdPayload =
         cmcdDataBuilder?.getCmcdDataForSegmentRequest(content);
+      pipelineRequestOptions.requestData = content.representation.requestData;
       return loadSegment(
         cdnMetadata,
         context,

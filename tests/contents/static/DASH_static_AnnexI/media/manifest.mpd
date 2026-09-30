@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xmlns:up="urn:mpeg:dash:schema:urlparam:2016"
+  type="static"
+  mediaPresentationDuration="PT4.004S"
+  maxSegmentDuration="PT4.004S"
+  minBufferTime="PT1S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011">
+  <EssentialProperty schemeIdUri="urn:mpeg:dash:urlparam:2016">
+    <up:ExtUrlQueryInfo
+      queryString="from=network"
+      queryTemplate="$querypart$"
+      includeInRequests="segment" />
+  </EssentialProperty>
+  <Period id="period" duration="PT4.004S">
+    <AdaptationSet
+      id="video"
+      contentType="video"
+      mimeType="video/mp4"
+      codecs="avc1.42C014"
+      segmentAlignment="true"
+      startWithSAP="1">
+      <Representation
+        id="video-representation"
+        bandwidth="400000"
+        width="220"
+        height="124">
+        <SupplementalProperty schemeIdUri="urn:mpeg:dash:urlparam:2016">
+          <up:ExtUrlQueryInfo
+            queryString="kind=video"
+            queryTemplate="$querypart$"
+            includeInRequests="segment" />
+        </SupplementalProperty>
+        <SegmentTemplate
+          timescale="1000"
+          duration="4004"
+          startNumber="1"
+          initialization="init.mp4"
+          media="segment-$Number$.m4s" />
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="text"
+      contentType="text"
+      mimeType="application/mp4"
+      codecs="wvtt"
+      lang="en">
+      <Representation id="text-representation" bandwidth="1">
+        <SupplementalProperty schemeIdUri="urn:mpeg:dash:urlparam:2016">
+          <up:ExtUrlQueryInfo
+            queryString="kind=text"
+            queryTemplate="$querypart$"
+            includeInRequests="segment" />
+        </SupplementalProperty>
+        <SegmentTemplate
+          timescale="1000"
+          duration="4004"
+          startNumber="1"
+          initialization="text-init.mp4"
+          media="text-$Number$.m4s" />
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="thumbnails"
+      contentType="image"
+      mimeType="image/jpeg">
+      <Representation
+        id="thumbnail-representation"
+        bandwidth="12288"
+        width="3200"
+        height="180">
+        <EssentialProperty
+          schemeIdUri="http://dashif.org/thumbnail_tile"
+          value="10x1" />
+        <SupplementalProperty schemeIdUri="urn:mpeg:dash:urlparam:2016">
+          <up:ExtUrlQueryInfo
+            queryString="kind=thumbnail"
+            queryTemplate="$querypart$"
+            includeInRequests="segment" />
+        </SupplementalProperty>
+        <SegmentTemplate
+          timescale="1000"
+          duration="4004"
+          startNumber="1"
+          media="thumbnail-$Number$.jpg" />
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>

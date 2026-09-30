@@ -81,6 +81,7 @@ export default function updatePeriodInPlace(
       oldThumbnailTrack.end = newThumbnailTrack.end;
       oldThumbnailTrack.tileDuration = newThumbnailTrack.tileDuration;
       oldThumbnailTrack.cdnMetadata = newThumbnailTrack.cdnMetadata;
+      oldThumbnailTrack.requestData = newThumbnailTrack.requestData;
       if (updateType === MANIFEST_UPDATE_TYPE.Full) {
         oldThumbnailTrack.index._replace(newThumbnailTrack.index);
       } else {
@@ -177,6 +178,7 @@ export default function updatePeriodInPlace(
           const [newRepresentation] = newRepresentations.splice(newRepresentationIdx, 1);
           updatedRepresentations.push(oldRepresentation.getMetadataSnapshot());
           oldRepresentation.cdnMetadata = newRepresentation.cdnMetadata;
+          oldRepresentation.requestData = newRepresentation.requestData;
           if (updateType === MANIFEST_UPDATE_TYPE.Full) {
             oldRepresentation.index._replace(newRepresentation.index);
           } else {
