@@ -91,12 +91,8 @@ export interface IManifestMetadata {
    */
   isLastPeriodKnown: boolean;
 
-  /*
-   * Every URI linking to that Manifest.
-   * They can be used for refreshing the Manifest.
-   * Listed from the most important to the least important.
-   */
-  uris: string[];
+  /** URLs through which the Manifest can be refreshed, by order of importance. */
+  refreshUrls: string[];
 
   /**
    * Minimum time, in seconds, at which a segment defined in the Manifest

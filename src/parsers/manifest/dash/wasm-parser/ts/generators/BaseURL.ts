@@ -30,8 +30,18 @@ export function generateBaseUrlAttrParser(
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
   return function onMPDAttribute(attr: AttributeName, ptr: number, len: number) {
-    if (attr === AttributeName.Text) {
-      baseUrlAttrs.value = parseString(linearMemory.buffer, ptr, len);
+    switch (attr) {
+      case AttributeName.Text:
+        baseUrlAttrs.value = parseString(linearMemory.buffer, ptr, len);
+        break;
+
+      case AttributeName.ServiceLocation:
+        baseUrlAttrs.attributes.serviceLocation = parseString(
+          linearMemory.buffer,
+          ptr,
+          len,
+        );
+        break;
     }
   };
 }
