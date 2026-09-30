@@ -22,7 +22,9 @@ import arrayFind from "../../utils/array_find.ts";
 import assert, { assertUnreachable } from "../../utils/assert.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
 import type { ILogFormat, ILoggerLevel } from "../../utils/logger.ts";
-import { scaleTimestamp } from "../../utils/monotonic_timestamp.ts";
+import getMonotonicTimeStamp, {
+  scaleTimestamp,
+} from "../../utils/monotonic_timestamp.ts";
 import objectAssign from "../../utils/object_assign.ts";
 import type { IReadOnlySharedReference } from "../../utils/reference.ts";
 import SharedReference from "../../utils/reference.ts";
@@ -1064,6 +1066,7 @@ function updateLoggerLevel(
     // Here we force the log format to "standard" as the full formatting will be
     // performed on main thread.
     log.setLevel(logLevel, "standard", (levelStr, namespace, logs) => {
+      const timestamp = getMonotonicTimeStamp();
       const sentLogs = logs.map((e) => {
         if (e instanceof Error) {
           return formatErrorForSender(e);
@@ -1074,6 +1077,7 @@ function updateLoggerLevel(
       postMessage({
         type: CoreMessageType.LogMessage,
         value: {
+          timestamp,
           namespace,
           logLevel: levelStr,
           logs: sentLogs,
