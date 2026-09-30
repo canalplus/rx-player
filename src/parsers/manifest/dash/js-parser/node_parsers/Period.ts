@@ -25,6 +25,7 @@ import type {
 import { createAdaptationSetIntermediateRepresentation } from "./AdaptationSet.ts";
 import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
+import parseDescriptor from "./Descriptor.ts";
 import { createEventStreamIntermediateRepresentation } from "./EventStream.ts";
 import parseSegmentTemplate from "./SegmentTemplate.ts";
 import { parseBoolean, parseDuration, ValueParser } from "./utils.ts";
@@ -42,6 +43,7 @@ function parsePeriodChildren(
     AdaptationSet: [],
     BaseURL: [],
     ContentProtection: [],
+    SupplementalProperty: [],
     SegmentTemplate: [],
     EventStream: [],
   };
@@ -96,6 +98,13 @@ function parsePeriodChildren(
         if (contentProtection !== undefined) {
           ret.ContentProtection.push(contentProtection);
         }
+        break;
+      }
+
+      case "SupplementalProperty": {
+        const [descriptor, descriptorWarnings] = parseDescriptor(currentElement);
+        ret.SupplementalProperty.push(descriptor);
+        warnings.push(...descriptorWarnings);
         break;
       }
     }

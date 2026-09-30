@@ -23,6 +23,7 @@ import type {
 } from "../../node_parser_types.ts";
 import parseBaseURL from "./BaseURL.ts";
 import parseContentProtection from "./ContentProtection.ts";
+import parseDescriptor from "./Descriptor.ts";
 import parseSegmentBase from "./SegmentBase.ts";
 import parseSegmentList from "./SegmentList.ts";
 import parseSegmentTemplate from "./SegmentTemplate.ts";
@@ -103,12 +104,18 @@ function parseRepresentationChildren(
         }
         break;
       }
-      case "EssentialProperty":
-        children.EssentialProperty.push(parseScheme(currentElement));
+      case "EssentialProperty": {
+        const [descriptor, descriptorWarnings] = parseDescriptor(currentElement);
+        children.EssentialProperty.push(descriptor);
+        warnings.push(...descriptorWarnings);
         break;
-      case "SupplementalProperty":
-        children.SupplementalProperty.push(parseScheme(currentElement));
+      }
+      case "SupplementalProperty": {
+        const [descriptor, descriptorWarnings] = parseDescriptor(currentElement);
+        children.SupplementalProperty.push(descriptor);
+        warnings.push(...descriptorWarnings);
         break;
+      }
     }
   }
   return [children, warnings];
