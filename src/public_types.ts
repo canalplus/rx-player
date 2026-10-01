@@ -96,6 +96,15 @@ export interface ILoadVideoOptions {
    */
   lowLatencyMode?: boolean;
 
+  /**
+   * HTTP headers added to every DASH audio and video segment request,
+   * including initialization segments and low-latency chunked requests.
+   *
+   * These headers are not added to Manifest, text-track, thumbnail, or
+   * license requests.
+   */
+  segmentRequestHeaders?: Record<string, string> | undefined;
+
   requestConfig?: IRequestConfig;
 
   /** Indicate the position the RxPlayer should start at on the loaded content. */
