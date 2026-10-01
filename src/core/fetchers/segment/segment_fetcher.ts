@@ -348,6 +348,12 @@ export default function createSegmentFetcher<TLoadedFormat, TSegmentDataType>({
      * @param {*} err
      */
     function onRetry(err: unknown): void {
+      // TODO When retrying a chunked request after chunks have already been
+      // communicated, those same chunks may be parsed and pushed again. This
+      // can also repeat parsing side-effects such as inband events, predicted
+      // segments and Manifest refreshes. `segmentDurationAcc` and pending
+      // progress information also currently contain data from the previous
+      // request attempt.
       fetcherCallbacks.onRetry(errorSelector(err));
     }
 
