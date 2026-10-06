@@ -1,5 +1,44 @@
 # Changelog
 
+## Current dev build: v4.6.0-dev.2026100600
+
+### Features
+
+- `MULTI_THREAD` is not an experimental feature anymore [#1885]
+
+### Bug fixes
+
+- Force generateRequest call on PlayReady MediaKeys on Windows 11 Edge to work-around
+  PlayReady issue around mixed-encryption contents [#1920]
+- Fix Playstation 4 DRM session issues when re-creating a session with same keys [#1887]
+- WASM: Fix parsing of some attributes linked to low-latency contents which may have led
+  to playing them less efficiently [#1893]
+- Do not use directly `Object.entries` and `WeakSet` anymore, to ensure applications not
+  relying on polyfill can still integrate us easily [#1890]
+
+### Other improvements
+
+- Honor Retry-After header for HTTP 429 retries [#1864]
+- Tizen: Validate "tvkey" DRM with dedicated init data for new Tizen Nagra support [#1898]
+- DASH: Do not request undeclared initialization segments [#1886]
+- WASM: Greatly improve performance and size (from `123kb` to `88kb`) of our optional
+  WebAssembly MPD parser [#1907]
+- WASM: Ensure compatibility with the initial WASM browser version (a.k.a. MVP) to
+  maximize compatible targets, previous versions weren't always [#1894]
+- WASM: `EMBEDDED_WASM` is now relying on a base64 string instead of a number array as
+  this has (light) performance and size upsides [#1897]
+- WASM: update Rust edition to 2024 [#1914]
+- DASH: Update first pass of MPD parsing to facilitate future "MPD patch" development
+  [#1652]
+- Simplify MetaPlaylist Manifest loading by relying on the same code than other transports
+  [#1487]
+- Add `swc` to transpile our commonJS build to ES5 under new TypeScript 6 based builds
+  [#1770]
+- tests: add parsers tests, for now just testing equality between our WASM and JS MPD
+  parsers [#1895]
+- tests: Verify built npm package before publish [#1877]
+- tests: move unit tests to tests/unit [#1841]
+
 ## v4.5.0
 
 ### Features
