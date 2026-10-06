@@ -21,6 +21,7 @@ import type {
 } from "../../compat/browser_compatibility_types.ts";
 import canReuseMediaKeys from "../../compat/can_reuse_media_keys.ts";
 import type { IEmeApiImplementation } from "../../compat/eme/index.ts";
+import forceMediaKeysInstantiationIfNeeded from "../../compat/force_media_key_instantiation_if_needed.ts";
 import { EncryptedMediaError } from "../../errors/index.ts";
 import log from "../../log.ts";
 import type { IKeySystemOption } from "../../public_types.ts";
@@ -157,6 +158,7 @@ async function createMediaKeys(
   log.info("DRM", "Calling createMediaKeys on the MediaKeySystemAccess");
   try {
     const mediaKeys = await mediaKeySystemAccess.createMediaKeys();
+    await forceMediaKeysInstantiationIfNeeded(mediaKeys, mediaKeySystemAccess);
     return mediaKeys;
   } catch (error) {
     const message =

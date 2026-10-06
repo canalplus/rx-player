@@ -82,6 +82,8 @@ const DEVICES = {
   Other: 110,
   /** DSTtv's Streama STB MPD1001S, which is known to have some quirks. */
   StreamaMdp1001S: 111,
+  /** Devices running either Windows 10 or Windows 11. */
+  Windows10Or11: 112,
 } as const;
 
 /** Interface giving information on the current environment where the RxPlayer runs. */
@@ -235,6 +237,11 @@ function resetEnvironment(): void {
     EnvDetector.device = DEVICES.Xbox;
   } else if (navigator.userAgent.indexOf("Model/a1-kstb40xx") !== -1) {
     EnvDetector.device = DEVICES.A1KStb40xx;
+  } else if (/Windows NT 10\.0/.test(navigator.userAgent)) {
+    // Windows 10 and 11 both report `Windows NT 10.0` in `userAgent`.
+    // Distinguishing between them requires User-Agent Client Hints, which are
+    // more involved (asynchronous and not available in every supported browser).
+    EnvDetector.device = DEVICES.Windows10Or11;
   }
 }
 
