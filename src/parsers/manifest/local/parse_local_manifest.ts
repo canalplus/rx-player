@@ -62,7 +62,7 @@ export default function parseLocalManifest(
     isDynamic: !isFinished,
     isLastPeriodKnown: true,
     isLive: false,
-    uris: [],
+    refreshUrls: [],
     timeBounds: {
       minimumSafePosition: minimumPosition ?? 0,
       timeshiftDepth: null,
