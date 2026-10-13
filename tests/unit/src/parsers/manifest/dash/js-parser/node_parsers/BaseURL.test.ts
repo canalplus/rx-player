@@ -7,10 +7,10 @@ describe("DASH Node Parsers - BaseURL", () => {
   it("should preserve an empty BaseURL and its serviceLocation", () => {
     const element = parseXml('<BaseURL serviceLocation="cdn-a" />')[0] as ITNode;
 
-    expect(parseBaseURL(element)).toEqual([
-      { value: "", attributes: { serviceLocation: "cdn-a" } },
-      [],
-    ]);
+    expect(parseBaseURL(element)).toEqual({
+      value: "",
+      attributes: { serviceLocation: "cdn-a" },
+    });
   });
 
   it("should correctly parse a BaseURL and its serviceLocation", () => {
@@ -18,12 +18,9 @@ describe("DASH Node Parsers - BaseURL", () => {
       '<BaseURL serviceLocation="cdn-a" ignored="value">https://cdn.example/</BaseURL>',
     )[0] as ITNode;
 
-    expect(parseBaseURL(element)).toEqual([
-      {
-        value: "https://cdn.example/",
-        attributes: { serviceLocation: "cdn-a" },
-      },
-      [],
-    ]);
+    expect(parseBaseURL(element)).toEqual({
+      value: "https://cdn.example/",
+      attributes: { serviceLocation: "cdn-a" },
+    });
   });
 });

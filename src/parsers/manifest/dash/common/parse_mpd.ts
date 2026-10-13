@@ -25,7 +25,7 @@ import {
   isAbsoluteURL,
   resolveURL,
 } from "../../../../utils/url-utils.ts";
-import type { IParsedManifest } from "../../types.ts";
+import type { ICdnMetadata, IParsedManifest } from "../../types.ts";
 import type {
   IMPDIntermediateRepresentation,
   IPeriodIntermediateRepresentation,
@@ -422,7 +422,7 @@ function parseCompleteIntermediateRepresentation(
       (parsedPeriods[parsedPeriods.length - 1]?.end !== undefined ||
         mpdIR.attributes.mediaPresentationDuration !== undefined));
 
-  const refreshUrls = [];
+  const refreshUrls: ICdnMetadata[] = [];
   const manifestUrl =
     args.url !== undefined && args.url.length > 0 ? args.url : undefined;
   for (const location of rootChildren.Location) {

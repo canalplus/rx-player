@@ -62,11 +62,7 @@ function parseRepresentationChildren(
 
     switch (currentElement.tagName) {
       case "BaseURL": {
-        const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
-        if (baseURLObj !== undefined) {
-          children.BaseURL.push(baseURLObj);
-        }
-        warnings = warnings.concat(baseURLWarnings);
+        children.BaseURL.push(parseBaseURL(currentElement));
         break;
       }
       case "InbandEventStream":
