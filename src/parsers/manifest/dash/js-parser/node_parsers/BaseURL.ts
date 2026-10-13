@@ -22,15 +22,12 @@ import { textContent } from "./utils.ts";
 /**
  * Parse an BaseURL element into an BaseURL intermediate
  * representation.
- * @param {Object | string} root - The BaseURL root element.
- * @returns {Array.<Object|undefined>}
+ * @param {Object} root - The BaseURL root element.
+ * @returns {Object}
  */
-export default function parseBaseURL(
-  root: ITNode,
-): [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
+export default function parseBaseURL(root: ITNode): IBaseUrlIntermediateRepresentation {
   const attributes: { serviceLocation?: string } = {};
-  const value = typeof root === "string" ? root : textContent(root.children);
-  const warnings: Error[] = [];
+  const value = textContent(root.children);
 
   for (const attributeName of Object.keys(root.attributes)) {
     const attributeVal = root.attributes[attributeName];
@@ -41,5 +38,5 @@ export default function parseBaseURL(
       attributes.serviceLocation = attributeVal;
     }
   }
-  return [{ value, attributes }, warnings];
+  return { value, attributes };
 }

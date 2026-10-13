@@ -74,13 +74,7 @@ function parseAdaptationSetChildren(
         break;
 
       case "BaseURL": {
-        const [baseURLObj, baseURLWarnings] = parseBaseURL(currentNode);
-        if (baseURLObj !== undefined) {
-          children.BaseURL.push(baseURLObj);
-        }
-        if (baseURLWarnings.length > 0) {
-          warnings = warnings.concat(baseURLWarnings);
-        }
+        children.BaseURL.push(parseBaseURL(currentNode));
         break;
       }
 

@@ -59,11 +59,7 @@ function parseMPDChildren(
     }
     switch (currentNode.tagName) {
       case "BaseURL": {
-        const [baseURLObj, baseURLWarnings] = parseBaseURL(currentNode);
-        if (baseURLObj !== undefined) {
-          ret.BaseURL.push(baseURLObj);
-        }
-        warnings = warnings.concat(baseURLWarnings);
+        ret.BaseURL.push(parseBaseURL(currentNode));
         break;
       }
 

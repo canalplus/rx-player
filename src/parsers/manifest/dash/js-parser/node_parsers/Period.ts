@@ -53,11 +53,7 @@ function parsePeriodChildren(
     }
     switch (currentElement.tagName) {
       case "BaseURL": {
-        const [baseURLObj, baseURLWarnings] = parseBaseURL(currentElement);
-        if (baseURLObj !== undefined) {
-          ret.BaseURL.push(baseURLObj);
-        }
-        warnings = warnings.concat(baseURLWarnings);
+        ret.BaseURL.push(parseBaseURL(currentElement));
         break;
       }
 
