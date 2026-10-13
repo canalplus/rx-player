@@ -6,16 +6,9 @@
  * @returns {Object|undefined}
  */
 export default function mergeRequestHeaders(
-  baseHeaders: Record<string, string> | undefined,
-  newHeaders: Record<string, string> | undefined,
-): Record<string, string> | undefined {
-  if (baseHeaders === undefined) {
-    return newHeaders === undefined ? undefined : { ...newHeaders };
-  }
-  if (newHeaders === undefined) {
-    return baseHeaders;
-  }
-
+  baseHeaders: Record<string, string>,
+  newHeaders: Record<string, string>,
+): Record<string, string> {
   const headers = { ...baseHeaders };
   for (const headerName of Object.keys(newHeaders)) {
     const lowerCasedHeaderName = headerName.toLowerCase();

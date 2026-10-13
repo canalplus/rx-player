@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import mergeRequestHeaders from "../../../../../src/transports/utils/merge_request_headers.ts";
 
 describe("mergeRequestHeaders", () => {
-  it("should return undefined when no headers are given", () => {
-    expect(mergeRequestHeaders(undefined, undefined)).toBeUndefined();
+  it("should return an empty object when no headers are given", () => {
+    expect(mergeRequestHeaders({}, {})).toEqual({});
   });
 
   it("should merge custom and RxPlayer headers", () => {

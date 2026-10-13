@@ -58,8 +58,8 @@ function generateRegularManifestLoader(
     const cmcdHeaders =
       loaderOptions.cmcdPayload?.type === "headers"
         ? loaderOptions.cmcdPayload.value
-        : undefined;
-    const headers = mergeRequestHeaders(cmcdHeaders, loaderOptions.headers);
+        : {};
+    const headers = mergeRequestHeaders(cmcdHeaders, loaderOptions.headers ?? {});
 
     // What follows could be written in a single line, but TypeScript wouldn't
     // shut up.

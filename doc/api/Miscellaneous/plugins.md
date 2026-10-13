@@ -161,12 +161,12 @@ As you can see, this function takes two arguments:
    - **resolve**: To call after the segment is loaded.
 
      When called, it should be given an object with the following properties:
-     - _data_ (`ArrayBuffer`|`Uint8Array`|`null`) - the segment data which has not yet
-       been communicated through the `data` callback. `null` can be set when all segment
-       data has already been communicated.
+     - _data_ (`ArrayBuffer`|`Uint8Array`|`null`) - the loaded segment data.
 
-       If not relying on the `data` callback (it is mostly useful for DASH Low-Latency
-       contents), this property should contain the complete segment data.
+       Note: if you're playing low-latency DASH contents and thus relying on the `data`
+       callback (documented below), `data` here should _only_ be for the segment data
+       which has not yet been communicated through a `data` callback. `null` can be set
+       when all segment data has already been communicated.
 
      - _duration_ (`Number|undefined`) - the duration the request took, in milliseconds.
 
@@ -218,8 +218,8 @@ As you can see, this function takes two arguments:
        If not set or set to `undefined`, the RxPlayer might retry or fail depending on
        other factors.
 
-   - **fallback**: Callback to call if you want to call our default implementation instead
-     for loading this segment.
+   - **fallback**: Callback to call if you want to rely on RxPlayer's default segment
+     loading implementation.
 
      An optional object can be given with a `headers` property. `headers` should be an
      object describing HTTP headers that the default segment loader should add to its

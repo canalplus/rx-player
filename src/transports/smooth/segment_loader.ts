@@ -63,18 +63,19 @@ async function regularSegmentLoader(
     loaderOptions.cmcdPayload?.type === "headers"
       ? loaderOptions.cmcdPayload.value
       : undefined;
-  const range = context.segment.range;
 
-  let generatedHeaders;
-  if (Array.isArray(range)) {
-    generatedHeaders = {
-      ...cmcdHeaders,
-      Range: byteRange(range),
-    };
-  } else if (cmcdHeaders !== undefined) {
-    generatedHeaders = cmcdHeaders;
+  let headers = loaderOptions.headers ?? {};
+  if (cmcdHeaders !== undefined) {
+    headers = mergeRequestHeaders(cmcdHeaders, headers);
   }
-  const headers = mergeRequestHeaders(generatedHeaders, loaderOptions.headers);
+  if (context.segment.range !== undefined) {
+    headers = mergeRequestHeaders(
+      {
+        Range: byteRange(context.segment.range),
+      },
+      headers,
+    );
+  }
 
   const url =
     loaderOptions.cmcdPayload?.type === "query"

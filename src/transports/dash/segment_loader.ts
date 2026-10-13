@@ -88,16 +88,19 @@ export async function regularSegmentLoader(
     options.cmcdPayload?.type === "headers" ? options.cmcdPayload.value : undefined;
 
   const { segment } = context;
-  let generatedHeaders;
-  if (segment.range !== undefined) {
-    generatedHeaders = {
-      ...cmcdHeaders,
-      Range: byteRange(segment.range),
-    };
-  } else if (cmcdHeaders !== undefined) {
-    generatedHeaders = cmcdHeaders;
+
+  let headers = options.headers ?? {};
+  if (cmcdHeaders !== undefined) {
+    headers = mergeRequestHeaders(cmcdHeaders, headers);
   }
-  const headers = mergeRequestHeaders(generatedHeaders, options.headers);
+  if (segment.range !== undefined) {
+    headers = mergeRequestHeaders(
+      {
+        Range: byteRange(segment.range),
+      },
+      headers,
+    );
+  }
 
   const containerType = inferSegmentContainer(context.type, context.mimeType);
   if (lowLatencyMode && (containerType === "mp4" || containerType === undefined)) {

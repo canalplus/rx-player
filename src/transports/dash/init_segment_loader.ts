@@ -55,9 +55,12 @@ export default function initSegmentLoader(
   if (options.cmcdPayload?.type === "query") {
     url = addQueryString(url, options.cmcdPayload.value);
   }
-  const cmcdHeaders =
-    options.cmcdPayload?.type === "headers" ? options.cmcdPayload.value : undefined;
-  const headers = mergeRequestHeaders(cmcdHeaders, options.headers);
+
+  let headers = options.headers ?? {};
+  if (options.cmcdPayload?.type === "headers") {
+    headers = mergeRequestHeaders(options.cmcdPayload.value, headers);
+  }
+
   if (segment.range === undefined) {
     return request({
       url,
