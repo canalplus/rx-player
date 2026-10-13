@@ -107,7 +107,11 @@ impl MPDProcessor {
                         self.process_base_url_element();
                     }
                     b"cenc:pssh" => self.process_cenc_pssh_element(),
-                    b"Location" => self.process_location_element(),
+                    b"Location" => {
+                        TagName::Location.report_tag_open();
+                        attributes::report_location_attrs(&tag);
+                        self.process_location_element();
+                    }
                     b"Label" => {
                         TagName::Label.report_tag_open();
                         self.process_label_element();
@@ -312,8 +316,8 @@ impl MPDProcessor {
     fn process_location_element(&mut self) {
         self.process_text_element(
             b"Location",
-            AttributeName::Location,
-            None,
+            AttributeName::Text,
+            Some(TagName::Location),
             "Unexpected end of file in a Location tag.",
         );
     }

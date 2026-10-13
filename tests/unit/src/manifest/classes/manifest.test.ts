@@ -107,6 +107,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [],
+      refreshUrls: [],
     };
 
     const manifest = new Manifest(simpleFakeManifest, {});
@@ -121,7 +122,7 @@ describe("Manifest - Manifest", () => {
     expect(manifest.getMinimumSafePosition()).toEqual(0);
     expect(manifest.periods).toEqual([]);
     expect(manifest.suggestedPresentationDelay).toEqual(undefined);
-    expect(manifest.uris).toEqual([]);
+    expect(manifest.refreshUrls).toEqual([]);
 
     expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
@@ -149,6 +150,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      refreshUrls: [],
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IPeriod) {
@@ -200,6 +202,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      refreshUrls: [],
     };
 
     const representationFilter = function () {
@@ -254,6 +257,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [period1, period2],
+      refreshUrls: [],
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
@@ -309,7 +313,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       suggestedPresentationDelay: 99,
-      uris: ["url1", "url2"],
+      refreshUrls: [{ baseUrl: "url1" }, { baseUrl: "url2" }],
     };
 
     mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
@@ -343,13 +347,13 @@ describe("Manifest - Manifest", () => {
       },
     ]);
     expect(manifest.suggestedPresentationDelay).toEqual(99);
-    expect(manifest.uris).toEqual(["url1", "url2"]);
+    expect(manifest.refreshUrls).toEqual(["url1", "url2"]);
     expect(mocks.fakeGenerateNewId).toHaveBeenCalledTimes(1);
     expect(mocks.fakeLogger.info).not.toHaveBeenCalled();
     expect(mocks.fakeLogger.warn).not.toHaveBeenCalled();
   });
 
-  it("should return all URLs given with `getContentUrls`", async () => {
+  it("should return all URLs given with `getRefreshUrls`", async () => {
     mocks.fakePeriod.mockImplementation(function (period: IParsedPeriod): IPeriod {
       return { ...period, id: `foo${period.id}` } as unknown as IPeriod;
     });
@@ -377,11 +381,11 @@ describe("Manifest - Manifest", () => {
       },
       periods: [oldPeriod1, oldPeriod2],
       suggestedPresentationDelay: 99,
-      uris: ["url1", "url2"],
+      refreshUrls: [{ baseUrl: "url1" }, { baseUrl: "url2" }],
     };
 
     const manifest1 = new Manifest(oldManifestArgs1, {});
-    expect(manifest1.getUrls()).toEqual(["url1", "url2"]);
+    expect(manifest1.getRefreshUrls()).toEqual(["url1", "url2"]);
 
     const oldManifestArgs2 = {
       availabilityStartTime: 5,
@@ -407,10 +411,10 @@ describe("Manifest - Manifest", () => {
           time: 10,
         },
       },
-      uris: [],
+      refreshUrls: [],
     };
     const manifest2 = new Manifest(oldManifestArgs2, {});
-    expect(manifest2.getUrls()).toEqual([]);
+    expect(manifest2.getRefreshUrls()).toEqual([]);
   });
 
   it("should replace with a new Manifest when calling `replace`", async () => {
@@ -446,7 +450,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       suggestedPresentationDelay: 99,
-      uris: ["url1", "url2"],
+      refreshUrls: [{ baseUrl: "url1" }, { baseUrl: "url2" }],
     };
 
     const manifest = new Manifest(oldManifestArgs, {});
@@ -490,7 +494,7 @@ describe("Manifest - Manifest", () => {
         },
       },
       periods: [newPeriod1, newPeriod2],
-      uris: ["url3", "url4"],
+      refreshUrls: [{ baseUrl: "url3" }, { baseUrl: "url4" }],
     } as unknown as Manifest;
 
     manifest.replace(newManifest);
