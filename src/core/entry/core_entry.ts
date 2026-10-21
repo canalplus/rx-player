@@ -499,32 +499,45 @@ function prepareNewContent(
   refs: ICoreReferences,
   corePlugins: ICorePlugins,
 ): void {
-  contentPreparer
-    .initializeNewContent(
-      sendMessage,
-      contentInitData,
-      {
-        limitResolution: { video: refs.limitVideoResolution },
-        throttleBitrate: { video: refs.throttleVideoBitrate },
-      },
-      corePlugins,
-    )
-    .then(
-      (manifest) => {
+  contentPreparer.initializeNewContent(
+    sendMessage,
+    contentInitData,
+    {
+      limitResolution: { video: refs.limitVideoResolution },
+      throttleBitrate: { video: refs.throttleVideoBitrate },
+    },
+    corePlugins,
+    {
+      onReady: (manifest) => {
         sendMessage({
           type: CoreMessageType.ManifestReady,
           contentId: contentInitData.contentId,
           value: { manifest },
         });
       },
-      (err: unknown) => {
+      onError: (err) => {
         sendMessage({
           type: CoreMessageType.Error,
           contentId: contentInitData.contentId,
           value: formatErrorForSender(err),
         });
       },
-    );
+      onWarning: (err) => {
+        sendMessage({
+          type: CoreMessageType.Warning,
+          contentId: contentInitData.contentId,
+          value: formatErrorForSender(err),
+        });
+      },
+      onManifestUpdate: (manifest, updates) => {
+        sendMessage({
+          type: CoreMessageType.ManifestUpdate,
+          contentId: contentInitData.contentId,
+          value: { manifest, updates },
+        });
+      },
+    },
+  );
 }
 
 function updateCoreReference(msg: IReferenceUpdateMessage, refs: ICoreReferences): void {

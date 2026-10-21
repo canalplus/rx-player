@@ -2,7 +2,7 @@ import BROWSER_GLOBALS from "../../compat/browser_compatibility_types.ts";
 import features from "../../features/index.ts";
 import log from "../../log.ts";
 import type { IContentInitializationData } from "../../main_thread/types.ts";
-import type { IManifest } from "../../manifest/index.ts";
+import type { IManifest, IPeriodsUpdateResult } from "../../manifest/index.ts";
 import type { IMediaSourceInterface } from "../../mse/index.ts";
 import MainMediaSourceInterface from "../../mse/main_media_source_interface.ts";
 import WorkerMediaSourceInterface from "../../mse/worker_media_source_interface.ts";
@@ -29,14 +29,21 @@ import CoreTextDisplayerInterface from "./core_text_displayer_interface.ts";
 import FreezeResolver from "./FreezeResolver.ts";
 import TrackChoiceSetter from "./track_choice_setter.ts";
 import type { ICorePlugins } from "./utils.ts";
-import {
-  extractExternalPlugins,
-  formatErrorForSender,
-  updateCodecSupportInWorkerMode,
-} from "./utils.ts";
+import { extractExternalPlugins, updateCodecSupportInWorkerMode } from "./utils.ts";
 
 /** Function allowing to associate a unique identifier to all created `MediaSource` */
 const generateMediaSourceId = idGenerator();
+
+export interface IContentPreparerCallbacks {
+  /** Called once preparation succeeds, in a microtask. */
+  onReady: (manifest: IManifest) => void;
+  /** Preparation failures run in a microtask; fatal refresh errors run synchronously. */
+  onError: (error: unknown) => void;
+  /** Called synchronously when the Manifest fetcher emits a warning. */
+  onWarning: (warning: IPlayerError) => void;
+  /** Called synchronously when the prepared Manifest is updated. */
+  onManifestUpdate: (manifest: IManifest, updates: IPeriodsUpdateResult) => void;
+}
 
 /**
  * Class facilitating the workflows behind loading a new content for the
@@ -87,15 +94,16 @@ export default class ContentPreparer {
    * Start fetching the wanted content's Manifest and initializing the various
    * modules stored by the `ContentPreparer` linked to that content.
    *
-   * The returned Promise resolves with the parsed Manifest when those modules
-   * are all ready and you can thus begin to load the content.
+   * Calls `callbacks.onReady` with the parsed Manifest when those modules
+   * are all ready and you can thus begin to load the content, or
+   * `callbacks.onError` if preparation fails.
    *
-   * Reject if it failed to do so.
+   * Warnings and Manifest updates continue until the content is disposed.
    * @param {Object} context - Information on the content that should be
    * initialized.
    * @param {Object} corePlugins - Callbacks that may have been registered by
    * the application if it loaded the core independently as a worker.
-   * @returns {Promise.<Object>}
+   * @param {Object} callbacks - Preparation and Manifest lifecycle callbacks.
    */
   public initializeNewContent(
     sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
@@ -103,8 +111,11 @@ export default class ContentPreparer {
     /** Allows to filter which Representations can be choosen. */
     throttlers: IRepresentationEstimatorThrottlers,
     corePlugins: ICorePlugins,
-  ): Promise<IManifest> {
-    return new Promise((res, rej) => {
+    callbacks: IContentPreparerCallbacks,
+  ): void {
+    // Keep the readiness Promise internal to preserve settlement and microtask
+    // ordering, including synchronous setup errors and cancellation.
+    const initialization = new Promise<IManifest>((res, rej) => {
       this.disposeCurrentContent("new init");
       const contentCanceller = this._contentCanceller;
       const currentMediaSourceCanceller = new TaskCanceller(
@@ -224,11 +235,7 @@ export default class ContentPreparer {
       manifestFetcher.addEventListener(
         "warning",
         (err: IPlayerError) => {
-          sendMessage({
-            type: CoreMessageType.Warning,
-            contentId,
-            value: formatErrorForSender(err),
-          });
+          callbacks.onWarning(err);
         },
         contentCanceller.signal,
       );
@@ -254,12 +261,7 @@ export default class ContentPreparer {
             rej(err);
           } else {
             // Once preparation has resolved, rejecting its Promise has no effect.
-            // Forward refresh errors through the normal fatal-error channel.
-            sendMessage({
-              type: CoreMessageType.Error,
-              contentId,
-              value: formatErrorForSender(err),
-            });
+            callbacks.onError(err);
           }
         },
         contentCanceller.signal,
@@ -282,11 +284,7 @@ export default class ContentPreparer {
               // TODO log warn?
               return;
             }
-            sendMessage({
-              type: CoreMessageType.ManifestUpdate,
-              contentId,
-              value: { manifest, updates },
-            });
+            callbacks.onManifestUpdate(manifest, updates);
           },
           contentCanceller.signal,
         );
@@ -295,6 +293,10 @@ export default class ContentPreparer {
         res(manifest);
       }
     });
+    initialization.then(
+      (manifest) => callbacks.onReady(manifest),
+      (err: unknown) => callbacks.onError(err),
+    );
   }
 
   /**
