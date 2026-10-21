@@ -123,6 +123,7 @@ export default class ContentPreparer {
         transport,
       } = context;
       let manifest: IManifest | null = null;
+      let isPrepared = false;
 
       const transportFn = features.transports[transport];
       if (typeof transportFn !== "function") {
@@ -249,7 +250,17 @@ export default class ContentPreparer {
       manifestFetcher.addEventListener(
         "error",
         (err: unknown) => {
-          rej(err);
+          if (!isPrepared) {
+            rej(err);
+          } else {
+            // Once preparation has resolved, rejecting its Promise has no effect.
+            // Forward refresh errors through the normal fatal-error channel.
+            sendMessage({
+              type: CoreMessageType.Error,
+              contentId,
+              value: formatErrorForSender(err),
+            });
+          }
         },
         contentCanceller.signal,
       );
@@ -280,6 +291,7 @@ export default class ContentPreparer {
           contentCanceller.signal,
         );
         unbindRejectOnCancellation();
+        isPrepared = true;
         res(manifest);
       }
     });
