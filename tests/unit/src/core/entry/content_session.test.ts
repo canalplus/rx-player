@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import ContentPreparer from "../../../../../src/core/entry/content_preparer.ts";
+import ContentSession from "../../../../../src/core/entry/content_session.ts";
 import initializeCoreEntry from "../../../../../src/core/entry/core_entry.ts";
 import type { IMessageReceiverCallback } from "../../../../../src/core/entry/core_entry.ts";
 import { ManifestFetcher } from "../../../../../src/core/fetchers/index.ts";
@@ -7,7 +7,10 @@ import type { IManifestFetcherEvent } from "../../../../../src/core/fetchers/man
 import { CoreMessageType } from "../../../../../src/core/types.ts";
 import type { ICoreMessage } from "../../../../../src/core/types.ts";
 import features from "../../../../../src/features/index.ts";
-import type { IContentInitializationData } from "../../../../../src/main_thread/types.ts";
+import type {
+  IContentInitializationData,
+  IMainThreadMessage,
+} from "../../../../../src/main_thread/types.ts";
 import { MainThreadMessageType } from "../../../../../src/main_thread/types.ts";
 import type {
   IManifest,
@@ -69,7 +72,7 @@ function createContext(contentId = "content"): IContentInitializationData {
 }
 
 function createHarness() {
-  const preparer = new ContentPreparer();
+  let session: ContentSession | null = null;
   const sendMessage = vi.fn<(msg: ICoreMessage) => void>();
   const callbacks = {
     onReady: vi.fn(),
@@ -77,8 +80,8 @@ function createHarness() {
     onWarning: vi.fn(),
     onManifestUpdate: vi.fn(),
   };
-  const initialize = (context = createContext()) =>
-    preparer.initializeNewContent(
+  const initialize = (context = createContext()) => {
+    session = new ContentSession(
       sendMessage,
       context,
       {
@@ -98,8 +101,9 @@ function createHarness() {
       },
       callbacks,
     );
+  };
   const current = () => {
-    const content = preparer.getCurrentContent();
+    const content = session?.state.data ?? null;
     if (content === null) {
       throw new Error("Expected prepared content");
     }
@@ -111,7 +115,12 @@ function createHarness() {
     emitFetcher(current().manifestFetcher, "manifestReady", manifestValue);
   const open = () => current().mediaSource.onMediaSourceReadyStateChanged?.("open");
   return {
-    preparer,
+    get session() {
+      if (session === null) {
+        throw new Error("Session not created");
+      }
+      return session;
+    },
     sendMessage,
     callbacks,
     initialize,
@@ -123,7 +132,29 @@ function createHarness() {
   };
 }
 
-describe("ContentPreparer callback contract", () => {
+function createCoreHarness() {
+  let receiveMessage: IMessageReceiverCallback = () => {
+    throw new Error("Core entry not initialized");
+  };
+  const sendMessage = vi.fn<(msg: ICoreMessage) => void>();
+  initializeCoreEntry(
+    (receiver) => {
+      receiveMessage = receiver;
+    },
+    sendMessage,
+    {
+      manifestLoaders: new Map(),
+      segmentLoaders: new Map(),
+      representationFilters: new Map(),
+    },
+  );
+  return {
+    sendMessage,
+    receive: (data: IMainThreadMessage) => receiveMessage({ data }),
+  };
+}
+
+describe("ContentSession callback contract", () => {
   let fetchers: ManifestFetcher[];
 
   beforeEach(() => {
@@ -168,8 +199,9 @@ describe("ContentPreparer callback contract", () => {
       await Promise.resolve();
       expect(calls).toEqual(["before", "ready", "after"]);
       expect(h.callbacks.onReady).toHaveBeenCalledExactlyOnceWith(h.manifestValue);
+      expect(h.session.state.type).toBe("ready");
       expect(h.callbacks.onError).not.toHaveBeenCalled();
-      h.preparer.disposeCurrentContent("test cleanup");
+      h.session.dispose("test cleanup");
     },
   );
 
@@ -197,9 +229,10 @@ describe("ContentPreparer callback contract", () => {
     h.manifest.update(updates);
     expect(h.callbacks.onManifestUpdate).toHaveBeenCalledTimes(2);
 
-    h.preparer.disposeCurrentContent("test cleanup");
+    const fetcher = h.current().manifestFetcher;
+    h.session.dispose("test cleanup");
     h.manifest.update(updates);
-    emitFetcher(h.current().manifestFetcher, "warning", warning);
+    emitFetcher(fetcher, "warning", warning);
     expect(h.callbacks.onManifestUpdate).toHaveBeenCalledTimes(2);
     expect(h.callbacks.onWarning).toHaveBeenCalledOnce();
   });
@@ -221,11 +254,14 @@ describe("ContentPreparer callback contract", () => {
         emitFetcher(h.current().manifestFetcher, "error", error);
         emitFetcher(h.current().manifestFetcher, "error", new Error("again"));
       } else if (failure === "cancellation") {
-        h.preparer.disposeCurrentContent("test cancellation");
+        h.session.dispose("test cancellation");
       }
       expect(h.callbacks.onError).not.toHaveBeenCalled();
       await Promise.resolve();
       expect(h.callbacks.onError).toHaveBeenCalledOnce();
+      expect(h.session.state.type).toBe(
+        failure === "cancellation" ? "disposed" : "failed",
+      );
       expect(h.callbacks.onReady).not.toHaveBeenCalled();
       if (failure === "cancellation") {
         expect(
@@ -234,7 +270,7 @@ describe("ContentPreparer callback contract", () => {
       } else if (failure !== "unsupported transport") {
         expect(h.callbacks.onError).toHaveBeenCalledWith(error);
       }
-      h.preparer.disposeCurrentContent("test cleanup");
+      h.session.dispose("test cleanup");
     },
   );
 
@@ -243,9 +279,10 @@ describe("ContentPreparer callback contract", () => {
     h.initialize();
     h.manifestReady();
     h.open();
-    h.preparer.disposeCurrentContent("stop before readiness notification");
+    h.session.dispose("stop before readiness notification");
     await Promise.resolve();
     expect(h.callbacks.onReady).toHaveBeenCalledExactlyOnceWith(h.manifestValue);
+    expect(h.session.state).toEqual({ type: "disposed", data: null });
     expect(h.callbacks.onError).not.toHaveBeenCalled();
   });
 
@@ -255,31 +292,23 @@ describe("ContentPreparer callback contract", () => {
     h.callbacks.onError.mockImplementation(() => calls.push("cancelled"));
     h.callbacks.onReady.mockImplementation(() => calls.push("ready"));
     h.initialize(createContext("first"));
+    const firstSession = h.session;
+    firstSession.dispose("new init");
     h.initialize(createContext("second"));
+    expect(h.session).not.toBe(firstSession);
+    expect(firstSession.state).toEqual({ type: "disposed", data: null });
     h.manifestReady();
     h.open();
     expect(calls).toEqual([]);
     await Promise.resolve();
     expect(calls).toEqual(["cancelled", "ready"]);
-    h.preparer.disposeCurrentContent("test cleanup");
+    h.session.dispose("test cleanup");
   });
 
   it("keeps message translation and ordering in core_entry", async () => {
-    let receiveMessage: IMessageReceiverCallback = () => {
-      throw new Error("Core entry not initialized");
-    };
-    const sendMessage = vi.fn<(msg: ICoreMessage) => void>();
-    initializeCoreEntry(
-      (receiver) => {
-        receiveMessage = receiver;
-      },
-      sendMessage,
-      {
-        manifestLoaders: new Map(),
-        segmentLoaders: new Map(),
-        representationFilters: new Map(),
-      },
-    );
+    const core = createCoreHarness();
+    const { sendMessage } = core;
+    const receiveMessage: IMessageReceiverCallback = ({ data }) => core.receive(data);
     receiveMessage({
       data: { type: MainThreadMessageType.PrepareContent, value: createContext() },
     });
@@ -337,10 +366,198 @@ describe("ContentPreparer callback contract", () => {
       },
     });
   });
+
+  it("disposes the old session before creating its replacement and ignores stale messages", async () => {
+    const core = createCoreHarness();
+    const { sendMessage, receive } = core;
+    receive({
+      type: MainThreadMessageType.PrepareContent,
+      value: createContext("first"),
+    });
+    const firstCreation = sendMessage.mock.calls[0][0];
+    if (firstCreation.type !== CoreMessageType.CreateMediaSource) {
+      throw new Error("Expected MediaSource creation message");
+    }
+    const firstDispose = vi.spyOn(fetchers[0], "dispose");
+    receive({
+      type: MainThreadMessageType.PrepareContent,
+      value: createContext("second"),
+    });
+    expect(firstDispose).toHaveBeenCalledExactlyOnceWith("new init");
+    expect(
+      sendMessage.mock.calls.map(([msg]) => [
+        msg.type,
+        "contentId" in msg ? msg.contentId : undefined,
+      ]),
+    ).toEqual([
+      [CoreMessageType.CreateMediaSource, "first"],
+      [CoreMessageType.DisposeMediaSource, undefined],
+      [CoreMessageType.CreateMediaSource, "second"],
+    ]);
+    await Promise.resolve();
+    expect(sendMessage.mock.calls[3][0]).toMatchObject({
+      type: CoreMessageType.Error,
+      contentId: "first",
+    });
+
+    const secondCreation = sendMessage.mock.calls[2][0];
+    if (secondCreation.type !== CoreMessageType.CreateMediaSource) {
+      throw new Error("Expected MediaSource creation message");
+    }
+    const secondDispose = vi.spyOn(fetchers[1], "dispose");
+    receive({ type: MainThreadMessageType.StopContent, contentId: "first", value: null });
+    receive({
+      type: MainThreadMessageType.MediaSourceReadyStateChange,
+      mediaSourceId: firstCreation.mediaSourceId,
+      value: "open",
+    });
+    const manifest = new TestManifest() as unknown as IManifest;
+    emitFetcher(fetchers[0], "manifestReady", manifest);
+    emitFetcher(
+      fetchers[0],
+      "warning",
+      new Error("old warning") as IManifestFetcherEvent["warning"],
+    );
+    emitFetcher(fetchers[1], "manifestReady", manifest);
+    await Promise.resolve();
+    expect(sendMessage).toHaveBeenCalledTimes(4);
+    expect(secondDispose).not.toHaveBeenCalled();
+
+    receive({
+      type: MainThreadMessageType.MediaSourceReadyStateChange,
+      mediaSourceId: secondCreation.mediaSourceId,
+      value: "open",
+    });
+    await Promise.resolve();
+    expect(sendMessage.mock.calls[4][0]).toEqual({
+      type: CoreMessageType.ManifestReady,
+      contentId: "second",
+      value: { manifest },
+    });
+    receive({
+      type: MainThreadMessageType.StopContent,
+      contentId: "second",
+      value: null,
+    });
+    expect(secondDispose).toHaveBeenCalledExactlyOnceWith("StopContent message");
+    const count = sendMessage.mock.calls.length;
+    receive({
+      type: MainThreadMessageType.StopContent,
+      contentId: "second",
+      value: null,
+    });
+    receive({
+      type: MainThreadMessageType.MediaSourceReadyStateChange,
+      mediaSourceId: secondCreation.mediaSourceId,
+      value: "open",
+    });
+    expect(sendMessage).toHaveBeenCalledTimes(count);
+  });
+
+  it("keeps failed replacement separate from the disposed content", async () => {
+    const { receive, sendMessage } = createCoreHarness();
+    receive({
+      type: MainThreadMessageType.PrepareContent,
+      value: createContext("first"),
+    });
+    const oldFetcher = fetchers[0];
+    const oldDispose = vi.spyOn(oldFetcher, "dispose");
+    const context = createContext("second");
+    context.transport = "unsupported";
+    receive({ type: MainThreadMessageType.PrepareContent, value: context });
+    await Promise.resolve();
+    expect(oldDispose).toHaveBeenCalledOnce();
+    expect(sendMessage.mock.calls.map(([msg]) => msg.type)).toEqual([
+      CoreMessageType.CreateMediaSource,
+      CoreMessageType.DisposeMediaSource,
+      CoreMessageType.Error,
+      CoreMessageType.Error,
+    ]);
+    receive({ type: MainThreadMessageType.StopContent, contentId: "first", value: null });
+    receive({
+      type: MainThreadMessageType.StopContent,
+      contentId: "second",
+      value: null,
+    });
+    expect(oldDispose).toHaveBeenCalledOnce();
+  });
+
+  it("replaces only MediaSource resources when reloading the session", async () => {
+    const h = createHarness();
+    h.initialize();
+    h.manifestReady();
+    h.open();
+    await Promise.resolve();
+    const resources = h.current();
+    const { mediaSource, segmentSinksStore, freezeResolver, ...contentResources } =
+      resources;
+    const oldDispose = vi.spyOn(mediaSource, "dispose");
+    const calls: string[] = [];
+    const reloaded = h.session
+      .reloadMediaSource(h.sendMessage)
+      .then(() => calls.push("reloaded"));
+    expect(oldDispose).toHaveBeenCalledOnce();
+    expect(h.current()).toBe(resources);
+    expect(resources.mediaSource).not.toBe(mediaSource);
+    expect(resources.segmentSinksStore).not.toBe(segmentSinksStore);
+    expect(resources.freezeResolver).not.toBe(freezeResolver);
+    expect(resources).toMatchObject(contentResources);
+    expect(h.sendMessage.mock.calls.map(([msg]) => msg.type)).toEqual([
+      CoreMessageType.CreateMediaSource,
+      CoreMessageType.DisposeMediaSource,
+      CoreMessageType.CreateMediaSource,
+    ]);
+    queueMicrotask(() => calls.push("before"));
+    h.open();
+    queueMicrotask(() => calls.push("after"));
+    expect(calls).toEqual([]);
+    await reloaded;
+    expect(calls).toEqual(["before", "reloaded", "after"]);
+    expect(h.callbacks.onReady).toHaveBeenCalledOnce();
+    h.session.dispose("test cleanup");
+  });
+
+  it.each(["dispose", "supersede"])(
+    "cancels a pending MediaSource reload on %s",
+    async (action) => {
+      const h = createHarness();
+      h.initialize();
+      h.manifestReady();
+      h.open();
+      await Promise.resolve();
+      const reloading = h.session.reloadMediaSource(h.sendMessage);
+      const oldMediaSource = h.current().mediaSource;
+      let nextReload: Promise<void> | undefined;
+      if (action === "dispose") {
+        h.session.dispose("stop during reload");
+      } else {
+        nextReload = h.session.reloadMediaSource(h.sendMessage);
+      }
+      oldMediaSource.onMediaSourceReadyStateChanged?.("open");
+      await expect(reloading).rejects.toSatisfy((error: unknown) =>
+        TaskCanceller.isCancellationError(error),
+      );
+      if (nextReload !== undefined) {
+        h.open();
+        await nextReload;
+      }
+      h.session.dispose("test cleanup");
+      const count = h.sendMessage.mock.calls.length;
+      h.session.dispose("repeat cleanup");
+      h.session.scheduleManifestRefresh({
+        enablePartialRefresh: false,
+        canUseUnsafeMode: false,
+      });
+      await expect(h.session.reloadMediaSource(h.sendMessage)).rejects.toThrow(
+        "No content anymore",
+      );
+      expect(h.sendMessage).toHaveBeenCalledTimes(count);
+      expect(h.session.state).toEqual({ type: "disposed", data: null });
+    },
+  );
 });
 
-
-describe("ContentPreparer manifest errors", () => {
+describe("ContentSession manifest errors", () => {
   let h: ReturnType<typeof createHarness>;
 
   beforeEach(() => {
@@ -352,7 +569,7 @@ describe("ContentPreparer manifest errors", () => {
   });
 
   afterEach(() => {
-    h.preparer.disposeCurrentContent("test cleanup");
+    h.session.dispose("test cleanup");
     delete features.transports.test;
     vi.restoreAllMocks();
   });
@@ -399,7 +616,7 @@ describe("ContentPreparer manifest errors", () => {
     h.open();
     h.manifestReady();
     await Promise.resolve();
-    h.preparer.disposeCurrentContent("content stopped");
+    h.session.dispose("content stopped");
     emitFetcher(fetcher, "error", new Error("disposed"));
     expect(h.callbacks.onError).not.toHaveBeenCalled();
   });
