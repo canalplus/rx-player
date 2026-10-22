@@ -34,7 +34,7 @@ import { extractExternalPlugins, updateCodecSupportInWorkerMode } from "./utils.
 /** Function allowing to associate a unique identifier to all created `MediaSource` */
 const generateMediaSourceId = idGenerator();
 
-export interface IContentPreparerCallbacks {
+export interface IContentSessionCallbacks {
   /** Called once preparation succeeds, in a microtask. */
   onReady: (manifest: IManifest) => void;
   /** Preparation failures run in a microtask; fatal refresh errors run synchronously. */
@@ -45,7 +45,15 @@ export interface IContentPreparerCallbacks {
   onManifestUpdate: (manifest: IManifest, updates: IPeriodsUpdateResult) => void;
 }
 
+/** State of one content's preparation and resources. */
+export type IContentSessionState =
+  | { type: "preparing" | "failed"; data: IPreparedContentData | null }
+  | { type: "ready"; data: IPreparedContentData }
+  | { type: "disposed"; data: null };
+
 /**
+ * Owns preparation and MediaSource resources for a single content.
+ *
  * Class facilitating the workflows behind loading a new content for the
  * RxPlayer Core:
  *
@@ -57,71 +65,52 @@ export interface IContentPreparerCallbacks {
  *   - initialize various modules (`segmentQueueCreator`, CmcdDataBuilder`,
  *     `RepresentationEstimator`) linked to the initialized content.
  *
- * You can start loading a content through the `initializeNewContent` method.
+ * It begins preparation as soon as the class is constructed.
  *
  * When a content is linked to the `ContentPreparer` you can inspect the
  * different initialized modules by calling its `getCurrentContent` method.
  *
- * @class ContentPreparer
+ * @class ContentSession
  */
-export default class ContentPreparer {
+export default class ContentSession {
   /**
-   * Information on the content linked to that `ContentPreparer` through its
-   * `initializeNewContent` method.
-   * `null` if no content is initialized.
+   * Identifier uniquely identifying the corresponding content.
+   * Passed at construction.
    */
-  private _currentContent: IPreparedContentData | null;
+  public readonly contentId: string;
   /**
-   * TaskCanceller which is triggered when the currently-initialized content is
-   * not needed anymore, because we stopped it since or switched to a new content.
+   * Combine the current ReadyState of the `ContentSession` and its associated
+   * content data.
    */
-  private _contentCanceller: TaskCanceller;
+  private _state: IContentSessionState;
+  /** `TaskCanceller` associated to the full session lifetime. */
+  private readonly _contentCanceller: TaskCanceller;
   /**
-   * TaskCanceller which is triggered when the currently-created MediaSource is
-   * not needed anymore, either because the content has changed or because we
-   * had to reload.
+   * `TaskCanceller` associated to the current MediaSource's lifetime.
+   * There can be multiple `MediaSource` for a single session.
    */
   private _currentMediaSourceCanceller: TaskCanceller;
 
-  constructor() {
-    this._currentContent = null;
-    this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
-    const contentCanceller = new TaskCanceller("ContentPreparer");
-    this._contentCanceller = contentCanceller;
-  }
-
   /**
-   * Start fetching the wanted content's Manifest and initializing the various
-   * modules stored by the `ContentPreparer` linked to that content.
-   *
-   * Calls `callbacks.onReady` with the parsed Manifest when those modules
-   * are all ready and you can thus begin to load the content, or
-   * `callbacks.onError` if preparation fails.
-   *
-   * Warnings and Manifest updates continue until the content is disposed.
-   * @param {Object} context - Information on the content that should be
-   * initialized.
-   * @param {Object} corePlugins - Callbacks that may have been registered by
-   * the application if it loaded the core independently as a worker.
-   * @param {Object} callbacks - Preparation and Manifest lifecycle callbacks.
+   * Begin preparing this content. Readiness and errors are delivered in a
+   * microtask; warnings and Manifest updates keep their synchronous timing.
    */
-  public initializeNewContent(
+  constructor(
     sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
     context: IContentInitializationData,
-    /** Allows to filter which Representations can be choosen. */
     throttlers: IRepresentationEstimatorThrottlers,
     corePlugins: ICorePlugins,
-    callbacks: IContentPreparerCallbacks,
-  ): void {
+    callbacks: IContentSessionCallbacks,
+  ) {
+    this.contentId = context.contentId;
+    this._state = { type: "preparing", data: null };
+    this._contentCanceller = new TaskCanceller("ContentSession");
+    this._currentMediaSourceCanceller = new TaskCanceller("ContentSession MediaSource");
     // Keep the readiness Promise internal to preserve settlement and microtask
     // ordering, including synchronous setup errors and cancellation.
     const initialization = new Promise<IManifest>((res, rej) => {
-      this.disposeCurrentContent("new init");
       const contentCanceller = this._contentCanceller;
-      const currentMediaSourceCanceller = new TaskCanceller(
-        "ContentPreparer MediaSource",
-      );
-      this._currentMediaSourceCanceller = currentMediaSourceCanceller;
+      const currentMediaSourceCanceller = this._currentMediaSourceCanceller;
 
       currentMediaSourceCanceller.linkToSignal(contentCanceller.signal);
 
@@ -203,7 +192,7 @@ export default class ContentPreparer {
           currentMediaSourceCanceller.signal,
         );
       const freezeResolver = new FreezeResolver(segmentSinksStore);
-      this._currentContent = {
+      const data: IPreparedContentData = {
         cmcdDataBuilder,
         contentId,
         enableRepresentationAvoidance,
@@ -221,6 +210,7 @@ export default class ContentPreparer {
         videoTrack: playbackSupport.videoTrack,
         textTrack: playbackSupport.textTrack,
       };
+      this._state = { type: "preparing", data };
       mediaSource.addEventListener(
         "mediaSourceOpen",
         function () {
@@ -247,9 +237,7 @@ export default class ContentPreparer {
             return;
           }
           manifest = man;
-          if (this._currentContent !== null) {
-            this._currentContent.manifest = manifest;
-          }
+          data.manifest = manifest;
           checkIfReadyAndValidate();
         },
         currentMediaSourceCanceller.signal,
@@ -294,19 +282,23 @@ export default class ContentPreparer {
       }
     });
     initialization.then(
-      (manifest) => callbacks.onReady(manifest),
-      (err: unknown) => callbacks.onError(err),
+      (manifest) => {
+        if (this._state.data !== null) {
+          this._state = { type: "ready", data: this._state.data };
+        }
+        callbacks.onReady(manifest);
+      },
+      (err: unknown) => {
+        if (this._state.type !== "disposed") {
+          this._state = { type: "failed", data: this._state.data };
+        }
+        callbacks.onError(err);
+      },
     );
   }
 
-  /**
-   * Get information on the current content prepared through the
-   * `initializeNewContent` method, or `null` if no content is currently
-   * prepared.
-   * @returns {Object|null}
-   */
-  public getCurrentContent(): IPreparedContentData | null {
-    return this._currentContent;
+  public get state(): IContentSessionState {
+    return this._state;
   }
 
   /**
@@ -317,7 +309,7 @@ export default class ContentPreparer {
    * moment at which the Manifest will be refreshed.
    */
   public scheduleManifestRefresh(settings: IManifestRefreshSettings): void {
-    this._currentContent?.manifestFetcher.scheduleManualRefresh(settings);
+    this._state.data?.manifestFetcher.scheduleManualRefresh(settings);
   }
 
   /**
@@ -332,30 +324,31 @@ export default class ContentPreparer {
   public reloadMediaSource(
     sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   ): Promise<void> {
-    this._currentMediaSourceCanceller.cancel("ContentPreparer MediaSource reload");
-    if (this._currentContent === null) {
+    this._currentMediaSourceCanceller.cancel("ContentSession MediaSource reload");
+    const data = this._state.data;
+    if (data === null) {
       return Promise.reject(new Error("CP: No content anymore"));
     }
-    this._currentContent.trackChoiceSetter.reset();
-    this._currentContent.coreTextSender?.stop("ContentPreparer MediaSource reload");
-    this._currentMediaSourceCanceller = new TaskCanceller("ContentPreparer MediaSource");
+    data.trackChoiceSetter.reset();
+    data.coreTextSender?.stop("ContentSession MediaSource reload");
+    this._currentMediaSourceCanceller = new TaskCanceller("ContentSession MediaSource");
     this._currentMediaSourceCanceller.linkToSignal(this._contentCanceller.signal);
 
     const [mediaSourceInterface, segmentSinksStore, coreTextSender] =
       createMediaSourceInterfaceAndSegmentSinksStore(
         sendMessage,
-        this._currentContent.contentId,
+        data.contentId,
         {
-          mseInWorker: this._currentContent.mseInWorker,
-          videoTrack: this._currentContent.videoTrack,
-          textTrack: this._currentContent.textTrack,
+          mseInWorker: data.mseInWorker,
+          videoTrack: data.videoTrack,
+          textTrack: data.textTrack,
         },
         this._currentMediaSourceCanceller.signal,
       );
-    this._currentContent.mediaSource = mediaSourceInterface;
-    this._currentContent.segmentSinksStore = segmentSinksStore;
-    this._currentContent.freezeResolver = new FreezeResolver(segmentSinksStore);
-    this._currentContent.coreTextSender = coreTextSender;
+    data.mediaSource = mediaSourceInterface;
+    data.segmentSinksStore = segmentSinksStore;
+    data.freezeResolver = new FreezeResolver(segmentSinksStore);
+    data.coreTextSender = coreTextSender;
     return new Promise((res, rej) => {
       mediaSourceInterface.addEventListener(
         "mediaSourceOpen",
@@ -377,16 +370,10 @@ export default class ContentPreparer {
     });
   }
 
-  /**
-   * Dispose all resources linked to the currently preopared content if one and
-   * stop linking it to this `ContentPreparer`.
-   * @param {string | undefined} reason - Human-inspectable reason behind the
-   * dispose. Used for debugging matters, especially for debug log
-   * inspection.
-   */
-  public disposeCurrentContent(reason: string | undefined) {
+  /** Dispose this session once; it cannot be reused for another content. */
+  public dispose(reason: string | undefined): void {
+    this._state = { type: "disposed", data: null };
     this._contentCanceller.cancel(reason);
-    this._contentCanceller = new TaskCanceller("ContentPreparer");
   }
 }
 
@@ -494,7 +481,7 @@ function createMediaSourceInterfaceAndSegmentSinksStore(
   let mediaSourceInterface: IMediaSourceInterface;
   if (playbackSupport.mseInWorker) {
     if (BROWSER_GLOBALS.MediaSource_ === undefined) {
-      throw new Error("ContentPreparer: Cannot use MSE-in-Worker: no MSE");
+      throw new Error("ContentSession: Cannot use MSE-in-Worker: no MSE");
     }
     const mainMediaSource = new MainMediaSourceInterface(
       generateMediaSourceId(),
