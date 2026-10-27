@@ -1,13 +1,19 @@
 # Changelog
 
-## Current dev build: v4.6.0-dev.2026100600
+## Current dev build: v4.6.0-dev.2026102700
 
 ### Features
 
 - `MULTI_THREAD` is not an experimental feature anymore [#1885]
+- Call segmentLoader even in low-latency mode [#1883]
+- Add `data` callback to `segmentLoader` to allow progressive communication of data
+  [#1883]
+- Add options to the `fallback` callback of a `segmentLoader` to allow customization of
+  the corresponding HTTP request's headers [#1883]
 
 ### Bug fixes
 
+- Send error when manifest request failed post-initialization [#1923]
 - Force generateRequest call on PlayReady MediaKeys on Windows 11 Edge to work-around
   PlayReady issue around mixed-encryption contents [#1920]
 - Fix Playstation 4 DRM session issues when re-creating a session with same keys [#1887]
@@ -19,6 +25,7 @@
 ### Other improvements
 
 - Honor Retry-After header for HTTP 429 retries [#1864]
+- Prefer a codec continuity between Periods if possible [#1839]
 - Tizen: Validate "tvkey" DRM with dedicated init data for new Tizen Nagra support [#1898]
 - DASH: Do not request undeclared initialization segments [#1886]
 - WASM: Greatly improve performance and size (from `123kb` to `88kb`) of our optional
@@ -32,6 +39,7 @@
   [#1652]
 - Simplify MetaPlaylist Manifest loading by relying on the same code than other transports
   [#1487]
+- On "debug mode" worker-side logs have now worker-side timestamp [#1903]
 - Add `swc` to transpile our commonJS build to ES5 under new TypeScript 6 based builds
   [#1770]
 - tests: add parsers tests, for now just testing equality between our WASM and JS MPD
