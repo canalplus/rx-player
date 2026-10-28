@@ -27,6 +27,7 @@ import { parseFloatOrBool, parseString } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentComponentAttrParser } from "./ContentComponent.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
+import { generateDescriptorParsers } from "./Descriptor.ts";
 import { generateLabelElementParser } from "./Label.ts";
 import {
   generateRepresentationAttrParser,
@@ -101,16 +102,19 @@ export function generateAdaptationSetChildrenParser(
         break;
       }
 
-      case TagName.EssentialProperty: {
-        const essentialProperty = { attributes: {} };
-        adaptationSetChildren.EssentialProperty.push(essentialProperty);
-
-        const childrenParser = noop; // EssentialProperty have no sub-element
-        const attributeParser = generateSchemeAttrParser(
-          essentialProperty.attributes,
-          linearMemory,
-        );
-        parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
+      case TagName.EssentialProperty:
+      case TagName.SupplementalProperty: {
+        const descriptor = {
+          attributes: {},
+          children: { UrlQueryInfo: [], ExtUrlQueryInfo: [] },
+        };
+        const destination =
+          nodeId === TagName.EssentialProperty
+            ? adaptationSetChildren.EssentialProperty
+            : adaptationSetChildren.SupplementalProperty;
+        destination.push(descriptor);
+        const parsers = generateDescriptorParsers(descriptor, linearMemory, parsersStack);
+        parsersStack.pushParsers(nodeId, parsers.children, parsers.attributes);
         break;
       }
 
@@ -159,17 +163,6 @@ export function generateAdaptationSetChildrenParser(
         const role = { attributes: {} };
         adaptationSetChildren.Role.push(role);
         const attributeParser = generateSchemeAttrParser(role.attributes, linearMemory);
-        parsersStack.pushParsers(nodeId, noop, attributeParser);
-        break;
-      }
-
-      case TagName.SupplementalProperty: {
-        const supplementalProperty = { attributes: {} };
-        adaptationSetChildren.SupplementalProperty.push(supplementalProperty);
-        const attributeParser = generateSchemeAttrParser(
-          supplementalProperty.attributes,
-          linearMemory,
-        );
         parsersStack.pushParsers(nodeId, noop, attributeParser);
         break;
       }

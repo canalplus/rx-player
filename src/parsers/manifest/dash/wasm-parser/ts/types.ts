@@ -117,6 +117,12 @@ export const enum TagName {
 
   /// Indicate a `<Location>` node.
   Location = 23,
+
+  /// Indicate a `<UrlQueryInfo>` node.
+  UrlQueryInfo = 24,
+
+  /// Indicate an `<ExtUrlQueryInfo>` node.
+  ExtUrlQueryInfo = 25,
 }
 
 /**
@@ -303,4 +309,9 @@ export const enum AttributeName {
   EndNumber = 76, // f64
 
   SupplementalCodecs = 77, // String
+
+  QueryTemplate = 81, // String
+  IncludeInRequests = 82, // String
+  UseMpdUrlQuery = 83, // Boolean
+  QueryString = 84, // String
 }

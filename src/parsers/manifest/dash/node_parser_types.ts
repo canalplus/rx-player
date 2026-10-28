@@ -43,6 +43,10 @@ export interface IMPDChildren {
    * from the first encountered to the last encountered.
    */
   BaseURL: IBaseUrlIntermediateRepresentation[];
+  /** Root-level `<EssentialProperty>` descriptors. */
+  EssentialProperty: IDescriptorIntermediateRepresentation[];
+  /** Root-level `<SupplementalProperty>` descriptors. */
+  SupplementalProperty: IDescriptorIntermediateRepresentation[];
   /**
    * Location(s) at which the Manifest can be refreshed.
    *
@@ -143,6 +147,8 @@ export interface IPeriodChildren {
   EventStream: IEventStreamIntermediateRepresentation[];
   /** Encryption-related metadata. */
   ContentProtection: IContentProtectionIntermediateRepresentation[];
+  /** Period-level `<SupplementalProperty>` descriptors. */
+  SupplementalProperty: IDescriptorIntermediateRepresentation[];
 }
 
 /* Intermediate representation for A Period node's attributes. */
@@ -192,10 +198,10 @@ export interface IAdaptationSetChildren {
   ContentComponent: IContentComponentIntermediateRepresentation[];
   /** Encryption-related metadata. */
   ContentProtection: IContentProtectionIntermediateRepresentation[];
-  EssentialProperty: ISchemeIntermediateRepresentation[];
+  EssentialProperty: IDescriptorIntermediateRepresentation[];
   InbandEventStream: ISchemeIntermediateRepresentation[];
   Role: ISchemeIntermediateRepresentation[];
-  SupplementalProperty: ISchemeIntermediateRepresentation[];
+  SupplementalProperty: IDescriptorIntermediateRepresentation[];
   SegmentBase: ISegmentBaseIntermediateRepresentation[];
   SegmentList: ISegmentListIntermediateRepresentation[];
   SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
@@ -251,8 +257,8 @@ export interface IRepresentationChildren {
   SegmentBase: ISegmentBaseIntermediateRepresentation[];
   SegmentList: ISegmentListIntermediateRepresentation[];
   SegmentTemplate: ISegmentTemplateIntermediateRepresentation[];
-  SupplementalProperty: ISchemeIntermediateRepresentation[];
-  EssentialProperty: ISchemeIntermediateRepresentation[];
+  SupplementalProperty: IDescriptorIntermediateRepresentation[];
+  EssentialProperty: IDescriptorIntermediateRepresentation[];
 }
 
 /* Intermediate representation for A Representation node's attributes. */
@@ -436,6 +442,29 @@ export interface ILocationIntermediateRepresentation {
 /** Intermediate representation for a Node following a "scheme" format. */
 export interface ISchemeIntermediateRepresentation {
   attributes: ISchemeAttributes;
+}
+
+/** Shared intermediate representation for DASH descriptor elements. */
+export interface IDescriptorIntermediateRepresentation {
+  attributes: IDescriptorAttributes;
+  children: {
+    UrlQueryInfo: IUrlQueryInfoIntermediateRepresentation[];
+    ExtUrlQueryInfo: IUrlQueryInfoIntermediateRepresentation[];
+  };
+}
+
+/** Parsed DASH Annex I URL query information. */
+export interface IUrlQueryInfoIntermediateRepresentation {
+  attributes: {
+    queryString?: string | undefined;
+    queryTemplate?: string | undefined;
+    includeInRequests?: string | undefined;
+    useMpdUrlQuery?: boolean | undefined;
+  };
+}
+
+export interface IDescriptorAttributes extends ISchemeAttributes {
+  id?: string | undefined;
 }
 
 export interface ISchemeAttributes {
