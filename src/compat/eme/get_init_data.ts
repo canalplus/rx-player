@@ -81,7 +81,7 @@ function getInitializationDataValues(
     }
 
     const len = be4toi(new Uint8Array(initData), offset);
-    if (offset + len > initData.length) {
+    if (len < 8 || offset + len > initData.length) {
       log.warn("DRM", "Unrecognized initialization data. Use as is.");
       return [{ systemId: undefined, data: initData }];
     }
