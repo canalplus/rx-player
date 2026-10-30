@@ -298,7 +298,11 @@ export default class AudioVideoSegmentSink extends SegmentSink {
       tmpU8.set(
         segmentData instanceof ArrayBuffer
           ? new Uint8Array(segmentData)
-          : new Uint8Array(segmentData.buffer),
+          : new Uint8Array(
+              segmentData.buffer,
+              segmentData.byteOffset,
+              segmentData.byteLength,
+            ),
       );
       segmentData = tmpU8;
       dataToPush.push(segmentData);
