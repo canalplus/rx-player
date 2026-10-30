@@ -124,8 +124,7 @@ export default function updatePeriodInPlace(
   const oldAdaptations = oldPeriod.getAdaptations();
   const newAdaptations = newPeriod.getAdaptations();
 
-  for (let j = 0; j < oldAdaptations.length; j++) {
-    const oldAdaptation = oldAdaptations[j];
+  for (const oldAdaptation of oldAdaptations) {
     const newAdaptationIdx = arrayFindIndex(
       newAdaptations,
       (a) => a.id === oldAdaptation.id,
@@ -134,13 +133,17 @@ export default function updatePeriodInPlace(
     if (newAdaptationIdx === -1) {
       log.warn(
         "manifest",
-        'Adaptation "' + oldAdaptations[j].id + '" not found when merging.',
+        'Adaptation "' + oldAdaptation.id + '" not found when merging.',
       );
-      const [removed] = oldAdaptations.splice(j, 1);
-      j--;
+      // `getAdaptations` returns a copy. Remove from the Period's array instead.
+      const adaptationsForType = oldPeriod.adaptations[oldAdaptation.type] ?? [];
+      const index = adaptationsForType.indexOf(oldAdaptation);
+      if (index !== -1) {
+        adaptationsForType.splice(index, 1);
+      }
       res.removedAdaptations.push({
-        id: removed.id,
-        trackType: removed.type,
+        id: oldAdaptation.id,
+        trackType: oldAdaptation.type,
       });
     } else {
       const [newAdaptation] = newAdaptations.splice(newAdaptationIdx, 1);

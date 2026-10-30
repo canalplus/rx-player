@@ -1,9 +1,12 @@
 import type { MockInstance } from "vitest";
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import log from "../../../../../src/log.ts";
-import type Period from "../../../../../src/manifest/classes/period.ts";
+import CodecSupportCache from "../../../../../src/manifest/classes/codec_support_cache.ts";
+import Period from "../../../../../src/manifest/classes/period.ts";
+import StaticRepresentationIndex from "../../../../../src/manifest/classes/representation_index/static.ts";
 import { MANIFEST_UPDATE_TYPE } from "../../../../../src/manifest/classes/types.ts";
 import updatePeriodInPlace from "../../../../../src/manifest/classes/update_period_in_place.ts";
+import type { ITrackType } from "../../../../../src/public_types.ts";
 
 const oldVideoRepresentation1 = {
   id: "rep-video-1",
@@ -929,7 +932,7 @@ describe("Manifest - updatePeriodInPlace", () => {
       "manifest",
       'Adaptation "ada-video-2" not found when merging.',
     );
-    expect(oldPeriod.adaptations.video).toHaveLength(2);
+    expect(oldPeriod.adaptations.video).toEqual([oldVideoAdaptation1]);
     mockLog.mockRestore();
   });
 
@@ -1032,9 +1035,81 @@ describe("Manifest - updatePeriodInPlace", () => {
       "manifest",
       'Adaptation "ada-video-2" not found when merging.',
     );
-    expect(oldPeriod.adaptations.video).toHaveLength(2);
+    expect(oldPeriod.adaptations.video).toEqual([oldVideoAdaptation1]);
     mockLog.mockRestore();
   });
+
+  it.each([MANIFEST_UPDATE_TYPE.Full, MANIFEST_UPDATE_TYPE.Partial])(
+    "should remove Adaptations from a real Period in update mode %s",
+    (updateType) => {
+      const createAdaptation = (id: string, type: ITrackType) => ({
+        id,
+        type,
+        representations: [
+          {
+            id: `${id}-rep`,
+            bitrate: 1000,
+            cdnMetadata: null,
+            index: new StaticRepresentationIndex({ media: `${id}.mp4` }),
+          },
+        ],
+      });
+      const periodInfo = { id: "period", start: 0, duration: 10, thumbnailTracks: [] };
+      const codecSupport = new CodecSupportCache([]);
+      const oldPeriod = new Period(
+        {
+          ...periodInfo,
+          adaptations: {
+            video: [
+              createAdaptation("removed-video-1", "video"),
+              createAdaptation("removed-video-2", "video"),
+              createAdaptation("kept-video", "video"),
+            ],
+            audio: [createAdaptation("removed-audio", "audio")],
+            text: [createAdaptation("removed-text", "text")],
+          },
+        },
+        codecSupport,
+      );
+      const newPeriod = new Period(
+        {
+          ...periodInfo,
+          adaptations: {
+            video: [
+              createAdaptation("kept-video", "video"),
+              createAdaptation("added-video", "video"),
+            ],
+          },
+        },
+        codecSupport,
+      );
+      const videoAdaptations = oldPeriod.adaptations.video;
+      const keptVideo = oldPeriod.getAdaptation("kept-video");
+
+      const res = updatePeriodInPlace(oldPeriod, newPeriod, updateType);
+
+      expect(res.removedAdaptations).toEqual([
+        { id: "removed-video-1", trackType: "video" },
+        { id: "removed-video-2", trackType: "video" },
+        { id: "removed-audio", trackType: "audio" },
+        { id: "removed-text", trackType: "text" },
+      ]);
+      expect(oldPeriod.adaptations.video).toBe(videoAdaptations);
+      expect(oldPeriod.getAdaptation("kept-video")).toBe(keptVideo);
+      expect(oldPeriod.getAdaptations().map((a) => a.id)).toEqual([
+        "kept-video",
+        "added-video",
+      ]);
+      for (const { id } of res.removedAdaptations) {
+        expect(oldPeriod.getAdaptation(id)).toBeUndefined();
+      }
+      expect(oldPeriod.getSupportedAdaptations("audio")).toEqual([]);
+      expect(oldPeriod.getSupportedAdaptations("text")).toEqual([]);
+      expect(
+        updatePeriodInPlace(oldPeriod, newPeriod, updateType).removedAdaptations,
+      ).toEqual([]);
+    },
+  );
 
   it("should add new Representations in Full mode", () => {
     const oldVideoAdaptation1 = generateFakeAdaptation({
