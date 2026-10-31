@@ -314,7 +314,7 @@ describe.skip("scheduleRequestWithCdns", () => {
   });
 });
 
-describe("scheduleRequestWithCdns backoff cleanup", () => {
+describe("scheduleRequestWithCdns backoff", () => {
   const cdn1 = { baseUrl: "cdn1" };
   const cdn2 = { baseUrl: "cdn2" };
   let requestCanceller: TaskCanceller;
@@ -343,6 +343,122 @@ describe("scheduleRequestWithCdns backoff cleanup", () => {
     prioritizerCanceller.cancel("test cleanup");
     vi.useRealTimers();
     vi.restoreAllMocks();
+  });
+
+  it.each([50, 150])(
+    "waits for the new CDN when priorities change at %i ms during a backoff",
+    async (priorityChangeTime) => {
+      mockConfigGetCurrent.mockReturnValue({
+        MAX_RETRY_AFTER_DELAY: 60_000,
+        DEFAULT_CDN_DOWNGRADE_TIME: 10,
+      });
+      const error = new RequestError("url", 500, NetworkErrorTypes.ERROR_HTTP_CODE);
+      let resolveRequest!: (value: string) => void;
+      const replacementRequest = new Promise<string>((resolve) => {
+        resolveRequest = resolve;
+      });
+      const performRequest = vi
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockRejectedValueOnce(error)
+        .mockReturnValue(replacementRequest);
+      const onSuccess = vi.fn();
+      const onFailure = vi.fn();
+      const result = scheduleRequestWithCdns(
+        [cdn1, cdn2],
+        prioritizer,
+        performRequest,
+        defaultOptions,
+        requestCanceller.signal,
+      ).then(onSuccess, onFailure);
+
+      await vi.advanceTimersByTimeAsync(20);
+      expect(performRequest).toHaveBeenCalledTimes(2);
+      mockConfigGetCurrent.mockReturnValue({
+        MAX_RETRY_AFTER_DELAY: 60_000,
+        DEFAULT_CDN_DOWNGRADE_TIME: 60_000,
+      });
+
+      // Move the clock without running the timeout, which may be delayed by
+      // a busy JS thread. Both CDNs can be retried from 100 ms onwards.
+      vi.setSystemTime(priorityChangeTime);
+      prioritizer.downgradeCdn(cdn1);
+      await vi.advanceTimersByTimeAsync(Math.max(100 - priorityChangeTime, 0));
+
+      expect(performRequest).toHaveBeenCalledTimes(3);
+      expect(performRequest).toHaveBeenNthCalledWith(3, cdn2, requestCanceller.signal);
+      expect(onSuccess).not.toHaveBeenCalled();
+      expect(onFailure).not.toHaveBeenCalled();
+      expect(requestCanceller.signal.isCancelled()).toBe(false);
+
+      resolveRequest("ok");
+      await result;
+      expect(onSuccess).toHaveBeenCalledExactlyOnceWith("ok");
+      expect(onFailure).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(performRequest).toHaveBeenCalledTimes(3);
+    },
+  );
+
+  it("forwards the request error if the retries fail after switching CDN", async () => {
+    mockConfigGetCurrent.mockReturnValue({
+      MAX_RETRY_AFTER_DELAY: 60_000,
+      DEFAULT_CDN_DOWNGRADE_TIME: 10,
+    });
+    const initialError = new RequestError("url", 500, NetworkErrorTypes.ERROR_HTTP_CODE);
+    const lastError = new RequestError("url", 403, NetworkErrorTypes.ERROR_HTTP_CODE);
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(initialError)
+      .mockRejectedValueOnce(initialError)
+      .mockRejectedValue(lastError);
+    const result = scheduleRequestWithCdns(
+      [cdn1, cdn2],
+      prioritizer,
+      performRequest,
+      defaultOptions,
+      requestCanceller.signal,
+    ).catch((err: unknown) => err);
+
+    await vi.advanceTimersByTimeAsync(20);
+    vi.setSystemTime(150);
+    prioritizer.downgradeCdn(cdn1);
+    expect(await result).toBe(lastError);
+    expect(performRequest).toHaveBeenCalledTimes(4);
+    expect(performRequest).toHaveBeenNthCalledWith(3, cdn2, requestCanceller.signal);
+    expect(performRequest).toHaveBeenNthCalledWith(4, cdn1, requestCanceller.signal);
+    expect(requestCanceller.signal.isCancelled()).toBe(false);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(performRequest).toHaveBeenCalledTimes(4);
+  });
+
+  it("still cancels while waiting for the new CDN's backoff", async () => {
+    mockConfigGetCurrent.mockReturnValue({
+      MAX_RETRY_AFTER_DELAY: 60_000,
+      DEFAULT_CDN_DOWNGRADE_TIME: 10,
+    });
+    const error = new RequestError("url", 500, NetworkErrorTypes.ERROR_HTTP_CODE);
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockRejectedValueOnce(error)
+      .mockResolvedValue("ok");
+    const result = scheduleRequestWithCdns(
+      [cdn1, cdn2],
+      prioritizer,
+      performRequest,
+      defaultOptions,
+      requestCanceller.signal,
+    ).catch((err: unknown) => err);
+
+    await vi.advanceTimersByTimeAsync(20);
+    vi.setSystemTime(50);
+    prioritizer.downgradeCdn(cdn1);
+    await vi.advanceTimersByTimeAsync(0);
+    requestCanceller.cancel("resource no longer needed");
+    expect(await result).toBe(requestCanceller.signal.cancellationError);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(performRequest).toHaveBeenCalledTimes(2);
   });
 
   it("does not request again when CDN priorities change after a successful retry", async () => {

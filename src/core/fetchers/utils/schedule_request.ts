@@ -343,10 +343,15 @@ export async function scheduleRequestWithCdns<T>(
 
       cancellableSleep(blockedFor, canceller.signal).then(
         () => requestCdn(nextWantedCdn).then(cleanAndResolve, cleanAndReject),
-        (err) =>
-          cleanAndReject(
-            cancellationSignal.isCancelled() ? cancellationSignal.cancellationError : err,
-          ),
+        (err) => {
+          if (cancellationSignal.isCancelled()) {
+            cleanAndReject(cancellationSignal.cancellationError);
+          } else if (!canceller.isUsed() || !TaskCanceller.isCancellationError(err)) {
+            cleanAndReject(err);
+          }
+          // Cancelling the backoff to switch CDN does not cancel the request.
+          // Its result will come from the new CDN instead.
+        },
       );
 
       function cleanAndResolve(response: T) {
