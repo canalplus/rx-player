@@ -357,6 +357,53 @@ describe("NetworkAnalyzer", () => {
       resetSpy.mockRestore();
     });
 
+    it.each([
+      { remainingTime: 4.4, expectedBandwidth: 3_000_000, expectedResets: 0 },
+      { remainingTime: 4.5, expectedBandwidth: 3_000_000, expectedResets: 0 },
+      { remainingTime: 4.6, expectedBandwidth: 100_000, expectedResets: 1 },
+      { remainingTime: 35, expectedBandwidth: 100_000, expectedResets: 1 },
+    ])(
+      "should estimate $expectedBandwidth bps with $remainingTime seconds left and 2 seconds buffered",
+      ({ remainingTime, expectedBandwidth, expectedResets }) => {
+        const now = 14_000;
+        const performanceNowSpy = vi.spyOn(performance, "now").mockReturnValue(now);
+        try {
+          const analyzer = new NetworkAnalyzer(1_000_000, false);
+          const bandwidthEstimator = createMockBandwidthEstimator(3_000_000);
+          const resetSpy = vi.spyOn(bandwidthEstimator, "reset");
+          const currentRepresentation = new DummyRepresentation({ bitrate: 500_000 });
+          // The last 5 progress events indicate 100 kbps. The request is old enough
+          // for the progress-based estimate, but not for the duration-based fallback.
+          const request = createMockRequest(
+            2,
+            8,
+            1000,
+            Array.from({ length: 5 }, (_, i) => ({
+              size: (i + 1) * 12_500,
+              timestamp: now - (4 - i) * 1000,
+              totalSize: 62_500 + remainingTime * 12_500,
+            })),
+          );
+
+          const result = analyzer.getBandwidthEstimate(
+            createMockPlaybackInfo(2, 0),
+            bandwidthEstimator,
+            currentRepresentation,
+            [request],
+            3_000_000,
+          );
+
+          expect(result.bandwidthEstimate).toBeCloseTo(expectedBandwidth);
+          expect(result.bitrateChosen).toBeCloseTo(
+            expectedResets === 1 ? 100_000 : 3_000_000 * 0.72,
+          );
+          expect(resetSpy).toHaveBeenCalledTimes(expectedResets);
+        } finally {
+          performanceNowSpy.mockRestore();
+        }
+      },
+    );
+
     it("should handle infinite buffer gap", () => {
       const analyzer = new NetworkAnalyzer(1000000, false);
       const playbackInfo = createMockPlaybackInfo(Infinity, 0);
