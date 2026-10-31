@@ -98,6 +98,35 @@ describe("decrypt - utils - areInitializationValuesCompatible", () => {
     expect(test1).toEqual(false);
   });
 
+  it("should return false if only some systemIds are shared", () => {
+    const stored = [
+      { systemId: "AA", hash: 1, data: new Uint8Array([1]) },
+      { systemId: "BB", hash: 2, data: new Uint8Array([2]) },
+    ];
+    const newElts = [
+      { systemId: "AA", hash: 1, data: new Uint8Array([1]) },
+      { systemId: "CC", hash: 3, data: new Uint8Array([3]) },
+    ];
+    expect(areInitializationValuesCompatible(stored, newElts)).toEqual(false);
+    expect(areInitializationValuesCompatible(newElts, stored)).toEqual(false);
+  });
+
+  it("should return false if data differ after an unfound systemId", () => {
+    const stored = [
+      { systemId: "AA", hash: 1, data: new Uint8Array([1]) },
+      { systemId: "BB", hash: 2, data: new Uint8Array([2]) },
+      { systemId: "CC", hash: 3, data: new Uint8Array([3]) },
+    ];
+    const newElts = [
+      { systemId: "AA", hash: 1, data: new Uint8Array([1]) },
+      { systemId: "CC", hash: 4, data: new Uint8Array([4]) },
+      { systemId: "DD", hash: 5, data: new Uint8Array([5]) },
+      { systemId: "EE", hash: 6, data: new Uint8Array([6]) },
+    ];
+    expect(areInitializationValuesCompatible(stored, newElts)).toEqual(false);
+    expect(areInitializationValuesCompatible(newElts, stored)).toEqual(false);
+  });
+
   it("should return false if at least one hash is different", () => {
     const test1 = areInitializationValuesCompatible(
       [
