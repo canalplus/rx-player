@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import CdnPrioritizer from "../../../../../../src/core/fetchers/cdn_prioritizer.ts";
 import {
   scheduleRequestWithCdns,
   scheduleRequestPromise,
@@ -7,6 +8,7 @@ import {
   CustomLoaderError,
   NetworkErrorTypes,
 } from "../../../../../../src/errors/index.ts";
+import type * as cancellableSleepModule from "../../../../../../src/utils/cancellable_sleep.ts";
 import { RequestError } from "../../../../../../src/utils/request/index.ts";
 import TaskCanceller from "../../../../../../src/utils/task_canceller.ts";
 
@@ -309,6 +311,117 @@ describe.skip("scheduleRequestWithCdns", () => {
     // After 2nd failure: delay = min(100 * 2^1, 150) = 150
     expect(mockGetFuzzedDelay).toHaveBeenNthCalledWith(1, 100);
     expect(mockGetFuzzedDelay).toHaveBeenNthCalledWith(2, 150);
+  });
+});
+
+describe("scheduleRequestWithCdns backoff cleanup", () => {
+  const cdn1 = { baseUrl: "cdn1" };
+  const cdn2 = { baseUrl: "cdn2" };
+  let requestCanceller: TaskCanceller;
+  let prioritizerCanceller: TaskCanceller;
+  let prioritizer: CdnPrioritizer;
+
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    mockGetTimestamp.mockImplementation(() => Date.now());
+    mockConfigGetCurrent.mockReturnValue({
+      MAX_RETRY_AFTER_DELAY: 60_000,
+      DEFAULT_CDN_DOWNGRADE_TIME: 60_000,
+    });
+    const { default: cancellableSleep } = await vi.importActual<
+      typeof cancellableSleepModule
+    >("../../../../../../src/utils/cancellable_sleep.ts");
+    mockCancellableSleep.mockImplementation(cancellableSleep);
+    requestCanceller = new TaskCanceller("test request");
+    prioritizerCanceller = new TaskCanceller("test prioritizer");
+    prioritizer = new CdnPrioritizer(prioritizerCanceller.signal);
+  });
+
+  afterEach(() => {
+    requestCanceller.cancel("test cleanup");
+    prioritizerCanceller.cancel("test cleanup");
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it("does not request again when CDN priorities change after a successful retry", async () => {
+    const getCdnPreference = vi.spyOn(prioritizer, "getCdnPreferenceForResource");
+    const error = new RequestError("url", 500, NetworkErrorTypes.ERROR_HTTP_CODE);
+    const performRequest = vi
+      .fn()
+      .mockRejectedValueOnce(error)
+      .mockRejectedValueOnce(error)
+      .mockResolvedValue("ok");
+    const result = scheduleRequestWithCdns(
+      [cdn1, cdn2],
+      prioritizer,
+      performRequest,
+      defaultOptions,
+      requestCanceller.signal,
+    );
+
+    await vi.advanceTimersByTimeAsync(100);
+    await expect(result).resolves.toBe("ok");
+    expect(performRequest).toHaveBeenCalledTimes(3);
+    expect(performRequest).toHaveBeenNthCalledWith(1, cdn1, requestCanceller.signal);
+    expect(performRequest).toHaveBeenNthCalledWith(2, cdn2, requestCanceller.signal);
+    expect(performRequest).toHaveBeenNthCalledWith(3, cdn1, requestCanceller.signal);
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    getCdnPreference.mockClear();
+    prioritizer.downgradeCdn(cdn1);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(performRequest).toHaveBeenCalledTimes(3);
+    expect(getCdnPreference).not.toHaveBeenCalled();
+    expect(requestCanceller.signal.isCancelled()).toBe(false);
+  });
+
+  it("stops listening to CDN priorities when the last retry fails", async () => {
+    const error = new RequestError("url", 500, NetworkErrorTypes.ERROR_HTTP_CODE);
+    const performRequest = vi.fn().mockRejectedValue(error);
+    const getCdnPreference = vi.spyOn(prioritizer, "getCdnPreferenceForResource");
+    const result = scheduleRequestWithCdns(
+      [cdn1],
+      prioritizer,
+      performRequest,
+      { ...defaultOptions, maxRetry: 1 },
+      requestCanceller.signal,
+    );
+    const rejection = expect(result).rejects.toBe(error);
+
+    await vi.advanceTimersByTimeAsync(100);
+    await rejection;
+    expect(performRequest).toHaveBeenCalledTimes(2);
+
+    getCdnPreference.mockClear();
+    prioritizer.downgradeCdn(cdn2);
+    expect(getCdnPreference).not.toHaveBeenCalled();
+    expect(requestCanceller.signal.isCancelled()).toBe(false);
+  });
+
+  it("still cancels a request waiting for its backoff", async () => {
+    const error = new RequestError("url", 500, NetworkErrorTypes.ERROR_HTTP_CODE);
+    const performRequest = vi.fn().mockRejectedValue(error);
+    const getCdnPreference = vi.spyOn(prioritizer, "getCdnPreferenceForResource");
+    const result = scheduleRequestWithCdns(
+      [cdn1, cdn2],
+      prioritizer,
+      performRequest,
+      defaultOptions,
+      requestCanceller.signal,
+    ).catch((err: unknown) => err);
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(performRequest).toHaveBeenCalledTimes(2);
+    requestCanceller.cancel("resource no longer needed");
+    expect(await result).toBe(requestCanceller.signal.cancellationError);
+
+    getCdnPreference.mockClear();
+    prioritizer.downgradeCdn(cdn1);
+    await vi.advanceTimersByTimeAsync(200);
+    expect(performRequest).toHaveBeenCalledTimes(2);
+    expect(getCdnPreference).not.toHaveBeenCalled();
   });
 });
 
