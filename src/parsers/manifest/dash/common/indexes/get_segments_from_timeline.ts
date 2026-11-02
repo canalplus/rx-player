@@ -87,7 +87,10 @@ export default function getSegmentsFromTimeline(
     if (maximumTime === undefined) {
       maxRepeatTime = scaledPeriodEnd;
     } else {
-      maxRepeatTime = Math.min(maximumTime * timescale, scaledPeriodEnd ?? Infinity);
+      maxRepeatTime = Math.min(
+        toIndexTime(maximumTime, index),
+        scaledPeriodEnd ?? Infinity,
+      );
     }
     const repeat = calculateRepeat(timelineItem, timeline[i + 1], maxRepeatTime);
     const complete =
