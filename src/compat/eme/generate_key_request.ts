@@ -65,7 +65,7 @@ export function patchInitData(
     }
 
     const len = be4toi(new Uint8Array(initData), offset);
-    if (offset + len > initData.length) {
+    if (len < 8 || offset + len > initData.length) {
       log.warn("DRM", "unrecognized initialization data. Cannot patch it.");
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
