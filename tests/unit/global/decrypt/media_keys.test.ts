@@ -1,7 +1,9 @@
 import { describe, beforeEach, afterEach, it, expect, vi } from "vitest";
 import getEmeApiImplementation from "../../../../src/compat/eme/index.ts";
+import { EncryptedMediaError } from "../../../../src/errors/index.ts";
 import ContentDecryptor from "../../../../src/main_thread/decrypt/content_decryptor.ts";
 import { ContentDecryptorState } from "../../../../src/main_thread/decrypt/types.ts";
+import MediaKeysAttacher from "../../../../src/main_thread/decrypt/utils/media_keys_attacher.ts";
 import type { IKeySystemOption } from "../../../../src/public_types.ts";
 import assert from "../../../../src/utils/assert.ts";
 import {
@@ -139,6 +141,73 @@ describe("decrypt - global tests - media key system access", () => {
       "CREATE_MEDIA_KEYS_ERROR",
     );
   });
+
+  it.each(["throws", "rejects"])(
+    "should report an attachment error if setMediaKeys %s and allow loading another content",
+    async (failureType) => {
+      mockCompat(mocks);
+      const attachmentError = new Error("Could not attach keys");
+      mocks.setMediaKeys.mockImplementationOnce(() => {
+        if (failureType === "throws") {
+          throw attachmentError;
+        }
+        return Promise.reject(attachmentError);
+      });
+
+      const mediaElement = document.createElement("video");
+      const eme = getEmeApiImplementation("auto");
+      assert(eme !== null, "Expected to have an EME implementation");
+      const contentDecryptor = new ContentDecryptor(eme, mediaElement, ksConfig);
+      try {
+        const error = await new Promise<Error>((res, rej) => {
+          contentDecryptor.addEventListener("error", res);
+          contentDecryptor.addEventListener("stateChange", (state) => {
+            if (state === ContentDecryptorState.WaitingForAttachment) {
+              contentDecryptor.attach();
+            } else if (state !== ContentDecryptorState.Error) {
+              rej(new Error(`Unexpected state: ${state}`));
+            }
+          });
+        });
+        expect(error).toBeInstanceOf(EncryptedMediaError);
+        expect(error).toMatchObject({
+          code: "MEDIA_KEYS_ATTACHMENT_ERROR",
+          message:
+            "MEDIA_KEYS_ATTACHMENT_ERROR: Could not attach the MediaKeys to the media element: Error: Could not attach keys",
+          keySystem: "com.widevine.alpha",
+        });
+        expect(contentDecryptor.getState()).toEqual(ContentDecryptorState.Error);
+        expect(MediaKeysAttacher.getAwaitedState(mediaElement)).toBeNull();
+        await expect(
+          MediaKeysAttacher.getAttachedMediaKeysState(mediaElement),
+        ).resolves.toBeNull();
+      } finally {
+        contentDecryptor.dispose(undefined);
+      }
+
+      const nextDecryptor = new ContentDecryptor(eme, mediaElement, ksConfig);
+      try {
+        await new Promise<void>((res, rej) => {
+          nextDecryptor.addEventListener("error", rej);
+          nextDecryptor.addEventListener("stateChange", (state) => {
+            if (state === ContentDecryptorState.WaitingForAttachment) {
+              nextDecryptor.attach();
+            } else if (state === ContentDecryptorState.ReadyForContent) {
+              res();
+            } else {
+              rej(new Error(`Unexpected state: ${state}`));
+            }
+          });
+        });
+        expect(mocks.setMediaKeys).toHaveBeenCalledTimes(2);
+        await expect(
+          MediaKeysAttacher.getAttachedMediaKeysState(mediaElement),
+        ).resolves.not.toBeNull();
+      } finally {
+        nextDecryptor.dispose(undefined);
+      }
+    },
+  );
 
   it("should go into the WaitingForAttachment state if createMediaKeys resolves", async () => {
     mockCompat(mocks);
