@@ -41,7 +41,7 @@ export type IPlaybackConditionsInfo = Pick<
  * This heuristic is only done along many other conditions to ensure our long term
  * estimates are still the main way with which throughput is estimated.
  */
-const MAX_EXPECTED_REBUFFERING_TIME_BEFORE_EMERGENCY_RESET = 3.5;
+const MAX_EXPECTED_REBUFFERING_TIME_BEFORE_EMERGENCY_RESET = 3;
 
 /**
  * Get pending segment request(s) starting with the asked segment position.
@@ -196,8 +196,14 @@ function estimateStarvationModeBitrate(
     if ((now - lastProgressEvent.timestamp) / 1000 <= remainingTime) {
       // Calculate estimated time spent rebuffering if we continue doing that request.
       const expectedRebufferingTime = remainingTime - realBufferGap / speed;
+      const estimatedFullDownloadTime =
+        (lastProgressEvent.totalSize * 8) / bandwidthEstimate;
+      // Low buffer alone does not mean that the current quality is unsustainable.
+      // Also require downloading a whole segment to take clearly longer than playing it.
       if (
-        expectedRebufferingTime > MAX_EXPECTED_REBUFFERING_TIME_BEFORE_EMERGENCY_RESET
+        expectedRebufferingTime > MAX_EXPECTED_REBUFFERING_TIME_BEFORE_EMERGENCY_RESET &&
+        estimatedFullDownloadTime >
+          (concernedRequest.content.segment.duration * 1.5) / speed
       ) {
         return bandwidthEstimate;
       }
