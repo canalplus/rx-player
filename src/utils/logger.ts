@@ -328,7 +328,7 @@ export default class Logger extends EventEmitter<ILoggerEvents> {
    * @returns {boolean}
    */
   public hasLevel(logLevel: ILoggerLevel): boolean {
-    return this._levels[logLevel] >= this._levels[this._currentLevel];
+    return this._levels[this._currentLevel] >= this._levels[logLevel];
   }
 }
 
