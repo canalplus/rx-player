@@ -187,7 +187,7 @@ function estimateStarvationModeBitrate(
     if ((now - lastProgressEvent.timestamp) / 1000 <= remainingTime) {
       // Calculate estimated time spent rebuffering if we continue doing that request.
       const expectedRebufferingTime = remainingTime - realBufferGap / speed;
-      if (expectedRebufferingTime > 2500) {
+      if (expectedRebufferingTime > 2.5) {
         return bandwidthEstimate;
       }
     }
