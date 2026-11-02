@@ -318,7 +318,7 @@ export async function scheduleRequestWithCdns<T>(
     }
 
     const canceller = new TaskCanceller("Request Backoff");
-    const unlinkCanceller = canceller.linkToSignal(cancellationSignal);
+    canceller.linkToSignal(cancellationSignal);
     return new Promise<T>((res, rej) => {
       cdnPrioritizer?.addEventListener(
         "priorityChange",
@@ -350,11 +350,11 @@ export async function scheduleRequestWithCdns<T>(
       );
 
       function cleanAndResolve(response: T) {
-        unlinkCanceller();
+        canceller.cancel("request succeeded");
         res(response);
       }
       function cleanAndReject(err: unknown) {
-        unlinkCanceller();
+        canceller.cancel("request failed");
         rej(err);
       }
     });
