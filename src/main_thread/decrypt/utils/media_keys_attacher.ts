@@ -101,11 +101,12 @@ export default {
           mediaKeysState: mediaKeysInfo,
         });
       },
-      () => {
+      (err: unknown) => {
         currentMediaState.set(mediaElement, {
           pendingTask: null,
           mediaKeysState: null,
         });
+        throw err;
       },
     );
     currentMediaState.set(mediaElement, {
