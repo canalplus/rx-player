@@ -150,7 +150,7 @@ function _isAInB(
         }
         break;
       }
-      if (aIdx === b.length) {
+      if (bIdx === b.length) {
         // we didn't find `aElt`'s systemId in b
         return null;
       }
