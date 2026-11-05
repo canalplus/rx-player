@@ -1,24 +1,38 @@
 import { describe, it, expect, vi } from "vitest";
 
 import cleanOldLoadedSessions from "../../../../../../src/main_thread/decrypt/utils/clean_old_loaded_sessions.ts";
+import InitDataValuesContainer from "../../../../../../src/main_thread/decrypt/utils/init_data_values_container.ts";
+import KeySessionRecord from "../../../../../../src/main_thread/decrypt/utils/key_session_record.ts";
 import type LoadedSessionsStore from "../../../../../../src/main_thread/decrypt/utils/loaded_sessions_store.ts";
 
 const entry1 = {
   initializationData: { data: new Uint8Array([1, 6, 9]), type: "test" },
   mediaKeySession: { sessionId: "toto" },
   sessionType: "",
+  keySessionRecord: new KeySessionRecord({
+    type: undefined,
+    values: new InitDataValuesContainer([]),
+  }),
 };
 
 const entry2 = {
   initializationData: { data: new Uint8Array([4, 8]), type: "foo" },
   mediaKeySession: { sessionId: "titi" },
   sessionType: "",
+  keySessionRecord: new KeySessionRecord({
+    type: undefined,
+    values: new InitDataValuesContainer([]),
+  }),
 };
 
 const entry3 = {
   initializationData: { data: new Uint8Array([7, 3, 121, 87]), type: "bar" },
   mediaKeySession: { sessionId: "tutu" },
   sessionType: "",
+  keySessionRecord: new KeySessionRecord({
+    type: undefined,
+    values: new InitDataValuesContainer([]),
+  }),
 };
 
 function createLoadedSessionsStore(): LoadedSessionsStore {
@@ -64,7 +78,7 @@ async function checkNothingHappen(
   limit: number,
 ): Promise<void> {
   const mockCloseSession = vi.spyOn(loadedSessionsStore, "closeSession");
-  await cleanOldLoadedSessions(loadedSessionsStore, limit);
+  await cleanOldLoadedSessions(loadedSessionsStore, [], limit);
   expect(mockCloseSession).not.toHaveBeenCalled();
   mockCloseSession.mockRestore();
 }
@@ -85,7 +99,7 @@ async function checkEntriesCleaned(
   entries: Array<{ sessionId: string }>,
 ): Promise<void> {
   const mockCloseSession = vi.spyOn(loadedSessionsStore, "closeSession");
-  const prom = cleanOldLoadedSessions(loadedSessionsStore, limit).then(() => {
+  const prom = cleanOldLoadedSessions(loadedSessionsStore, [], limit).then(() => {
     expect(mockCloseSession).toHaveBeenCalledTimes(entries.length);
     mockCloseSession.mockRestore();
   });
