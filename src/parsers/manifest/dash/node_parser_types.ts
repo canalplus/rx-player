@@ -50,7 +50,7 @@ export interface IMPDChildren {
    * node,
    * from the first encountered to the last encountered.
    */
-  Location: Array<{ value: string }>;
+  Location: ILocationIntermediateRepresentation[];
   /**
    * Temporal subdivisions in that Manifest.
    *
@@ -410,6 +410,27 @@ export interface IBaseUrlIntermediateRepresentation {
    * This is the inner content of a BaseURL node.
    */
   value: string;
+
+  /** Attributes assiociated to the BaseURL node. */
+  attributes: {
+    /**
+     * Potential value for a `serviceLocation` attribute, used in content
+     * steering mechanisms.
+     */
+    serviceLocation?: string;
+  };
+}
+
+/** Intermediate representation for a Location node. */
+export interface ILocationIntermediateRepresentation {
+  /** The URL contained in the Location node. */
+  value: string;
+
+  /** Attributes associated to the Location node. */
+  attributes: {
+    /** Value of the `serviceLocation` attribute. */
+    serviceLocation?: string | undefined;
+  };
 }
 
 /** Intermediate representation for a Node following a "scheme" format. */
