@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../../errors/index.ts";
+import { MediaError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { IIndexSegment } from "./index_helpers.ts";
 import { getIndexSegmentEnd } from "./index_helpers.ts";

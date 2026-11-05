@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import errorMessage from "../../../../src/errors/error_message.ts";
+import errorMessage from "../../../../../src/errors/utils/error_message.ts";
 
 describe("Errors - generateErrorMessage", () => {
   it("should format a readable error message", () => {

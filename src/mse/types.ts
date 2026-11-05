@@ -1,4 +1,4 @@
-import type { ISerializedSourceBufferError } from "../errors/source_buffer_error.ts";
+import type { ISerializedSourceBufferError } from "../errors/internal/index.ts";
 import type EventEmitter from "../utils/event_emitter.ts";
 import type { IRange } from "../utils/ranges.ts";
 

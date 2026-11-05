@@ -1,6 +1,6 @@
 import type { IMediaElement } from "../../../compat/browser_compatibility_types.ts";
 import getEmeApiImplementation from "../../../compat/eme/index.ts";
-import { EncryptedMediaError } from "../../../errors/index.ts";
+import { EncryptedMediaError } from "../../../errors/public_api/index.ts";
 import features from "../../../features/index.ts";
 import log from "../../../log.ts";
 import type { IKeySystemOption, IPlayerError } from "../../../public_types.ts";

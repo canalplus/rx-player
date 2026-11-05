@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../errors/index.ts";
+import { MediaError } from "../../errors/public_api/index.ts";
 import log from "../../log.ts";
 import type { IPeriodMetadata } from "../../manifest/index.ts";
 import type { IPeriod } from "../../public_types.ts";

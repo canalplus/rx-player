@@ -22,7 +22,7 @@ import type {
 import canReuseMediaKeys from "../../compat/can_reuse_media_keys.ts";
 import type { IEmeApiImplementation } from "../../compat/eme/index.ts";
 import forceMediaKeysInstantiationIfNeeded from "../../compat/force_media_key_instantiation_if_needed.ts";
-import { EncryptedMediaError } from "../../errors/index.ts";
+import { EncryptedMediaError } from "../../errors/public_api/index.ts";
 import log from "../../log.ts";
 import type { IKeySystemOption } from "../../public_types.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";

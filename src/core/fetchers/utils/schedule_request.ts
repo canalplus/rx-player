@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import {
-  CustomLoaderError,
-  isKnownError,
-  NetworkErrorTypes,
-} from "../../../errors/index.ts";
+import { isApiError } from "../../../errors/index.ts";
+import { CustomLoaderError } from "../../../errors/internal/index.ts";
+import { NetworkErrorTypes } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { ICdnMetadata } from "../../../parsers/manifest/index.ts";
 import cancellableSleep from "../../../utils/cancellable_sleep.ts";
@@ -76,7 +74,7 @@ function shouldRetry(error: unknown): boolean {
     }
     return false;
   }
-  return isKnownError(error) && error.code === "INTEGRITY_ERROR";
+  return isApiError(error) && error.code === "INTEGRITY_ERROR";
 }
 
 /** Settings to give to the backoff functions to configure their behavior. */
