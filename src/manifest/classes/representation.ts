@@ -46,6 +46,8 @@ class Representation implements IRepresentationMetadata {
    * @see IRepresentationMetadata.bitrate
    */
   public bitrate: number;
+  /** Transport-specific data used when requesting this Representation's resources. */
+  public requestData?: IParsedRepresentation["requestData"];
   /**
    * @see IRepresentationMetadata.frameRate
    */
@@ -143,6 +145,7 @@ class Representation implements IRepresentationMetadata {
     this.uniqueId = generateRepresentationUniqueId();
     this.shouldBeAvoided = false;
     this.bitrate = args.bitrate;
+    this.requestData = args.requestData;
     this.baseCodecs = [];
     this.trackType = trackType;
 

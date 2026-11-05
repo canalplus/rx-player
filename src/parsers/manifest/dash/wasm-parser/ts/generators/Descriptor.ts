@@ -71,6 +71,9 @@ function generateUrlQueryInfoAttrParser(
       case AttributeName.UseMpdUrlQuery:
         attributes.useMpdUrlQuery = readBoolean(value);
         break;
+      case AttributeName.SameOriginOnly:
+        attributes.sameOriginOnly = readBoolean(value);
+        break;
     }
   };
 }

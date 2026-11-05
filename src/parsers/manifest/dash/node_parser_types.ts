@@ -460,6 +460,7 @@ export interface IUrlQueryInfoIntermediateRepresentation {
     queryTemplate?: string | undefined;
     includeInRequests?: string | undefined;
     useMpdUrlQuery?: boolean | undefined;
+    sameOriginOnly?: boolean | undefined;
   };
 }
 

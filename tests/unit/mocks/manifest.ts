@@ -177,6 +177,7 @@ export const DummyRepresentation = makeMockedClass<Representation>(
     frameRate: undefined,
     hdrInfo: undefined,
     contentProtections: undefined,
+    requestData: undefined,
   },
 );
 
