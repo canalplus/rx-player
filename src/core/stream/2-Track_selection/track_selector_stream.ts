@@ -33,31 +33,31 @@ import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
 import SegmentSinksStore from "../../segment_sinks/index.ts";
 import type {
   IAdaptationChoice,
-  IAdaptationStreamCallbacks,
-  IAdaptationStreamPlaybackObservation,
-} from "../adaptation/index.ts";
-import AdaptationStream from "../adaptation/index.ts";
-import type { IRepresentationsChoice } from "../representation/index.ts";
+  IRepresentationSelectorCallbacks,
+  IRepresentationSelectorPlaybackObservation,
+} from "../3-Representation_selection/index.ts";
+import RepresentationSelector from "../3-Representation_selection/index.ts";
+import type { IRepresentationsChoice } from "../4-Segment_selection/index.ts";
 import type {
-  IPeriodStreamArguments,
-  IPeriodStreamCallbacks,
-  IPeriodStreamPlaybackObservation,
+  ITrackSelectorStreamArguments,
+  ITrackSelectorStreamCallbacks,
+  ITrackSelectorStreamPlaybackObservation,
 } from "./types.ts";
 import getAdaptationSwitchStrategy from "./utils/get_adaptation_switch_strategy.ts";
 
 /**
- * Create a single PeriodStream:
+ * Create a single TrackSelectorStream:
  *   - Lazily create (or reuse) a SegmentSink for the given type.
  *   - Create a Stream linked to an Adaptation each time it changes, to
  *     download and append the corresponding segments to the SegmentSink.
  *   - Announce when the Stream is full or is awaiting new Segments through
  *     events
  *
- * @param {Object} args - Various arguments allowing the `PeriodStream` to
+ * @param {Object} args - Various arguments allowing the `TrackSelectorStream` to
  * determine which Adaptation and which Representation to choose, as well as
  * which segments to load from it.
  * You can check the corresponding type for more information.
- * @param {Object} callbacks - The `PeriodStream` relies on a system of
+ * @param {Object} callbacks - The `TrackSelectorStream` relies on a system of
  * callbacks that it will call on various events.
  *
  * Depending on the event, the caller may be supposed to perform actions to
@@ -65,18 +65,18 @@ import getAdaptationSwitchStrategy from "./utils/get_adaptation_switch_strategy.
  *
  * This approach is taken instead of a more classical EventEmitter pattern to:
  *   - Allow callbacks to be called synchronously after the
- *     `AdaptationStream` is called.
+ *     `RepresentationSelector` is called.
  *   - Simplify bubbling events up, by just passing through callbacks
  *   - Force the caller to explicitely handle or not the different events.
  *
- * Callbacks may start being called immediately after the `AdaptationStream`
+ * Callbacks may start being called immediately after the `RepresentationSelector`
  * call and may be called until either the `parentCancelSignal` argument is
  * triggered, or until the `error` callback is called, whichever comes first.
  * @param {Object} parentCancelSignal - `CancellationSignal` allowing, when
- * triggered, to immediately stop all operations the `PeriodStream` is
+ * triggered, to immediately stop all operations the `TrackSelectorStream` is
  * doing.
  */
-export default function PeriodStream(
+export default function TrackSelectorStream(
   {
     bufferType,
     content,
@@ -88,8 +88,8 @@ export default function PeriodStream(
     options,
     wantedBufferAhead,
     maxVideoBufferSize,
-  }: IPeriodStreamArguments,
-  callbacks: IPeriodStreamCallbacks,
+  }: ITrackSelectorStreamArguments,
+  callbacks: ITrackSelectorStreamCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
   const { manifest, period } = content;
@@ -104,7 +104,7 @@ export default function PeriodStream(
     parentCancelSignal,
   );
 
-  callbacks.periodStreamReady({
+  callbacks.streamReady({
     type: bufferType,
     manifest,
     period,
@@ -126,10 +126,10 @@ export default function PeriodStream(
         }
 
         const streamCanceller = new TaskCanceller(
-          "PeriodStream: Adaptation choice " + bufferType,
+          "TrackSelectorStream: Adaptation choice " + bufferType,
         );
         streamCanceller.linkToSignal(parentCancelSignal);
-        currentStreamCanceller?.cancel("PeriodStream: Adaptation update"); // Cancel previously created stream if one
+        currentStreamCanceller?.cancel("TrackSelectorStream: Adaptation update"); // Cancel previously created stream if one
         currentStreamCanceller = streamCanceller;
 
         if (choice === null) {
@@ -178,7 +178,7 @@ export default function PeriodStream(
             return; // Previous call has provoken Stream cancellation by side-effect
           }
 
-          return createEmptyAdaptationStream(
+          return createEmptyRepresentationSelector(
             playbackObserver,
             wantedBufferAhead,
             bufferType,
@@ -194,7 +194,7 @@ export default function PeriodStream(
           (a) => a.id === choice.adaptationId,
         );
         if (adaptation === undefined) {
-          currentStreamCanceller.cancel("PeriodStream: Adaptation not found");
+          currentStreamCanceller.cancel("TrackSelectorStream: Adaptation not found");
           log.warn("Stream", "Unfound chosen Adaptation choice", {
             adaptationId: choice.adaptationId,
           });
@@ -324,7 +324,7 @@ export default function PeriodStream(
         }
 
         garbageCollectors.get(segmentSink)(streamCanceller.signal);
-        createAdaptationStream(
+        createRepresentationSelector(
           adaptation,
           representations,
           segmentSink,
@@ -334,7 +334,7 @@ export default function PeriodStream(
         if (err instanceof CancellationError) {
           return;
         }
-        currentStreamCanceller?.cancel("PeriodStream err");
+        currentStreamCanceller?.cancel("TrackSelectorStream err");
         callbacks.error(err);
       });
     },
@@ -347,18 +347,18 @@ export default function PeriodStream(
    * @param {Object} segmentSink
    * @param {Object} cancelSignal
    */
-  function createAdaptationStream(
+  function createRepresentationSelector(
     adaptation: IAdaptation,
     representations: IReadOnlySharedReference<IRepresentationsChoice>,
     segmentSink: SegmentSink,
     cancelSignal: CancellationSignal,
   ): void {
-    const adaptationPlaybackObserver = createAdaptationStreamPlaybackObserver(
+    const adaptationPlaybackObserver = createRepresentationSelectorPlaybackObserver(
       playbackObserver,
       adaptation.type,
     );
 
-    AdaptationStream(
+    RepresentationSelector(
       {
         content: { manifest, period, adaptation, representations },
         options,
@@ -369,11 +369,11 @@ export default function PeriodStream(
         wantedBufferAhead,
         maxVideoBufferSize,
       },
-      { ...callbacks, error: onAdaptationStreamError },
+      { ...callbacks, error: onRepresentationSelectorError },
       cancelSignal,
     );
 
-    function onAdaptationStreamError(error: unknown): void {
+    function onRepresentationSelectorError(error: unknown): void {
       // Stream linked to a non-native media buffer should not impact the
       // stability of the player. ie: if a text buffer sends an error, we want
       // to continue playing without any subtitles
@@ -383,18 +383,18 @@ export default function PeriodStream(
           `${bufferType} Stream crashed. Aborting it.`,
           error instanceof Error ? error : "",
         );
-        segmentSinksStore.disposeSegmentSink(bufferType, "AdaptationStream err");
+        segmentSinksStore.disposeSegmentSink(bufferType, "RepresentationSelector err");
 
         const formattedError = formatError(error, {
           defaultCode: "NONE",
-          defaultReason: "Unknown `AdaptationStream` error",
+          defaultReason: "Unknown `RepresentationSelector` error",
         });
         callbacks.warning(formattedError);
         if (cancelSignal.isCancelled()) {
           return; // Previous callback cancelled the Stream by side-effect
         }
 
-        return createEmptyAdaptationStream(
+        return createEmptyRepresentationSelector(
           playbackObserver,
           wantedBufferAhead,
           bufferType,
@@ -504,31 +504,31 @@ function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
 }
 
 /**
- * Create AdaptationStream's version of a playback observer.
+ * Create RepresentationSelector's version of a playback observer.
  * @param {Object} initialPlaybackObserver
  * @param {string} trackType
  * @returns {Object}
  */
-function createAdaptationStreamPlaybackObserver(
-  initialPlaybackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
+function createRepresentationSelectorPlaybackObserver(
+  initialPlaybackObserver: IReadOnlyPlaybackObserver<ITrackSelectorStreamPlaybackObservation>,
   trackType: ITrackType,
-): IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation> {
+): IReadOnlyPlaybackObserver<IRepresentationSelectorPlaybackObservation> {
   return initialPlaybackObserver.deriveReadOnlyObserver(function transform(
-    observationRef: IReadOnlySharedReference<IPeriodStreamPlaybackObservation>,
+    observationRef: IReadOnlySharedReference<ITrackSelectorStreamPlaybackObservation>,
     cancellationSignal: CancellationSignal,
-  ): IReadOnlySharedReference<IAdaptationStreamPlaybackObservation> {
+  ): IReadOnlySharedReference<IRepresentationSelectorPlaybackObservation> {
     const newRef = new SharedReference(
-      constructAdaptationStreamPlaybackObservation(),
+      constructRepresentationSelectorPlaybackObservation(),
       cancellationSignal,
     );
 
-    observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
+    observationRef.onUpdate(emitRepresentationSelectorPlaybackObservation, {
       clearSignal: cancellationSignal,
       emitCurrentValue: false,
     });
     return newRef;
 
-    function constructAdaptationStreamPlaybackObservation(): IAdaptationStreamPlaybackObservation {
+    function constructRepresentationSelectorPlaybackObservation(): IRepresentationSelectorPlaybackObservation {
       const baseObservation = observationRef.getValue();
       const buffered = baseObservation.buffered[trackType];
       const bufferGap =
@@ -538,15 +538,15 @@ function createAdaptationStreamPlaybackObserver(
       return objectAssign({}, baseObservation, { bufferGap, buffered });
     }
 
-    function emitAdaptationStreamPlaybackObservation() {
-      newRef.setValue(constructAdaptationStreamPlaybackObservation());
+    function emitRepresentationSelectorPlaybackObservation() {
+      newRef.setValue(constructRepresentationSelectorPlaybackObservation());
     }
   });
 }
 
 /**
- * Create empty AdaptationStream, linked to a Period.
- * This AdaptationStream will never download any segment and just emit a "full"
+ * Create empty RepresentationSelector, linked to a Period.
+ * This RepresentationSelector will never download any segment and just emit a "full"
  * event when reaching the end.
  * @param {Object} playbackObserver
  * @param {Object} wantedBufferAhead
@@ -555,12 +555,12 @@ function createAdaptationStreamPlaybackObserver(
  * @param {Object} callbacks
  * @param {Object} cancelSignal
  */
-function createEmptyAdaptationStream(
-  playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
+function createEmptyRepresentationSelector(
+  playbackObserver: IReadOnlyPlaybackObserver<ITrackSelectorStreamPlaybackObservation>,
   wantedBufferAhead: IReadOnlySharedReference<number>,
   bufferType: IBufferType,
   content: { period: IPeriod },
-  callbacks: Pick<IAdaptationStreamCallbacks, "streamStatusUpdate">,
+  callbacks: Pick<IRepresentationSelectorCallbacks, "streamStatusUpdate">,
   cancelSignal: CancellationSignal,
 ): void {
   const { period } = content;
@@ -580,7 +580,7 @@ function createEmptyAdaptationStream(
     const wba = wantedBufferAhead.getValue();
     const position = observation.position.getWanted();
     if (period.end !== undefined && position + wba >= period.end) {
-      log.debug("Stream", 'full "empty" AdaptationStream', {
+      log.debug("Stream", 'full "empty" RepresentationSelector', {
         bufferType,
         periodEnd: period.end,
         position,

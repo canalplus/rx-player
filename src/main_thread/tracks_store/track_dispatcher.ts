@@ -182,7 +182,7 @@ export default class TrackDispatcher extends EventEmitter<ITrackDispatcherEvent>
       let switchingMode:
         IAudioRepresentationsSwitchingMode | IVideoRepresentationsSwitchingMode;
 
-      /** Representations for which a `RepresentationStream` can be created. */
+      /** Representations for which a `SegmentSelector` can be created. */
       let playableRepresentations;
       if (repSettings === null) {
         // unlocking

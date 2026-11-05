@@ -1021,7 +1021,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
         }
 
-        case CoreMessageType.PeriodStreamReady: {
+        case CoreMessageType.StreamReady: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
@@ -1084,7 +1084,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
             },
             { clearSignal: this._initCanceller.signal },
           );
-          this.trigger("periodStreamReady", {
+          this.trigger("streamReady", {
             period,
             type: msgData.value.bufferType,
             adaptationRef: ref,
@@ -1092,14 +1092,14 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
           break;
         }
 
-        case CoreMessageType.PeriodStreamCleared: {
+        case CoreMessageType.StreamCleared: {
           if (
             this._currentContentInfo?.contentId !== msgData.contentId ||
             this._currentContentInfo.manifest === null
           ) {
             return;
           }
-          this.trigger("periodStreamCleared", {
+          this.trigger("streamCleared", {
             periodId: msgData.value.periodId,
             type: msgData.value.bufferType,
           });

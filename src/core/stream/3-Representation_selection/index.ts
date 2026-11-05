@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import PeriodStream from "./period_stream.ts";
+import RepresentationSelector from "./representation_selector.ts";
 export type * from "./types.ts";
 
-export default PeriodStream;
+export default RepresentationSelector;

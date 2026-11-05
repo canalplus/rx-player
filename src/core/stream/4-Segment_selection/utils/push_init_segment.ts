@@ -27,7 +27,7 @@ import type { IReadOnlySharedReference } from "../../../../utils/reference.ts";
 import type { CancellationSignal } from "../../../../utils/task_canceller.ts";
 import type { IPushedChunkData, SegmentSink } from "../../../segment_sinks/index.ts";
 import type {
-  IRepresentationStreamPlaybackObservation,
+  ISegmentSelectorPlaybackObservation,
   IStreamEventAddedSegmentPayload,
 } from "../types.ts";
 import appendSegmentToBuffer from "./append_segment_to_buffer.ts";
@@ -47,7 +47,7 @@ export default async function pushInitSegment<T>(
     segmentSink,
     bufferGoal,
   }: {
-    playbackObserver: IReadOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>;
+    playbackObserver: IReadOnlyPlaybackObserver<ISegmentSelectorPlaybackObservation>;
     content: {
       adaptation: IAdaptation;
       manifest: IManifest;

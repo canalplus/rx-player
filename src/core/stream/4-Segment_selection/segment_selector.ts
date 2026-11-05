@@ -15,9 +15,9 @@
  */
 
 /**
- * This file allows to create RepresentationStreams.
+ * This file allows to create SegmentSelectors.
  *
- * A RepresentationStream downloads and push segment for a single
+ * A SegmentSelector downloads and push segment for a single
  * Representation (e.g. a single video stream of a given quality).
  * It chooses which segments should be downloaded according to the current
  * position and what is currently buffered.
@@ -36,8 +36,8 @@ import type {
 import EncryptionDataNotifier from "./encryption_data_notifier.ts";
 import type {
   IQueuedSegment,
-  IRepresentationStreamArguments,
-  IRepresentationStreamCallbacks,
+  ISegmentSelectorArguments,
+  ISegmentSelectorCallbacks,
 } from "./types.ts";
 import getBufferStatus from "./utils/get_buffer_status.ts";
 import getSegmentPriority from "./utils/get_segment_priority.ts";
@@ -52,13 +52,13 @@ import pushMediaSegment from "./utils/push_media_segment.ts";
  * RxPlayer, the one actually responsible for finding which are the current
  * right segments to load, loading them, and pushing them so they can be decoded.
  *
- * Multiple RepresentationStream can run on the same SegmentSink.
+ * Multiple SegmentSelector can run on the same SegmentSink.
  * This allows for example smooth transitions between multiple periods.
  *
  * @param {Object} args - Various arguments allowing to know which segments to
  * load, loading them and pushing them.
  * You can check the corresponding type for more information.
- * @param {Object} callbacks - The `RepresentationStream` relies on a system of
+ * @param {Object} callbacks - The `SegmentSelector` relies on a system of
  * callbacks that it will call on various events.
  *
  * Depending on the event, the caller may be supposed to perform actions to
@@ -66,20 +66,20 @@ import pushMediaSegment from "./utils/push_media_segment.ts";
  *
  * This approach is taken instead of a more classical EventEmitter pattern to:
  *   - Allow callbacks to be called synchronously after the
- *     `RepresentationStream` is called.
+ *     `SegmentSelector` is called.
  *   - Simplify bubbling events up, by just passing through callbacks
  *   - Force the caller to explicitely handle or not the different events.
  *
- * Callbacks may start being called immediately after the `RepresentationStream`
+ * Callbacks may start being called immediately after the `SegmentSelector`
  * call and may be called until either the `parentCancelSignal` argument is
  * triggered, until the `terminating` callback has been triggered AND all loaded
  * segments have been pushed, or until the `error` callback is called, whichever
  * comes first.
  * @param {Object} parentCancelSignal - `CancellationSignal` allowing, when
- * triggered, to immediately stop all operations the `RepresentationStream` is
+ * triggered, to immediately stop all operations the `SegmentSelector` is
  * doing.
  */
-export default function RepresentationStream<TSegmentDataType>(
+export default function SegmentSelector<TSegmentDataType>(
   {
     content,
     options,
@@ -87,11 +87,11 @@ export default function RepresentationStream<TSegmentDataType>(
     segmentSink,
     segmentQueue,
     terminate,
-  }: IRepresentationStreamArguments<TSegmentDataType>,
-  callbacks: IRepresentationStreamCallbacks,
+  }: ISegmentSelectorArguments<TSegmentDataType>,
+  callbacks: ISegmentSelectorCallbacks,
   parentCancelSignal: CancellationSignal,
 ): void {
-  log.debug("Stream", "Creating RepresentationStream", {
+  log.debug("Stream", "Creating SegmentSelector", {
     periodStart: content.period.start,
     bufferType: content.adaptation.type,
     adaptationId: content.adaptation.id,
@@ -102,8 +102,8 @@ export default function RepresentationStream<TSegmentDataType>(
   const { bufferGoal, maxBufferSize, drmSystemId, fastSwitchThreshold } = options;
   const bufferType = adaptation.type;
 
-  /** `TaskCanceller` stopping operations performed by the `RepresentationStream` */
-  const canceller = new TaskCanceller("RepresentationStream " + bufferType);
+  /** `TaskCanceller` stopping operations performed by the `SegmentSelector` */
+  const canceller = new TaskCanceller("SegmentSelector " + bufferType);
   canceller.linkToSignal(parentCancelSignal);
 
   /** Saved initialization segment state for this representation. */
@@ -144,7 +144,7 @@ export default function RepresentationStream<TSegmentDataType>(
       if (canceller.signal.isCancelled()) {
         return; // ignore post requests-cancellation loading-related errors,
       }
-      canceller.cancel("RepresentationStream: SegmentQueue err"); // Stop every operations
+      canceller.cancel("SegmentSelector: SegmentQueue err"); // Stop every operations
       callbacks.error(err);
     },
     canceller.signal,
@@ -183,7 +183,7 @@ export default function RepresentationStream<TSegmentDataType>(
   const segmentsToLoadRef = segmentQueue.resetForContent(
     content,
     hasInitSegment,
-    "new RepresentationStream linked to SegmentQueue",
+    "new SegmentSelector linked to SegmentQueue",
   );
 
   canceller.signal.register((err) => {
@@ -432,7 +432,7 @@ export default function RepresentationStream<TSegmentDataType>(
 
   /**
    * Handle Buffer-related fatal errors by cancelling everything the
-   * `RepresentationStream` is doing and calling the error callback with the
+   * `SegmentSelector` is doing and calling the error callback with the
    * corresponding error.
    * @param {*} err
    */
@@ -452,14 +452,14 @@ export default function RepresentationStream<TSegmentDataType>(
       },
       err instanceof Error ? err : null,
     );
-    canceller.cancel("RepresentationStream: fatal buffer err");
+    canceller.cancel("SegmentSelector: fatal buffer err");
     callbacks.error(err);
   }
 }
 
 /**
  * Information about the initialization segment linked to the Representation
- * which the RepresentationStream try to download segments for.
+ * which the SegmentSelector try to download segments for.
  */
 interface IInitSegmentState {
   /**
