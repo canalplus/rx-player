@@ -172,6 +172,59 @@ export default class PlaybackObserver {
   }
 
   /**
+   * Get direct access to the `HTMLMediaElement`.
+   * `null` if no `HTMLMediaElement` has yet been "attached" to that
+   * `MediaElementPlaybackObserver`.
+   * @returns {HTMLMediaElement|null}
+   */
+  getMediaElement(): IMediaElement | null {
+    return this._mediaElementRef.getValue();
+  }
+
+  onMediaElementAttachment(
+    cb: (mediaElement: IMediaElement) => void,
+    cancelSignal: CancellationSignal,
+  ) {
+    if (cancelSignal.isCancelled()) {
+      return;
+    }
+    const mediaElement = this._mediaElementRef.getValue();
+    if (mediaElement !== null) {
+      try {
+        cb(mediaElement);
+      } catch (err) {
+        log.error(
+          "API",
+          "onMediaElementAttachment error",
+          err instanceof Error ? err : "Unknown Error",
+        );
+      }
+    } else {
+      this._mediaElementRef.onUpdate(
+        (lastMediaElement, stopListening) => {
+          if (lastMediaElement === null) {
+            return;
+          }
+          stopListening();
+          try {
+            cb(lastMediaElement);
+          } catch (err) {
+            log.error(
+              "API",
+              "onMediaElementAttachment error",
+              err instanceof Error ? err : "Unknown Error",
+            );
+          }
+        },
+        {
+          clearSignal: cancelSignal,
+          emitCurrentValue: false,
+        },
+      );
+    }
+  }
+
+  /**
    * "Link" the actual `HTMLMediaElement` to this `PlaybackObserver`.
    *
    * This is done in a step separate from the constructor to allow complex
