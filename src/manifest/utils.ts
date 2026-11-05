@@ -333,14 +333,14 @@ export function toVideoTrack(
 export function toAudioRepresentation(
   representation: IRepresentationMetadata,
 ): IAudioRepresentation {
-  const { id, bitrate, chosenCodec, isSpatialAudio, isSupported, decipherable } =
+  const { id, bitrate, chosenCodec, isSpatialAudio, isCodecSupported, decipherable } =
     representation;
   return {
     id,
     bitrate,
     codec: chosenCodec,
     isSpatialAudio,
-    isCodecSupported: isSupported,
+    isCodecSupported,
     decipherable,
   };
 }
@@ -360,7 +360,8 @@ export function toVideoRepresentation(
     height,
     chosenCodec,
     hdrInfo,
-    isSupported,
+    isCodecSupported,
+    isResolutionSupported,
     decipherable,
     contentProtections,
   } = representation;
@@ -372,7 +373,8 @@ export function toVideoRepresentation(
     height,
     codec: chosenCodec,
     hdrInfo,
-    isCodecSupported: isSupported,
+    isCodecSupported,
+    isResolutionSupported,
     decipherable,
     contentProtections:
       contentProtections !== undefined
@@ -411,10 +413,14 @@ export function toTaggedTrack(adaptation: IAdaptation): ITaggedTrack {
 export function isRepresentationPlayable(
   representation: IRepresentationMetadata,
 ): boolean | undefined {
-  if (representation.decipherable === false) {
-    return false;
+  if (representation.isCodecSupported === undefined) {
+    return undefined;
   }
-  return representation.isSupported;
+  return (
+    representation.isCodecSupported &&
+    representation.isResolutionSupported !== false &&
+    representation.decipherable !== false
+  );
 }
 
 /**

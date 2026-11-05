@@ -76,6 +76,7 @@ export default function (transportOptions: ITransportOptions): ITransportPipelin
 
       const manifest = new Manifest(parserResult, {
         representationFilter: transportOptions.representationFilter,
+        enableResolutionChecks: transportOptions.enableResolutionChecks,
       });
       return { manifest, url };
     },

@@ -6,6 +6,7 @@ import type {
   IRepresentation,
   ISegment,
 } from "../../manifest/index.ts";
+import { isRepresentationPlayable } from "../../manifest/index.ts";
 import type {
   IReadOnlyPlaybackObserver,
   IRebufferingStatus,
@@ -339,7 +340,7 @@ export default class CmcdDataBuilder {
     props.st = content.manifest.isDynamic ? "l" : "v";
     props.tb = content.adaptation.representations.reduce(
       (acc: number | undefined, representation: IRepresentation) => {
-        if (representation.isPlayable() !== true) {
+        if (isRepresentationPlayable(representation) !== true) {
           return acc;
         }
         if (acc === undefined) {
