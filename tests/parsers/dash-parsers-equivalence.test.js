@@ -96,6 +96,23 @@ describe("DASH parser intermediate-representation equivalence", () => {
 
   // More specialized tests for issues we did have in the past
 
+  for (const element of ["UrlQueryInfo", "ExtUrlQueryInfo"]) {
+    for (const selfClosing of [true, false]) {
+      for (const value of ["true", "false"]) {
+        it(`matches ${element} with booleans ${value}, self-closing: ${selfClosing}`, () => {
+          expectEquivalent(`
+            <MPD xmlns:up="urn:mpeg:dash:schema:urlparam:2016">
+              <EssentialProperty schemeIdUri="urn:mpeg:dash:urlparam:2016">
+                <up:${element} queryString="key=value" queryTemplate="$querypart$"
+                    useMPDUrlQuery="${value}"
+                    ${selfClosing ? "/>" : `></up:${element}>`}
+              </EssentialProperty>
+            </MPD>`);
+        });
+      }
+    }
+  }
+
   it("matches boolean attributes", () => {
     expectEquivalent(`
       <MPD type="static">
