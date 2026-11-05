@@ -15,22 +15,22 @@
  */
 
 import log from "../../log.ts";
-import type { IReadOnlyPlaybackObserver } from "../../playback_observer/index.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../media_element_monitor/index.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
 import type { IRange } from "../../utils/ranges.ts";
 import { getInnerAndOuterRanges } from "../../utils/ranges.ts";
 import type { IReadOnlySharedReference } from "../../utils/reference.ts";
 import type { CancellationSignal } from "../../utils/task_canceller.ts";
 import TaskCanceller from "../../utils/task_canceller.ts";
-import type { IStreamOrchestratorPlaybackObservation } from "../stream/index.ts";
+import type { IStreamOrchestratorMediaObservation } from "../stream/index.ts";
 import type { SegmentSink } from "./implementations/index.ts";
 
 export interface IGarbageCollectorArgument {
   /** SegmentSink implementation */
   segmentSink: SegmentSink;
   /** Emit current position in seconds regularly */
-  playbackObserver: IReadOnlyPlaybackObserver<
-    Pick<IStreamOrchestratorPlaybackObservation, "position" | "buffered">
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<
+    Pick<IStreamOrchestratorMediaObservation, "position" | "buffered">
   >;
   /** Maximum time to keep behind current time position, in seconds */
   maxBufferBehind: IReadOnlySharedReference<number>;
@@ -40,7 +40,7 @@ export interface IGarbageCollectorArgument {
 
 /**
  * Perform cleaning of the buffer according to the values set by the user
- * each time `playbackObserver` emits and each times the
+ * each time `mediaElementMonitor` emits and each times the
  * maxBufferBehind/maxBufferAhead values change.
  *
  * Abort this operation when the `cancellationSignal` emits.
@@ -51,7 +51,7 @@ export interface IGarbageCollectorArgument {
 export default function BufferGarbageCollector(
   {
     segmentSink,
-    playbackObserver,
+    mediaElementMonitor,
     maxBufferBehind,
     maxBufferAhead,
   }: IGarbageCollectorArgument,
@@ -59,7 +59,7 @@ export default function BufferGarbageCollector(
 ): void {
   let lastPosition: number;
   let lastBuffered: IRange[] | null = [];
-  playbackObserver.listen(
+  mediaElementMonitor.listen(
     (o) => {
       lastPosition = o.position.getWanted();
       lastBuffered = o.buffered[segmentSink.bufferType];

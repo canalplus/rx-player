@@ -182,9 +182,9 @@ For the subdirectories and files in this directory not represented in that schem
 - `manifest` (_./manifest_): Defines a `Manifest` structure and its properties, a central
   structure of the player describing a content.
 
-- `PlaybackObserver` (./playback_observer): Defines `PlaybackObserver` instances, used by
-  many modules to obtain playback-related properties (such as the playing position, the
-  current playback speed etc.).
+- `MediaElementMonitor` (./media_element_monitor): Defines the `MediaElementMonitor` ,
+  used by many modules to poll the `HTMLMediaElement` for playback-related properties
+  (such as the playing position, the current playback speed etc.).
 
 - `parsers` (_./parsers_): Various parsers for several formats
 
