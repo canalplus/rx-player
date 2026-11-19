@@ -1056,7 +1056,7 @@ export function getLastRequestableSegmentInfo(
       end: getIndexSegmentEnd(lastElem, null, scaledPeriodEnd),
     };
   }
-  for (let i = index.timeline.length - 1; i >= index.timeline.length; i--) {
+  for (let i = index.timeline.length - 1; i >= 0; i--) {
     const element = index.timeline[i];
     const endOfFirstOccurence = element.start + element.duration;
     if (fromIndexTime(endOfFirstOccurence, index) <= adjustedMaxSeconds) {
@@ -1066,7 +1066,7 @@ export function getLastRequestableSegmentInfo(
           isLastOfTimeline: i === index.timeline.length - 1,
           timelineIdx: i,
           newRepeatCount: element.repeatCount,
-          end: endOfFirstOccurence,
+          end: endTime,
         };
       } else {
         // We have to find the right repeatCount
