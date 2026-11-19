@@ -1,6 +1,73 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import TimelineRepresentationIndex from "../../../../../../../../../src/parsers/manifest/dash/common/indexes/timeline/timeline_representation_index.ts";
+import TimelineRepresentationIndex, {
+  getLastRequestableSegmentInfo,
+} from "../../../../../../../../../src/parsers/manifest/dash/common/indexes/timeline/timeline_representation_index.ts";
 import ManifestBoundsCalculator from "../../../../../../../../../src/parsers/manifest/dash/common/manifest_bounds_calculator.ts";
+
+describe("TimelineRepresentationIndex - availability bounds", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  describe.each([
+    { timescale: 1, indexTimeOffset: 0 },
+    { timescale: 90000, indexTimeOffset: 123456789 },
+  ])("timescale=$timescale, indexTimeOffset=$indexTimeOffset", (timeMapping) => {
+    it.each([
+      { availabilityTimeOffset: -39, expected: null },
+      {
+        availabilityTimeOffset: -38,
+        expected: { timelineIdx: 0, newRepeatCount: 0, end: 62 },
+      },
+      {
+        availabilityTimeOffset: -15.559,
+        expected: { timelineIdx: 0, newRepeatCount: 4, end: 70 },
+      },
+      {
+        availabilityTimeOffset: -5.559,
+        expected: { timelineIdx: 1, newRepeatCount: 1, end: 94 },
+      },
+      {
+        availabilityTimeOffset: 0,
+        expected: { timelineIdx: 1, newRepeatCount: 4, end: 100 },
+      },
+      {
+        availabilityTimeOffset: 5,
+        expected: { timelineIdx: 1, newRepeatCount: 4, end: 100 },
+      },
+    ])("finds the available tip with ATO=$availabilityTimeOffset", (testCase) => {
+      vi.spyOn(performance, "now").mockReturnValue(0);
+      const bounds = new ManifestBoundsCalculator({
+        availabilityStartTime: 0,
+        isDynamic: true,
+        timeShiftBufferDepth: undefined,
+        serverTimestampOffset: 100000,
+      });
+      const { timescale, indexTimeOffset } = timeMapping;
+      const index = {
+        ...timeMapping,
+        availabilityTimeOffset: testCase.availabilityTimeOffset,
+        timeline: [60, 90].map((start) => ({
+          start: start * timescale + indexTimeOffset,
+          duration: 2 * timescale,
+          repeatCount: 4,
+        })),
+      };
+
+      const result = getLastRequestableSegmentInfo(index, bounds, undefined);
+
+      if (testCase.expected === null) {
+        expect(result).toBeNull();
+      } else {
+        expect(result).toEqual({
+          ...testCase.expected,
+          end: testCase.expected.end * timescale + indexTimeOffset,
+          isLastOfTimeline: testCase.expected.end === 100,
+        });
+      }
+    });
+  });
+});
 
 describe("TimelineRepresentationIndex - negative repeats", () => {
   afterEach(() => {
