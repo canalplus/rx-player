@@ -51,7 +51,7 @@ export default async function appendSegmentToBuffer<T>(
   dataInfos: IPushChunkInfos<T> & { inventoryInfos: IInsertedChunkInfos },
   bufferGoal: IReadOnlySharedReference<number>,
   cancellationSignal: CancellationSignal,
-): Promise<IRange[]> {
+): Promise<IRange[] | undefined> {
   try {
     return await segmentSink.pushChunk(dataInfos);
   } catch (appendError: unknown) {

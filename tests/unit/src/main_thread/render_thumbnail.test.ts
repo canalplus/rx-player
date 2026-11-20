@@ -147,6 +147,7 @@ function createContentInfos(
     },
     initializer: {} as IPublicApiContentInfos["initializer"],
     isDirectFile: false,
+    isPreload: false,
     mediaElementTracksStore: null,
     onAudioTracksNotPlayable: "continue",
     onVideoTracksNotPlayable: "continue",

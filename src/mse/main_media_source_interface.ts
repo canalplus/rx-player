@@ -275,7 +275,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
   }
 
   /** @see ISourceBufferInterface */
-  public getBuffered(): IRange[] {
+  public getBuffered(): IRange[] | undefined {
     try {
       return convertToRanges(this._sourceBuffer.buffered);
     } catch (err) {
@@ -313,6 +313,7 @@ export class MainSourceBufferInterface implements ISourceBufferInterface {
       // we don't care
     }
     this._emptyCurrentQueue(reason);
+    this._canceller.cancel(reason);
   }
 
   private _onError(evt: Event) {
