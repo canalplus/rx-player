@@ -68,6 +68,7 @@ import {
   toVideoRepresentation,
   toAudioRepresentation,
 } from "../../manifest/index.ts";
+import type { IThumbnailTrackMetadata } from "../../manifest/types.ts";
 import type { IPlaybackObservation } from "../../playback_observer/index.ts";
 import MediaElementPlaybackObserver from "../../playback_observer/media_element_playback_observer.ts";
 import type {
@@ -961,6 +962,11 @@ class Player extends EventEmitter<IPublicAPIEvent> {
         width: Math.floor(t.width / t.horizontalTiles),
         height: Math.floor(t.height / t.verticalTiles),
         mimeType: t.mimeType,
+        start: t.start,
+        end: t.end,
+        thumbnailDuration: t.tileDuration,
+        thumbnailsPerSegment: t.horizontalTiles * t.verticalTiles,
+        lastThumbnailTime: this._getLastThumbnailTime(t),
       };
     });
   }
@@ -3798,6 +3804,48 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_currentError === formattedError) {
       this.trigger("error", formattedError);
     }
+  }
+
+  /**
+   * For the given track, returns the position in seconds that will
+   * correspond to the currently last reachable thumbnail, or `undefined` if
+   * unknown.
+   *
+   * That position may then be passed to the `rxPlayer.renderThumbnail()` method.
+   *
+   * @param {Object} metadata
+   * @returns {number|undefined}
+   */
+  private _getLastThumbnailTime(metadata: IThumbnailTrackMetadata): number | undefined {
+    if (metadata.start === undefined || metadata.tileDuration === undefined) {
+      return;
+    }
+
+    const maximumPosition = this.getMaximumPosition() ?? undefined;
+    if (maximumPosition === undefined) {
+      return;
+    }
+
+    const thumbnailsPerSegment = metadata.horizontalTiles * metadata.verticalTiles;
+
+    /** Amount of seconds a segment of thumbnails span. */
+    const segmentDuration = metadata.tileDuration * (thumbnailsPerSegment ?? 1);
+
+    /**
+     * Seconds at the end of the content for which a thumbnail has not yet been
+     * generated.
+     */
+    const secondsWithoutThumbnailYet =
+      (maximumPosition - metadata.start) % segmentDuration;
+
+    /**
+     * Position that will lead to the last available thumbnail being requested.
+     */
+    const maxThumbnailTime =
+      Math.min(maximumPosition - secondsWithoutThumbnailYet, metadata.end ?? Infinity) -
+      metadata.tileDuration;
+
+    return maxThumbnailTime;
   }
 
   /**
