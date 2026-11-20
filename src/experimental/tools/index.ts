@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
+import ContentDownloader from "./ContentDownloader/index.ts";
 import createMetaplaylist from "./createMetaplaylist/index.ts";
 import mediaCapabilitiesProber from "./mediaCapabilitiesProber/index.ts";
 import VideoThumbnailLoader from "./VideoThumbnailLoader/index.ts";
 
-export { createMetaplaylist, mediaCapabilitiesProber, VideoThumbnailLoader };
+export {
+  ContentDownloader,
+  createMetaplaylist,
+  mediaCapabilitiesProber,
+  VideoThumbnailLoader,
+};
