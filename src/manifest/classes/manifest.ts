@@ -60,6 +60,15 @@ interface IManifestParsingOptions {
    * manifest will be updated fully when it needs to be refreshed, and it will
    * fetched through the original URL. */
   manifestUpdateUrl?: string | undefined;
+  /**
+   * If `true`, we will try to detect what's the highest supported video
+   * resolution on the current device and if found, we will avoid playing
+   * video Representation (i.e. qualities) with an higher resolution.
+   *
+   * An exception is made when the currently-chosen track only has seemlingly
+   * unsupported Representations, in which case we'll still atempt to play them.
+   */
+  enableResolutionChecks?: boolean | undefined;
 }
 
 /** Representation affected by a `decipherabilityUpdate` event. */
@@ -312,7 +321,7 @@ export default class Manifest
    * Caches the information if a codec is supported or not in the context of the
    * current content.
    */
-  private _cachedCodecSupport: CodecSupportCache;
+  private _codecSupportCache: CodecSupportCache;
 
   /**
    * Construct a Manifest instance from a parsed Manifest object (as returned by
@@ -323,21 +332,21 @@ export default class Manifest
    */
   constructor(parsedManifest: IParsedManifest, options: IManifestParsingOptions) {
     super();
-    const { representationFilter, manifestUpdateUrl } = options;
+    const { representationFilter, manifestUpdateUrl, enableResolutionChecks } = options;
     this.manifestFormat = ManifestMetadataFormat.Class;
     this.id = generateNewManifestId();
     this.expired = parsedManifest.expired ?? null;
     this.transport = parsedManifest.transportType;
     this.clockOffset = parsedManifest.clockOffset;
-    this._cachedCodecSupport = new CodecSupportCache([]);
+    this._codecSupportCache = new CodecSupportCache([]);
 
     this.periods = parsedManifest.periods
       .map((parsedPeriod) => {
-        const period = new Period(
-          parsedPeriod,
-          this._cachedCodecSupport,
+        const period = new Period(parsedPeriod, {
+          enableResolutionChecks,
+          codecSupportCache: this._codecSupportCache,
           representationFilter,
-        );
+        });
         return period;
       })
       .sort((a, b) => a.start - b.start);
@@ -382,10 +391,10 @@ export default class Manifest
       return null;
     }
 
-    this._cachedCodecSupport.addCodecs(updatedCodecSupportInfo);
+    this._codecSupportCache.addCodecs(updatedCodecSupportInfo);
     const unsupportedAdaptations: Adaptation[] = [];
     for (const period of this.periods) {
-      period.refreshCodecSupport(unsupportedAdaptations, this._cachedCodecSupport);
+      period.refreshCodecSupport(unsupportedAdaptations, this._codecSupportCache);
     }
     this.trigger("supportUpdate", null);
     if (unsupportedAdaptations.length > 0) {
@@ -503,7 +512,7 @@ export default class Manifest
   }
 
   public updateCodecSupportList(cachedCodecSupport: CodecSupportCache) {
-    this._cachedCodecSupport = cachedCodecSupport;
+    this._codecSupportCache = cachedCodecSupport;
   }
 
   /**
@@ -658,7 +667,7 @@ export default class Manifest
 
   /**
    * Returns a list of all codecs that the support is not known yet.
-   * If a representation with (`isSupported`) is undefined, we consider the
+   * If a representation with (`isCodecSupported`) is undefined, we consider the
    * codec support as unknown.
    *
    * This function iterates through all periods, adaptations, and representations,
