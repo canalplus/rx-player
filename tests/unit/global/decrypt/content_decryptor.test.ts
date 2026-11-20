@@ -162,7 +162,11 @@ describe("content_decryptor - session decommissioning", () => {
     await new Promise((res) => setTimeout(res, 120));
 
     expect(
-      (contentDecryptor as unknown as { _currentSessions: unknown[] })._currentSessions,
+      (
+        contentDecryptor as unknown as {
+          _activeSessionsStore: { getSessions(): unknown[] };
+        }
+      )._activeSessionsStore.getSessions(),
     ).toHaveLength(3);
 
     sessionCallbacks[1].onError(
@@ -177,7 +181,11 @@ describe("content_decryptor - session decommissioning", () => {
     await new Promise((res) => setTimeout(res, 30));
 
     expect(
-      (contentDecryptor as unknown as { _currentSessions: unknown[] })._currentSessions,
+      (
+        contentDecryptor as unknown as {
+          _activeSessionsStore: { getSessions(): unknown[] };
+        }
+      )._activeSessionsStore.getSessions(),
     ).toHaveLength(2);
 
     contentDecryptor.dispose(undefined);
