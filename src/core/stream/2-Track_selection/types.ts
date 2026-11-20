@@ -15,22 +15,22 @@ import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
 import type SegmentSinksStore from "../../segment_sinks/index.ts";
 import type {
   IAdaptationChoice,
-  IAdaptationStreamCallbacks,
-  IAdaptationStreamOptions,
-} from "../adaptation/index.ts";
-import type { IPausedPlaybackObservation } from "../representation/index.ts";
+  IRepresentationSelectorCallbacks,
+  IRepresentationSelectorOptions,
+} from "../3-Representation_selection/index.ts";
+import type { IPausedPlaybackObservation } from "../4-Segment_selection/index.ts";
 
 export type { IPausedPlaybackObservation };
 
-/** Callbacks called by the `AdaptationStream` on various events. */
-export interface IPeriodStreamCallbacks extends IAdaptationStreamCallbacks {
+/** Callbacks called by the `RepresentationSelector` on various events. */
+export interface ITrackSelectorStreamCallbacks extends IRepresentationSelectorCallbacks {
   /**
-   * Called when a new `PeriodStream` is ready to start but needs an Adaptation
+   * Called when a new `TrackSelectorStream` is ready to start but needs an Adaptation
    * (i.e. track) to be chosen first.
    */
-  periodStreamReady(payload: IPeriodStreamReadyPayload): void;
+  streamReady(payload: IStreamReadyPayload): void;
   /**
-   * Called when a new `AdaptationStream` is created to load segments from an
+   * Called when a new `RepresentationSelector` is created to load segments from an
    * `Adaptation`.
    */
   adaptationChange(payload: IAdaptationChangePayload): void;
@@ -40,30 +40,30 @@ export interface IPeriodStreamCallbacks extends IAdaptationStreamCallbacks {
 export interface IAdaptationChangePayload {
   /** The type of buffer for which the Representation is changing. */
   type: IBufferType;
-  /** The `Period` linked to the `RepresentationStream` we're creating. */
+  /** The `Period` linked to the `SegmentSelector` we're creating. */
   period: IPeriod;
   /**
-   * The `Adaptation` linked to the `AdaptationStream` we're creating.
+   * The `Adaptation` linked to the `RepresentationSelector` we're creating.
    * `null` when we're choosing no Adaptation at all.
    */
   adaptation: IAdaptation | null;
 }
 
-/** Payload for the `periodStreamReady` callback. */
-export interface IPeriodStreamReadyPayload {
-  /** The type of buffer linked to the `PeriodStream` we want to create. */
+/** Payload for the `streamReady` callback. */
+export interface IStreamReadyPayload {
+  /** The type of buffer linked to the `TrackSelectorStream` we want to create. */
   type: IBufferType;
-  /** The `Manifest` linked to the `PeriodStream` we have created. */
+  /** The `Manifest` linked to the `TrackSelectorStream` we have created. */
   manifest: IManifest;
-  /** The `Period` linked to the `PeriodStream` we have created. */
+  /** The `Period` linked to the `TrackSelectorStream` we have created. */
   period: IPeriod;
   /**
    * The reference through which any Adaptation (i.e. track) choice should be
-   * emitted for that `PeriodStream`.
+   * emitted for that `TrackSelectorStream`.
    *
-   * The `PeriodStream` will not do anything until this Reference has emitted
+   * The `TrackSelectorStream` will not do anything until this Reference has emitted
    * at least one to give its initial choice.
-   * You can send `null` through it to tell this `PeriodStream` that you don't
+   * You can send `null` through it to tell this `TrackSelectorStream` that you don't
    * want any `Adaptation` for now.
    * It is set to `undefined` by default, you SHOULD NOT set it to `undefined`
    * yourself.
@@ -71,8 +71,8 @@ export interface IPeriodStreamReadyPayload {
   adaptationRef: SharedReference<IAdaptationChoice | null | undefined>;
 }
 
-/** Playback observation required by the `PeriodStream`. */
-export interface IPeriodStreamPlaybackObservation {
+/** Playback observation required by the `TrackSelectorStream`. */
+export interface ITrackSelectorStreamPlaybackObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
@@ -108,8 +108,8 @@ export interface IPeriodStreamPlaybackObservation {
   canStream: boolean;
 }
 
-/** Arguments required by the `PeriodStream`. */
-export interface IPeriodStreamArguments {
+/** Arguments required by the `TrackSelectorStream`. */
+export interface ITrackSelectorStreamArguments {
   bufferType: IBufferType;
   content: { manifest: IManifest; period: IPeriod };
   garbageCollectors: WeakMapMemory<
@@ -118,15 +118,15 @@ export interface IPeriodStreamArguments {
   >;
   segmentQueueCreator: SegmentQueueCreator;
   segmentSinksStore: SegmentSinksStore;
-  playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>;
-  options: IPeriodStreamOptions;
+  playbackObserver: IReadOnlyPlaybackObserver<ITrackSelectorStreamPlaybackObservation>;
+  options: ITrackSelectorStreamOptions;
   representationEstimator: IRepresentationEstimator;
   wantedBufferAhead: IReadOnlySharedReference<number>;
   maxVideoBufferSize: IReadOnlySharedReference<number>;
 }
 
-/** Options tweaking the behavior of the PeriodStream. */
-export type IPeriodStreamOptions = IAdaptationStreamOptions & {
+/** Options tweaking the behavior of the TrackSelectorStream. */
+export type ITrackSelectorStreamOptions = IRepresentationSelectorOptions & {
   /** Behavior when a new video and/or audio codec is encountered. */
   onCodecSwitch: "continue" | "reload";
 };

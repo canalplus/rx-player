@@ -26,13 +26,13 @@ The `StreamOrchestrator` is the main entry point to interact with the `Stream`.
 
 It completely takes care of segment downloading and pushing for a whole content.
 
-To do so, it creates the right `PeriodStream`s depending on the current playback
+To do so, it creates the right `TrackSelectorStream`s depending on the current playback
 conditions.
 
-## The PeriodStream
+## The TrackSelectorStream
 
-The `PeriodStream` creates and destroys `AdaptationStream`s for a single Manifest's Period
-and a single type of buffer (e.g. "audio", "video", "text" etc.).
+The `TrackSelectorStream` creates and destroys `RepresentationSelector`s for a single
+Manifest's Period and a single type of buffer (e.g. "audio", "video", "text" etc.).
 
 It does so after asking through a callback which Adaptation has to be chosen for that
 Period and type.
@@ -40,17 +40,17 @@ Period and type.
 It also takes care of creating the right "`SegmentSink`" for its associated type, if none
 was already created for it.
 
-## The AdaptationStream
+## The RepresentationSelector
 
-The `AdaptationStream` creates and destroys `RepresentationStream`s for a single
+The `RepresentationSelector` creates and destroys `SegmentSelector`s for a single
 manifest's Adaptation (such as a particular audio language, a video track etc.) based on
 the current conditions (network bandwidth, browser conditions...).
 
-The `RepresentationStream` will then have the task to do the segment downloading and
-pushing itself.
+The `SegmentSelector` will then have the task to do the segment downloading and pushing
+itself.
 
-## The RepresentationStream
+## The SegmentSelector
 
-The `RepresentationStream` is the part that actually monitors the buffer to deduce which
+The `SegmentSelector` is the part that actually monitors the buffer to deduce which
 segments should be downloaded, ask to download them and then give the order to push them
 to the `SegmentSink`.
