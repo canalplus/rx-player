@@ -172,7 +172,7 @@ export default class Manifest
    * They can be used for refreshing the Manifest.
    * Listed from the most important to the least important.
    */
-  public uris: string[];
+  public refreshUrls: string[];
 
   /** Optional URL that points to a shorter version of the Manifest used
    * for updates only. */
@@ -352,7 +352,7 @@ export default class Manifest
     this.isDynamic = parsedManifest.isDynamic;
     this.isLive = parsedManifest.isLive;
     this.isLastPeriodKnown = parsedManifest.isLastPeriodKnown;
-    this.uris = parsedManifest.uris === undefined ? [] : parsedManifest.uris;
+    this.refreshUrls = parsedManifest.refreshUrls.map((r) => r.baseUrl);
 
     this.updateUrl = manifestUpdateUrl;
     this.lifetime = parsedManifest.lifetime;
@@ -447,8 +447,8 @@ export default class Manifest
    * `undefined` if no URL is found.
    * @returns {Array.<string>}
    */
-  public getUrls(): string[] {
-    return this.uris;
+  public getRefreshUrls(): string[] {
+    return this.refreshUrls;
   }
 
   /**
@@ -650,7 +650,7 @@ export default class Manifest
       isLastPeriodKnown: this.isLastPeriodKnown,
       suggestedPresentationDelay: this.suggestedPresentationDelay,
       clockOffset: this.clockOffset,
-      uris: this.uris,
+      refreshUrls: this.refreshUrls,
       availabilityStartTime: this.availabilityStartTime,
       timeBounds: this.timeBounds,
     };
@@ -689,11 +689,11 @@ export default class Manifest
     let updatedPeriodsResult;
     if (updateType === MANIFEST_UPDATE_TYPE.Full) {
       this.timeBounds = newManifest.timeBounds;
-      this.uris = newManifest.uris;
+      this.refreshUrls = newManifest.refreshUrls;
       updatedPeriodsResult = replacePeriods(this.periods, newManifest.periods);
     } else {
       this.timeBounds.maximumTimeData = newManifest.timeBounds.maximumTimeData;
-      this.updateUrl = newManifest.uris[0];
+      this.updateUrl = newManifest.refreshUrls[0];
       updatedPeriodsResult = updatePeriods(this.periods, newManifest.periods);
 
       // Partial updates do not remove old Periods.

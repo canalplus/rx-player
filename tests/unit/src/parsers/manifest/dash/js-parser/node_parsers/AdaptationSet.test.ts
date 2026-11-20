@@ -1050,7 +1050,7 @@ describe("DASH Node Parsers - AdaptationSet", () => {
         attributes: {},
         children: {
           Accessibility: [],
-          BaseURL: [],
+          BaseURL: [{ value: "", attributes: {} }],
           Representation: [],
           ContentComponent: [],
           ContentProtection: [],
@@ -1068,14 +1068,14 @@ describe("DASH Node Parsers - AdaptationSet", () => {
     ]);
 
     const element2 = parseXml(
-      "<AdaptationSet><BaseURL></BaseURLs</AdaptationSet>",
+      "<AdaptationSet><BaseURL></BaseURL></AdaptationSet>",
     )[0] as ITNode;
     expect(createAdaptationSetIntermediateRepresentation(element2)).toEqual([
       {
         attributes: {},
         children: {
           Accessibility: [],
-          BaseURL: [],
+          BaseURL: [{ value: "", attributes: {} }],
           Representation: [],
           ContentComponent: [],
           ContentProtection: [],
@@ -1102,7 +1102,7 @@ describe("DASH Node Parsers - AdaptationSet", () => {
         attributes: {},
         children: {
           Accessibility: [],
-          BaseURL: [{ value: "a" }],
+          BaseURL: [{ value: "a", attributes: { serviceLocation: "foo" } }],
           ContentComponent: [],
           ContentProtection: [],
           EssentialProperty: [],
@@ -1127,7 +1127,7 @@ describe("DASH Node Parsers - AdaptationSet", () => {
         attributes: {},
         children: {
           Accessibility: [],
-          BaseURL: [{ value: "foo bar" }],
+          BaseURL: [{ value: "foo bar", attributes: { serviceLocation: "4" } }],
           Representation: [],
           ContentComponent: [],
           ContentProtection: [],
@@ -1154,7 +1154,10 @@ describe("DASH Node Parsers - AdaptationSet", () => {
         attributes: {},
         children: {
           Accessibility: [],
-          BaseURL: [{ value: "a" }, { value: "b" }],
+          BaseURL: [
+            { value: "a", attributes: { serviceLocation: "" } },
+            { value: "b", attributes: { serviceLocation: "http://test.com" } },
+          ],
           Representation: [],
           ContentComponent: [],
           ContentProtection: [],

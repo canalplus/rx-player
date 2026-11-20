@@ -17,6 +17,7 @@
 import noop from "../../../../../../utils/noop.ts";
 import type {
   IContentProtectionIntermediateRepresentation,
+  ILocationIntermediateRepresentation,
   IMPDAttributes,
   IMPDChildren,
   IPeriodIntermediateRepresentation,
@@ -27,6 +28,7 @@ import { AttributeName, TagName } from "../types.ts";
 import { parseString, readFloat } from "../utils.ts";
 import { generateBaseUrlAttrParser } from "./BaseURL.ts";
 import { generateContentProtectionAttrParser } from "./ContentProtection.ts";
+import { generateLocationAttrParser } from "./Location.ts";
 import { generatePeriodAttrParser, generatePeriodChildrenParser } from "./Period.ts";
 import { generateSchemeAttrParser } from "./Scheme.ts";
 
@@ -53,6 +55,20 @@ export function generateMPDChildrenParser(
         const childrenParser = noop; // BaseURL have no sub-element
         const attributeParser = generateBaseUrlAttrParser(baseUrl, linearMemory);
         parsersStack.pushParsers(nodeId, childrenParser, attributeParser);
+        break;
+      }
+
+      case TagName.Location: {
+        const location: ILocationIntermediateRepresentation = {
+          value: "",
+          attributes: {},
+        };
+        mpdChildren.Location.push(location);
+        parsersStack.pushParsers(
+          nodeId,
+          noop,
+          generateLocationAttrParser(location, linearMemory),
+        );
         break;
       }
 
@@ -116,7 +132,6 @@ export function generateMPDChildrenParser(
 }
 
 export function generateMPDAttrParser(
-  mpdChildren: IMPDChildren,
   mpdAttrs: IMPDAttributes,
   linearMemory: WebAssembly.Memory,
 ): IAttributeParser {
@@ -168,11 +183,6 @@ export function generateMPDAttrParser(
       case AttributeName.MaxSubsegmentDuration:
         mpdAttrs.maxSubsegmentDuration = readFloat(value);
         break;
-      case AttributeName.Location: {
-        const location = parseString(linearMemory.buffer, ptr, len);
-        mpdChildren.Location.push({ value: location });
-        break;
-      }
       case AttributeName.Namespace: {
         const xmlNs = { key: "", value: "" };
         dataView = new DataView(linearMemory.buffer);
