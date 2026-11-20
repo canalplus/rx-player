@@ -4,7 +4,7 @@ import { ManifestFetcher } from "../../../../../src/core/fetchers/index.ts";
 import type { IManifestFetcherEvent } from "../../../../../src/core/fetchers/manifest/manifest_fetcher.ts";
 import { CoreMessageType } from "../../../../../src/core/types.ts";
 import type { ICoreMessage } from "../../../../../src/core/types.ts";
-import { NetworkError } from "../../../../../src/errors/index.ts";
+import { NetworkError } from "../../../../../src/errors/public_api/index.ts";
 import features from "../../../../../src/features/index.ts";
 import type { IContentInitializationData } from "../../../../../src/main_thread/types.ts";
 import type { IManifest } from "../../../../../src/manifest/index.ts";

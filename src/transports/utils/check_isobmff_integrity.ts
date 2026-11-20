@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { OtherError } from "../../errors/index.ts";
+import { OtherError } from "../../errors/public_api/index.ts";
 import { findCompleteBox } from "../../parsers/containers/isobmff/index.ts";
 
 /**

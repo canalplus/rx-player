@@ -1,5 +1,5 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import { OtherError } from "../../../../../src/errors/index.ts";
+import { OtherError } from "../../../../../src/errors/public_api/index.ts";
 import checkISOBMFFIntegrity from "../../../../../src/transports/utils/check_isobmff_integrity.ts";
 
 const mocks = vi.hoisted(() => {
@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => {
     findCompleteBox: vi.fn(),
   };
 });
-vi.mock("../../../../../src/parsers/containers/isobmff", () => ({
+vi.mock("../../../../../src/parsers/containers/isobmff/index.ts", () => ({
   findCompleteBox: mocks.findCompleteBox,
 }));
 

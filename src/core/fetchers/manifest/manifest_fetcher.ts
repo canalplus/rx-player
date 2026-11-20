@@ -15,7 +15,7 @@
  */
 
 import config from "../../../config.ts";
-import { formatError } from "../../../errors/index.ts";
+import { formatApiError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import Manifest from "../../../manifest/classes/index.ts";
 import type {
@@ -337,7 +337,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         return finish(manifest);
       }
     } catch (err) {
-      const formattedError = formatError(err, {
+      const formattedError = formatApiError(err, {
         defaultCode: "PIPELINE_PARSE_ERROR",
         defaultReason: "Unknown error when parsing the Manifest",
       });
@@ -372,7 +372,7 @@ export default class ManifestFetcher extends EventEmitter<IManifestFetcherEvent>
         if (cancelSignal.isCancelled()) {
           return;
         }
-        const formattedError = formatError(warning, {
+        const formattedError = formatApiError(warning, {
           defaultCode: "PIPELINE_PARSE_ERROR",
           defaultReason: "Unknown error when parsing the Manifest",
         });

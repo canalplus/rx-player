@@ -31,7 +31,7 @@ export default class CustomLoaderError extends Error {
   /**
    * @param {string} message
    * @param {boolean} canRetry
-   * @param {XMLHttpRequest} xhr
+   * @param {XMLHttpRequest|undefined} xhr
    */
   constructor(message: string, canRetry: boolean, xhr: XMLHttpRequest | undefined) {
     super(message);

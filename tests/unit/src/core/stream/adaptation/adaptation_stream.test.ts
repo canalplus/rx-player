@@ -42,12 +42,12 @@ const {
   mockGetRepresentationsSwitchingStrategy,
   mockRepresentationStream,
   mockCancellableSleep,
-  mockFormatError,
+  mockFormatApiError,
 } = vi.hoisted(() => ({
   mockGetRepresentationsSwitchingStrategy: vi.fn(),
   mockRepresentationStream: vi.fn(),
   mockCancellableSleep: vi.fn(),
-  mockFormatError: vi.fn(),
+  mockFormatApiError: vi.fn(),
 }));
 
 vi.mock(
@@ -65,8 +65,8 @@ vi.mock("../../../../../../src/utils/cancellable_sleep", () => ({
   default: mockCancellableSleep,
 }));
 
-vi.mock("../../../../../../src/errors", () => ({
-  formatError: mockFormatError,
+vi.mock("../../../../../../src/errors/public_api", () => ({
+  formatApiError: mockFormatApiError,
 }));
 
 const DummySegmentQueue = makeMockedClass<SegmentQueue<unknown>>(
@@ -146,9 +146,9 @@ describe("AdaptationStream", () => {
     mockGetRepresentationsSwitchingStrategy.mockReset();
     mockRepresentationStream.mockReset();
     mockCancellableSleep.mockReset();
-    mockFormatError.mockReset();
+    mockFormatApiError.mockReset();
     mockCancellableSleep.mockResolvedValue(undefined);
-    mockFormatError.mockImplementation((err: Error) => err);
+    mockFormatApiError.mockImplementation((err: Error) => err);
   });
 
   afterEach(() => {
@@ -298,7 +298,7 @@ describe("AdaptationStream", () => {
       type: "continue",
       value: undefined,
     });
-    mockFormatError.mockReturnValue({ code: "BUFFER_FULL_ERROR" });
+    mockFormatApiError.mockReturnValue({ code: "BUFFER_FULL_ERROR" });
     mockRepresentationStream.mockImplementation(
       (
         args: { options: { bufferGoal: SharedReference<number> } },
@@ -708,7 +708,7 @@ describe("AdaptationStream", () => {
         streamCallbacks = repCallbacks;
       },
     );
-    mockFormatError.mockReturnValue({ code: "OTHER_ERROR" });
+    mockFormatApiError.mockReturnValue({ code: "OTHER_ERROR" });
 
     AdaptationStream(createArgs({}), callbacks, parentCanceller.signal);
 
@@ -730,7 +730,7 @@ describe("AdaptationStream", () => {
         streamCallbacks = repCallbacks;
       },
     );
-    mockFormatError.mockReturnValue(formattedError);
+    mockFormatApiError.mockReturnValue(formattedError);
 
     AdaptationStream(
       createArgs({

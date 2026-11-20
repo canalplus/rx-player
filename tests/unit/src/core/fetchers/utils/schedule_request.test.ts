@@ -4,10 +4,8 @@ import {
   scheduleRequestWithCdns,
   scheduleRequestPromise,
 } from "../../../../../../src/core/fetchers/utils/schedule_request.ts";
-import {
-  CustomLoaderError,
-  NetworkErrorTypes,
-} from "../../../../../../src/errors/index.ts";
+import { CustomLoaderError } from "../../../../../../src/errors/internal/index.ts";
+import { NetworkErrorTypes } from "../../../../../../src/errors/public_api/index.ts";
 import type * as cancellableSleepModule from "../../../../../../src/utils/cancellable_sleep.ts";
 import { RequestError } from "../../../../../../src/utils/request/index.ts";
 import TaskCanceller from "../../../../../../src/utils/task_canceller.ts";

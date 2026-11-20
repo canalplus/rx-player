@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { NetworkError } from "../../../errors/index.ts";
+import { NetworkError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { IRepresentationIndex, ISegment } from "../../../manifest/index.ts";
 import type { IPlayerError } from "../../../public_types.ts";
@@ -39,7 +39,7 @@ function getSegmentNumber(start: number, up: number, duration: number): number {
 /**
  * Convert second-based start time and duration to the timescale of the
  * manifest's index.
- * @param {Object} index
+ * @param {number|undefined} timescale
  * @param {Number} start
  * @param {Number} duration
  * @returns {Object} - Object with two properties:

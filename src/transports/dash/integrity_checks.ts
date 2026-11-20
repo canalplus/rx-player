@@ -1,4 +1,4 @@
-import { OtherError } from "../../errors/index.ts";
+import { OtherError } from "../../errors/public_api/index.ts";
 import type { ILoadedManifestFormat } from "../../public_types.ts";
 import globalScope from "../../utils/global_scope.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";

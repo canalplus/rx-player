@@ -3,19 +3,14 @@ import type { IPublicApiContentInfos } from "../../../../src/main_thread/api/pub
 import renderThumbnail from "../../../../src/main_thread/render_thumbnail.ts";
 import TaskCanceller from "../../../../src/utils/task_canceller.ts";
 
-const { mockFormatError, mockGetPeriodForTime } = vi.hoisted(() => {
+const { mockGetPeriodForTime } = vi.hoisted(() => {
   return {
-    mockFormatError: vi.fn((err: unknown) => err),
     mockGetPeriodForTime: vi.fn(() => ({
       id: "period-1",
       thumbnailTracks: [{ id: "thumb-track-1" }],
     })),
   };
 });
-
-vi.mock("../../../../src/errors", () => ({
-  formatError: mockFormatError,
-}));
 
 vi.mock("../../../../src/manifest", () => ({
   getPeriodForTime: mockGetPeriodForTime,

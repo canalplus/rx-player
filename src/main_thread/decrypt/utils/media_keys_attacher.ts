@@ -21,7 +21,7 @@ import type {
 } from "../../../compat/browser_compatibility_types.ts";
 import type { IEmeApiImplementation } from "../../../compat/eme/index.ts";
 import { setMediaKeys } from "../../../compat/eme/set_media_keys.ts";
-import { EncryptedMediaError } from "../../../errors/index.ts";
+import { EncryptedMediaError } from "../../../errors/public_api/index.ts";
 import log from "../../../log.ts";
 import type { IKeySystemOption } from "../../../public_types.ts";
 import isNullOrUndefined from "../../../utils/is_null_or_undefined.ts";

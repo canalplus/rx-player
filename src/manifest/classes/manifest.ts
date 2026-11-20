@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MediaError } from "../../errors/index.ts";
+import { MediaError } from "../../errors/public_api/index.ts";
 import log from "../../log.ts";
 import { getCodecsWithUnknownSupport } from "../../main_thread/init/utils/update_manifest_codec_support.ts";
 import type { IParsedManifest } from "../../parsers/manifest/index.ts";

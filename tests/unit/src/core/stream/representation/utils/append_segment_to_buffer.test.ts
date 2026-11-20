@@ -6,7 +6,8 @@ import type {
 } from "../../../../../../../src/core/segment_sinks/index.ts";
 import type { IRepresentationStreamPlaybackObservation } from "../../../../../../../src/core/stream/representation/types.ts";
 import appendSegmentToBuffer from "../../../../../../../src/core/stream/representation/utils/append_segment_to_buffer.ts";
-import { MediaError, SourceBufferError } from "../../../../../../../src/errors/index.ts";
+import { SourceBufferError } from "../../../../../../../src/errors/internal/index.ts";
+import { MediaError } from "../../../../../../../src/errors/public_api/index.ts";
 import SharedReference from "../../../../../../../src/utils/reference.ts";
 import TaskCanceller, {
   CancellationError,
@@ -23,13 +24,13 @@ import {
 } from "../../../../../mocks/playback_observer.ts";
 import { DummySegmentSink } from "../../../../../mocks/segment_sinks.ts";
 
-vi.mock("../../../../../../../src/log", () => ({
+vi.mock("../../../../../../../src/log.ts", () => ({
   default: {
     debug: vi.fn(),
     warn: vi.fn(),
   },
 }));
-vi.mock("../../../../../../../src/utils/sleep", () => ({
+vi.mock("../../../../../../../src/utils/sleep.ts", () => ({
   default: vi.fn(() => Promise.resolve()),
 }));
 

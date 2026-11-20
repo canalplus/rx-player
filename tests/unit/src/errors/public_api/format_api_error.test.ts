@@ -1,36 +1,38 @@
 import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
-import formatError from "../../../../src/errors/format_error.ts";
-import OtherError from "../../../../src/errors/other_error.ts";
+import formatApiError from "../../../../../src/errors/public_api/format_api_error.ts";
+import OtherError from "../../../../../src/errors/public_api/other_error.ts";
 
 const mocks = vi.hoisted(() => {
   return {
-    isKnownError: vi.fn(),
+    isApiError: vi.fn(),
   };
 });
 
-vi.mock("../../../../src/errors/is_known_error", () => {
+vi.mock("../../../../../src/errors/utils/is_api_error.ts", () => {
   return {
-    default: mocks.isKnownError,
+    default: mocks.isApiError,
   };
 });
-describe("errors - formatError", () => {
+describe("errors - formatApiError", () => {
   beforeEach(() => {
     vi.resetModules();
   });
   afterEach(() => {
-    mocks.isKnownError.mockReset();
+    mocks.isApiError.mockReset();
   });
 
   it("should just return the error if it is a Custom Error", () => {
-    mocks.isKnownError.mockImplementation(() => true);
+    mocks.isApiError.mockImplementation(() => true);
     const error1 = new Error("Aaaaaa");
-    expect(formatError(error1, { defaultCode: "NONE", defaultReason: "a" })).toBe(error1);
+    expect(formatApiError(error1, { defaultCode: "NONE", defaultReason: "a" })).toBe(
+      error1,
+    );
   });
 
   it("should stringify error if it is an Error but not a Custom Error", () => {
-    mocks.isKnownError.mockImplementation(() => false);
+    mocks.isApiError.mockImplementation(() => false);
     const error1 = new Error("Abcdef");
-    const formattedError = formatError(error1, {
+    const formattedError = formatApiError(error1, {
       defaultCode: "NONE",
       defaultReason: "a",
     });
@@ -40,9 +42,9 @@ describe("errors - formatError", () => {
   });
 
   it("should stringify error if it is an Error but not a Custom Error", () => {
-    mocks.isKnownError.mockImplementation(() => false);
+    mocks.isApiError.mockImplementation(() => false);
     const error1 = {};
-    const formattedError = formatError(error1, {
+    const formattedError = formatApiError(error1, {
       defaultCode: "NONE",
       defaultReason: "a",
     });
