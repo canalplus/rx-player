@@ -1,4 +1,4 @@
-import { expect, describe, afterEach, test } from "vitest";
+import { expect, describe, afterEach, test } from "../simple-test-lib";
 // TODO: rely on `dist` instead
 import RxPlayer from "../../src";
 import VideoThumbnailLoader, {
