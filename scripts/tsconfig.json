@@ -7,7 +7,9 @@
     "lib": ["es2022"],
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": false,
+    // webdriverio/vitest have a few typing issues of unconditionally rely on
+    // DOM types even in Node.js contexts
+    "skipLibCheck": true,
     "noImplicitAny": true,
     "strict": true,
     "strictNullChecks": true,
