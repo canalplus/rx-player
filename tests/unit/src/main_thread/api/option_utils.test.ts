@@ -281,6 +281,7 @@ describe("API - parseLoadVideoOptions", () => {
     url: undefined,
     experimentalOptions: {
       enableRepresentationAvoidance: false,
+      playbackRateBasedRebufferingAvoidanceSettings: null,
     },
   };
 

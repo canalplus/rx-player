@@ -35,6 +35,7 @@ import type {
   IServerSyncInfos,
   IRxPlayerMode,
   ICmcdOptions,
+  IPlaybackRateBasedRebufferingAvoidanceSettings,
 } from "../../public_types.ts";
 import arrayIncludes from "../../utils/array_includes.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
@@ -133,6 +134,7 @@ interface IParsedLoadVideoOptionsBase {
   /** @see ILoadVideoOptions.experimentalOptions */
   experimentalOptions: {
     enableRepresentationAvoidance: boolean;
+    playbackRateBasedRebufferingAvoidanceSettings: IPlaybackRateBasedRebufferingAvoidanceSettings | null;
   };
   __priv_manifestUpdateUrl?: string | undefined;
   __priv_patchLastSegmentInSidx?: boolean | undefined;
@@ -577,6 +579,9 @@ function parseLoadVideoOptions(options: ILoadVideoOptions): IParsedLoadVideoOpti
     experimentalOptions: {
       enableRepresentationAvoidance:
         options.experimentalOptions?.enableRepresentationAvoidance === true,
+      playbackRateBasedRebufferingAvoidanceSettings:
+        options.experimentalOptions?.playbackRateBasedRebufferingAvoidanceSettings ??
+        null,
     },
   };
 }

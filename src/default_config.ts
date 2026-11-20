@@ -346,7 +346,7 @@ const DEFAULT_CONFIG = {
    * triggered when various events of the media element are received.
    * @type {Number}
    */
-  SAMPLING_INTERVAL_MEDIASOURCE: 1000,
+  SAMPLING_INTERVAL_MEDIASOURCE: 500,
 
   /**
    * Same than SAMPLING_INTERVAL_MEDIASOURCE but for lowLatency mode.

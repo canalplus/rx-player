@@ -44,6 +44,7 @@ import type {
   ICmcdOptions,
   IInitialManifest,
   IKeySystemOption,
+  IPlaybackRateBasedRebufferingAvoidanceSettings,
   IPlayerError,
   IRepresentationFilter,
   IManifestLoader,
@@ -1728,6 +1729,7 @@ export default class MediaSourceContentInitializer extends ContentInitializer {
       playbackObserver,
       manifest,
       speed,
+      this._settings.playbackRateBasedRebufferingAvoidanceSettings,
     );
     rebufferingController.addEventListener("stalled", (evt) =>
       this.trigger("stalled", evt),
@@ -2244,6 +2246,12 @@ export interface IInitializeArguments {
   url: string | undefined;
   /** `MediaSource` implementation that is wanted for that content. */
   MediaSourceClass: IMediaSourceClass;
+  /**
+   * Configuration on a rebuffering avoidance mechanism where the playback rate
+   * (i.e. the speed at which the content plays) is lowered when there's not a lot
+   * of data in the buffer.
+   */
+  playbackRateBasedRebufferingAvoidanceSettings: IPlaybackRateBasedRebufferingAvoidanceSettings | null;
 }
 
 function bindNumberReferencesToCore(
