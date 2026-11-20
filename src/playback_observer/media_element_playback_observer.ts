@@ -179,8 +179,11 @@ export default class PlaybackObserver {
    * element is ready to play your content (e.g. when pre-loading the next
    * content).
    *
-   * @param {HTMLMediaElement} mediaElement - The `HTMLMediaElement` on which
-   * the content plays.
+   * If callbacks are registered on `HTMLMediaElement` attachment through the
+   * `onMediaElementAttachment` method, they will be called synchronously.
+   *
+   * @param {HTMLMediaElement} mediaElement - The `HTMLMediaElement` to attach
+   * to this `PlaybackObserver.`
    */
   public attachMediaElement(mediaElement: IMediaElement): void {
     const prevMediaElement = this._mediaElementRef.getValue();
@@ -201,6 +204,61 @@ export default class PlaybackObserver {
     }
     if (mediaElement.readyState >= 1) {
       this._onLoadedMetadataEvent();
+    }
+  }
+
+  /**
+   * A `PlaybackObserver` can have an `HTMLMediaElement` attached or still await
+   * one. This method calls your given callback as soon as it is attached.
+   * Calls your callback synchronously if it is already attached.
+   *
+   * @param {Function} cb - The callback to call once the `HTMLMediaElement` is
+   * attached, with the `HTMLMediaElement` in argument.
+   * Note that `cb` will be called at most once.
+   * @param {CancellationSignal} cancelSignal - When/if this
+   * `CancellationSignal` emits before the given `cb` is called, we will stop
+   * registering that callback to be called.
+   */
+  public onMediaElementAttachment(
+    cb: (mediaElement: IMediaElement) => void,
+    cancelSignal: CancellationSignal,
+  ) {
+    if (cancelSignal.isCancelled()) {
+      return;
+    }
+    const mediaElement = this._mediaElementRef.getValue();
+    if (mediaElement !== null) {
+      try {
+        cb(mediaElement);
+      } catch (err) {
+        log.error(
+          "API",
+          "onMediaElementAttachment error",
+          err instanceof Error ? err : "Unknown Error",
+        );
+      }
+    } else {
+      this._mediaElementRef.onUpdate(
+        (lastMediaElement, stopListening) => {
+          if (lastMediaElement === null) {
+            return;
+          }
+          stopListening();
+          try {
+            cb(lastMediaElement);
+          } catch (err) {
+            log.error(
+              "API",
+              "onMediaElementAttachment error",
+              err instanceof Error ? err : "Unknown Error",
+            );
+          }
+        },
+        {
+          clearSignal: cancelSignal,
+          emitCurrentValue: false,
+        },
+      );
     }
   }
 
