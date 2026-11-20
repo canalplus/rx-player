@@ -7,10 +7,10 @@ import type {
   ISegment,
 } from "../../manifest/index.ts";
 import type {
-  IReadOnlyPlaybackObserver,
+  IReadOnlyMediaElementMonitor,
   IRebufferingStatus,
   ObservationPosition,
-} from "../../playback_observer/index.ts";
+} from "../../media_element_monitor/index.ts";
 import type { ICmcdOptions, ICmcdPayload, ITrackType } from "../../public_types.ts";
 import createUuid from "../../utils/create_uuid.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
@@ -60,10 +60,10 @@ export interface ICmcdSegmentInfo {
 }
 
 /**
- * Media playback observation's properties the `CmcdDataBuilder` wants to have
+ * Media media observation's properties the `CmcdDataBuilder` wants to have
  * access to.
  */
-export interface ICmcdDataBuilderPlaybackObservation {
+export interface ICmcdDataBuilderMediaObservation {
   /**
    * Ranges of buffered data per type of media.
    * `null` if no buffer exists for that type of media.
@@ -81,7 +81,7 @@ export interface ICmcdDataBuilderPlaybackObservation {
    * status.
    * "Rebuffering" is a status where the player has not enough buffer ahead to
    * play reliably.
-   * The RxPlayer should pause playback when a playback observation indicates the
+   * The RxPlayer should pause playback when a media observation indicates the
    * rebuffering status.
    */
   rebuffering: IRebufferingStatus | null;
@@ -98,7 +98,7 @@ export default class CmcdDataBuilder {
   private _contentId: string;
   private _typePreference: TypePreference;
   private _lastThroughput: Partial<Record<ITrackType, number | undefined>>;
-  private _playbackObserver: IReadOnlyPlaybackObserver<ICmcdDataBuilderPlaybackObservation> | null;
+  private _mediaElementMonitor: IReadOnlyMediaElementMonitor<ICmcdDataBuilderMediaObservation> | null;
   private _bufferStarvationToggle: boolean;
   private _canceller: TaskCanceller | null;
 
@@ -115,28 +115,28 @@ export default class CmcdDataBuilder {
         ? TypePreference.Headers
         : TypePreference.QueryString;
     this._bufferStarvationToggle = false;
-    this._playbackObserver = null;
+    this._mediaElementMonitor = null;
     this._lastThroughput = {};
     this._canceller = null;
   }
 
   /**
-   * Start listening to the given `playbackObserver` so the `CmcdDataBuilder`
+   * Start listening to the given `mediaElementMonitor` so the `CmcdDataBuilder`
    * can extract some playback-linked metadata that it needs.
    *
    * It will keep listening for media data until `stopMonitoringPlayback` is called.
    *
    * If `startMonitoringPlayback` is called again, the previous monitoring is
    * also cancelled.
-   * @param {Object} playbackObserver
+   * @param {Object} mediaElementMonitor
    */
   public startMonitoringPlayback(
-    playbackObserver: IReadOnlyPlaybackObserver<ICmcdDataBuilderPlaybackObservation>,
+    mediaElementMonitor: IReadOnlyMediaElementMonitor<ICmcdDataBuilderMediaObservation>,
   ): void {
     this._canceller?.cancel("CmcdDataBuilder start");
     this._canceller = new TaskCanceller("CMCD monitoring");
-    this._playbackObserver = playbackObserver;
-    playbackObserver.listen(
+    this._mediaElementMonitor = mediaElementMonitor;
+    mediaElementMonitor.listen(
       (obs) => {
         if (obs.rebuffering !== null) {
           this._bufferStarvationToggle = true;
@@ -153,7 +153,7 @@ export default class CmcdDataBuilder {
   public stopMonitoringPlayback(): void {
     this._canceller?.cancel("CmcdDataBuilder stop");
     this._canceller = null;
-    this._playbackObserver = null;
+    this._mediaElementMonitor = null;
   }
 
   /**
@@ -184,7 +184,7 @@ export default class CmcdDataBuilder {
         : undefined;
     props.sid = this._sessionId;
 
-    const lastObservation = this._playbackObserver?.getReference().getValue();
+    const lastObservation = this._mediaElementMonitor?.getReference().getValue();
     props.pr =
       lastObservation === undefined ||
       !isFinite(lastObservation.speed) ||
@@ -232,7 +232,7 @@ export default class CmcdDataBuilder {
    * @returns {Object}
    */
   public getCmcdDataForSegmentRequest(content: ICmcdSegmentInfo): ICmcdPayload {
-    const lastObservation = this._playbackObserver?.getReference().getValue();
+    const lastObservation = this._mediaElementMonitor?.getReference().getValue();
 
     const props = this._getCommonCmcdData(this._lastThroughput[content.adaptation.type]);
     props.br = Math.round(content.representation.bitrate / 1000);
@@ -289,7 +289,7 @@ export default class CmcdDataBuilder {
       if (!isNullOrUndefined(bufferedForType)) {
         // TODO more precize position estimate?
         const position =
-          this._playbackObserver?.getCurrentTime() ??
+          this._mediaElementMonitor?.getCurrentTime() ??
           lastObservation.position.getWanted() ??
           lastObservation.position.getPolled();
         for (const range of bufferedForType) {

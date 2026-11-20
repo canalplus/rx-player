@@ -4,7 +4,7 @@ import type {
   IPeriod,
   IRepresentation,
 } from "../../../manifest/index.ts";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../../media_element_monitor/index.ts";
 import type {
   IAudioTrackSwitchingMode,
   IVideoTrackSwitchingMode,
@@ -16,7 +16,7 @@ import type { IBufferType, SegmentSink } from "../../segment_sinks/index.ts";
 import type {
   IRepresentationsChoice,
   IRepresentationStreamCallbacks,
-  IRepresentationStreamPlaybackObservation,
+  IRepresentationStreamMediaObservation,
 } from "../representation/index.ts";
 
 /** Callbacks called by the `AdaptationStream` on various events. */
@@ -118,7 +118,7 @@ export interface INeedsBufferFlushPayload {
 }
 
 /** Regular playback information needed by the AdaptationStream. */
-export interface IAdaptationStreamPlaybackObservation extends IRepresentationStreamPlaybackObservation {
+export interface IAdaptationStreamMediaObservation extends IRepresentationStreamMediaObservation {
   /**
    * For the current SegmentSink, difference in seconds between the next position
    * where no segment data is available and the current position.
@@ -143,7 +143,7 @@ export interface IAdaptationStreamPlaybackObservation extends IRepresentationStr
 /** Arguments given when creating a new `AdaptationStream`. */
 export interface IAdaptationStreamArguments {
   /** Regularly emit playback conditions. */
-  playbackObserver: IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation>;
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IAdaptationStreamMediaObservation>;
   /** Content you want to create this Stream for. */
   content: {
     manifest: IManifest;

@@ -19,7 +19,7 @@ import { formatError, MediaError } from "../../../errors/index.ts";
 import log from "../../../log.ts";
 import type { IAdaptation, IPeriod } from "../../../manifest/index.ts";
 import { toTaggedTrack } from "../../../manifest/index.ts";
-import type { IReadOnlyPlaybackObserver } from "../../../playback_observer/index.ts";
+import type { IReadOnlyMediaElementMonitor } from "../../../media_element_monitor/index.ts";
 import type { ITrackType } from "../../../public_types.ts";
 import arrayFind from "../../../utils/array_find.ts";
 import objectAssign from "../../../utils/object_assign.ts";
@@ -34,14 +34,14 @@ import SegmentSinksStore from "../../segment_sinks/index.ts";
 import type {
   IAdaptationChoice,
   IAdaptationStreamCallbacks,
-  IAdaptationStreamPlaybackObservation,
+  IAdaptationStreamMediaObservation,
 } from "../adaptation/index.ts";
 import AdaptationStream from "../adaptation/index.ts";
 import type { IRepresentationsChoice } from "../representation/index.ts";
 import type {
   IPeriodStreamArguments,
   IPeriodStreamCallbacks,
-  IPeriodStreamPlaybackObservation,
+  IPeriodStreamMediaObservation,
 } from "./types.ts";
 import getAdaptationSwitchStrategy from "./utils/get_adaptation_switch_strategy.ts";
 
@@ -81,7 +81,7 @@ export default function PeriodStream(
     bufferType,
     content,
     garbageCollectors,
-    playbackObserver,
+    mediaElementMonitor,
     representationEstimator,
     segmentQueueCreator,
     segmentSinksStore,
@@ -179,7 +179,7 @@ export default function PeriodStream(
           }
 
           return createEmptyAdaptationStream(
-            playbackObserver,
+            mediaElementMonitor,
             wantedBufferAhead,
             bufferType,
             { period },
@@ -288,7 +288,7 @@ export default function PeriodStream(
           period,
           adaptation,
           choice.switchingMode,
-          playbackObserver,
+          mediaElementMonitor,
           options,
         );
         if (strategy.type === "needs-reload") {
@@ -353,8 +353,8 @@ export default function PeriodStream(
     segmentSink: SegmentSink,
     cancelSignal: CancellationSignal,
   ): void {
-    const adaptationPlaybackObserver = createAdaptationStreamPlaybackObserver(
-      playbackObserver,
+    const adaptationMediaElementMonitor = createAdaptationStreamMediaElementMonitor(
+      mediaElementMonitor,
       adaptation.type,
     );
 
@@ -362,7 +362,7 @@ export default function PeriodStream(
       {
         content: { manifest, period, adaptation, representations },
         options,
-        playbackObserver: adaptationPlaybackObserver,
+        mediaElementMonitor: adaptationMediaElementMonitor,
         representationEstimator,
         segmentSink,
         segmentQueueCreator,
@@ -395,7 +395,7 @@ export default function PeriodStream(
         }
 
         return createEmptyAdaptationStream(
-          playbackObserver,
+          mediaElementMonitor,
           wantedBufferAhead,
           bufferType,
           { period },
@@ -413,8 +413,8 @@ export default function PeriodStream(
   }
 
   /**
-   * Regularly ask to reload the MediaSource on each playback observation
-   * performed by the playback observer.
+   * Regularly ask to reload the MediaSource on each media observation
+   * performed by the `MediaElementMonitor`.
    *
    * @param {number} timeOffset - Relative position, compared to the current
    * playhead, at which we should restart playback after reloading.
@@ -440,9 +440,9 @@ export default function PeriodStream(
     // the next observation (which may reflect very different playback conditions)
     // is actually received.
     // It can happen when `askForMediaSourceReload` is called as a side-effect of
-    // the same event that triggers the playback observation to be emitted.
+    // the same event that triggers the media observation to be emitted.
     queueMicrotask(() => {
-      playbackObserver.listen(
+      mediaElementMonitor.listen(
         () => {
           if (cancelSignal.isCancelled()) {
             return;
@@ -504,31 +504,31 @@ function getFirstDeclaredMimeType(adaptation: IAdaptation): string {
 }
 
 /**
- * Create AdaptationStream's version of a playback observer.
- * @param {Object} initialPlaybackObserver
+ * Create AdaptationStream's version of a `MediaElementMonitor`.
+ * @param {Object} initialMediaElementMonitor
  * @param {string} trackType
  * @returns {Object}
  */
-function createAdaptationStreamPlaybackObserver(
-  initialPlaybackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
+function createAdaptationStreamMediaElementMonitor(
+  initialMediaElementMonitor: IReadOnlyMediaElementMonitor<IPeriodStreamMediaObservation>,
   trackType: ITrackType,
-): IReadOnlyPlaybackObserver<IAdaptationStreamPlaybackObservation> {
-  return initialPlaybackObserver.deriveReadOnlyObserver(function transform(
-    observationRef: IReadOnlySharedReference<IPeriodStreamPlaybackObservation>,
+): IReadOnlyMediaElementMonitor<IAdaptationStreamMediaObservation> {
+  return initialMediaElementMonitor.deriveReadOnlyMonitor(function transform(
+    observationRef: IReadOnlySharedReference<IPeriodStreamMediaObservation>,
     cancellationSignal: CancellationSignal,
-  ): IReadOnlySharedReference<IAdaptationStreamPlaybackObservation> {
+  ): IReadOnlySharedReference<IAdaptationStreamMediaObservation> {
     const newRef = new SharedReference(
-      constructAdaptationStreamPlaybackObservation(),
+      constructAdaptationStreamMediaObservation(),
       cancellationSignal,
     );
 
-    observationRef.onUpdate(emitAdaptationStreamPlaybackObservation, {
+    observationRef.onUpdate(emitAdaptationStreamMediaObservation, {
       clearSignal: cancellationSignal,
       emitCurrentValue: false,
     });
     return newRef;
 
-    function constructAdaptationStreamPlaybackObservation(): IAdaptationStreamPlaybackObservation {
+    function constructAdaptationStreamMediaObservation(): IAdaptationStreamMediaObservation {
       const baseObservation = observationRef.getValue();
       const buffered = baseObservation.buffered[trackType];
       const bufferGap =
@@ -538,8 +538,8 @@ function createAdaptationStreamPlaybackObserver(
       return objectAssign({}, baseObservation, { bufferGap, buffered });
     }
 
-    function emitAdaptationStreamPlaybackObservation() {
-      newRef.setValue(constructAdaptationStreamPlaybackObservation());
+    function emitAdaptationStreamMediaObservation() {
+      newRef.setValue(constructAdaptationStreamMediaObservation());
     }
   });
 }
@@ -548,7 +548,7 @@ function createAdaptationStreamPlaybackObserver(
  * Create empty AdaptationStream, linked to a Period.
  * This AdaptationStream will never download any segment and just emit a "full"
  * event when reaching the end.
- * @param {Object} playbackObserver
+ * @param {Object} mediaElementMonitor
  * @param {Object} wantedBufferAhead
  * @param {string} bufferType
  * @param {Object} content
@@ -556,7 +556,7 @@ function createAdaptationStreamPlaybackObserver(
  * @param {Object} cancelSignal
  */
 function createEmptyAdaptationStream(
-  playbackObserver: IReadOnlyPlaybackObserver<IPeriodStreamPlaybackObservation>,
+  mediaElementMonitor: IReadOnlyMediaElementMonitor<IPeriodStreamMediaObservation>,
   wantedBufferAhead: IReadOnlySharedReference<number>,
   bufferType: IBufferType,
   content: { period: IPeriod },
@@ -569,14 +569,14 @@ function createEmptyAdaptationStream(
     emitCurrentValue: false,
     clearSignal: cancelSignal,
   });
-  playbackObserver.listen(sendStatus, {
+  mediaElementMonitor.listen(sendStatus, {
     includeLastObservation: false,
     clearSignal: cancelSignal,
   });
   sendStatus();
 
   function sendStatus(): void {
-    const observation = playbackObserver.getReference().getValue();
+    const observation = mediaElementMonitor.getReference().getValue();
     const wba = wantedBufferAhead.getValue();
     const position = observation.position.getWanted();
     if (period.end !== undefined && position + wba >= period.end) {

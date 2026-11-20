@@ -68,8 +68,8 @@ import {
   toVideoRepresentation,
   toAudioRepresentation,
 } from "../../manifest/index.ts";
-import type { IPlaybackObservation } from "../../playback_observer/index.ts";
-import MediaElementPlaybackObserver from "../../playback_observer/media_element_playback_observer.ts";
+import type { IMediaObservation } from "../../media_element_monitor/index.ts";
+import MediaElementMonitor from "../../media_element_monitor/media_element_monitor.ts";
 import type {
   IAudioRepresentation,
   IAudioRepresentationsSwitchingMode,
@@ -1349,8 +1349,8 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       });
     }
 
-    /** Global "playback observer" which will emit playback conditions */
-    const playbackObserver = new MediaElementPlaybackObserver({
+    /** Global `MediaElementMonitor` which will poll media properties */
+    const mediaElementMonitor = new MediaElementMonitor({
       withMediaSource: !isDirectFile,
       lowLatencyMode,
     });
@@ -1359,17 +1359,17 @@ class Player extends EventEmitter<IPublicAPIEvent> {
      * We want to block seeking operations until we know the media element is
      * ready for it.
      */
-    playbackObserver.blockSeeking();
+    mediaElementMonitor.blockSeeking();
 
     currentContentCanceller.signal.register((err) => {
-      playbackObserver.stop(err.reason);
+      mediaElementMonitor.destroy(err.reason);
     });
 
     /** Future `this._priv_contentInfos` related to this content. */
     const contentInfos: IPublicApiContentInfos = {
       contentId: generateContentId(),
       originalUrl: url,
-      playbackObserver,
+      mediaElementMonitor,
       currentContentCanceller,
       defaultAudioTrackSwitchingMode,
       initializer,
@@ -1478,13 +1478,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     //     content.
     this.stop();
 
-    playbackObserver.attachMediaElement(videoElement);
+    mediaElementMonitor.attachMediaElement(videoElement);
 
     // Update the RxPlayer's state at the right events
     const playerStateRef = constructPlayerStateReference(
       initializer,
       videoElement,
-      playbackObserver,
+      mediaElementMonitor,
       isDirectFile,
       currentContentCanceller.signal,
     );
@@ -1506,13 +1506,13 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           break; // keep previous metadata
         case "ENDED":
           this._priv_reloadingMetadata.reloadInPause = true;
-          this._priv_reloadingMetadata.reloadPosition = playbackObserver
+          this._priv_reloadingMetadata.reloadPosition = mediaElementMonitor
             .getReference()
             .getValue()
             .position.getPolled();
           break;
         default: {
-          const o = playbackObserver.getReference().getValue();
+          const o = mediaElementMonitor.getReference().getValue();
           this._priv_reloadingMetadata.reloadInPause = o.paused;
           this._priv_reloadingMetadata.reloadPosition = o.position.getWanted();
           break;
@@ -1604,7 +1604,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           seekEventsCanceller = new TaskCanceller("API seek events");
           seekEventsCanceller.linkToSignal(currentContentCanceller.signal);
           emitSeekEvents(
-            playbackObserver,
+            mediaElementMonitor,
             () => this.trigger("seeking", null),
             () => this.trigger("seeked", null),
             seekEventsCanceller.signal,
@@ -1615,7 +1615,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     );
 
     // React to playback conditions change
-    playbackObserver.listen(
+    mediaElementMonitor.listen(
       (observation) => {
         updateReloadingMetadata(this.state);
         this._priv_triggerPositionUpdate(contentInfos, observation);
@@ -1634,7 +1634,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
           stopListeningToLock();
 
           // start playback!
-          initializer.start(videoElement, playbackObserver);
+          initializer.start(videoElement, mediaElementMonitor);
         }
       },
       { emitCurrentValue: true, clearSignal: currentContentCanceller.signal },
@@ -2126,7 +2126,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
       throw new Error("invalid time given");
     }
     log.info("API", "API seekTo", { positionWanted });
-    this._priv_contentInfos.playbackObserver.setCurrentTime(positionWanted, false);
+    this._priv_contentInfos.mediaElementMonitor.setCurrentTime(positionWanted, false);
     return positionWanted;
   }
 
@@ -3522,7 +3522,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
   }
 
   /**
-   * Triggered each time a playback observation.
+   * Triggered each time a media observation.
    *
    * Trigger the right Player Event
    *
@@ -3531,7 +3531,7 @@ class Player extends EventEmitter<IPublicAPIEvent> {
    */
   private _priv_triggerPositionUpdate(
     contentInfos: IPublicApiContentInfos,
-    observation: IPlaybackObservation,
+    observation: IMediaObservation,
   ): void {
     if (contentInfos.contentId !== this._priv_contentInfos?.contentId) {
       return; // Event for another content
@@ -3911,8 +3911,8 @@ export interface IPublicApiContentInfos {
   originalUrl: string | undefined;
   /** `ContentInitializer` used to load the content. */
   initializer: ContentInitializer;
-  /** interface emitting regularly playback observations. */
-  playbackObserver: MediaElementPlaybackObserver;
+  /** interface emitting regularly media observations. */
+  mediaElementMonitor: MediaElementMonitor;
   /** TaskCanceller triggered when it's time to stop the current content. */
   currentContentCanceller: TaskCanceller;
   /** The default behavior to adopt when switching the audio track. */

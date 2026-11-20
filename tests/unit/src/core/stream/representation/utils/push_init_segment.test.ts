@@ -1,7 +1,7 @@
 import type { Mock } from "vitest";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { type SegmentSink } from "../../../../../../../src/core/segment_sinks/index.ts";
-import type { IRepresentationStreamPlaybackObservation } from "../../../../../../../src/core/stream/representation/types.ts";
+import type { IRepresentationStreamMediaObservation } from "../../../../../../../src/core/stream/representation/types.ts";
 import type appendSegmentToBuffer from "../../../../../../../src/core/stream/representation/utils/append_segment_to_buffer.ts";
 import pushInitSegment from "../../../../../../../src/core/stream/representation/utils/push_init_segment.ts";
 import {
@@ -22,9 +22,9 @@ import {
   createSegment,
 } from "../../../../../mocks/manifest.ts";
 import {
-  makeReadyOnlyPlaybackObserver,
+  makeReadyOnlyMediaElementMonitor,
   DummyObservationPosition,
-} from "../../../../../mocks/playback_observer.ts";
+} from "../../../../../mocks/media_element_monitor.ts";
 import { DummySegmentSink } from "../../../../../mocks/segment_sinks.ts";
 
 const mockAppendSegmentToBuffer = vi.hoisted((): Mock<typeof appendSegmentToBuffer> =>
@@ -38,8 +38,8 @@ vi.mock(
 );
 
 describe("pushInitSegment", () => {
-  const mockedPlaybackObserver =
-    makeReadyOnlyPlaybackObserver<IRepresentationStreamPlaybackObservation>({
+  const mockedMediaElementMonitor =
+    makeReadyOnlyMediaElementMonitor<IRepresentationStreamMediaObservation>({
       position: new DummyObservationPosition({
         getWanted: vi.fn(() => 10),
       }),
@@ -89,7 +89,7 @@ describe("pushInitSegment", () => {
   afterEach(() => {
     mockBufferGoal.finish();
     mockCanceller.cancel("test end");
-    mockedPlaybackObserver.reset();
+    mockedMediaElementMonitor.reset();
     vi.resetModules();
   });
 
@@ -105,7 +105,7 @@ describe("pushInitSegment", () => {
 
     await pushInitSegment(
       {
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         content: mockContent,
         initSegmentUniqueId,
         segmentData: null,
@@ -119,7 +119,7 @@ describe("pushInitSegment", () => {
     expect(mockAppendSegmentToBuffer).toHaveBeenCalledTimes(1);
 
     const callArgs = mockAppendSegmentToBuffer.mock.calls[0];
-    expect(callArgs[0]).toBe(mockedPlaybackObserver.observer);
+    expect(callArgs[0]).toBe(mockedMediaElementMonitor.observer);
     expect(callArgs[1]).toBe(mockSegmentSink);
     expect(callArgs[3]).toBe(mockBufferGoal);
     expect(callArgs[4]).toBe(mockCanceller.signal);
@@ -151,7 +151,7 @@ describe("pushInitSegment", () => {
 
     const result = await pushInitSegment(
       {
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         content: mockContent,
         initSegmentUniqueId: "init-456",
         segmentData: null,
@@ -178,7 +178,7 @@ describe("pushInitSegment", () => {
 
     await pushInitSegment(
       {
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         content: mockContent,
         initSegmentUniqueId: "init-789",
         segmentData: null,
@@ -197,7 +197,7 @@ describe("pushInitSegment", () => {
 
     await pushInitSegment(
       {
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         content: mockContent,
         initSegmentUniqueId: "init-abc",
         segmentData: { someData: "value" },
@@ -217,7 +217,7 @@ describe("pushInitSegment", () => {
 
     await pushInitSegment(
       {
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         content: mockContent,
         initSegmentUniqueId: "init-def",
         segmentData: null,
@@ -237,7 +237,7 @@ describe("pushInitSegment", () => {
 
     await pushInitSegment(
       {
-        playbackObserver: mockedPlaybackObserver.observer,
+        mediaElementMonitor: mockedMediaElementMonitor.observer,
         content: mockContent,
         initSegmentUniqueId: "init-ghi",
         segmentData: null,

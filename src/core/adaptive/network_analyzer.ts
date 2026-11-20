@@ -20,7 +20,7 @@ import type { IRepresentation } from "../../manifest/index.ts";
 import arrayFind from "../../utils/array_find.ts";
 import isNullOrUndefined from "../../utils/is_null_or_undefined.ts";
 import getMonotonicTimeStamp from "../../utils/monotonic_timestamp.ts";
-import type { IRepresentationEstimatorPlaybackObservation } from "./adaptive_representation_selector.ts";
+import type { IRepresentationEstimatorMediaObservation } from "./adaptive_representation_selector.ts";
 import type BandwidthEstimator from "./utils/bandwidth_estimator.ts";
 import EWMA from "./utils/ewma.ts";
 import type {
@@ -30,7 +30,7 @@ import type {
 
 /** Object describing the current playback conditions. */
 export type IPlaybackConditionsInfo = Pick<
-  IRepresentationEstimatorPlaybackObservation,
+  IRepresentationEstimatorMediaObservation,
   "bufferGap" | "position" | "speed" | "duration"
 >;
 

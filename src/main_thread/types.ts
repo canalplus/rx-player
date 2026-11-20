@@ -2,14 +2,17 @@ import type {
   IResolutionInfo,
   IManifestFetcherSettings,
   ISegmentQueueCreatorBackoffOptions,
-  IPausedPlaybackObservation,
+  IPausedMediaObservation,
   IRepresentationsChoice,
   ITrackSwitchingMode,
 } from "../core/types.ts";
 import type { IDefaultConfig } from "../default_config.ts";
 import type { ISerializedSourceBufferError } from "../errors/source_buffer_error.ts";
+import type {
+  IFreezingStatus,
+  IRebufferingStatus,
+} from "../media_element_monitor/index.ts";
 import type { SourceBufferType } from "../mse/index.ts";
-import type { IFreezingStatus, IRebufferingStatus } from "../playback_observer/index.ts";
 import type {
   ICmcdOptions,
   IManifestLoader,
@@ -241,8 +244,8 @@ export interface IStartPreparedContentMessage {
 export interface IStartPreparedContentMessageValue {
   /** The start time at which we should play, in seconds. */
   initialTime: number;
-  /** The current playback observation. */
-  initialObservation: ISerializedPlaybackObservation;
+  /** The current media observation. */
+  initialObservation: ISerializedMediaObservation;
   /**
    * Hex-encoded string identifying the key system used.
    * May be cross-referenced with the content's metadata when performing
@@ -287,15 +290,15 @@ export interface ICodecSupportInfo {
  * Those messages are sent until the `IStopContentMessage` for that same
  * `contentId`.
  */
-export interface IPlaybackObservationMessage {
-  type: MainThreadMessageType.PlaybackObservation;
+export interface IMediaObservationMessage {
+  type: MainThreadMessageType.MediaObservation;
   /**
    * Same `contentId` than for the corresponding `IPrepareContentMessage` message.
    * Allows to prevent race conditions.
    */
   contentId: string;
   /** The media-related metadata that has just been observed now. */
-  value: ISerializedPlaybackObservation;
+  value: ISerializedMediaObservation;
 }
 
 /**
@@ -398,12 +401,12 @@ export interface IRepresentationUpdateMessage {
 }
 
 /** Media-related metadata. */
-export interface ISerializedPlaybackObservation {
+export interface ISerializedMediaObservation {
   /**
    * Information on whether the media element was paused at the time of the
    * Observation.
    */
-  paused: IPausedPlaybackObservation;
+  paused: IPausedMediaObservation;
   position: [number, number | null];
   /** `readyState` property of the HTMLMediaElement. */
   readyState: number;
@@ -624,7 +627,7 @@ export const enum MainThreadMessageType {
   DecipherabilityStatusUpdate = "decipherability-update",
   LogLevelUpdate = "log-level-update",
   MediaSourceReadyStateChange = "media-source-ready-state-change",
-  PlaybackObservation = "observation",
+  MediaObservation = "observation",
   PrepareContent = "prepare",
   ReferenceUpdate = "ref-update",
   RepresentationUpdate = "rep-update",
@@ -648,7 +651,7 @@ export type IMainThreadMessage =
   | IStartPreparedContentMessage
   | IReferenceUpdateMessage
   | ICodecSupportUpdateMessage
-  | IPlaybackObservationMessage
+  | IMediaObservationMessage
   | IDecipherabilityStatusChangedMessage
   | IUpdateContentUrlsMessage
   | ITriggerMediaSourceReloadMainMessage

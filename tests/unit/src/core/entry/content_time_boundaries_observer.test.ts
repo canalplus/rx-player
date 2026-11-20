@@ -12,7 +12,7 @@ const {
   mockTrigger,
   mockCancellerSignal,
   mockCanceller,
-  mockPlaybackObserverListen,
+  mockMediaElementMonitorListen,
   mockManifestEventListener,
   mockGetMinimumSafePosition,
   mockGetMaximumSafePosition,
@@ -26,7 +26,7 @@ const {
     isUsed: vi.fn(() => false),
     cancel: vi.fn(),
   },
-  mockPlaybackObserverListen: vi.fn(),
+  mockMediaElementMonitorListen: vi.fn(),
   mockManifestEventListener: vi.fn(),
   mockGetMinimumSafePosition: vi.fn(() => 0),
   mockGetMaximumSafePosition: vi.fn((): number | undefined => 100),
@@ -65,8 +65,8 @@ describe("ContentTimeBoundariesObserver", () => {
     ...overrides,
   });
 
-  const createMockPlaybackObserver = (): any => ({
-    listen: mockPlaybackObserverListen,
+  const createMockMediaElementMonitor = (): any => ({
+    listen: mockMediaElementMonitorListen,
   });
 
   const createMockPeriod = (id: string, start: number = 0): any => ({
@@ -99,14 +99,14 @@ describe("ContentTimeBoundariesObserver", () => {
   });
 
   describe("constructor", () => {
-    it("should initialize and set up playback observer", async () => {
+    it("should initialize and set up MediaElementMonitor", async () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
       const bufferTypes: IBufferType[] = ["audio", "video"];
 
-      new ContentTimeBoundariesObserver(manifest, playbackObserver, bufferTypes);
+      new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, bufferTypes);
       await sleep(0);
-      expect(mockPlaybackObserverListen).toHaveBeenCalledWith(
+      expect(mockMediaElementMonitorListen).toHaveBeenCalledWith(
         expect.any(Function),
         expect.objectContaining({
           includeLastObservation: false,
@@ -117,9 +117,9 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should set up manifest event listener", async () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, ["audio"]);
       await sleep(0);
 
       expect(mockManifestEventListener).toHaveBeenCalledWith(
@@ -132,12 +132,12 @@ describe("ContentTimeBoundariesObserver", () => {
     it("should trigger warning when position is before manifest minimum", async () => {
       mockGetMinimumSafePosition.mockReturnValue(10);
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, ["audio"]);
       await sleep(0);
 
-      const positionCallback = mockPlaybackObserverListen.mock.calls[0][0];
+      const positionCallback = mockMediaElementMonitorListen.mock.calls[0][0];
       positionCallback({ position: { getWanted: () => 5 } });
 
       expect(mockTrigger).toHaveBeenCalledWith("warning", expect.any(Object));
@@ -153,12 +153,12 @@ describe("ContentTimeBoundariesObserver", () => {
     it("should not trigger warning when position is within epsilon of manifest minimum", async () => {
       mockGetMinimumSafePosition.mockReturnValue(10);
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, ["audio"]);
       await sleep(0);
 
-      const positionCallback = mockPlaybackObserverListen.mock.calls[0][0];
+      const positionCallback = mockMediaElementMonitorListen.mock.calls[0][0];
       positionCallback({ position: { getWanted: () => 9.9995 } });
 
       expect(mockTrigger).not.toHaveBeenCalled();
@@ -167,12 +167,12 @@ describe("ContentTimeBoundariesObserver", () => {
     it("should trigger warning when position is after manifest maximum", async () => {
       mockGetMaximumSafePosition.mockReturnValue(100);
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, ["audio"]);
       await sleep(0);
 
-      const positionCallback = mockPlaybackObserverListen.mock.calls[0][0];
+      const positionCallback = mockMediaElementMonitorListen.mock.calls[0][0];
       positionCallback({ position: { getWanted: () => 150 } });
 
       expect(mockTrigger).toHaveBeenCalledWith("warning", expect.any(Object));
@@ -185,9 +185,9 @@ describe("ContentTimeBoundariesObserver", () => {
     it("should return ending position when manifest is not dynamic", async () => {
       mockGetMaximumSafePosition.mockReturnValue(100);
       const manifest = createMockManifest({ isDynamic: false });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
       await sleep(0);
@@ -210,9 +210,9 @@ describe("ContentTimeBoundariesObserver", () => {
         isLastPeriodKnown: true,
         periods: [period],
       });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -229,9 +229,9 @@ describe("ContentTimeBoundariesObserver", () => {
     it("should return isEnd: false when ending position is undetermined for non-dynamic content", () => {
       mockGetMaximumSafePosition.mockReturnValue(undefined);
       const manifest = createMockManifest({ isDynamic: false });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -253,9 +253,9 @@ describe("ContentTimeBoundariesObserver", () => {
         isLastPeriodKnown: false,
         periods: [period],
       });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -280,9 +280,9 @@ describe("ContentTimeBoundariesObserver", () => {
         isLastPeriodKnown: true,
         periods: [period],
       });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -305,9 +305,9 @@ describe("ContentTimeBoundariesObserver", () => {
         isLastPeriodKnown: true,
         periods: [period],
       });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "video",
       ]);
 
@@ -324,10 +324,10 @@ describe("ContentTimeBoundariesObserver", () => {
     it("should not trigger events after canceller is used", () => {
       mockCanceller.isUsed.mockReturnValue(true);
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
       const period = createMockPeriod("period-1");
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -357,9 +357,9 @@ describe("ContentTimeBoundariesObserver", () => {
         isLastPeriodKnown: true,
         periods: [period],
       });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
         "video",
       ]);
@@ -377,10 +377,10 @@ describe("ContentTimeBoundariesObserver", () => {
   describe("onRepresentationChange", () => {
     it("should add period to active periods", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
       const period1 = createMockPeriod("period-1", 0);
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -394,11 +394,11 @@ describe("ContentTimeBoundariesObserver", () => {
   describe("onPeriodCleared", () => {
     it("should remove period from active periods", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
       const period1 = createMockPeriod("period-1", 0);
       const period2 = createMockPeriod("period-2", 10);
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -415,10 +415,10 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should handle clearing non-existent period gracefully", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
       const period1 = createMockPeriod("period-1", 0);
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -432,10 +432,10 @@ describe("ContentTimeBoundariesObserver", () => {
   describe("periodChange event", () => {
     it("should trigger periodChange only when period is active in all buffer types", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
       const period = createMockPeriod("period-1", 0);
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
         "video",
       ]);
@@ -458,10 +458,10 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should not trigger periodChange multiple times for same period", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
       const period = createMockPeriod("period-1", 0);
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -479,13 +479,13 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should trigger periodChange when switching to different period", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
       const period1 = createMockPeriod("period-1", 0);
       const period2 = createMockPeriod("period-2", 10);
       const adap1 = createMockAdaptation([]);
       const adap2 = createMockAdaptation([]);
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -503,9 +503,9 @@ describe("ContentTimeBoundariesObserver", () => {
   describe("onLastSegmentFinishedLoading", () => {
     it("should trigger endOfStream when all buffer types finished loading", () => {
       const manifest = createMockManifest({ isLastPeriodKnown: true });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
         "video",
       ]);
@@ -520,9 +520,9 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should not trigger endOfStream if not all buffer types finished", () => {
       const manifest = createMockManifest({ isLastPeriodKnown: true });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
         "video",
       ]);
@@ -539,9 +539,9 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should not trigger endOfStream if last period is not known", () => {
       const manifest = createMockManifest({ isLastPeriodKnown: false });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -557,9 +557,9 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should not trigger multiple times for same buffer type", () => {
       const manifest = createMockManifest({ isLastPeriodKnown: true });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -579,9 +579,9 @@ describe("ContentTimeBoundariesObserver", () => {
   describe("onLastSegmentLoadingResume", () => {
     it("should trigger resumeStream after endOfStream", () => {
       const manifest = createMockManifest({ isLastPeriodKnown: true });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
         "video",
       ]);
@@ -598,9 +598,9 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should not trigger if already in loading state", () => {
       const manifest = createMockManifest({ isLastPeriodKnown: true });
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -620,9 +620,9 @@ describe("ContentTimeBoundariesObserver", () => {
   describe("manifestUpdate event", () => {
     it("should trigger endingPositionChange on manifest update", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, ["audio"]);
 
       const manifestUpdateCallback = mockManifestEventListener.mock.calls[0][1];
 
@@ -641,9 +641,9 @@ describe("ContentTimeBoundariesObserver", () => {
     it("should not trigger events if canceller is cancelled", () => {
       mockCancellerSignal.isCancelled.mockReturnValue(true);
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      new ContentTimeBoundariesObserver(manifest, playbackObserver, ["audio"]);
+      new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, ["audio"]);
 
       const manifestUpdateCallback = mockManifestEventListener.mock.calls[0][1];
 
@@ -661,9 +661,9 @@ describe("ContentTimeBoundariesObserver", () => {
   describe("dispose", () => {
     it("should cancel operations with provided reason", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -674,9 +674,9 @@ describe("ContentTimeBoundariesObserver", () => {
 
     it("should cancel operations with default reason when none provided", () => {
       const manifest = createMockManifest();
-      const playbackObserver = createMockPlaybackObserver();
+      const mediaElementMonitor = createMockMediaElementMonitor();
 
-      const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
+      const observer = new ContentTimeBoundariesObserver(manifest, mediaElementMonitor, [
         "audio",
       ]);
 
@@ -693,11 +693,13 @@ describe("ContentTimeBoundariesObserver", () => {
       it("should return manifest safe position for dynamic content", () => {
         mockGetMaximumSafePosition.mockReturnValue(120);
         const manifest = createMockManifest({ isDynamic: true });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio"],
+        );
 
         const result = observer.getCurrentEndingTime();
 
@@ -707,12 +709,13 @@ describe("ContentTimeBoundariesObserver", () => {
       it("should return manifest safe position when adaptations not set", () => {
         mockGetMaximumSafePosition.mockReturnValue(100);
         const manifest = createMockManifest({ isDynamic: false });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-          "video",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio", "video"],
+        );
 
         const result = observer.getCurrentEndingTime();
 
@@ -729,12 +732,13 @@ describe("ContentTimeBoundariesObserver", () => {
           isLastPeriodKnown: true,
           periods: [period],
         });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-          "video",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio", "video"],
+        );
 
         observer.onAdaptationChange("audio", period, null);
         observer.onAdaptationChange("video", period, videoAdaptation);
@@ -754,12 +758,13 @@ describe("ContentTimeBoundariesObserver", () => {
           isLastPeriodKnown: true,
           periods: [period],
         });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-          "video",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio", "video"],
+        );
 
         observer.onAdaptationChange("audio", period, audioAdaptation);
         observer.onAdaptationChange("video", period, null);
@@ -777,12 +782,13 @@ describe("ContentTimeBoundariesObserver", () => {
           isLastPeriodKnown: true,
           periods: [period],
         });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-          "video",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio", "video"],
+        );
 
         observer.onAdaptationChange("audio", period, null);
         observer.onAdaptationChange("video", period, null);
@@ -803,11 +809,13 @@ describe("ContentTimeBoundariesObserver", () => {
           isLastPeriodKnown: true,
           periods: [period],
         });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio"],
+        );
 
         observer.onAdaptationChange("audio", period, audioAdaptation);
 
@@ -820,12 +828,13 @@ describe("ContentTimeBoundariesObserver", () => {
     describe("getEndingPosition for dynamic content", () => {
       it("should return undefined when adaptations not set", () => {
         const manifest = createMockManifest({ isDynamic: true });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-          "video",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio", "video"],
+        );
 
         const result = observer.getCurrentEndingTime();
 
@@ -842,12 +851,13 @@ describe("ContentTimeBoundariesObserver", () => {
           isLastPeriodKnown: true,
           periods: [period],
         });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-          "video",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio", "video"],
+        );
 
         observer.onAdaptationChange("audio", period, audioAdaptation);
         observer.onAdaptationChange("video", period, null);
@@ -867,12 +877,13 @@ describe("ContentTimeBoundariesObserver", () => {
           isLastPeriodKnown: true,
           periods: [period],
         });
-        const playbackObserver = createMockPlaybackObserver();
+        const mediaElementMonitor = createMockMediaElementMonitor();
 
-        const observer = new ContentTimeBoundariesObserver(manifest, playbackObserver, [
-          "audio",
-          "video",
-        ]);
+        const observer = new ContentTimeBoundariesObserver(
+          manifest,
+          mediaElementMonitor,
+          ["audio", "video"],
+        );
 
         observer.onAdaptationChange("audio", period, null);
         observer.onAdaptationChange("video", period, null);
