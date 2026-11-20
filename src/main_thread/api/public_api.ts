@@ -1589,6 +1589,12 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     playerStateRef.onUpdate(
       (newState: IPlayerState) => {
         updateReloadingMetadata(newState);
+        if (newState === "ENDED") {
+          this._priv_loadChainedManifests();
+          if (currentContentCanceller.isUsed()) {
+            return;
+          }
+        }
         this._priv_setPlayerState(newState);
 
         if (currentContentCanceller.isUsed()) {
@@ -3798,6 +3804,31 @@ class Player extends EventEmitter<IPublicAPIEvent> {
     if (this._priv_currentError === formattedError) {
       this.trigger("error", formattedError);
     }
+  }
+
+  /**
+   * Load the chained Manifest if one with roughly the same options than the
+   * previous `loadVideo` call (beside `startAt`).
+   * Do nothing if no Manifest to chain to exist or if it's not possible to do
+   * Manifest chaining in the current context.
+   */
+  private _priv_loadChainedManifests(): void {
+    const nextManifestUrls = this._priv_contentInfos?.manifest?.chainedManifests;
+    if (isNullOrUndefined(nextManifestUrls) || nextManifestUrls.length === 0) {
+      return;
+    }
+    const options = this._priv_reloadingMetadata.options;
+    if (options === undefined) {
+      log.error("API", "Chaining Manifest despite not having any load option");
+      return;
+    }
+
+    const nextUrl = nextManifestUrls[0];
+    log.info("API", "Going to chained Manifest", { nextUrl });
+    const newOptions = { ...options, url: nextUrl, startAt: undefined };
+    this._priv_reloadingMetadata = { options: newOptions };
+    this._priv_initializeContentPlayback(newOptions);
+    this._priv_lastAutoPlay = newOptions.autoPlay;
   }
 
   /**

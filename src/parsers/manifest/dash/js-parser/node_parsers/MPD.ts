@@ -48,6 +48,8 @@ function parseMPDChildren(
     Period: [],
     UTCTiming: [],
     ContentProtection: [],
+    EssentialProperty: [],
+    SupplementalProperty: [],
   };
 
   let warnings: Error[] = [];
@@ -97,6 +99,14 @@ function parseMPDChildren(
         }
         break;
       }
+
+      case "EssentialProperty":
+        ret.EssentialProperty.push(parseScheme(currentNode));
+        break;
+
+      case "SupplementalProperty":
+        ret.SupplementalProperty.push(parseScheme(currentNode));
+        break;
     }
   }
   return [ret, warnings];
