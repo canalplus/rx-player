@@ -41,7 +41,7 @@ import type {
   IResolutionInfo,
 } from "../types.ts";
 import { CoreMessageType } from "../types.ts";
-import ContentPreparer from "./content_preparer.ts";
+import ContentSession from "./content_session.ts";
 import createContentTimeBoundariesObserver from "./create_content_time_boundaries_observer.ts";
 import type { IFreezeResolution } from "./FreezeResolver.ts";
 import getBufferedDataPerMediaBuffer from "./get_buffered_data_per_media_buffer.ts";
@@ -94,11 +94,8 @@ export default function initializeCoreEntry(
    * Allow to enforce the fact that it is only initialized once.
    */
   let isInitialized = false;
-  /**
-   * Abstraction allowing to prepare contents (fetching its manifest as
-   * well as creating and reloading its MediaSource) for playback.
-   */
-  const contentPreparer = new ContentPreparer();
+  /** Session owning the active content's preparation and resources. */
+  let session: ContentSession | null = null;
   /**
    * Object allowing to control the lifecycle of the current content (stop/reload etc.).
    * `null` if there's no content loaded currently.
@@ -158,12 +155,15 @@ export default function initializeCoreEntry(
         break;
 
       case MainThreadMessageType.PrepareContent:
-        prepareNewContent(sendMessage, contentPreparer, msg.value, refs, corePlugins);
+        session?.dispose("new init");
+        session = prepareNewContent(sendMessage, msg.value, refs, corePlugins);
         break;
 
       case MainThreadMessageType.StartPreparedContent: {
-        const preparedContent = contentPreparer.getCurrentContent();
-        if (msg.contentId !== preparedContent?.contentId) {
+        if (session === null || msg.contentId !== session.contentId) {
+          return;
+        }
+        if (session.state.data === null) {
           return;
         }
 
@@ -180,7 +180,7 @@ export default function initializeCoreEntry(
         currentContentHandle = loadPreparedContent(
           sendMessage,
           msg.value,
-          contentPreparer,
+          session,
           currentContentObservationRef,
           refs,
         );
@@ -188,7 +188,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.PlaybackObservation: {
-        const currentContent = contentPreparer.getCurrentContent();
+        const currentContent = session?.state.data ?? null;
         if (msg.contentId !== currentContent?.contentId) {
           return;
         }
@@ -217,10 +217,11 @@ export default function initializeCoreEntry(
         break;
 
       case MainThreadMessageType.StopContent:
-        if (msg.contentId !== contentPreparer.getCurrentContent()?.contentId) {
+        if (session === null || msg.contentId !== session.contentId) {
           return;
         }
-        contentPreparer.disposeCurrentContent("StopContent message");
+        session.dispose("StopContent message");
+        session = null;
 
         currentContentHandle?.stop();
         currentContentHandle = null;
@@ -231,7 +232,7 @@ export default function initializeCoreEntry(
 
       case MainThreadMessageType.MediaSourceReload:
         {
-          const preparedContent = contentPreparer.getCurrentContent();
+          const preparedContent = session?.state.data ?? null;
           if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
             return;
           }
@@ -240,7 +241,7 @@ export default function initializeCoreEntry(
         break;
 
       case MainThreadMessageType.SourceBufferSuccess: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
           return;
         }
@@ -268,7 +269,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.SourceBufferError: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
           return;
         }
@@ -298,7 +299,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.MediaSourceReadyStateChange: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (msg.mediaSourceId !== preparedContent?.mediaSource.id) {
           return;
         }
@@ -314,10 +315,10 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.DecipherabilityStatusUpdate: {
-        if (msg.contentId !== contentPreparer.getCurrentContent()?.contentId) {
+        if (msg.contentId !== session?.state.data?.contentId) {
           return;
         }
-        const currentContent = contentPreparer.getCurrentContent();
+        const currentContent = session?.state.data ?? null;
         if (currentContent === null || currentContent.manifest === null) {
           return;
         }
@@ -334,7 +335,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.CodecSupportUpdate: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (preparedContent === null || preparedContent.manifest === null) {
           return;
         }
@@ -359,7 +360,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.ContentUrlsUpdate: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
@@ -371,7 +372,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.TrackUpdate: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
@@ -384,7 +385,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.RepresentationUpdate: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
@@ -398,7 +399,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.PushTextDataSuccess: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
@@ -411,7 +412,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.PushTextDataError: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
@@ -424,7 +425,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.RemoveTextDataSuccess: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
@@ -437,7 +438,7 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.RemoveTextDataError: {
-        const preparedContent = contentPreparer.getCurrentContent();
+        const preparedContent = session?.state.data ?? null;
         if (preparedContent === null || preparedContent.contentId !== msg.contentId) {
           return;
         }
@@ -450,12 +451,12 @@ export default function initializeCoreEntry(
       }
 
       case MainThreadMessageType.PullSegmentSinkStoreInfos: {
-        sendSegmentSinksStoreInfos(sendMessage, contentPreparer, msg.value.requestId);
+        sendSegmentSinksStoreInfos(sendMessage, session, msg.value.requestId);
         break;
       }
 
       case MainThreadMessageType.ThumbnailDataRequest: {
-        sendThumbnailData(sendMessage, contentPreparer, msg);
+        sendThumbnailData(sendMessage, session, msg);
         break;
       }
 
@@ -482,8 +483,6 @@ export default function initializeCoreEntry(
  *   - etc.
  * @param {Function} sendMessage - Function allowing to send messages to the
  * "main thread" part of the RxPlayer logic.
- * @param {ContentPreparer} contentPreparer - Interface allowing to setup and
- * prepare a content.
  * @param {Object} contentInitData - Configuration wanted for the content to
  * load.
  * @param {Object} refs - Collection of so-called "references": values
@@ -494,37 +493,49 @@ export default function initializeCoreEntry(
  */
 function prepareNewContent(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
-  contentPreparer: ContentPreparer,
   contentInitData: IContentInitializationData,
   refs: ICoreReferences,
   corePlugins: ICorePlugins,
-): void {
-  contentPreparer
-    .initializeNewContent(
-      sendMessage,
-      contentInitData,
-      {
-        limitResolution: { video: refs.limitVideoResolution },
-        throttleBitrate: { video: refs.throttleVideoBitrate },
-      },
-      corePlugins,
-    )
-    .then(
-      (manifest) => {
+): ContentSession {
+  return new ContentSession(
+    sendMessage,
+    contentInitData,
+    {
+      limitResolution: { video: refs.limitVideoResolution },
+      throttleBitrate: { video: refs.throttleVideoBitrate },
+    },
+    corePlugins,
+    {
+      onReady: (manifest) => {
         sendMessage({
           type: CoreMessageType.ManifestReady,
           contentId: contentInitData.contentId,
           value: { manifest },
         });
       },
-      (err: unknown) => {
+      onError: (err) => {
         sendMessage({
           type: CoreMessageType.Error,
           contentId: contentInitData.contentId,
           value: formatErrorForSender(err),
         });
       },
-    );
+      onWarning: (err) => {
+        sendMessage({
+          type: CoreMessageType.Warning,
+          contentId: contentInitData.contentId,
+          value: formatErrorForSender(err),
+        });
+      },
+      onManifestUpdate: (manifest, updates) => {
+        sendMessage({
+          type: CoreMessageType.ManifestUpdate,
+          contentId: contentInitData.contentId,
+          value: { manifest, updates },
+        });
+      },
+    },
+  );
 }
 
 function updateCoreReference(msg: IReferenceUpdateMessage, refs: ICoreReferences): void {
@@ -583,7 +594,7 @@ interface IContentHandle {
 function loadPreparedContent(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
   val: ILoadingContentParameters,
-  contentPreparer: ContentPreparer,
+  session: ContentSession,
   playbackObservationRef: IReadOnlySharedReference<ICorePlaybackObservation>,
   refs: ICoreReferences,
 ): IContentHandle {
@@ -620,7 +631,7 @@ function loadPreparedContent(
       Map<ITrackType, IDiscontinuityUpdateCoreMessagePayload>
     > = new Map();
 
-    const preparedContent = contentPreparer.getCurrentContent();
+    const preparedContent = session.state.data;
     if (preparedContent === null || preparedContent.manifest === null) {
       const error = new OtherError("NONE", "Loading content when none is prepared");
       sendMessage({
@@ -765,7 +776,7 @@ function loadPreparedContent(
         },
 
         needsManifestRefresh() {
-          contentPreparer.scheduleManifestRefresh({
+          session.scheduleManifestRefresh({
             enablePartialRefresh: true,
             canUseUnsafeMode: true,
           });
@@ -773,7 +784,7 @@ function loadPreparedContent(
 
         manifestMightBeOufOfSync() {
           const { OUT_OF_SYNC_MANIFEST_REFRESH_DELAY } = config.getCurrent();
-          contentPreparer.scheduleManifestRefresh({
+          session.scheduleManifestRefresh({
             enablePartialRefresh: false,
             canUseUnsafeMode: false,
             delay: OUT_OF_SYNC_MANIFEST_REFRESH_DELAY,
@@ -1002,7 +1013,7 @@ function loadPreparedContent(
       currentLoadCanceller.cancel("WorkerMain MediaSource reload");
       currentLoadCanceller = null;
     }
-    const mediaSourceId = contentPreparer.getCurrentContent()?.mediaSource.id;
+    const mediaSourceId = session.state.data?.mediaSource.id;
     if (mediaSourceId === undefined) {
       log.warn("Core", "Cannot reload MediaSource: no MediaSource currently.");
       return;
@@ -1025,6 +1036,9 @@ function loadPreparedContent(
   }
 
   function onMediaSourceReload(): void {
+    if (session.state.type === "disposed") {
+      return;
+    }
     // TODO more precize one day?
     const lastObservation = playbackObservationRef.getValue();
     const newInitialTime = lastObservation.position.getWanted();
@@ -1032,9 +1046,12 @@ function loadPreparedContent(
       currentLoadCanceller.cancel("MediaSource reload");
       currentLoadCanceller = null;
     }
-    const contentId = contentPreparer.getCurrentContent()?.contentId;
-    contentPreparer.reloadMediaSource(sendMessage).then(
+    const contentId = session.state.data?.contentId;
+    session.reloadMediaSource(sendMessage).then(
       () => {
+        if (session.state.type === "disposed") {
+          return;
+        }
         log.info("Core", "MediaSource Reloaded, loading content again", {
           newInitialTime,
         });
@@ -1092,14 +1109,14 @@ function updateLoggerLevel(
  * a serialized object that represents the segmentSinksStore state.
  * @param {Function} sendMessage - Function allowing to send messages to the
  * "main thread" part of the RxPlayer logic.
- * @param {ContentPreparer} contentPreparer
+ * @param {ContentSession} session
  */
 function sendSegmentSinksStoreInfos(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
-  contentPreparer: ContentPreparer,
+  session: ContentSession | null,
   requestId: number,
 ): void {
-  const currentContent = contentPreparer.getCurrentContent();
+  const currentContent = session?.state.data ?? null;
   if (currentContent === null) {
     return;
   }
@@ -1184,15 +1201,15 @@ function handleFreezeResolution(
 
 /**
  * Handles thumbnail requests and send back the result to the main thread.
- * @param {ContentPreparer} contentPreparer
+ * @param {ContentSession} session
  * @returns {void}
  */
 function sendThumbnailData(
   sendMessage: (msg: ICoreMessage, transferables?: Transferable[]) => void,
-  contentPreparer: ContentPreparer,
+  session: ContentSession | null,
   msg: IThumbnailDataRequestMainMessage,
 ): void {
-  const preparedContent = contentPreparer.getCurrentContent();
+  const preparedContent = session?.state.data ?? null;
   const respondWithError = (err: unknown) => {
     sendMessage({
       type: CoreMessageType.ThumbnailDataResponse,
