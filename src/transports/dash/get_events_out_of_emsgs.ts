@@ -37,8 +37,15 @@ function manifestNeedsToBeRefreshed(
     const manifestRefreshEventFromEMSGs = emsgs[i];
     const currentManifestPublishTime = manifestPublishTime;
     const { messageData } = manifestRefreshEventFromEMSGs;
-    const strPublishTime = utf8ToStr(messageData);
-    const eventManifestPublishTime = Date.parse(strPublishTime);
+    // `message_data` starts with the `publish_time` of an MPD, as a
+    // null-terminated string (ISO/IEC 23009-1 5.10.4.1)
+    const nullIdx = messageData.indexOf(0);
+    const strPublishTime = utf8ToStr(
+      nullIdx === -1 ? messageData : messageData.subarray(0, nullIdx),
+    );
+    // `Date.parse` returns milliseconds, our Manifest's `publishTime` is in
+    // seconds
+    const eventManifestPublishTime = Date.parse(strPublishTime) / 1000;
     if (
       currentManifestPublishTime === undefined ||
       eventManifestPublishTime === undefined ||
@@ -84,6 +91,10 @@ export default function getEventsOutOfEMSGs(
         // TODO support value 2 and 3
         val.value === "1"
       ) {
+        // TODO ignore events already seen in previous segments. Per ISO/IEC
+        // 23009-1 5.10.3.3.4, events with the same `id`, `schemeIdUri` and
+        // `value` are equivalent, and they are often repeated in multiple
+        // segments. This would need state kept across segments.
         if (acc.manifestRefreshEventsFromEMSGs === undefined) {
           acc.manifestRefreshEventsFromEMSGs = [];
         }
