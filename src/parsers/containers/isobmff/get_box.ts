@@ -139,6 +139,15 @@ function getBoxOffsets(
     lastBoxSize = be4toi(buf, lastOffset);
     lastOffset += 4;
 
+    if (lastBoxSize === 4) {
+      // NOTE: A box with a 32-bit size of 4 is not valid ISOBMFF, as it is
+      // smaller than its own header. Yet some implementations (e.g. GPAC)
+      // tolerate it as a 4-byte filler, and skipping those 4 bytes always
+      // worked here, so we keep doing it to avoid breaking content.
+      boxBaseOffset += 4;
+      continue;
+    }
+
     name = be4toi(buf, lastOffset);
     lastOffset += 4;
 
@@ -152,7 +161,10 @@ function getBoxOffsets(
       lastOffset += 8;
     }
 
-    if (lastBoxSize < 0) {
+    if (lastBoxSize < lastOffset - boxBaseOffset) {
+      // Smaller than its own header (this also prevents infinite loops)
+      // TODO: ffmpeg reads a 64-bit size of 8 as "box goes to the end of the
+      // file". We throw instead. Consider aligning.
       throw new Error("ISOBMFF: Size out of range");
     }
     if (name === boxName) {
@@ -195,6 +207,11 @@ function getUuidContent<T extends ArrayBufferLike>(
     boxSize = be4toi(buf, currentOffset);
     currentOffset += 4;
 
+    if (boxSize === 4) {
+      // NOTE: see `getBoxOffsets` for why a 32-bit size of 4 is skipped over.
+      continue;
+    }
+
     const boxName = be4toi(buf, currentOffset);
     currentOffset += 4;
 
@@ -206,6 +223,12 @@ function getUuidContent<T extends ArrayBufferLike>(
       }
       boxSize = be8toi(buf, currentOffset);
       currentOffset += 8;
+    }
+
+    if (boxSize < currentOffset - boxBaseOffset) {
+      // Smaller than its own header (this also prevents infinite loops)
+      // TODO: see `getBoxOffsets` about a 64-bit size of 8.
+      throw new Error("ISOBMFF: Size out of range");
     }
 
     if (
@@ -283,7 +306,9 @@ function getNextBoxOffsets(
     lastOffset += 8;
   }
 
-  if (boxSize < 0) {
+  if (boxSize < lastOffset) {
+    // Smaller than its own header
+    // TODO: see `getBoxOffsets` about a 64-bit size of 8.
     throw new Error("ISOBMFF: Size out of range");
   }
   if (name === 0x75756964 /* === "uuid" */) {

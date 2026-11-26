@@ -102,7 +102,15 @@ export default function generateAudioVideoSegmentParser({
       const psshInfo = extractPssh(chunkData);
       let keyId;
       if (segment.isInit) {
-        keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;
+        try {
+          keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;
+        } catch (err) {
+          logger.warn(
+            "dash",
+            "Could not read key id from init segment",
+            err instanceof Error ? err : "",
+          );
+        }
       }
       if (psshInfo.length > 0 || keyId !== undefined) {
         protectionData.push({
@@ -120,7 +128,16 @@ export default function generateAudioVideoSegmentParser({
       const chunkOffset = segment.timestampOffset ?? 0;
 
       if (seemsToBeMP4) {
-        const parsedEMSGs = parseEmsgBoxes(chunkData);
+        let parsedEMSGs;
+        try {
+          parsedEMSGs = parseEmsgBoxes(chunkData);
+        } catch (err) {
+          logger.warn(
+            "dash",
+            "Could not read emsg boxes from segment",
+            err instanceof Error ? err : "",
+          );
+        }
         if (parsedEMSGs !== undefined) {
           const whitelistedEMSGs = parsedEMSGs.filter((evt) => {
             if (
@@ -165,7 +182,7 @@ export default function generateAudioVideoSegmentParser({
     // we're handling an initialization segment
     const { indexRange } = segment;
 
-    let segmentList;
+    let segmentList = null;
     if (containerType === "webm") {
       segmentList = getSegmentsFromCues(chunkData, 0);
     } else if (seemsToBeMP4) {
@@ -179,10 +196,24 @@ export default function generateAudioVideoSegmentParser({
         removeDolbyVisionConfigData(chunkData);
       }
 
-      segmentList = getSegmentsFromSidx(
-        chunkData,
-        Array.isArray(indexRange) ? indexRange[0] : 0,
-      );
+      try {
+        segmentList = getSegmentsFromSidx(
+          chunkData,
+          Array.isArray(indexRange) ? indexRange[0] : 0,
+        );
+      } catch (err) {
+        // Only consider it an error if we're sure this is MP4 and a `sidx` is
+        // announced. Otherwise, the data might not be MP4 or might just not
+        // contain a `sidx` at all.
+        if (containerType === "mp4" && indexRange !== undefined) {
+          throw err;
+        }
+        logger.warn(
+          "dash",
+          "Could not read sidx from segment",
+          err instanceof Error ? err : "",
+        );
+      }
 
       // This is a very specific handling for streams we know have a very
       // specific problem at Canal+: The last reference gives a truncated
@@ -205,7 +236,15 @@ export default function generateAudioVideoSegmentParser({
 
     let timescale;
     if (seemsToBeMP4) {
-      timescale = getMDHDTimescale(chunkData);
+      try {
+        timescale = getMDHDTimescale(chunkData);
+      } catch (err) {
+        logger.warn(
+          "dash",
+          "Could not read mdhd timescale from segment",
+          err instanceof Error ? err : "",
+        );
+      }
     } else if (containerType === "webm") {
       timescale = getTimeCodeScale(chunkData, 0);
     }

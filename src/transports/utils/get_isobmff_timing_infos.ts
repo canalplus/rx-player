@@ -39,7 +39,13 @@ export default function getISOBMFFTimingInfos(
   segment: ISegment,
   initTimescale?: number,
 ): IChunkTimeInfo | null {
-  const baseDecodeTime = getTrackFragmentDecodeTime(buffer);
+  let baseDecodeTime;
+  try {
+    baseDecodeTime = getTrackFragmentDecodeTime(buffer);
+  } catch (err) {
+    log.warn("dash", "Could not read tfdt from segment", err instanceof Error ? err : "");
+    return null;
+  }
   if (baseDecodeTime === undefined || initTimescale === undefined) {
     return null;
   }
@@ -48,7 +54,16 @@ export default function getISOBMFFTimingInfos(
     segment.timestampOffset !== undefined
       ? baseDecodeTime + segment.timestampOffset * initTimescale
       : baseDecodeTime;
-  let trunDuration = getDurationFromTrun(buffer);
+  let trunDuration;
+  try {
+    trunDuration = getDurationFromTrun(buffer);
+  } catch (err) {
+    log.warn(
+      "dash",
+      "Could not read duration from trun",
+      err instanceof Error ? err : "",
+    );
+  }
   if (startTime < 0) {
     if (trunDuration !== undefined) {
       trunDuration += startTime; // remove from duration what comes before `0`

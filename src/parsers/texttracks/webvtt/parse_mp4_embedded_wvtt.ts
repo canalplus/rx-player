@@ -3,10 +3,12 @@ import { be4toi } from "../../../utils/byte_parsing.ts";
 import { utf8ToStr } from "../../../utils/string_parsing.ts";
 import {
   getBoxContent,
+  getBoxOffsets,
   getMDAT,
   getTrackFragmentDecodeTime,
 } from "../../containers/isobmff/index.ts";
-import { getTrunSamples } from "../../containers/isobmff/utils.ts";
+import type { ITrunSampleInfo } from "../../containers/isobmff/utils.ts";
+import { getTrunSamplesFromTraf } from "../../containers/isobmff/utils.ts";
 import { parseSettings } from "./parse_cue_block.ts";
 import type { IStyleElements } from "./parse_style_block.ts";
 
@@ -31,6 +33,9 @@ export default function parseMp4EmbeddedWebVtt<T>(
     return [];
   }
   const trunSamples = getTrunSamples(buffer);
+  // TODO: Only the first `mdat` is read, while `trunSamples` comes from every
+  // `moof`. Samples from the following `moof`s are read past this `mdat`'s end
+  // and their cues are silently lost.
   const mdat = getMDAT(buffer);
   if (mdat === null) {
     return [];
@@ -167,4 +172,46 @@ function getPayl(buf: Uint8Array): Uint8Array | null {
  */
 function getSttg(buf: Uint8Array): Uint8Array | null {
   return getBoxContent(buf, 0x73747467 /* "sttg" */);
+}
+
+/**
+ * Parse the trun boxes of every moof (first traf of each) found in the given
+ * ISOBMFF data into "trun sample" objects.
+ *
+ * If unreadable data is encountered, the samples read until then are returned:
+ * cues obtained from them are still valid.
+ * @param {Uint8Array} buffer
+ * @returns {Array.<Object>}
+ */
+function getTrunSamples(buffer: Uint8Array): ITrunSampleInfo[] {
+  const samples: ITrunSampleInfo[] = [];
+  let remaining = buffer;
+  while (remaining.length > 0) {
+    let trafSamples;
+    try {
+      const moofOffsets = getBoxOffsets(remaining, 0x6d6f6f66 /* moof */);
+      if (moofOffsets === null) {
+        break;
+      }
+      const moof = remaining.subarray(moofOffsets[1], moofOffsets[2]);
+      remaining = remaining.subarray(moofOffsets[2]);
+      const traf = getBoxContent(moof, 0x74726166 /* traf */);
+      if (traf === null) {
+        continue;
+      }
+      trafSamples = getTrunSamplesFromTraf(traf);
+    } catch (err) {
+      log.warn(
+        "vtt",
+        "Could not read further trun samples",
+        err instanceof Error ? err : "",
+      );
+      break;
+    }
+    if (trafSamples === null) {
+      return [];
+    }
+    samples.push(...trafSamples);
+  }
+  return samples;
 }

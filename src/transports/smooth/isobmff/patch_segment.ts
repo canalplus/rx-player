@@ -15,6 +15,7 @@
  */
 
 import canPatchISOBMFFSegment from "../../../compat/can_patch_isobmff.ts";
+import log from "../../../log.ts";
 import {
   createBoxWithChildren,
   getBox,
@@ -67,13 +68,19 @@ export default function patchSegment(
     oldTrunBox,
     oldTrunOffsets[1] - oldTrunOffsets[0],
   );
-  const sencContent = getUuidContent(
-    trafContent,
-    0xa2394f52,
-    0x5a9b4f14,
-    0xa2446c42,
-    0x7c648df4,
-  );
+  let sencContent;
+  try {
+    sencContent = getUuidContent(
+      trafContent,
+      0xa2394f52,
+      0x5a9b4f14,
+      0xa2446c42,
+      0x7c648df4,
+    );
+  } catch (err) {
+    // Boxes other than the ones we re-create are dropped anyway
+    log.warn("smooth", "could not read senc box", err instanceof Error ? err : "");
+  }
   const newTrafBox = createTrafBox(tfhdBox, tfdtBox, newTrunBox, mfhdBox, sencContent);
   const newMoof = createBoxWithChildren("moof", [mfhdBox, newTrafBox]);
 

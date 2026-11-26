@@ -504,8 +504,15 @@ export class DummySourceBuffer
 
         const [initSegment, otherChunks] = extractInitSegment(u8data);
         let keyId = this._lastKeyId;
+        // TODO: On malformed data, behave like MSE's "append error" algorithm
+        // (`updating` to `false`, "error" then "updateend" events, decode error
+        // on the media element) instead of ignoring the unreadable box.
         if (initSegment !== null) {
-          keyId = getKeyIdFromInitSegment(initSegment);
+          try {
+            keyId = getKeyIdFromInitSegment(initSegment);
+          } catch {
+            keyId = null;
+          }
         }
         this._lastKeyId = keyId;
 
@@ -517,10 +524,24 @@ export class DummySourceBuffer
         for (const chunk of chunks) {
           const moovIndex = findCompleteBox(chunk, 0x6d6f6f76);
           if (moovIndex >= 0) {
-            this._lastInitTimescale = getMDHDTimescale(chunk) ?? null;
+            try {
+              this._lastInitTimescale = getMDHDTimescale(chunk) ?? null;
+            } catch {
+              this._lastInitTimescale = null;
+            }
           } else {
-            const trackFragmentDecodeTime = getTrackFragmentDecodeTime(chunk);
-            let trunDuration = getDurationFromTrun(chunk);
+            let trackFragmentDecodeTime;
+            try {
+              trackFragmentDecodeTime = getTrackFragmentDecodeTime(chunk);
+            } catch {
+              trackFragmentDecodeTime = undefined;
+            }
+            let trunDuration;
+            try {
+              trunDuration = getDurationFromTrun(chunk);
+            } catch {
+              trunDuration = undefined;
+            }
             if (
               trackFragmentDecodeTime !== undefined &&
               trunDuration !== undefined &&
