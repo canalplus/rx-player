@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import isNullOrUndefined from "../../../../../utils/is_null_or_undefined.ts";
 import type { ITNode } from "../../../../../utils/xml-parser.ts";
 import type { IBaseUrlIntermediateRepresentation } from "../../node_parser_types.ts";
 import { textContent } from "./utils.ts";
@@ -21,16 +22,21 @@ import { textContent } from "./utils.ts";
 /**
  * Parse an BaseURL element into an BaseURL intermediate
  * representation.
- * @param {Object | string} root - The BaseURL root element.
- * @returns {Array.<Object|undefined>}
+ * @param {Object} root - The BaseURL root element.
+ * @returns {Object}
  */
-export default function parseBaseURL(
-  root: ITNode | string,
-): [IBaseUrlIntermediateRepresentation | undefined, Error[]] {
-  const value = typeof root === "string" ? root : textContent(root.children);
-  const warnings: Error[] = [];
-  if (value === null || value.length === 0) {
-    return [undefined, warnings];
+export default function parseBaseURL(root: ITNode): IBaseUrlIntermediateRepresentation {
+  const attributes: { serviceLocation?: string } = {};
+  const value = textContent(root.children);
+
+  for (const attributeName of Object.keys(root.attributes)) {
+    const attributeVal = root.attributes[attributeName];
+    if (isNullOrUndefined(attributeVal)) {
+      continue;
+    }
+    if (attributeName === "serviceLocation") {
+      attributes.serviceLocation = attributeVal;
+    }
   }
-  return [{ value }, warnings];
+  return { value, attributes };
 }

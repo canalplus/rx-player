@@ -152,6 +152,19 @@ pub fn report_base_url_attrs(element: &crate::xml::Element) {
     }
 }
 
+pub fn report_location_attrs(element: &crate::xml::Element) {
+    for res_attr in element.attributes() {
+        match res_attr {
+            Ok(attr) => {
+                if let b"serviceLocation" = attr.key {
+                    ServiceLocation.try_report_as_string(&attr)
+                }
+            }
+            Err(err) => err.report_err(),
+        };
+    }
+}
+
 pub fn report_segment_template_attrs(element: &crate::xml::Element) {
     for res_attr in element.attributes() {
         match res_attr {
