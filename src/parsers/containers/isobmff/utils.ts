@@ -31,8 +31,8 @@ import { hexToBytes, readNullTerminatedString } from "../../../utils/string_pars
 import { MAX_32_BIT_INT } from "./constants.ts";
 import { createBox } from "./create_box.ts";
 import { getPlayReadyKIDFromPrivateData } from "./drm/index.ts";
-import { getBoxContent, getBoxOffsets, getChildBox } from "./get_box.ts";
-import { getEMSG, getMDIA, getTRAF, getTRAFs } from "./read.ts";
+import { getBoxContent, getBoxesContent, getBoxOffsets, getChildBox } from "./get_box.ts";
+import { getMDIA, getTRAF, getTRAFs } from "./read.ts";
 
 /** Information related to a PSSH box. */
 export interface IISOBMFFPSSHInfo {
@@ -544,18 +544,16 @@ function updateBoxLength(buf: Uint8Array<ArrayBuffer>): Uint8Array<ArrayBuffer> 
  */
 function parseEmsgBoxes(buffer: Uint8Array): IEMSG[] | undefined {
   const emsgs: IEMSG[] = [];
-  let offset = 0;
-  while (offset < buffer.length) {
-    const emsg = getEMSG(buffer, offset);
-    if (emsg === null) {
-      break;
-    }
-
+  for (const emsg of getBoxesContent(buffer, 0x656d7367 /* emsg */)) {
     const length = emsg.length;
-    offset += length;
 
     const version = emsg[0];
     if (version !== 0) {
+      // TODO support version 1. Its fields are in a different order and it
+      // signals an absolute `presentation_time` instead of a
+      // `presentation_time_delta` relative to the segment's earliest
+      // presentation time (ISO/IEC 23009-1 5.10.3.3), which our `IEMSG`
+      // (and thus the public `inbandEvents` event) exposes.
       log.warn("isobmff", "EMSG version " + version.toString() + " not supported.");
     } else {
       let position = 4; // skip version + flags
