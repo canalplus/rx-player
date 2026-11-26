@@ -14,7 +14,14 @@ import { boxTypeToFourCC, getBoxContent, getBoxOffsets } from "./get_box.ts";
  * @returns {void}
  */
 export default function removeDolbyVisionConfigData(data: Uint8Array<ArrayBuffer>): void {
-  const moov = getBoxContent(data, 0x6d6f6f76 /* moov */);
+  let moov;
+  try {
+    moov = getBoxContent(data, 0x6d6f6f76 /* moov */);
+  } catch (e) {
+    const err = e instanceof Error ? e : "";
+    log.warn("isobmff", "Error while reading moov to remove Dolby Vision data", err);
+    return;
+  }
   if (moov === null) {
     return;
   }
@@ -34,9 +41,16 @@ export default function removeDolbyVisionConfigData(data: Uint8Array<ArrayBuffer
       break;
     }
 
+    // TODO: `trakOffsets` already gives the trak's content, no need to look for
+    // it a second time.
     const trak = getBoxContent(moov.subarray(trakStart), 0x7472616b /* trak */);
     if (trak !== null) {
-      removeDvcCFromTrak(trak);
+      try {
+        removeDvcCFromTrak(trak);
+      } catch (e) {
+        const err = e instanceof Error ? e : "";
+        log.warn("isobmff", "Error while removing Dolby Vision data from trak", err);
+      }
     }
 
     // Advance past this trak box to find the next one

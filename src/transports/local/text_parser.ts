@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log.ts";
 import { getMDHDTimescale } from "../../parsers/containers/isobmff/index.ts";
 import { strToUtf8, utf8ToStr } from "../../utils/string_parsing.ts";
 import type {
@@ -65,7 +66,16 @@ function parseISOBMFFEmbeddedTextTrack(
   }
 
   if (segment.isInit) {
-    const mdhdTimescale = getMDHDTimescale(chunkBytes);
+    let mdhdTimescale;
+    try {
+      mdhdTimescale = getMDHDTimescale(chunkBytes);
+    } catch (err) {
+      log.warn(
+        "isobmff",
+        "Could not read mdhd timescale from text segment",
+        err instanceof Error ? err : "",
+      );
+    }
     return {
       segmentType: "init",
       initializationData: null,

@@ -377,6 +377,11 @@ export default function PeriodStream(
       // Stream linked to a non-native media buffer should not impact the
       // stability of the player. ie: if a text buffer sends an error, we want
       // to continue playing without any subtitles
+      // TODO: When a text segment cannot be parsed, we'd prefer to skip only
+      // that segment and keep the text stream, rather than disposing it for the
+      // whole Period. This concerns both errors from its segment parser and
+      // errors when pushing it, as WebVTT embedded in MP4 is only parsed when
+      // pushed.
       if (!SegmentSinksStore.isNative(bufferType)) {
         log.error(
           `Stream`,

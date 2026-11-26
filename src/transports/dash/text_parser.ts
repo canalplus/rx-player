@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log.ts";
 import {
   getMDHDTimescale,
   getSegmentsFromSidx,
@@ -74,10 +75,24 @@ function parseISOBMFFEmbeddedTextTrack(
   }
 
   if (isInit) {
-    const segmentList = getSegmentsFromSidx(
-      chunkBytes,
-      Array.isArray(indexRange) ? indexRange[0] : 0,
-    );
+    let segmentList = null;
+    try {
+      segmentList = getSegmentsFromSidx(
+        chunkBytes,
+        Array.isArray(indexRange) ? indexRange[0] : 0,
+      );
+    } catch (err) {
+      // Only consider it an error if a `sidx` is announced. Otherwise, the
+      // segment might just not contain a `sidx` at all.
+      if (indexRange !== undefined) {
+        throw err;
+      }
+      log.warn(
+        "dash",
+        "Could not read sidx from text segment",
+        err instanceof Error ? err : "",
+      );
+    }
 
     // This is a very specific handling for streams we know have a very
     // specific problem at Canal+: The last reference gives a truncated
@@ -97,7 +112,16 @@ function parseISOBMFFEmbeddedTextTrack(
       }
     }
 
-    const mdhdTimescale = getMDHDTimescale(chunkBytes);
+    let mdhdTimescale;
+    try {
+      mdhdTimescale = getMDHDTimescale(chunkBytes);
+    } catch (err) {
+      log.warn(
+        "dash",
+        "Could not read mdhd timescale from text segment",
+        err instanceof Error ? err : "",
+      );
+    }
     return {
       segmentType: "init",
       initializationData: null,

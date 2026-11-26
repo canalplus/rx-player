@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import log from "../../log.ts";
 import { getMDHDTimescale, extractPssh } from "../../parsers/containers/isobmff/index.ts";
 import { getKeyIdFromInitSegment } from "../../parsers/containers/isobmff/utils.ts";
 import { getTimeCodeScale } from "../../parsers/containers/matroska/index.ts";
@@ -71,7 +72,15 @@ export default function segmentParser(
     const psshInfo = extractPssh(chunkData);
     let keyId;
     if (segment.isInit) {
-      keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;
+      try {
+        keyId = getKeyIdFromInitSegment(chunkData) ?? undefined;
+      } catch (err) {
+        log.warn(
+          "isobmff",
+          "Could not read key id from init segment",
+          err instanceof Error ? err : "",
+        );
+      }
     }
     if (psshInfo.length > 0 || keyId !== undefined) {
       protectionData.push({ initDataType: "cenc", keyId, initData: psshInfo });
@@ -79,11 +88,21 @@ export default function segmentParser(
   }
 
   if (segment.isInit) {
-    const timescale =
-      containerType === "webm"
-        ? getTimeCodeScale(chunkData, 0)
-        : // assume ISOBMFF-compliance
-          getMDHDTimescale(chunkData);
+    let timescale;
+    if (containerType === "webm") {
+      timescale = getTimeCodeScale(chunkData, 0);
+    } else {
+      // assume ISOBMFF-compliance
+      try {
+        timescale = getMDHDTimescale(chunkData);
+      } catch (err) {
+        log.warn(
+          "isobmff",
+          "Could not read mdhd timescale from segment",
+          err instanceof Error ? err : "",
+        );
+      }
+    }
     return {
       segmentType: "init",
       initializationData: chunkData,

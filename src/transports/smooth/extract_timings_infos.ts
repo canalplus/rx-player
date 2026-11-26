@@ -79,10 +79,24 @@ export default function extractTimingsInfos(
   let tfxdSegment: IISOBMFFBasicSegment | undefined;
   let tfrfSegments: IISOBMFFBasicSegment[] | undefined;
   if (isLive) {
-    const traf = getTRAF(data);
+    let traf = null;
+    try {
+      traf = getTRAF(data);
+    } catch (err) {
+      log.warn("smooth", "could not read traf atom", err instanceof Error ? err : "");
+    }
     if (traf !== null) {
-      tfrfSegments = parseTfrf(traf);
-      tfxdSegment = parseTfxd(traf);
+      // Separate catches so that a failure on one does not prevent the other
+      try {
+        tfrfSegments = parseTfrf(traf);
+      } catch (err) {
+        log.warn("smooth", "could not read tfrf box", err instanceof Error ? err : "");
+      }
+      try {
+        tfxdSegment = parseTfxd(traf);
+      } catch (err) {
+        log.warn("smooth", "could not read tfxd box", err instanceof Error ? err : "");
+      }
     } else {
       log.warn("smooth", "could not find traf atom");
     }
@@ -117,7 +131,16 @@ export default function extractTimingsInfos(
   // the segment infos instead.
   const maxDecodeTimeDelta = Math.min(initTimescale * 0.9, segmentDuration / 4);
 
-  const trunDuration = getDurationFromTrun(data);
+  let trunDuration;
+  try {
+    trunDuration = getDurationFromTrun(data);
+  } catch (err) {
+    log.warn(
+      "smooth",
+      "could not read duration from trun",
+      err instanceof Error ? err : "",
+    );
+  }
   const scaledSegmentTime =
     segment.privateInfos?.smoothMediaSegment !== undefined
       ? segment.privateInfos.smoothMediaSegment.time

@@ -40,7 +40,14 @@ export interface IISOBMFFPSSHInfo {
  * are encountered.
  */
 export default function extractPssh(data: Uint8Array<ArrayBuffer>): IISOBMFFPSSHInfo[] {
-  const moovContent = getBoxContent(data, 0x6d6f6f76 /* moov */);
+  let moovContent;
+  try {
+    moovContent = getBoxContent(data, 0x6d6f6f76 /* moov */);
+  } catch (e) {
+    const err = e instanceof Error ? e : new Error("Unknown ISOBMFF box reading error");
+    log.warn("isobmff", "Error while reading moov to extract PSSH", err);
+    return [];
+  }
   if (moovContent === null) {
     return [];
   }
