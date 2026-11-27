@@ -134,6 +134,32 @@ describe("extractPssh", () => {
     expect(mockLog.warn).toHaveBeenCalledWith("isobmff", "un-handled PSSH version");
   });
 
+  it("returns [] and warns when a box before moov has a size smaller than its header", () => {
+    const badBox = new Uint8Array([0, 0, 0, 5, 0x66, 0x72, 0x65, 0x65]);
+    const data = concat(badBox, buildMoovBox(buildPsshBox(SYSTEM_ID_A)));
+    expect(extractPssh(data)).toEqual([]);
+    expect(mockLog.warn).toHaveBeenCalledWith(
+      "isobmff",
+      "Error while reading moov to extract PSSH",
+      new Error("ISOBMFF: Size out of range"),
+    );
+  });
+
+  it("keeps the pssh read before a box with a size smaller than its header", () => {
+    const badBox = new Uint8Array([0, 0, 0, 5, 0x66, 0x72, 0x65, 0x65]);
+    const data = buildMoovBox(
+      concat(buildPsshBox(SYSTEM_ID_A), badBox, buildPsshBox(SYSTEM_ID_B)),
+    );
+    const result = extractPssh(data);
+    expect(result).toHaveLength(1);
+    expect(result[0].systemId).toBe(systemIdAHex);
+    expect(mockLog.warn).toHaveBeenCalledWith(
+      "isobmff",
+      "Error while removing PSSH from ISOBMFF",
+      new Error("ISOBMFF: Size out of range"),
+    );
+  });
+
   it("patches out pssh bytes when canPatchOutPsshBox returns true", () => {
     mockCanPatchOutPsshBox.mockReturnValue(true);
     const pssh = buildPsshBox(SYSTEM_ID_A);

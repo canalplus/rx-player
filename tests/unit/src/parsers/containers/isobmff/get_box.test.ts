@@ -10,7 +10,7 @@ import {
   getUuidContent,
 } from "../../../../../../src/parsers/containers/isobmff/get_box.ts";
 import assert from "../../../../../../src/utils/assert.ts";
-import { concat } from "../../../../../../src/utils/byte_parsing.ts";
+import { concat, itobe4 } from "../../../../../../src/utils/byte_parsing.ts";
 
 const logWarn = vi.hoisted(() => vi.fn());
 vi.mock("../../../../../../src/log", () => ({
@@ -445,5 +445,179 @@ describe("isobmff - getUuidContent", () => {
     expect(result).not.toBeUndefined();
     assert(result !== undefined); // For TypeScript
     expect(Array.from(result)).toEqual([0x11, 0x22]);
+  });
+});
+
+/**
+ * Builds a FREE box announcing the given 32-bit size, whatever its real length.
+ */
+function makeBoxWithSize(size: number): Uint8Array {
+  const buf = makeBox(FREE, new Uint8Array(16));
+  writeBe4(buf, 0, size);
+  return buf;
+}
+
+/**
+ * Builds a FREE box announcing the given 64-bit size, whatever its real length.
+ */
+function makeLargeBoxWithSize(size: number): Uint8Array {
+  const buf = makeLargeBox(FREE, new Uint8Array(16));
+  writeBe8(buf, 8, 0, size);
+  return buf;
+}
+
+/** 32-bit sizes smaller than the header, except `0`, `1` and `4`. */
+const TOO_SMALL_SIZES = [2, 3, 5, 6, 7];
+
+/** 64-bit sizes smaller than the header. */
+const TOO_SMALL_LARGE_SIZES = [0, 1, 2, 4, 7, 8, 9, 15];
+
+describe("isobmff - getBoxOffsets - box sizes", () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  for (const size of TOO_SMALL_SIZES) {
+    it(`should throw on a box before the wanted one with a size of ${size}`, () => {
+      const buf = concat(makeBoxWithSize(size), makeBox(MOOV));
+      expect(() => getBoxOffsets(buf, MOOV)).toThrow("ISOBMFF: Size out of range");
+    });
+  }
+
+  for (const size of TOO_SMALL_LARGE_SIZES) {
+    it(`should throw on a box before the wanted one with a 64-bit size of ${size}`, () => {
+      const buf = concat(makeLargeBoxWithSize(size), makeBox(MOOV));
+      expect(() => getBoxOffsets(buf, MOOV)).toThrow("ISOBMFF: Size out of range");
+    });
+  }
+
+  it("should throw when the wanted box has a size smaller than its header", () => {
+    expect(() => getBoxOffsets(makeBoxWithSize(7), FREE)).toThrow(
+      "ISOBMFF: Size out of range",
+    );
+    expect(() => getBoxOffsets(makeLargeBoxWithSize(15), FREE)).toThrow(
+      "ISOBMFF: Size out of range",
+    );
+  });
+
+  it("should not read boxes after the wanted one", () => {
+    const buf = concat(makeBox(MOOV), makeBoxWithSize(2));
+    expect(getBoxOffsets(buf, MOOV)).toEqual([0, 8, 8]);
+  });
+
+  it("should skip a 32-bit size of 4", () => {
+    const buf = concat(itobe4(4), makeBox(MOOV, new Uint8Array(2)));
+    expect(getBoxOffsets(buf, MOOV)).toEqual([4, 12, 14]);
+  });
+
+  it("should skip several 32-bit sizes of 4 in a row", () => {
+    const buf = concat(itobe4(4), itobe4(4), makeBox(MOOV));
+    expect(getBoxOffsets(buf, MOOV)).toEqual([8, 16, 16]);
+  });
+
+  it("should accept boxes with only a header", () => {
+    const buf = concat(makeBox(FREE), makeLargeBox(FTYP), makeBox(MOOV));
+    expect(getBoxOffsets(buf, MOOV)).toEqual([24, 32, 32]);
+    expect(getBoxOffsets(buf, FTYP)).toEqual([8, 24, 24]);
+  });
+});
+
+describe("isobmff - getBox, getBoxContent and getBoxesContent - box sizes", () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("should throw on a box with a size smaller than its header", () => {
+    const buf = concat(makeBoxWithSize(5), makeBox(MOOV));
+    expect(() => getBox(buf, MOOV)).toThrow("ISOBMFF: Size out of range");
+    expect(() => getBoxContent(buf, MOOV)).toThrow("ISOBMFF: Size out of range");
+    expect(() => getBoxesContent(buf, MOOV)).toThrow("ISOBMFF: Size out of range");
+  });
+
+  it("should throw on a box between wanted ones for getBoxesContent", () => {
+    const buf = concat(makeBox(MOOV), makeLargeBoxWithSize(0), makeBox(MOOV));
+    expect(() => getBoxesContent(buf, MOOV)).toThrow("ISOBMFF: Size out of range");
+  });
+});
+
+describe("isobmff - getNextBoxOffsets - box sizes", () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  for (const size of [...TOO_SMALL_SIZES, 4]) {
+    it(`should throw on a size of ${size}`, () => {
+      expect(() => getNextBoxOffsets(makeBoxWithSize(size))).toThrow(
+        "ISOBMFF: Size out of range",
+      );
+    });
+  }
+
+  for (const size of TOO_SMALL_LARGE_SIZES) {
+    it(`should throw on a 64-bit size of ${size}`, () => {
+      expect(() => getNextBoxOffsets(makeLargeBoxWithSize(size))).toThrow(
+        "ISOBMFF: Size out of range",
+      );
+    });
+  }
+
+  it("should accept boxes with only a header", () => {
+    expect(getNextBoxOffsets(makeBox(FREE))).toEqual([0, 8, 8]);
+    expect(getNextBoxOffsets(makeLargeBox(FREE))).toEqual([0, 16, 16]);
+  });
+});
+
+describe("isobmff - getUuidContent - box sizes", () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  const ID1 = 0x01020304;
+  const ID2 = 0x05060708;
+  const ID3 = 0x090a0b0c;
+  const ID4 = 0x0d0e0f10;
+  const PAYLOAD = new Uint8Array([0xca, 0xfe]);
+
+  for (const size of TOO_SMALL_SIZES) {
+    it(`should throw on a box before the wanted one with a size of ${size}`, () => {
+      const buf = concat(makeBoxWithSize(size), makeUuidBox(ID1, ID2, ID3, ID4));
+      expect(() => getUuidContent(buf, ID1, ID2, ID3, ID4)).toThrow(
+        "ISOBMFF: Size out of range",
+      );
+    });
+  }
+
+  for (const size of TOO_SMALL_LARGE_SIZES) {
+    it(`should throw on a box before the wanted one with a 64-bit size of ${size}`, () => {
+      const buf = concat(makeLargeBoxWithSize(size), makeUuidBox(ID1, ID2, ID3, ID4));
+      expect(() => getUuidContent(buf, ID1, ID2, ID3, ID4)).toThrow(
+        "ISOBMFF: Size out of range",
+      );
+    });
+  }
+
+  it("should not read boxes after the wanted one", () => {
+    const buf = concat(makeUuidBox(ID1, ID2, ID3, ID4, PAYLOAD), makeBoxWithSize(2));
+    expect(Array.from(getUuidContent(buf, ID1, ID2, ID3, ID4) ?? [])).toEqual([
+      0xca, 0xfe,
+    ]);
+  });
+
+  it("should skip a 32-bit size of 4", () => {
+    const buf = concat(itobe4(4), makeUuidBox(ID1, ID2, ID3, ID4, PAYLOAD));
+    expect(Array.from(getUuidContent(buf, ID1, ID2, ID3, ID4) ?? [])).toEqual([
+      0xca, 0xfe,
+    ]);
+  });
+
+  it("should accept boxes with only a header", () => {
+    const buf = concat(
+      makeBox(FREE),
+      makeLargeBox(FTYP),
+      makeUuidBox(ID1, ID2, ID3, ID4, PAYLOAD),
+    );
+    expect(Array.from(getUuidContent(buf, ID1, ID2, ID3, ID4) ?? [])).toEqual([
+      0xca, 0xfe,
+    ]);
   });
 });

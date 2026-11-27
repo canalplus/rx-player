@@ -279,4 +279,42 @@ describe("removeDolbyVisionConfigData", () => {
       expect(() => removeDolbyVisionConfigData(truncated)).not.toThrow();
     });
   });
+
+  describe("box with a size smaller than its header", () => {
+    /** A `free` box announcing a size of 5. */
+    const badBox = (): Uint8Array<ArrayBuffer> =>
+      new Uint8Array([0, 0, 0, 5, 0x66, 0x72, 0x65, 0x65]);
+
+    it("does nothing and does not throw when it is before moov", () => {
+      const data = concat(badBox(), buildMoov(buildTrakFromStsd(buildStsd(HVC1, DVCC))));
+      const before = data.slice();
+      expect(() => removeDolbyVisionConfigData(data)).not.toThrow();
+      expect(data).toEqual(before);
+    });
+
+    it("still patches the trak boxes before it in moov", () => {
+      const data = buildMoov(
+        buildTrakFromStsd(buildStsd(HVC1, DVCC)),
+        badBox(),
+        buildTrakFromStsd(buildStsd(HVC1, DVVC)),
+      );
+      expect(() => removeDolbyVisionConfigData(data)).not.toThrow();
+      expect(findBoxOffset(data, DVCC)).toBe(-1);
+      expect(findBoxOffset(data, DVVC)).toBeGreaterThan(-1);
+    });
+
+    it("still patches the next trak boxes when it is inside a trak", () => {
+      const brokenTrak = buildBox(
+        TRAK,
+        concat(
+          badBox(),
+          buildBox(MDIA, buildBox(MINF, buildBox(STBL, buildStsd(HVC1, DVVC)))),
+        ),
+      );
+      const data = buildMoov(brokenTrak, buildTrakFromStsd(buildStsd(HVC1, DVCC)));
+      expect(() => removeDolbyVisionConfigData(data)).not.toThrow();
+      expect(findBoxOffset(data, DVVC)).toBeGreaterThan(-1);
+      expect(findBoxOffset(data, DVCC)).toBe(-1);
+    });
+  });
 });

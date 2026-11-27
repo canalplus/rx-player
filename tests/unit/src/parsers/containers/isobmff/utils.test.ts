@@ -136,4 +136,38 @@ describe("parseEmsgBoxes", () => {
     );
     expect(parseEmsgBoxes(data)?.map((e) => e.id)).toEqual([2]);
   });
+
+  it("should keep the emsg boxes read before a box with a size smaller than its header", () => {
+    const badBox = concat(itobe4(5), strToUtf8("free"));
+    const data = concat(
+      createEmsgV0({
+        schemeIdUri: "urn:a",
+        value: "1",
+        id: 1,
+        messageData: new Uint8Array([]),
+      }),
+      badBox,
+      createEmsgV0({
+        schemeIdUri: "urn:b",
+        value: "2",
+        id: 2,
+        messageData: new Uint8Array([]),
+      }),
+    );
+    expect(parseEmsgBoxes(data)?.map((e) => e.id)).toEqual([1]);
+  });
+
+  it("should return undefined when the first box has a size smaller than its header", () => {
+    const badBox = concat(itobe4(5), strToUtf8("free"));
+    const data = concat(
+      badBox,
+      createEmsgV0({
+        schemeIdUri: "urn:a",
+        value: "1",
+        id: 1,
+        messageData: new Uint8Array([]),
+      }),
+    );
+    expect(parseEmsgBoxes(data)).toBe(undefined);
+  });
 });
