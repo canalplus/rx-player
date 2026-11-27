@@ -43,6 +43,12 @@ import { PSSH_TO_INTEGER } from "./constants.ts";
  *
  * If the initData is unrecognized or if a CENC PSSH is not found, this function
  * throws.
+ *
+ * TODO: When the initialization data cannot be fully read (a box which is not
+ * a PSSH, a wrong size, trailing bytes...), this function throws. Chrome and
+ * Firefox then reject the unpatched initialization data, even when it contains
+ * a usable PSSH. We could retry with only the readable PSSH boxes, on a new
+ * `MediaKeySession`, when the browser rejects it.
  * @param {Uint8Array} initData - Initialization data you want to patch
  * @returns {Uint8Array} - Initialization data, patched
  */
@@ -132,6 +138,10 @@ export function patchInitData(
     } else if (goesToEnd) {
       // Its size says that it goes until the end of the data: nothing can be
       // put after it.
+      // TODO: If this is the only non-CENC PSSH, CENC PSSH stay first, which
+      // is what some browsers have issues with (see this function's
+      // description). Should we write its actual size in it instead, so it can
+      // be moved like other boxes? For now seen as too destructive/risky.
       lastBox = currentPSSH;
     } else {
       resInitData = concat(resInitData, currentPSSH);
@@ -189,6 +199,11 @@ export default function generateKeyRequest(
       // a rejected promise with a TypeError in that case).
       // Retry with a default "cenc" value for initialization data type if
       // we're in that condition.
+      // TODO: The EME specification marks the `MediaKeySession` as initialized
+      // before rejecting an empty initialization data type (Firefox does so),
+      // so this new `generateRequest` call on the same `MediaKeySession`
+      // should then fail with an `InvalidStateError`. A new `MediaKeySession`
+      // should be used instead.
       log.warn(
         "DRM",
         "error while calling `generateRequest` with an empty " +
