@@ -56,6 +56,34 @@ describe("Compat - generateKeyRequest", () => {
     }
   }
 
+  for (const size of [8, 12, 27]) {
+    it(`should drop a PSSH too small for a system ID (${size} bytes)`, () => {
+      const smallPssh = createBox("pssh", new Uint8Array(size - 8));
+      expect(patchInitData(concat(pssh, smallPssh))).toEqual(pssh);
+      expect(patchInitData(concat(smallPssh, pssh, smallPssh))).toEqual(pssh);
+    });
+
+    it(`should use original data if only PSSH too small for a system ID are left (${size} bytes)`, async () => {
+      const smallPssh = createBox("pssh", new Uint8Array(size - 8));
+      const initData = concat(smallPssh, smallPssh);
+      const generateRequest = vi.fn().mockResolvedValue(undefined);
+      const session = { generateRequest } as unknown as IMediaKeySession;
+
+      expect(() => patchInitData(initData)).toThrow(
+        "Compat: unrecognized initialization data. Cannot patch it.",
+      );
+      await generateKeyRequest(session, "cenc", initData);
+      expect(generateRequest).toHaveBeenCalledTimes(1);
+      expect(generateRequest.mock.calls[0][1]).toBe(initData);
+    });
+  }
+
+  it("should accept a PSSH with only a system ID", () => {
+    const smallestPssh = createBox("pssh", concat(4, new Uint8Array(16).fill(0x22)));
+    expect(smallestPssh.length).toBe(28);
+    expect(patchInitData(concat(pssh, smallestPssh))).toEqual(concat(pssh, smallestPssh));
+  });
+
   it("should still move CENC PSSH after other PSSH boxes", () => {
     const cencSystemId = new Uint8Array([
       0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2,

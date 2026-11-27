@@ -70,6 +70,14 @@ export function patchInitData(
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
 
+    if (len < 28) {
+      // Too small to contain a system ID. Drop it: some browsers reject the
+      // whole initialization data because of such box.
+      log.warn("DRM", "dropping PSSH too small to contain a system ID", len);
+      offset += len;
+      continue;
+    }
+
     const currentPSSH: Uint8Array<ArrayBuffer> = initData.subarray(offset, offset + len);
     // yep
     if (
@@ -121,6 +129,10 @@ export function patchInitData(
 
   if (offset !== initData.length) {
     log.warn("DRM", "unrecognized initialization data. Cannot patch it.");
+    throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
+  }
+  if (resInitData.length === 0 && concatenatedCencs.length === 0) {
+    log.warn("DRM", "no usable PSSH in initialization data. Cannot patch it.");
     throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
   }
   return concat(resInitData, concatenatedCencs);
