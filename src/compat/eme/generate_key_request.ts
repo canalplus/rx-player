@@ -205,13 +205,17 @@ export default function generateKeyRequest(
   initializationDataType: string | undefined,
   initializationData: Uint8Array<ArrayBuffer>,
 ): Promise<unknown> {
-  let patchedInit: Uint8Array<ArrayBuffer>;
-  try {
-    patchedInit = patchInitData(initializationData);
-  } catch (_e) {
-    patchedInit = initializationData;
-  }
   const initDataType = initializationDataType ?? "";
+  let patchedInit: Uint8Array<ArrayBuffer> = initializationData;
+  // Other types (e.g. "webm", "keyids") do not contain PSSH boxes. An empty
+  // type is retried as "cenc" below.
+  if (initDataType === "cenc" || initDataType === "") {
+    try {
+      patchedInit = patchInitData(initializationData);
+    } catch (_e) {
+      patchedInit = initializationData;
+    }
+  }
   log.debug("DRM", "Calling generateRequest on the MediaKeySession");
   return session
     .generateRequest(initDataType, patchedInit)

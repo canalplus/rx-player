@@ -84,6 +84,36 @@ describe("Compat - generateKeyRequest", () => {
     expect(patchInitData(concat(pssh, smallestPssh))).toEqual(concat(pssh, smallestPssh));
   });
 
+  describe("initialization data type", () => {
+    const cencSystemId = new Uint8Array([
+      0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2,
+      0xfb, 0x4b,
+    ]);
+    const cencPssh = createBox("pssh", concat([1, 0, 0, 0], cencSystemId, 8));
+
+    for (const initDataType of ["cenc", "", undefined]) {
+      it(`should patch initialization data of type ${String(initDataType)}`, async () => {
+        const generateRequest = vi.fn().mockResolvedValue(undefined);
+        const session = { generateRequest } as unknown as IMediaKeySession;
+        await generateKeyRequest(session, initDataType, concat(cencPssh, pssh));
+        expect(generateRequest).toHaveBeenCalledTimes(1);
+        expect(generateRequest.mock.calls[0][1]).toEqual(concat(pssh, cencPssh));
+      });
+    }
+
+    for (const initDataType of ["webm", "keyids", "sinf"]) {
+      it(`should not patch initialization data of type ${initDataType}`, async () => {
+        // Looks like a PSSH too small for a system ID followed by a PSSH
+        const initData = concat(createBox("pssh", new Uint8Array(0)), cencPssh, pssh);
+        const generateRequest = vi.fn().mockResolvedValue(undefined);
+        const session = { generateRequest } as unknown as IMediaKeySession;
+        await generateKeyRequest(session, initDataType, initData);
+        expect(generateRequest).toHaveBeenCalledTimes(1);
+        expect(generateRequest.mock.calls[0][1]).toBe(initData);
+      });
+    }
+  });
+
   describe("incomplete CENC PSSH v1", () => {
     const cencSystemId = new Uint8Array([
       0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2,
