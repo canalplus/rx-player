@@ -84,6 +84,49 @@ describe("Compat - generateKeyRequest", () => {
     expect(patchInitData(concat(pssh, smallestPssh))).toEqual(concat(pssh, smallestPssh));
   });
 
+  describe("incomplete CENC PSSH v1", () => {
+    const cencSystemId = new Uint8Array([
+      0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2,
+      0xfb, 0x4b,
+    ]);
+    const cencPsshV0 = createBox("pssh", concat([0, 0, 0, 0], cencSystemId, 4));
+    const cencPsshV1 = createBox(
+      "pssh",
+      concat([1, 0, 0, 0], cencSystemId, itobe4(1), new Uint8Array(16).fill(0x22), 4),
+    );
+    const incompleteV1s = [
+      // Only a system ID
+      createBox("pssh", concat([1, 0, 0, 0], cencSystemId)),
+      // More key IDs announced than present
+      createBox(
+        "pssh",
+        concat([1, 0, 0, 0], cencSystemId, itobe4(2), new Uint8Array(20)),
+      ),
+      // More data announced than present
+      createBox("pssh", concat([1, 0, 0, 0], cencSystemId, itobe4(0), itobe4(10), 4)),
+    ];
+
+    for (const [i, incompleteV1] of incompleteV1s.entries()) {
+      it(`should not let an incomplete CENC PSSH v1 replace a v0 one (${i})`, () => {
+        expect(patchInitData(concat(cencPsshV0, pssh, incompleteV1))).toEqual(
+          concat(pssh, cencPsshV0, incompleteV1),
+        );
+      });
+
+      it(`should still let a complete CENC PSSH v1 replace an incomplete one (${i})`, () => {
+        expect(patchInitData(concat(cencPsshV0, incompleteV1, pssh, cencPsshV1))).toEqual(
+          concat(pssh, cencPsshV1),
+        );
+      });
+    }
+
+    it("should let a complete CENC PSSH v1 replace a v0 one", () => {
+      expect(patchInitData(concat(cencPsshV0, pssh, cencPsshV1))).toEqual(
+        concat(pssh, cencPsshV1),
+      );
+    });
+  });
+
   describe("PSSH with a 64-bit size", () => {
     const cencSystemId = new Uint8Array([
       0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02, 0xac, 0xe3, 0x3c, 0x1e, 0x52, 0xe2,
@@ -121,6 +164,17 @@ describe("Compat - generateKeyRequest", () => {
     it("should recognize a CENC PSSH with a 64-bit size", () => {
       expect(patchInitData(concat(to64Bits(cencPsshV1), pssh))).toEqual(
         concat(pssh, to64Bits(cencPsshV1)),
+      );
+    });
+
+    it("should not let an incomplete CENC PSSH v1 with a 64-bit size replace a v0 one", () => {
+      const cencPsshV0 = createBox("pssh", concat([0, 0, 0, 0], cencSystemId, 4));
+      const incompleteV1 = to64Bits(
+        createBox("pssh", concat([1, 0, 0, 0], cencSystemId)),
+      );
+      expect(incompleteV1.length).toBe(36);
+      expect(patchInitData(concat(cencPsshV0, incompleteV1))).toEqual(
+        concat(cencPsshV0, incompleteV1),
       );
     });
 

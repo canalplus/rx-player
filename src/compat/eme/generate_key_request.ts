@@ -122,7 +122,12 @@ export function patchInitData(
     ) {
       const version = currentPSSH[headerSize];
       log.info("DRM", "CENC PSSH found with version", version);
-      if (foundCencV1 === (version === 1)) {
+      if (version === 1 && !isCompletePsshV1(currentPSSH, headerSize)) {
+        // Keep it, but don't let it replace other CENC PSSH as it may not be
+        // usable.
+        log.warn("DRM", "incomplete CENC PSSH v1, keeping other CENC PSSH");
+        concatenatedCencs = concat(concatenatedCencs, currentPSSH);
+      } else if (foundCencV1 === (version === 1)) {
         // Either `concatenatedCencs` only contains v1 or does not contain any
         concatenatedCencs = concat(concatenatedCencs, currentPSSH);
       } else if (version === 1) {
@@ -162,6 +167,27 @@ export function patchInitData(
     throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
   }
   return concat(resInitData, concatenatedCencs, lastBox);
+}
+
+/**
+ * Returns `true` if all fields of the given version 1 PSSH box fit in it.
+ * @param {Uint8Array} pssh - The whole PSSH box.
+ * @param {number} contentOffset - Offset of its content (after its size and
+ * type).
+ * @returns {boolean}
+ */
+function isCompletePsshV1(pssh: Uint8Array, contentOffset: number): boolean {
+  let offset = contentOffset + 4 + 16; // version, flags and system ID
+  if (offset + 4 > pssh.length) {
+    return false;
+  }
+  const kidCount = be4toi(pssh, offset);
+  offset += 4 + kidCount * 16;
+  if (offset + 4 > pssh.length) {
+    return false;
+  }
+  const dataSize = be4toi(pssh, offset);
+  return offset + 4 + dataSize <= pssh.length;
 }
 
 /**
