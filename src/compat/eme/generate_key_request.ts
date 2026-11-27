@@ -43,6 +43,12 @@ import { PSSH_TO_INTEGER } from "./constants.ts";
  *
  * If the initData is unrecognized or if a CENC PSSH is not found, this function
  * throws.
+ *
+ * TODO: When the initialization data cannot be fully read (a box which is not
+ * a PSSH, a wrong size, trailing bytes...), this function throws. Chrome and
+ * Firefox then reject the unpatched initialization data, even when it contains
+ * a usable PSSH. We could retry with only the readable PSSH boxes, on a new
+ * `MediaKeySession`, when the browser rejects it.
  * @param {Uint8Array} initData - Initialization data you want to patch
  * @returns {Uint8Array} - Initialization data, patched
  */
@@ -53,6 +59,8 @@ export function patchInitData(
   let foundCencV1 = false;
   let concatenatedCencs = new Uint8Array();
   let resInitData = new Uint8Array();
+  /** Box going until the end of the data (size of `0`), kept last. */
+  let lastBox = new Uint8Array();
 
   let offset = 0;
   while (offset < initData.length) {
@@ -64,42 +72,61 @@ export function patchInitData(
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
 
-    const len = be4toi(new Uint8Array(initData), offset);
-    if (len < 8 || offset + len > initData.length) {
+    let boxOffsets;
+    try {
+      boxOffsets = getNextBoxOffsets(initData.subarray(offset));
+    } catch (err) {
+      log.warn(
+        "DRM",
+        "unrecognized initialization data. Cannot patch it.",
+        err instanceof Error ? err : "",
+      );
+      throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
+    }
+    if (boxOffsets === null || offset + boxOffsets[2] > initData.length) {
       log.warn("DRM", "unrecognized initialization data. Cannot patch it.");
       throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
     }
+    const [, headerSize, len] = boxOffsets;
+    // A size of `0` means that the box goes until the end of the data
+    const goesToEnd = be4toi(initData, offset) === 0;
+
+    if (len < headerSize + 20) {
+      // Too small to contain a system ID. Drop it: some browsers reject the
+      // whole initialization data because of such box.
+      log.warn("DRM", "dropping PSSH too small to contain a system ID", len);
+      offset += len;
+      continue;
+    }
 
     const currentPSSH: Uint8Array<ArrayBuffer> = initData.subarray(offset, offset + len);
+    const systemIdOffset = offset + headerSize + 4; // after version and flags
     // yep
     if (
-      initData[offset + 12] === 0x10 &&
-      initData[offset + 13] === 0x77 &&
-      initData[offset + 14] === 0xef &&
-      initData[offset + 15] === 0xec &&
-      initData[offset + 16] === 0xc0 &&
-      initData[offset + 17] === 0xb2 &&
-      initData[offset + 18] === 0x4d &&
-      initData[offset + 19] === 0x02 &&
-      initData[offset + 20] === 0xac &&
-      initData[offset + 21] === 0xe3 &&
-      initData[offset + 22] === 0x3c &&
-      initData[offset + 23] === 0x1e &&
-      initData[offset + 24] === 0x52 &&
-      initData[offset + 25] === 0xe2 &&
-      initData[offset + 26] === 0xfb &&
-      initData[offset + 27] === 0x4b
+      initData[systemIdOffset] === 0x10 &&
+      initData[systemIdOffset + 1] === 0x77 &&
+      initData[systemIdOffset + 2] === 0xef &&
+      initData[systemIdOffset + 3] === 0xec &&
+      initData[systemIdOffset + 4] === 0xc0 &&
+      initData[systemIdOffset + 5] === 0xb2 &&
+      initData[systemIdOffset + 6] === 0x4d &&
+      initData[systemIdOffset + 7] === 0x02 &&
+      initData[systemIdOffset + 8] === 0xac &&
+      initData[systemIdOffset + 9] === 0xe3 &&
+      initData[systemIdOffset + 10] === 0x3c &&
+      initData[systemIdOffset + 11] === 0x1e &&
+      initData[systemIdOffset + 12] === 0x52 &&
+      initData[systemIdOffset + 13] === 0xe2 &&
+      initData[systemIdOffset + 14] === 0xfb &&
+      initData[systemIdOffset + 15] === 0x4b
     ) {
-      let cencOffsets = null;
-      try {
-        cencOffsets = getNextBoxOffsets(currentPSSH);
-      } catch (err) {
-        log.warn("DRM", "could not read CENC PSSH box", err instanceof Error ? err : "");
-      }
-      const version = cencOffsets === null ? undefined : currentPSSH[cencOffsets[1]];
+      const version = currentPSSH[headerSize];
       log.info("DRM", "CENC PSSH found with version", version);
-      if (version === undefined) {
-        log.warn("DRM", "could not read version of CENC PSSH");
+      if (version === 1 && !isCompletePsshV1(currentPSSH, headerSize)) {
+        // Keep it, but don't let it replace other CENC PSSH as it may not be
+        // usable.
+        log.warn("DRM", "incomplete CENC PSSH v1, keeping other CENC PSSH");
+        concatenatedCencs = concat(concatenatedCencs, currentPSSH);
       } else if (foundCencV1 === (version === 1)) {
         // Either `concatenatedCencs` only contains v1 or does not contain any
         concatenatedCencs = concat(concatenatedCencs, currentPSSH);
@@ -113,6 +140,14 @@ export function patchInitData(
       } else {
         log.warn("DRM", "filtering out cenc pssh box with wrong version", version);
       }
+    } else if (goesToEnd) {
+      // Its size says that it goes until the end of the data: nothing can be
+      // put after it.
+      // TODO: If this is the only non-CENC PSSH, CENC PSSH stay first, which
+      // is what some browsers have issues with (see this function's
+      // description). Should we write its actual size in it instead, so it can
+      // be moved like other boxes? For now seen as too destructive/risky.
+      lastBox = currentPSSH;
     } else {
       resInitData = concat(resInitData, currentPSSH);
     }
@@ -123,7 +158,36 @@ export function patchInitData(
     log.warn("DRM", "unrecognized initialization data. Cannot patch it.");
     throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
   }
-  return concat(resInitData, concatenatedCencs);
+  if (
+    resInitData.length === 0 &&
+    concatenatedCencs.length === 0 &&
+    lastBox.length === 0
+  ) {
+    log.warn("DRM", "no usable PSSH in initialization data. Cannot patch it.");
+    throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
+  }
+  return concat(resInitData, concatenatedCencs, lastBox);
+}
+
+/**
+ * Returns `true` if all fields of the given version 1 PSSH box fit in it.
+ * @param {Uint8Array} pssh - The whole PSSH box.
+ * @param {number} contentOffset - Offset of its content (after its size and
+ * type).
+ * @returns {boolean}
+ */
+function isCompletePsshV1(pssh: Uint8Array, contentOffset: number): boolean {
+  let offset = contentOffset + 4 + 16; // version, flags and system ID
+  if (offset + 4 > pssh.length) {
+    return false;
+  }
+  const kidCount = be4toi(pssh, offset);
+  offset += 4 + kidCount * 16;
+  if (offset + 4 > pssh.length) {
+    return false;
+  }
+  const dataSize = be4toi(pssh, offset);
+  return offset + 4 + dataSize <= pssh.length;
 }
 
 /**
@@ -141,13 +205,17 @@ export default function generateKeyRequest(
   initializationDataType: string | undefined,
   initializationData: Uint8Array<ArrayBuffer>,
 ): Promise<unknown> {
-  let patchedInit: Uint8Array<ArrayBuffer>;
-  try {
-    patchedInit = patchInitData(initializationData);
-  } catch (_e) {
-    patchedInit = initializationData;
-  }
   const initDataType = initializationDataType ?? "";
+  let patchedInit: Uint8Array<ArrayBuffer> = initializationData;
+  // Other types (e.g. "webm", "keyids") do not contain PSSH boxes. An empty
+  // type is retried as "cenc" below.
+  if (initDataType === "cenc" || initDataType === "") {
+    try {
+      patchedInit = patchInitData(initializationData);
+    } catch (_e) {
+      patchedInit = initializationData;
+    }
+  }
   log.debug("DRM", "Calling generateRequest on the MediaKeySession");
   return session
     .generateRequest(initDataType, patchedInit)
@@ -161,6 +229,11 @@ export default function generateKeyRequest(
       // a rejected promise with a TypeError in that case).
       // Retry with a default "cenc" value for initialization data type if
       // we're in that condition.
+      // TODO: The EME specification marks the `MediaKeySession` as initialized
+      // before rejecting an empty initialization data type (Firefox does so),
+      // so this new `generateRequest` call on the same `MediaKeySession`
+      // should then fail with an `InvalidStateError`. A new `MediaKeySession`
+      // should be used instead.
       log.warn(
         "DRM",
         "error while calling `generateRequest` with an empty " +
