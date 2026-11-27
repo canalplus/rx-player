@@ -90,7 +90,12 @@ export function patchInitData(
       initData[offset + 26] === 0xfb &&
       initData[offset + 27] === 0x4b
     ) {
-      const cencOffsets = getNextBoxOffsets(currentPSSH);
+      let cencOffsets = null;
+      try {
+        cencOffsets = getNextBoxOffsets(currentPSSH);
+      } catch (err) {
+        log.warn("DRM", "could not read CENC PSSH box", err instanceof Error ? err : "");
+      }
       const version = cencOffsets === null ? undefined : currentPSSH[cencOffsets[1]];
       log.info("DRM", "CENC PSSH found with version", version);
       if (version === undefined) {

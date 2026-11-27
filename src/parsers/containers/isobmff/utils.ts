@@ -31,7 +31,7 @@ import { hexToBytes, readNullTerminatedString } from "../../../utils/string_pars
 import { MAX_32_BIT_INT } from "./constants.ts";
 import { createBox } from "./create_box.ts";
 import { getPlayReadyKIDFromPrivateData } from "./drm/index.ts";
-import { getBoxContent, getBoxesContent, getBoxOffsets, getChildBox } from "./get_box.ts";
+import { getBoxContent, getBoxOffsets, getChildBox } from "./get_box.ts";
 import { getMDIA, getTRAF, getTRAFs } from "./read.ts";
 
 /** Information related to a PSSH box. */
@@ -247,86 +247,86 @@ interface ITrunSampleInfo {
 }
 
 /**
- *  Parse all trun boxes found in the given ISOBMFF file into "trun sample"
+ *  Parse the trun box found in the given traf box's content into "trun sample"
  *  objects.
- *  @param {Uint8Array} buffer
- *  @returns {Array.<Object>}
+ *
+ *  Returns an empty array if there's no trun box.
+ *  Returns `null` if the trun box could not be parsed.
+ *  @param {Uint8Array} traf - Content of a traf box.
+ *  @returns {Array.<Object>|null}
  */
-function getTrunSamples(buffer: Uint8Array): ITrunSampleInfo[] {
-  const trafs = getTRAFs(buffer);
+function getTrunSamplesFromTraf(traf: Uint8Array): ITrunSampleInfo[] | null {
   const samples: ITrunSampleInfo[] = [];
-  for (const traf of trafs) {
-    const trun = getBoxContent(traf, 0x7472756e /* trun */);
-    if (trun === null) {
-      continue;
+  const trun = getBoxContent(traf, 0x7472756e /* trun */);
+  if (trun === null) {
+    return samples;
+  }
+  let cursor = 0;
+  const version = trun[cursor];
+  cursor += 1;
+  if (version > 1) {
+    return null;
+  }
+
+  const flags = be3toi(trun, cursor);
+  cursor += 3;
+  const hasSampleDuration = (flags & 0x000100) > 0;
+
+  let defaultDuration: number | undefined = 0;
+  if (!hasSampleDuration) {
+    defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
+    if (defaultDuration === undefined) {
+      return null;
     }
-    let cursor = 0;
-    const version = trun[cursor];
-    cursor += 1;
-    if (version > 1) {
-      return [];
-    }
+  }
 
-    const flags = be3toi(trun, cursor);
-    cursor += 3;
-    const hasSampleDuration = (flags & 0x000100) > 0;
+  const hasDataOffset = (flags & 0x000001) > 0;
+  const hasFirstSampleFlags = (flags & 0x000004) > 0;
+  const hasSampleSize = (flags & 0x000200) > 0;
+  const hasSampleFlags = (flags & 0x000400) > 0;
+  const hasSampleCompositionOffset = (flags & 0x000800) > 0;
 
-    let defaultDuration: number | undefined = 0;
-    if (!hasSampleDuration) {
-      defaultDuration = getDefaultDurationFromTFHDInTRAF(traf);
-      if (defaultDuration === undefined) {
-        return [];
-      }
-    }
+  const sampleCounts = be4toi(trun, cursor);
+  cursor += 4;
 
-    const hasDataOffset = (flags & 0x000001) > 0;
-    const hasFirstSampleFlags = (flags & 0x000004) > 0;
-    const hasSampleSize = (flags & 0x000200) > 0;
-    const hasSampleFlags = (flags & 0x000400) > 0;
-    const hasSampleCompositionOffset = (flags & 0x000800) > 0;
-
-    const sampleCounts = be4toi(trun, cursor);
+  if (hasDataOffset) {
     cursor += 4;
+  }
+  if (hasFirstSampleFlags) {
+    cursor += 4;
+  }
 
-    if (hasDataOffset) {
+  let i = sampleCounts;
+  while (i-- > 0) {
+    let duration;
+    let size;
+    let sampleFlags;
+    let compositionTimeOffset;
+    if (hasSampleDuration) {
+      duration = be4toi(trun, cursor);
+      cursor += 4;
+    } else {
+      duration = defaultDuration;
+    }
+    if (hasSampleSize) {
+      size = be4toi(trun, cursor);
       cursor += 4;
     }
-    if (hasFirstSampleFlags) {
+    if (hasSampleFlags) {
+      sampleFlags = be4toi(trun, cursor);
       cursor += 4;
     }
-
-    let i = sampleCounts;
-    while (i-- > 0) {
-      let duration;
-      let size;
-      let sampleFlags;
-      let compositionTimeOffset;
-      if (hasSampleDuration) {
-        duration = be4toi(trun, cursor);
-        cursor += 4;
-      } else {
-        duration = defaultDuration;
-      }
-      if (hasSampleSize) {
-        size = be4toi(trun, cursor);
-        cursor += 4;
-      }
-      if (hasSampleFlags) {
-        sampleFlags = be4toi(trun, cursor);
-        cursor += 4;
-      }
-      if (hasSampleCompositionOffset) {
-        compositionTimeOffset =
-          version === 0 ? be4toi(trun, cursor) : be4toiSigned(trun, cursor);
-        cursor += 4;
-      }
-      samples.push({
-        duration,
-        compositionTimeOffset,
-        size,
-        flags: sampleFlags,
-      });
+    if (hasSampleCompositionOffset) {
+      compositionTimeOffset =
+        version === 0 ? be4toi(trun, cursor) : be4toiSigned(trun, cursor);
+      cursor += 4;
     }
+    samples.push({
+      duration,
+      compositionTimeOffset,
+      size,
+      flags: sampleFlags,
+    });
   }
   return samples;
 }
@@ -544,7 +544,26 @@ function updateBoxLength(buf: Uint8Array<ArrayBuffer>): Uint8Array<ArrayBuffer> 
  */
 function parseEmsgBoxes(buffer: Uint8Array): IEMSG[] | undefined {
   const emsgs: IEMSG[] = [];
-  for (const emsg of getBoxesContent(buffer, 0x656d7367 /* emsg */)) {
+  let remaining = buffer;
+  while (remaining.length > 0) {
+    let offsets;
+    try {
+      offsets = getBoxOffsets(remaining, 0x656d7367 /* emsg */);
+    } catch (err) {
+      // Keep the emsg boxes already read
+      log.warn(
+        "isobmff",
+        "Could not read further emsg boxes",
+        err instanceof Error ? err : "",
+      );
+      break;
+    }
+    if (offsets === null) {
+      break;
+    }
+    const emsg = remaining.subarray(offsets[1], offsets[2]);
+    remaining = remaining.subarray(offsets[2]);
+
     const length = emsg.length;
 
     const version = emsg[0];
@@ -672,5 +691,5 @@ export {
   patchPssh,
   updateBoxLength,
   parseEmsgBoxes,
-  getTrunSamples,
+  getTrunSamplesFromTraf,
 };
