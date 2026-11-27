@@ -99,7 +99,9 @@ export function patchInitData(
       const version = cencOffsets === null ? undefined : currentPSSH[cencOffsets[1]];
       log.info("DRM", "CENC PSSH found with version", version);
       if (version === undefined) {
-        log.warn("DRM", "could not read version of CENC PSSH");
+        // Let the browser handle it instead of dropping a box it may understand
+        log.warn("DRM", "could not read version of CENC PSSH. Cannot patch it.");
+        throw new Error("Compat: unrecognized initialization data. Cannot patch it.");
       } else if (foundCencV1 === (version === 1)) {
         // Either `concatenatedCencs` only contains v1 or does not contain any
         concatenatedCencs = concat(concatenatedCencs, currentPSSH);
